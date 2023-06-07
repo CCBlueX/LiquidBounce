@@ -20,9 +20,9 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object FastBow : Module("FastBow", category = ModuleCategory.COMBAT) {
+object FastBow : Module("FastBow", ModuleCategory.COMBAT) {
 
-    private val packetsValue = IntegerValue("Packets", 20, 3, 20)
+    private val packets by IntegerValue("Packets", 20, 3..20)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -40,8 +40,9 @@ object FastBow : Module("FastBow", category = ModuleCategory.COMBAT) {
 
             val pitch = targetRotation?.pitch ?: thePlayer.rotationPitch
 
-            for (i in 0 until packetsValue.get())
+            repeat(packets) {
                 sendPacket(C05PacketPlayerLook(yaw, pitch, true))
+            }
 
             sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1

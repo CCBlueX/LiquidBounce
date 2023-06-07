@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.EntityMovementEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.special.ClientFixes;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.PacketUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDownloadTerrain;
@@ -18,6 +19,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
@@ -31,12 +33,15 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import static net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.ACCEPTED;
+import static net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD;
 
 @Mixin(NetHandlerPlayClient.class)
 public abstract class MixinNetHandlerPlayClient {
@@ -73,9 +78,9 @@ public abstract class MixinNetHandlerPlayClient {
                 ClientUtils.INSTANCE.getLOGGER().error("Failed to handle resource pack", e);
 
                 // Accepted is always sent.
-                netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.ACCEPTED));
+                netManager.sendPacket(new C19PacketResourcePackStatus(hash, ACCEPTED));
                 // But we fail of course.
-                netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD));
+                netManager.sendPacket(new C19PacketResourcePackStatus(hash, FAILED_DOWNLOAD));
 
                 callbackInfo.cancel();
             }
@@ -109,5 +114,10 @@ public abstract class MixinNetHandlerPlayClient {
 
         if(entity != null)
             EventManager.INSTANCE.callEvent(new EntityMovementEvent(entity));
+    }
+
+    @Redirect(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkManager;sendPacket(Lnet/minecraft/network/Packet;)V"))
+    private void hookAntiCustomRotationOverride(NetworkManager instance, Packet p_sendPacket_1_) {
+        PacketUtils.sendPacket(p_sendPacket_1_, false);
     }
 }

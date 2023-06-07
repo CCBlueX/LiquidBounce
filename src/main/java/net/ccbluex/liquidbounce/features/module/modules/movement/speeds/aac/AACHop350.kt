@@ -5,12 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.event.EventManager.registerListener
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
-class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
+class AACHop350 : SpeedMode("AACHop3.5.0") {
     override fun onMotion() {}
     override fun onUpdate() {}
     override fun onMove(event: MoveEvent) {}
@@ -19,7 +21,7 @@ class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (event.eventState == EventState.POST && isMoving && !thePlayer.isInWater && !thePlayer.isInLava) {
+        if (event.eventState == EventState.POST && isMoving && !thePlayer.isInWater && !thePlayer.isInLava && !mc.thePlayer.isSneaking) {
             thePlayer.jumpMovementFactor += 0.00208f
             if (thePlayer.fallDistance <= 1f) {
                 if (thePlayer.onGround) {
@@ -39,20 +41,12 @@ class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
         val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.onGround) {
+            thePlayer.motionX = 0.0
             thePlayer.motionZ = 0.0
-            thePlayer.motionX = thePlayer.motionZ
         }
     }
 
     override fun onDisable() {
         mc.thePlayer?.jumpMovementFactor = 0.02f
-    }
-
-    override fun handleEvents(): Boolean {
-        return isActive
-    }
-
-    init {
-        registerListener(this)
     }
 }

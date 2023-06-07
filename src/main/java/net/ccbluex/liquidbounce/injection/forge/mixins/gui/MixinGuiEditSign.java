@@ -24,6 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.awt.*;
 import java.io.IOException;
 
+import static net.minecraft.event.ClickEvent.Action.RUN_COMMAND;
+
 @Mixin(GuiEditSign.class)
 public class MixinGuiEditSign extends GuiScreen {
 
@@ -61,16 +63,16 @@ public class MixinGuiEditSign extends GuiScreen {
         switch (button.id) {
             case 0:
                 if (!signCommand1.getText().isEmpty())
-                    tileSign.signText[0].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand1.getText())));
+                    tileSign.signText[0].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(RUN_COMMAND, signCommand1.getText())));
 
                 if (!signCommand2.getText().isEmpty())
-                    tileSign.signText[1].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand2.getText())));
+                    tileSign.signText[1].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(RUN_COMMAND, signCommand2.getText())));
 
                 if (!signCommand3.getText().isEmpty())
-                    tileSign.signText[2].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand3.getText())));
+                    tileSign.signText[2].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(RUN_COMMAND, signCommand3.getText())));
 
                 if(!signCommand4.getText().isEmpty())
-                    tileSign.signText[3].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, signCommand4.getText())));
+                    tileSign.signText[3].setChatStyle(new ChatStyle().setChatClickEvent(new ClickEvent(RUN_COMMAND, signCommand4.getText())));
                 break;
             case 1:
                 enabled = !enabled;

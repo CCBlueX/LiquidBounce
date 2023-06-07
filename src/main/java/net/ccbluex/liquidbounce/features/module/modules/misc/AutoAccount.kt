@@ -24,14 +24,14 @@ import kotlin.concurrent.schedule
 
 object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
 
-    private val registerValue = BoolValue("AutoRegister", true)
+    private val register by BoolValue("AutoRegister", true)
 
-    private val loginValue = BoolValue("AutoLogin", true)
+    private val login by BoolValue("AutoLogin", true)
 
     // Gamster requires 8 chars+
     private val passwordValue = object : TextValue("Password", "axolotlaxolotl") {
-        override fun onChange(oldValue: String, newValue: String): String {
-            return when {
+        override fun onChange(oldValue: String, newValue: String) =
+            when {
                 " " in newValue -> {
                     displayChatMessage("§7[§a§lAutoAccount§7] §cPassword cannot contain a space!")
                     oldValue
@@ -46,33 +46,26 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
                 }
                 else -> super.onChange(oldValue, newValue)
             }
-        }
 
-        override fun isSupported() = registerValue.get() || loginValue.get()
+        override fun isSupported() = register || login
     }
+    private val password by passwordValue
 
     // Needed for Gamster
-    private val sendDelayValue = object : IntegerValue("SendDelay", 250, 0, 500) {
-        override fun isSupported() = passwordValue.isSupported()
-    }
+    private val sendDelay by IntegerValue("SendDelay", 250, 0..500) { passwordValue.isSupported() }
 
-    private val autoSessionValue = BoolValue("AutoSession", false)
+    private val autoSession by BoolValue("AutoSession", false)
 
-    private val startupValue = object : BoolValue("RandomAccountOnStart", false) {
-        override fun isSupported() = autoSessionValue.get()
-    }
+    private val startupValue = BoolValue("RandomAccountOnStart", false) { autoSession }
 
-    private val relogInvalidValue = object : BoolValue("RelogWhenPasswordInvalid", true) {
-        override fun isSupported() = autoSessionValue.get()
-    }
+    private val relogInvalidValue = BoolValue("RelogWhenPasswordInvalid", true) { autoSession }
 
-    private val relogKickedValue = object : BoolValue("RelogWhenKicked", false) {
-        override fun isSupported() = autoSessionValue.get()
-    }
+    private val relogKickedValue = BoolValue("RelogWhenKicked", false) { autoSession }
 
-    private val reconnectDelayValue = object : IntegerValue("ReconnectDelay", 1000, 0, 2500) {
-        override fun isSupported() = relogInvalidValue.isActive() || relogKickedValue.isActive()
+    private val reconnectDelayValue = IntegerValue("ReconnectDelay", 1000, 0..2500) {
+        relogInvalidValue.isActive() || relogKickedValue.isActive()
     }
+    private val reconnectDelay by reconnectDelayValue
 
     private val accountModeValue = object : ListValue("AccountMode", arrayOf("RandomName", "RandomAlt"), "RandomName") {
         override fun isSupported() = reconnectDelayValue.isSupported() || startupValue.isActive()
@@ -86,9 +79,10 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
             return super.onChange(oldValue, newValue)
         }
     }
+    private val accountMode by accountModeValue
 
-    private val saveValue = object : BoolValue("SaveToAlts", false) {
-        override fun isSupported() = accountModeValue.isSupported() && accountModeValue.get() != "RandomAlt"
+    private val saveValue = BoolValue("SaveToAlts", false) {
+        accountModeValue.isSupported() && accountMode != "RandomAlt"
     }
 
     private var status = Status.WAITING
@@ -97,7 +91,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         // Disconnect from server
         if (mc.currentServerData != null && mc.theWorld != null)
              mc.netHandler.networkManager.closeChannel(
-                 ChatComponentText("$info\n\nReconnecting with a random account in ${reconnectDelayValue.get()}ms")
+                 ChatComponentText("$info\n\nReconnecting with a random account in ${reconnectDelay}ms")
              )
 
         // Log in to account with a random name, optionally save it
@@ -107,7 +101,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         if (reconnectDelayValue.isMinimal()) return ServerUtils.connectToLastServer()
 
         // Delay the reconnect, connectToLastServer gets called from a TimerThread with no OpenGL context
-        Timer().schedule(reconnectDelayValue.get().toLong()) {
+        Timer().schedule(reconnectDelay.toLong()) {
             ServerUtils.connectToLastServer(true)
         }
     }
@@ -116,16 +110,16 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         if (msg == null) return false
 
         when {
-            registerValue.get() && "/reg" in msg -> {
+            register && "/reg" in msg -> {
                 addNotification(Notification("Trying to register."))
-                Timer().schedule(sendDelayValue.get().toLong()) {
-                    mc.thePlayer.sendChatMessage("/register ${passwordValue.get()} ${passwordValue.get()}")
+                Timer().schedule(sendDelay.toLong()) {
+                    mc.thePlayer.sendChatMessage("/register $password $password")
                 }
             }
-            loginValue.get() && "/log" in msg -> {
+            login && "/log" in msg -> {
                 addNotification(Notification("Trying to log in."))
-                Timer().schedule(sendDelayValue.get().toLong()) {
-                    mc.thePlayer.sendChatMessage("/login ${passwordValue.get()}")
+                Timer().schedule(sendDelay.toLong()) {
+                    mc.thePlayer.sendChatMessage("/login $password")
                 }
             }
             else -> return false
@@ -227,7 +221,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
     }
 
     private fun changeAccount() {
-        if (accountModeValue.get() == "RandomAlt") {
+        if (accountMode == "RandomAlt") {
             val account = accountsConfig.accounts.filter { it is CrackedAccount && it.name != mc.session.username }
                 .randomOrNull() ?: return
             mc.session = Session(
@@ -250,7 +244,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         }
     }
 
-    enum class Status {
+    private enum class Status {
         WAITING, SENT_COMMAND, STOPPED
     }
 }

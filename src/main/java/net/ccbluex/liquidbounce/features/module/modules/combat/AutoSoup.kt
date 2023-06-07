@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -24,46 +25,45 @@ import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_IN
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object AutoSoup : Module("AutoSoup", category = ModuleCategory.COMBAT) {
+object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
 
-    private val healthValue = FloatValue("Health", 15f, 0f, 20f)
-    private val delayValue = IntegerValue("Delay", 150, 0, 500)
-    private val openInventoryValue = BoolValue("OpenInv", false)
-    private val simulateInventoryValue = object : BoolValue("SimulateInventory", true) {
-        override fun isSupported() = !openInventoryValue.get()
-    }
-    private val bowlValue = ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
+    private val health by FloatValue("Health", 15f, 0f..20f)
+    private val delay by IntegerValue("Delay", 150, 0..500)
+    private val openInventory by BoolValue("OpenInv", false)
+    private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
+    private val bowl by ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
 
     private val timer = MSTimer()
 
     override val tag
-        get() = healthValue.get().toString()
+        get() = health.toString()
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (!timer.hasTimePassed(delayValue.get()))
+        if (!timer.hasTimePassed(delay))
             return
 
         val thePlayer = mc.thePlayer ?: return
 
-        val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
+        val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
-        if (thePlayer.health <= healthValue.get() && soupInHotbar != -1) {
-            sendPacket(C09PacketHeldItemChange(soupInHotbar - 36))
-            sendPacket(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
+        if (thePlayer.health <= health && soupInHotbar != null) {
+            sendPackets(
+                C09PacketHeldItemChange(soupInHotbar - 36),
+                C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar))
+            )
 
-            if (bowlValue.get() == "Drop")
-                sendPacket(C07PacketPlayerDigging(DROP_ITEM,
-                    BlockPos.ORIGIN, EnumFacing.DOWN))
+            if (bowl == "Drop")
+                sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 
             sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
             timer.reset()
             return
         }
 
-        val bowlInHotbar = InventoryUtils.findItem(36, 45, Items.bowl)
-        if (bowlValue.get() == "Move" && bowlInHotbar != -1) {
-            if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
+        val bowlInHotbar = InventoryUtils.findItem(36, 44, Items.bowl)
+        if (bowl == "Move" && bowlInHotbar != null) {
+            if (openInventory && mc.currentScreen !is GuiInventory)
                 return
 
             var bowlMovable = false
@@ -81,7 +81,7 @@ object AutoSoup : Module("AutoSoup", category = ModuleCategory.COMBAT) {
             }
 
             if (bowlMovable) {
-                val openInventory = mc.currentScreen !is GuiInventory && simulateInventoryValue.get()
+                val openInventory = mc.currentScreen !is GuiInventory && simulateInventory
 
                 if (openInventory)
                     sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
@@ -90,13 +90,13 @@ object AutoSoup : Module("AutoSoup", category = ModuleCategory.COMBAT) {
             }
         }
 
-        val soupInInventory = InventoryUtils.findItem(9, 36, Items.mushroom_stew)
+        val soupInInventory = InventoryUtils.findItem(9, 35, Items.mushroom_stew)
 
-        if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar()) {
-            if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
+        if (soupInInventory != null && InventoryUtils.hasSpaceHotbar()) {
+            if (openInventory && mc.currentScreen !is GuiInventory)
                 return
 
-            val openInventory = mc.currentScreen !is GuiInventory && simulateInventoryValue.get()
+            val openInventory = mc.currentScreen !is GuiInventory && simulateInventory
             if (openInventory)
                 sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 

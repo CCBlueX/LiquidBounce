@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 object FastPlace : Module("FastPlace", ModuleCategory.WORLD) {
-    val speedValue = IntegerValue("Speed", 0, 0, 4)
-    val onlyBlocksValue = BoolValue("OnlyBlocks", true)
-    val facingBlocksValue = BoolValue("OnlyWhenFacingBlocks", true)
+    val speed by IntegerValue("Speed", 0, 0..4)
+    val onlyBlocks by BoolValue("OnlyBlocks", true)
+    val facingBlocks by BoolValue("OnlyWhenFacingBlocks", true)
 }

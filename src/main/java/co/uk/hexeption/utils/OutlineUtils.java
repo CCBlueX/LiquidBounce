@@ -55,12 +55,12 @@ public class OutlineUtils {
         glDepthMask(false);
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_POLYGON_OFFSET_LINE);
-        glPolygonOffset(1.0F, -2000000F);
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
+        glPolygonOffset(1F, -2000000F);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240F, 240F);
     }
 
     public static void renderFive() {
-        glPolygonOffset(1.0F, 2000000F);
+        glPolygonOffset(1F, 2000000F);
         glDisable(GL_POLYGON_OFFSET_LINE);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(true);

@@ -22,16 +22,14 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.item.ItemBow
 import java.awt.Color
 
-object BowAimbot : Module("BowAimbot", category = ModuleCategory.COMBAT) {
+object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
 
-    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
-    private val predictValue = BoolValue("Predict", true)
-    private val predictSizeValue = object : FloatValue("PredictSize", 2F, 0.1F, 5F) {
-        override fun isSupported() = predictValue.get()
-    }
-    private val silentValue = BoolValue("Silent", true)
-    private val throughWallsValue = BoolValue("ThroughWalls", false)
-    private val markValue = BoolValue("Mark", true)
+    private val priority by ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
+    private val predict by BoolValue("Predict", true)
+    private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F) { predict }
+    private val silent by BoolValue("Silent", true)
+    private val throughWalls by BoolValue("ThroughWalls", false)
+    private val mark by BoolValue("Mark", true)
 
     private var target: Entity? = null
 
@@ -44,16 +42,16 @@ object BowAimbot : Module("BowAimbot", category = ModuleCategory.COMBAT) {
         target = null
 
         if (mc.thePlayer.itemInUse?.item is ItemBow) {
-            val entity = getTarget(throughWallsValue.get(), priorityValue.get()) ?: return
+            val entity = getTarget(throughWalls, priority) ?: return
 
             target = entity
-            faceBow(entity, silentValue.get(), predictValue.get(), predictSizeValue.get())
+            faceBow(entity, silent, predict, predictSize)
         }
     }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (target != null && priorityValue.get() != "Multi" && markValue.get())
+        if (target != null && priority != "Multi" && mark)
             drawPlatform(target!!, Color(37, 126, 255, 70))
     }
 

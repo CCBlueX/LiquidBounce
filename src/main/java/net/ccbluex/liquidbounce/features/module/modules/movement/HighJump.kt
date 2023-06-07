@@ -20,21 +20,19 @@ import net.minecraft.block.BlockPane
 import net.minecraft.util.BlockPos
 
 object HighJump : Module("HighJump", ModuleCategory.MOVEMENT) {
-    private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")
-    private val heightValue = object : FloatValue("Height", 2f, 1.1f, 5f) {
-        override fun isSupported() = modeValue.get() in setOf("Vanilla", "Damage")
-    }
-    private val glassValue = BoolValue("OnlyGlassPane", false)
+    private val mode by ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")
+    private val height by FloatValue("Height", 2f, 1.1f..5f) { mode in arrayOf("Vanilla", "Damage") }
+    private val glass by BoolValue("OnlyGlassPane", false)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
-        if (glassValue.get() && getBlock(BlockPos(thePlayer)) !is BlockPane)
+        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
 
-        when (modeValue.get().lowercase()) {
-            "damage" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) thePlayer.motionY += 0.42f * heightValue.get()
+        when (mode.lowercase()) {
+            "damage" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) thePlayer.motionY += 0.42f * height
             "aacv3" -> if (!thePlayer.onGround) thePlayer.motionY += 0.059
             "dac" -> if (!thePlayer.onGround) thePlayer.motionY += 0.049999
             "mineplex" -> if (!thePlayer.onGround) strafe(0.35f)
@@ -45,10 +43,10 @@ object HighJump : Module("HighJump", ModuleCategory.MOVEMENT) {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (glassValue.get() && getBlock(BlockPos(thePlayer)) !is BlockPane)
+        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
         if (!thePlayer.onGround) {
-            if ("mineplex" == modeValue.get().lowercase()) {
+            if ("mineplex" == mode.lowercase()) {
                 thePlayer.motionY += if (thePlayer.fallDistance == 0f) 0.0499 else 0.05
             }
         }
@@ -58,14 +56,14 @@ object HighJump : Module("HighJump", ModuleCategory.MOVEMENT) {
     fun onJump(event: JumpEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (glassValue.get() && getBlock(BlockPos(thePlayer)) !is BlockPane)
+        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
-        when (modeValue.get().lowercase()) {
-            "vanilla" -> event.motion = event.motion * heightValue.get()
+        when (mode.lowercase()) {
+            "vanilla" -> event.motion = event.motion * height
             "mineplex" -> event.motion = 0.47f
         }
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

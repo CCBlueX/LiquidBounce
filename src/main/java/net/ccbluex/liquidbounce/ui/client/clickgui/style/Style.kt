@@ -23,7 +23,7 @@ abstract class Style : MinecraftInstance() {
         }
 
     abstract fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
-    abstract fun drawDescription(mouseX: Int, mouseY: Int, text: String)
+    abstract fun drawHoverText(mouseX: Int, mouseY: Int, text: String)
     abstract fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
     abstract fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean
 

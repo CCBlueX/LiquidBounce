@@ -15,7 +15,7 @@ import net.minecraft.client.gui.GuiGameOver
 
 object AutoRespawn : Module("AutoRespawn", ModuleCategory.PLAYER) {
 
-    private val instantValue = BoolValue("Instant", true)
+    private val instant by BoolValue("Instant", true)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -24,7 +24,7 @@ object AutoRespawn : Module("AutoRespawn", ModuleCategory.PLAYER) {
         if (thePlayer == null || Ghost.state)
             return
 
-        if (if (instantValue.get()) mc.thePlayer.health == 0F || mc.thePlayer.isDead else mc.currentScreen is GuiGameOver
+        if (if (instant) mc.thePlayer.health == 0F || mc.thePlayer.isDead else mc.currentScreen is GuiGameOver
                     && (mc.currentScreen as GuiGameOver).enableButtonsTimer >= 20) {
             thePlayer.respawnPlayer()
             mc.displayGuiScreen(null)

@@ -28,7 +28,7 @@ object HttpUtils {
         HttpURLConnection.setFollowRedirects(true)
     }
 
-    private fun make(url: String, method: String, agent: String = DEFAULT_AGENT): HttpURLConnection {
+    private fun make(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()) : HttpURLConnection {
         val httpConnection = URL(url).openConnection() as HttpURLConnection
 
         httpConnection.requestMethod = method
@@ -37,6 +37,10 @@ object HttpUtils {
 
         httpConnection.setRequestProperty("User-Agent", agent)
 
+        for ((key, value) in headers) {
+            httpConnection.setRequestProperty(key, value)
+        }
+
         httpConnection.instanceFollowRedirects = true
         httpConnection.doOutput = true
 
@@ -44,12 +48,12 @@ object HttpUtils {
     }
 
     @Throws(IOException::class)
-    fun request(url: String, method: String, agent: String = DEFAULT_AGENT) =
-        requestStream(url, method, agent).reader().readText()
+    fun request(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()) =
+        requestStream(url, method, agent, headers).reader().readText()
 
     @Throws(IOException::class)
-    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT): InputStream =
-        make(url, method, agent).inputStream
+    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): InputStream =
+        make(url, method, agent, headers).inputStream
 
     @Throws(IOException::class)
     fun get(url: String) = request(url, "GET")

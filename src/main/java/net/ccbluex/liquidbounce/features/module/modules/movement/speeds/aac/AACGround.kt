@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
-import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.aacGroundTimerValue
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.aacGroundTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -17,7 +17,7 @@ class AACGround : SpeedMode("AACGround") {
         if (!isMoving)
             return
 
-        mc.timer.timerSpeed = aacGroundTimerValue.get()
+        mc.timer.timerSpeed = aacGroundTimer
         sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true))
     }
 

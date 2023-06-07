@@ -142,10 +142,10 @@ object ClientRichPresence : MinecraftInstance() {
 
         // Check has app id
         if (json.has("appID"))
-            appID = json.get("appID").asLong
+            appID = json["appID"].asLong
 
         // Import all asset names
-        for ((key, value) in json.get("assets").asJsonObject.entrySet())
+        for ((key, value) in json["assets"].asJsonObject.entrySet())
             assets[key] = value.asString
     }
 }

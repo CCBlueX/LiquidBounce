@@ -20,15 +20,11 @@ import net.minecraft.client.settings.GameSettings
 object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
     private val undetectable = BoolValue("Undetectable", false)
-    val aacAdditionProValue = BoolValue("AACAdditionPro", false)
+    val aacAdditionPro by BoolValue("AACAdditionPro", false)
 
-    private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
-    private val noClicksAirValue = object : BoolValue("NoClicksInAir", false) {
-        override fun isSupported() = noMoveClicksValue.get()
-    }
-    private val noClicksGroundValue = object : BoolValue("NoClicksOnGround", true) {
-        override fun isSupported() = noMoveClicksValue.get()
-    }
+    private val noMoveClicks by BoolValue("NoMoveClicks", false)
+    private val noClicksAir by BoolValue("NoClicksInAir", false) { noMoveClicks }
+    private val noClicksGround by BoolValue("NoClicksOnGround", true) { noMoveClicks }
 
     private val affectedBindings = arrayOf(
         mc.gameSettings.keyBindForward,
@@ -39,21 +35,23 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
         mc.gameSettings.keyBindSprint
     )
 
+    fun canClickInventory() =
+        !state || !isMoving || !noMoveClicks || (if (mc.thePlayer.onGround) !noClicksGround else !noClicksAir)
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable.get() || mc.currentScreen !is GuiContainer)) {
             for (affectedBinding in affectedBindings) {
-                affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
+                val shouldExcept = Sprint.state && Sprint.mode == "Legit"
+                affectedBinding.pressed = if (affectedBinding == affectedBindings.last() && shouldExcept) true else GameSettings.isKeyDown(affectedBinding)
             }
         }
     }
 
     @EventTarget
     fun onClick(event: ClickWindowEvent) {
-        if (noMoveClicksValue.get() && isMoving &&
-            if (mc.thePlayer.onGround) noClicksGroundValue.get()
-            else noClicksAirValue.get()
-        ) event.cancelEvent()
+        if (!canClickInventory())
+            event.cancelEvent()
     }
 
     override fun onDisable() {
@@ -66,5 +64,5 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = if (aacAdditionProValue.get()) "AACAdditionPro" else null
+        get() = if (aacAdditionPro) "AACAdditionPro" else null
 }

@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.Render3DEvent;
+import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack;
@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator;
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
-import net.ccbluex.liquidbounce.utils.item.ItemUtils;
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
@@ -31,6 +30,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
+import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.isEmpty;
+import static net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT;
+
 public class AutoArmor extends Module {
 
     public AutoArmor() {
@@ -38,26 +42,26 @@ public class AutoArmor extends Module {
     }
 
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
-    private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {
+    private final IntegerValue maxTicksValue = new IntegerValue("MaxTicks", 4, 0, 10) {
         @Override
         protected Integer onChange(final Integer oldValue, final Integer newValue) {
-            final int minDelay = minDelayValue.get();
+            final int minDelay = minTicksValue.get();
 
             return newValue > minDelay ? newValue : minDelay;
         }
     };
-    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400) {
+    private final IntegerValue minTicksValue = new IntegerValue("MinTicks", 2, 0, 10) {
 
         @Override
         protected Integer onChange(final Integer oldValue, final Integer newValue) {
-            final int maxDelay = maxDelayValue.get();
+            final int maxDelay = maxTicksValue.get();
 
             return newValue < maxDelay ? newValue : maxDelay;
         }
 
         @Override
         public boolean isSupported() {
-            return !maxDelayValue.isMinimal();
+            return !maxTicksValue.isMinimal();
         }
     };
 
@@ -69,7 +73,7 @@ public class AutoArmor extends Module {
         }
     };
     private final BoolValue noMoveValue = new BoolValue("NoMove", false);
-    private final IntegerValue itemDelayValue = new IntegerValue("ItemDelay", 0, 0, 5000);
+    private final IntegerValue itemTicksValue = new IntegerValue("ItemTicks", 0, 0, 20);
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
 
     private long delay;
@@ -77,15 +81,15 @@ public class AutoArmor extends Module {
     private boolean locked = false;
 
     @EventTarget
-    public void onRender3D(final Render3DEvent event) {
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.thePlayer == null || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
+    public void onTick(final TickEvent event) {
+        if (!InventoryUtils.INSTANCE.getCLICK_TIMER().hasTimePassed(delay * 50L) || mc.thePlayer == null || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
             return;
 
         // Find best armor
         final Map<Integer, List<ArmorPiece>> armorPieces = IntStream.range(0, 36).filter(i -> {
             final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(i);
 
-            return itemStack != null && itemStack.getItem() instanceof ItemArmor && (i < 9 || System.currentTimeMillis() - ((IMixinItemStack) (Object) itemStack).getItemDelay() >= itemDelayValue.get());
+            return itemStack != null && itemStack.getItem() instanceof ItemArmor && (i < 9 || System.currentTimeMillis() - ((IMixinItemStack) (Object) itemStack).getItemDelay() >= itemTicksValue.get() * 50L);
         }).mapToObj(i -> new ArmorPiece(mc.thePlayer.inventory.getStackInSlot(i), i)).collect(Collectors.groupingBy(ArmorPiece::getArmorType));
 
         final ArmorPiece[] bestArmor = new ArmorPiece[4];
@@ -104,13 +108,13 @@ public class AutoArmor extends Module {
 
             final ArmorPiece oldArmor = new ArmorPiece(mc.thePlayer.inventory.armorItemInSlot(armorSlot), -1);
 
-            if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !(oldArmor.getItemStack().getItem() instanceof ItemArmor) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
-                if (!ItemUtils.isStackEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true)) {
+            if (isEmpty(oldArmor.getItemStack()) || !(oldArmor.getItemStack().getItem() instanceof ItemArmor) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
+                if (!isEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true)) {
                     locked = true;
                     return;
                 }
 
-                if (ItemUtils.isStackEmpty(mc.thePlayer.inventory.armorItemInSlot(armorSlot)) && move(armorPiece.getSlot(), false)) {
+                if (isEmpty(mc.thePlayer.inventory.armorItemInSlot(armorSlot)) && move(armorPiece.getSlot(), false)) {
                     locked = true;
                     return;
                 }
@@ -133,23 +137,25 @@ public class AutoArmor extends Module {
      */
     private boolean move(int item, boolean isArmorSlot) {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !(mc.currentScreen instanceof GuiInventory)) {
-            mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(item));
-            mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()));
-            mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+            sendPackets(
+                new C09PacketHeldItemChange(item),
+                new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()),
+                new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
+            );
 
-            delay = TimeUtils.INSTANCE.randomDelay(minDelayValue.get(), maxDelayValue.get());
+            delay = TimeUtils.INSTANCE.randomDelay(minTicksValue.get(), maxTicksValue.get());
 
             return true;
         } else if (!(noMoveValue.get() && MovementUtils.INSTANCE.isMoving()) && (!invOpenValue.get() || mc.currentScreen instanceof GuiInventory) && item != -1) {
             final boolean openInventory = simulateInventory.get() && !(mc.currentScreen instanceof GuiInventory);
 
-            if (openInventory) mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
+            if (openInventory) sendPacket(new C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT));
 
             boolean full = isArmorSlot;
 
             if (full) {
                 for (ItemStack iItemStack : mc.thePlayer.inventory.mainInventory) {
-                    if (ItemUtils.isStackEmpty(iItemStack)) {
+                    if (isEmpty(iItemStack)) {
                         full = false;
                         break;
                     }
@@ -162,10 +168,10 @@ public class AutoArmor extends Module {
                 mc.playerController.windowClick(mc.thePlayer.inventoryContainer.windowId, (isArmorSlot ? item : (item < 9 ? item + 36 : item)), 0, 1, mc.thePlayer);
             }
 
-            delay = TimeUtils.INSTANCE.randomDelay(minDelayValue.get(), maxDelayValue.get());
+            delay = TimeUtils.INSTANCE.randomDelay(minTicksValue.get(), maxTicksValue.get());
 
             if (openInventory)
-                mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
+                sendPacket(new C0DPacketCloseWindow());
 
             return true;
         }

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.block.BlockCarpet
 import kotlin.math.cos
 import kotlin.math.sin
@@ -25,7 +26,7 @@ class AACHop3313 : SpeedMode("AACHop3.3.13") {
                 thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
         if (thePlayer.onGround && thePlayer.isCollidedVertically) {
             // MotionXYZ
-            val yawRad = thePlayer.rotationYaw * 0.017453292f
+            val yawRad = thePlayer.rotationYaw.toRadians()
             thePlayer.motionX -= sin(yawRad) * 0.202f
             thePlayer.motionZ += cos(yawRad) * 0.202f
             thePlayer.motionY = 0.405

@@ -33,7 +33,7 @@ class XRayConfig(file: File) : FileConfig(file) {
                     LOGGER.error("[FileManager] Skipped xray block '${block.registryName}' because the block is already added.")
                     continue
                 }
-                XRay.xrayBlocks.add(block)
+                XRay.xrayBlocks += block
             } catch (throwable: Throwable) {
                 LOGGER.error("[FileManager] Failed to add block to xray.", throwable)
             }

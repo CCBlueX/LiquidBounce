@@ -28,18 +28,12 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER) {
-    val infoValue = BoolValue("Info", false)
+    val info by BoolValue("Info", false)
 
     private val colorRainbow = BoolValue("Rainbow", false)
-    private val colorRedValue = object : IntegerValue("R", 68, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorGreenValue = object : IntegerValue("G", 117, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
+    private val colorRed by IntegerValue("R", 68, 0..255) { !colorRainbow.get() }
+    private val colorGreen by IntegerValue("G", 117, 0..255) { !colorRainbow.get() }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow.get() }
 
     val currentBlock: BlockPos?
         get() {
@@ -58,8 +52,8 @@ object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER) {
         val block = getBlock(blockPos) ?: return
         val partialTicks = event.partialTicks
 
-        val color = if (colorRainbow.get()) rainbow(alpha = 0.4F) else Color(colorRedValue.get(),
-                colorGreenValue.get(), colorBlueValue.get(), (0.4F * 255).toInt())
+        val color = if (colorRainbow.get()) rainbow(alpha = 0.4F) else Color(colorRed,
+                colorGreen, colorBlue, (0.4F * 255).toInt())
 
         enableBlend()
         tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
@@ -91,7 +85,7 @@ object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (infoValue.get()) {
+        if (info) {
             val blockPos = currentBlock ?: return
             val block = getBlock(blockPos) ?: return
 

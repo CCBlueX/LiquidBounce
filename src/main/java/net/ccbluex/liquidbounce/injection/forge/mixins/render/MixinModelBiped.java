@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
@@ -39,7 +38,7 @@ public class MixinModelBiped {
         if (heldItemRight == 3) bipedRightArm.rotateAngleY = 0F;
 
         if (Rotations.INSTANCE.shouldRotate() && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(mc.thePlayer)) {
-            bipedHead.rotateAngleX = (float) Math.toRadians(RotationUtils.INSTANCE.getServerRotation().getPitch());
+            bipedHead.rotateAngleX = (float) Math.toRadians(Rotations.INSTANCE.lerp(mc.timer.renderPartialTicks, Rotations.INSTANCE.getPrevHeadPitch(), Rotations.INSTANCE.getHeadPitch()));
         }
     }
 }

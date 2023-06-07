@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
+import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.api.UpdateInfo
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -20,15 +20,17 @@ class GuiUpdate : GuiScreen() {
     override fun initGui() {
         val j = height / 4 + 48
 
-        buttonList.add(GuiButton(1, width / 2 + 2, j + 24 * 2, 98, 20, "Ignore"))
-        buttonList.add(GuiButton(2, width / 2 - 100, j + 24 * 2, 98, 20, "Go to download page"))
+        buttonList.run {
+            add(GuiButton(1, width / 2 + 2, j + 24 * 2, 98, 20, "Ignore"))
+            add(GuiButton(2, width / 2 - 100, j + 24 * 2, 98, 20, "Go to download page"))
+        }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
         if (!IN_DEV) {
-            Fonts.font35.drawCenteredString("${UpdateInfo.newestVersion?.lbVersion} got released!", width / 2f, height / 8f + 80, 0xffffff)
+            Fonts.font35.drawCenteredString("${ClientUpdate.newestVersion?.lbVersion} got released!", width / 2f, height / 8f + 80, 0xffffff)
         } else {
             Fonts.font35.drawCenteredString("New build available!", width / 2f, height / 8f + 80, 0xffffff)
         }

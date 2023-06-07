@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -19,7 +20,7 @@ class NCPYPort : SpeedMode("NCPYPort") {
         if (jumps >= 4 && mc.thePlayer.onGround) jumps = 0
         if (mc.thePlayer.onGround) {
             mc.thePlayer.motionY = if (jumps <= 1) 0.42 else 0.4
-            val f = mc.thePlayer.rotationYaw * 0.017453292f
+            val f = mc.thePlayer.rotationYaw.toRadians()
             mc.thePlayer.motionX -= sin(f) * 0.2f
             mc.thePlayer.motionZ += cos(f) * 0.2f
             jumps++

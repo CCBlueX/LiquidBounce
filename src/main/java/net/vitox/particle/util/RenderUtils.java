@@ -1,5 +1,7 @@
 package net.vitox.particle.util;
 
+import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
+
 import static org.lwjgl.opengl.GL11.*;
 
 public class RenderUtils {
@@ -36,8 +38,12 @@ public class RenderUtils {
         glPushMatrix();
         glLineWidth(1F);
         glBegin(GL_POLYGON);
-        for(int i = 0; i <= 360; i++)
-            glVertex2d(x + Math.sin(i * Math.PI / 180.0D) * radius, y + Math.cos(i * Math.PI / 180.0D) * radius);
+
+        for (int i = 0; i <= 360; i++) {
+            double rad = MathExtensionsKt.toRadians(i);
+            glVertex2d(x + Math.sin(rad) * radius, y + Math.cos(rad) * radius);
+        }
+
         glEnd();
         glPopMatrix();
         glEnable(GL_TEXTURE_2D);

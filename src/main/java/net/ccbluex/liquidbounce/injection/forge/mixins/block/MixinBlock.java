@@ -82,7 +82,7 @@ public abstract class MixinBlock {
     private void isCollidable(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final GhostHand ghostHand = GhostHand.INSTANCE;
 
-        if (ghostHand.getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this))) {
+        if (ghostHand.getState() && !(ghostHand.getBlock() == Block.getIdFromBlock((Block) (Object) this))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -101,18 +101,18 @@ public abstract class MixinBlock {
         // NoSlowBreak
         final NoSlowBreak noSlowBreak = NoSlowBreak.INSTANCE;
         if (noSlowBreak.getState()) {
-            if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
+            if (noSlowBreak.getWater() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
                 f *= 5f;
             }
 
-            if (noSlowBreak.getAirValue().get() && !playerIn.onGround) {
+            if (noSlowBreak.getAir() && !playerIn.onGround) {
                 f *= 5f;
             }
         } else if (playerIn.onGround) { // NoGround
             final NoFall noFall = NoFall.INSTANCE;
             final Criticals criticals = Criticals.INSTANCE;
 
-            if (noFall.getState() && noFall.getModeValue().get().equals("NoGround") || criticals.getState() && criticals.getModeValue().get().equals("NoGround")) {
+            if (noFall.getState() && noFall.getMode().equals("NoGround") || criticals.getState() && criticals.getMode().equals("NoGround")) {
                 f /= 5F;
             }
         }

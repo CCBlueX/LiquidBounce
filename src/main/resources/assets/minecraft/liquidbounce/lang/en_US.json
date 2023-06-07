@@ -2,7 +2,8 @@
     "locale": "en_US",
     "contributors": [
         "1zuna",
-        "Zywl"
+        "Zywl",
+        "CzechHek"
     ],
     "translations": {
         "menu.altManager": "Alt Manager",
@@ -58,9 +59,9 @@
 
         "module.velocity.description": "Allows you to modify the amount of knockback you take.",
 
-        "module.abortBreaking.description:": "Allows you to abort breaking.",
+        "module.abortBreaking.description": "Allows you to abort breaking without losing your break progress.",
 
-        "module.ambience.description:" : "Change your world time and weather client-side.",
+        "module.ambience.description": "Change your world time and weather client-side.",
 
         "module.antiHunger.description": "Prevents you from getting hungry.",
 
@@ -82,7 +83,7 @@
         
         "module.antiCactus.description": "Prevents cacti from damaging you.",
         
-        "module.antiFireBall.description": "Automatically punches fireballs away from you.",
+        "module.antiFireball.description": "Automatically punches fireballs away from you.",
         
         "module.atAllProvider.description": "Automatically mentions everyone on the server when using '@a' in your message.",
         

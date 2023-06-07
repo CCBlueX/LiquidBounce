@@ -15,8 +15,11 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.network.play.client.C02PacketUseEntity;
-import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.util.Vec3;
+
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
+import static net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK;
+import static net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition;
 
 public class TeleportHit extends Module {
 
@@ -31,7 +34,7 @@ public class TeleportHit extends Module {
         if (event.getEventState() != EventState.PRE)
             return;
 
-        final Entity facedEntity = RaycastUtils.INSTANCE.raycastEntity(100D, raycastedEntity -> raycastedEntity instanceof EntityLivingBase);
+        final Entity facedEntity = RaycastUtils.INSTANCE.raycastEntity(100, raycastedEntity -> raycastedEntity instanceof EntityLivingBase);
 
         EntityPlayerSP thePlayer = mc.thePlayer;
 
@@ -39,7 +42,7 @@ public class TeleportHit extends Module {
             return;
 
         if (mc.gameSettings.keyBindAttack.isKeyDown() && EntityUtils.INSTANCE.isSelected(facedEntity, true)) {
-            if (facedEntity.getDistanceSqToEntity(mc.thePlayer) >= 1D) targetEntity = (EntityLivingBase) facedEntity;
+            if (facedEntity.getDistanceSqToEntity(mc.thePlayer) >= 1) targetEntity = (EntityLivingBase) facedEntity;
         }
 
         if (targetEntity != null) {
@@ -52,12 +55,12 @@ public class TeleportHit extends Module {
                 final Vec3 rotationVector = RotationUtils.INSTANCE.getVectorForRotation(new Rotation(mc.thePlayer.rotationYaw, 0F));
                 final double x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1f);
                 final double z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1f);
-                final double y = targetEntity.getPosition().getY() + 0.25D;
+                final double y = targetEntity.getPosition().getY() + 0.25;
 
-                PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
+                PathUtils.findPath(x, y + 1, z, 4).forEach(pos -> sendPacket(new C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
                 thePlayer.swingItem();
-                mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK));
+                sendPacket(new C02PacketUseEntity(targetEntity, ATTACK));
                 thePlayer.onCriticalHit(targetEntity);
                 shouldHit = false;
                 targetEntity = null;

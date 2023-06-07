@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.ClientUpdate;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
@@ -17,7 +18,6 @@ import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
-import net.ccbluex.liquidbounce.api.UpdateInfo;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
@@ -128,7 +128,7 @@ public abstract class MixinMinecraft {
     private void afterMainScreen(CallbackInfo callbackInfo) {
         if (FileManager.INSTANCE.getFirstStart()) {
             displayGuiScreen(new GuiWelcome());
-        } else if (UpdateInfo.INSTANCE.hasUpdate()) {
+        } else if (ClientUpdate.INSTANCE.hasUpdate()) {
             displayGuiScreen(new GuiUpdate());
         }
     }
@@ -223,12 +223,10 @@ public abstract class MixinMinecraft {
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
 
         final FastPlace fastPlace = FastPlace.INSTANCE;
-        if (!fastPlace.getState())
-            return;
+        if (!fastPlace.getState()) return;
 
         // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocksValue().get()
-                && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+        if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
             return;
 
         if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
@@ -238,9 +236,9 @@ public abstract class MixinMinecraft {
             // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
             if (blockState.getBlock().hasTileEntity(blockState)) return;
             // Return if not facing a block
-        } else if (fastPlace.getFacingBlocksValue().get()) return;
+        } else if (fastPlace.getFacingBlocks()) return;
 
-        rightClickDelayTimer = fastPlace.getSpeedValue().get();
+        rightClickDelayTimer = fastPlace.getSpeed();
     }
 
     @Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/WorldClient;Ljava/lang/String;)V", at = @At("HEAD"))

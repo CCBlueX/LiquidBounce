@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist.Companion.spacedModules
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.toLowerCamelCase
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
@@ -26,19 +26,21 @@ open class Module @JvmOverloads constructor(
 
     val name: String,
     val category: ModuleCategory,
-    private val forcedDescription: String? = null,
-    keyBind: Int = Keyboard.KEY_NONE,
+    defaultKeyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
-    private val canEnable: Boolean = true,
+    private val canBeEnabled: Boolean = true,
+    private val forcedDescription: String? = null,
     // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
     val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
 
 ) : MinecraftInstance(), Listenable {
 
     // Module information
-    fun getName(spaced: Boolean = spacedModules) = if (spaced) spacedName else name
 
-    var keyBind = keyBind
+    // Get normal or spaced name
+    fun getName(spaced: Boolean = Arraylist.spacedModules) = if (spaced) spacedName else name
+
+    var keyBind = defaultKeyBind
         set(keyBind) {
             field = keyBind
 
@@ -52,7 +54,7 @@ open class Module @JvmOverloads constructor(
             saveConfig(modulesConfig)
         }
 
-    val description: String
+    val description
         get() = forcedDescription ?: translation("module.${name.toLowerCamelCase()}.description")
 
     var slideStep = 0F
@@ -69,14 +71,14 @@ open class Module @JvmOverloads constructor(
             // Play sound and add notification
             if (!isStarting) {
                 mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
-                addNotification(Notification(if (value) translation("notification.moduleEnabled", getName()) else translation("notification.moduleDisabled", getName())))
+                addNotification(Notification(translation("notification.module" + if (value) "Enabled" else "Disabled", getName())))
             }
 
             // Call on enabled or disabled
             if (value) {
                 onEnable()
 
-                if (canEnable)
+                if (canBeEnabled)
                     field = true
             } else {
                 onDisable()
@@ -129,13 +131,13 @@ open class Module @JvmOverloads constructor(
     operator fun get(valueName: String) = getValue(valueName)
 
     /**
-     * Get all values of module
+     * Get all values of module with unique names
      */
-    open val values: List<Value<*>>
+    open val values
         get() = javaClass.declaredFields.map { valueField ->
             valueField.isAccessible = true
             valueField[this]
-        }.filterIsInstance<Value<*>>()
+        }.filterIsInstance<Value<*>>().distinctBy { it.name }
 
     /**
      * Events should be handled when module is enabled

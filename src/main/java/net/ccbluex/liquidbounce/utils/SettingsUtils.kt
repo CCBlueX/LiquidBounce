@@ -35,7 +35,7 @@ object SettingsUtils {
     /**
      * Execute settings [script]
      */
-    fun executeScript(script: String) {
+    fun applyScript(script: String) {
         script.lines().forEachIndexed { index, s ->
             if (s.isEmpty() || s.startsWith('#')) return@forEachIndexed
 
@@ -59,7 +59,7 @@ object SettingsUtils {
 
                     try {
                         displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l$url§7...")
-                        executeScript(get(url))
+                        applyScript(get(url))
                         displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings from §a§l$url§7.")
                     } catch (e: Exception) {
                         displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings from §a§l$url§7.")

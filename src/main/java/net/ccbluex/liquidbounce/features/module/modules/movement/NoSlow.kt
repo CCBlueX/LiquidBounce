@@ -27,21 +27,21 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 
-    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1f, 0.2F, 1f)
-    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1f, 0.2F, 1f)
+    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
+    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1f, 0.2F, 1f)
-    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F, 1f)
+    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
+    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1f, 0.2F, 1f)
-    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1f, 0.2F, 1f)
+    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1f, 0.2F..1f)
+    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1f, 0.2F..1f)
 
     // NCP mode
     private val packet = BoolValue("Packet", true)
 
     // Blocks
-    val soulsandValue = BoolValue("Soulsand", true)
-    val liquidPushValue = BoolValue("LiquidPush", true)
+    val soulsand by BoolValue("Soulsand", true)
+    val liquidPush by BoolValue("LiquidPush", true)
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
@@ -56,14 +56,10 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
         if (packet.get()) {
             when (event.eventState) {
-                EventState.PRE -> {
-                    val digging = C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN)
-                    sendPacket(digging)
-                }
-                EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f)
-                    sendPacket(blockPlace)
-                }
+                EventState.PRE ->
+                    sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN))
+                EventState.POST ->
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f))
             }
         }
     }

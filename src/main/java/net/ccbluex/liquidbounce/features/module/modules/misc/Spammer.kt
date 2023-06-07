@@ -20,41 +20,42 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.TextValue
 
 object Spammer : Module("Spammer", ModuleCategory.MISC) {
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 5000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0..5000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 
         override fun onChanged(oldValue: Int, newValue: Int) {
-            delay = randomDelay(minDelayValue.get(), get())
+            delay = randomDelay(minDelay, get())
         }
     }
+    private val maxDelay by maxDelayValue
 
-    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 5000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
+    private val minDelay: Int by object : IntegerValue("MinDelay", 500, 0..5000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 
         override fun onChanged(oldValue: Int, newValue: Int) {
-            delay = randomDelay(get(), maxDelayValue.get())
+            delay = randomDelay(get(), maxDelay)
         }
 
         override fun isSupported() = !maxDelayValue.isMinimal()
     }
 
-    private val messageValue =
+    private val message by
         TextValue("Message", "$CLIENT_NAME Client | liquidbounce(.net) | CCBlueX on yt")
 
-    private val customValue = BoolValue("Custom", false)
+    private val custom by BoolValue("Custom", false)
 
     private val msTimer = MSTimer()
-    private var delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+    private var delay = randomDelay(minDelay, maxDelay)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (msTimer.hasTimePassed(delay)) {
             mc.thePlayer.sendChatMessage(
-                if (customValue.get()) replace(messageValue.get())
-                else messageValue.get() + " >" + randomString(nextInt(5, 11)) + "<"
+                if (custom) replace(message)
+                else message + " >" + randomString(nextInt(5, 11)) + "<"
             )
             msTimer.reset()
-            delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+            delay = randomDelay(minDelay, maxDelay)
         }
     }
 

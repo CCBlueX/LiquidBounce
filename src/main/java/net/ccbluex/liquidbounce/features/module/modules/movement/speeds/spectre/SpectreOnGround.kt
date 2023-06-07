@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -26,7 +27,7 @@ class SpectreOnGround : SpeedMode("SpectreOnGround") {
             return
         }
         if (mc.thePlayer.onGround && mc.gameSettings.keyBindForward.isKeyDown) {
-            val f = mc.thePlayer.rotationYaw * 0.017453292f
+            val f = mc.thePlayer.rotationYaw.toRadians()
             mc.thePlayer.motionX -= sin(f) * 0.145f
             mc.thePlayer.motionZ += cos(f) * 0.145f
             event.x = mc.thePlayer.motionX

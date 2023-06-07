@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -38,30 +39,30 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         private val SQRT_OF_TWO = sqrt(2f)
     }
 
-    private val sizeValue = FloatValue("Size", 90f, 30f, 500f)
-    private val viewDistanceValue = FloatValue("View Distance", 4F, 0.5F, 32F)
+    private val sizeValue = FloatValue("Size", 90f, 30f..500f)
+    private val viewDistanceValue = FloatValue("View Distance", 4F, 0.5F..32F)
 
     private val playerShapeValue = ListValue("Player Shape", arrayOf("Triangle", "Rectangle", "Circle"), "Triangle")
-    private val playerSizeValue = FloatValue("Player Size", 2f, 0.5f, 20F)
+    private val playerSizeValue = FloatValue("Player Size", 2f, 0.5f..20F)
     private val useESPColorsValue = BoolValue("Use ESP Colors", true)
-    private val fovSizeValue = FloatValue("FOV Size", 10F, 0F, 50F)
-    private val fovAngleValue = FloatValue("FOV Angle", 70F, 30F, 160F)
+    private val fovSizeValue = FloatValue("FOV Size", 10F, 0F..50F)
+    private val fovAngleValue = FloatValue("FOV Angle", 70F, 30F..160F)
 
     private val minimapValue = BoolValue("Minimap", true)
 
-    private val rainbowXValue = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
-    private val rainbowYValue = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
+    private val rainbowXValue = FloatValue("Rainbow-X", -1000F, -2000F..2000F)
+    private val rainbowYValue = FloatValue("Rainbow-Y", -1000F, -2000F..2000F)
 
-    private val backgroundRedValue = IntegerValue("Background Red", 0, 0, 255)
-    private val backgroundGreenValue = IntegerValue("Background Green", 0, 0, 255)
-    private val backgroundBlueValue = IntegerValue("Background Blue", 0, 0, 255)
-    private val backgroundAlphaValue = IntegerValue("Background Alpha", 50, 0, 255)
+    private val backgroundRedValue = IntegerValue("Background Red", 0, 0..255)
+    private val backgroundGreenValue = IntegerValue("Background Green", 0, 0..255)
+    private val backgroundBlueValue = IntegerValue("Background Blue", 0, 0..255)
+    private val backgroundAlphaValue = IntegerValue("Background Alpha", 50, 0..255)
 
-    private val borderStrengthValue = FloatValue("Border Strength", 2F, 1F, 5F)
-    private val borderRedValue = IntegerValue("Border Red", 0, 0, 255)
-    private val borderGreenValue = IntegerValue("Border Green", 0, 0, 255)
-    private val borderBlueValue = IntegerValue("Border Blue", 0, 0, 255)
-    private val borderAlphaValue = IntegerValue("Border Alpha", 150, 0, 255)
+    private val borderStrengthValue = FloatValue("Border Strength", 2F, 1F..5F)
+    private val borderRedValue = IntegerValue("Border Red", 0, 0..255)
+    private val borderGreenValue = IntegerValue("Border Green", 0, 0..255)
+    private val borderBlueValue = IntegerValue("Border Blue", 0, 0..255)
+    private val borderAlphaValue = IntegerValue("Border Alpha", 150, 0..255)
     private val borderRainbowValue = BoolValue("Border Rainbow", false)
 
     private var fovMarkerVertexBuffer: VertexBuffer? = null
@@ -302,8 +303,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
 
         worldRenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION)
 
-        val start = (90f - (angle * 0.5f)) / 180f * Math.PI.toFloat()
-        val end = (90f + (angle * 0.5f)) / 180f * Math.PI.toFloat()
+        val start = (90f - (angle * 0.5f)).toRadians()
+        val end = (90f + (angle * 0.5f)).toRadians()
 
         var curr = end
         val radius = 1.0

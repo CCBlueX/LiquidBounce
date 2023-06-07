@@ -55,9 +55,9 @@
 
         "module.velocity.description": "Permite modificar a quantidade de recuo que você recebe.",
 
-        "module.abortBreaking.description:": "Permite interromper a quebra de blocos.",
+        "module.abortBreaking.description": "Permite interromper a quebra de blocos.",
 
-        "module.ambience.description:" : "Permite que você possa trocar o horário e o clima.",
+        "module.ambience.description": "Permite que você possa trocar o horário e o clima.",
 
         "module.antiHunger.description": "Impede que você fique com fome.",
 
@@ -79,7 +79,7 @@
 
         "module.antiCactus.description": "Impede que cactos o danifiquem.",
 
-        "module.antiFireBall.description": "Automáticamente tira as bolas de fogo longe de você.",
+        "module.antiFireball.description": "Automáticamente tira as bolas de fogo longe de você.",
 
         "module.atAllProvider.description": "Menciona automaticamente todos no servidor ao usar '@a' em sua mensagem.",
 

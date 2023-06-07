@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.minecraft.potion.Potion
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -97,25 +98,25 @@ class SNCPBHop : SpeedMode("SNCPBHop") {
         var forward = movementInput.moveForward
         var strafe = movementInput.moveStrafe
         var yaw = mc.thePlayer.rotationYaw
-        if (forward == 0.0f && strafe == 0.0f) {
+        if (forward == 0f && strafe == 0f) {
             event.x = 0.0
             event.z = 0.0
-        } else if (forward != 0.0f) {
-            if (strafe >= 1.0f) {
-                yaw += (if (forward > 0.0f) -45 else 45).toFloat()
-                strafe = 0.0f
-            } else if (strafe <= -1.0f) {
-                yaw += (if (forward > 0.0f) 45 else -45).toFloat()
-                strafe = 0.0f
+        } else if (forward != 0f) {
+            if (strafe >= 1f) {
+                yaw += (if (forward > 0f) -45 else 45).toFloat()
+                strafe = 0f
+            } else if (strafe <= -1f) {
+                yaw += (if (forward > 0f) 45 else -45).toFloat()
+                strafe = 0f
             }
-            if (forward > 0.0f) {
-                forward = 1.0f
-            } else if (forward < 0.0f) {
-                forward = -1.0f
+            if (forward > 0f) {
+                forward = 1f
+            } else if (forward < 0f) {
+                forward = -1f
             }
         }
-        val mx2 = cos(Math.toRadians(yaw + 90.0f.toDouble()))
-        val mz2 = sin(Math.toRadians(yaw + 90.0f.toDouble()))
+        val mx2 = cos((yaw + 90f).toRadiansD())
+        val mz2 = sin((yaw + 90f).toRadiansD())
         event.x = forward * moveSpeed * mx2 + strafe * moveSpeed * mz2
         event.z = forward * moveSpeed * mz2 - strafe * moveSpeed * mx2
         mc.thePlayer.stepHeight = 0.6f

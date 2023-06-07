@@ -11,12 +11,12 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.init.Items
 
-object AutoRod : Module("AutoRod", category = ModuleCategory.COMBAT) {
+object AutoRod : Module("AutoRod", ModuleCategory.COMBAT) {
 
-    private val facingEnemy = BoolValue("FacingEnemy", true)
+    private val facingEnemy by BoolValue("FacingEnemy", true)
 
-    private val pushDelay = IntegerValue("PushDelay", 100, 50, 1000)
-    private val pullbackDelay = IntegerValue("PullbackDelay", 500, 50, 1000)
+    private val pushDelay by IntegerValue("PushDelay", 100, 50..1000)
+    private val pullbackDelay by IntegerValue("PullbackDelay", 500, 50..1000)
 
     private val pushTimer = MSTimer()
     private val rodPullTimer = MSTimer()
@@ -33,7 +33,7 @@ object AutoRod : Module("AutoRod", category = ModuleCategory.COMBAT) {
             // Check if rod pull timer has reached delay
             // mc.thePlayer.fishEntity?.caughtEntity != null is always null
 
-            if (rodPullTimer.hasTimePassed(pullbackDelay.get())) {
+            if (rodPullTimer.hasTimePassed(pullbackDelay)) {
                 if (switchBack != -1 && mc.thePlayer.inventory.currentItem != switchBack) {
                     // Switch back to previous item
                     mc.thePlayer.inventory.currentItem = switchBack
@@ -52,7 +52,7 @@ object AutoRod : Module("AutoRod", category = ModuleCategory.COMBAT) {
         } else {
             var rod = false
 
-            if (facingEnemy.get()) {
+            if (facingEnemy) {
                 // Check if player is facing enemy
                 var facingEntity = mc.objectMouseOver?.entityHit
 
@@ -69,7 +69,7 @@ object AutoRod : Module("AutoRod", category = ModuleCategory.COMBAT) {
                 rod = true
             }
 
-            if (rod && pushTimer.hasTimePassed(pushDelay.get())) {
+            if (rod && pushTimer.hasTimePassed(pushDelay)) {
                 // Check if player has rod in hand
                 if (mc.thePlayer.heldItem?.item != Items.fishing_rod) {
                     // Check if player has rod in hotbar

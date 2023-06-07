@@ -18,8 +18,8 @@ import net.minecraft.util.BlockPos
 
 object SafeWalk : Module("SafeWalk", ModuleCategory.MOVEMENT) {
 
-    private val airSafeValue = BoolValue("AirSafe", false)
-    private val maxFallDistanceValue = IntegerValue("MaxFallDistance", 5, 0, 100)
+    private val airSafe by BoolValue("AirSafe", false)
+    private val maxFallDistanceValue = IntegerValue("MaxFallDistance", 5, 0..100)
 
     private var lastGroundY: Double? = null
     private var lastCollisionY: Int? = null
@@ -35,7 +35,7 @@ object SafeWalk : Module("SafeWalk", ModuleCategory.MOVEMENT) {
             lastCollisionY = FallingPlayer(player, true).findCollision(60)?.pos?.y
         }
 
-        if (airSafeValue.get() || player.onGround) {
+        if (airSafe || player.onGround) {
             event.isSafeWalk = maxFallDistanceValue.isMinimal()
                     || (lastGroundY != null && lastCollisionY != null
                     && lastGroundY!! - lastCollisionY!! > maxFallDistanceValue.get() + 1)

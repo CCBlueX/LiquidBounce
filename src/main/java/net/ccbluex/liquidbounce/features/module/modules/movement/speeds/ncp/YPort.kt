@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.MovementUtils.hasMotion
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.block.Block
 import net.minecraft.block.material.Material
 import net.minecraft.init.Blocks
@@ -89,14 +90,14 @@ class YPort : SpeedMode("YPort") {
             if (strafe >= 1f) {
                 yaw += (if (forward > 0f) -45 else 45).toFloat()
                 strafe = 0f
-            } else if (strafe <= -1.0f) {
+            } else if (strafe <= -1f) {
                 yaw += (if (forward > 0f) 45 else -45).toFloat()
                 strafe = 0f
             }
             if (forward > 0f) forward = 1f else if (forward < 0f) forward = -1f
         }
-        val mx = cos(Math.toRadians(yaw + 90.0f.toDouble()))
-        val mz = sin(Math.toRadians(yaw + 90.0f.toDouble()))
+        val mx = cos((yaw + 90.0).toRadians())
+        val mz = sin((yaw + 90.0).toRadians())
         event.x = forward * moveSpeed * mx + strafe * moveSpeed * mz
         event.z = forward * moveSpeed * mz - strafe * moveSpeed * mx
 
