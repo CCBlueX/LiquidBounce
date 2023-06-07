@@ -58,7 +58,7 @@ object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
                     if (!retry || retryQueue.isEmpty())
                         return
                     else
-                        sendQueue.addAll(retryQueue)
+                        sendQueue += retryQueue
                 }
 
                 mc.thePlayer.sendChatMessage(sendQueue.take())
@@ -84,12 +84,12 @@ object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
                         if (playerName == mc.thePlayer.name)
                             continue
 
-                        sendQueue.add(message.replace("@a", playerName))
+                        sendQueue += message.replace("@a", playerName)
                     }
                     if (retry) {
                         synchronized(retryQueue) {
                             retryQueue.clear()
-                            retryQueue.addAll(listOf(*sendQueue.toTypedArray()))
+                            retryQueue += sendQueue
                         }
                     }
                 }

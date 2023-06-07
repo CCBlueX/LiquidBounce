@@ -60,32 +60,39 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         searchField.maxStringLength = Int.MAX_VALUE
         
         altsList = GuiList(this)
-        altsList.registerScrollButtons(7, 8)
-        
-        val mightBeTheCurrentAccount = accountsConfig.accounts.indexOfFirst { it.name == mc.session.username }
-        altsList.elementClicked(mightBeTheCurrentAccount, false, 0, 0)
-        altsList.scrollBy(mightBeTheCurrentAccount * altsList.getSlotHeight())
+        altsList.run {
+            registerScrollButtons(7, 8)
+
+            val mightBeTheCurrentAccount = accountsConfig.accounts.indexOfFirst { it.name == mc.session.username }
+            elementClicked(mightBeTheCurrentAccount, false, 0, 0)
+
+            scrollBy(mightBeTheCurrentAccount * altsList.getSlotHeight())
+        }
+
+
 
         // Setup buttons
 
         val startPositionY = 22
-        buttonList.add(GuiButton(1, width - 80, startPositionY + 24, 70, 20, "Add"))
-        buttonList.add(GuiButton(2, width - 80, startPositionY + 24 * 2, 70, 20, "Remove").also { removeButton = it })
-        buttonList.add(GuiButton(7, width - 80, startPositionY + 24 * 3, 70, 20, "Import"))
-        buttonList.add(GuiButton(12, width - 80, startPositionY + 24 * 4, 70, 20, "Export"))
-        buttonList.add(GuiButton(8, width - 80, startPositionY + 24 * 5, 70, 20, "Copy"))
-        buttonList.add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
-        buttonList.add(GuiButton(3, 5, startPositionY + 24, 90, 20, "Login").also { loginButton = it })
-        buttonList.add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random Alt").also { randomAltButton = it })
-        buttonList.add(GuiButton(5, 5, startPositionY + 24 * 3, 90, 20, "Random Name").also { randomNameButton = it })
-        buttonList.add(GuiButton(6, 5, startPositionY + 24 * 4, 90, 20, "Direct Login"))
-        buttonList.add(GuiButton(10, 5, startPositionY + 24 * 5, 90, 20, "Session Login"))
+        buttonList.run {
+            add(GuiButton(1, width - 80, startPositionY + 24, 70, 20, "Add"))
+            add(GuiButton(2, width - 80, startPositionY + 24 * 2, 70, 20, "Remove").also { removeButton = it })
+            add(GuiButton(7, width - 80, startPositionY + 24 * 3, 70, 20, "Import"))
+            add(GuiButton(12, width - 80, startPositionY + 24 * 4, 70, 20, "Export"))
+            add(GuiButton(8, width - 80, startPositionY + 24 * 5, 70, 20, "Copy"))
+            add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
+            add(GuiButton(3, 5, startPositionY + 24, 90, 20, "Login").also { loginButton = it })
+            add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random Alt").also { randomAltButton = it })
+            add(GuiButton(5, 5, startPositionY + 24 * 3, 90, 20, "Random Name").also { randomNameButton = it })
+            add(GuiButton(6, 5, startPositionY + 24 * 4, 90, 20, "Direct Login"))
+            add(GuiButton(10, 5, startPositionY + 24 * 5, 90, 20, "Session Login"))
 
-        if (activeGenerators.getOrDefault("thealtening", true)) {
-            buttonList.add(GuiButton(9, 5, startPositionY + 24 * 6, 90, 20, "TheAltening"))
+            if (activeGenerators.getOrDefault("thealtening", true)) {
+                add(GuiButton(9, 5, startPositionY + 24 * 6, 90, 20, "TheAltening"))
+            }
+
+            add(GuiButton(11, 5, startPositionY + 24 * 7, 90, 20, "Cape"))
         }
-
-        buttonList.add(GuiButton(11, 5, startPositionY + 24 * 7, 90, 20, "Cape"))
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {

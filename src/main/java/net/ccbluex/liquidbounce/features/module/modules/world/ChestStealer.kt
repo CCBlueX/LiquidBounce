@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.item.isEmpty
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
@@ -136,7 +136,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                         val stack = slot.stack
 
                         if (stack != null && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1)))
-                            items.add(slot)
+                            items += slot
                     }
 
                     val randomSlot = nextInt(endExclusive = items.size)
@@ -173,7 +173,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     }
 
     private fun shouldTake(stack: ItemStack?): Boolean {
-        return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItems || stack.item !is ItemBlock)
+        return stack != null && !stack.isEmpty && (!onlyItems || stack.item !is ItemBlock)
                 && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1))
     }
 
@@ -197,5 +197,5 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     }
 
     private val fullInventory
-        get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
+        get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemStack::isEmpty) ?: false
 }

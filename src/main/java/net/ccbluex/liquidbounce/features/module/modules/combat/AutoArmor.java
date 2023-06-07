@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
@@ -15,7 +14,6 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator;
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
-import net.ccbluex.liquidbounce.utils.item.ItemUtils;
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
@@ -34,6 +32,7 @@ import java.util.stream.IntStream;
 
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
+import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.isEmpty;
 import static net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT;
 
 public class AutoArmor extends Module {
@@ -83,7 +82,7 @@ public class AutoArmor extends Module {
 
     @EventTarget
     public void onTick(final TickEvent event) {
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay * 50L) || mc.thePlayer == null || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
+        if (!InventoryUtils.INSTANCE.getCLICK_TIMER().hasTimePassed(delay * 50L) || mc.thePlayer == null || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
             return;
 
         // Find best armor
@@ -109,13 +108,13 @@ public class AutoArmor extends Module {
 
             final ArmorPiece oldArmor = new ArmorPiece(mc.thePlayer.inventory.armorItemInSlot(armorSlot), -1);
 
-            if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !(oldArmor.getItemStack().getItem() instanceof ItemArmor) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
-                if (!ItemUtils.isStackEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true)) {
+            if (isEmpty(oldArmor.getItemStack()) || !(oldArmor.getItemStack().getItem() instanceof ItemArmor) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
+                if (!isEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true)) {
                     locked = true;
                     return;
                 }
 
-                if (ItemUtils.isStackEmpty(mc.thePlayer.inventory.armorItemInSlot(armorSlot)) && move(armorPiece.getSlot(), false)) {
+                if (isEmpty(mc.thePlayer.inventory.armorItemInSlot(armorSlot)) && move(armorPiece.getSlot(), false)) {
                     locked = true;
                     return;
                 }
@@ -156,7 +155,7 @@ public class AutoArmor extends Module {
 
             if (full) {
                 for (ItemStack iItemStack : mc.thePlayer.inventory.mainInventory) {
-                    if (ItemUtils.isStackEmpty(iItemStack)) {
+                    if (isEmpty(iItemStack)) {
                         full = false;
                         break;
                     }

@@ -19,6 +19,6 @@ object Item {
      * @return An instance of [ItemStack] with the given data.
      */
     @JvmStatic
-    fun create(itemArguments: String): ItemStack = ItemUtils.createItem(itemArguments)
+    fun create(itemArguments: String): ItemStack? = ItemUtils.createItem(itemArguments)
 
 }

@@ -98,7 +98,7 @@ object LiquidBounce {
         registerListener(ClientFixes)
         registerListener(BungeeCordSpoof)
         registerListener(CapeService)
-        registerListener(InventoryUtils())
+        registerListener(InventoryUtils)
         registerListener(MiniMapRegister)
 
         // Load client fonts

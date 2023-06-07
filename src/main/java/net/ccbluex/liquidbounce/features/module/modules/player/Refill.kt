@@ -1,13 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
+import net.ccbluex.liquidbounce.utils.InventoryUtils.openInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.item.hasItemDelayPassed
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -18,7 +18,6 @@ import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C0EPacketClickWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
-import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val delay by IntegerValue("Delay", 400, 10..1000)
@@ -36,8 +35,6 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
 
     private val timer = MSTimer()
 
-    private var openInv = false
-
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (!timer.hasTimePassed(delay))
@@ -51,8 +48,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
 
         for (slot in 36..44) {
             val stack = mc.thePlayer.inventoryContainer.getSlot(slot).stack ?: continue
-            if (stack.stackSize == stack.maxStackSize
-                || (System.currentTimeMillis() - (stack as IMixinItemStack).itemDelay) < itemDelay) continue
+            if (stack.stackSize == stack.maxStackSize || !stack.hasItemDelayPassed(itemDelay)) continue
 
             when (mode) {
                 "Swap" -> {
@@ -94,25 +90,12 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
             }
         }
 
-        if (simulateInventory && openInv && mc.currentScreen !is GuiInventory)
+        if (simulateInventory && openInventory && mc.currentScreen !is GuiInventory)
             sendPacket(C0DPacketCloseWindow(mc.thePlayer.openContainer.windowId))
     }
 
-    @EventTarget(ignoreCondition = true)
-    fun onPacket(event: PacketEvent) {
-        val packet = event.packet
-        if (event.isCancelled) return
-
-        when (packet) {
-            is C16PacketClientStatus ->
-                if (packet.status == OPEN_INVENTORY_ACHIEVEMENT)
-                    openInv = true
-            is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInv = false
-        }
-    }
-
     fun click(slot: Int, button: Int, mode: Int, stack: ItemStack) {
-        if (simulateInventory && !openInv)
+        if (simulateInventory && !openInventory)
             sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
         sendPacket(

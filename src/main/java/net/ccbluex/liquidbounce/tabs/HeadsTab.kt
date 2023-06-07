@@ -42,8 +42,8 @@ class HeadsTab : CreativeTabs("Heads") {
 
             val headsConf = headsConfiguration.asJsonObject
 
-            if (headsConf.get("enabled").asBoolean) {
-                val url = headsConf.get("url").asString
+            if (headsConf["enabled"].asBoolean) {
+                val url = headsConf["url"].asString
 
                 LOGGER.info("Loading heads from $url...")
 
@@ -59,7 +59,7 @@ class HeadsTab : CreativeTabs("Heads") {
                 for ((_, value) in headsObject.entrySet()) {
                     val headElement = value.asJsonObject
 
-                    heads.add(ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}"))
+                    heads += ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement["name"].asString}\"},SkullOwner:{Id:\"${headElement["uuid"].asString}\",Properties:{textures:[{Value:\"${headElement["value"].asString}\"}]}}}")!!
                 }
 
                 LOGGER.info("Loaded " + heads.size + " heads from HeadDB.")
@@ -76,7 +76,7 @@ class HeadsTab : CreativeTabs("Heads") {
      * @param itemList list of tab items
      */
     override fun displayAllReleventItems(itemList: MutableList<ItemStack>) {
-        itemList.addAll(heads)
+        itemList += heads
     }
 
     /**

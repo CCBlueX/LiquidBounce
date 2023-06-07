@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
@@ -16,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.StringUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -41,9 +43,13 @@ object NullStyle : Style() {
         val width = lines.maxOfOrNull { font35.getStringWidth(it) + 14 } ?: return // Makes no sense to render empty lines
         val height = (font35.fontHeight * lines.size) + 3
 
-        drawRect(mouseX + 9, mouseY, mouseX + width, mouseY + height, guiColor)
+        // Don't draw hover text beyond window boundaries
+        val x = mouseX.coerceIn(0, (ScaledResolution(mc).scaledWidth / scale - width).roundToInt())
+        val y = mouseY.coerceIn(0, (ScaledResolution(mc).scaledHeight / scale - height).roundToInt())
+
+        drawRect(x + 9, y, x + width, y + height, guiColor)
         lines.forEachIndexed { index, text ->
-            font35.drawString(text, mouseX + 12, mouseY + 3 + (font35.fontHeight) * index, getNegatedColor())
+            font35.drawString(text, x + 12, y + 3 + (font35.fontHeight) * index, getNegatedColor())
         }
     }
 

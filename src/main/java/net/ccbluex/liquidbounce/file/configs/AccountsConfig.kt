@@ -37,7 +37,7 @@ class AccountsConfig(file: File) : FileConfig(file) {
             val accountObject = accountElement.asJsonObject
             try {
                 // Import Elixir account format
-                accounts.add(fromJson(accountElement.asJsonObject))
+                accounts += fromJson(accountElement.asJsonObject)
             } catch (e: JsonSyntaxException) {
                 // Import old account format
                 val name = accountObject["name"]
@@ -48,11 +48,11 @@ class AccountsConfig(file: File) : FileConfig(file) {
                     mojangAccount.email = name.asString
                     mojangAccount.name = inGameName.asString
                     mojangAccount.password = password.asString
-                    accounts.add(mojangAccount)
+                    accounts += mojangAccount
                 } else {
                     val crackedAccount = CrackedAccount()
                     crackedAccount.name = name.asString
-                    accounts.add(crackedAccount)
+                    accounts += crackedAccount
                 }
             } catch (e: IllegalStateException) {
                 val name = accountObject["name"]
@@ -63,11 +63,11 @@ class AccountsConfig(file: File) : FileConfig(file) {
                     mojangAccount.email = name.asString
                     mojangAccount.name = inGameName.asString
                     mojangAccount.password = password.asString
-                    accounts.add(mojangAccount)
+                    accounts += mojangAccount
                 } else {
                     val crackedAccount = CrackedAccount()
                     crackedAccount.name = name.asString
-                    accounts.add(crackedAccount)
+                    accounts += crackedAccount
                 }
             }
         }
@@ -97,7 +97,7 @@ class AccountsConfig(file: File) : FileConfig(file) {
         val crackedAccount = CrackedAccount()
         crackedAccount.name = name
 
-        if (!accountExists(crackedAccount)) accounts.add(crackedAccount)
+        if (!accountExists(crackedAccount)) accounts += crackedAccount
     }
 
     /**
@@ -111,7 +111,7 @@ class AccountsConfig(file: File) : FileConfig(file) {
         mojangAccount.name = name
         mojangAccount.password = password
 
-        if (!accountExists(mojangAccount)) accounts.add(mojangAccount)
+        if (!accountExists(mojangAccount)) accounts += mojangAccount
     }
 
     /**

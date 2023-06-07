@@ -153,10 +153,10 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
 
             if (entity is EntityPlayer) {
                 if (entity.onGround && entity.entityId !in groundList)
-                    groundList.add(entity.entityId)
+                    groundList += entity.entityId
 
                 if (!entity.onGround && entity.entityId !in airList)
-                    airList.add(entity.entityId)
+                    airList += entity.entityId
 
                 if (entity.onGround) {
                     if (entity.prevPosY != entity.posY)
@@ -164,16 +164,16 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
                 } else {
                     val currentVL = invalidGroundList.getOrDefault(entity.entityId, 0) / 2
                     if (currentVL <= 0)
-                        invalidGroundList.remove(entity.entityId)
+                        invalidGroundList -= entity.entityId
                     else
                         invalidGroundList[entity.entityId] = currentVL
                 }
 
                 if (entity.isInvisible && entity.entityId !in invisibleList)
-                    invisibleList.add(entity.entityId)
+                    invisibleList += entity.entityId
 
                 if (entity.entityId !in notAlwaysInRadiusList && mc.thePlayer.getDistanceToEntity(entity) > alwaysRadius)
-                    notAlwaysInRadiusList.add(entity.entityId)
+                    notAlwaysInRadiusList += entity.entityId
             }
         }
 
@@ -182,7 +182,7 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
 
             if (entity != null && entity is EntityLivingBase && packet.animationType == 0
                     && entity.entityId !in swingList)
-                swingList.add(entity.entityId)
+                swingList += entity.entityId
         }
     }
 
@@ -191,7 +191,7 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
         val entity = e.targetEntity
 
         if (entity != null && entity is EntityLivingBase && entity.entityId !in hitList)
-            hitList.add(entity.entityId)
+            hitList += entity.entityId
     }
 
     @EventTarget

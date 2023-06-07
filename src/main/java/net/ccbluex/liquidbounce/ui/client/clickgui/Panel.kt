@@ -8,11 +8,12 @@ package net.ccbluex.liquidbounce.ui.client.clickgui
 import net.ccbluex.liquidbounce.LiquidBounce.clickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.fadeSpeed
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.maxElements
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.panelsBorder
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.panelsForcedInBoundaries
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import java.util.*
@@ -30,17 +31,17 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
     private var updatePos = false
 
     private fun parseX(value: Int = x): Int {
-        if (!panelsBorder)
+        if (!panelsForcedInBoundaries)
             return value
 
         val settingsWidth =
             if (open) elements.filterIsInstance<ModuleElement>().maxOfOrNull { if (it.showSettings) it.settingsWidth else 0 } ?: 0
             else 0
 
-        return value.coerceIn(0, (mc.displayWidth / 2f / scale - width - settingsWidth).roundToInt().coerceAtLeast(0))
+        return value.coerceIn(0, (ScaledResolution(mc).scaledWidth / scale - width - settingsWidth).roundToInt().coerceAtLeast(0))
     }
     fun parseY(value: Int = y): Int {
-        if (!panelsBorder)
+        if (!panelsForcedInBoundaries)
             return value
 
         var yPos = height + 4
@@ -57,7 +58,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
                 }
             }
 
-        return value.coerceIn(0, (mc.displayHeight / 2f / scale - panelHeight).roundToInt().coerceAtLeast(0))
+        return value.coerceIn(0, (ScaledResolution(mc).scaledHeight / scale - panelHeight).roundToInt().coerceAtLeast(0))
     }
 
     var drag = false

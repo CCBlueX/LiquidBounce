@@ -188,25 +188,24 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
                     commits += week.commits
                 }
 
-                credits.add(Credit(gitHubContributor.author.name, gitHubContributor.author.avatarUrl, null, additions, deletions, commits, contributorInformation?.teamMember
-                        ?: false, contributorInformation?.contributions ?: emptyList()))
+                credits += Credit(gitHubContributor.author.name, gitHubContributor.author.avatarUrl, null,
+                    additions, deletions, commits,
+                    contributorInformation?.teamMember ?: false,
+                    contributorInformation?.contributions ?: emptyList()
+                )
             }
 
-            credits.sortWith(object : Comparator<Credit> {
-                override fun compare(o1: Credit, o2: Credit): Int {
-                    if (o1.isTeamMember && o2.isTeamMember) {
-                        return -o1.commits.compareTo(o2.commits)
-                    }
+            credits.sortWith { o1, o2 ->
+                when {
+                    o1.isTeamMember && o2.isTeamMember -> -o1.commits.compareTo(o2.commits)
 
-                    if (o1.isTeamMember)
-                        return -1
-                    if (o2.isTeamMember)
-                        return 1
+                    o1.isTeamMember -> -1
 
-                    return -o1.additions.compareTo(o2.additions)
+                    o2.isTeamMember -> 1
+
+                    else -> -o1.additions.compareTo(o2.additions)
                 }
-
-            })
+            }
 
             this.credits = credits
 

@@ -28,8 +28,8 @@ object LoginUtils : MinecraftInstance() {
         } catch (e: java.lang.Exception){
             return LoginResult.FAILED_PARSE_TOKEN
         }
-        val uuid = sessionObject.get("spr").asString
-        val accessToken = sessionObject.get("yggt").asString
+        val uuid = sessionObject["spr"].asString
+        val accessToken = sessionObject["yggt"].asString
 
         if (!UserUtils.isValidToken(accessToken)) {
             return LoginResult.INVALID_ACCOUNT_DATA

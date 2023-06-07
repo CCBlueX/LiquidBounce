@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrolls
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
-import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.BlackStyle
@@ -56,7 +55,7 @@ object ClickGui : GuiScreen() {
     private var mouseX = 0
     private var mouseY = 0
 
-    // Used when closing ClickGui using its key bind, prevents it from getting closed instantly.
+    // Used when closing ClickGui using its key bind, prevents it from getting closed instantly after getting opened.
     // Caused by keyTyped being called along with onKey that opens the ClickGui.
     private var ignoreClosing = false
 
@@ -68,22 +67,22 @@ object ClickGui : GuiScreen() {
         var yPos = 5
 
         for (category in ModuleCategory.values()) {
-            panels.add(object : Panel(category.displayName, 100, yPos, width, height, false) {
+            panels += object : Panel(category.displayName, 100, yPos, width, height, false) {
                 override val elements = moduleManager.modules.filter { it.category == category }.map { ModuleElement(it) }
-            })
+            }
 
             yPos += 20
         }
 
         yPos += 20
-        panels.add(setupTargetsPanel(100, yPos, width, height))
+        panels += setupTargetsPanel(100, yPos, width, height)
 
         // Settings Panel
         yPos += 20
-        panels.add(setupSettingsPanel(100, yPos, width, height))
+        panels += setupSettingsPanel(100, yPos, width, height)
     }
 
-    private fun setupTargetsPanel(xPositon: Int = 100, yPositon: Int, width: Int, height: Int) = object : Panel("Targets", xPositon, yPositon, width, height, false) {
+    private fun setupTargetsPanel(xPos: Int = 100, yPos: Int, width: Int, height: Int) = object : Panel("Targets", xPos, yPos, width, height, false) {
 
         override val elements = listOf(
             ButtonElement("Players", { if (targetPlayer) guiColor else Int.MAX_VALUE }) {
@@ -105,7 +104,7 @@ object ClickGui : GuiScreen() {
 
     }
 
-    private fun setupSettingsPanel(xPositon: Int = 100, yPositon: Int, width: Int, height: Int) = object : Panel("Auto Settings", xPositon, yPositon, width, height, false) {
+    private fun setupSettingsPanel(xPos: Int = 100, yPos: Int, width: Int, height: Int) = object : Panel("Auto Settings", xPos, yPos, width, height, false) {
 
         /**
          * Auto settings list
@@ -235,7 +234,7 @@ object ClickGui : GuiScreen() {
 
                 // Move dragged panel to top.
                 panels.removeAt(panels.lastIndex - index)
-                panels.add(panel)
+                panels += panel
                 return
             }
         }

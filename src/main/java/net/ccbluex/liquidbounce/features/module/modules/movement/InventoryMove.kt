@@ -35,6 +35,9 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
         mc.gameSettings.keyBindSprint
     )
 
+    fun canClickInventory() =
+        !state || !isMoving || !noMoveClicks || (if (mc.thePlayer.onGround) !noClicksGround else !noClicksAir)
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable.get() || mc.currentScreen !is GuiContainer)) {
@@ -47,10 +50,8 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onClick(event: ClickWindowEvent) {
-        if (noMoveClicks && isMoving &&
-            if (mc.thePlayer.onGround) noClicksGround
-            else noClicksAir
-        ) event.cancelEvent()
+        if (!canClickInventory())
+            event.cancelEvent()
     }
 
     override fun onDisable() {

@@ -24,7 +24,7 @@ import net.minecraft.util.BlockPos
 import java.awt.Color
 
 object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
-    val blocks: MutableMap<BlockPos, Long> = HashMap()
+    val blocks = mutableMapOf<BlockPos, Long>()
 
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")
 
@@ -53,7 +53,7 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
             drawEntityBox(entity, getColor(), mode == "Box")
         }
         synchronized(blocks) {
-            val iterator: MutableIterator<Map.Entry<BlockPos, Long>> = blocks.entries.iterator()
+            val iterator = blocks.entries.iterator()
 
             while (iterator.hasNext()) {
                 val entry = iterator.next()
