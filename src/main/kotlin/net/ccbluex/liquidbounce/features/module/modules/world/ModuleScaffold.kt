@@ -34,14 +34,13 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.block.Blocks.CAKE
-import net.minecraft.block.ShapeContext
-import net.minecraft.block.SideShapeType
-import net.minecraft.block.SlabBlock
-import net.minecraft.block.StairsBlock
+import net.minecraft.block.*
+import net.minecraft.block.Blocks.*
+import net.minecraft.block.Blocks
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -51,7 +50,6 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 import kotlin.math.absoluteValue
-
 
 /**
  * Scaffold module
@@ -106,7 +104,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
 
-    private val blockFilter by blocks("BlacklistedBlocks", mutableSetOf(CAKE))
+    private val blockFilter by blocks("Blocks", hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND, Blocks.CACTUS, Blocks.TORCH, Blocks.ANVIL))
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
 
@@ -167,7 +165,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Handle silent block selection
         if (silent && !hasBlockInHand) {
-            val slot = (0..8).mapNotNull {
+            val slot = (0..8).filter { isValidBlock(player.inventory.getStack(it), target) }.mapNotNull {
                 val stack = player.inventory.getStack(it)
 
                 if (stack.item is BlockItem) Pair(it, stack)
@@ -254,7 +252,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             target.blockPos,
             target.direction,
             SideShapeType.CENTER
-        ) || blockFilter.contains(block)
+        ) && !blockFilter.contains(block)
     }
 
     private fun getTargetedPosition(): BlockPos {
