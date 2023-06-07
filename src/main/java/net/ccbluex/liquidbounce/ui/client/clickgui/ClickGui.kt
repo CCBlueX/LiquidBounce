@@ -55,7 +55,7 @@ object ClickGui : GuiScreen() {
     private var mouseX = 0
     private var mouseY = 0
 
-    // Used when closing ClickGui using its key bind, prevents it from getting closed instantly.
+    // Used when closing ClickGui using its key bind, prevents it from getting closed instantly after getting opened.
     // Caused by keyTyped being called along with onKey that opens the ClickGui.
     private var ignoreClosing = false
 
@@ -82,7 +82,7 @@ object ClickGui : GuiScreen() {
         panels += setupSettingsPanel(100, yPos, width, height)
     }
 
-    private fun setupTargetsPanel(xPositon: Int = 100, yPositon: Int, width: Int, height: Int) = object : Panel("Targets", xPositon, yPositon, width, height, false) {
+    private fun setupTargetsPanel(xPos: Int = 100, yPos: Int, width: Int, height: Int) = object : Panel("Targets", xPos, yPos, width, height, false) {
 
         override val elements = listOf(
             ButtonElement("Players", { if (targetPlayer) guiColor else Int.MAX_VALUE }) {
@@ -104,7 +104,7 @@ object ClickGui : GuiScreen() {
 
     }
 
-    private fun setupSettingsPanel(xPositon: Int = 100, yPositon: Int, width: Int, height: Int) = object : Panel("Auto Settings", xPositon, yPositon, width, height, false) {
+    private fun setupSettingsPanel(xPos: Int = 100, yPos: Int, width: Int, height: Int) = object : Panel("Auto Settings", xPos, yPos, width, height, false) {
 
         /**
          * Auto settings list

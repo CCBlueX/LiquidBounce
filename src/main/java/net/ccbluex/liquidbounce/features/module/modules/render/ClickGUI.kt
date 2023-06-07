@@ -34,7 +34,7 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT,
     val fadeSpeed by FloatValue("FadeSpeed", 1f, 0.5f..2f)
     val scrolls by BoolValue("Scrolls", false)
     val spacedModules by BoolValue("SpacedModules", false)
-    val panelsBorder by BoolValue("PanelsNotBeyondBorder", true)
+    val panelsForcedInBoundaries by BoolValue("PanelsForcedInBoundaries", true)
 
 
     private val colorRainbow = BoolValue("Rainbow", false) { style !in arrayOf("Slowly", "Black") }
