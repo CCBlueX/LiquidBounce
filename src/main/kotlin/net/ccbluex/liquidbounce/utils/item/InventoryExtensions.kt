@@ -69,6 +69,9 @@ fun openInventorySilently() {
     }
 }
 
+/**
+ * A list of blocks, which are useless, so inv cleaner and scaffold won't count them as blocks
+ */
 var notABlock = hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND, Blocks.CACTUS, Blocks.ANVIL)
 
 /**
