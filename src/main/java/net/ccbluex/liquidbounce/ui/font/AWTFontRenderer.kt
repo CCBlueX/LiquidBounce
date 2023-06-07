@@ -86,10 +86,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
         glScaled(scale, scale, scale)
         glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
-        if (loadingScreen)
+        if (loadingScreen) {
             glBindTexture(GL_TEXTURE_2D, textureID)
-        else
+        } else {
             bindTexture(textureID)
+        }
 
         val red = (color shr 16 and 0xff) / 255F
         val green = (color shr 8 and 0xff) / 255F
@@ -98,7 +99,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
         glColor4f(red, green, blue, alpha)
 
-        var currX = 0.0
+        var currX = 0.0f
+        var unicodeWidth = 0.0f
 
         val cached = cachedStrings[text]
 
@@ -129,9 +131,9 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
                 glScaled(reverse, reverse, reverse)
                 mc.fontRendererObj.posY = 0.0f
-                mc.fontRendererObj.posX = currX.toFloat()
+                mc.fontRendererObj.posX = (currX / 4) + unicodeWidth
                 val width = mc.fontRendererObj.renderUnicodeChar(char, false)
-                currX += width
+                unicodeWidth += width
 
                 if (loadingScreen) {
                     glBindTexture(GL_TEXTURE_2D, textureID)
@@ -142,8 +144,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
                 glBegin(GL_QUADS)
             } else {
-                drawChar(fontChar, currX.toFloat(), 0f)
-                currX += fontChar.width - 8.0
+                drawChar(fontChar, currX + (unicodeWidth * 4), 0f)
+                currX += fontChar.width - 8.0f
             }
         }
 
