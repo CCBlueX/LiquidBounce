@@ -172,7 +172,8 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
             for (gitHubContributor in gitHubContributors) {
                 var contributorInformation: ContributorInformation? = null
-                val jsonElement = additionalInformation[gitHubContributor.author.id.toString()]
+                val author = gitHubContributor.author ?: continue // Skip invalid contributors
+                val jsonElement = additionalInformation[author.id.toString()]
 
                 if (jsonElement != null) {
                     contributorInformation = PRETTY_GSON.fromJson(jsonElement, ContributorInformation::class.java)
@@ -188,7 +189,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
                     commits += week.commits
                 }
 
-                credits += Credit(gitHubContributor.author.name, gitHubContributor.author.avatarUrl, null,
+                credits += Credit(author.name, author.avatarUrl, null,
                     additions, deletions, commits,
                     contributorInformation?.teamMember ?: false,
                     contributorInformation?.contributions ?: emptyList()
@@ -226,7 +227,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
     internal inner class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)
 
-    internal inner class GitHubContributor(@SerializedName("total") val totalContributions: Int, val weeks: List<GitHubWeek>, val author: GitHubAuthor)
+    internal inner class GitHubContributor(@SerializedName("total") val totalContributions: Int, val weeks: List<GitHubWeek>, val author: GitHubAuthor?)
     internal inner class GitHubWeek(@SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int, @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int)
     internal inner class GitHubAuthor(@SerializedName("login") val name: String, val id: Int, @SerializedName("avatar_url") val avatarUrl: String)
 
