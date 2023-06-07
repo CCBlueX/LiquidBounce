@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.GlStateManager.bindTexture
 import net.minecraft.client.renderer.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
@@ -99,15 +100,12 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
         var currX = 0.0
 
-        val cached: CachedFont? = cachedStrings[text]
+        val cached = cachedStrings[text]
 
         if (cached != null) {
             glCallList(cached.displayList)
-
             cached.lastUsage = System.currentTimeMillis()
-
             glPopMatrix()
-
             return
         }
 
@@ -122,27 +120,28 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
         glBegin(GL_QUADS)
 
         for (char in text.toCharArray()) {
-            if (char.code >= charLocations.size) {
+            val fontChar = charLocations.getOrNull(char.code)
+
+            if (fontChar == null) {
                 glEnd()
 
-                // Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
+                GlStateManager.resetColor()
+
                 glScaled(reverse, reverse, reverse)
-                mc.fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, 2f, color, false)
-                currX += mc.fontRendererObj.getStringWidth("$char") * reverse
+                mc.fontRendererObj.posY = 0.0f
+                mc.fontRendererObj.posX = currX.toFloat()
+                val width = mc.fontRendererObj.renderUnicodeChar(char, false)
+                currX += width
 
-                glScaled(scale, scale, scale)
-
-                if (loadingScreen)
+                if (loadingScreen) {
                     glBindTexture(GL_TEXTURE_2D, textureID)
-                else
+                } else {
                     bindTexture(textureID)
-
-                glColor4f(red, green, blue, alpha)
+                }
+                glScaled(scale, scale, scale)
 
                 glBegin(GL_QUADS)
             } else {
-                val fontChar = charLocations[char.code] ?: continue
-
                 drawChar(fontChar, currX.toFloat(), 0f)
                 currX += fontChar.width - 8.0
             }
@@ -275,19 +274,19 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
      */
     fun getStringWidth(text: String): Int {
         var width = 0
+        var mcWidth = 0
 
         for (c in text.toCharArray()) {
-            val fontChar = charLocations[
-                    if (c.code < charLocations.size)
-                        c.code
-                    else
-                        '\u0003'.code
-            ] ?: continue
+            val fontChar = charLocations.getOrNull(c.code)
 
-            width += fontChar.width - 8
+            if (fontChar == null) {
+                mcWidth += mc.fontRendererObj.getCharWidth(c) + 8
+            } else {
+                width += fontChar.width - 8
+            }
         }
 
-        return width / 2
+        return (width / 2) + mcWidth
     }
 
     fun delete() {
