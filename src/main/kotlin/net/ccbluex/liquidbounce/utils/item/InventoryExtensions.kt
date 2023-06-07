@@ -27,6 +27,7 @@ import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPac
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.block.Blocks
 
 fun convertClientSlotToServerSlot(slot: Int): Int {
     return when (slot) {
@@ -67,6 +68,8 @@ fun openInventorySilently() {
         }
     }
 }
+
+var notABlock = hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND, Blocks.CACTUS, Blocks.ANVIL)
 
 /**
  * Configurable to configure the dynamic rotation engine

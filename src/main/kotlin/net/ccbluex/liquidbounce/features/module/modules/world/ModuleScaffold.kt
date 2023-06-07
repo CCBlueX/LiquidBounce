@@ -104,7 +104,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
 
-    private val blockFilter by blocks("Blocks", hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND, Blocks.CACTUS, Blocks.TORCH, Blocks.ANVIL))
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
 
@@ -252,7 +251,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             target.blockPos,
             target.direction,
             SideShapeType.CENTER
-        ) && !blockFilter.contains(block)
+        ) && !notABlock.contains(block)
     }
 
     private fun getTargetedPosition(): BlockPos {
