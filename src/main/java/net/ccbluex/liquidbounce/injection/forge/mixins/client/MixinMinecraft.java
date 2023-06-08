@@ -190,7 +190,7 @@ public abstract class MixinMinecraft {
     private void setWindowIcon(CallbackInfo callbackInfo) {
         if (Util.getOSType() != Util.EnumOS.OSX) {
             if (GuiClientConfiguration.Companion.getEnabledClientTitle()) {
-                final ByteBuffer[] liquidBounceFavicon = IconUtils.getFavicon();
+                final ByteBuffer[] liquidBounceFavicon = IconUtils.INSTANCE.getFavicon();
                 if (liquidBounceFavicon != null) {
                     Display.setIcon(liquidBounceFavicon);
                     callbackInfo.cancel();
@@ -206,7 +206,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "clickMouse", at = @At("HEAD"))
     private void clickMouse(CallbackInfo callbackInfo) {
-        CPSCounter.registerClick(CPSCounter.MouseButton.LEFT);
+        CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.LEFT);
 
         if (AutoClicker.INSTANCE.getState()) {
             leftClickCounter = 0;
@@ -215,12 +215,12 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "middleClickMouse", at = @At("HEAD"))
     private void middleClickMouse(CallbackInfo ci) {
-        CPSCounter.registerClick(CPSCounter.MouseButton.MIDDLE);
+        CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.MIDDLE);
     }
 
     @Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = At.Shift.AFTER))
     private void rightClickMouse(final CallbackInfo callbackInfo) {
-        CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
+        CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.RIGHT);
 
         final FastPlace fastPlace = FastPlace.INSTANCE;
         if (!fastPlace.getState()) return;
