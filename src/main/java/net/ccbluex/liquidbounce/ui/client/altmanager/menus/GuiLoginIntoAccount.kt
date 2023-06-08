@@ -109,6 +109,11 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
                 actionPerformed(addButton)
                 return
             }
+
+            Keyboard.KEY_TAB -> {
+                username.isFocused = true
+                return
+            }
         }
 
         if (username.isFocused) {
