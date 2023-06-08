@@ -52,7 +52,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
             if (speed < 0)
                 speed = -speed
 
-            speedList.add(speed)
+            speedList += speed
             while (speedList.size > width) {
                 speedList.removeAt(0)
             }

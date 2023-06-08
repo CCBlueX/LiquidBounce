@@ -62,7 +62,7 @@ object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         synchronized(positions) {
-            positions.add(doubleArrayOf(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY, mc.thePlayer.posZ))
+            positions += doubleArrayOf(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY, mc.thePlayer.posZ)
         }
     }
 
@@ -70,17 +70,13 @@ object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
         val thePlayer = mc.thePlayer ?: return
 
         synchronized(positions) {
-            positions.add(doubleArrayOf(thePlayer.posX,
-                    thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight * 0.5f,
-                    thePlayer.posZ))
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight * 0.5f, thePlayer.posZ)
 
-            positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ))
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
         }
-        super.onEnable()
     }
 
     override fun onDisable() {
         synchronized(positions) { positions.clear() }
-        super.onDisable()
     }
 }

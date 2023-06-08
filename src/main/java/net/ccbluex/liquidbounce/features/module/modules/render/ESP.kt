@@ -191,7 +191,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                 if (color !in entityMap) {
                     entityMap[color] = ArrayList()
                 }
-                entityMap[color]!!.add(entity)
+                entityMap[color]!! += entity
             }
 
             entityMap.forEach { (color, entities) ->

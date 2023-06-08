@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
-import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor

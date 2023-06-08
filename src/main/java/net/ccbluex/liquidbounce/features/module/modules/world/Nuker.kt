@@ -143,7 +143,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
 
                 // Set next target block
                 currentBlock = blockPos
-                attackedBlocks.add(blockPos)
+                attackedBlocks += blockPos
 
                 // Call auto tool
                 if (AutoTool.state)
@@ -211,7 +211,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                         sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                         thePlayer.swingItem()
                         sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, pos, EnumFacing.DOWN))
-                        attackedBlocks.add(pos)
+                        attackedBlocks += pos
                     }
         }
     }

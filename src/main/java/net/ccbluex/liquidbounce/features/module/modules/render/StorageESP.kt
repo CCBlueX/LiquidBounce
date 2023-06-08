@@ -197,7 +197,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                     tileEntityMap[color] = ArrayList()
                 }
 
-                tileEntityMap[color]!!.add(tileEntity)
+                tileEntityMap[color]!! += tileEntity
             }
 
             tileEntityMap.forEach { (color, tileEntites) ->

@@ -8,7 +8,7 @@ import me.liuli.elixir.account.CrackedAccount
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration
-import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.minecraft.util.Session
 import kotlin.random.Random
 

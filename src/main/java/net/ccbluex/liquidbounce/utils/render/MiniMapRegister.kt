@@ -24,7 +24,7 @@ object MiniMapRegister : MinecraftInstance(), Listenable {
 
     fun updateChunk(chunk: Chunk) {
         synchronized(queuedChunkUpdates) {
-            queuedChunkUpdates.add(chunk)
+            queuedChunkUpdates += chunk
         }
     }
 
@@ -71,7 +71,7 @@ object MiniMapRegister : MinecraftInstance(), Listenable {
 
     fun unloadChunk(x: Int, z: Int) {
         synchronized(queuedChunkDeletions) {
-            queuedChunkDeletions.add(ChunkLocation(x, z))
+            queuedChunkDeletions += ChunkLocation(x, z)
         }
     }
 
