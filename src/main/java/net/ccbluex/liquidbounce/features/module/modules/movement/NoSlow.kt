@@ -27,17 +27,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 
-    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
-    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
+    private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
+    private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
-    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
+    private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
+    private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1f, 0.2F..1f)
-    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1f, 0.2F..1f)
+    private val bowForwardMultiplier by FloatValue("BowForwardMultiplier", 1f, 0.2F..1f)
+    private val bowStrafeMultiplier by FloatValue("BowStrafeMultiplier", 1f, 0.2F..1f)
 
     // NCP mode
-    private val packet = BoolValue("Packet", true)
+    private val packet by BoolValue("Packet", true)
 
     // Blocks
     val soulsand by BoolValue("Soulsand", true)
@@ -54,7 +54,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
         if (!thePlayer.isBlocking && !KillAura.blockStatus)
             return
 
-        if (packet.get()) {
+        if (packet) {
             when (event.eventState) {
                 EventState.PRE ->
                     sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN))
@@ -72,19 +72,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
         event.strafe = getMultiplier(heldItem, false)
     }
 
-    private fun getMultiplier(item: Item?, isForward: Boolean): Float {
-        return when (item) {
+    private fun getMultiplier(item: Item?, isForward: Boolean) =
+        when (item) {
             is ItemFood, is ItemPotion, is ItemBucketMilk ->
-                if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
+                if (isForward) consumeForwardMultiplier else consumeStrafeMultiplier
 
             is ItemSword ->
-                if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
+                if (isForward) blockForwardMultiplier else blockStrafeMultiplier
 
             is ItemBow ->
-                if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
+                if (isForward) bowForwardMultiplier else bowStrafeMultiplier
 
             else -> 0.2F
         }
-    }
-
 }

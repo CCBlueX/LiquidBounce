@@ -68,7 +68,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand"), "Normal")
 
     // Placeable delay
-    private val placeDelay = BoolValue("PlaceDelay", true)
+    private val placeDelay by BoolValue("PlaceDelay", true)
 
     private val extraClicks = BoolValue("DoExtraClicks", false)
 
@@ -89,14 +89,14 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0..1000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 
-        override fun isSupported() = placeDelay.get()
+        override fun isSupported() = placeDelay
     }
     private val maxDelay by maxDelayValue
 
     private val minDelay by object : IntegerValue("MinDelay", 0, 0..1000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 
-        override fun isSupported() = placeDelay.get() && !maxDelayValue.isMinimal()
+        override fun isSupported() = placeDelay && !maxDelayValue.isMinimal()
     }
 
     // Autoblock
@@ -114,21 +114,21 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f) { eagle != "Off" }
 
     // Expand
-    private val omniDirectionalExpand = BoolValue("OmniDirectionalExpand", false)
+    private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false)
     private val expandLength by IntegerValue("ExpandLength", 1, 1..6)
 
     // Rotation Options
     private val rotations by BoolValue("Rotations", true)
     private val strafe by BoolValue("Strafe", false)
-    private val stabilizedRotation = BoolValue("StabilizedRotation", false)
+    private val stabilizedRotation by BoolValue("StabilizedRotation", false)
     private val silentRotation by BoolValue("SilentRotation", true)
     private val keepRotation by BoolValue("KeepRotation", true)
-    private val keepTicksValue = object : IntegerValue("KeepTicks", 1, 1..20) {
+    private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
     }
 
     // Search options
-    private val searchMode = ListValue("SearchMode", arrayOf("Area", "Center"), "Area")
+    private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area")
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f)
 
     // Turn Speed
@@ -145,15 +145,15 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
 
     // Zitter
-    private val zitterMode = ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
-    private val zitterSpeed = FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode.get() == "Teleport" }
-    private val zitterStrength = FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode.get() == "Teleport" }
+    private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
+    private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
+    private val zitterStrength by FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode == "Teleport" }
 
     // Game
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
     private val speedModifier by FloatValue("SpeedModifier", 1f, 0f..2f)
     private val slow by BoolValue("Slow", false)
-    private val slowSpeed = FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
+    private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
 
     // Safety
     private val sameY by BoolValue("SameY", false)
@@ -216,8 +216,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (slow) {
-            player.motionX *= slowSpeed.get()
-            player.motionZ *= slowSpeed.get()
+            player.motionX *= slowSpeed
+            player.motionZ *= slowSpeed
         }
 
         // Eagle
@@ -266,7 +266,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 strafe(0.2F)
                 player.motionY = 0.0
             }
-            when (zitterMode.get().lowercase()) {
+            when (zitterMode.lowercase()) {
                 "off" -> {
                     return
                 }
@@ -294,10 +294,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 }
 
                 "teleport" -> {
-                    strafe(zitterSpeed.get())
+                    strafe(zitterSpeed)
                     val yaw = (player.rotationYaw + if (zitterDirection) 90.0 else -90.0).toRadians()
-                    player.motionX -= sin(yaw) * zitterStrength.get()
-                    player.motionZ += cos(yaw) * zitterStrength.get()
+                    player.motionX -= sin(yaw) * zitterStrength
+                    player.motionZ += cos(yaw) * zitterStrength
                     zitterDirection = !zitterDirection
                 }
             }
@@ -327,7 +327,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val rotation = targetRotation
 
         if (rotations && keepRotation && rotation != null) {
-            setRotation(rotation, keepTicksValue.minimum)
+            setRotation(rotation, 1)
         }
 
         if (event.eventState == EventState.POST) {
@@ -348,7 +348,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (target == null) {
-            if (placeDelay.get()) {
+            if (placeDelay) {
                 delayTimer.reset()
             }
             return
@@ -377,7 +377,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        findBlock(mode == "Expand" && expandLength > 1, searchMode.get() == "Area")
+        findBlock(mode == "Expand" && expandLength > 1, searchMode == "Area")
     }
 
     private fun setRotation(rotation: Rotation, ticks: Int) {
@@ -420,8 +420,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (expand) {
             val yaw = player.rotationYaw.toRadiansD()
-            val x = if (omniDirectionalExpand.get()) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
-            val z = if (omniDirectionalExpand.get()) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
+            val x = if (omniDirectionalExpand) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
+            val z = if (omniDirectionalExpand) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
             for (i in 0 until expandLength) {
                 if (search(blockPosition.add(x * i, 0, z * i), false, area)) {
                     return
@@ -473,7 +473,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             )
         ) {
             delayTimer.reset()
-            delay = if (!placeDelay.get()) 0 else randomDelay(minDelay, maxDelay)
+            delay = if (!placeDelay) 0 else randomDelay(minDelay, maxDelay)
 
             if (player.onGround) {
                 player.motionX *= speedModifier
@@ -648,8 +648,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         for (i in 0 until if (mode == "Expand") expandLength + 1 else 2) {
             val yaw = player.rotationYaw.toRadiansD()
-            val x = if (omniDirectionalExpand.get()) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
-            val z = if (omniDirectionalExpand.get()) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
+            val x = if (omniDirectionalExpand) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
+            val z = if (omniDirectionalExpand) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
             val blockPos = BlockPos(
                 player.posX + x * i,
                 if (sameY && launchY <= player.posY) launchY - 1.0 else player.posY - (if (player.posY == player.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
@@ -742,7 +742,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 currRotation, placeRotation.rotation, nextFloat(minTurnSpeed, maxTurnSpeed)
             )
 
-            setRotation(limitedRotation, keepTicksValue.get())
+            setRotation(limitedRotation, keepTicks)
         }
         targetPlace = placeRotation.placeInfo
         return true
@@ -797,7 +797,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         var rotation = toRotation(vec, false)
 
-        rotation = if (stabilizedRotation.get()) {
+        rotation = if (stabilizedRotation) {
             Rotation((rotation.yaw / 45f).roundToInt() * 45f, rotation.pitch)
         } else {
             rotation

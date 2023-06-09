@@ -29,7 +29,7 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
 
     private val delay by IntegerValue("CustomDelay", 0, 0..300) { mode == "Custom" }
     private val customSpeed by IntegerValue("CustomSpeed", 2, 1..35) { mode == "Custom" }
-    private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f..2f) { mode == "Custom" }
+    private val customTimer by FloatValue("CustomTimer", 1.1f, 0.5f..2f) { mode == "Custom" }
 
     private val msTimer = MSTimer()
     private var usedTimer = false
@@ -74,7 +74,7 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
                 }
                 
                 "custom" -> {
-                    mc.timer.timerSpeed = customTimer.get()
+                    mc.timer.timerSpeed = customTimer
                     usedTimer = true
 
                     if (!msTimer.hasTimePassed(delay))

@@ -14,5 +14,5 @@ object AntiBlind : Module("AntiBlind", ModuleCategory.RENDER) {
     val confusionEffect by BoolValue("Confusion", true)
     val pumpkinEffect by BoolValue("Pumpkin", true)
     val fireEffect by FloatValue("FireAlpha", 0.3f, 0f..1f)
-    val bossHealth = BoolValue("BossHealth", true)
+    val bossHealth by BoolValue("BossHealth", true)
 }

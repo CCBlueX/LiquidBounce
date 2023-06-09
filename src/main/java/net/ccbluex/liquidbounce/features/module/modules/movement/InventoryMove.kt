@@ -19,7 +19,7 @@ import net.minecraft.client.settings.GameSettings
 
 object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
-    private val undetectable = BoolValue("Undetectable", false)
+    private val undetectable by BoolValue("Undetectable", false)
     val aacAdditionPro by BoolValue("AACAdditionPro", false)
 
     private val noMoveClicks by BoolValue("NoMoveClicks", false)
@@ -40,7 +40,7 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable.get() || mc.currentScreen !is GuiContainer)) {
+        if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable || mc.currentScreen !is GuiContainer)) {
             for (affectedBinding in affectedBindings) {
                 val shouldExcept = Sprint.state && Sprint.mode == "Legit"
                 affectedBinding.pressed = if (affectedBinding == affectedBindings.last() && shouldExcept) true else GameSettings.isKeyDown(affectedBinding)

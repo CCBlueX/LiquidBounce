@@ -39,11 +39,11 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
-    private val colorMode = ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
+    private val colorMode by ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
 
-    private val colorRed by IntegerValue("R", 0, 0..255) { colorMode.get() == "Custom" }
-    private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode.get() == "Custom" }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode.get() == "Custom" }
+    private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }
+    private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -137,7 +137,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
         disableGlCap(GL_DEPTH_TEST, GL_ALPHA_TEST, GL_TEXTURE_2D)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-        when (colorMode.get().lowercase()) {
+        when (colorMode.lowercase()) {
             "custom" -> {
                 glColor(Color(colorRed, colorGreen, colorBlue, 255))
             }

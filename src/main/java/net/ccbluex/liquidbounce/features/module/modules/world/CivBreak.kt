@@ -31,7 +31,7 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
 
-    private val range = FloatValue("Range", 5F, 1F..6F)
+    private val range by FloatValue("Range", 5F, 1F..6F)
     private val rotations by BoolValue("Rotations", true)
     private val visualSwing by BoolValue("VisualSwing", true)
 
@@ -60,12 +60,12 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
         val isAirBlock = getBlock(pos) == Blocks.air
 
         if (airReset && isAirBlock ||
-                rangeReset && getCenterDistance(pos) > range.get()) {
+                rangeReset && getCenterDistance(pos) > range) {
             blockPos = null
             return
         }
 
-        if (isAirBlock || getCenterDistance(pos) > range.get())
+        if (isAirBlock || getCenterDistance(pos) > range)
             return
 
         when (event.eventState) {

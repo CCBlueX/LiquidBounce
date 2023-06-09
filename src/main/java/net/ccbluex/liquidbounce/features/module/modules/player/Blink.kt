@@ -108,11 +108,10 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val color = if (Breadcrumbs.colorRainbow.get()) rainbow() else Color(
-            Breadcrumbs.colorRed,
-            Breadcrumbs.colorGreen,
-            Breadcrumbs.colorBlue
-        )
+        val color =
+            if (Breadcrumbs.colorRainbow) rainbow()
+            else Color(Breadcrumbs.colorRed, Breadcrumbs.colorGreen, Breadcrumbs.colorBlue)
+
         synchronized(positions) {
             glPushMatrix()
             glDisable(GL_TEXTURE_2D)

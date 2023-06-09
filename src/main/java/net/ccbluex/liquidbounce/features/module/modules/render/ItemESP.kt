@@ -25,15 +25,15 @@ import java.awt.Color
 object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
 
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+    private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+    private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
-    private val colorRainbow = BoolValue("Rainbow", true)
-    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow.get() }
-    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow.get() }
-    private val colorBlue by IntegerValue("B", 0, 0..255) { !colorRainbow.get() }
+    private val colorRainbow by BoolValue("Rainbow", true)
+    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow }
+    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
+    private val colorBlue by IntegerValue("B", 0, 0..255) { !colorRainbow }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -56,7 +56,7 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
 
         if(mc.theWorld == null) return
 
-        shader.startDraw(partialTicks, glowRenderScale.get())
+        shader.startDraw(partialTicks, glowRenderScale)
         try {
             mc.theWorld.loadedEntityList.filter { it is EntityItem || it is EntityArrow }.forEach { entity ->
                 mc.renderManager.renderEntityStatic(entity, event.partialTicks, true)
@@ -64,11 +64,11 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
         } catch (ex: Exception) {
             LOGGER.error("An error occurred while rendering all item entities for shader esp", ex)
         }
-        shader.stopDraw(getColor(), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
+        shader.stopDraw(getColor(), glowRadius, glowFade, glowTargetAlpha)
     }
 
     private fun getColor():Color{
-        return if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
+        return if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
     }
 
 }

@@ -50,7 +50,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
             "Hypixel"
         ), "SpoofGround"
     )
-    private val minFallDistance = FloatValue("MinMLGHeight", 5f, 2f..50f) { mode == "MLG" }
+    private val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f) { mode == "MLG" }
     private val spartanTimer = TickTimer()
     private val mlgTimer = TickTimer()
     private var currentState = 0
@@ -196,7 +196,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
             if (!mlgTimer.hasTimePassed(10)) return
 
-            if (mc.thePlayer.fallDistance > minFallDistance.get()) {
+            if (mc.thePlayer.fallDistance > minFallDistance) {
                 val fallingPlayer = FallingPlayer(mc.thePlayer)
 
                 val maxDist = mc.playerController.blockReachDistance + 1.5

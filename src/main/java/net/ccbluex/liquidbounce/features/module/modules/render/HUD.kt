@@ -17,7 +17,7 @@ import net.minecraft.util.ResourceLocation
 
 object HUD : Module("HUD", ModuleCategory.RENDER, defaultInArray = false) {
     val blackHotbar by BoolValue("BlackHotbar", true)
-    val inventoryParticle = BoolValue("InventoryParticle", false)
+    val inventoryParticle by BoolValue("InventoryParticle", false)
     private val blur by BoolValue("Blur", false)
     val fontChat by BoolValue("FontChat", false)
 

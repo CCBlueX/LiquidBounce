@@ -44,21 +44,21 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         "Box"
     )
 
-    val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f..5f) { mode == "Outline" }
+    val outlineWidth by FloatValue("Outline-Width", 3f, 0.5f..5f) { mode == "Outline" }
 
-    val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f..5f) { mode == "WireFrame" }
+    val wireframeWidth by FloatValue("WireFrame-Width", 2f, 0.5f..5f) { mode == "WireFrame" }
 
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+    private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+    private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
-    private val colorRainbow = BoolValue("Rainbow", false)
-    private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow.get() }
-    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow.get() }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow.get() }
+    private val colorRainbow by BoolValue("Rainbow", false)
+    private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
+    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
-    private val colorTeam = BoolValue("Team", false)
+    private val colorTeam by BoolValue("Team", false)
     private val bot by BoolValue("Bots", true)
 
     var renderNameTags = true
@@ -176,7 +176,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         val mode = mode.lowercase()
         val partialTicks = event.partialTicks
         val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
-        shader.startDraw(event.partialTicks, glowRenderScale.get())
+        shader.startDraw(event.partialTicks, glowRenderScale)
         renderNameTags = false
 
         if(mc.theWorld == null) return
@@ -195,17 +195,17 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             }
 
             entityMap.forEach { (color, entities) ->
-                shader.startDraw(partialTicks, glowRenderScale.get())
+                shader.startDraw(partialTicks, glowRenderScale)
                 for (entity in entities) {
                     mc.renderManager.renderEntitySimple(entity, partialTicks)
                 }
-                shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
+                shader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
             }
         } catch (ex: Exception) {
             LOGGER.error("An error occurred while rendering all entities for shader esp", ex)
         }
         renderNameTags = true
-        shader.stopDraw(getColor(null), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
+        shader.stopDraw(getColor(null), glowRadius, glowFade, glowTargetAlpha)
     }
 
     override val tag
@@ -219,7 +219,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                 if (entity is EntityPlayer && entity.isClientFriend())
                     return Color.BLUE
 
-                if (colorTeam.get()) {
+                if (colorTeam) {
                     val chars = (entity.displayName ?: return@run).formattedText.toCharArray()
                     var color = Int.MAX_VALUE
                     for (i in chars.indices) {
@@ -235,7 +235,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             }
         }
 
-        return if (colorRainbow.get()) rainbow() else Color(
+        return if (colorRainbow) rainbow() else Color(
             colorRed,
             colorGreen,
             colorBlue

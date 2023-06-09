@@ -19,15 +19,15 @@ import java.awt.Color
 import java.util.*
 
 object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
-    val colorRainbow = BoolValue("Rainbow", false)
-    val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow.get() }
-    val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow.get() }
-    val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow.get() }
+    val colorRainbow by BoolValue("Rainbow", false)
+    val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
+    val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
+    val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
     private val positions = LinkedList<DoubleArray>()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val color = if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
+        val color = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
 
         synchronized(positions) {
             glPushMatrix()

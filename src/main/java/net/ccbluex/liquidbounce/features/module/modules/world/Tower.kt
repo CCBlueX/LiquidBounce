@@ -61,7 +61,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
     )
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val swing by BoolValue("Swing", true)
-    private val stopWhenBlockAbove = BoolValue("StopWhenBlockAbove", false)
+    private val stopWhenBlockAbove by BoolValue("StopWhenBlockAbove", false)
     private val rotations by BoolValue("Rotations", true)
     private val keepRotation by BoolValue("KeepRotation", false) { rotations }
     private val onJump by BoolValue("OnJump", false)
@@ -143,7 +143,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 (autoBlock != "Off" && InventoryUtils.findBlockInHotbar() != null) || thePlayer.heldItem?.item is ItemBlock
 
             if (update) {
-                if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
+                if (!stopWhenBlockAbove || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
 
                 val blockPos = BlockPos(thePlayer).down()
                 if (blockPos.getBlock() == Blocks.air) {

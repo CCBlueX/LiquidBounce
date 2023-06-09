@@ -33,10 +33,10 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
     private val mode by
         ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "Glow", "2D", "WireFrame"), "Outline")
 
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+    private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+    private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
     private val chest by BoolValue("Chest", true)
     private val enderChest by BoolValue("EnderChest", true)
@@ -184,7 +184,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
         val partialTicks = event.partialTicks
         val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
         val renderManager = mc.renderManager
-        shader.startDraw(event.partialTicks, glowRenderScale.get())
+        shader.startDraw(event.partialTicks, glowRenderScale)
 
         if (mc.theWorld == null) return
 
@@ -201,7 +201,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
             }
 
             tileEntityMap.forEach { (color, tileEntites) ->
-                shader.startDraw(partialTicks, glowRenderScale.get())
+                shader.startDraw(partialTicks, glowRenderScale)
 
                 for (entity in tileEntites) {
                     TileEntityRendererDispatcher.instance.renderTileEntityAt(
@@ -212,12 +212,12 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                         partialTicks
                     )
                 }
-                shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
+                shader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
             }
         } catch (ex: Exception) {
             LOGGER.error("An error occurred while rendering all storages for shader esp", ex)
         }
 
-        shader.stopDraw(Color(0, 66, 255), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
+        shader.stopDraw(Color(0, 66, 255), glowRadius, glowFade, glowTargetAlpha)
     }
 }

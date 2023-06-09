@@ -28,9 +28,9 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     val food by BoolValue("Food", true) { mode == "Vanilla" }
 
-    val checkServerSide = BoolValue("CheckServerSide", false) { mode == "Vanilla" }
+    val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
 
-    val checkServerSideGround = BoolValue("CheckServerSideOnlyGround", false) { mode == "Vanilla" && checkServerSide.get() }
+    val checkServerSideGround by BoolValue("CheckServerSideOnlyGround", false) { mode == "Vanilla" && checkServerSide }
     override val tag
         get() = mode
 
@@ -53,7 +53,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
             if (!isMoving || mc.thePlayer.isSneaking || blindness
                 && mc.thePlayer.isPotionActive(Potion.blindness) || food
                 && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying)
-                    || (checkServerSide.get() && (mc.thePlayer.onGround || !checkServerSideGround.get())
+                    || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround)
                         && !allDirections && targetRotation != null)
                     && getRotationDifference(mc.thePlayer.rotation) > 30
             ) {
