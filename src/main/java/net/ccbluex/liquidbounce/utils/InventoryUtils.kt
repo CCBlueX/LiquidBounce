@@ -98,8 +98,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        // Support for Singleplayer
-        if (event.isCancelled || event.eventType == EventState.RECEIVE) return
+        if (event.isCancelled) return
 
         val packet = event.packet
 
@@ -112,9 +111,14 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
             is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInventory = false
 
-            is C09PacketHeldItemChange ->
+            is C09PacketHeldItemChange -> {
+                // Support for Singleplayer
+                // (client packets get sent and received, duplicates would get cancelled, making slot changing impossible)
+                if (event.eventType == EventState.RECEIVE) return
+
                 if (packet.slotId == slot) event.cancelEvent()
                 else slot = packet.slotId
+            }
         }
     }
 
