@@ -14,6 +14,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.item.Item
 import net.minecraft.item.ItemBlock
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
@@ -21,7 +22,10 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 object InventoryUtils : MinecraftInstance(), Listenable {
 
-    // Returns if inventory is open on server-side.
+    // What slot is selected on server-side?
+    var slot = -1
+
+    // Is inventory open on server-side?
     var openInventory = false
 
     var CLICK_TIMER = MSTimer()
@@ -103,6 +107,10 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                     openInventory = true
 
             is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInventory = false
+
+            is C09PacketHeldItemChange ->
+                if (packet.slotId == slot) event.cancelEvent()
+                else slot = packet.slotId
         }
     }
 
