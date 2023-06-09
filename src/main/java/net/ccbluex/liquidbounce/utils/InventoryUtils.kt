@@ -5,10 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.minecraft.block.BlockBush
 import net.minecraft.init.Blocks
@@ -106,8 +103,10 @@ object InventoryUtils : MinecraftInstance(), Listenable {
             is C08PacketPlayerBlockPlacement -> CLICK_TIMER.reset()
 
             is C16PacketClientStatus ->
-                if (packet.status == OPEN_INVENTORY_ACHIEVEMENT)
-                    openInventory = true
+                if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
+                    if (openInventory) event.cancelEvent()
+                    else openInventory = true
+                }
 
             is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInventory = false
 
@@ -120,6 +119,13 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 else slot = packet.slotId
             }
         }
+    }
+
+    @EventTarget
+    fun onWorld(event: WorldEvent) {
+        // Prevent desync
+        slot = -1
+        openInventory = false
     }
 
     override fun handleEvents() = true
