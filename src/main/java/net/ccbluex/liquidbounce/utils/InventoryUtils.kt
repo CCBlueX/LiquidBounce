@@ -24,11 +24,13 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     // What slot is selected on server-side?
     var slot = -1
+        private set
 
     // Is inventory open on server-side?
     var openInventory = false
+        private set
 
-    var CLICK_TIMER = MSTimer()
+    val CLICK_TIMER = MSTimer()
 
     val BLOCK_BLACKLIST = listOf(
         Blocks.chest,
@@ -108,9 +110,12 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
             is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInventory = false
 
-            is C09PacketHeldItemChange ->
+            is C09PacketHeldItemChange -> {
+                if (mc.isSingleplayer) return
+
                 if (packet.slotId == slot) event.cancelEvent()
                 else slot = packet.slotId
+            }
         }
     }
 
