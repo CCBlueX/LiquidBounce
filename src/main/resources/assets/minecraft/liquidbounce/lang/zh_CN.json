@@ -99,7 +99,7 @@
         
         "module.autoWalk.description": "自动行走.",
 
-        "module.avoidHazards.description": "UNTRANSLATED: Prevents you from walking into blocks that might be harmful to you.",
+        "module.avoidHazards.description": "防止走进可能对你有害的方块.",
         
         "module.blink.description": "挂起所有移动数据包.",
         
