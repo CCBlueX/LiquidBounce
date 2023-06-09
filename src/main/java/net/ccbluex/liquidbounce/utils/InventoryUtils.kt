@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -97,7 +98,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.isCancelled) return
+        // Support for Singleplayer
+        if (event.isCancelled || event.eventType == EventState.RECEIVE) return
 
         val packet = event.packet
 
@@ -110,12 +112,9 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
             is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInventory = false
 
-            is C09PacketHeldItemChange -> {
-                if (mc.isSingleplayer) return
-
+            is C09PacketHeldItemChange ->
                 if (packet.slotId == slot) event.cancelEvent()
                 else slot = packet.slotId
-            }
         }
     }
 
