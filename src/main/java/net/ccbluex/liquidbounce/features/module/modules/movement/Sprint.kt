@@ -11,13 +11,13 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
-import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.KeyBinding.setKeyBindState
 import net.minecraft.potion.Potion
+import net.minecraft.util.MathHelper
 
 object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
@@ -36,8 +36,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        if (mode == "Legit")
-            setKeyBindState(mc.gameSettings.keyBindSprint.keyCode, true)
+        if (mode == "Legit") setKeyBindState(mc.gameSettings.keyBindSprint.keyCode, true)
     }
 
     override fun onDisable() {
@@ -49,20 +48,25 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        val targetRotation = targetRotation
+        val movementInput = mc.thePlayer.movementInput
+
+        val rotationYaw = mc.thePlayer.rotationYaw
+
+        val shouldStop =
+            targetRotation != null && movementInput.moveForward * MathHelper.cos((rotationYaw - targetRotation.yaw).toRadians()) + movementInput.moveStrafe * MathHelper.sin(
+                (rotationYaw - targetRotation.yaw).toRadians()
+            ) < 0.8
+
         if (mode == "Vanilla") {
-            if (!isMoving || mc.thePlayer.isSneaking || blindness
-                && mc.thePlayer.isPotionActive(Potion.blindness) || food
-                && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying)
-                    || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround)
-                        && !allDirections && targetRotation != null)
-                    && getRotationDifference(mc.thePlayer.rotation) > 30
-            ) {
+            if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)) {
                 mc.thePlayer.isSprinting = false
                 return
-            } else
+            }
 
-            if (allDirections || mc.thePlayer.movementInput.moveForward >= 0.8f)
+            if (allDirections || mc.thePlayer.movementInput.moveForward >= 0.8f) {
                 mc.thePlayer.isSprinting = true
+            }
         }
     }
 }
