@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.combat
 
+import kotlin.math.roundToInt
+
 /**
  * A CPS scheduler
  *
@@ -37,8 +39,16 @@ class CpsScheduler {
         var timeLeft = System.currentTimeMillis() - lastClick
         var clicks = 0
 
+        // Does the clickTime need a forced update or are we a tick late?
+        if (clickTime == -1L || ((timeLeft - clickTime) / 50.0).roundToInt() * 50 > 50) {
+            clickTime = clickTime(cps)
+            lastClick = System.currentTimeMillis()
+
+            return if (condition()) 1 else 0
+        }
+
         while (timeLeft >= clickTime && condition()) {
-            timeLeft -= lastClick
+            timeLeft -= clickTime
             clicks++
 
             clickTime = clickTime(cps)
@@ -49,7 +59,6 @@ class CpsScheduler {
     }
 
     // TODO: Make more stamina like
-    private fun clickTime(cps: IntRange) =
-        ((Math.random() * (1000 / cps.first - 1000 / cps.last + 1)) + 1000 / cps.last).toLong()
+    private fun clickTime(cps: IntRange) = 1000L / cps.random()
 
 }
