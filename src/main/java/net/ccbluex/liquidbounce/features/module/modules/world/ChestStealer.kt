@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.item.isEmpty
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -166,6 +167,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                 val stack = slot.stack
 
                 if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, slot.slotNumber)) {
+                    ClientUtils.displayChatMessage("${slot.slotNumber}, ${slot.slotNumber}, $slotIndex, CAUGHT")
                     tickedActions[{
                         move(screen, slot)
                     }] = slot.slotNumber
@@ -174,9 +176,12 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
             }
         } else if (autoClose && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(
                 nextCloseDelay
-            )
+            ) && !tickedActions.containsValue(contentReceived)
         ) {
-            thePlayer.closeScreen()
+            tickedActions[{
+                thePlayer.closeScreen()
+            }] = contentReceived
+
             nextCloseDelay = randomDelay(autoCloseMinDelay, autoCloseMaxDelay)
         }
     }
