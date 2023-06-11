@@ -100,6 +100,8 @@
         "module.autoTool.description": "Automatically selects the best tool in your inventory to mine a block.",
         
         "module.autoWalk.description": "Automatically makes you walk.",
+
+        "module.avoidHazards.description": "Prevents you from walking into blocks that might be harmful to you.",
         
         "module.blink.description": "Suspends all movement packets.",
         

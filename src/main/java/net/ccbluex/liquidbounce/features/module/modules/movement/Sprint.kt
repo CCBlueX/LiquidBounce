@@ -28,10 +28,9 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     val food by BoolValue("Food", true) { mode == "Vanilla" }
 
-    val checkServerSide = BoolValue("CheckServerSide", false) { mode == "Vanilla" }
+    val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
 
-    val checkServerSideGround =
-        BoolValue("CheckServerSideOnlyGround", false) { mode == "Vanilla" && checkServerSide.get() }
+    val checkServerSideGround by BoolValue("CheckServerSideOnlyGround", false) { mode == "Vanilla" && checkServerSide }
     override val tag
         get() = mode
 
@@ -60,7 +59,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
             ) < 0.8
 
         if (mode == "Vanilla") {
-            if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide.get() && (mc.thePlayer.onGround || !checkServerSideGround.get()) && !allDirections && shouldStop)) {
+            if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)) {
                 mc.thePlayer.isSprinting = false
                 return
             }

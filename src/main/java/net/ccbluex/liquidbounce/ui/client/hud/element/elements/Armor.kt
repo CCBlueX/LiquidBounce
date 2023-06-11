@@ -24,7 +24,7 @@ import org.lwjgl.opengl.GL11.glPushMatrix
 class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
-    private val modeValue = ListValue("Alignment", arrayOf("Horizontal", "Vertical"), "Horizontal")
+    private val modeValue by ListValue("Alignment", arrayOf("Horizontal", "Vertical"), "Horizontal")
 
     /**
      * Draw element
@@ -45,7 +45,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
                 renderItem.renderItemIntoGUI(stack, x, y)
                 renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)
 
-                when (modeValue.get()) {
+                when (modeValue) {
                     "Horizontal" -> x += 18
                     "Vertical" -> y += 18
                 }
@@ -58,7 +58,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             glPopMatrix()
         }
 
-        return when (modeValue.get()) {
+        return when (modeValue) {
             "Horizontal" -> Border(0F, 0F, 72F, 17F)
             else -> Border(0F, 0F, 18F, 72F)
         }

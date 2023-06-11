@@ -47,10 +47,10 @@ object Animations : Module("Animations", ModuleCategory.RENDER) {
         OldAnimation()
     )
 
-    private var animationMode = ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
-    var oddSwing = BoolValue("OddSwing", false)
+    private val animationMode by ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
+    val oddSwing by BoolValue("OddSwing", false)
 
-    fun getAnimation() = animations.firstOrNull { it.name == animationMode.get() }
+    fun getAnimation() = animations.firstOrNull { it.name == animationMode }
 
 }
 

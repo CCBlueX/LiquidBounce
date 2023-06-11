@@ -36,7 +36,7 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
     private val range by FloatValue("Range", 5F, 1F..6F)
     private val delay by IntegerValue("Delay", 100, 50..200)
     private val throughWalls by BoolValue("ThroughWalls", true)
-    private val visualSwing = BoolValue("VisualSwing", true)
+    private val visualSwing by BoolValue("VisualSwing", true)
     private val chest by BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
     private val rotations by BoolValue("Rotations", true)
 
@@ -86,7 +86,7 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
             EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delay)) {
                 if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld, thePlayer.heldItem, currentBlock!!,
                                 EnumFacing.DOWN, currentBlock!!.getVec())) {
-                    if (visualSwing.get())
+                    if (visualSwing)
                         thePlayer.swingItem()
                     else
                         sendPacket(C0APacketAnimation())

@@ -133,7 +133,7 @@ public abstract class MixinItemRenderer {
             }else{
                 final Animations animations = Animations.INSTANCE;
 
-                if (!animations.getState() || !animations.getOddSwing().get()) {
+                if (!animations.getState() || !animations.getOddSwing()) {
                     doItemUsedTransformations(f1);
                 }
 

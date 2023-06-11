@@ -362,7 +362,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean shouldStop = targetRotation != null && movementInput.moveForward * MathHelper.cos(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) + movementInput.moveStrafe * MathHelper.sin(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) < 0.8;
 
-        if ((scaffold.getState() && !scaffold.getSprint()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirections() && shouldStop))
+        if ((scaffold.getState() && !scaffold.getSprint()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide() && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections() && shouldStop))
             setSprinting(false);
 
         if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirections()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {

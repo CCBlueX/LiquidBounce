@@ -34,8 +34,7 @@ import java.text.SimpleDateFormat
  * Allows to draw custom text
  */
 @ElementInfo(name = "Text")
-class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
-           side: Side = Side.default()) : Element(x, y, scale, side) {
+class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = Side.default()) : Element(x, y, scale, side) {
 
     companion object {
 
@@ -50,25 +49,28 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
         fun defaultClient(): Text {
             val text = Text(x = 2.0, y = 2.0, scale = 2F)
 
-            text.displayString.set("%clientName%")
-            text.shadow.set(true)
-            text.fontValue.set(Fonts.font40)
-            text.setColor(Color(0, 111, 255))
+            text.displayString = "%clientName%"
+            text.shadow = true
+            text.font = Fonts.font40
+            text.color = Color(0, 111, 255)
 
             return text
         }
 
     }
 
-    private val displayString = TextValue("DisplayText", "")
-    private val redValue = IntegerValue("Red", 255, 0..255)
-    private val greenValue = IntegerValue("Green", 255, 0..255)
-    private val blueValue = IntegerValue("Blue", 255, 0..255)
-    private val rainbow = BoolValue("Rainbow", false)
-    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F..2000F)
-    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F..2000F)
-    private val shadow = BoolValue("Shadow", true)
-    private var fontValue = FontValue("Font", Fonts.font40)
+    private var displayString by TextValue("DisplayText", "")
+
+    private val rainbow by BoolValue("Rainbow", false)
+    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { rainbow }
+    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { rainbow }
+
+    private var red by IntegerValue("Red", 255, 0..255) { !rainbow }
+    private var green by IntegerValue("Green", 255, 0..255) { !rainbow }
+    private var blue by IntegerValue("Blue", 255, 0..255) { !rainbow }
+
+    private var shadow by BoolValue("Shadow", true)
+    private var font by FontValue("Font", Fonts.font40)
 
     private var editMode = false
     private var editTicks = 0
@@ -78,13 +80,21 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
     private val display: String
         get() {
-            val textContent = if (displayString.get().isEmpty() && !editMode)
+            val textContent = if (displayString.isEmpty() && !editMode)
                 "Text Element"
             else
-                displayString.get()
+                displayString
 
 
             return multiReplace(textContent)
+        }
+
+    private var color: Color
+        get() = Color(red, green, blue)
+        set(value) {
+            red = value.red
+            green = value.green
+            blue = value.blue
         }
 
     private fun getReplacement(str: String): String? {
@@ -157,19 +167,15 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border {
-        val color = Color(redValue.get(), greenValue.get(), blueValue.get()).rgb
+        val rainbow = rainbow
 
-        val fontRenderer = fontValue.get()
-
-        val rainbow = rainbow.get()
-
-        RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0f) 0f else 1f / rainbowX.get(), if (rainbowY.get() == 0f) 0f else 1f / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-            fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
-                0 else color, shadow.get())
+        RainbowFontShader.begin(rainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+            font.drawString(displayText, 0F, 0F, if (rainbow)
+                0 else color.rgb, shadow)
 
             if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
-                fontRenderer.drawString("_", fontRenderer.getStringWidth(displayText) + 2F,
-                        0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
+                font.drawString("_", font.getStringWidth(displayText) + 2F,
+                        0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color.rgb, shadow)
         }
 
         if (editMode && mc.currentScreen !is GuiHudDesigner) {
@@ -177,14 +183,14 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
             updateElement()
         }
 
-        return Border(-2F, -2F, fontRenderer.getStringWidth(displayText) + 2F, fontRenderer.FONT_HEIGHT.toFloat())
+        return Border(-2F, -2F, font.getStringWidth(displayText) + 2F, font.FONT_HEIGHT.toFloat())
     }
 
     override fun updateElement() {
         editTicks += 5
         if (editTicks > 80) editTicks = 0
 
-        displayText = if (editMode) displayString.get() else display
+        displayText = if (editMode) displayString else display
     }
 
     override fun handleMouseClick(x: Double, y: Double, mouseButton: Int) {
@@ -201,25 +207,17 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
     override fun handleKey(c: Char, keyCode: Int) {
         if (editMode && mc.currentScreen is GuiHudDesigner) {
             if (keyCode == Keyboard.KEY_BACK) {
-                if (displayString.get().isNotEmpty())
-                    displayString.set(displayString.get().substring(0, displayString.get().length - 1))
+                if (displayString.isNotEmpty())
+                    displayString = displayString.dropLast(1)
 
                 updateElement()
                 return
             }
 
             if (ColorUtils.isAllowedCharacter(c) || c == '§')
-                displayString.set(displayString.get() + c)
+                displayString += c
 
             updateElement()
         }
     }
-
-    fun setColor(c: Color): Text {
-        redValue.set(c.red)
-        greenValue.set(c.green)
-        blueValue.set(c.blue)
-        return this
-    }
-
 }

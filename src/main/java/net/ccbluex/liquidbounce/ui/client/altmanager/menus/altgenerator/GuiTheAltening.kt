@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.TabUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
@@ -217,11 +218,27 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
      * Handle key typed
      */
     override fun keyTyped(typedChar: Char, keyCode: Int) {
-        // Check if user want to escape from screen
-        if (Keyboard.KEY_ESCAPE == keyCode) {
-            // Send back to prev screen
-            mc.displayGuiScreen(prevGui)
-            return
+        when (keyCode) {
+            // Check if user want to escape from screen
+            Keyboard.KEY_ESCAPE -> {
+                // Send back to prev screen
+                mc.displayGuiScreen(prevGui)
+                return
+            }
+
+            Keyboard.KEY_TAB -> {
+                TabUtils.tab(tokenField, apiKeyField)
+                return
+            }
+
+            Keyboard.KEY_RETURN -> {
+                // Click Login, when token field is focused, Generate, when api field is focused.
+                actionPerformed(
+                    if (apiKeyField.isFocused) generateButton
+                    else loginButton
+                )
+                return
+            }
         }
 
         // Check if field is focused, then call key typed

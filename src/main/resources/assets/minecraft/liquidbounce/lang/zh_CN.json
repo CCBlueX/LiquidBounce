@@ -98,6 +98,8 @@
         "module.autoTool.description": "自动用背包里最好的工具挖方块.",
         
         "module.autoWalk.description": "自动行走.",
+
+        "module.avoidHazards.description": "防止走进可能对你有害的方块.",
         
         "module.blink.description": "挂起所有移动数据包.",
         

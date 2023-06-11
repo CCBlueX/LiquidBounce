@@ -108,7 +108,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                         glEnable(GL_BLEND);
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                         RenderUtils.INSTANCE.glColor(esp.getColor(p_renderModel_1_));
-                        glLineWidth(esp.getWireframeWidth().get());
+                        glLineWidth(esp.getWireframeWidth());
                         mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         glPopAttrib();
                         glPopMatrix();
@@ -119,7 +119,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
                         final Color color = esp.getColor(p_renderModel_1_);
                         OutlineUtils.setColor(color);
-                        OutlineUtils.renderOne(esp.getOutlineWidth().get());
+                        OutlineUtils.renderOne(esp.getOutlineWidth());
                         mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         OutlineUtils.setColor(color);
                         OutlineUtils.renderTwo();

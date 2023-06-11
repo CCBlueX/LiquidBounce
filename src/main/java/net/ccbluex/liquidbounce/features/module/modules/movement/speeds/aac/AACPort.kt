@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
-import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.portMax
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.aacPortLength
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -29,7 +29,7 @@ class AACPort : SpeedMode("AACPort") {
         val f = thePlayer.rotationYaw.toRadians()
         var d = 0.2
 
-        while (d <= portMax.get()) {
+        while (d <= aacPortLength) {
             val x = thePlayer.posX - sin(f) * d
             val z = thePlayer.posZ + cos(f) * d
 

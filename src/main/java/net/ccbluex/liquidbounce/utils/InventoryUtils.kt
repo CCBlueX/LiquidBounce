@@ -5,15 +5,14 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.minecraft.block.BlockBush
 import net.minecraft.init.Blocks
 import net.minecraft.item.Item
 import net.minecraft.item.ItemBlock
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
@@ -21,10 +20,15 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 object InventoryUtils : MinecraftInstance(), Listenable {
 
-    // Returns if inventory is open on server-side.
-    var openInventory = false
+    // What slot is selected on server-side?
+    var slot = -1
+        private set
 
-    var CLICK_TIMER = MSTimer()
+    // Is inventory open on server-side?
+    var openInventory = false
+        private set
+
+    val CLICK_TIMER = MSTimer()
 
     val BLOCK_BLACKLIST = listOf(
         Blocks.chest,
@@ -99,11 +103,29 @@ object InventoryUtils : MinecraftInstance(), Listenable {
             is C08PacketPlayerBlockPlacement -> CLICK_TIMER.reset()
 
             is C16PacketClientStatus ->
-                if (packet.status == OPEN_INVENTORY_ACHIEVEMENT)
-                    openInventory = true
+                if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
+                    if (openInventory) event.cancelEvent()
+                    else openInventory = true
+                }
 
             is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInventory = false
+
+            is C09PacketHeldItemChange -> {
+                // Support for Singleplayer
+                // (client packets get sent and received, duplicates would get cancelled, making slot changing impossible)
+                if (event.eventType == EventState.RECEIVE) return
+
+                if (packet.slotId == slot) event.cancelEvent()
+                else slot = packet.slotId
+            }
         }
+    }
+
+    @EventTarget
+    fun onWorld(event: WorldEvent) {
+        // Prevent desync
+        slot = -1
+        openInventory = false
     }
 
     override fun handleEvents() = true

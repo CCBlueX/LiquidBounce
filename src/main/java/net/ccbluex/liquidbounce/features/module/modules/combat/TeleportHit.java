@@ -57,7 +57,7 @@ public class TeleportHit extends Module {
                 final double z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1f);
                 final double y = targetEntity.getPosition().getY() + 0.25;
 
-                PathUtils.findPath(x, y + 1, z, 4).forEach(pos -> sendPacket(new C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
+                PathUtils.INSTANCE.findPath(x, y + 1, z, 4).forEach(pos -> sendPacket(new C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
                 thePlayer.swingItem();
                 sendPacket(new C02PacketUseEntity(targetEntity, ATTACK));

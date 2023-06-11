@@ -68,7 +68,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                                 fileStream.close()
 
                                 if ("/" in entryName)
-                                    scriptFiles.add(entryFile)
+                                    scriptFiles += entryFile
                             }
 
                             scriptFiles.forEach { scriptFile -> scriptManager.loadScript(scriptFile) }

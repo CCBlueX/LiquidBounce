@@ -97,6 +97,8 @@
 
         "module.autoWalk.description": "Faz você andar automaticamente.",
 
+        "module.avoidHazards.description": "UNTRANSLATED: Prevents you from walking into blocks that might be harmful to you.",
+
         "module.blink.description": "Suspende todos os pacotes de movimento.",
 
         "module.blockESP.description": "Permite ver um bloco selecionado através das paredes.",

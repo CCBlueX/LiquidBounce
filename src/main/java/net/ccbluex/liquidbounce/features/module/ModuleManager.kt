@@ -79,6 +79,7 @@ object ModuleManager : Listenable {
             AutoTool,
             AutoWalk,
             AutoWeapon,
+            AvoidHazards,
             Backtrack,
             BedGodMode,
             Blink,

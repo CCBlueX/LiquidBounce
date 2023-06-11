@@ -96,7 +96,7 @@ public abstract class MixinGuiInGame {
     private void renderBossHealth(CallbackInfo callbackInfo) {
         final AntiBlind antiBlind = AntiBlind.INSTANCE;
         
-        if (antiBlind.getState() && antiBlind.getBossHealth().get())
+        if (antiBlind.getState() && antiBlind.getBossHealth())
             callbackInfo.cancel();
     }
 }

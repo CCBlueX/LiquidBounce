@@ -73,11 +73,11 @@ public abstract class MixinGuiScreen {
     private void drawWorldBackground(final CallbackInfo callbackInfo) {
         final HUD hud = HUD.INSTANCE;
 
-        if(hud.getInventoryParticle().get() && mc.thePlayer != null) {
+        if(hud.getInventoryParticle() && mc.thePlayer != null) {
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
             final int width = scaledResolution.getScaledWidth();
             final int height = scaledResolution.getScaledHeight();
-            ParticleUtils.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
+            ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
         }
     }
 
@@ -95,7 +95,7 @@ public abstract class MixinGuiScreen {
             if (background == null) {
                 // Use default background shader
 
-                BackgroundShader.BACKGROUND_SHADER.startShader();
+                BackgroundShader.Companion.getBACKGROUND_SHADER().startShader();
 
                 final Tessellator instance = Tessellator.getInstance();
                 final WorldRenderer worldRenderer = instance.getWorldRenderer();
@@ -106,14 +106,14 @@ public abstract class MixinGuiScreen {
                 worldRenderer.pos(0, 0, 0).endVertex();
                 instance.draw();
 
-                BackgroundShader.BACKGROUND_SHADER.stopShader();
+                BackgroundShader.Companion.getBACKGROUND_SHADER().stopShader();
             }else{
                 // Use custom background
                 background.drawBackground(width, height);
             }
 
             if (GuiClientConfiguration.Companion.getParticles()) {
-                ParticleUtils.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
+                ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
             }
 
             callbackInfo.cancel();
@@ -123,7 +123,7 @@ public abstract class MixinGuiScreen {
     @Inject(method = "drawBackground", at = @At("RETURN"))
     private void drawParticles(final CallbackInfo callbackInfo) {
         if(GuiClientConfiguration.Companion.getParticles())
-            ParticleUtils.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
+            ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
     }
 
     @Inject(method = "sendChatMessage(Ljava/lang/String;Z)V", at = @At("HEAD"), cancellable = true)

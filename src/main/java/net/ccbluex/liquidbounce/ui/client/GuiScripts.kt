@@ -105,7 +105,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 MiscUtils.showErrorPopup("Wrong file extension.", "The file extension has to be .js or .zip")
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while importing a script.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
 
             2 -> try {
@@ -118,19 +118,19 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 }
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while deleting a script.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
             3 -> try {
                 reloadScripts()
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while reloading all scripts.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
             4 -> try {
                 Desktop.getDesktop().open(scriptsFolder)
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while trying to open your scripts folder.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
             5 -> try {
                 Desktop.getDesktop().browse(URL("https://liquidbounce.net/docs/ScriptAPI/Getting%20Started").toURI())

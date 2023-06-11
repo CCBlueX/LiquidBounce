@@ -99,12 +99,14 @@ class HudConfig(file: File) : FileConfig(file) {
 
         for (element in HUD.elements) {
             val elementObject = JsonObject()
-            elementObject.addProperty("Type", element.name)
-            elementObject.addProperty("X", element.x)
-            elementObject.addProperty("Y", element.y)
-            elementObject.addProperty("Scale", element.scale)
-            elementObject.addProperty("HorizontalFacing", element.side.horizontal.sideName)
-            elementObject.addProperty("VerticalFacing", element.side.vertical.sideName)
+            elementObject.run {
+                addProperty("Type", element.name)
+                addProperty("X", element.x)
+                addProperty("Y", element.y)
+                addProperty("Scale", element.scale)
+                addProperty("HorizontalFacing", element.side.horizontal.sideName)
+                addProperty("VerticalFacing", element.side.vertical.sideName)
+            }
 
             for (value in element.values)
                 elementObject.add(value.name, value.toJson())

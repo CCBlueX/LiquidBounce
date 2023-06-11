@@ -93,15 +93,9 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         }
 
         when (button.id) {
-            0 -> {
-                if (loginUrl != null) {
-                    MiscUtils.showURL(loginUrl)
-                }
-            }
+            0 -> loginUrl?.let { MiscUtils.showURL(it) }
 
-            1 -> {
-                errorAndDone("Login cancelled.")
-            }
+            1 -> errorAndDone("Login cancelled.")
         }
 
 

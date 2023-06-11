@@ -31,10 +31,10 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     private val radius by IntegerValue("Radius", 40, 5..120)
     private val blockLimit by IntegerValue("BlockLimit", 256, 0..2056)
 
-    private val colorRainbow = BoolValue("Rainbow", false)
-    private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow.get() }
-    private val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow.get() }
-    private val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow.get() }
+    private val colorRainbow by BoolValue("Rainbow", false)
+    private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
+    private val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
+    private val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
 
     private val searchTimer = MSTimer()
     private val posList = mutableListOf<BlockPos>()
@@ -83,7 +83,7 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         synchronized(posList) {
-            val color = if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
+            val color = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
             for (blockPos in posList) {
                 when (mode.lowercase()) {
                     "box" -> drawBlockBox(blockPos, color, true)

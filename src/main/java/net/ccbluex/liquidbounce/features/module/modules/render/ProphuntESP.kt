@@ -28,15 +28,15 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
 
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")
 
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+    private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+    private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
-    private val colorRainbow = BoolValue("Rainbow", false)
-    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow.get() }
-    private val colorGreen by IntegerValue("G", 90, 0..255) { !colorRainbow.get() }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow.get() }
+    private val colorRainbow by BoolValue("Rainbow", false)
+    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow }
+    private val colorGreen by IntegerValue("G", 90, 0..255) { !colorRainbow }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
 
     override fun onDisable() {
@@ -71,11 +71,11 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
     fun onRender2D(event: Render2DEvent) {
         val mode = mode.lowercase()
         val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
-        val color = if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
+        val color = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
 
         if(mc.theWorld == null) return
 
-        shader.startDraw(event.partialTicks, glowRenderScale.get())
+        shader.startDraw(event.partialTicks, glowRenderScale)
         try {
             mc.theWorld.loadedEntityList.filterNot{ it !is EntityFallingBlock }.forEach { entity ->
                 mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
@@ -85,9 +85,9 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
         }
 
 
-        shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
+        shader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
     }
 
-    private fun getColor() = if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
+    private fun getColor() = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
 
 }

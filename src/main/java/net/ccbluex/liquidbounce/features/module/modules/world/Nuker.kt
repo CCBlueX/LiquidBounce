@@ -50,7 +50,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     private val layer by BoolValue("Layer", false)
     private val hitDelay by IntegerValue("HitDelay", 4, 0..20)
     private val nuke by IntegerValue("Nuke", 1, 1..20)
-    private val nukeDelay = IntegerValue("NukeDelay", 1, 1..20)
+    private val nukeDelay by IntegerValue("NukeDelay", 1, 1..20)
 
     /**
      * VALUES
@@ -75,7 +75,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
 
         // Reset bps
         nukeTimer.update()
-        if (nukeTimer.hasTimePassed(nukeDelay.get())) {
+        if (nukeTimer.hasTimePassed(nukeDelay)) {
             nukedCount = 0
             nukeTimer.reset()
         }
@@ -143,7 +143,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
 
                 // Set next target block
                 currentBlock = blockPos
-                attackedBlocks.add(blockPos)
+                attackedBlocks += blockPos
 
                 // Call auto tool
                 if (AutoTool.state)
@@ -211,7 +211,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                         sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                         thePlayer.swingItem()
                         sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, pos, EnumFacing.DOWN))
-                        attackedBlocks.add(pos)
+                        attackedBlocks += pos
                     }
         }
     }

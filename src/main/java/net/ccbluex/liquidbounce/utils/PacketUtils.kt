@@ -47,9 +47,7 @@ object PacketUtils : MinecraftInstance() {
         } else {
             netManager.readWriteLock.writeLock().lock()
             try {
-                netManager.outboundPacketsQueue.add(
-                    NetworkManager.InboundHandlerTuplePacketListener(packet, null)
-                )
+                netManager.outboundPacketsQueue += NetworkManager.InboundHandlerTuplePacketListener(packet, null)
             } finally {
                 netManager.readWriteLock.writeLock().unlock()
             }

@@ -244,7 +244,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
         var selectedSlot = 0
             set(value) {
-                field = value.coerceIn(0, credits.lastIndex)
+                field = (value + credits.size) % credits.size
             }
 
         override fun isSelected(id: Int) = selectedSlot == id

@@ -86,19 +86,19 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     // AAC
     private val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
-    private val aacFast = BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
-    private val aacMotion = FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
-    private val aacMotion2 = FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
+    private val aacFast by BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
+    private val aacMotion by FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
+    private val aacMotion2 by FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
 
     // Hypixel
-    private val hypixelBoost = BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
-    private val hypixelBoostDelay = IntegerValue("Hypixel-BoostDelay", 1200, 0..2000) { mode == "Hypixel" }
-    private val hypixelBoostTimer = FloatValue("Hypixel-BoostTimer", 1f, 0f..5f) { mode == "Hypixel" }
+    private val hypixelBoost by BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
+    private val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 0..2000) { mode == "Hypixel" }
+    private val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0f..5f) { mode == "Hypixel" }
 
     // Other
     private val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
-    private val neruxVaceTicks = IntegerValue("NeruxVace-Ticks", 6, 0..20) { mode == "NeruxVace" }
-    private val redeskyHeight = FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
+    private val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 0..20) { mode == "NeruxVace" }
+    private val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
 
     // Visuals
     private val mark by BoolValue("Mark", true)
@@ -120,7 +120,6 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     private var moveSpeed = 0.0
     private var lastDistance = 0.0
     private var failedStart = false
-    private val cubecraft2TickTimer = TickTimer()
     private val cubecraftTeleportTickTimer = TickTimer()
     private val freeHypixelTimer = TickTimer()
     private var freeHypixelYaw = 0f
@@ -222,7 +221,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                 }
                 "redesky" -> {
                     if (mc.thePlayer.onGround) {
-                        redeskyVClip1(redeskyHeight.get())
+                        redeskyVClip1(redeskyHeight)
                     }
                 }
             }
@@ -316,7 +315,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                 }
                 "aac3.0.5" -> {
                     if (aac3delay == 2) thePlayer.motionY = 0.1 else if (aac3delay > 2) aac3delay = 0
-                    if (aacFast.get()) {
+                    if (aacFast) {
                         if (thePlayer.movementInput.moveStrafe == 0f) thePlayer.jumpMovementFactor = 0.08f
                         else thePlayer.jumpMovementFactor = 0f
                     }
@@ -481,7 +480,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                     displayChatMessage("§8[§c§lMineplex-§a§lFly§8] §aSelect an empty slot to fly.")
                 }
                 "aac3.3.12" -> {
-                    if (thePlayer.posY < -70) thePlayer.motionY = aacMotion.get().toDouble()
+                    if (thePlayer.posY < -70) thePlayer.motionY = aacMotion.toDouble()
                     mc.timer.timerSpeed = 1f
                     if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
                         mc.timer.timerSpeed = 0.2f
@@ -501,7 +500,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                     if (thePlayer.isDead) wasDead = true
                     if (wasDead || thePlayer.onGround) {
                         wasDead = false
-                        thePlayer.motionY = aacMotion2.get().toDouble()
+                        thePlayer.motionY = aacMotion2.toDouble()
                         thePlayer.onGround = false
                     }
                     mc.timer.timerSpeed = 1f
@@ -541,15 +540,15 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                 }
                 "neruxvace" -> {
                     if (!thePlayer.onGround) aac3glideDelay++
-                    if (aac3glideDelay >= neruxVaceTicks.get() && !thePlayer.onGround) {
+                    if (aac3glideDelay >= neruxVaceTicks && !thePlayer.onGround) {
                         aac3glideDelay = 0
                         thePlayer.motionY = .015
                     }
                 }
                 "hypixel" -> {
-                    val boostDelay = hypixelBoostDelay.get()
-                    if (hypixelBoost.get() && !flyTimer.hasTimePassed(boostDelay)) {
-                        mc.timer.timerSpeed = 1f + hypixelBoostTimer.get() * (flyTimer.hasTimeLeft(boostDelay.toLong())
+                    val boostDelay = hypixelBoostDelay
+                    if (hypixelBoost && !flyTimer.hasTimePassed(boostDelay)) {
+                        mc.timer.timerSpeed = 1f + hypixelBoostTimer * (flyTimer.hasTimeLeft(boostDelay.toLong())
                             .toFloat() / boostDelay)
                     }
                     hypixelTimer.update()

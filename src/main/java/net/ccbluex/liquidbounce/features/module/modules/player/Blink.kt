@@ -53,14 +53,8 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
             fakePlayer = faker
         }
         synchronized(positions) {
-            positions.add(
-                doubleArrayOf(
-                    thePlayer.posX,
-                    thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2,
-                    thePlayer.posZ
-                )
-            )
-            positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ))
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2, thePlayer.posZ)
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
         }
         pulseTimer.reset()
     }
@@ -95,7 +89,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
             packet is C0BPacketEntityAction || packet is C02PacketUseEntity
         ) {
             event.cancelEvent()
-            packets.add(packet)
+            packets += packet
         }
     }
 
@@ -104,13 +98,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
         val thePlayer = mc.thePlayer ?: return
 
         synchronized(positions) {
-            positions.add(
-                doubleArrayOf(
-                    thePlayer.posX,
-                    thePlayer.entityBoundingBox.minY,
-                    thePlayer.posZ
-                )
-            )
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
         }
         if (pulse && pulseTimer.hasTimePassed(pulseDelay)) {
             blink()
@@ -120,11 +108,10 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val color = if (Breadcrumbs.colorRainbow.get()) rainbow() else Color(
-            Breadcrumbs.colorRed,
-            Breadcrumbs.colorGreen,
-            Breadcrumbs.colorBlue
-        )
+        val color =
+            if (Breadcrumbs.colorRainbow) rainbow()
+            else Color(Breadcrumbs.colorRed, Breadcrumbs.colorGreen, Breadcrumbs.colorBlue)
+
         synchronized(positions) {
             glPushMatrix()
             glDisable(GL_TEXTURE_2D)

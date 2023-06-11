@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
 import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.network.play.server.S40PacketDisconnect
+import net.minecraft.network.play.server.S45PacketTitle
 import net.minecraft.util.ChatComponentText
 import net.minecraft.util.Session
 import java.util.*
@@ -106,36 +107,37 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         }
     }
 
-    private fun respond(msg: String?): Boolean {
-        if (msg == null) return false
-
-        when {
-            register && "/reg" in msg -> {
-                addNotification(Notification("Trying to register."))
-                Timer().schedule(sendDelay.toLong()) {
-                    mc.thePlayer.sendChatMessage("/register $password $password")
-                }
+    private fun respond(msg: String) = when {
+        register && "/reg" in msg -> {
+            addNotification(Notification("Trying to register."))
+            Timer().schedule(sendDelay.toLong()) {
+                mc.thePlayer.sendChatMessage("/register $password $password")
             }
-            login && "/log" in msg -> {
-                addNotification(Notification("Trying to log in."))
-                Timer().schedule(sendDelay.toLong()) {
-                    mc.thePlayer.sendChatMessage("/login $password")
-                }
-            }
-            else -> return false
+            true
         }
-        return true
+        login && "/log" in msg -> {
+            addNotification(Notification("Trying to log in."))
+            Timer().schedule(sendDelay.toLong()) {
+                mc.thePlayer.sendChatMessage("/login $password")
+            }
+            true
+        }
+        else -> false
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
         when (packet) {
-            is S02PacketChat -> {
+            is S02PacketChat, is S45PacketTitle -> {
                 // Don't respond to register / login prompts when failed once
                 if (!passwordValue.isSupported() || status == Status.STOPPED) return
 
-                val msg = packet.chatComponent?.unformattedText?.lowercase() ?: return
+                val msg = when (packet) {
+                    is S02PacketChat -> packet.chatComponent?.unformattedText?.lowercase()
+                    is S45PacketTitle -> packet.message?.unformattedText?.lowercase()
+                    else -> return
+                } ?: return
 
                 if (status == Status.WAITING) {
                     // Try to register / log in, return if invalid message
