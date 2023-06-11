@@ -32,12 +32,12 @@ object UltralightIntegrationHook : Listenable {
     }
 
     val screenRenderHandler = handler<ScreenRenderEvent> {
-        UltralightEngine.render(RenderLayer.SCREEN_LAYER, it.matrices)
-        UltralightEngine.render(RenderLayer.SPLASH_LAYER, it.matrices)
+        UltralightEngine.render(RenderLayer.SCREEN_LAYER, it.context)
+        UltralightEngine.render(RenderLayer.SPLASH_LAYER, it.context)
     }
 
     val overlayRenderHandler = handler<OverlayRenderEvent> {
-        UltralightEngine.render(RenderLayer.OVERLAY_LAYER, it.matrices)
+        UltralightEngine.render(RenderLayer.OVERLAY_LAYER, it.context)
     }
 
     val windowResizeWHandler = handler<WindowResizeEvent> {

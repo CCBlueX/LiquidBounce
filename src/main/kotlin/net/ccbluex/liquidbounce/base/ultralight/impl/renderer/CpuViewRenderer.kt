@@ -23,6 +23,7 @@ import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.UltralightViewConfig
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
@@ -51,7 +52,7 @@ class CpuViewRenderer : ViewRenderer {
     /**
      * Render the current view
      */
-    override fun render(view: UltralightView, matrices: MatrixStack) {
+    override fun render(view: UltralightView, context: DrawContext) {
         if (glTexture == -1) {
             createGlTexture()
         }

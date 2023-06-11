@@ -1,5 +1,5 @@
 {
-  "modmenu.descriptionTranslation.liquidbounce": "Um client de injeção forge gratuito e de cógido aberto"
+  "modmenu.descriptionTranslation.liquidbounce": "Um client de injeção forge gratuito e de cógido aberto",
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.forum": "Forum",
   "liquidbounce.generic.error": "Erro",
@@ -312,8 +312,7 @@
 
   "liquidbounce.module.itemEsp.description": "Deixa você ver itens dropados pela parede.",
 
-  "liquidbounce.module.nametags.description": "Faz nomes mais viziveis e mostra mais informações
-.",
+  "liquidbounce.module.nametags.description": "Faz nomes mais viziveis e mostra mais informações.",
 
   "liquidbounce.module.traces.description": "Mostra linhas em entidades a uma certa distancia de você.",
 

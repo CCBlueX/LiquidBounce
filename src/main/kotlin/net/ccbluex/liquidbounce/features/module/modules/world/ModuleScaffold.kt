@@ -62,7 +62,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             compareByCondition(
                 o1,
                 o2
-            ) { (it.item as BlockItem).block.defaultState.material.isSolid }
+            ) { (it.item as BlockItem).block.defaultState.isSolid }
         },
         { o1, o2 ->
             compareByCondition(
@@ -301,7 +301,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     val currPos = posToInvestigate.add(direction.opposite.vector)
                     val currState = currPos.getState() ?: return@mapNotNull null
 
-                    if (currState.isAir || currState.material.isReplaceable) {
+                    if (currState.isAir || currState.isReplaceable) {
                         return@mapNotNull null
                     }
 

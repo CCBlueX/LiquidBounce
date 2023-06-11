@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
@@ -61,10 +62,10 @@ class GameRenderEvent : Event()
 class EngineRenderEvent(val tickDelta: Float) : Event()
 
 @Nameable("overlayRender")
-class OverlayRenderEvent(val matrices: MatrixStack, val tickDelta: Float) : Event()
+class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
 
 @Nameable("screenRender")
-class ScreenRenderEvent(val screen: Screen, val matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float) : Event()
+class ScreenRenderEvent(val screen: Screen, val context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) : Event()
 
 @Nameable("windowResize")
 class WindowResizeEvent(val window: Long, val width: Int, val height: Int) : Event()

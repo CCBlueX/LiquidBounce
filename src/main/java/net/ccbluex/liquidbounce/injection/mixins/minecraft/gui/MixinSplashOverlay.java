@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay;
 import net.ccbluex.liquidbounce.base.ultralight.theme.Page;
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceReload;
@@ -61,11 +62,11 @@ public class MixinSplashOverlay {
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void hookSplashRender(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo callbackInfo) {
+    private void hookSplashRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (viewOverlay != null) {
             if (this.reload.isComplete()) {
                 if (this.client.currentScreen != null) {
-                    this.client.currentScreen.render(matrices, 0, 0, delta);
+                    this.client.currentScreen.render(context, 0, 0, delta);
                 }
 
                 if (!closing) {
@@ -83,8 +84,8 @@ public class MixinSplashOverlay {
                 }
             }
 
-            UltralightEngine.INSTANCE.render(RenderLayer.SPLASH_LAYER, matrices);
-            callbackInfo.cancel();
+            UltralightEngine.INSTANCE.render(RenderLayer.SPLASH_LAYER, context);
+            ci.cancel();
         }
     }
 

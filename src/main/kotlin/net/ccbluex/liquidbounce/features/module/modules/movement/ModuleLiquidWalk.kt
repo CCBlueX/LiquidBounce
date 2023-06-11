@@ -45,7 +45,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
             get() = modes
 
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.material.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
+            if (event.state.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
@@ -67,7 +67,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
         private var tick = false
 
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.material.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
+            if (event.state.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
             }
         }

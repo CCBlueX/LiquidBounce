@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.longedSize
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.math.MatrixStack
 
@@ -121,8 +122,8 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
     /**
      * Render view
      */
-    open fun render(matrices: MatrixStack) {
-        viewRenderer.render(ultralightView.get(), matrices)
+    open fun render(context: DrawContext) {
+        viewRenderer.render(ultralightView.get(), context)
     }
 
     /**
