@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.item.isEmpty
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -147,15 +146,16 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                         ) items += slot
                     }
 
-                    val randomSlot = nextInt(endExclusive = items.size)
-                    val slot = items[randomSlot]
+                    if (items.size > 0) {
+                        val randomSlot = nextInt(endExclusive = items.size)
+                        val slot = items[randomSlot]
 
-                    tickedActions[{
-                        move(screen, slot)
-                    }] = slot.slotNumber
+                        tickedActions[{
+                            move(screen, slot)
+                        }] = slot.slotNumber
 
-                    resetDelay()
-
+                        resetDelay()
+                    }
                 } while (delayTimer.hasTimePassed(nextDelay) && items.isNotEmpty())
                 return
             }
@@ -167,10 +167,10 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                 val stack = slot.stack
 
                 if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, slot.slotNumber)) {
-                    ClientUtils.displayChatMessage("${slot.slotNumber}, ${slot.slotNumber}, $slotIndex, CAUGHT")
                     tickedActions[{
                         move(screen, slot)
                     }] = slot.slotNumber
+
                     resetDelay()
                 }
             }
