@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
@@ -92,6 +93,8 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
     private var contentReceived = 0
 
+    private var tickedActions = hashMapOf<() -> Unit, Int>()
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val thePlayer = mc.thePlayer
@@ -99,9 +102,9 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         val screen = mc.currentScreen ?: return
 
         if (screen !is GuiChest || mc.currentScreen == null) {
-            if (delayOnFirst)
-                delayTimer.reset()
+            if (delayOnFirst) delayTimer.reset()
             autoCloseTimer.reset()
+            tickedActions.clear()
             return
         }
 
@@ -110,16 +113,18 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
             return
         }
 
-
-
         // No Compass
-        if (noCompass && thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass")
-            return
+        if (noCompass && thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass") return
 
         // Chest title
-        if (chestTitle && (screen.lowerChestInventory == null ||
-            ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))).displayName !in screen.lowerChestInventory.name))
-            return
+        if (chestTitle && (screen.lowerChestInventory == null || ItemStack(
+                Item.itemRegistry.getObject(
+                    ResourceLocation(
+                        "minecraft:chest"
+                    )
+                )
+            ).displayName !in screen.lowerChestInventory.name)
+        ) return
 
         // Is empty?
         if (!isEmpty(screen) && (!closeOnFull || !fullInventory)) {
@@ -135,14 +140,22 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                         val stack = slot.stack
 
-                        if (stack != null && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1)))
-                            items += slot
+                        if (stack != null && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(
+                                stack, -1
+                            )) && !tickedActions.containsValue(slot.slotNumber)
+                        ) items += slot
                     }
 
-                    val randomSlot = nextInt(endExclusive = items.size)
-                    val slot = items[randomSlot]
+                    if (items.size > 0) {
+                        val randomSlot = nextInt(endExclusive = items.size)
+                        val slot = items[randomSlot]
 
-                    move(screen, slot)
+                        tickedActions[{
+                            move(screen, slot)
+                        }] = slot.slotNumber
+
+                        resetDelay()
+                    }
                 } while (delayTimer.hasTimePassed(nextDelay) && items.isNotEmpty())
                 return
             }
@@ -153,14 +166,37 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                 val stack = slot.stack
 
-                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack)) {
-                    move(screen, slot)
+                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, slot.slotNumber)) {
+                    tickedActions[{
+                        move(screen, slot)
+                    }] = slot.slotNumber
+
+                    resetDelay()
                 }
             }
-        } else if (autoClose && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay)) {
-            thePlayer.closeScreen()
+        } else if (autoClose && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(
+                nextCloseDelay
+            ) && !tickedActions.containsValue(contentReceived)
+        ) {
+            tickedActions[{
+                thePlayer.closeScreen()
+            }] = contentReceived
+
             nextCloseDelay = randomDelay(autoCloseMinDelay, autoCloseMaxDelay)
         }
+    }
+
+    override fun onEnable() {
+        tickedActions.clear()
+    }
+
+    @EventTarget
+    private fun onTick(event: TickEvent) {
+        for (action in tickedActions) {
+            action.key()
+        }
+
+        tickedActions.clear()
     }
 
     @EventTarget
@@ -172,13 +208,19 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         }
     }
 
-    private fun shouldTake(stack: ItemStack?): Boolean {
-        return stack != null && !stack.isEmpty && (!onlyItems || stack.item !is ItemBlock)
-                && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1))
+    private fun shouldTake(stack: ItemStack?, slot: Int): Boolean {
+        return stack != null && !stack.isEmpty && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(
+            stack, -1
+        )) && !tickedActions.containsValue(
+            slot
+        )
     }
 
     private fun move(screen: GuiChest, slot: Slot) {
         screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
+    }
+
+    private fun resetDelay() {
         delayTimer.reset()
         nextDelay = randomDelay(minDelay, maxDelay)
     }
@@ -189,8 +231,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
             val stack = slot.stack
 
-            if (shouldTake(stack))
-                return false
+            if (shouldTake(stack, i)) return false
         }
 
         return true
