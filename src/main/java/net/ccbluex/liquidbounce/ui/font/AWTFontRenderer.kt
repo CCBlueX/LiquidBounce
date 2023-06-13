@@ -17,6 +17,7 @@ import java.awt.Font
 import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import kotlin.math.roundToInt
 
 /**
  * Generate new bitmap based font renderer
@@ -129,7 +130,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
                 GlStateManager.resetColor()
 
+                GlStateManager.pushMatrix()
                 glScaled(reverse, reverse, reverse)
+                val fontScaling = font.size / 32.0
+
+                glScaled(fontScaling, fontScaling, 0.0)
                 mc.fontRendererObj.posY = 0.0f
                 mc.fontRendererObj.posX = (currX / 4) + unicodeWidth
                 val width = mc.fontRendererObj.renderUnicodeChar(char, false)
@@ -140,7 +145,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
                 } else {
                     bindTexture(textureID)
                 }
-                glScaled(scale, scale, scale)
+                GlStateManager.popMatrix()
 
                 glBegin(GL_QUADS)
             } else {
@@ -278,11 +283,13 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
         var width = 0
         var mcWidth = 0
 
+        val fontScaling = font.size / 32.0
+
         for (c in text.toCharArray()) {
             val fontChar = charLocations.getOrNull(c.code)
 
             if (fontChar == null) {
-                mcWidth += mc.fontRendererObj.getCharWidth(c) + 8
+                mcWidth += ((mc.fontRendererObj.getCharWidth(c) + 8) * fontScaling).roundToInt()
             } else {
                 width += fontChar.width - 8
             }
