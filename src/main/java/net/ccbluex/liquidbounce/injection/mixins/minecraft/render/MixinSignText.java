@@ -20,31 +20,27 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSignRender;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.client.render.block.entity.SignBlockEntityRenderer;
+import net.minecraft.block.entity.SignText;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Arrays;
 import java.util.function.Function;
 
-@Mixin(SignBlockEntityRenderer.class)
-public class MixinSignBlockEntityRenderer {
+@Mixin(SignText.class)
+public class MixinSignText {
 
-    @Redirect(method = "renderText", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/SignBlockEntity;updateSign(ZLjava/util/function/Function;)[Lnet/minecraft/text/OrderedText;"))
-    private OrderedText[] injectNoSignRender(SignBlockEntity signBlockEntity, boolean filterText, Function<Text, OrderedText> textOrderingFunction) {
-        var signText = signBlockEntity.updateSign(filterText, textOrderingFunction);
-
+    @Inject(method = "getOrderedMessages", at = @At("HEAD"), cancellable = true)
+    private void injectNoSignRender(boolean filtered, Function<Text, OrderedText> messageOrderer, CallbackInfoReturnable<OrderedText[]> cir) {
         if (ModuleNoSignRender.INSTANCE.getEnabled()) {
-            signText = new OrderedText[signText.length];
-
+            var signText = new OrderedText[4];
             Arrays.fill(signText, OrderedText.EMPTY);
+            cir.setReturnValue(signText);
         }
-
-        return signText;
     }
 
 }

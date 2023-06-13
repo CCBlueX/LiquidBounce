@@ -24,8 +24,6 @@ import com.labymedia.ultralight.gpu.UltralightOpenGLGPUDriverNative
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.DrawableHelper
-import net.minecraft.client.util.math.MatrixStack
 
 /**
  * A gpu view renderer
@@ -58,7 +56,7 @@ class GpuViewRenderer(val driver: UltralightOpenGLGPUDriverNative) : ViewRendere
 
         driver.bindTexture(0, textureId)
 
-        context.drawTexture(matrices, 0, 0, 1, 0.0f, 0.0f, mc.window.scaledWidth, mc.window.scaledHeight, mc.window.scaledWidth, mc.window.scaledHeight)
+        // context.drawTexture(matrices, 0, 0, 1, 0.0f, 0.0f, mc.window.scaledWidth, mc.window.scaledHeight, mc.window.scaledWidth, mc.window.scaledHeight)
     }
 
     override fun delete() {

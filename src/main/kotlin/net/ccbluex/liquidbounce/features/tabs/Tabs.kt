@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
-import net.fabricmc.fabric.impl.itemgroup.ItemGroupHelper
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -34,7 +33,9 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.potion.PotionUtil
 import net.minecraft.registry.Registries
+import net.minecraft.registry.Registry
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 import java.util.*
 
 /**
@@ -199,8 +200,9 @@ open class LiquidsItemGroup(
             }
             .build()
 
-        // Uses FabricAPI to add tab to creative inventory
-        ItemGroupHelper.appendItemGroup(itemGroup)
+        // Add tab to creative inventory
+        // todo: figure out why this is not working
+        Registry.register(Registries.ITEM_GROUP, Identifier("liquidbounce", plainName), itemGroup)
 
         return itemGroup
     }

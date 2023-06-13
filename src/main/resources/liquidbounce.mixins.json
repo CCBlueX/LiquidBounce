@@ -55,7 +55,7 @@
     "minecraft.render.MixinLightmapTextureManager",
     "minecraft.render.MixinLivingEntityRenderer",
     "minecraft.render.MixinRenderTickCounter",
-    "minecraft.render.MixinSignBlockEntityRenderer",
+    "minecraft.render.MixinSignText",
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer"

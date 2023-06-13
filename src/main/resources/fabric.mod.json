@@ -33,7 +33,7 @@
   "depends": {
     "fabricloader": ">=0.14.21",
     "fabric-language-kotlin": ">=1.9.2+kotlin.1.8.10",
-    "minecraft": "1.20"
+    "minecraft": "1.20.1"
   },
   "accessWidener": "liquidbounce.accesswidener"
 }
