@@ -59,11 +59,11 @@
 
         "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度.",
 
-        "module.ambience.description": "改变你的世界时间和天气.（客户端）",
+        "module.ambience.description": "改变你的世界时间和天气. (客户端)",
 
         "module.antiHunger.description": "防止你饥饿.",
 
-        "module.bedGodMode.description": "允许你躺在床上四处走动.（对于1.9）",
+        "module.bedGodMode.description": "允许你躺在床上四处走动. (对于1.9)",
 
         "module.clip.description": "允许你clip通过方块.",
         
@@ -183,11 +183,11 @@
         
         "module.keepAlive.description": "尝试防止你死去.",
         
-        "module.keepContainer.description": "允许你在任何位置打开上次关闭的容器（按INSERT键打开）",
+        "module.keepContainer.description": "允许你在任何位置打开上次关闭的容器 (按INSERT键打开)",
         
         "module.kick.description": "让你把自己从服务器中踢出去.",
         
-        "module.ladderJump.description": "碰到梯子时把你发射到天上.（AAC）",
+        "module.ladderJump.description": "碰到梯子时把你发射到天上. (AAC)",
         
         "module.liquidChat.description": "允许你与其他LiquidBounce用户聊天.",
         
@@ -209,9 +209,9 @@
         
         "module.noBob.description": "禁用视角摇晃效果.",
         
-        "module.noBooks.description": "阻止服务器打开书籍（强制广告，…）.",
+        "module.noBooks.description": "阻止服务器打开书籍 (强制广告，…).",
         
-        "module.noClip.description": "允许你自由穿越墙壁（必须有沙子落在你的头上）.",
+        "module.noClip.description": "允许你自由穿越墙壁 (必须有沙子落在你的头上).",
         
         "module.noFOV.description": "禁用由速度等效果引起的视野变化.",
         
@@ -277,7 +277,7 @@
         
         "module.serverCrasher.description": "允许你使某些服务器崩溃.",
         
-        "module.skinDerp.description": "让你的皮肤闪烁（需要多层皮肤）.",
+        "module.skinDerp.description": "让你的皮肤闪烁 (需要多层皮肤).",
 
         "module.slimeJump.description": "允许你在粘液块上跳得更高.",
         
