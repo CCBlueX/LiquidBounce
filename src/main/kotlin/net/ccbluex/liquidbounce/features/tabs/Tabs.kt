@@ -201,8 +201,7 @@ open class LiquidsItemGroup(
             .build()
 
         // Add tab to creative inventory
-        // todo: figure out why this is not working
-        Registry.register(Registries.ITEM_GROUP, Identifier("liquidbounce", plainName), itemGroup)
+        Registry.register(Registries.ITEM_GROUP, Identifier("liquidbounce", plainName.lowercase()), itemGroup)
 
         return itemGroup
     }
