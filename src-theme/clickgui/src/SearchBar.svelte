@@ -18,10 +18,31 @@
 
         filteredModules = modules.filter(module => module.name.toLowerCase().includes(value.toLowerCase()));
     };
+    function isElementVisible(container, element) {
+        const containerTop = container.scrollTop;
+        const containerBottom = containerTop + container.clientHeight;
+        const elementTop = element.offsetTop;
+        const elementBottom = elementTop + element.clientHeight;
 
+        return elementTop >= containerTop && elementBottom <= containerBottom;
+    }
+    function scrollToElement(container, element) {
+        if (!isElementVisible(container, element)) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
     const handleToggleClick = (module) => {
         module.instance.setEnabled(!module.enabled);
     };
+
+    const handleHiglight = (module) => {
+        const elem = document.getElementById(module.name + "-module");
+        scrollToElement(elem.parentElement, elem)
+        elem.classList.add("module-highlight");
+        setTimeout(() => {
+            elem.classList.remove("module-highlight");
+        }, 1000);
+    }
 
     try {
         events.on("toggleModule", event => {
@@ -101,7 +122,7 @@
         {#if 0 < filteredModules.length}
             <div class="search-bar-list">
                 {#each filteredModules as module}
-                    <div class="search-bar-list-item" on:mousedown={() => handleToggleClick(module)}
+                    <div class="search-bar-list-item" on:mousedown={(e) => (e.button === 0 ? handleToggleClick : handleHiglight)(module)}
                          class:selected={selectedModule === module}>
                         <span class:active={module.enabled}>
                             {module.name}

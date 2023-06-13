@@ -145,7 +145,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         ) != true) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
-                            wait(inventoryConstraints.delay.random())
+                            wait { inventoryConstraints.delay.random() }
 
                             return@repeatable
                         }
@@ -166,7 +166,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             }
 
             if (executeAction(i, 1, SlotActionType.THROW)) {
-                wait(inventoryConstraints.delay.random())
+                wait { inventoryConstraints.delay.random() }
 
                 return@repeatable
             }
@@ -585,7 +585,7 @@ class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         private val COMPARATOR = ComparatorChain<WeightedBlockItem>({ o1, o2 ->
             compareByCondition(
                 o1, o2
-            ) { (it.itemStack.item as BlockItem).block.defaultState.isSolid }
+            ) { (it.itemStack.item as BlockItem).block.defaultState.isSolid && !notABlock.contains((it.itemStack.item as BlockItem).block) }
         }, { o1, o2 ->
             compareByCondition(
                 o1, o2

@@ -5,6 +5,18 @@
   "liquidbounce.generic.error": "Ошибка",
   "liquidbounce.generic.enabled": "Включен",
   "liquidbounce.generic.disabled": "Выключен",
+  "liquidbounce.generic.notifyDeveloper": "Проверьте свой игровой журнал и оповестите нас.",
+
+  "liquidbounce.liquidchat.states.connecting": "Подключение к серверу чата...",
+  "liquidbounce.liquidchat.states.connected": "Подключено к серверу чата!",
+  "liquidbounce.liquidchat.states.disconnected": "Отключено от сервера чата!",
+  "liquidbounce.liquidchat.states.loggingIn": "Авторизация...",
+  "liquidbounce.liquidchat.states.loggedIn": "Авторизовано!",
+
+  "liquidbounce.liquidchat.writeMessage": "Отправлено сообщение: %s",
+  "liquidbounce.liquidchat.writePrivateMessage": "Отправляет приватное сообщение: %s",
+
+  "liquidbounce.liquidchat.jwtTokenReceived": "Получен JWT токен! Перезагружаемся...",
 
   "liquidbounce.commandManager.exceptionOccurred": "Не удалось выполнить команду. %s",
   "liquidbounce.commandManager.unknownCommand": "Команда \"%s\" не найдена.",
@@ -39,7 +51,7 @@
   "liquidbounce.command.binds.subcommand.list.description": "Список всех привязок.",
   "liquidbounce.command.binds.subcommand.list.parameter.page.description": "Страница для показа.",
   "liquidbounce.command.binds.subcommand.list.result.noBindings": "Привязки не найдены.",
-  "liquidbounce.command.binds.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает макисмальное число доступных страниц, Максимальное количество %d.",
+  "liquidbounce.command.binds.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает максимальное число доступных страниц, максимальное количество %d.",
   "liquidbounce.command.binds.subcommand.list.result.bindings": "Привязки",
   "liquidbounce.command.binds.subcommand.list.result.page": "Страница: %s",
 
@@ -57,6 +69,46 @@
 
   "liquidbounce.command.client.subcommand.reload.description": "Перезагружает Ваш клиент",
 
+  "liquidbounce.command.config.subcommand.load.description": "Загружает конфигурационный файл.",
+  "liquidbounce.command.config.subcommand.load.parameter.name.description": "Имя конфигурационного файлы.",
+  "liquidbounce.command.config.subcommand.load.result.notFound": "Конфигурационный файл с названием %s не существует.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoad": "Не удалось загрузить конфигурационного файл с названием %s.",
+  "liquidbounce.command.config.subcommand.load.result.loaded": "Конфигурационного файл с названием %s был успешно загружен.",
+  "liquidbounce.command.config.subcommand.create.parameter.name.description": "Название конфигурационного файла.",
+  "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Перезаписать существующий конфигурационного файл.",
+  "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Не удалось создать конфигурационный файл с названием %s.",
+  "liquidbounce.command.config.subcommand.create.result.created": "Конфигурационный файл с названием %s был успешно создан.",
+  "liquidbounce.command.config.subcommand.create.result.alreadyExists": "Конфигурационный файл с названием %s уже существует.",
+
+  "liquidbounce.command.enemy.description": "Позволяет Вам управлять тем, какие сущности считаются враждебными.",
+  "liquidbounce.command.enemy.subcommand.players.description": "Позволяет Вам управлять тем, считаются ли игроки враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.players.result.enabled": "Игроки теперь считаются враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.players.result.disabled": "Игроки больше не считаются враждебными сущностями.",
+
+  "liquidbounce.command.enemy.subcommand.mobs.description": "Позволяет Вам управлять тем, считаются ли игроки враждебными сущностями.Allows you to toggle if mobs are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.mobs.result.enabled": "Игроки теперь считаются враждебными сущностями.Mobs are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.mobs.result.disabled": "Игроки больше не считаются враждебными сущностями.Mobs are no longer considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.animals.description": "Позволяет Вам управлять тем, считаются ли мобы враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.animals.result.enabled": "Игроки теперь считаются мобы сущностями.",
+  "liquidbounce.command.enemy.subcommand.animals.result.disabled": "Игроки мобы не считаются враждебными сущностями.",
+
+  "liquidbounce.command.enemy.subcommand.dead.description": "Позволяет Вам управлять тем, считаются ли мёртвые сущности враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.dead.result.enabled": "Мёртвые сущности теперь считаются враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.dead.result.disabled": "Мёртвые сущности больше не считаются враждебными сущностями.",
+
+  "liquidbounce.command.enemy.subcommand.invisible.description": "Позволяет Вам управлять тем, считаются ли невидимые сущности враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.invisible.result.enabled": "Невидимые сущности теперь считаются враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.invisible.result.disabled": "Невидимые сущности больше не считаются враждебными сущностями.",
+
+  "liquidbounce.command.enemy.subcommand.friends.description": "Позволяет Вам управлять тем, считаются ли друзья клиента враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.friends.result.enabled": "Друзья клиента теперь считаются враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.friends.result.disabled": "Друзья клиента больше не считаются враждебными сущностями.",
+
+  "liquidbounce.command.enemy.subcommand.teammates.description": "Позволяет Вам управлять тем, считаются ли участники команды враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.teammates.result.enabled": "Участники команды теперь считаются враждебными сущностями.",
+  "liquidbounce.command.enemy.subcommand.teammates.result.disabled": "Участники команды больше не считаются враждебными сущностями.",
+
   "liquidbounce.command.friend.description": "Позволяет Вам управлять список Ваших друзей.",
 
   "liquidbounce.command.friend.subcommand.add.description": "Добавляет имя в список друзей.",
@@ -64,7 +116,7 @@
   "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "Необязательный псевдоним друга.",
   "liquidbounce.command.friend.subcommand.add.result.alreadyFriends": "%s уже в списке друзей.",
   "liquidbounce.command.friend.subcommand.add.result.success": "%s был успешно добавлен в список друзей",
-  "liquidbounce.command.friend.subcommand.add.result.successAlias":  "%s был успешно добавлен в список друзей как %s",
+  "liquidbounce.command.friend.subcommand.add.result.successAlias": "%s был успешно добавлен в список друзей как %s",
 
   "liquidbounce.command.friend.subcommand.remove.description": "Удаляет друга из списка друзей.",
   "liquidbounce.command.friend.subcommand.remove.parameter.name.description": "Имя друга.",
@@ -86,10 +138,32 @@
 
   "liquidbounce.command.help.description": "Список всех доступных команд.",
   "liquidbounce.command.help.parameter.page.description": "Страница для показа.",
-  "liquidbounce.command.help.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает макисмальное число доступных страниц, Максимальное количество %d.",
+  "liquidbounce.command.help.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает максимальное число доступных страниц, максимальное количество %d.",
   "liquidbounce.command.help.result.help": "Помощь.",
   "liquidbounce.command.help.result.pageCount": "Страница: %s",
   "liquidbounce.command.help.result.page": "страница",
+
+  "liquidbounce.command.items.subcommand.add.description": "Добавялет блок в список не блоков.",
+  "liquidbounce.command.items.subcommand.add.parameter.block.description": "Имя блока (например\": \"minecraft:stone\")",
+  "liquidbounce.command.items.subcommand.add.result.blockNotExists": "Блока %s не существует.",
+  "liquidbounce.command.items.subcommand.add.result.blockIsPresent": "Блок %s уже в список не блоков.",
+  "liquidbounce.command.items.subcommand.add.result.blockAdded": "Блок %s был добавлен в список не блоков.",
+
+  "liquidbounce.command.items.subcommand.remove.description": "Убирает блок из список не блоков.",
+  "liquidbounce.command.items.subcommand.remove.parameter.block.description": "Название блока (например: \"minecraft:stone\")",
+  "liquidbounce.command.items.subcommand.remove.result.blockNotExists": "Блока %s не существует.",
+  "liquidbounce.command.items.subcommand.remove.result.blockNotFound": "Блока %s нету в списке не блоков.",
+  "liquidbounce.command.items.subcommand.remove.result.blockRemoved": "Блок %s был убран из список не блоков.",
+
+  "liquidbounce.command.items.subcommand.list.description": "Показывает список не блоков.",
+  "liquidbounce.command.items.subcommand.list.parameter.page.description": "Страница для отображения.",
+  "liquidbounce.command.items.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает максисмальное число доступных страниц, максимальное количество %d.",
+  "liquidbounce.command.items.subcommand.list.result.list": "Список",
+  "liquidbounce.command.items.subcommand.list.result.pageCount": "Страница: %s",
+  "liquidbounce.command.items.subcommand.list.result.page": "страница",
+
+  "liquidbounce.command.items.subcommand.clear.description": "Очищает список не блоков для отображения.",
+  "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "Список не блоков очищен.",
 
   "liquidbounce.command.hide.description": "Скрывает модуль.",
 
@@ -106,7 +180,7 @@
   "liquidbounce.command.hide.subcommand.list.description": "Список всех скрытых модулей.",
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Страница для показа",
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "Нет скрытых модулей.",
-  "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает макисмальное число доступных страниц, Максимальное количество %d.",
+  "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает максимальное число доступных страниц, максимальное количество %d.",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Скрыт",
   "liquidbounce.command.hide.subcommand.list.result.page": "Страница",
 
@@ -114,15 +188,27 @@
   "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Все модули успешно показаны.",
 
   "liquidbounce.command.panic.description": "Выключает все модули",
+
   "liquidbounce.command.panic.parameter.category.description": "Отключает модули только в определённой категории.",
+
   "liquidbounce.command.panic.result.categoryNotFound": "Категория \"%s\" не найден.",
   "liquidbounce.command.panic.result.disabledAllModules": "Все модули выключены.",
   "liquidbounce.command.panic.result.disabledAllCategoryModules": "Все модули в категории \"%s\" отключены.",
   "liquidbounce.command.panic.result.nonRender": "Необрабатываемый",
 
+  "liquidbounce.command.ping.description": "Узнаёт Ваш ping.",
+  "liquidbounce.command.ping.result.pingCheck": "Ваш ping - %sмс.",
+
   "liquidbounce.command.prefix.description": "Меняет префикс команды.",
   "liquidbounce.command.prefix.parameter.prefix.description": "Новый префикс команды.",
   "liquidbounce.command.prefix.result.prefixChanged": "Успешно изменён префикс команды на \"%s\".",
+
+  "liquidbounce.command.remoteview.description": "Позволяет Вам увидеть перспективу другого игрока.",
+  "liquidbounce.command.remoteview.subcommand.view.result.viewPlayer": "Сейчас Вы видеть перспективы %s.",
+  "liquidbounce.command.remoteview.subcommand.view.result.caseOff": "Чтобы прекратить просмотр перспективы %s, выполните команду \".rv off\"",
+  "liquidbounce.command.remoteview.subcommand.view.result.alreadyViewing": "Вы уже смотрите перспективу %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.off": "Успешно прикрашен просмотр перспективы %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "Вы не просматриваете ничью перспективу.",
 
   "liquidbounce.command.toggle.description": "Переключает модуль.",
   "liquidbounce.command.toggle.parameter.name.description": "Имя модуля.",
@@ -130,6 +216,41 @@
   "liquidbounce.command.toggle.result.moduleToggled": "%s был %s.",
   "liquidbounce.command.toggle.result.enabled": "включен",
   "liquidbounce.command.toggle.result.disabled": "выключен",
+
+  "liquidbounce.command.value.description": "Позволяет вам менять значения настроек",
+  "liquidbounce.command.value.result.success": "Успешно изменено значение настройки.",
+  "liquidbounce.command.value.result.valueNotFound": "Не удалось найти настройку %s!",
+
+  "liquidbounce.command.xray.description": "Позволяет Вам видеть руды через стены.",
+
+  "liquidbounce.command.xray.subcommand.add.description": "Добавляет блок для отображения в список.",
+  "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Имя блока (например\": \"minecraft:stone\")",
+  "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "Блока %s не существует.",
+  "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "Блок %s уже в списке отображаемых блоков.",
+  "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Блок %s был добавлен в список для отображения.",
+
+  "liquidbounce.command.xray.subcommand.remove.description": "Убирает блок из списка для отображения,.",
+  "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Название блока (например: \"minecraft:stone\")",
+  "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "Блока %s не существует.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Блока %s нету в списке отображаемых блоков.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Блок %s был убран из списка для отображения.",
+
+  "liquidbounce.command.xray.subcommand.list.description": "Показывает список отображаемых блоков.",
+  "liquidbounce.command.xray.subcommand.list.parameter.page.description": "Страница для отображения.",
+  "liquidbounce.command.xray.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает максимальное число доступных страниц, максимальное количество %d.",
+  "liquidbounce.command.xray.subcommand.list.result.list": "Список",
+  "liquidbounce.command.xray.subcommand.list.result.pageCount": "Страница: %s",
+  "liquidbounce.command.xray.subcommand.list.result.page": "страница",
+
+  "liquidbounce.command.xray.subcommand.clear.description": "Очищает список блоков для отображения.",
+  "liquidbounce.command.xray.subcommand.clear.result.blocksCleared": "Список отображаемых блоков очищен.",
+
+  "liquidbounce.command.enchant.description": "Зачаровывает выбранный предмет.",
+  "liquidbounce.command.enchant.parameter.enchantment.description": "Название зачарования.",
+  "liquidbounce.command.enchant.parameter.level.description": "Уровень зачарования.",
+  "liquidbounce.command.enchant.result.mustBeCreative": "Необходим творческий режим!",
+  "liquidbounce.command.enchant.result.enchantmentNotExists": "Зачарование \"%s\" не существует.",
+  "liquidbounce.command.enchant.result.enchantedItem": "Предмет был зачарован на %s %s уровня.",
 
   "liquidbounce.command.give.description": "Выдать себе предмет.",
   "liquidbounce.command.give.parameter.item.description": "Имя предмета.",
@@ -159,14 +280,7 @@
   "liquidbounce.command.chat.description": "Отправить сообщение в LiquidChat.",
   "liquidbounce.command.chat.parameter.message.description": "Сообщения для отправки.",
 
-  "liquidbounce.liquidchat.states.connecting": "Подключение к серверу чата...",
-  "liquidbounce.liquidchat.states.connected": "Подключено к серверу чата!",
-  "liquidbounce.liquidchat.states.disconnected": "Отключено от сервера чата!",
-  "liquidbounce.liquidchat.states.loggingIn": "Авторизация...",
-  "liquidbounce.liquidchat.states.loggedIn": "Авторизовано!",
-
-  "liquidbounce.liquidchat.writeMessage": "Отправлено сообщение: %s",
-  "liquidbounce.liquidchat.writePrivateMessage": "Отправляет приватное сообщение: %s",
+  "liquidbounce.module.aimbot.description": "Автоматически наводится на выбранные сущности вокруг Вас.",
 
   "liquidbounce.module.autoArmor.description": "Автоматически одевает лучшую броню.",
   "liquidbounce.module.autoArmor.value.delay.description": "Время для задержки между надеванием нескольких предметов.",
@@ -227,7 +341,7 @@
   "liquidbounce.module.freeze.description": "Позволяет Вам заморозить себя в одном месте без ведома сервера.",
 
   "liquidbounce.module.noClip.description": "Позволяет Вам летать сквозь блоки.",
-  "liquidbounce.module.noClip.messages.setbackDetected": "YСервер отбросил Вас назад! Убедитесь, что Вы уже стоите внутри блока.",
+  "liquidbounce.module.noClip.messages.setbackDetected": "Сервер отбросил Вас назад! Убедитесь, что Вы уже стоите внутри блока.",
 
   "liquidbounce.module.parkour.description": "Автоматически прыгает на самый край блока.",
 
@@ -247,7 +361,7 @@
 
   "liquidbounce.module.autoWalk.description": "Автоматически заставляет Вас идти в том направлении, куда Вы смотрите.",
 
-  "liquidbounce.module.blink.description": "Создается впечатление, что Вы телепортируетесь к другим игрокам.",
+  "liquidbounce.module.blink.description": "Создается впечатление, что Вы телепортируйтесь к другим игрокам.",
 
   "liquidbounce.module.eagle.description": "Автоматически приседает на краю блока (aka. FastBridge).",
 
@@ -267,7 +381,7 @@
 
   "liquidbounce.module.nametags.description": "Делает имена игроков более заметными и добавляет полезную информацию.",
 
-  "liquidbounce.module.traces.description": "Рисует линию к каждой сущности определенного радиуса.",
+  "liquidbounce.module.traces.description": "Рисует линию к каждой сущности определённого радиуса.",
 
   "liquidbounce.module.chestAura.description": "Автоматически открывает сундуки вокруг Вас.",
 
@@ -277,49 +391,7 @@
 
   "liquidbounce.module.timer.description": "Изменяет скорость игры.",
 
-  "liquidbounce.generic.notifyDeveloper": "Проверьте свой игровой журнал и оповестите нас.",
-
-  "liquidbounce.command.value.description": "Позволяет вам менять значения настроек",
-  "liquidbounce.command.value.result.success": "Успешно измененно значение настройки.",
-  "liquidbounce.command.value.result.valueNotFound": "Не удалось найти настройку %s!",
-
-  "liquidbounce.command.ping.description": "Узнает Ваш ping.",
-  "liquidbounce.command.ping.result.pingCheck": "Ваш ping - %sмс.",
-
-  "liquidbounce.command.remoteview.description": "Позволяет Вам увидеть перспективу другого игрока.",
-  "liquidbounce.command.remoteview.subcommand.view.result.viewPlayer": "Сейчас Вы видеть преспективы %s.",
-  "liquidbounce.command.remoteview.subcommand.view.result.caseOff": "Чтобы прекратить просмотр перспективы %s, выполните команду \".rv off\"",
-  "liquidbounce.command.remoteview.subcommand.view.result.alreadyViewing": "Вы уже смотрите перспективу %s.",
-  "liquidbounce.command.remoteview.subcommand.off.result.off": "Успешно прикрашен просмотр перспективы %s.",
-  "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "Вы не просматриваете ничью перспективу.",
-
-  "liquidbounce.command.xray.description": "Позволяет Вам видеть руды через стены.",
-
-  "liquidbounce.command.xray.subcommand.add.description": "Добавялет блок для отображения в список.",
-  "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Имя блока (например\": \"minecraft:stone\")",
-  "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "Блока %s не существует.",
-  "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "Блок %s уже в списке отображаемых блоков.",
-  "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Блок %s был добавлен в список для отображения.",
-
-  "liquidbounce.command.xray.subcommand.remove.description": "Убирает блок из списка для отображения,.",
-  "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Название блока (например: \"minecraft:stone\")",
-  "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "Блока %s не существует.",
-  "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Блока %s нету в списке отображаемых блоков.",
-  "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Блок %s был убран из списка для отображения.",
-
-  "liquidbounce.command.xray.subcommand.list.description": "Показывает список отображаемых блоков.",
-  "liquidbounce.command.xray.subcommand.list.parameter.page.description": "Страница для отображения.",
-  "liquidbounce.command.xray.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает макисмальное число доступных страниц, Максимальное количество %d.",
-  "liquidbounce.command.xray.subcommand.list.result.list": "Список",
-  "liquidbounce.command.xray.subcommand.list.result.pageCount": "Страница: %s",
-  "liquidbounce.command.xray.subcommand.list.result.page": "страница",
-
-  "liquidbounce.command.xray.subcommand.clear.description": "Очищает список блоков для отображения.",
-  "liquidbounce.command.xray.subcommand.clear.result.blocksCleared": "Список отображаемых блоков очищен.",
-
-  "liquidbounce.liquidchat.jwtTokenReceived": "Получен JWT токен! Перезеходит...",
-
-  "liquidbounce.module.pingSpoof.noSingleplayer": "Невозможно включить %s в одиночной игре.",
+  "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "Невозможно включить %s в одиночной игре.",
 
   "liquidbounce.module.plugins.description": "Позволяет вам видеть плагины сервера.",
   "liquidbounce.module.plugins.messages.timeOut": "Время для поиска плагинов вышло.",
@@ -328,18 +400,16 @@
   "liquidbounce.module.noWeb.description": "Убирает замедление паутины.",
 
   "liquidbounce.module.friendClicker.description": "Позволяет Вам добавлять друзей по нажатию.",
-  "liquidbounce.module.friendClicker.addedFriend": "%s был успешно добавлен в списко друзей.",
+  "liquidbounce.module.friendClicker.addedFriend": "%s был успешно добавлен в список друзей.",
   "liquidbounce.module.friendClicker.removedFriend": "%s Был успешно удален из списка друзей.",
 
   "liquidbounce.module.autoGapple.description": "Автоматически есть яблоки, когда Ваше здоровье на исходе.",
 
   "liquidbounce.module.autoSoup.description": "Автоматически есть супы, когда Ваше здоровье на исходе.",
 
-  "liquidbounce.module.badWifi.description": "Задержвает пакеты, чтобы не дать врагу ударить Вас.",
+  "liquidbounce.module.badWifi.description": "Задерживает пакеты, чтобы не дать врагу ударить Вас.",
 
-  "liquidbounce.module.aimbot.description": "Автоматически наводится на выбранные сущности вокруг Вас.",
-
-  "liquidbounce.module.antiReducedDebugInfo.description": "Позволяет вам видеть дополнительную инфорацию для отладки.",
+  "liquidbounce.module.antiReducedDebugInfo.description": "Позволяет вам видеть дополнительную информацию для отладки.",
 
   "liquidbounce.module.ghostHand.description": "Позволяет Вам взаимодействовать с выбранными блоками через стены.",
 
@@ -355,7 +425,7 @@
 
   "liquidbounce.module.blockWalk.description": "Позволяет вам ходить по неполным блокам.",
 
-  "liquidbounce.module.bugUp.description": "Автоматически возвращает Вас обратно при подения с определёенной высоты.",
+  "liquidbounce.module.bugUp.description": "Автоматически возвращает Вас обратно при падения с определённой высоты.",
 
   "liquidbounce.module.elytraFly.description": "Позволяет Вам быстрее лететь с Элитрами.",
 
@@ -425,7 +495,7 @@
 
   "liquidbounce.module.fucker.description": "Ломает/использует выбранные блоки вокруг Вас.",
 
-  "liquidbounce.module.ignite.description": "Автоматически пождигает цели вокруг Вас.",
+  "liquidbounce.module.ignite.description": "Автоматически поджигает цели вокруг Вас.",
 
   "liquidbounce.module.scaffold.description": "Автоматически ставит блоки под Вами.",
 
@@ -439,7 +509,7 @@
 
   "liquidbounce.module.dankBobbing.description": "Увеличивает эффект покачивания.",
 
-  "liquidbounce.module.projectilePuncher.description": "Отбивает приблежающиеся снаряды.",
+  "liquidbounce.module.projectilePuncher.description": "Отбивает приближающиеся снаряды.",
 
   "liquidbounce.module.autoPot.description": "Автоматически бросает зелья лечения, когда Ваше здоровье на исходе.",
 
@@ -449,5 +519,27 @@
 
   "liquidbounce.module.noRotateSet.description": "Не даёт серверу поворачивать Вашу голову.",
 
-  "liquidbounce.module.noSlowBreak.description": "Автоматически меняет скорость ломания блоков в неблагоприятных условиях."
+  "liquidbounce.module.noSlowBreak.description": "Автоматически меняет скорость ломания блоков в неблагоприятных условиях.",
+
+  "liquidbounce.module.trueSight.description": "Позволяет вам видеть невидимые объекты и сущности.",
+
+  "liquidbounce.module.sprint.description": "Спринтует автоматически",
+
+  "liquidbounce.module.cameraClip.description": "Позволяет вам видеть сквозь стены от третьего лица.",
+
+  "liquidbounce.module.reach.description": "Увеличивает ваш охват.",
+
+  "liquidbounce.module.disabler.vulcan.message": "Вам нужно иметь трезубец, зачарованный на тягун в левой руке, чтобы выключить проверки передвижения Vulcan.",
+
+  "liquidbounce.module.perfectHit.description": "Разрешает атаки только тогда, когда время восстановления атаки полностью восстановлено.",
+
+  "liquidbounce.module.autoClicker.description": "Автоматически нажимает, пока Вы держите кнопку нажатой.",
+
+  "liquidbounce.module.antiVanish.description": "Позволяет увидеть невидимых игроков на некоторых серверах.",
+  "liquidbounce.module.antiVanish.messages.staffDetected": "Мы засекли человека из персонала в невидимке.",
+  "liquidbounce.module.antiVanish.messages.allClear": "Ни одного невидимого игрока не было найдено.",
+
+  "liquidbounce.module.autoWeapon.description": "Автоматически выбирает лучшее оружие в вашем арсенале.",
+
+  "liquidbounce.module.derp.description": "Заставляет все выглядеть так, как если бы вы вращали головой во все стороны"
 }

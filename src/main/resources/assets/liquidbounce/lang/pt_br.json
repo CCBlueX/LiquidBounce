@@ -255,7 +255,7 @@
   "liquidbounce.module.noPitchLimit.description": "Deixa você olhar em qualquer direção.",
 
   "liquidbounce.module.pingSpoof.description": "Muda seu ping para um valor especifico.",
-  "liquidbounce.module.pingSpoof.noSingleplayer": "Não pode ativar %s no singleplayer.",
+  "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "Não pode ativar %s no singleplayer.",
 
   "liquidbounce.module.plugins.description": "Deixa você ver plugins de um server.",
   "liquidbounce.module.plugins.messages.timeOut": "Checagem de plugins chegou a tempo limite.",

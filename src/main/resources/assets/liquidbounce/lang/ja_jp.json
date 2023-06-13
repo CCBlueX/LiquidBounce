@@ -296,7 +296,7 @@
  "liquidbounce.module.noPitchLimit.description": "通常のピッチ制限を超えて頭を回転させることができます。",
  
  "liquidbounce.module.pingSpoof.description": "ping を指定された値に偽装します。",
- "liquidbounce.module.pingSpoof.messages.noSingleplayer": "シングルプレイで %s を有効にできません。",
+ "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "シングルプレイで %s を有効にできません。",
  
  "liquidbounce.module.plugins.description": "サーバーのプラグインを表示します。",
  "liquidbounce.module.plugins.messages.timeOut": "プラグインのチェックがタイムアウトしました。",
@@ -507,5 +507,15 @@
  
  "liquidbounce.module.antiVanish.description": "一部のサーバーでどのプレイヤーが消えているかを確認できます。",
  "liquidbounce.module.antiVanish.messages.staffDetected": "消失したスタッフ メンバーを検出しました。",
- "liquidbounce.module.antiVanish.messages.allClear": "消失したプレイヤーは見つかりませんでした。"
+ "liquidbounce.module.antiVanish.messages.allClear": "消失したプレイヤーは見つかりませんでした。",
+ "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Successfully unhidden all modules.",
+ "liquidbounce.command.enchant.description": "Enchants the currently selected item.",
+ "liquidbounce.command.enchant.parameter.enchantment.description": "Enchantment name.",
+ "liquidbounce.command.enchant.parameter.level.description": "Enchantment level.",
+ "liquidbounce.command.enchant.result.mustBeCreative": "Creative mode required!",
+ "liquidbounce.command.enchant.result.enchantmentNotExists": "Enchantment \"%s\" do not exists.",
+ "liquidbounce.command.enchant.result.enchantedItem": "Item has been enchanted with %s enchantment on the %s level.",
+ "liquidbounce.module.avoidHazards.description": "Prevents you from walking into blocks that might be malicious.",
+ "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
+ "liquidbounce.module.derp.description": "Makes it look as if you were derping around."
 }

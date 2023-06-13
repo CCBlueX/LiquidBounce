@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -33,13 +35,13 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.block.ShapeContext
-import net.minecraft.block.SideShapeType
-import net.minecraft.block.SlabBlock
-import net.minecraft.block.StairsBlock
+import net.minecraft.block.*
+import net.minecraft.block.Blocks.*
+import net.minecraft.block.Blocks
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -93,21 +95,40 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         { o1, o2 -> o2.count.compareTo(o1.count) }
     )
 
-    val silent by boolean("Silent", true)
+    private val silent by boolean("Silent", true)
     var delay by intRange("Delay", 3..5, 0..40)
 
-    val eagle by boolean("Eagle", true)
+    private val swing by boolean("Swing", true)
+    private val eagle by boolean("Eagle", true)
     val down by boolean("Down", false)
 
     // Rotation
-    val rotationsConfigurable = tree(RotationsConfigurable())
+    private val rotationsConfigurable = tree(RotationsConfigurable())
 
-    val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
 
-    var currentTarget: Target? = null
+    object Slow : ToggleableConfigurable(this, "Slow", false) {
+        val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..3f)
+    }
 
-    val shouldGoDown: Boolean
+    private val safeWalk by boolean("SafeWalk", true)
+    private val sameY by boolean("SameY", false)
+    private var currentTarget: Target? = null
+
+
+    init {
+        tree(Slow)
+    }
+
+    private var startY = 0
+    private val shouldGoDown: Boolean
         get() = this.down && mc.options.sneakKey.isPressed
+
+    override fun enable() {
+        startY = player.blockPos.y
+        super.enable()
+    }
 
     val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
         if (it.state != EventState.PRE) {
@@ -121,6 +142,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
     }
 
+    val speedHandler = repeatable {
+        if (Slow.enabled) {
+            player.velocity.x *= Slow.slowSpeed
+            player.velocity.z *= Slow.slowSpeed
+        }
+    }
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
 
@@ -138,7 +165,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Handle silent block selection
         if (silent && !hasBlockInHand) {
-            val slot = (0..8).mapNotNull {
+            val slot = (0..8).filter { isValidBlock(player.inventory.getStack(it), target) }.mapNotNull {
                 val stack = player.inventory.getStack(it)
 
                 if (stack.item is BlockItem) Pair(it, stack)
@@ -165,7 +192,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
         if (result.isAccepted) {
-            if (result.shouldSwingHand()) {
+            if (player.isOnGround) {
+                player.velocity.x *= speedModifier
+                player.velocity.z *= speedModifier
+            }
+            if (result.shouldSwingHand() && swing) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
@@ -216,15 +247,22 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val block = item.block
 
-        return block.defaultState.isSideSolid(world, target.blockPos, target.direction, SideShapeType.CENTER)
+        return block.defaultState.isSideSolid(
+            world,
+            target.blockPos,
+            target.direction,
+            SideShapeType.CENTER
+        ) && !notABlock.contains(block)
     }
 
-    fun getTargetedPosition(): BlockPos {
+    private fun getTargetedPosition(): BlockPos {
         if (shouldGoDown) {
             return player.blockPos.add(0, -2, 0)
         }
-
-        return player.blockPos.add(0, -1, 0)
+        if (sameY)
+            return BlockPos(player.blockPos.x, startY - 1, player.blockPos.z)
+        else
+            return player.blockPos.add(0, -1, 0)
     }
 
     fun updateTarget(pos: BlockPos, lavaBucket: Boolean = false): Target? {
@@ -369,7 +407,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
-        event.isSafeWalk = !shouldDisableSafeWalk()
+        if (safeWalk)
+            event.isSafeWalk = !shouldDisableSafeWalk()
     }
 
     private fun shouldDisableSafeWalk() = shouldGoDown && player.blockPos.add(0, -2, 0).canStandOn()

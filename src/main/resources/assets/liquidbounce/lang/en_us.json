@@ -93,6 +93,29 @@
   "liquidbounce.command.help.result.pageCount": "Page: %s",
   "liquidbounce.command.help.result.page": "page",
 
+
+  "liquidbounce.command.items.subcommand.add.description": "Adds a block to list of ignored blocks.",
+  "liquidbounce.command.items.subcommand.add.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
+  "liquidbounce.command.items.subcommand.add.result.blockNotExists": "Block named %s does not exist.",
+  "liquidbounce.command.items.subcommand.add.result.blockIsPresent": "Block named %s is already in the not a block list.",
+  "liquidbounce.command.items.subcommand.add.result.blockAdded": "Block named %s has been added to not a block list.",
+
+  "liquidbounce.command.items.subcommand.remove.description": "Removes a block from not a block list.",
+  "liquidbounce.command.items.subcommand.remove.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
+  "liquidbounce.command.items.subcommand.remove.result.blockNotExists": "Block named %s does not exist.",
+  "liquidbounce.command.items.subcommand.remove.result.blockNotFound": "Block named %s is not in the not a block list.",
+  "liquidbounce.command.items.subcommand.remove.result.blockRemoved": "Block named %s has been removed from not a block list.",
+
+  "liquidbounce.command.items.subcommand.list.description": "Shows a list of rendered blocks.",
+  "liquidbounce.command.items.subcommand.list.parameter.page.description": "Page to show.",
+  "liquidbounce.command.items.subcommand.list.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %d",
+  "liquidbounce.command.items.subcommand.list.result.list": "List",
+  "liquidbounce.command.items.subcommand.list.result.pageCount": "Page: %s",
+  "liquidbounce.command.items.subcommand.list.result.page": "page",
+
+  "liquidbounce.command.items.subcommand.clear.description": "Clears the list of rendered blocks.",
+  "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared.",
+
   "liquidbounce.command.hide.description": "Hides a module.",
 
   "liquidbounce.command.hide.subcommand.hide.description": "Hides a module.",
@@ -303,7 +326,7 @@
   "liquidbounce.module.noPitchLimit.description": "Allows you to rotate your head beyond the regular pitch limit.",
 
   "liquidbounce.module.pingSpoof.description": "Spoofs your ping to a specified value.",
-  "liquidbounce.module.pingSpoof.messages.noSingleplayer": "Cannot enable %s in singleplayer.",
+  "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "Cannot enable %s in singleplayer.",
 
   "liquidbounce.module.plugins.description": "Allows you to see a server's plugins.",
   "liquidbounce.module.plugins.messages.timeOut": "Plugins check timed out.",
@@ -506,7 +529,7 @@
 
   "liquidbounce.module.disabler.vulcan.message": "You need to have a trident enchanted with Riptide in your offhand in order to bypass Vulcan movement checks.",
 
-  "liquidbounce.module.perfectHit.description": "Allows attacks when attack cooldown is fully restored.",
+  "liquidbounce.module.perfectHit.description": "Allows attacks only when attack cooldown is fully restored.",
 
   "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations.",
 
