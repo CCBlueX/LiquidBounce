@@ -114,7 +114,9 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         }
 
         // No Compass
-        if (noCompass && thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass") return
+        if (noCompass && thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass") {
+            return
+        }
 
         // Chest title
         if (chestTitle && (screen.lowerChestInventory == null || ItemStack(
@@ -124,7 +126,9 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                     )
                 )
             ).displayName !in screen.lowerChestInventory.name)
-        ) return
+        ) {
+            return
+        }
 
         // Is empty?
         if (!isEmpty(screen) && (!closeOnFull || !fullInventory)) {
@@ -176,11 +180,11 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
             }
         } else if (autoClose && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(
                 nextCloseDelay
-            ) && !tickedActions.containsValue(contentReceived)
+            ) && !tickedActions.containsValue(-1)
         ) {
             tickedActions[{
                 thePlayer.closeScreen()
-            }] = contentReceived
+            }] = -1
 
             nextCloseDelay = randomDelay(autoCloseMinDelay, autoCloseMaxDelay)
         }
@@ -231,7 +235,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
             val stack = slot.stack
 
-            if (shouldTake(stack, i)) return false
+            if (shouldTake(stack, -2)) return false
         }
 
         return true
