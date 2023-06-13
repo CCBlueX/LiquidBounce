@@ -586,7 +586,7 @@ class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         private val COMPARATOR = ComparatorChain<WeightedBlockItem>({ o1, o2 ->
             compareByCondition(
                 o1, o2
-            ) { (it.itemStack.item as BlockItem).block.defaultState.material.isSolid }
+            ) { (it.itemStack.item as BlockItem).block.defaultState.material.isSolid && !notABlock.contains((it.itemStack.item as BlockItem).block) }
         }, { o1, o2 ->
             compareByCondition(
                 o1, o2

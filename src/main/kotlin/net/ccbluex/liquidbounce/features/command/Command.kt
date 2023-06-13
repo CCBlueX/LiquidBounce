@@ -62,7 +62,10 @@ class Command(
 
     private fun getParentKeys(currentCommand: Command?, current: String): String {
         val parentName = currentCommand?.parentCommand?.name
-        return if (parentName != null) getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current") else current
+        return if (parentName != null) getParentKeys(
+            currentCommand.parentCommand,
+            "$parentName.subcommand.$current"
+        ) else current
     }
 
     fun result(key: String, vararg args: Any): MutableText {
