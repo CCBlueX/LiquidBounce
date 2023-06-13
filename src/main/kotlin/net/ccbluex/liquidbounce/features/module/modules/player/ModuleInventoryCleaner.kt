@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
@@ -145,7 +146,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         ) != true) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
-                            wait(inventoryConstraints.delay.random())
+                            wait { inventoryConstraints.delay.random() }
 
                             return@repeatable
                         }
@@ -166,7 +167,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             }
 
             if (executeAction(i, 1, SlotActionType.THROW)) {
-                wait(inventoryConstraints.delay.random())
+                wait { inventoryConstraints.delay.random() }
 
                 return@repeatable
             }

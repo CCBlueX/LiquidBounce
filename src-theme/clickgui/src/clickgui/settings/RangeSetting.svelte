@@ -8,7 +8,7 @@
     let name = instance.getName();
     let min = instance.getRange().getStart()
     let max = instance.getRange().getEndInclusive()
-    let step = type.includes("INT") ? 1 : 0.1;
+    let step = type.includes("INT") ? 1 : 0.01;
     let multi = type.includes("RANGE");
 
     let value;
