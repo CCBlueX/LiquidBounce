@@ -97,7 +97,7 @@ dependencies {
 
     implementation "org.graalvm.sdk:graal-sdk:22.3.2"
     implementation "org.graalvm.truffle:truffle-api:22.3.2"
-    implementation "org.graalvm.js:js:22.3.2"
+    implementation "org.graalvm.js:js:23.0.0"
 
     runtimeOnly "org.graalvm.tools:profiler:22.3.2"
     runtimeOnly "org.graalvm.tools:chromeinspector:22.3.2"
@@ -187,7 +187,7 @@ shadowJar {
         include(dependency('com.github.CCBlueX:Elixir'))
         include(dependency("org.graalvm.sdk:graal-sdk:22.3.2"))
         include(dependency("org.graalvm.truffle:truffle-api:22.3.2"))
-        include(dependency("org.graalvm.js:js:22.3.2"))
+        include(dependency("org.graalvm.js:js:23.0.0"))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
     }
