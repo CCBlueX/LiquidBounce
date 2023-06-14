@@ -101,7 +101,7 @@
 
         "module.avoidHazards.description": "防止走进可能对你有害的方块。",
         
-        "module.blink.description": "挂起所有移动数据包(打到开关后瞬间移动的效果)。",
+        "module.blink.description": "挂起所有移动数据包(达到开关后瞬间移动的效果)。",
         
         "module.blockESP.description": "允许你透过墙壁看到你选定的方块。",
         
