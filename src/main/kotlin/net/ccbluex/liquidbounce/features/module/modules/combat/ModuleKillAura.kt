@@ -90,6 +90,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
+    private val whileUse by boolean("whileUse", true)
     private val blockingTicks by int("BlockingTicks", 0, 0..20)
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
@@ -198,11 +199,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }, cps)
 
             repeat(clicks) {
+                if(!whileUse && player.isUsingItem()){
+                    return@repeat
+                }
                 if (simulateInventoryClosing && isInInventoryScreen) {
                     network.sendPacket(CloseHandledScreenC2SPacket(0))
                 }
 
                 val blocking = player.isBlocking
+
 
                 // Make sure to unblock now
                 if (blocking) {
@@ -217,7 +222,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         wait(blockingTicks)
                     }
                 }
-
                 // Fail rate
                 if (failRate > 0 && failRate > Random.nextInt(100)) {
                     // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
