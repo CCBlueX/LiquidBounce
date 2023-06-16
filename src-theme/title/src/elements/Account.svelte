@@ -62,6 +62,8 @@
         position: relative;
         top: 0;
         right: 0;
+        width: 21px;
+        height: 21px;
     }
 
     .icon {
