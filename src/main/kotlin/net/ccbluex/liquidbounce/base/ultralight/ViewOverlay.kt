@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.client.longedSize
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.util.math.MatrixStack
 
 /**
  * A view overlay which is being rendered when the view state is [ViewOverlayState.VISIBLE] or [ViewOverlayState.TRANSITIONING].
@@ -54,6 +53,9 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
 
     private var onStateChange: ((ViewOverlayState) -> Unit)? = null
 
+    // CPU renderer
+    private var glTexture = -1
+
     init {
         // Setup view
         val (width, height) = mc.window.longedSize
@@ -72,9 +74,6 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
         context = UltralightJsContext(this, ultralightView)
 
         logger.debug("Successfully created new view")
-
-        // Fix black screen issue
-        resize(width, height)
     }
 
     /**
@@ -91,6 +90,11 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
         ultralightView.get().loadURL(page.viewableFile)
         ultralightPage = page
         logger.debug("Successfully loaded page ${page.name} from ${page.viewableFile}")
+
+        val (width, height) = mc.window.longedSize
+
+        // Fix black screen issue
+        resize(width, height)
     }
 
     /**

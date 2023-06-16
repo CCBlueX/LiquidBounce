@@ -28,7 +28,6 @@ import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.util.math.MatrixStack
 import org.lwjgl.opengl.GL12.*
 import java.nio.ByteBuffer
 
@@ -37,7 +36,7 @@ import java.nio.ByteBuffer
  */
 class CpuViewRenderer : ViewRenderer {
 
-    private var glTexture = -1
+    private val glTexture by lazy { createGlTexture() }
 
     override fun setupConfig(viewConfig: UltralightViewConfig) {
         // CPU rendering is not accelerated
@@ -45,18 +44,14 @@ class CpuViewRenderer : ViewRenderer {
     }
 
     override fun delete() {
-        glDeleteTextures(glTexture)
-        glTexture = -1
+        // Delete texture
+        RenderSystem.deleteTexture(glTexture)
     }
 
     /**
      * Render the current view
      */
     override fun render(view: UltralightView, context: DrawContext) {
-        if (glTexture == -1) {
-            createGlTexture()
-        }
-
         // As we are using the CPU renderer, draw with a bitmap (we did not set a custom surface)
         val surface = view.surface() as UltralightBitmapSurface
         val bitmap = surface.bitmap()
@@ -150,14 +145,17 @@ class CpuViewRenderer : ViewRenderer {
     /**
      * Sets up the OpenGL texture for rendering
      */
-    private fun createGlTexture() {
-        glTexture = glGenTextures()
+    private fun createGlTexture(): Int {
+        val glTexture = glGenTextures()
+
         glBindTexture(GL_TEXTURE_2D, glTexture)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glBindTexture(GL_TEXTURE_2D, 0)
+
+        return glTexture
     }
 
 }
