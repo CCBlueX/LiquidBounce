@@ -38,6 +38,17 @@ object ProxyManager : Configurable("Proxies") {
         ConfigSystem.root(this)
     }
 
+    fun setProxy(host: String, port: Int, username: String, password: String): String {
+        ProxyManager.currentProxy = ProxyManager.Proxy(InetSocketAddress(host, port), if (username.isNotBlank()) ProxyManager.ProxyCredentials(username, password) else null)
+
+        return "Successfully set proxy"
+    }
+
+    fun unsetProxy(): String {
+        ProxyManager.currentProxy = null
+        return "Successfully unset proxy"
+    }
+
     // todo: hook into ChannelInitializer
     // val proxy = currentProxy
     //            if (proxy != null) {

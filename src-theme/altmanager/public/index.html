@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Alt Manager</title>
     <style>
-
         *:focus {
             outline: none;
         }
@@ -38,7 +37,7 @@
             display: grid;
             top: 150px;
             grid-auto-rows: max-content;
-            row-gap: 20px;
+            row-gap: 5px;
         }
 
         .wrapper {
@@ -48,19 +47,18 @@
             margin: 60px;
         }
 
-        .Button {
+        .button {
             background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
             background-position: right bottom;
             will-change: background-position;
             transition: background-position .2s ease-out;
-            margin-top: 30px;
-            width: 420px;
+            margin-top: 10px;
+            width: 23%;
             padding: 25px 35px;
             border-radius: 6px;
             align-items: center;
             column-gap: 30px;
-            font-size: 26px;
         }
 
         .scale {
@@ -98,23 +96,24 @@
             }
         }
 
-        Input {
+        input {
             border-radius: 6px;
             margin-top: 10px;
+            margin-bottom: 10px;
             padding: 5px;
             border-color: white;
             background-color: rgba(0, 0, 0, 0.68);
             color: white;
             border: none;
             height: 40px;
-            width: 150px;
         }
 
-        Button {
+        button {
             border-radius: 6px;
+            margin-right: 10px;
             padding: 5px;
             background-color: rgba(0, 0, 0, 0.68);
-            width: 80px;
+            min-width: 80px;
             height: 30px;
             color: white;
             border: none;
@@ -150,10 +149,26 @@
             transition: background-position .2s ease-out;
         }
 
-        .butto:hover, .Button:hover {
+        .butto:hover, .button:hover {
             background-position: left bottom
         }
 
+        .accounts {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 75%;
+            height: 85%;
+            background-color: rgba(0, 0, 0, 0.68);
+            border-radius: 6px;
+            padding: 20px;
+            overflow-y: scroll;
+        }
+
+        #face {
+            width: 32px;
+            height: 32px;
+        }
     </style>
     <script>
         const random = (length = 8) => {
@@ -169,62 +184,194 @@
             return str;
 
         };
+        
+        function setRandomUsername() {
+            document.getElementById('username').value = random();
+        }
+
+        function successMicrosoft(microsoftAccount) {
+            console.log("Logged in with Microsoft");
+            document.getElementById('response').innerText = "Logged in with Microsoft";
+        }
+
+        function errorMicrosoft(error) {
+            console.log(error);
+            document.getElementById('response').innerText = error;
+        }
+
+        function updateAccountList() {
+            let accountsDiv = document.getElementById('accounts');
+            let accounts = client.getAccountManager().getAccounts().iterator();
+
+            // Clear the div
+            accountsDiv.innerHTML = "";
+
+            // Add all accounts
+            console.log(accounts);
+            var i = 0;
+            while(accounts.hasNext()) {
+                let account = accounts.next();
+                console.log(JSON.stringify(account));
+                console.log(account.getType());
+                console.log(account.getName());
+
+                let row = document.createElement('tr');
+                let type = document.createElement('td');
+                let name = document.createElement('td');
+                let button = document.createElement('td');
+
+                type.innerText = account.getType();
+                name.innerText = account.getName();
+                button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
+                
+                row.appendChild(type);
+                row.appendChild(name);
+                row.appendChild(button);
+                accountsDiv.appendChild(row);
+                i++;
+            }
+        }
+
+        function updateAccountData() {
+            const username = client.getSessionService().getUsername();
+            const faceUrl = client.getSessionService().getFaceUrl();
+            const accountType = client.getSessionService().getAccountType();
+            const location = client.getSessionService().getLocation();
+
+            document.getElementById('sessionUsername').innerText = username;
+            document.getElementById('face').src = faceUrl;
+            document.getElementById('accountType').innerText = accountType;
+            document.getElementById('location').innerText = location;
+        }
+
+        window.onload = function () {
+            updateAccountList();
+            updateAccountData();
+
+            // Set altening token
+            console.log(client.getAccountManager().getAlteningApiToken());
+            document.getElementById('apitoken').value = client.getAccountManager().getAlteningApiToken();
+        };
+
+        function newCrackedAccount() {
+            let username = document.getElementById('username').value;
+
+            if(username === "") {
+                document.getElementById('response').innerText = "Please enter a username";
+                return;
+            }
+
+            client.getAccountManager().newCrackedAccount(username);
+            updateAccountList();
+        }
+
+        function newAlteningAccount() {
+            let token = document.getElementById('token').value;
+
+            if(token === "") {
+                document.getElementById('response').innerText = "Please enter a token";
+                return;
+            }
+
+            client.getAccountManager().newAlteningAccount(token);
+            updateAccountList();
+        }
+
+        function newMicrosoftAccount() {
+            client.getAccountManager().newMicrosoftAccount(successMicrosoft, errorMicrosoft);
+            updateAccountList();
+        }
+
+        function generateAlteningAccount() {
+            let apiToken = document.getElementById('apitoken').value;
+
+            if(apiToken === "") {
+                document.getElementById('response').innerText = "Please enter an API token";
+                return;
+            }
+
+            client.getAccountManager().setAlteningApiToken(apiToken);
+            console.log("Generating new altening account using token: " + client.getAccountManager().getAlteningApiToken());
+            client.getAccountManager().generateNewAlteningAccount(apiToken);
+            updateAccountList();
+        }
+        
+        function loginAccount(id) {
+            client.getAccountManager().loginAccount(parseInt(id));
+            updateAccountData();
+        }
+
+        function deleteAccount(id) {
+            var account = client.getAccountManager().getAccounts().remove(parseInt(id));
+            updateAccountList();
+
+            document.getElementById('response').innerText = "Deleted account: " + account.getName();
+        }
     </script>
 </head>
 <body>
 <div class="scale">
     <div class="wrapper">
         <h1 id="title">Alt Manager</h1>
+        <b>This is a prototype design for testing purposes <br>and is NOT the final design.</b>
 
         <div id="buttongrid">
-            <div class="Button">
+            <div class="button">
+                <img id="face" alt="head" class="head"/>
+                <br>
+
+                <label><b>Username:</b></label>
+                <div id="sessionUsername" class="username"></div>
+                <label><b>Account Type:</b></label>
+                <div id="accountType" class="accountType"></div>
+                <label><b>Location:</b></label>
+                <div id="location" class="location"></div>
+            </div>
+
+            <div class="button">
                 <h2>Cracked Login</h2>
                 <div>
-                    <label for="username"></label><input type="text" id="username" name="username"
-                                                         placeholder="type username here..."><br>
-                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(document.getElementById('username').value);">
-                        Login
+                    <label for="username"></label>
+                    <input type="text" id="username" name="username" placeholder="Username">
+                    <button onclick="setRandomUsername()">Random</button>
+                    <br>
+                    <button onclick="newCrackedAccount()">
+                        Add
                     </button>
 
-                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(random(16));">
-                        Random
-                    </button>
+                    
                 </div>
             </div>
-            <div class="Button">
-                <h2>Mojang Login</h2>
-                <div>
-                    <label for="email"></label><input type="text" id="email" name="email" placeholder="email"><br>
-                    <label for="password"></label><input type="text" id="password" name="password"
-                                                         placeholder="password"><br>
-                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginMojang(document.getElementById('email').value, document.getElementById('password').value);">
-                        Login
-                    </button>
-                </div>
-            </div>
-            <div class="Button">
+
+            <div class="button">
                 <h2>Microsoft Login</h2>
-                <div>
-                    <button onclick="client.getSessionService().loginMicrosoft();">
-                        Open login in browser
-                    </button>
-                </div>
+
+                This will open your browser to sign in to your Microsoft account.<br>
+                <br>
+
+                <button onclick="newMicrosoftAccount(successMicrosoft, errorMicrosoft)">
+                    Add
+                </button>
             </div>
-            <div class="Button">
+            <div class="button">
                 <h2>Altening Login</h2>
+
                 <div>
-                    <label for="token"></label><input type="text" id="token" name="token" placeholder="token"><br>
-                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(document.getElementById('token').value);">
-                        Login
+                    <label for="token"></label><input type="text" id="token" name="token" placeholder="Account Token">
+                    <button onclick="newAlteningAccount()">
+                        Add
                     </button>
                     <br>
-                    <label for="apitoken"></label><input type="text" id="apitoken" name="apitoken"
-                                                         placeholder="API Token"><br>
-                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(client.getTheAltening().generateAccount(document.getElementById('apitoken').value));">
-                        Login
+                    <label for="apitoken"></label>
+                    <input type="password" id="apitoken" name="apitoken" placeholder="API Token">
+                    <button onclick="generateAlteningAccount()">
+                        Add
                     </button>
                 </div>
             </div>
+
+            <div class="accounts" id="accounts"></div>
+            <div id="response"></div>
         </div>
     </div>
     <footer>
