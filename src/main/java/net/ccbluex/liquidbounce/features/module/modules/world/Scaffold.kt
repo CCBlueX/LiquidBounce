@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
-import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
@@ -72,14 +71,14 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     private val extraClicks = BoolValue("DoExtraClicks", false)
 
-    private val extraClickMaxCPSValue: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0..20) {
+    private val extraClickMaxCPSValue: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0..50) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(extraClickMinCPS)
 
         override fun isSupported() = extraClicks.isActive()
     }
     private val extraClickMaxCPS by extraClickMaxCPSValue
 
-    private val extraClickMinCPS by object : IntegerValue("ExtraClickMinCPS", 3, 0..20) {
+    private val extraClickMinCPS by object : IntegerValue("ExtraClickMinCPS", 3, 0..50) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(extraClickMaxCPS)
 
         override fun isSupported() = extraClicks.isActive() && !extraClickMaxCPSValue.isMinimal()
@@ -191,7 +190,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Current rotation
     private val currRotation
-        get() = targetRotation ?: mc.thePlayer?.rotation ?: serverRotation
+        get() = targetRotation ?: mc.thePlayer.rotation
 
     // Extra clicks
     private var extraClick = ExtraClickInfo(randomClickDelay(extraClickMinCPS, extraClickMaxCPS), 0L, 0)
@@ -510,9 +509,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        val rotation = targetRotation ?: return
-
-        val raytrace = performBlockRaytrace(rotation, mc.playerController.blockReachDistance) ?: return
+        val raytrace = performBlockRaytrace(currRotation, mc.playerController.blockReachDistance) ?: return
 
         val shouldHelpWithDelay =
             !delayTimer.hasTimePassed(delay) && (raytrace.sideHit.axis != EnumFacing.Axis.Y || !sameY && raytrace.blockPos.y < player.posY - 1)
@@ -593,8 +590,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (counterDisplay) {
             glPushMatrix()
 
-            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null)
-                glTranslatef(0f, 15f, 0f)
+            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null) glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)
@@ -627,7 +623,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks.get() && MovementUtils.isMoving
 
         if (shouldBother) {
-            targetRotation?.let {
+            currRotation.let {
                 performBlockRaytrace(it, mc.playerController.blockReachDistance)?.let { raytrace ->
                     val timePassed = System.currentTimeMillis() - extraClick.lastClick >= extraClick.delay
 
