@@ -53,9 +53,6 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
 
     private var onStateChange: ((ViewOverlayState) -> Unit)? = null
 
-    // CPU renderer
-    private var glTexture = -1
-
     init {
         // Setup view
         val (width, height) = mc.window.longedSize
