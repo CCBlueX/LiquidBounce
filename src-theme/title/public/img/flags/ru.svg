@@ -1,15 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="21" height="21"
-     viewBox="0 0 21 21">
-    <defs>
-        <clipPath id="a">
-            <circle cx="10.5" cy="10.5" r="10.5" transform="translate(1424 68)" fill="#fff"/>
-        </clipPath>
-    </defs>
-    <g transform="translate(-1424 -68)" clip-path="url(#a)">
-        <g transform="translate(1424 68)">
-            <path d="M0,10.5H21v7H0Z" transform="translate(0 3.5)" fill="#CA3A27" fill-rule="evenodd"/>
-            <path d="M0,5.25H21v7H0Z" transform="translate(0 1.75)" fill="#4169E1" fill-rule="evenodd"/>
-            <path d="M0,0H21V7H0Z" fill="#E5E4E2" fill-rule="evenodd"/>
-        </g>
-    </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><clipPath id="a"><circle cx="256" cy="256" r="256" fill="#fff"/></clipPath></defs><g clip-path="url(#a)"><path fill="#0052b4" d="M512 170v172l-256 32L0 342V170l256-32z"/><path fill="#eee" d="M512 0v170H0V0Z"/><path fill="#d80027" d="M512 342v170H0V342Z"/></g></svg>
