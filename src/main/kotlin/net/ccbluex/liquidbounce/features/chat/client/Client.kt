@@ -116,7 +116,7 @@ class Client {
 
             })
 
-        channel = bootstrap.connect(uri.host, uri.port).sync().channel()
+        channel = bootstrap.connect(uri.host, uri.port).sync()!!.channel()!!
         handler.handshakeFuture.sync()
 
         if (connected) {

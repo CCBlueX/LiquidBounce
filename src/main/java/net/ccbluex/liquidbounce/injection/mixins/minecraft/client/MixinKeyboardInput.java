@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventory
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
@@ -59,7 +60,8 @@ public class MixinKeyboardInput extends MixinInput {
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
-        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), keyBinding.boundKey.getCode()) : keyBinding.isPressed();
+        Boolean enforced = KeybindExtensionsKt.getEnforced(keyBinding);
+        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? (enforced != null ? enforced : InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), keyBinding.boundKey.getCode())) : (enforced != null ? enforced : keyBinding.isPressed());
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingBack:Z", ordinal = 0))

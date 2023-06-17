@@ -39,4 +39,8 @@ class StateUpdateEvent : Event() {
 
 class ForcedState {
     var enforceEagle: Boolean? = null
+    var enforceLeft: Boolean? = null
+    var enforceRight: Boolean? = null
+    var enforceForward: Boolean? = null
+    var enforceBackward: Boolean? = null
 }

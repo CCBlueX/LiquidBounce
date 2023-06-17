@@ -18,30 +18,32 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getFace
+import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.block.*
-import net.minecraft.block.Blocks.*
-import net.minecraft.block.Blocks
+import net.minecraft.block.ShapeContext
+import net.minecraft.block.SideShapeType
+import net.minecraft.block.SlabBlock
+import net.minecraft.block.StairsBlock
+import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -106,6 +108,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val rotationsConfigurable = tree(RotationsConfigurable())
 
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val zitterModes = choices(
+        "ZitterMode",
+        Off, arrayOf(
+            Off,
+            //Teleport,
+            Smooth
+        )
+    )
+    val timer by float("Timer", 1f, 0.01f..10f)
     private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
 
     object Slow : ToggleableConfigurable(this, "Slow", false) {
@@ -142,11 +153,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
     }
 
-    val speedHandler = repeatable {
+    val moveHandler = repeatable {
         if (Slow.enabled) {
             player.velocity.x *= Slow.slowSpeed
             player.velocity.z *= Slow.slowSpeed
         }
+        mc.timer.timerSpeed = timer
     }
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
@@ -234,7 +246,68 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
+    private object Off : Choice("Off") {
+        override val parent: ChoiceConfigurable
+            get() = zitterModes
+    }
+
+    private object Smooth : Choice("Smooth") {
+
+        override val parent: ChoiceConfigurable
+            get() = zitterModes
+
+        val zitterDelay by int("ZitterTimer", 100, 0..500)
+        val groundOnly by boolean("GroundOnly", true)
+        val zitterTimer = Chronometer()
+        var zitterDirection = false
+
+        val repeatable = repeatable {
+            if (player.isOnGround || !groundOnly) {
+                val pressedOnKeyboardKeys = moveKeys.filter { it.pressedOnKeyboard }
+                when (pressedOnKeyboardKeys.size) {
+                    0 -> {
+                        moveKeys.forEach {
+                            it.enforced = null
+                        }
+                    }
+
+                    1 -> {
+                        val key = pressedOnKeyboardKeys.first()
+                        val possible = moveKeys.filter { it != key && it != key.opposite }
+                        zitter(possible)
+                        key.opposite!!.enforced = false
+                        key.enforced = true
+                    }
+
+                    2 -> {
+                        zitter(pressedOnKeyboardKeys)
+                        moveKeys.filter { !!pressedOnKeyboardKeys.contains(it) }.forEach {
+                            it.opposite!!.enforced = false
+                        }
+                    }
+                }
+                if (zitterTimer.hasElapsed(zitterDelay.toLong())) {
+                    zitterDirection = !zitterDirection
+                    zitterTimer.reset()
+                }
+            }
+        }
+
+        fun zitter(first: List<KeyBinding>) {
+            if (zitterDirection) {
+                first.first().enforced = true
+                first.last().enforced = false
+            } else {
+                first.first().enforced = false
+                first.last().enforced = true
+            }
+        }
+    }
+
     override fun disable() {
+        moveKeys.forEach {
+            it.enforced = null
+        }
         SilentHotbar.resetSlot(this)
     }
 
