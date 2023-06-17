@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Custom.Rotate.angle
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.util.Hand
@@ -55,7 +56,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             get() = modes
 
         override fun disable() {
-            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.forwardKey.boundKey.code)) {
+            if (!mc.options.forwardKey.pressedOnKeyboard) {
                 mc.options.forwardKey.isPressed = false
             }
         }
@@ -162,7 +163,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val move by boolean("Move", true)
 
         override fun disable() {
-            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.forwardKey.boundKey.code)) {
+            if (!mc.options.forwardKey.pressedOnKeyboard) {
                 mc.options.forwardKey.isPressed = false
             }
         }

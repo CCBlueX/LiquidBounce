@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
@@ -115,7 +116,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     }
 
     override fun disable() {
-        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.useKey.boundKey.code)) {
+        if (!mc.options.useKey.pressedOnKeyboard) {
             mc.options.useKey.isPressed = false
         }
 
