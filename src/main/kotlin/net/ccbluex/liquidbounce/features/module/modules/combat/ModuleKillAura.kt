@@ -211,9 +211,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }
 
                 val blocking = player.isBlocking
-                // if((blocking && !whileBlocking.enabled) || (player.isUsingItem()) && !whileUsingItem){
-                //     return@repeat
-                // }
 
                 if(blocking){
                     if(!whileBlocking.enabled){
