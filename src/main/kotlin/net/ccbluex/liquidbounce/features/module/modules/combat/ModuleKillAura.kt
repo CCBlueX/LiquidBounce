@@ -90,7 +90,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
-    private val whileUse by boolean("whileUse", true)
+    private val whileUsingItem by boolean("whileUsingItem", true)
     private val blockingTicks by int("BlockingTicks", 0, 0..20)
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
@@ -199,7 +199,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }, cps)
 
             repeat(clicks) {
-                if(!whileUse && player.isUsingItem()){
+                if(!whileUsingItem && player.isUsingItem()){
                     return@repeat
                 }
                 if (simulateInventoryClosing && isInInventoryScreen) {
