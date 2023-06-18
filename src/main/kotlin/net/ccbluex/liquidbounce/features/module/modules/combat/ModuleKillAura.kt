@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -91,8 +92,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val attackShielding by boolean("AttackShielding", false)
 
     private val whileUsingItem by boolean("whileUsingItem", true)
-    private val blockingTicks by int("BlockingTicks", 0, 0..20)
+    object whileBlocking : ToggleableConfigurable(this, "whileBlocking", true) {
+        val blockingTicks by int("blockingTicks", 0, 0..20)
+    }
 
+    init {
+        tree(whileBlocking)
+    }
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
     private val failRate by int("FailRate", 0, 0..100)
@@ -101,6 +107,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private val cpsTimer = CpsScheduler()
+
 
     override fun disable() {
         targetTracker.cleanup()
@@ -199,14 +206,22 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }, cps)
 
             repeat(clicks) {
-                if(!whileUsingItem && player.isUsingItem()){
-                    return@repeat
-                }
                 if (simulateInventoryClosing && isInInventoryScreen) {
                     network.sendPacket(CloseHandledScreenC2SPacket(0))
                 }
 
                 val blocking = player.isBlocking
+                // if((blocking && !whileBlocking.enabled) || (player.isUsingItem()) && !whileUsingItem){
+                //     return@repeat
+                // }
+
+                if(blocking){
+                    if(!whileBlocking.enabled){
+                        return@repeat
+                    }
+                } else if(player.isUsingItem() && !whileUsingItem){
+                    return@repeat
+                }
 
 
                 // Make sure to unblock now
@@ -218,8 +233,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     )
 
                     // Wait until the un-blocking delay time is up
-                    if (blockingTicks > 0) {
-                        wait(blockingTicks)
+                    if (whileBlocking.blockingTicks > 0) {
+                        wait(whileBlocking.blockingTicks)
                     }
                 }
                 // Fail rate
@@ -240,8 +255,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 // Make sure to block again
                 if (blocking) {
                     // Wait until the blocking delay time is up
-                    if (blockingTicks > 0) {
-                        wait(blockingTicks)
+                    if (whileBlocking.blockingTicks > 0) {
+                        wait(whileBlocking.blockingTicks)
                     }
 
                     interaction.sendSequencedPacket(world) { sequence ->
