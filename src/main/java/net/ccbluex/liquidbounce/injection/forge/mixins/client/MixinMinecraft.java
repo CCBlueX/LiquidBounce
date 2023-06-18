@@ -168,7 +168,7 @@ public abstract class MixinMinecraft {
         return (Sys.getTime() * 1000) / Sys.getTimerResolution();
     }
 
-    @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = At.Shift.BEFORE))
+    @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", ordinal = 0))
     private void onTick(final CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new TickEvent());
     }
