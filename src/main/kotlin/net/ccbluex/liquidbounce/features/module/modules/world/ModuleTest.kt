@@ -10,7 +10,6 @@ object ModuleTest : Module("Test", Category.WORLD) {
     override fun enable() {
         chat("your - ${RotationManager.serverRotation.toString()}")
         chat(player.blockPos.add(-1, -1, 0).toString())
-        chat(RotationManager.aimToBlock(mc.player!!.eyes, player.blockPos.add(-1, -1, 0), 4.5).toString())
         super.enable()
     }
 }

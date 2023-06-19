@@ -516,18 +516,33 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
                     }.thenComparingDouble { it.second.y }
                 ) ?: continue*/
-                val rotation1 = RotationManager.aimToBlock(player.eyes, currPos, 4.5)
-                if (rotation1!!.first != null) {
-                    val rayTraceResult = raycast(4.5, rotation1.first!!) ?: continue
-                    val rotation2 = RotationManager.aimToBlock(player.eyes, rayTraceResult.blockPos, 4.5)
-                    if (rotation2 != null) {
-                        return Target(
-                            rayTraceResult.blockPos,
-                            rayTraceResult.side,
-                            rayTraceResult.blockPos.y.toDouble(),
-                            rotation2.first!!
-                        )
-                    }
+                chat(currPos.toString())
+                chat(first.first.toString())
+                val rotation1 = RotationManager.aimToBlock(player.eyes, currPos, 4.5, first.first)
+                chat("got first rotation")
+                if (rotation1 != null) {
+                    chat("not null")
+                } else {
+                    chat("null")
+                }
+                val vec = Vec3d(
+                    currPos.x + 0.5,
+                    0.5,
+                    0.5
+                )
+                //RotationManager.makeRotation(currPos, player.eyes)
+                val rayTraceResult = raycast(4.5, rotation1!!.first!!) ?: continue
+                val rotation2 = RotationManager.aimToBlock(player.eyes, rayTraceResult.blockPos, 4.5, rayTraceResult.side)
+                chat(rayTraceResult.blockPos.toString())
+                chat(rayTraceResult.side.toString())
+                if (rotation2 != null) {
+                    chat("found one")
+                    return Target(
+                        rayTraceResult.blockPos,
+                        rayTraceResult.side,
+                        rayTraceResult.blockPos.y.toDouble(),
+                        rotation2.first!!
+                    )
                 }
             }
         }

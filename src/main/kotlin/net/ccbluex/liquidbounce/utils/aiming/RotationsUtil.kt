@@ -221,6 +221,7 @@ object RotationManager : Listenable {
         eyes: Vec3d,
         pos: BlockPos,
         range: Double,
+        side: Direction?
     ): Pair<Rotation?, Vec3d>? {
         val rangeSquared = range * range
 
@@ -229,9 +230,9 @@ object RotationManager : Listenable {
         val minZ = pos.z.toDouble()
         val possibleRotations = mutableListOf<Pair<Rotation, Vec3d>>()
 
-        for (x in 0.1..0.9 step 0.1) {
-            for (z in 0.1..0.9 step 0.1) {
-                for (y in 0.1..0.9 step 0.1) {
+        for (x in 0.05..0.95 step 0.05) {
+            for (z in 0.05..0.95 step 0.05) {
+                for (y in 0.01..0.99 step 0.05) {
                     val vec3 = Vec3d(
                         minX + x,
                         minY + y,
@@ -246,14 +247,12 @@ object RotationManager : Listenable {
                     }
 
                     // check if target is visible to eyes
-                    val visible = facingBlock(eyes, vec3, pos)
+                    val visible = facingBlock(eyes, vec3, pos, expectedSide = side)
 
                     // skip because not visible in range
-                    if (!visible) {
-                        continue
+                    if (visible) {
+                        possibleRotations.add(Pair(makeRotation(vec3, eyes), vec3))
                     }
-
-                    possibleRotations.add(Pair(makeRotation(vec3, eyes), vec3))
                 }
             }
         }
@@ -262,8 +261,6 @@ object RotationManager : Listenable {
             abs(rotationDifference2(it.first, serverRotation))
         }
     }
-
-    class test(rotation: Rotation, vec3d: Vec3d)
 
     fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable) =
         aimAt(makeRotation(vec, eyes), ticks, configurable)
