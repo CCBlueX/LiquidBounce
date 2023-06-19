@@ -149,7 +149,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val target = currentTarget ?: return@handler
 
-        RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
+        RotationManager.aimAt(target.rotation, configurable = rotationsConfigurable)
     }
 
     val moveHandler = repeatable {

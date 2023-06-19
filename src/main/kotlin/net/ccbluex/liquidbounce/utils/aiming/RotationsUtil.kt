@@ -47,6 +47,7 @@ class RotationsConfigurable : Configurable("Rotations") {
     val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
     val fixVelocity by boolean("FixVelocity", true)
     val threshold by float("Threshold", 2f, 0f..50f)
+    val keepRotationTicks by int("KeepRotationTicks", 30, 0..300)
 }
 
 /**
@@ -260,17 +261,17 @@ object RotationManager : Listenable {
         }
     }
 
-    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable) =
-        aimAt(makeRotation(vec, eyes), ticks, configurable)
+    fun aimAt(vec: Vec3d, eyes: Vec3d, configurable: RotationsConfigurable) =
+        aimAt(makeRotation(vec, eyes), configurable)
 
-    fun aimAt(rotation: Rotation, ticks: Int = 5, configurable: RotationsConfigurable) {
+    fun aimAt(rotation: Rotation, configurable: RotationsConfigurable) {
         if (!shouldUpdate()) {
             return
         }
 
         activeConfigurable = configurable
         targetRotation = rotation
-        ticksUntilReset = ticks
+        ticksUntilReset = configurable.keepRotationTicks
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
