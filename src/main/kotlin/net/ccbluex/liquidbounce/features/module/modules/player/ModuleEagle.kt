@@ -27,7 +27,7 @@ import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.Direction
 
 /**
- * A eagle module
+ * An eagle module
  *
  * Legit trick to build faster.
  */

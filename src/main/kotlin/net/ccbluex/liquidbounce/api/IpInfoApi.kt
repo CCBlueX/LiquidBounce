@@ -41,12 +41,12 @@ object IpInfoApi {
      *
      * todo: add support for proxy
      */
-    private fun requestIpInfo(): IpInfo = endpointRequest(API_URL)
+    private fun requestIpInfo(): IpInfo = endpointRequest(API_URL)!!
 
     /**
      * Request endpoint and parse JSON to data class
      */
-    private inline fun <reified T> endpointRequest(endpoint: String): T = decode(makeEndpointRequest(endpoint))
+    private inline fun <reified T> endpointRequest(endpoint: String): T = decode(makeEndpointRequest(endpoint))!!
 
     /**
      * Request to endpoint with custom agent and session token

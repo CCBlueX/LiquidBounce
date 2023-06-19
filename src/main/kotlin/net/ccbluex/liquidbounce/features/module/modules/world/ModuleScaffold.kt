@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -51,8 +52,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import kotlin.math.abs
-import kotlin.math.absoluteValue
+import kotlin.math.*
 
 /**
  * Scaffold module
@@ -102,17 +102,19 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
     private val eagle by boolean("Eagle", true)
+    private val blocksToEagle by int("BlocksToEagle", 1, 1..10)
+    private val edgeDistance by float("EagleEdgeDistance", 0f, 0f..0.5f)
     val down by boolean("Down", false)
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
-
+    private val stabilizedRotation by boolean("StabilizedRotation", false)
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val zitterModes = choices(
         "ZitterMode",
         Off, arrayOf(
             Off,
-            //Teleport,
+            Teleport,
             Smooth
         )
     )
@@ -133,6 +135,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private var startY = 0
+    private var placedBlocks = 0
     private val shouldGoDown: Boolean
         get() = this.down && mc.options.sneakKey.isPressed
 
@@ -148,9 +151,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         currentTarget = updateTarget(getTargetedPosition())
 
-        val target = currentTarget ?: return@handler
+        val target = currentTarget
 
-        RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
+        if (target != null) {
+            if (stabilizedRotation) {
+                RotationManager.aimAt(
+                    Rotation((target.rotation.yaw / 45f).roundToInt() * 45f, target.rotation.pitch),
+                    ticks = 30,
+                    configurable = rotationsConfigurable
+                )
+            } else
+                RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
+        }
     }
 
     val moveHandler = repeatable {
@@ -160,6 +172,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
         mc.timer.timerSpeed = timer
     }
+
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
 
@@ -170,6 +183,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 rayTraceResult
             )
         ) {
+            chat("blocked")
             return@repeatable
         }
 
@@ -204,6 +218,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
         if (result.isAccepted) {
+            placedBlocks = placedBlocks++ % blocksToEagle
             if (player.isOnGround) {
                 player.velocity.x *= speedModifier
                 player.velocity.z *= speedModifier
@@ -212,6 +227,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
+            chat("placed")
             currentTarget = null
             wait(delay.random())
         }
@@ -236,12 +252,27 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val repeatable = handler<StateUpdateEvent> {
-        // Check if player is on the edge and is NOT flying
-        val isAir = !player.blockPos.add(0, -1, 0).canStandOn() && !player.abilities.flying
+        // Gets player distance to the edge
+        var dif = 0.5
 
+        for (side in Direction.values().drop(2)) {
+            val neighbor = player.blockPos.down().offset(side)
+
+            if (neighbor.getState()!!.isReplaceable) {
+                val calcDif = abs(
+                    0.5 + (if (side.axis == Direction.Axis.Z) {
+                        neighbor.z - player.pos.z
+                    } else {
+                        neighbor.x - player.pos.x
+                    })
+                ) - 0.5
+
+                dif = min(dif, calcDif)
+            }
+        }
         if (shouldDisableSafeWalk()) {
             it.state.enforceEagle = false
-        } else if (isAir && eagle) {
+        } else if (!player.abilities.flying && dif <= edgeDistance && eagle && blocksToEagle == 0) {
             it.state.enforceEagle = true
         }
     }
@@ -251,12 +282,32 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             get() = zitterModes
     }
 
+    private object Teleport : Choice("Teleport") {
+        override val parent: ChoiceConfigurable
+            get() = zitterModes
+
+        private val speed by float("Speed", 0.13f, 0.1f..0.3f)
+        private val strength by float("Strength", 0.05f, 0f..0.2f)
+        val groundOnly by boolean("GroundOnly", true)
+        var zitterDirection = false
+
+        val repeatable = repeatable {
+            if (player.isOnGround || !groundOnly) {
+                player.strafe(speed = speed.toDouble())
+                val yaw = Math.toRadians(player.yaw + if (zitterDirection) 90.0 else -90.0)
+                player.velocity.x -= sin(yaw) * strength
+                player.velocity.z += cos(yaw) * strength
+                zitterDirection = !zitterDirection
+            }
+        }
+    }
+
     private object Smooth : Choice("Smooth") {
 
         override val parent: ChoiceConfigurable
             get() = zitterModes
 
-        val zitterDelay by int("ZitterTimer", 100, 0..500)
+        val zitterDelay by int("Delay", 100, 0..500)
         val groundOnly by boolean("GroundOnly", true)
         val zitterTimer = Chronometer()
         var zitterDirection = false
@@ -281,7 +332,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
                     2 -> {
                         zitter(pressedOnKeyboardKeys)
-                        moveKeys.filter { !!pressedOnKeyboardKeys.contains(it) }.forEach {
+                        moveKeys.filter { pressedOnKeyboardKeys.contains(it) }.forEach {
                             it.opposite!!.enforced = false
                         }
                     }
@@ -423,7 +474,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     val angle = delta.dotProduct(Vec3d.of(normalVector)) / delta.distanceTo(Vec3d.ZERO)
 
                     if (angle < 0) return@mapNotNull null
-
                     Triple(direction, currPos, angle)
                 }.maxByOrNull { it.second }
             }
@@ -435,7 +485,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val currBlock = currState.block
 
                 val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
-
+                /*
                 val face = currState.getOutlineShape(
                     mc.world,
                     currPos,
@@ -465,17 +515,22 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                             )
                         ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
                     }.thenComparingDouble { it.second.y }
-                ) ?: continue
-
-                return Target(
-                    currPos,
-                    first.first,
-                    face.first.from.y + currPos.y,
-                    RotationManager.makeRotation(face.second.add(Vec3d.of(currPos)), player.eyes)
-                )
+                ) ?: continue*/
+                val rotation1 = RotationManager.aimToBlock(player.eyes, currPos, 4.5)
+                if (rotation1!!.first != null) {
+                    val rayTraceResult = raycast(4.5, rotation1.first!!) ?: continue
+                    val rotation2 = RotationManager.aimToBlock(player.eyes, rayTraceResult.blockPos, 4.5)
+                    if (rotation2 != null) {
+                        return Target(
+                            rayTraceResult.blockPos,
+                            rayTraceResult.side,
+                            rayTraceResult.blockPos.y.toDouble(),
+                            rotation2.first!!
+                        )
+                    }
+                }
             }
         }
-
         return null
     }
 

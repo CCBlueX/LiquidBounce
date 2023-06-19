@@ -204,7 +204,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlowBreak,
             ModuleProjectilePuncher,
             ModuleScaffold,
-            ModuleTimer
+            ModuleTimer,
+            ModuleTest
         )
 
         builtin.apply {
