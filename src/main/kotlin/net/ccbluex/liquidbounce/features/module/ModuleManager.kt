@@ -205,7 +205,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProjectilePuncher,
             ModuleScaffold,
             ModuleTimer,
-            ModuleTest
         )
 
         builtin.apply {

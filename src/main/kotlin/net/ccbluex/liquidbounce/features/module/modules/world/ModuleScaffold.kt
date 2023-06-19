@@ -33,14 +33,10 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.block.ShapeContext
 import net.minecraft.block.SideShapeType
-import net.minecraft.block.SlabBlock
-import net.minecraft.block.StairsBlock
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemPlacementContext
@@ -478,73 +474,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }.maxByOrNull { it.second }
             }
 
-            if (first != null) {
-                val currPos = first.second
-
-                val currState = currPos.getState()!!
-                val currBlock = currState.block
-
-                val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
-                /*
-                val face = currState.getOutlineShape(
-                    mc.world,
-                    currPos,
-                    ShapeContext.of(player)
-                ).boundingBoxes.mapNotNull {
-                    var face = it.getFace(first.first)
-
-                    if (truncate) {
-                        face = face.truncate(0.5) ?: return@mapNotNull null
-                    }
-
-                    Pair(
-                        face,
-                        Vec3d(
-                            face.from.x + (face.to.x - face.from.x) * 0.5,
-                            face.from.y + (face.to.y - face.from.y) * 0.5,
-                            face.from.z + (face.to.z - face.from.z) * 0.5
-                        )
-                    )
-                }.maxWithOrNull(
-                    Comparator.comparingDouble<Pair<Face, Vec3d>> {
-                        it.second.subtract(
-                            Vec3d(
-                                0.5,
-                                0.5,
-                                0.5
-                            )
-                        ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
-                    }.thenComparingDouble { it.second.y }
-                ) ?: continue*/
-                chat(currPos.toString())
-                chat(first.first.toString())
-                val rotation1 = RotationManager.aimToBlock(player.eyes, currPos, 4.5, first.first)
-                chat("got first rotation")
-                if (rotation1 != null) {
-                    chat("not null")
-                } else {
-                    chat("null")
-                }
-                val vec = Vec3d(
-                    currPos.x + 0.5,
-                    0.5,
-                    0.5
-                )
-                //RotationManager.makeRotation(currPos, player.eyes)
-                val rayTraceResult = raycast(4.5, rotation1!!.first!!) ?: continue
-                val rotation2 = RotationManager.aimToBlock(player.eyes, rayTraceResult.blockPos, 4.5, rayTraceResult.side)
-                chat(rayTraceResult.blockPos.toString())
-                chat(rayTraceResult.side.toString())
-                if (rotation2 != null) {
-                    chat("found one")
-                    return Target(
-                        rayTraceResult.blockPos,
-                        rayTraceResult.side,
-                        rayTraceResult.blockPos.y.toDouble(),
-                        rotation2.first!!
-                    )
-                }
+            if (first == null) {
+                continue
             }
+            val currPos = first.second
+            val rotation = raycast(4.5, RotationManager.aimToBlock(player.eyes, currPos, 4.5, first.first)!!) ?: continue
+            val rotationRaycasted = RotationManager.aimToBlock(player.eyes, rotation.blockPos, 4.5, rotation.side) ?: continue
+            return Target(
+                rotation.blockPos,
+                rotation.side,
+                rotation.blockPos.y.toDouble(),
+                rotationRaycasted
+            )
         }
         return null
     }

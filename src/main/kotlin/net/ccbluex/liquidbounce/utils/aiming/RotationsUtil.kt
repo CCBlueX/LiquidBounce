@@ -215,24 +215,25 @@ object RotationManager : Listenable {
     }
 
     /**
-     * Find the best spot of the upper side of the block
+     * Find the best spot of the side to aim at
      */
     fun aimToBlock(
         eyes: Vec3d,
         pos: BlockPos,
         range: Double,
         side: Direction?
-    ): Pair<Rotation?, Vec3d>? {
+    ): Rotation? {
         val rangeSquared = range * range
 
         val minX = pos.x.toDouble()
         val minY = pos.y.toDouble()
         val minZ = pos.z.toDouble()
-        val possibleRotations = mutableListOf<Pair<Rotation, Vec3d>>()
+        // Collects all possible rotations
+        val possibleRotations = mutableListOf<Rotation>()
 
-        for (x in 0.05..0.95 step 0.05) {
-            for (z in 0.05..0.95 step 0.05) {
-                for (y in 0.01..0.99 step 0.05) {
+        for (x in 0.1..0.9 step 0.1) {
+            for (z in 0.1..0.9 step 0.1) {
+                for (y in 0.1..0.9 step 0.1) {
                     val vec3 = Vec3d(
                         minX + x,
                         minY + y,
@@ -251,14 +252,14 @@ object RotationManager : Listenable {
 
                     // skip because not visible in range
                     if (visible) {
-                        possibleRotations.add(Pair(makeRotation(vec3, eyes), vec3))
+                        possibleRotations.add(makeRotation(vec3, eyes))
                     }
                 }
             }
         }
 
         return possibleRotations.minByOrNull {
-            abs(rotationDifference2(it.first, serverRotation))
+            angleDifference(it.yaw, serverRotation.yaw).toDouble()
         }
     }
 
@@ -301,13 +302,18 @@ object RotationManager : Listenable {
         }
 
         // Update rotations
-        val turnSpeed = RandomUtils.nextFloat(activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive)
+        val turnSpeed =
+            RandomUtils.nextFloat(activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive)
 
         val playerRotation = mc.player?.rotation ?: return
 
         if (ticksUntilReset == 0 || !shouldUpdate()) {
 
-            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) < activeConfigurable!!.threshold) {
+            if (rotationDifference(
+                    currentRotation ?: serverRotation,
+                    playerRotation
+                ) < activeConfigurable!!.threshold
+            ) {
                 ticksUntilReset = -1
 
                 targetRotation = null
@@ -350,8 +356,6 @@ object RotationManager : Listenable {
     fun rotationDifference(a: Rotation, b: Rotation) =
         hypot(angleDifference(a.yaw, b.yaw).toDouble(), (a.pitch - b.pitch).toDouble())
 
-    fun rotationDifference2(a: Rotation, b: Rotation) =
-        angleDifference(a.yaw, b.yaw).toDouble()
     /**
      * Calculate difference between an entity and your rotation
      */
