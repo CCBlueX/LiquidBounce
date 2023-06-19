@@ -185,6 +185,7 @@ object RotationManager : Listenable {
         val minX = pos.x.toDouble()
         val y = pos.y + 0.9
         val minZ = pos.z.toDouble()
+
         for (x in 0.1..0.9 step 0.4) {
             for (z in 0.1..0.9 step 0.4) {
                 val vec3 = Vec3d(
@@ -218,16 +219,17 @@ object RotationManager : Listenable {
      * Find the best spot of the side to aim at
      */
     fun aimToBlock(
-        eyes: Vec3d,
+        eyes: Vec3d = mc.player?.eyes!!,
         pos: BlockPos,
         range: Double,
-        side: Direction?
+        side: Direction? = null
     ): Rotation? {
         val rangeSquared = range * range
 
         val minX = pos.x.toDouble()
         val minY = pos.y.toDouble()
         val minZ = pos.z.toDouble()
+
         // Collects all possible rotations
         val possibleRotations = mutableListOf<Rotation>()
 
@@ -242,16 +244,11 @@ object RotationManager : Listenable {
 
                     // skip because of out of range
                     val distance = eyes.squaredDistanceTo(vec3)
-
-                    if (distance > rangeSquared) {
-                        continue
-                    }
-
-                    // check if target is visible to eyes
+                    // checks if this rotation is facing to this side of the block
+                    // TODO: fix this part, so it doesn't prevent you from getting rotaions when on edge
                     val visible = facingBlock(eyes, vec3, pos, expectedSide = side)
 
-                    // skip because not visible in range
-                    if (visible) {
+                    if (distance <= rangeSquared && visible) {
                         possibleRotations.add(makeRotation(vec3, eyes))
                     }
                 }

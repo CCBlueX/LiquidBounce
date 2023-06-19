@@ -147,18 +147,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         currentTarget = updateTarget(getTargetedPosition())
 
-        val target = currentTarget
+        val target = currentTarget ?: return@handler
 
-        if (target != null) {
-            if (stabilizedRotation) {
-                RotationManager.aimAt(
-                    Rotation((target.rotation.yaw / 45f).roundToInt() * 45f, target.rotation.pitch),
-                    ticks = 30,
-                    configurable = rotationsConfigurable
-                )
-            } else
-                RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
-        }
+        RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
     }
 
     val moveHandler = repeatable {
@@ -179,7 +170,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 rayTraceResult
             )
         ) {
-            chat("blocked")
             return@repeatable
         }
 
@@ -223,7 +213,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
-            chat("placed")
             currentTarget = null
             wait(delay.random())
         }
@@ -248,22 +237,24 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val repeatable = handler<StateUpdateEvent> {
-        // Gets player distance to the edge
         var dif = 0.5
+        if (eagle) {
+            // Gets player distance to the edge
 
-        for (side in Direction.values().drop(2)) {
-            val neighbor = player.blockPos.down().offset(side)
+            for (side in Direction.values().drop(2)) {
+                val neighbor = player.blockPos.down().offset(side)
 
-            if (neighbor.getState()!!.isReplaceable) {
-                val calcDif = abs(
-                    0.5 + (if (side.axis == Direction.Axis.Z) {
-                        neighbor.z - player.pos.z
-                    } else {
-                        neighbor.x - player.pos.x
-                    })
-                ) - 0.5
+                if (neighbor.getState()!!.isReplaceable) {
+                    val calcDif = abs(
+                        0.5 + (if (side.axis == Direction.Axis.Z) {
+                            neighbor.z - player.pos.z
+                        } else {
+                            neighbor.x - player.pos.x
+                        })
+                    ) - 0.5
 
-                dif = min(dif, calcDif)
+                    dif = min(dif, calcDif)
+                }
             }
         }
         if (shouldDisableSafeWalk()) {
@@ -470,6 +461,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     val angle = delta.dotProduct(Vec3d.of(normalVector)) / delta.distanceTo(Vec3d.ZERO)
 
                     if (angle < 0) return@mapNotNull null
+
                     Triple(direction, currPos, angle)
                 }.maxByOrNull { it.second }
             }

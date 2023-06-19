@@ -42,7 +42,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Push, Strafe, AAC442
+            Modify, Strafe, AAC442
         )
     }
 
@@ -138,29 +138,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.playerVelocityX *= horizontal
                 packet.playerVelocityY *= vertical
                 packet.playerVelocityZ *= horizontal
-            }
-        }
-
-    }
-
-    /**
-     * Push velocity
-     *
-     * todo: finish it what ever
-     */
-    private object Push : Choice("Push") {
-
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val packetHandler = sequenceHandler<PacketEvent> { event ->
-            val packet = event.packet
-
-            // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
-
-            } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
-
             }
         }
 
