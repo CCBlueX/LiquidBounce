@@ -256,9 +256,7 @@ object RotationManager : Listenable {
             }
         }
 
-        return possibleRotations.minByOrNull {
-            angleDifference(it.yaw, serverRotation.yaw).toDouble()
-        }
+        return possibleRotations.minByOrNull { abs(angleDifference(it.yaw, serverRotation.yaw).toDouble()) }
     }
 
     fun aimAt(vec: Vec3d, eyes: Vec3d, configurable: RotationsConfigurable) =

@@ -104,7 +104,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
-    private val stabilizedRotation by boolean("StabilizedRotation", false)
+
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val zitterModes = choices(
         "ZitterMode",
