@@ -132,3 +132,74 @@ body {
     margin-bottom: 3.5em;
     box-shadow: 3px 3px 6px #000
 }
+
+.footinit {
+    background-color: rgba(0, 0, 0, 0.68);
+    border-radius: 6px;
+    align-items: center;
+    column-gap: 30px;
+    font-size: 26px;
+    padding: 15px 35px;
+    position: absolute;
+    bottom: 20px;
+    text-align: right;
+    right: 20px;
+    margin-bottom: 10px;
+}
+
+.footinit2 {
+    background-color: rgba(0, 0, 0, 0.68);
+    border-radius: 6px;
+    align-items: center;
+    column-gap: 30px;
+    font-size: 26px;
+    padding: 15px 35px;
+    position: absolute;
+    bottom: 20px;
+    text-align: left;
+    left: 20px;
+    margin-bottom: 10px;
+}
+
+.butto {
+    height: 45px;
+    width: 155px;
+    font-size: 22px;
+    background-color: rgba(0, 0, 0, 0.68);
+    border-radius: 6px;
+    margin-right: 10px;
+    background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+    background-size: 200% 100%;
+    background-position: right bottom;
+    will-change: background-position;
+    transition: background-position .2s ease-out;
+}
+
+.butto:hover, .Button:hover {
+    background-position: left bottom
+}
+
+.Button {
+    background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+    background-size: 200% 100%;
+    background-position: right bottom;
+    will-change: background-position;
+    transition: background-position .2s ease-out;
+    margin-top: 30px;
+    width: 420px;
+    padding: 25px 35px;
+    border-radius: 6px;
+    align-items: center;
+    font-size: 26px;
+}
+
+
+Button {
+    border-radius: 6px;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.68);
+    width: 90px;
+    height: 30px;
+    color: white;
+    border: none;
+}
