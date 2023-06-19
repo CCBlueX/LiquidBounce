@@ -1,91 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html">
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <link href="css/classic.min.css" rel="stylesheet">
+    <link href="css/nouislider.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="build/bundle.css">
+
+    <script defer src="build/bundle.js"></script>
+
+
+    <style>
+        body {
+
+        }
+    </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="head">
-        <img id="logo" src="img/lb.svg" alt="logo" class="logo" style="scale: 0.85">
-        <div class="head-right">
-                <div id="box">
-                    <img src="https://i.imgur.com/0EdXK99.jpg" width="76px" alt="avatar" class="avatar">
-                    <a href="#">
-                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/ba/Flag_of_Germany.svg/1920px-Flag_of_Germany.svg.png" alt="flag" class="flag">
-                        <span class="tooltip">Change Location</span>
-                    </a>
-                </div>
-        </div>
-    </div>
-</div>
-<div id="spacer"></div>
-<div class="container altmanager">
-    <div class="head">
-        <div class="container-sm" style="display: inherit">
-        <label class="searchbox">
-            <img src="img/search.svg" width="20px" style="color: #ffffff;" alt="">
-            <input type="text" name="searchAlt" id="inputbox">
-        </label>
-        </div>
-        <p id="test">Input Blablabla</p>
-    </div>
-</div>
-<footer>
-    <div class="footinit">
-        <button class="butto" onclick="pages.open('title', screen)">
-            <picture>
-                <source srcset="img/back.svg"
-                        media="(orientation: portrait)">
-                <img src="img/back.svg" alt="">
-            </picture>
-            Back
-        </button>
-    </div>
-    <div class="footinit2">
-        <button class="butto" onclick="pages.open('title', screen)">
-            <picture>
-                <source srcset="img/add.svg"
-                        media="(orientation: portrait)">
-                <img src="img/add.svg" alt="">
-            </picture>
-            Add
-        </button>
-        <button class="butto" onclick="pages.open('title', screen)">
-            <picture>
-                <source srcset="img/clipboard.svg"
-                        media="(orientation: portrait)">
-                <img src="img/clipboard.svg" alt="">
-            </picture>
-            Clipboard
-        </button>
-        <button class="butto" onclick="pages.open('title', screen)">
-            <picture>
-                <source srcset="img/import.svg"
-                        media="(orientation: portrait)">
-                <img src="img/import.svg" alt="">
-            </picture>
-            Import
-        </button>
-        <button class="butto" onclick="pages.open('title', screen)">
-            <picture>
-                <source srcset="img/random.svg"
-                        media="(orientation: portrait)">
-                <img src="img/random.svg" alt="">
-            </picture>
-            Random
-        </button>
-        <button class="butto" onclick="pages.open('title', screen)">
-            <picture>
-                <source srcset="img/check.svg"
-                        media="(orientation: portrait)">
-                <img src="img/check.svg" alt="">
-            </picture>
-            Check
-        </button>
-    </div>
-</footer>
-<script src="js.js"></script>
+    <div id="app"></div>
 </body>
+
 </html>

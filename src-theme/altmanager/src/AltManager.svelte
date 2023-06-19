@@ -1,4 +1,10 @@
 <script>
+
+    import SearchBar from "./Searchbar.svelte";
+
+    let selectedAlt = [];
+    let selectedOptions = [];
+
     const random = (length = 8) => {
         // Declare all characters
         let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -12,6 +18,10 @@
         return str;
 
     };
+
+
+    console.log("Test 1243")
+
 </script>
 
 <main>
@@ -32,12 +42,17 @@
     <div id="spacer"></div>
     <div class="container altmanager">
         <div class="head">
-            <div class="container-sm" style="display: inherit">
-                <label class="searchbox">
-                    <img src="img/search.svg" width="20px" style="color: #ffffff;" alt="">
-                    <input type="text" name="searchAlt" id="inputbox">
-                </label>
-            </div>
+            <SearchBar
+                    placeholder="Search"
+                    on:input={e => {
+                        selectedOptions = [];
+                        selectedAlt = [];
+                        for (let i = 0; i < 10; i++) {
+                            selectedAlt.push(random());
+                            selectedOptions.push(random());
+                        }
+                    }}
+            />
             <p id="test">Input Blablabla</p>
         </div>
     </div>
@@ -98,25 +113,6 @@
 </main>
 
 <style>
-    *:focus {
-        outline: none;
-    }
-
-    * {
-        cursor: default !important;
-        font-family: "Montserrat", sans-serif;
-        user-select: none;
-        box-sizing: border-box;
-        color: white;
-    }
-
-    body {
-        background-image: url("img/background.png");
-        background-size: cover;
-        overflow: hidden;
-        margin : 3rem;
-    }
-
     .container {
         display: flex;
         justify-content: center;
@@ -136,8 +132,6 @@
     #logo  {
         float: left;
     }
-
-
 
     .head-right {
         float: right;
@@ -195,10 +189,6 @@
         box-shadow: 3px 3px 6px #000;
     }
 
-    #textbox {
-        width: 100%
-    }
-
     .flag {
         width: 1.3rem;
         height: 1.3rem;
@@ -250,22 +240,8 @@
         transition: background-position .2s ease-out;
     }
 
-    .butto:hover, .Button:hover {
+    .butto:hover {
         background-position: left bottom
-    }
-
-    .Button {
-        background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
-        background-size: 200% 100%;
-        background-position: right bottom;
-        will-change: background-position;
-        transition: background-position .2s ease-out;
-        margin-top: 30px;
-        width: 420px;
-        padding: 25px 35px;
-        border-radius: 6px;
-        align-items: center;
-        font-size: 26px;
     }
 
 

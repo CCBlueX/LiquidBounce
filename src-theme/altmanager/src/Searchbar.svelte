@@ -5,7 +5,14 @@
 <div class="container-sm" style="display: inherit">
     <label class="searchbox">
         <img src="img/search.svg" width="20px" style="color: #ffffff;" alt="">
-        <input type="text" name="searchAlt" id="inputbox">
+        <input
+                type="text"
+                name="searchAlt"
+                id="inputbox"
+                autocomplete="off"
+                placeholder=""
+                bind:value={alt}
+                on:input />
     </label>
 </div>
 
