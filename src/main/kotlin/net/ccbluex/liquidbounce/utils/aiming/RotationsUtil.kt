@@ -216,6 +216,33 @@ object RotationManager : Listenable {
         return false
     }
 
+    fun can(
+        eyes: Vec3d = mc.player?.eyes!!,
+        pos: BlockPos,
+        range: Double,
+        side: Direction? = null
+    ): Pair<Rotation?, String> {
+
+        val minX = pos.x.toDouble()
+        val minY = pos.y.toDouble()
+        val minZ = pos.z.toDouble()
+
+        // Collects all possible rotations
+        val vec3 = Vec3d(
+            minX+0.5,
+            minY+0.5,
+            minZ+0.5
+        )
+        // skip because of out of range
+        // checks if this rotation is facing to this side of the block
+        // TODO: fix this part, so it doesn't prevent you from getting rotation when on edge
+        val visible = facingBlock(eyes, vec3, pos, expectedSide = side)
+        if (visible) {
+            return Pair(makeRotation(vec3, eyes), "")
+        } else {
+            return Pair(makeRotation(vec3, eyes), "visible - ${visible}")
+        }
+    }
     /**
      * Find the best spot of the side to aim at
      */
@@ -224,7 +251,7 @@ object RotationManager : Listenable {
         pos: BlockPos,
         range: Double,
         side: Direction? = null
-    ): Rotation? {
+    ): Vec3d? {
         val rangeSquared = range * range
 
         val minX = pos.x.toDouble()
@@ -232,31 +259,32 @@ object RotationManager : Listenable {
         val minZ = pos.z.toDouble()
 
         // Collects all possible rotations
-        val possibleRotations = mutableListOf<Rotation>()
+        val possibleRotations = mutableListOf<Vec3d>()
 
         for (x in 0.1..0.9 step 0.1) {
             for (z in 0.1..0.9 step 0.1) {
                 for (y in 0.1..0.9 step 0.1) {
                     val vec3 = Vec3d(
-                        minX + x,
-                        minY + y,
-                        minZ + z
+                        minX+x,
+                        minY+y,
+                        minZ+z
                     )
 
                     // skip because of out of range
                     val distance = eyes.squaredDistanceTo(vec3)
                     // checks if this rotation is facing to this side of the block
-                    // TODO: fix this part, so it doesn't prevent you from getting rotaions when on edge
+                    // TODO: fix this part, so it doesn't prevent you from getting rotation when on edge
                     val visible = facingBlock(eyes, vec3, pos, expectedSide = side)
 
                     if (distance <= rangeSquared && visible) {
-                        possibleRotations.add(makeRotation(vec3, eyes))
+                        possibleRotations.add(vec3)
                     }
                 }
             }
         }
 
-        return possibleRotations.minByOrNull { abs(angleDifference(it.yaw, serverRotation.yaw).toDouble()) }
+        return possibleRotations.minByOrNull { abs(angleDifference(makeRotation(it, eyes).yaw, serverRotation.yaw).toDouble()) }
+        //return possibleRotations.minByOrNull { abs(angleDifference(it.yaw, serverRotation.yaw).toDouble()) }
     }
 
     fun aimAt(vec: Vec3d, eyes: Vec3d, configurable: RotationsConfigurable) =
@@ -383,7 +411,7 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two angle points
      */
-    private fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
+    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (activeConfigurable?.fixVelocity == true) {

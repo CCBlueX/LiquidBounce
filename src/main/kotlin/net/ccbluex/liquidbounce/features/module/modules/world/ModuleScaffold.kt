@@ -24,19 +24,21 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.item.notABlock
+import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.minecraft.block.ShapeContext
 import net.minecraft.block.SideShapeType
+import net.minecraft.block.SlabBlock
+import net.minecraft.block.StairsBlock
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemPlacementContext
@@ -84,11 +86,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         },
         Comparator.comparingDouble {
             (
-                1.5 - (it.item as BlockItem).block.defaultState.getHardness(
-                    world,
-                    BlockPos(0, 0, 0)
-                )
-                ).absoluteValue
+                    1.5 - (it.item as BlockItem).block.defaultState.getHardness(
+                        world,
+                        BlockPos(0, 0, 0)
+                    )
+                    ).absoluteValue
         },
         { o1, o2 -> o2.count.compareTo(o1.count) }
     )
@@ -376,6 +378,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return player.blockPos.add(0, -1, 0)
     }
 
+    val target1 by float("test", 0.5f, 0f..1f)
     fun updateTarget(pos: BlockPos, lavaBucket: Boolean = false): Target? {
         val state = pos.getState()
 
@@ -466,19 +469,51 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }.maxByOrNull { it.second }
             }
 
-            if (first == null) {
-                continue
+            if (first != null) {
+                val currPos = first.second
+
+                val currState = currPos.getState()!!
+                val currBlock = currState.block
+
+                val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
+
+                val face = currState.getOutlineShape(
+                    mc.world,
+                    currPos,
+                    ShapeContext.of(player)
+                ).boundingBoxes.mapNotNull {
+                    var face = it.getFace(first.first)
+
+                    if (truncate) {
+                        face = face.truncate(0.5) ?: return@mapNotNull null
+                    }
+                    val test = face.getAim(currPos)
+                    chat("${test.toString()} - aim, ${face.center} - center, from - ${face.from}, to - ${face.to}")
+                    Pair(
+                        face,
+                        test
+                    )
+                }.maxWithOrNull(
+                    Comparator.comparingDouble<Pair<Face, Vec3d>> {
+                        it.second.subtract(
+                            Vec3d(
+                                0.5,
+                                0.5,
+                                0.5
+                            )
+                        ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
+                    }.thenComparingDouble { it.second.y }
+                ) ?: continue
+
+                return Target(
+                    currPos,
+                    first.first,
+                    face.first.from.y + currPos.y,
+                    RotationManager.makeRotation(face.second.add(Vec3d.of(currPos)), player.eyes)
+                )
             }
-            val currPos = first.second
-            val rotation = raycast(4.5, RotationManager.aimToBlock(player.eyes, currPos, 4.5, first.first)!!) ?: continue
-            val rotationRaycasted = RotationManager.aimToBlock(player.eyes, rotation.blockPos, 4.5, rotation.side) ?: continue
-            return Target(
-                rotation.blockPos,
-                rotation.side,
-                rotation.blockPos.y.toDouble(),
-                rotationRaycasted
-            )
         }
+
         return null
     }
 
@@ -506,6 +541,43 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 from.y + (to.y - from.y) * 0.5,
                 from.z + (to.z - from.z) * 0.5
             )
+
+        fun getAim(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
+
+            // Collects all possible rotations
+            val possibleRotations = mutableListOf<Vec3d>()
+
+            val fx = from.x == to.x
+            val fy = from.y == to.y
+            val fz = from.z == to.z
+
+            for (x in 0.1..0.9 step 0.1) {
+                for (y in 0.1..0.9 step 0.1) {
+                    val vec3: Vec3d
+                    if (fx)
+                        vec3 = Vec3d(
+                            1.0,
+                            y,
+                            z
+                        )
+                    if (fy)
+                        vec3 = Vec3d(
+                            x,
+                            1.0,
+                            y
+                        )
+                    if (fz)
+                        vec3 = Vec3d(
+                            x,
+                            y,
+                            1.0
+                        )
+
+                    possibleRotations.add(vec3)
+                }
+            }
+            return possibleRotations.minBy { abs(RotationManager.angleDifference(RotationManager.makeRotation(it.add(Vec3d.of(pos)), eyes).yaw, RotationManager.serverRotation.yaw)) }
+        }
 
         fun truncate(minY: Double): Face? {
             val newFace = Face(
