@@ -555,7 +555,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 for (y in from.y..to.y step 0.1) {
                     for (z in from.z..to.z step 0.1) {
                         if ((x == 0.0 || y == 0.0 || z == 0.0) || ((x == 1.0 && !fx) || (y == 1.0 && !fy) || (z == 1.0 && !fz))) {
-                            return
+                            continue
                         }
                         val vec3: Vec3d = Vec3d(x, y, z)
 
