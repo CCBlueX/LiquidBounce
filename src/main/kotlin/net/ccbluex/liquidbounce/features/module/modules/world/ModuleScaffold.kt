@@ -172,6 +172,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 rayTraceResult
             )
         ) {
+            chat("${rayTraceResult.type != HitResult.Type.BLOCK} ${rayTraceResult.blockPos != target.blockPos} ${rayTraceResult.side != target.direction} ${rayTraceResult.pos.y < target.minY} ${!isValidTarget(rayTraceResult)} ")
             return@repeatable
         }
 
@@ -378,7 +379,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return player.blockPos.add(0, -1, 0)
     }
 
-    val target1 by float("test", 0.5f, 0f..1f)
+    //val target1 by float("test", 0.5f, 0f..1f)
     fun updateTarget(pos: BlockPos, lavaBucket: Boolean = false): Target? {
         val state = pos.getState()
 
@@ -547,23 +548,46 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             // Collects all possible rotations
             val possibleRotations = mutableListOf<Vec3d>()
 
-            val fx = from.x == to.x
-            val fy = from.y == to.y
-            val fz = from.z == to.z
 
-            for (x in from.x..to.x step 0.1) {
-                for (y in from.y..to.y step 0.1) {
-                    for (z in from.z..to.z step 0.1) {
-                        if ((x == 0.0 || y == 0.0 || z == 0.0) || ((x == 1.0 && !fx) || (y == 1.0 && !fy) || (z == 1.0 && !fz))) {
-                            continue
-                        }
-                        val vec3: Vec3d = Vec3d(x, y, z)
+            val stx: Double
+            val sty: Double
+            val stz: Double
+            val enx: Double
+            val eny: Double
+            val enz: Double
+
+            if (from.x == to.x) {
+                stx = from.x
+                enx = to.x
+            } else {
+                stx = 0.1
+                enx = 0.9
+            }
+            if (from.y == to.y) {
+                sty = from.y
+                eny = to.y
+            } else {
+                sty = 0.1
+                eny = 0.9
+            }
+            if (from.z == to.z) {
+                stz = from.z
+                enz = to.z
+            } else {
+                stz = 0.1
+                enz = 0.9
+            }
+            for (x in stx..enx step 0.1) {
+                for (y in sty..eny step 0.1) {
+                    for (z in stz..enz step 0.1) {
+                        val vec3 = Vec3d(x, y, z)
 
                         possibleRotations.add(vec3)
                     }
                 }
             }
-            return possibleRotations.minBy { abs(RotationManager.angleDifference(RotationManager.makeRotation(it.add(Vec3d.of(pos)), eyes).yaw, RotationManager.serverRotation.yaw)) }
+            val check = if (RotationManager.currentRotation != null) RotationManager.currentRotation!!.yaw else player.yaw
+            return possibleRotations.minBy { abs(RotationManager.angleDifference(RotationManager.makeRotation(it.add(Vec3d.of(pos)), eyes).yaw, check))}
         }
 
         fun truncate(minY: Double): Face? {
