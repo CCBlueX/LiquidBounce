@@ -551,29 +551,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val fy = from.y == to.y
             val fz = from.z == to.z
 
-            for (x in 0.1..0.9 step 0.1) {
-                for (y in 0.1..0.9 step 0.1) {
-                    val vec3: Vec3d
-                    if (fx)
-                        vec3 = Vec3d(
-                            1.0,
-                            y,
-                            z
-                        )
-                    if (fy)
-                        vec3 = Vec3d(
-                            x,
-                            1.0,
-                            y
-                        )
-                    if (fz)
-                        vec3 = Vec3d(
-                            x,
-                            y,
-                            1.0
-                        )
+            for (x in from.x..to.x step 0.1) {
+                for (y in from.y..to.y step 0.1) {
+                    for (z in from.z..to.z step 0.1) {
+                        if ((x == 0.0 || y == 0.0 || z == 0.0) || ((x == 1.0 && !fx) || (y == 1.0 && !fy) || (z == 1.0 && !fz))) {
+                            return
+                        }
+                        val vec3: Vec3d = Vec3d(x, y, z)
 
-                    possibleRotations.add(vec3)
+                        possibleRotations.add(vec3)
+                    }
                 }
             }
             return possibleRotations.minBy { abs(RotationManager.angleDifference(RotationManager.makeRotation(it.add(Vec3d.of(pos)), eyes).yaw, RotationManager.serverRotation.yaw)) }
