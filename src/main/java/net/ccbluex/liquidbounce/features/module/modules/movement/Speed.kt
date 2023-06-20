@@ -12,9 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan.SpartanYPort
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreBHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.*
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -69,6 +67,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
             // Other
             Matrix(),
             SlowHop(),
+            StrafeHop(),
             CustomSpeed(),
             Legit()
     )
