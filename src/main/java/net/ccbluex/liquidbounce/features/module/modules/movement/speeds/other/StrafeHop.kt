@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class StrafeHop : SpeedMode("StrafeHop") {
     override fun onMotion() {
