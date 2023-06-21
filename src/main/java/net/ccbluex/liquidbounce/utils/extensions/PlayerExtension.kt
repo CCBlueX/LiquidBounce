@@ -63,8 +63,8 @@ fun EntityPlayer.isClientFriend(): Boolean {
     return friendsConfig.isFriend(stripColor(entityName))
 }
 
-val Entity.rotation
-    get() = Rotation(rotationYaw, rotationPitch)
+val Entity?.rotation
+    get() = Rotation(this?.rotationYaw ?: 0f, this?.rotationPitch ?: 0f)
 
 val Entity.hitBox: AxisAlignedBB
     get() {
