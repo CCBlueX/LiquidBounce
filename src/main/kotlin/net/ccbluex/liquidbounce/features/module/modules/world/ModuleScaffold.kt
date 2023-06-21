@@ -138,6 +138,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         get() = this.down && mc.options.sneakKey.isPressed
 
     override fun enable() {
+        chat(RotationManager.step.toString())
         startY = player.blockPos.y
         super.enable()
     }
@@ -379,7 +380,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return player.blockPos.add(0, -1, 0)
     }
 
-    //val target1 by float("test", 0.5f, 0f..1f)
     fun updateTarget(pos: BlockPos, lavaBucket: Boolean = false): Target? {
         val state = pos.getState()
 
@@ -488,11 +488,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     if (truncate) {
                         face = face.truncate(0.5) ?: return@mapNotNull null
                     }
-                    val test = face.getAim(currPos)
-                    chat("${test.toString()} - aim, ${face.center} - center, from - ${face.from}, to - ${face.to}")
+
                     Pair(
                         face,
-                        test
+                        Vec3d(
+                            face.from.x + (face.to.x - face.from.x) * 0.5,
+                            face.from.y + (face.to.y - face.from.y) * 0.5,
+                            face.from.z + (face.to.z - face.from.z) * 0.5
+                        )
                     )
                 }.maxWithOrNull(
                     Comparator.comparingDouble<Pair<Face, Vec3d>> {
@@ -548,7 +551,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             // Collects all possible rotations
             val possibleRotations = mutableListOf<Vec3d>()
 
-
+            // pls don't kill me, I know this code is shit
             val stx: Double
             val sty: Double
             val stz: Double
@@ -577,9 +580,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 stz = 0.1
                 enz = 0.9
             }
-            for (x in stx..enx step 0.1) {
-                for (y in sty..eny step 0.1) {
-                    for (z in stz..enz step 0.1) {
+            for (x in stx..enx step 0.03) {
+                for (y in sty..eny step 0.03) {
+                    for (z in stz..enz step 0.03) {
                         val vec3 = Vec3d(x, y, z)
 
                         possibleRotations.add(vec3)

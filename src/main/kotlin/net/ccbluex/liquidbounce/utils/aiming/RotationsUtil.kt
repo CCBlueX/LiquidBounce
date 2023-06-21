@@ -311,6 +311,12 @@ object RotationManager : Listenable {
         )
     }
 
+    val step: Double
+        get() {
+            val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
+            return f * f * f * 8.0 * 0.15F
+        }
+
     /**
      * Update current rotation to new rotation step
      */
