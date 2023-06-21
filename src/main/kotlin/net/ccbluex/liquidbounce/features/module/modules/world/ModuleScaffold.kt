@@ -165,7 +165,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
-
         val currentRotation = RotationManager.currentRotation ?: return@repeatable
         val rayTraceResult = raycast(4.5, currentRotation) ?: return@repeatable
 
@@ -173,7 +172,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 rayTraceResult
             )
         ) {
-            chat("${rayTraceResult.type != HitResult.Type.BLOCK} ${rayTraceResult.blockPos != target.blockPos} ${rayTraceResult.side != target.direction} ${rayTraceResult.pos.y < target.minY} ${!isValidTarget(rayTraceResult)} ")
             return@repeatable
         }
 
@@ -250,11 +248,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
                 if (neighbor.getState()!!.isReplaceable) {
                     val calcDif = abs(
-                        0.5 + (if (side.axis == Direction.Axis.Z) {
+                        0.5 + if (side.axis == Direction.Axis.Z) {
                             neighbor.z - player.pos.z
                         } else {
                             neighbor.x - player.pos.x
-                        })
+                        }
                     ) - 0.5
 
                     dif = min(dif, calcDif)
@@ -429,28 +427,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 )
             ) {
                 Direction.values().mapNotNull { direction ->
+
+                    // distance to the center of the block, multiplied by 0.5 (?)
                     val delta = player.eyes.subtract(
-                        Vec3d.of(posToInvestigate).add(0.5, 0.5, 0.5).add(Vec3d.of(direction.vector).multiply(0.5))
+                        posToInvestigate.toCenterPos().add(Vec3d.of(direction.vector).multiply(0.5))
                     )
 
-                    val angle = delta.dotProduct(Vec3d.of(direction.vector)) / delta.distanceTo(Vec3d.ZERO)
+                    val angle = delta.dotProduct(Vec3d.of(direction.vector)) / delta.length()
 
                     if (angle < 0) return@mapNotNull null
 
                     Triple(direction, posToInvestigate, angle)
                 }.maxByOrNull { it.second }
             } else {
-                val directionsToInvestigate = arrayOf(
-                    Direction.UP,
-                    Direction.NORTH,
-                    Direction.EAST,
-                    Direction.SOUTH,
-                    Direction.WEST,
-                    Direction.DOWN
-                )
-
-                directionsToInvestigate.mapNotNull { direction ->
-                    val normalVector = direction.vector
+                Direction.values().mapNotNull { direction ->
                     val currPos = posToInvestigate.add(direction.opposite.vector)
                     val currState = currPos.getState() ?: return@mapNotNull null
 
@@ -459,10 +449,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     }
 
                     val delta = player.eyes.subtract(
-                        Vec3d.of(currPos).add(0.5, 0.5, 0.5).add(Vec3d.of(normalVector).multiply(0.5))
+                        currPos.toCenterPos().add(Vec3d.of(direction.vector).multiply(0.5))
                     )
 
-                    val angle = delta.dotProduct(Vec3d.of(normalVector)) / delta.distanceTo(Vec3d.ZERO)
+                    val angle = delta.dotProduct(Vec3d.of(direction.vector)) / delta.length()
 
                     if (angle < 0) return@mapNotNull null
 
@@ -491,11 +481,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
                     Pair(
                         face,
-                        Vec3d(
-                            face.from.x + (face.to.x - face.from.x) * 0.5,
-                            face.from.y + (face.to.y - face.from.y) * 0.5,
-                            face.from.z + (face.to.z - face.from.z) * 0.5
-                        )
+                        face.getAim(currPos)
                     )
                 }.maxWithOrNull(
                     Comparator.comparingDouble<Pair<Face, Vec3d>> {
@@ -559,38 +545,50 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val eny: Double
             val enz: Double
 
+            val step = RotationManager.step.coerceIn(0.02, 0.1)
             if (from.x == to.x) {
                 stx = from.x
                 enx = to.x
             } else {
-                stx = 0.1
-                enx = 0.9
+                stx = from.x + step
+                enx = to.x - step
             }
             if (from.y == to.y) {
                 sty = from.y
                 eny = to.y
             } else {
-                sty = 0.1
-                eny = 0.9
+                sty = from.y + step
+                eny = to.x - step
             }
             if (from.z == to.z) {
                 stz = from.z
                 enz = to.z
             } else {
-                stz = 0.1
-                enz = 0.9
+                stz = from.y + step
+                enz = to.x - step
             }
-            for (x in stx..enx step 0.03) {
-                for (y in sty..eny step 0.03) {
-                    for (z in stz..enz step 0.03) {
+            for (x in stx..enx step step) {
+                for (y in sty..eny step step) {
+                    for (z in stz..enz step step) {
                         val vec3 = Vec3d(x, y, z)
 
                         possibleRotations.add(vec3)
                     }
                 }
             }
-            val check = if (RotationManager.currentRotation != null) RotationManager.currentRotation!!.yaw else player.yaw
-            return possibleRotations.minBy { abs(RotationManager.angleDifference(RotationManager.makeRotation(it.add(Vec3d.of(pos)), eyes).yaw, check))}
+            val check =
+                if (RotationManager.currentRotation != null) RotationManager.currentRotation!!.yaw else player.yaw
+            return possibleRotations.minBy {
+                abs(
+                    RotationManager.angleDifference(
+                        RotationManager.makeRotation(
+                            it.add(
+                                Vec3d.of(pos)
+                            ), eyes
+                        ).yaw, check
+                    )
+                )
+            }
         }
 
         fun truncate(minY: Double): Face? {
