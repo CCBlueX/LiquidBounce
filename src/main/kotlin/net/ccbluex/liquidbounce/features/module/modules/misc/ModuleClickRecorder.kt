@@ -48,7 +48,7 @@ object ModuleClickRecorder : Module("ClickRecorder", Category.COMBAT) {
     private var prevTime = -1L
 
     private var progression = 0
-    private var lastClick = 0L
+    private var lastClick = -1L
 
     override fun enable() {
         if (!ignoreInstructions) {
@@ -117,8 +117,14 @@ object ModuleClickRecorder : Module("ClickRecorder", Category.COMBAT) {
             return 0
         }
 
+        if (lastClick == -1L) {
+            lastClick = System.currentTimeMillis()
+
+            return if (condition()) 1 else 0
+        }
+
         while (timeLeft >= clickList[getProgression()] && condition()) {
-            timeLeft -= lastClick
+            timeLeft -= clickList[getProgression()]
             clicks++
 
             lastClick = System.currentTimeMillis()
