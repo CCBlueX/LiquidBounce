@@ -50,7 +50,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
     val weapon by enumChoice("Weapon", Weapon.ANY, Weapon.values())
     val delayPostStopUse by int("DelayPostStopUse", 0, 0..20)
 
-    private val cpsTimer = CpsScheduler()
+    private val cpsTimer = tree(CpsScheduler())
 
     val repeatable = repeatable {
         val crosshair = mc.crosshairTarget

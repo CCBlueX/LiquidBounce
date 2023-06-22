@@ -21,6 +21,9 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import kotlin.math.roundToInt
 
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleClickRecorder
+
 /**
  * A CPS scheduler
  *
@@ -30,7 +33,9 @@ import kotlin.math.roundToInt
  *     this.doAttack();
  * }
  */
-class CpsScheduler {
+class CpsScheduler : Configurable("CpsScheduler") {
+
+    private val useClickRecorder by boolean("UseClickRecorder", false)
 
     private var lastClick = 0L
     private var clickTime = -1L
@@ -38,6 +43,10 @@ class CpsScheduler {
     fun clicks(condition: () -> Boolean, cps: IntRange): Int {
         var timeLeft = System.currentTimeMillis() - lastClick
         var clicks = 0
+
+        if (useClickRecorder) {
+            return ModuleClickRecorder.doClicks(condition)
+        }
 
         // Does the clickTime need a forced update or are we a tick late?
         if (clickTime == -1L || ((timeLeft - clickTime) / 50.0).roundToInt() * 50 > 50) {

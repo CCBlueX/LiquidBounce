@@ -111,3 +111,5 @@ accessible field net/minecraft/client/gl/PostEffectProcessor passes Ljava/util/L
 accessible field net/minecraft/network/ClientConnection channel Lio/netty/channel/Channel;
 
 accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier (ZZ)F
+
+accessible field net/minecraft/client/option/KeyBinding timesPressed I
