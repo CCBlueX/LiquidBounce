@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AimMode.*
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -51,6 +53,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.*
+import kotlin.random.Random
 
 /**
  * Scaffold module
@@ -58,6 +61,14 @@ import kotlin.math.*
  * Places blocks under you.
  */
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
+
+
+    enum class AimMode(override val choiceName: String) : NamedChoice {
+        CENTER("Center"),
+        RANDOM("Random"),
+        STABILIZED("Stabilized"),
+        CLOSE_ROTATION("CloseRotation");
+    }
 
     private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
         { o1, o2 ->
@@ -106,6 +117,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val aimMode = enumChoice("RotationMode", STABILIZED, AimMode.values())
 
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val zitterModes = choices(
@@ -138,7 +150,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         get() = this.down && mc.options.sneakKey.isPressed
 
     override fun enable() {
-        chat(RotationManager.step.toString())
+        chat(RotationManager.gcd.toString())
         startY = player.blockPos.y
         super.enable()
     }
@@ -479,9 +491,26 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         face = face.truncate(0.5) ?: return@mapNotNull null
                     }
 
+                    val rotation = when (aimMode.value) {
+                        CENTER -> {
+                            face.center
+                        }
+
+                        RANDOM -> {
+                            face.random
+                        }
+
+                        CLOSE_ROTATION -> {
+                            face.closeRotation(currPos)
+                        }
+
+                        STABILIZED -> {
+                            face.stabilizedRotation(currPos)
+                        }
+                    }
                     Pair(
                         face,
-                        face.getAim(currPos)
+                        rotation
                     )
                 }.maxWithOrNull(
                     Comparator.comparingDouble<Pair<Face, Vec3d>> {
@@ -532,60 +561,62 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 from.z + (to.z - from.z) * 0.5
             )
 
-        fun getAim(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
+        val random: Vec3d
+            get() = Vec3d(
+                Random.nextDouble(from.x, to.x),
+                Random.nextDouble(from.y, to.y),
+                Random.nextDouble(from.z, to.z)
+            )
+
+        private fun rotationList(): MutableList<Vec3d> {
 
             // Collects all possible rotations
             val possibleRotations = mutableListOf<Vec3d>()
 
-            // pls don't kill me, I know this code is shit
-            val stx: Double
-            val sty: Double
-            val stz: Double
-            val enx: Double
-            val eny: Double
-            val enz: Double
+            val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
+            val xAd = if (from.x == to.x) 0.0 else 0.1
+            val yAd = if (from.y == to.y) 0.0 else 0.1
+            val zAd = if (from.z == to.z) 0.0 else 0.1
 
-            val step = RotationManager.step.coerceIn(0.02, 0.1)
-            if (from.x == to.x) {
-                stx = from.x
-                enx = to.x
-            } else {
-                stx = from.x + step
-                enx = to.x - step
-            }
-            if (from.y == to.y) {
-                sty = from.y
-                eny = to.y
-            } else {
-                sty = from.y + step
-                eny = to.x - step
-            }
-            if (from.z == to.z) {
-                stz = from.z
-                enz = to.z
-            } else {
-                stz = from.y + step
-                enz = to.x - step
-            }
-            for (x in stx..enx step step) {
-                for (y in sty..eny step step) {
-                    for (z in stz..enz step step) {
+            for (x in (from.x + xAd)..(to.x - xAd) step gcd) {
+                for (y in (from.y + yAd)..(to.y - yAd) step gcd) {
+                    for (z in (from.z + zAd)..(to.z - zAd) step gcd) {
                         val vec3 = Vec3d(x, y, z)
 
                         possibleRotations.add(vec3)
                     }
                 }
             }
-            val check =
-                if (RotationManager.currentRotation != null) RotationManager.currentRotation!!.yaw else player.yaw
-            return possibleRotations.minBy {
+            return possibleRotations
+        }
+
+        fun stabilizedRotation(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
+            return rotationList().minBy {
+                val yaw = RotationManager.makeRotation(
+                    it.add(
+                        Vec3d.of(pos)
+                    ), eyes
+                ).yaw
+                abs(
+                    RotationManager.angleDifference(
+                        yaw, (yaw / 45f).roundToInt() * 45f
+                    )
+                )
+            }
+        }
+
+        fun closeRotation(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
+            // Sort them by angleDifference between it and currentTarget.rotation
+            val yawToCompare = if (currentTarget != null) currentTarget!!.rotation.yaw else player.yaw
+
+            return rotationList().minBy {
                 abs(
                     RotationManager.angleDifference(
                         RotationManager.makeRotation(
                             it.add(
                                 Vec3d.of(pos)
                             ), eyes
-                        ).yaw, check
+                        ).yaw, yawToCompare
                     )
                 )
             }
@@ -607,5 +638,4 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     data class Target(val blockPos: BlockPos, val direction: Direction, val minY: Double, val rotation: Rotation)
-
 }
