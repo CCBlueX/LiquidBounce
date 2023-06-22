@@ -138,6 +138,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val safeWalk by boolean("SafeWalk", true)
     private val sameY by boolean("SameY", false)
     private var currentTarget: Target? = null
+    private var currentRotation: Rotation? = null
 
 
     init {
@@ -556,17 +557,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val center: Vec3d
             get() = Vec3d(
-                from.x + (to.x - from.x) * 0.5,
-                from.y + (to.y - from.y) * 0.5,
-                from.z + (to.z - from.z) * 0.5
+                (to.x + from.x) * 0.5,
+                (to.y + from.y) * 0.5,
+                (to.z + from.z) * 0.5
             )
 
         val random: Vec3d
-            get() = Vec3d(
-                Random.nextDouble(from.x, to.x),
-                Random.nextDouble(from.y, to.y),
-                Random.nextDouble(from.z, to.z)
-            )
+            get() {
+                val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
+                return Vec3d(
+                    if (from.x != to.x) Random.nextDouble(from.x + gcd, to.x - gcd) else from.x,
+                    if (from.y != to.y) Random.nextDouble(from.y + gcd, to.y - gcd) else from.y,
+                    if (from.z != to.z) Random.nextDouble(from.z + gcd, to.z - gcd) else from.z
+                )
+            }
 
         private fun rotationList(): MutableList<Vec3d> {
 
@@ -599,7 +603,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 ).yaw
                 abs(
                     RotationManager.angleDifference(
-                        yaw, (yaw / 45f).roundToInt() * 45f
+                        yaw, (yaw / 90f).roundToInt() * 90f
                     )
                 )
             }
@@ -607,7 +611,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         fun closeRotation(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
             // Sort them by angleDifference between it and currentTarget.rotation
-            val yawToCompare = if (currentTarget != null) currentTarget!!.rotation.yaw else player.yaw
+            val yawToCompare = if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
 
             return rotationList().minBy {
                 abs(
