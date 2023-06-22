@@ -25,7 +25,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
 import kotlin.math.roundToInt
 
-object ModuleClickRecorder : Module("ClickRecorder", Category.COMBAT) {
+/**
+ * ClickRecorder module
+ *
+ * Records your clicks which then can be used by cps-utilizing modules.
+ */
+
+object ModuleClickRecorder : Module("ClickRecorder", Category.MISC) {
 
     private val reset by boolean("Reset", false).listen {
         clickList.clear()

@@ -541,5 +541,7 @@
 
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
 
-  "liquidbounce.module.derp.description": "Makes it look as if you were derping around."
+  "liquidbounce.module.derp.description": "Makes it look as if you were derping around.",
+
+  "liquidbounce.module.clickRecorder.description": "Records your clicks which then can be used by cps-utilizing modules."
 }
