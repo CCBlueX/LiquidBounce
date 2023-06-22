@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
+import kotlin.math.roundToInt
 
 object ModuleClickRecorder : Module("ClickRecorder", Category.COMBAT) {
 
@@ -117,7 +118,7 @@ object ModuleClickRecorder : Module("ClickRecorder", Category.COMBAT) {
             return 0
         }
 
-        if (lastClick == -1L) {
+        if (lastClick == -1L || ((timeLeft - clickList[getProgression()]) / 50.0).roundToInt() * 50 > 50) {
             lastClick = System.currentTimeMillis()
 
             return if (condition()) 1 else 0
