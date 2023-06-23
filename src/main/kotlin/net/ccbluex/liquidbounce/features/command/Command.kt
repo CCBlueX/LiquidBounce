@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit

@@ -28,11 +28,8 @@ import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.item.AxeItem
 import net.minecraft.item.SwordItem
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
 import kotlin.random.Random
 
 /**

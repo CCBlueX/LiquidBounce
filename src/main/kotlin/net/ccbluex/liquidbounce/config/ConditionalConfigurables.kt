@@ -30,7 +30,6 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)

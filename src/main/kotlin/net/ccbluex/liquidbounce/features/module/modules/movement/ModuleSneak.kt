@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.client.util.InputUtil
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 /**

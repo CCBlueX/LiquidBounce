@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.hit.EntityHitResult
 
 /**

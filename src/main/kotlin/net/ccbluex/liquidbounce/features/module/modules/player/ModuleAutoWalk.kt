@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
-import net.minecraft.client.util.InputUtil
 
 /**
  * AutoWalk module

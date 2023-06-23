@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.base.ultralight.impl.renderer
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.config.UltralightViewConfig
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.util.math.MatrixStack
 
 /**
  * Render Views

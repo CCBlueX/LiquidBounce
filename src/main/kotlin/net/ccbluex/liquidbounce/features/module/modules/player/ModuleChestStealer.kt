@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 
 /**
  * ChestStealer module
