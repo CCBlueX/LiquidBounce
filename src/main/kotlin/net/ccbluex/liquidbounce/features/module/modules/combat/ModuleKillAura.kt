@@ -214,10 +214,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                 if(blocking){
                     if(!whileBlocking.enabled){
-                        return@repeat
+                        return@repeat // return if its not allowed to attack while using blocking with a shield
                     }
                 } else if(player.isUsingItem() && !whileUsingItem){
-                    return@repeat
+                    return@repeat // return if its not allowed to attack while the player is using another item thats not a shield
                 }
 
 
