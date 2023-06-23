@@ -26,6 +26,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType
@@ -100,6 +101,9 @@ class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
+
+@Nameable("keyBinding")
+class KeyBindingEvent(var key: KeyBinding) : Event()
 
 // User action events
 
