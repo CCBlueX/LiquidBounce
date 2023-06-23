@@ -47,7 +47,7 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
         tree(Right)
     }
 
-    val cpsScheduler = CpsScheduler()
+    val cpsScheduler = tree(CpsScheduler())
 
     val attack: Boolean
         get() = mc.options.attackKey.isPressed
