@@ -91,14 +91,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
-    private val whileUsingItem by boolean("whileUsingItem", true)
-    object whileBlocking : ToggleableConfigurable(this, "whileBlocking", true) {
-        val blockingTicks by int("blockingTicks", 0, 0..20)
+    private val whileUsingItem by boolean("WhileUsingItem", true)
+    object whileBlocking : ToggleableConfigurable(this, "WhileBlocking", true) {
+        val blockingTicks by int("BlockingTicks", 0, 0..20)
     }
-
+    
     init {
         tree(whileBlocking)
     }
+
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
     private val failRate by int("FailRate", 0, 0..100)
