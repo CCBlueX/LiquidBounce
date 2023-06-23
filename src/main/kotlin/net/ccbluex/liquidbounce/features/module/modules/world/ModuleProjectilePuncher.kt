@@ -57,7 +57,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     // Rotation
     private val rotations = RotationsConfigurable()
 
-    private val cpsTimer = CpsScheduler()
+    private val cpsTimer = tree(CpsScheduler())
 
     override fun disable() {
         targetTracker.cleanup()

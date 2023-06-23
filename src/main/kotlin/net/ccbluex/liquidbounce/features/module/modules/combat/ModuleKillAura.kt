@@ -99,7 +99,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
-    private val cpsTimer = CpsScheduler()
+    private val cpsTimer = tree(CpsScheduler())
 
     override fun disable() {
         targetTracker.cleanup()
