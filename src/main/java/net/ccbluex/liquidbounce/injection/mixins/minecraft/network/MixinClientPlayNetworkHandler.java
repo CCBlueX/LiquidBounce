@@ -19,10 +19,13 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import net.ccbluex.liquidbounce.config.Choice;
 import net.ccbluex.liquidbounce.event.ChunkLoadEvent;
 import net.ccbluex.liquidbounce.event.ChunkUnloadEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
+import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -72,9 +75,15 @@ public class MixinClientPlayNetworkHandler {
         this.connection.send(new TeleportConfirmC2SPacket(packet.getTeleportId()));
         // Silently accept yaw and pitch values requested by the server.
         this.connection.send(new PlayerMoveC2SPacket.Full(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ(), j, k, false));
-        // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotations server-side.
-        playerEntity.setYaw(playerEntity.prevYaw + 0.000001f);
-        playerEntity.setPitch(playerEntity.prevPitch + 0.000001f);
+        Choice activeChoice = ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice();
+        if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
+            RotationManager.INSTANCE.setActiveConfigurable(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable());
+            RotationManager.INSTANCE.setTargetRotation(new Rotation(j, k));
+        } else {
+            // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotations server-side.
+            playerEntity.setYaw(playerEntity.prevYaw + 0.000001f);
+            playerEntity.setPitch(playerEntity.prevPitch + 0.000001f);
+        }
 
         ci.cancel();
     }
