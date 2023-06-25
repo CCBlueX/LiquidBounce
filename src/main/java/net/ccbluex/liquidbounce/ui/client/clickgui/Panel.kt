@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.fadeSpee
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.maxElements
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.panelsForcedInBoundaries
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui.clamp
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
@@ -38,7 +39,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
             if (open) elements.filterIsInstance<ModuleElement>().maxOfOrNull { if (it.showSettings) it.settingsWidth else 0 } ?: 0
             else 0
 
-        return value.coerceIn(0, (ScaledResolution(mc).scaledWidth / scale - width - settingsWidth).roundToInt().coerceAtLeast(0))
+        return value.clamp(0, (ScaledResolution(mc).scaledWidth / scale - width - settingsWidth).roundToInt())
     }
     fun parseY(value: Int = y): Int {
         if (!panelsForcedInBoundaries)
@@ -58,7 +59,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
                 }
             }
 
-        return value.coerceIn(0, (ScaledResolution(mc).scaledHeight / scale - panelHeight).roundToInt().coerceAtLeast(0))
+        return value.clamp(0, (ScaledResolution(mc).scaledHeight / scale - panelHeight).roundToInt())
     }
 
     var drag = false
@@ -68,7 +69,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
     var isVisible = true
     var fade = 0
         set(value) {
-            val parsed = value.coerceIn(0, elementsHeight.coerceAtLeast(0))
+            val parsed = value.clamp(0, elementsHeight)
 
             if (parsed != field) {
                 // Update panel pos not to extend beyond border.
