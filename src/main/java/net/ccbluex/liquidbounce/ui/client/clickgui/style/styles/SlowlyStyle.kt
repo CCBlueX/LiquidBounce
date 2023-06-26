@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui.clamp
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
@@ -46,8 +47,8 @@ object SlowlyStyle : Style() {
         val height = (font35.fontHeight * lines.size) + 3
 
         // Don't draw hover text beyond window boundaries
-        val x = mouseX.coerceIn(0, (ScaledResolution(mc).scaledWidth / scale - width).roundToInt())
-        val y = mouseY.coerceIn(0, (ScaledResolution(mc).scaledHeight / scale - height).roundToInt())
+        val x = mouseX.clamp(0, (ScaledResolution(mc).scaledWidth / scale - width).roundToInt())
+        val y = mouseY.clamp(0, (ScaledResolution(mc).scaledHeight / scale - height).roundToInt())
 
         drawBorderedRect(x + 9, y, x + width, y + height, 3, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
         lines.forEachIndexed { index, text ->
