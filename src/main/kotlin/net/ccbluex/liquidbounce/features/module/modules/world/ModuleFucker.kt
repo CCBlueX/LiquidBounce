@@ -64,7 +64,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
     private val delay by int("SwitchDelay", 0, 0..20)
-    privaye val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Rotation
     private val rotations = RotationsConfigurable()
