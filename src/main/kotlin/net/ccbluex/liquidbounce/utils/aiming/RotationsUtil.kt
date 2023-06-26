@@ -49,7 +49,6 @@ class RotationsConfigurable : Configurable("Rotations") {
     val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
     val fixVelocity by boolean("FixVelocity", true)
     val threshold by float("Threshold", 2f, 0f..50f)
-    val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 }
 
 /**
@@ -64,6 +63,7 @@ object RotationManager : Listenable {
     // Current rotation
     var currentRotation: Rotation? = null
     var ticksUntilReset: Int = 0
+    var ignoreOpenInventory = false
 
     // Active configurable
     var activeConfigurable: RotationsConfigurable? = null
@@ -268,10 +268,10 @@ object RotationManager : Listenable {
 //        return visibleRot ?: notVisibleRot
 //    }
 
-    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable) =
-        aimAt(makeRotation(vec, eyes), ticks, configurable)
+    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, openInventory: Boolean = false, configurable: RotationsConfigurable) =
+        aimAt(makeRotation(vec, eyes), ticks, openInventory, configurable)
 
-    fun aimAt(rotation: Rotation, ticks: Int = 5, configurable: RotationsConfigurable) {
+    fun aimAt(rotation: Rotation, ticks: Int = 5, openInventory: Boolean = false, configurable: RotationsConfigurable) {
         if (!shouldUpdate()) {
             return
         }
@@ -279,6 +279,7 @@ object RotationManager : Listenable {
         activeConfigurable = configurable
         targetRotation = rotation
         ticksUntilReset = ticks
+        ignoreOpenInventory = openInventory
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -298,7 +299,7 @@ object RotationManager : Listenable {
     fun update() {
         // Prevents any rotation changes, when inventory is opened
         val canRotate =
-            (mc.currentScreen !is InventoryScreen && mc.currentScreen !is GenericContainerScreen) || activeConfigurable!!.ignoreOpenInventory
+            (mc.currentScreen !is InventoryScreen && mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
         // Update reset ticks
         if (ticksUntilReset > 0) {
             ticksUntilReset--

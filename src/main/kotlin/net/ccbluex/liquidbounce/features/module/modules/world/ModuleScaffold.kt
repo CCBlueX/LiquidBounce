@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -104,6 +105,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
@@ -139,7 +141,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val target = currentTarget ?: return@handler
 
-        RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
+        RotationManager.aimAt(target.rotation, ticks = 30, openInventory = ignoreOpenInventory, configurable = rotationsConfigurable)
     }
 
     val speedHandler = repeatable {

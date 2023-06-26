@@ -96,6 +96,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     private val failRate by int("FailRate", 0, 0..100)
 
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private val cpsTimer = tree(CpsScheduler())
@@ -152,7 +153,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
 
-        if (isInInventoryScreen && !rotations.ignoreOpenInventory) {
+        if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
             targetTracker.cleanup()
             return@handler
@@ -294,7 +295,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break
         }
     }
