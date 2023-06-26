@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
