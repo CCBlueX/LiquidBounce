@@ -59,7 +59,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val throughWalls by boolean("ThroughWalls", false)
 
 
-    private object replaceCrops : ToggleableConfigurable(this, "ReplaceCrops", true) {
+    private object replaceCrops : ToggleableConfigurable(this, "ReplaceCrops", false) {
         val delay by intRange("Delay", 1..2, 0..20)
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
 
@@ -113,21 +113,30 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
         val blockPos = rayTraceResult.blockPos
+
+        val state = rayTraceResult.blockPos.getState() ?: return@repeatable
         if(isTargeted(
-                rayTraceResult.blockPos.getState()!!,
+                state,
                 rayTraceResult.blockPos
             )){
 
-            if (!blockPos.getState()!!.isAir) {
+            if (!state.isAir) {
                 val direction = rayTraceResult.side
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                     player.swingHand(Hand.MAIN_HAND)
                 }
             }
         } else if(isFarmBlock(
-                rayTraceResult.blockPos.getState()!!,
-                rayTraceResult.blockPos)){
-            val item = findClosestItem(arrayOf(Items.WHEAT_SEEDS))
+                state,
+                rayTraceResult.blockPos.offset(rayTraceResult.side).down())){
+            val item =
+                findClosestItem(
+                    if(state.block is FarmlandBlock) {
+                        arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
+                    } else {
+                    arrayOf(Items.NETHER_WART)}
+                )
+
             if(item != null){
                 val delay = autoPlaceCrops.delay.random()
                 SilentHotbar.selectSlotSilently(this, item, autoPlaceCrops.swapBackDelay.random() + delay)
@@ -238,13 +247,18 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             else -> false
         }
     }
+
+    /**
+     * checks if the block is either a farmland or soulsand block and has air above it
+     */
     private fun isFarmBlock(state: BlockState, pos: BlockPos): Boolean {
         val block = state.block
 
-        return when (block) {
-            is FarmlandBlock -> pos.up().getState()?.isAir == true
+        return if(when (block) {
+            is FarmlandBlock -> true
+            is SoulSandBlock -> true
             else -> false
-        }
+        }) {pos.up().getState()?.isAir == true} else {false}
     }
 
     private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
