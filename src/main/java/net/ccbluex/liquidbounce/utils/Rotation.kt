@@ -48,7 +48,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         val gcd = getFixedAngleDelta(sensitivity)
 
         yaw = getFixedSensitivityAngle(yaw, serverRotation.yaw, gcd)
-        pitch = getFixedSensitivityAngle(pitch, serverRotation.pitch, gcd)
+        pitch = getFixedSensitivityAngle(pitch, serverRotation.pitch, gcd).coerceIn(-90f, 90f)
 
         return this
     }
