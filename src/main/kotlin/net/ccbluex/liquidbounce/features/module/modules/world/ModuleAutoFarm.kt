@@ -67,14 +67,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
     private val rotations = RotationsConfigurable()
+    private val fortune by boolean("fortune", true)
 
     init {
-
         tree(AutoPlaceCrops)
         tree(rotations)
     }
 
-    private val fortune by boolean("fortune", true)
 
     // Rotation
 
@@ -186,6 +185,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyes
 
+        // searches for any blocks within the radius that need to be destroyed, such as crops.
+        // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on top."
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
                 eyesPos,
@@ -212,24 +213,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         // We got a free angle at the block? Cool.
         if (rt != null) {
             val (rotation, _) = rt
+            this.currentTarget = pos
             RotationManager.aimAt(rotation, configurable = rotations)
-            return
         }
-
-        val raytraceResult = mc.world?.raycast(
-            RaycastContext(
-                player.eyes,
-                Vec3d.of(pos).add(0.5, 0.5, 0.5),
-                RaycastContext.ShapeType.OUTLINE,
-                RaycastContext.FluidHandling.NONE,
-                player
-            )
-        ) ?: return
-
-        // Failsafe. Should not trigger
-        if (raytraceResult.type != HitResult.Type.BLOCK) return
-
-        this.currentTarget = raytraceResult.blockPos
     }
 
     private fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
