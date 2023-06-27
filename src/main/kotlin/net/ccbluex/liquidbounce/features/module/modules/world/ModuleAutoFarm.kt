@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.*
@@ -59,7 +58,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val throughWalls by boolean("ThroughWalls", false)
 
 
-    private object autoPlaceCrops : ToggleableConfigurable(this, "AutoPlaceCrops", true) {
+    private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlaceCrops", true) {
         val delay by intRange("Delay", 0..0, 0..20)
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
     }
@@ -68,7 +67,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     init {
 
-        tree(autoPlaceCrops)
+        tree(AutoPlaceCrops)
         tree(rotations)
     }
 
@@ -90,9 +89,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         if (ModuleBlink.enabled) {
             return@repeatable
         }
-        
-
-
 
         if (rayTraceResult?.type != HitResult.Type.BLOCK
         ) {
@@ -124,10 +120,10 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 )
 
             if(item != null){
-                val delay = autoPlaceCrops.delay.random()
-                SilentHotbar.selectSlotSilently(this, item, autoPlaceCrops.swapBackDelay.random() + delay)
+                val delay = AutoPlaceCrops.delay.random()
+                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random() + delay)
                 if(delay != 0){
-                    wait(autoPlaceCrops.delay.random())
+                    wait(AutoPlaceCrops.delay.random())
                 }
                 placeCrop(rayTraceResult)
             }
@@ -172,7 +168,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared && isTargeted(state, pos)
         }.minByOrNull { it.first.getCenterDistanceSquared() }
-            ?: if(autoPlaceCrops.enabled) {searchBlocksInCuboid(radius.toInt()) { pos, state ->
+            ?: if(AutoPlaceCrops.enabled) {searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
@@ -193,11 +189,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         if (rt != null) {
             val (rotation, _) = rt
             RotationManager.aimAt(rotation, configurable = rotations)
-
-            this.currentTarget = pos
-            if(state.block is CropBlock && replaceCrops.enabled){
-                cropToReplace = pos
-            }
             return
         }
 
