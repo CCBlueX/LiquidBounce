@@ -59,11 +59,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val throughWalls by boolean("ThroughWalls", false)
 
 
-    private object replaceCrops : ToggleableConfigurable(this, "ReplaceCrops", false) {
-        val delay by intRange("Delay", 1..2, 0..20)
-        val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
-
-    }
     private object autoPlaceCrops : ToggleableConfigurable(this, "AutoPlaceCrops", true) {
         val delay by intRange("Delay", 0..0, 0..20)
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
@@ -72,7 +67,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val rotations = RotationsConfigurable()
 
     init {
-        tree(replaceCrops)
+
         tree(autoPlaceCrops)
         tree(rotations)
     }
@@ -91,20 +86,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
 
-        if(replaceCrops.enabled && cropToReplace?.getState()?.isAir == true && rayTraceResult.blockPos.offset(rayTraceResult.side) == cropToReplace){
-            val item = findClosestItem(arrayOf(Items.WHEAT_SEEDS))
-            if(item != null){
-                wait(replaceCrops.delay.random())
-                SilentHotbar.selectSlotSilently(this, item, replaceCrops.swapBackDelay.random())
-                placeCrop(rayTraceResult)
-            }
-        }
 
         if (ModuleBlink.enabled) {
             return@repeatable
         }
-
-//        val curr = currentTarget ?: return@repeatable
+        
 
 
 
@@ -149,7 +135,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
     }
-    private var cropToReplace: BlockPos? = null
 
     private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
         .minByOrNull { abs(player.inventory.selectedSlot - it) }
