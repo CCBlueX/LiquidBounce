@@ -33,9 +33,12 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -71,6 +74,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         tree(rotations)
     }
 
+    private val fortune by boolean("fortune", true)
+
     // Rotation
 
     private var currentTarget: BlockPos? = null
@@ -90,7 +95,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-        if (rayTraceResult?.type != HitResult.Type.BLOCK
+        if (rayTraceResult.type != HitResult.Type.BLOCK
         ) {
             return@repeatable
         }
@@ -103,6 +108,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             )){
 
             if (!state.isAir) {
+                if(fortune){
+                    findBestItem (1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
+                        ?.let { (slot, _) ->
+                            SilentHotbar.selectSlotSilently(this, slot, 2)
+                        }
+                }
                 val direction = rayTraceResult.side
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                     player.swingHand(Hand.MAIN_HAND)
@@ -126,6 +137,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                     wait(AutoPlaceCrops.delay.random())
                 }
                 placeCrop(rayTraceResult)
+                Blocks.HAY_BLOCK
             }
         }
 
@@ -134,6 +146,18 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
         .minByOrNull { abs(player.inventory.selectedSlot - it) }
+    private fun findBestItem(validator: (Int, ItemStack) -> Boolean,
+                             sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }) = (0..8)
+        .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
+        .filter { (slot, itemStack) -> validator (slot, itemStack) }
+        .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
+
+
+    private fun findBestItem(min: Int = 1, sort: (Int, ItemStack) -> Int) = (0..8)
+        .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
+        .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
+        ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
+
 
     private fun placeCrop(rayTraceResult: BlockHitResult){
         val stack = player.mainHandStack
