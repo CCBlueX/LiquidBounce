@@ -39,10 +39,6 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
         )
     )
 
-    init {
-        tree(mode)
-    }
-
     object ResetRotation : Choice("ResetRotation") {
         override val parent: ChoiceConfigurable
             get() = mode
