@@ -64,6 +64,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
     private val delay by int("SwitchDelay", 0, 0..20)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Rotation
     private val rotations = RotationsConfigurable()
@@ -154,7 +155,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // We got a free angle at the block? Cool.
         if (rt != null) {
             val (rotation, _) = rt
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
 
             this.currentTarget = DestroyerTarget(pos, this.action)
             return

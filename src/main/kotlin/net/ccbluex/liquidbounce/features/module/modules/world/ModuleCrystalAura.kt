@@ -65,6 +65,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
     private val range by float("Range", 4f, 3f..8f)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     var functioning = false
 
@@ -145,7 +146,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 targetTracker.lock(block)
 
                 // aim on target
-                RotationManager.aimAt(rotation, configurable = rotations)
+                RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
                 break
             }
         }
@@ -199,7 +200,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         // We got a free angle at the block? Cool.
         if (rt != null) {
             val (rotation, _) = rt
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             currentBlock = pos
             return
         }

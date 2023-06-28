@@ -104,6 +104,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
@@ -139,7 +140,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val target = currentTarget ?: return@handler
 
-        RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
+        RotationManager.aimAt(target.rotation, ticks = 30, openInventory = ignoreOpenInventory, configurable = rotationsConfigurable)
     }
 
     val speedHandler = repeatable {

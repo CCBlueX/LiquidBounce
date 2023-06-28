@@ -314,7 +314,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break
         }
     }
