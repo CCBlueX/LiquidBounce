@@ -5,8 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
@@ -36,43 +37,46 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
     private val clickTimer = MSTimer()
 
     @EventTarget
-    fun onStrafe(event: StrafeEvent) {
-        // Clicking delay
-        if (mc.gameSettings.keyBindAttack.isKeyDown)
-            clickTimer.reset()
-
-        if (onClick && clickTimer.hasTimePassed(500))
+    fun onMotion(event: MotionEvent) {
+        if (event.eventState != EventState.POST) {
             return
+        }
+
+        // Clicking delay
+        if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
+
+        if (onClick && clickTimer.hasTimePassed(500)) return
 
         // Search for the best enemy to target
 
-        val entity = mc.theWorld.loadedEntityList
-                .filter {
-                    isSelected(it, true) && mc.thePlayer.canEntityBeSeen(it) &&
-                            mc.thePlayer.getDistanceToEntityBox(it) <= range && getRotationDifference(it) <= fov
-                }
-                .minByOrNull { getRotationDifference(it) } ?: return
+        val entity = mc.theWorld.loadedEntityList.filter {
+            isSelected(
+                it, true
+            ) && mc.thePlayer.canEntityBeSeen(it) && mc.thePlayer.getDistanceToEntityBox(it) <= range && getRotationDifference(
+                it
+            ) <= fov
+        }.minByOrNull { getRotationDifference(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
-        if (!lock && isFaced(entity, range.toDouble()))
-            return
+        if (!lock && isFaced(entity, range.toDouble())) return
 
         // Look up required rotations to hit enemy
         val boundingBox = entity.hitBox
 
         val playerRotation = mc.thePlayer.rotation
-        val destinationRotation =
-            if (center) toRotation(getCenter(boundingBox), true)
-            else searchCenter(boundingBox, false, false, true, false, range)?.rotation ?: return
+        val destinationRotation = if (center) toRotation(getCenter(boundingBox), true)
+        else searchCenter(boundingBox, false, false, true, false, range)?.rotation ?: return
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
 
         val rotationDiff = getRotationDifference(playerRotation, destinationRotation)
 
         // is enemy visible to player on screen. Fov is about to be right with that you can actually see on the screen. Still not 100% accurate, but it is fast check.
-        val supposedTurnSpeed =
-            if (rotationDiff < mc.gameSettings.fovSetting) inViewTurnSpeed
-            else turnSpeed
+        val supposedTurnSpeed = if (rotationDiff < mc.gameSettings.fovSetting) {
+            inViewTurnSpeed
+        } else {
+            turnSpeed
+        }
 
         val random = Random()
         val gaussian = random.nextGaussian()
