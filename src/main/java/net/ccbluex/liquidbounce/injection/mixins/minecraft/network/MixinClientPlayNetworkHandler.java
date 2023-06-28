@@ -77,7 +77,10 @@ public class MixinClientPlayNetworkHandler {
         this.connection.send(new PlayerMoveC2SPacket.Full(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ(), j, k, false));
         Choice activeChoice = ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice();
         if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
+            // Changes you server side rotation and then resets it with provided settings
+            RotationManager.INSTANCE.setTicksUntilReset(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().getKeepRotationTicks());
             RotationManager.INSTANCE.setActiveConfigurable(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable());
+            RotationManager.INSTANCE.setCurrentRotation(new Rotation(j, k));
             RotationManager.INSTANCE.setTargetRotation(new Rotation(j, k));
         } else {
             // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotations server-side.
