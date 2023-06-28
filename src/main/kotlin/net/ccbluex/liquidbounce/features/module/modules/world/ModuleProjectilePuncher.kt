@@ -50,6 +50,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private val cps by intRange("CPS", 5..8, 1..20)
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
     private val targetTracker = tree(TargetTracker())
@@ -112,7 +113,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             targetTracker.lock(entity)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break
         }
     }

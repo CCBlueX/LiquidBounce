@@ -109,11 +109,7 @@ fun facingEnemy(enemy: Entity, rotation: Rotation, range: Double, wallsRange: Do
 
     val distance = cameraVec.squaredDistanceTo(entityHitResult.pos)
 
-    if (distance <= rangeSquared && isVisible(cameraVec, entityHitResult.pos) || distance <= wallsRangeSquared) {
-        return true
-    }
-
-    return false
+    return distance <= rangeSquared && isVisible(cameraVec, entityHitResult.pos) || distance <= wallsRangeSquared
 }
 
 /**

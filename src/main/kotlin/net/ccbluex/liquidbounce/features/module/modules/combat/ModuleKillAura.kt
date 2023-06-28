@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
@@ -90,16 +92,44 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
-    private val blockingTicks by int("BlockingTicks", 0, 0..20)
+    private val whileUsingItem by boolean("WhileUsingItem", true)
+    object whileBlocking : ToggleableConfigurable(this, "WhileBlocking", true) {
+        val blockingTicks by int("BlockingTicks", 0, 0..20)
+    }
+    
+    init {
+        tree(whileBlocking)
+    }
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
     private val failRate by int("FailRate", 0, 0..100)
 
+    private object FailSwing : ToggleableConfigurable(this, "FailSwing", false) {
+        object UseOwnCPS : ToggleableConfigurable(ModuleKillAura, "UseOwnCPS", true) {
+            val cps by intRange("CPS", 5..8, 0..20)
+        }
+
+        object LimitRange : ToggleableConfigurable(ModuleKillAura, "LimitRange", false) {
+            val asExtraRange by boolean("AsExtraRange", true)
+            val range by float("Range", 2f, 0f..10f)
+        }
+
+        init {
+            tree(UseOwnCPS)
+            tree(LimitRange)
+        }
+    }
+
+    init {
+        tree(FailSwing)
+    }
+
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private val cpsTimer = tree(CpsScheduler())
+
 
     override fun disable() {
         targetTracker.cleanup()
@@ -167,11 +197,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         // Check if there is target to attack
-        val target = targetTracker.lockedOnTarget ?: return@repeatable
+        val target = targetTracker.lockedOnTarget
         // Did you ever send a rotation before?
-        val rotation = RotationManager.currentRotation ?: return@repeatable
+        val rotation = RotationManager.currentRotation
 
-        if (target.boxedDistanceTo(player) <= range && facingEnemy(
+        if (rotation != null && target != null && target.boxedDistanceTo(player) <= range && facingEnemy(
                 target, rotation, range.toDouble(), wallRange.toDouble()
             )
         ) {
@@ -204,6 +234,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                 val blocking = player.isBlocking
 
+                if(blocking){
+                    if(!whileBlocking.enabled){
+                        return@repeat // return if its not allowed to attack while using blocking with a shield
+                    }
+                } else if(player.isUsingItem() && !whileUsingItem){
+                    return@repeat // return if its not allowed to attack while the player is using another item thats not a shield
+                }
+
+
                 // Make sure to unblock now
                 if (blocking) {
                     network.sendPacket(
@@ -213,11 +252,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     )
 
                     // Wait until the un-blocking delay time is up
-                    if (blockingTicks > 0) {
-                        wait(blockingTicks)
+                    if (whileBlocking.blockingTicks > 0) {
+                        mc.options.useKey.isPressed = false
+                        wait(whileBlocking.blockingTicks)
                     }
                 }
-
                 // Fail rate
                 if (failRate > 0 && failRate > Random.nextInt(100)) {
                     // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
@@ -228,6 +267,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     }
 
                     // todo: might notify client-user about fail hit
+                    // small colored box at the box spot of the attacked enemy or a sound effect
                 } else {
                     // Attack enemy
                     attackEntity(raycastedEntity)
@@ -236,19 +276,51 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 // Make sure to block again
                 if (blocking) {
                     // Wait until the blocking delay time is up
-                    if (blockingTicks > 0) {
-                        wait(blockingTicks)
+                    if (whileBlocking.blockingTicks > 0) {
+                        wait(whileBlocking.blockingTicks)
                     }
 
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(player.activeHand, sequence)
                     }
+                    mc.options.useKey.isPressed = true
 
                     if (simulateInventoryClosing && isInInventoryScreen) {
                         openInventorySilently()
                     }
 
                 }
+            }
+
+            return@repeatable
+        }
+
+        if (!FailSwing.enabled) {
+            return@repeatable
+        }
+
+        val entity = target ?: world.findEnemy(FailSwing.LimitRange.range)?.first
+
+        val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
+
+        val shouldSwing = if (FailSwing.LimitRange.enabled) {
+            entity != null && entity.boxedDistanceTo(player) <= reach
+        } else !FailSwing.LimitRange.enabled && rotation != null
+
+        val chosenCPS = if (FailSwing.UseOwnCPS.enabled) FailSwing.UseOwnCPS.cps else cps
+        val supposedRotation = rotation ?: player.rotation
+
+        val clicks = cpsTimer.clicks({
+            shouldSwing && (entity == null || raytraceEntity(
+                range.toDouble(), supposedRotation
+            ) { true } == null)
+        }, chosenCPS)
+
+        repeat(clicks) {
+            if (swing) {
+                player.swingHand(Hand.MAIN_HAND)
+            } else {
+                network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
             }
         }
     }
@@ -295,7 +367,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break
         }
     }
