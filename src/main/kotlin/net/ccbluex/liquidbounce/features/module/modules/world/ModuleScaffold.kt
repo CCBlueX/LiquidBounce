@@ -7,7 +7,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *https://github.com/CCBlueX/LiquidBounce/pull/1108/conflict?name=src%252Fmain%252Fkotlin%252Fnet%252Fccbluex%252Fliquidbounce%252Ffeatures%252Fmodule%252Fmodules%252Fworld%252FModuleScaffold.kt&ancestor_oid=3417d2abbe81d69cbc4548b966db8927f3f55cc6&base_oid=8b0e92c591b403a0003140c778f9a2f8560e438f&head_oid=d430f37b3d0a14c5efa6ab27cf474ea7df5bfa78
+ *
  * LiquidBounce is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
