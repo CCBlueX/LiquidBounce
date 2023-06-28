@@ -7,6 +7,12 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import kotlin.math.min
 
+/**
+ * TickBase module
+ *
+ * Calls tick function to speed up, when needed
+ */
+
 object ModuleTickBase : Module("TickBase", Category.COMBAT) {
 
     private val distanceToWork by floatRange("DistanceToWork", 3f..4f, 0f..10f)
