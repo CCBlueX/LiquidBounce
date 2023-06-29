@@ -46,8 +46,6 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
 import kotlin.math.abs
 
 /**
@@ -136,7 +134,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                     wait(AutoPlaceCrops.delay.random())
                 }
                 placeCrop(rayTraceResult)
-                Blocks.HAY_BLOCK
             }
         }
 
@@ -152,7 +149,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
 
 
-    private fun findBestItem(min: Int = 1, sort: (Int, ItemStack) -> Int) = (0..8)
+    private fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) = (0..8)
         .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
         .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
         ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
