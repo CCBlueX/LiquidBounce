@@ -55,12 +55,12 @@ import kotlin.math.abs
  */
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     // TODO Fix this entire module-
-    private val range by float("Range", 5F, 1F..6F)
+    private val range by float("Range", 4.5F, 1F..6F)
+    private val extraSearchRange by float("extraSearchRange", 0F, 0F..3F)
     private val throughWalls by boolean("ThroughWalls", false)
 
 
     private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlaceCrops", true) {
-        val delay by intRange("Delay", 0..0, 0..20)
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
     }
 
@@ -85,7 +85,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
+        val rayTraceResult = raycast(range.toDouble(), rotation) ?: return@repeatable
 
 
         if (ModuleBlink.enabled) {
@@ -128,11 +128,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 )
 
             if(item != null){
-                val delay = AutoPlaceCrops.delay.random()
-                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random() + delay)
-                if(delay != 0){
-                    wait(AutoPlaceCrops.delay.random())
-                }
+                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                 placeCrop(rayTraceResult)
             }
         }
@@ -178,12 +174,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private fun updateTarget() {
         this.currentTarget = null
 
-        val radius = range + 1
+        val radius = range + extraSearchRange
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyes
 
         // searches for any blocks within the radius that need to be destroyed, such as crops.
-        // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on top."
+        // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
                 eyesPos,
