@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventory
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
@@ -59,13 +60,14 @@ public class MixinKeyboardInput extends MixinInput {
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
-        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), keyBinding.boundKey.getCode()) : keyBinding.isPressed();
+        Boolean enforced = KeybindExtensionsKt.getEnforced(keyBinding);
+        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? (enforced != null ? enforced : KeybindExtensionsKt.getPressedOnKeyboard(keyBinding)) : (enforced != null ? enforced : keyBinding.isPressed());
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingBack:Z", ordinal = 0))
     private void hookInventoryMoveSprint(boolean slowDown, float f, CallbackInfo ci) {
         if (ModuleInventoryMove.INSTANCE.shouldHandleInputs(this.settings.sprintKey)) {
-            this.settings.sprintKey.setPressed(InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), this.settings.sprintKey.boundKey.getCode()));
+            this.settings.sprintKey.setPressed(KeybindExtensionsKt.getPressedOnKeyboard(this.settings.sprintKey));
         }
     }
 

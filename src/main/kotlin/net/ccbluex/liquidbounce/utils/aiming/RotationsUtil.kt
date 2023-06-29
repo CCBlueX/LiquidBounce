@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ class RotationsConfigurable : Configurable("Rotations") {
     val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
     val fixVelocity by boolean("FixVelocity", true)
     val threshold by float("Threshold", 2f, 0f..50f)
+    val keepRotationTicks by int("KeepRotationTicks", 30, 0..300)
 }
 
 /**
@@ -268,17 +269,17 @@ object RotationManager : Listenable {
 //        return visibleRot ?: notVisibleRot
 //    }
 
-    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, openInventory: Boolean = false, configurable: RotationsConfigurable) =
-        aimAt(makeRotation(vec, eyes), ticks, openInventory, configurable)
+    fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
+        aimAt(makeRotation(vec, eyes), openInventory, configurable)
 
-    fun aimAt(rotation: Rotation, ticks: Int = 5, openInventory: Boolean = false, configurable: RotationsConfigurable) {
+    fun aimAt(rotation: Rotation, openInventory: Boolean = false, configurable: RotationsConfigurable) {
         if (!shouldUpdate()) {
             return
         }
 
         activeConfigurable = configurable
         targetRotation = rotation
-        ticksUntilReset = ticks
+        ticksUntilReset = configurable.keepRotationTicks
         ignoreOpenInventory = openInventory
     }
 
@@ -292,6 +293,12 @@ object RotationManager : Listenable {
             MathHelper.wrapDegrees((-Math.toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))).toFloat())
         )
     }
+
+    val gcd: Double
+        get() {
+            val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
+            return f * f * f * 8.0 * 0.15F
+        }
 
     /**
      * Update current rotation to new rotation step
@@ -398,7 +405,7 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two angle points
      */
-    private fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
+    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (activeConfigurable?.fixVelocity == true) {
