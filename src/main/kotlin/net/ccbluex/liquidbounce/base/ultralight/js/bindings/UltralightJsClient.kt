@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ object UltralightJsClient {
          *
          * This depends on the current Geo IP of the user. This might be affected by the proxy service.
          */
-        fun getLocation() = IpInfoApi.localIpInfo.country.lowercase()
+        fun getLocation() = IpInfoApi?.localIpInfo?.country?.lowercase()
 
     }
 

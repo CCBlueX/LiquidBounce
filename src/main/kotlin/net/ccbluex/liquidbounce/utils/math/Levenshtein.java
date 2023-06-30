@@ -1,11 +1,11 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or 
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * LiquidBounce is distributed in the hope that it will be useful,
@@ -32,9 +32,9 @@ public class Levenshtein {
      * The Levenshtein distance, or edit distance, between two words is the
      * minimum number of single-character edits (insertions, deletions or
      * substitutions) required to change one word into the other.
-     *
+     * <p>
      * http://en.wikipedia.org/wiki/Levenshtein_distance
-     *
+     * <p>
      * It is always at least the difference of the sizes of the two strings.
      * It is at most the length of the longer string.
      * It is zero if and only if the strings are equal.
@@ -43,13 +43,13 @@ public class Levenshtein {
      * The Levenshtein distance verifies the triangle inequality (the distance
      * between two strings is no greater than the sum Levenshtein distances from
      * a third string).
-     *
+     * <p>
      * Implementation uses dynamic programming (Wagner–Fischer algorithm), with
      * only 2 rows of data. The space requirement is thus O(m) and the algorithm
      * runs in O(mn).
      *
-     * @param s1 The first string to compare.
-     * @param s2 The second string to compare.
+     * @param s1    The first string to compare.
+     * @param s2    The second string to compare.
      * @param limit The maximum result to compute before stopping. This
      *              means that the calculation can terminate early if you
      *              only care about strings with a certain similarity.
@@ -59,7 +59,7 @@ public class Levenshtein {
      * @throws NullPointerException if s1 or s2 is null.
      */
     public static int distance(String s1, String s2,
-                                 int limit) {
+                               int limit) {
         if (s1 == null) {
             throw new NullPointerException("s1 must not be null");
         }

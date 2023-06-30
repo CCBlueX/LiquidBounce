@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.client.util.InputUtil
+import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 
 /**
  * AutoWalk module
@@ -35,7 +35,7 @@ object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
     }
 
     override fun disable() {
-        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.forwardKey.boundKey.code)) {
+        if (!mc.options.forwardKey.pressedOnKeyboard) {
             mc.options.forwardKey.isPressed = false
         }
     }
