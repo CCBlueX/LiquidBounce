@@ -131,7 +131,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
             thePlayer.isSprinting = true
         }
 
-        modeModule?.onUpdate()
+        flyModeModule?.onUpdate()
     }
 
     @EventTarget
@@ -144,7 +144,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         if (isMoving)
             thePlayer.isSprinting = true
 
-        modeModule?.onMotion()
+        flyModeModule?.onMotion()
     }
 
     @EventTarget
@@ -152,7 +152,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         if (mc.thePlayer.isSneaking)
             return
 
-        modeModule?.onMove(event)
+        flyModeModule?.onMove(event)
     }
 
     @EventTarget
@@ -160,7 +160,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         if (mc.thePlayer.isSneaking)
             return
 
-        modeModule?.onTick()
+        flyModeModule?.onTick()
     }
 
     public fun handleVanillaKickBypass() {
@@ -217,7 +217,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
         mc.timer.timerSpeed = 1f
 
-        modeModule?.onEnable()
+        flyModeModule?.onEnable()
     }
 
     override fun onDisable() {
@@ -233,7 +233,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         
         mc.timer.timerSpeed = 1f
 
-        modeModule?.onDisable()
+        flyModeModule?.onDisable()
     }
 
     override val tag
