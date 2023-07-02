@@ -76,7 +76,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
             Flag()
     )
 
-    val mode by object : ListValue("Mode", modes, "Vanilla") {
+    val flyModed by object : ListValue("Mode", flyMode, "Vanilla") {
         override fun onChange(oldValue: String, newValue: String): String {
             if (state)
                 onDisable()
@@ -118,11 +118,11 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     public val stopOnDisable by BoolValue("StopOnDisable", true)
 
     // Test
-    private val thePlayer = mc.thePlayer
+    //private val thePlayer = mc.thePlayer
     
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        // val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.isSneaking)
             return
@@ -136,7 +136,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        // val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.isSneaking || event.eventState != EventState.PRE)
             return
@@ -166,7 +166,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     public fun handleVanillaKickBypass() {
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
         val ground = calculateGround()
-        //val thePlayer = mc.thePlayer
+        val thePlayer = mc.thePlayer
         run {
             var posY = thePlayer.posY
             while (posY > ground) {
@@ -221,7 +221,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     }
 
     override fun onDisable() {
-        //val thePlayer = mc.thePlayer
+        val thePlayer = mc.thePlayer
         if (thePlayer == null)
             return
 
@@ -237,11 +237,11 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = mode
+        get() = flyMode
 
-    private val modeModule
-        get() = flyModes.find { it.modeName == mode }
+    private val flyModeModule
+        get() = flyModes.find { it.flyModeName == flyMode }
 
-    private val modes
-        get() = flyModes.map { it.modeName }.toTypedArray()
+    private val flyMode
+        get() = flyModes.map { it.flyModeName }.toTypedArray()
 }
