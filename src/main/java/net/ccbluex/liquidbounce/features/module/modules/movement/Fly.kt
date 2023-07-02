@@ -9,11 +9,11 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.ncp.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.cubecraft.Cubecraft
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.hypixel.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.rewinside.*
+//import net.ccbluex.liquidbounce.features.module.modules.movement.flies.ncp.*
+//import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.*
+//import net.ccbluex.liquidbounce.features.module.modules.movement.flies.cubecraft.Cubecraft
+//import net.ccbluex.liquidbounce.features.module.modules.movement.flies.hypixel.*
+//import net.ccbluex.liquidbounce.features.module.modules.movement.flies.rewinside.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.*
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -90,7 +90,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         }
     }
     public val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f) {
-        mode in arrayOf("Vanilla", "SmoothVanilla", "KeepAlive", "MineSecure", "BugSpartan")
+        mode in arrayOf("Vanilla", "SmoothVanilla", /*"KeepAlive", "MineSecure", "BugSpartan"*/)
     }
     public val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
         mode in arrayOf("Vanilla", "SmoothVanilla")
@@ -101,7 +101,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     public val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
     // AAC
-    public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
+    /*public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
     public val aacFast by BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
     public val aacMotion by FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
     public val aacMotion2 by FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
@@ -114,7 +114,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     // Other
     public val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
     public val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 0..20) { mode == "NeruxVace" }
-    public val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
+    public val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }*/
     public val stopOnDisable by BoolValue("StopOnDisable", true)
 
     // Test
