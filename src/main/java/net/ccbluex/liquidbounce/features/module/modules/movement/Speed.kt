@@ -160,11 +160,11 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = speedMode_Module
+        get() = selectedSpeedMode
 
     private val speedModeModule
-        get() = speedModes.find { it.modeName == mode }
+        get() = speedModes.find { it.speedModeName == selectedSpeedMode }
 
     private val speedModuleModes
-        get() = speedModes.map { it.modeName }.toTypedArray()
+        get() = speedModes.map { it.speedModeName }.toTypedArray()
 }
