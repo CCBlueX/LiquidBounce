@@ -73,7 +73,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
             Legit()
     )
 
-    val speedMode_Module by object : ListValue("Mode", speedModuleModes, "NCPBHop") {
+    val selectedSpeedMode by object : ListValue("Mode", speedModuleModes, "NCPBHop") {
         override fun onChange(oldValue: String, newValue: String): String {
             if (state)
                 onDisable()
@@ -86,17 +86,17 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
                 onEnable()
         }
     }
-    val customSpeed by FloatValue("CustomSpeed", 1.6f, 0.2f..2f) { mode == "Custom" }
-    val customY by FloatValue("CustomY", 0f, 0f..4f) { mode == "Custom" }
-    val customTimer by FloatValue("CustomTimer", 1f, 0.1f..2f) { mode == "Custom" }
-    val customStrafe by BoolValue("CustomStrafe", true) { mode == "Custom" }
-    val resetXZ by BoolValue("CustomResetXZ", false) { mode == "Custom" }
-    val resetY by BoolValue("CustomResetY", false) { mode == "Custom" }
+    val customSpeed by FloatValue("CustomSpeed", 1.6f, 0.2f..2f) { selectedSpeedMode == "Custom" }
+    val customY by FloatValue("CustomY", 0f, 0f..4f) { selectedSpeedMode == "Custom" }
+    val customTimer by FloatValue("CustomTimer", 1f, 0.1f..2f) { selectedSpeedMode == "Custom" }
+    val customStrafe by BoolValue("CustomStrafe", true) { selectedSpeedMode == "Custom" }
+    val resetXZ by BoolValue("CustomResetXZ", false) { selectedSpeedMode == "Custom" }
+    val resetY by BoolValue("CustomResetY", false) { selectedSpeedMode == "Custom" }
 
-    val aacPortLength by FloatValue("AAC-PortLength", 1f, 1f..20f) { mode == "AACPort" }
-    val aacGroundTimer by FloatValue("AACGround-Timer", 3f, 1.1f..10f) { mode in arrayOf("AACGround", "AACGround2") }
-    val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { mode == "TeleportCubeCraft" }
-    val mineplexGroundSpeed by FloatValue("MineplexGround-Speed", 0.5f, 0.1f..1f) { mode == "Mineplex" }
+    val aacPortLength by FloatValue("AAC-PortLength", 1f, 1f..20f) { selectedSpeedMode == "AACPort" }
+    val aacGroundTimer by FloatValue("AACGround-Timer", 3f, 1.1f..10f) { selectedSpeedMode in arrayOf("AACGround", "AACGround2") }
+    val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { selectedSpeedMode == "TeleportCubeCraft" }
+    val mineplexGroundSpeed by FloatValue("MineplexGround-Speed", 0.5f, 0.1f..1f) { selectedSpeedMode == "Mineplex" }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -109,7 +109,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
             thePlayer.isSprinting = true
         }
 
-        modeModule?.onUpdate()
+        speedModeModule?.onUpdate()
     }
 
     @EventTarget
@@ -122,7 +122,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (isMoving)
             thePlayer.isSprinting = true
 
-        modeModule?.onMotion()
+        speedModeModule?.onMotion()
     }
 
     @EventTarget
@@ -130,7 +130,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (mc.thePlayer.isSneaking)
             return
 
-        modeModule?.onMove(event)
+        speedModeModule?.onMove(event)
     }
 
     @EventTarget
@@ -138,7 +138,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (mc.thePlayer.isSneaking)
             return
 
-        modeModule?.onTick()
+        speedModeModule?.onTick()
     }
 
     override fun onEnable() {
@@ -147,7 +147,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
         mc.timer.timerSpeed = 1f
 
-        modeModule?.onEnable()
+        speedModeModule?.onEnable()
     }
 
     override fun onDisable() {
@@ -156,7 +156,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
         mc.timer.timerSpeed = 1f
 
-        modeModule?.onDisable()
+        speedModeModule?.onDisable()
     }
 
     override val tag
