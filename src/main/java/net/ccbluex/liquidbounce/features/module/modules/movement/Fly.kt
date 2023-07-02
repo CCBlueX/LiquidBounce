@@ -95,7 +95,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         mode in arrayOf("Vanilla", "SmoothVanilla")
     }
     private val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
-        mode in arrayOf("Vanilla", "SmoothVanilla", "KeepAlive", "MineSecure", "BugSpartan")
+        mode in arrayOf("Vanilla", "SmoothVanilla")
     }
     private val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
