@@ -117,9 +117,12 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     public val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
     public val stopOnDisable by BoolValue("StopOnDisable", true)
 
+    // Test
+    private val thePlayer = mc.thePlayer
+    
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        // val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.isSneaking)
             return
@@ -133,7 +136,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        // val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.isSneaking || event.eventState != EventState.PRE)
             return
@@ -163,7 +166,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     public fun handleVanillaKickBypass() {
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
         val ground = calculateGround()
-        val thePlayer = mc.thePlayer
+        //val thePlayer = mc.thePlayer
         run {
             var posY = thePlayer.posY
             while (posY > ground) {
@@ -218,7 +221,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     }
 
     override fun onDisable() {
-        val thePlayer = mc.thePlayer
+        //val thePlayer = mc.thePlayer
         if (thePlayer == null)
             return
 
