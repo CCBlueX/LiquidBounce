@@ -117,8 +117,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     public val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }*/
     public val stopOnDisable by BoolValue("StopOnDisable", true)
 
-    // Test
-    //private val thePlayer = mc.thePlayer
+    // Values
+    private val groundTimer = MSTimer()
     
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
