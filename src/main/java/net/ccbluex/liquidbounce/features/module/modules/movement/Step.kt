@@ -151,11 +151,11 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
         }
 
         // Some fly modes should disable step
-        if (Fly.state && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+        /*if (Fly.state && Fly.selectedFlyMode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
             return
-        }
+        }*/
 
         val mode = mode
 
