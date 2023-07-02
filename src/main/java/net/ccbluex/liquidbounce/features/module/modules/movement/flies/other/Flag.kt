@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import org.lwjgl.input.Keyboard
 
 class FlagFly : FlyMode("Flag") {
