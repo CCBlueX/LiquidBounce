@@ -76,7 +76,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
             Flag()
     )
 
-    val flyModed by object : ListValue("Mode", flyMode, "Vanilla") {
+    val selectedFlyMode by object : ListValue("Mode", flyModes, "Vanilla") {
         override fun onChange(oldValue: String, newValue: String): String {
             if (state)
                 onDisable()
@@ -90,18 +90,18 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         }
     }
     public val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f) {
-        mode in arrayOf("Vanilla", "SmoothVanilla", /*"KeepAlive", "MineSecure", "BugSpartan"*/)
+        selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla", /*"KeepAlive", "MineSecure", "BugSpartan"*/)
     }
     public val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
-        mode in arrayOf("Vanilla", "SmoothVanilla")
+        selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
     public val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
-        mode in arrayOf("Vanilla", "SmoothVanilla")
+        selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
-    public val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
+/*    public val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
     // AAC
-    /*public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
+    public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
     public val aacFast by BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
     public val aacMotion by FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
     public val aacMotion2 by FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
@@ -237,10 +237,10 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = flyMode
+        get() = selectedFlyMode
 
     private val flyModeModule
-        get() = flyModes.find { it.flyModeName == flyMode }
+        get() = flyModes.find { it.flyModeName == selectedFlyMode }
 
     private val flyMode
         get() = flyModes.map { it.flyModeName }.toTypedArray()
