@@ -73,7 +73,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
             Legit()
     )
 
-    val mode by object : ListValue("Mode", modes, "NCPBHop") {
+    val speedMode_Module by object : ListValue("Mode", speedModuleModes, "NCPBHop") {
         override fun onChange(oldValue: String, newValue: String): String {
             if (state)
                 onDisable()
@@ -160,11 +160,11 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = mode
+        get() = speedMode_Module
 
-    private val modeModule
+    private val speedModeModule
         get() = speedModes.find { it.modeName == mode }
 
-    private val modes
+    private val speedModuleModes
         get() = speedModes.map { it.modeName }.toTypedArray()
 }
