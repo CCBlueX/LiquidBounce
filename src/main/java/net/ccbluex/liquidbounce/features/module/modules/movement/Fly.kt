@@ -15,63 +15,64 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.cubecraft
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.hypixel.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.rewinside.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.*
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.util.AxisAlignedBB
 
 object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
     private val flyModes = arrayOf(
 
-            // Vanilla
+            /* Vanilla */
             Vanilla(),
             SmoothVanilla(),
 
-            // NCP
-            NCP(),
-            OldNCP(),
+            /* NCP */
+            // NCP(),
+            // OldNCP(),
 
-            // AAC
-            AAC1910(),
-            AAC305(),
-            AAC316-Gomme(),
-            AAC312(),
-            AAC312-Glide(),
-            AAC313(),
+            /* AAC */
+            // AAC1910(),
+            // AAC305(),
+            // AAC316-Gomme(),
+            // AAC312(),
+            // AAC312-Glide(),
+            // AAC313(),
 
-            // CubeCraft
-            CubeCraft(),
+            /* CubeCraft */
+            // CubeCraft(),
 
-            // Hypixel
-            Hypixel(),   
-            BoostHypixel(),
-            FreeHypixel(),
+            /* Hypixel */
+            // Hypixel(),   
+            // BoostHypixel(),
+            // FreeHypixel(),
 
-            // Rewinside
-            Rewinside(),
-            TeleportRewinside(),
+            /* Rewinside */
+            // Rewinside(),
+            // TeleportRewinside(),
 
-            // Other server specific flys
-            Mineplex(),
-            NeruxVace(),
-            Minesucht(),
-            Redesky(),
+            /* Other server specific flys */
+            // Mineplex(),
+            // NeruxVace(),
+            // Minesucht(),
+            // Redesky(),
 
-            // Spartan
-            Spartan(),
-            Spartan2(),
-            BugSpartan(),
+            /* Spartan */
+            // Spartan(),
+            // Spartan2(),
+            // BugSpartan(),
 
-            // Other anticheats
-            MineSecure(),
-            HawkEye(),
-            HAC(),
-            WatchCat(),
+            /* Other anticheats */
+            // MineSecure(),
+            // HawkEye(),
+            // HAC(),
+            // WatchCat(),
 
-            // Other
-            Jetpack(),
-            KeepAlive(),
+            /* Other */
+            // Jetpack(),
+            // KeepAlive(),
             Flag()
     )
 
@@ -162,22 +163,23 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     public fun handleVanillaKickBypass() {
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
         val ground = calculateGround()
+        val thePlayer = mc.thePlayer
         run {
-            var posY = mc.thePlayer.posY
+            var posY = thePlayer.posY
             while (posY > ground) {
-                sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
+                sendPacket(C04PacketPlayerPosition(thePlayer.posX, posY, thePlayer.posZ, true))
                 if (posY - 8.0 < ground) break // Prevent next step
                 posY -= 8.0
             }
         }
-        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, ground, mc.thePlayer.posZ, true))
+        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, ground, thePlayer.posZ, true))
         var posY = ground
-        while (posY < mc.thePlayer.posY) {
-            sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
-            if (posY + 8.0 > mc.thePlayer.posY) break // Prevent next step
+        while (posY < thePlayer.posY) {
+            sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, thePlayer.posZ, true))
+            if (posY + 8.0 > thePlayer.posY) break // Prevent next step
             posY += 8.0
         }
-        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true))
+        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
         groundTimer.reset()
     }
 
@@ -216,7 +218,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        val thePlayer = mc.thePlayer
+        if (thePlayer == null)
             return
 
         if (stopOnDisable = true) {
