@@ -88,33 +88,33 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
                 onEnable()
         }
     }
-    private val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f) {
+    public val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f) {
         mode in arrayOf("Vanilla", "SmoothVanilla", "KeepAlive", "MineSecure", "BugSpartan")
     }
-    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
+    public val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
         mode in arrayOf("Vanilla", "SmoothVanilla")
     }
-    private val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
+    public val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
         mode in arrayOf("Vanilla", "SmoothVanilla")
     }
-    private val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
+    public val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
     // AAC
-    private val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
-    private val aacFast by BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
-    private val aacMotion by FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
-    private val aacMotion2 by FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
+    public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
+    public val aacFast by BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
+    public val aacMotion by FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
+    public val aacMotion2 by FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
 
     // Hypixel
-    private val hypixelBoost by BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
-    private val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 0..2000) { mode == "Hypixel" }
-    private val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0f..5f) { mode == "Hypixel" }
+    public val hypixelBoost by BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
+    public val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 0..2000) { mode == "Hypixel" }
+    public val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0f..5f) { mode == "Hypixel" }
 
     // Other
-    private val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
-    private val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 0..20) { mode == "NeruxVace" }
-    private val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
-    private val stopOnDisable by BoolValue("StopOnDisable", true)
+    public val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
+    public val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 0..20) { mode == "NeruxVace" }
+    public val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
+    public val stopOnDisable by BoolValue("StopOnDisable", true)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -158,6 +158,53 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
         modeModule?.onTick()
     }
+
+    public fun handleVanillaKickBypass() {
+        if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
+        val ground = calculateGround()
+        run {
+            var posY = mc.thePlayer.posY
+            while (posY > ground) {
+                sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
+                if (posY - 8.0 < ground) break // Prevent next step
+                posY -= 8.0
+            }
+        }
+        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, ground, mc.thePlayer.posZ, true))
+        var posY = ground
+        while (posY < mc.thePlayer.posY) {
+            sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
+            if (posY + 8.0 > mc.thePlayer.posY) break // Prevent next step
+            posY += 8.0
+        }
+        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true))
+        groundTimer.reset()
+    }
+
+    // TODO: Make better and faster calculation lol
+    private fun calculateGround(): Double {
+        val playerBoundingBox = mc.thePlayer.entityBoundingBox
+        var blockHeight = 1.0
+        var ground = mc.thePlayer.posY
+        while (ground > 0.0) {
+            val customBox = AxisAlignedBB.fromBounds(
+                playerBoundingBox.maxX,
+                ground + blockHeight,
+                playerBoundingBox.maxZ,
+                playerBoundingBox.minX,
+                ground,
+                playerBoundingBox.minZ
+            )
+            if (mc.theWorld.checkBlockCollision(customBox)) {
+                if (blockHeight <= 0.05) return ground + blockHeight
+                ground += blockHeight
+                blockHeight = 0.05
+            }
+            ground -= blockHeight
+        }
+        return 0.0
+    }
+
 
     override fun onEnable() {
         if (mc.thePlayer == null)
