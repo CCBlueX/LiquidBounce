@@ -163,7 +163,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         flyModeModule?.onTick()
     }
 
-    public fun handleVanillaKickBypass() {
+/*    public fun handleVanillaKickBypass() {
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
         val ground = calculateGround()
         val thePlayer = mc.thePlayer
@@ -208,7 +208,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
             ground -= blockHeight
         }
         return 0.0
-    }
+    }*/
 
 
     override fun onEnable() {
