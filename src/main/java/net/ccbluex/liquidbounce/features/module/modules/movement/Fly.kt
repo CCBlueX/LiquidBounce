@@ -76,7 +76,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
             Flag()
     )
 
-    val selectedFlyMode by object : ListValue("Mode", flyModes, "Vanilla") {
+    val selectedFlyMode by object : ListValue("Mode", flyModuleModes, "Vanilla") {
         override fun onChange(oldValue: String, newValue: String): String {
             if (state)
                 onDisable()
@@ -242,6 +242,6 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     private val flyModeModule
         get() = flyModes.find { it.flyModeName == selectedFlyMode }
 
-    private val flyMode
+    private val flyModuleModes
         get() = flyModes.map { it.flyModeName }.toTypedArray()
 }
