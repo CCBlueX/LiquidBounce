@@ -30,7 +30,7 @@ class VanillaFly : FlyMode("Vanilla") {
         if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= Fly.vanillaSpeed
         strafe(Fly.vanillaSpeed)
         mc.timer.timerSpeed = Fly.vanillaTimer
-        Fly.handleVanillaKickBypass()
+        //Fly.handleVanillaKickBypass()
     }
     override fun onMove(event: MoveEvent) {}
 }

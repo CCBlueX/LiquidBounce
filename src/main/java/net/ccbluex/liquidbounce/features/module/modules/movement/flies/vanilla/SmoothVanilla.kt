@@ -24,7 +24,7 @@ class SmoothVanillaFly : FlyMode("SmoothVanilla") {
         thePlayer.capabilities.isFlying = true
         // Soon adding this as actual speed, not strafe... strafe(Fly.vanillaSpeed)
         mc.timer.timerSpeed = Fly.vanillaTimer
-        Fly.handleVanillaKickBypass()
+        //Fly.handleVanillaKickBypass()
     }
     override fun onMove(event: MoveEvent) {}
 }
