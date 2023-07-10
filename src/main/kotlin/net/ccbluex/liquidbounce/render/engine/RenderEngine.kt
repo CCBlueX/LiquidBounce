@@ -95,31 +95,31 @@ object RenderEngine : Listenable {
 
     val RENDERED_OUTLINES = AtomicInteger(0)
 
-    val renderHandler = handler<OverlayRenderEvent> {
-        this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-            it.tickDelta,
-            true
-        ).toMat4()
-
-        val outlines = RENDERED_OUTLINES.getAndSet(0)
-
-        if (outlines > 0) {
-            println(outlines)
-        }
-
-        EventManager.callEvent(EngineRenderEvent(it.tickDelta))
-
-        GL11.glLineWidth(1.0f)
-
-        render(it.tickDelta)
-
-        // Run the deferred tasks
-        while (true) {
-            val currentTask = deferredForRenderThread.poll() ?: break
-
-            currentTask.run()
-        }
-    }
+//    val renderHandler = handler<OverlayRenderEvent> {
+//        this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+//            it.tickDelta,
+//            true
+//        ).toMat4()
+//
+//        val outlines = RENDERED_OUTLINES.getAndSet(0)
+//
+//        if (outlines > 0) {
+//            println(outlines)
+//        }
+//
+//        EventManager.callEvent(EngineRenderEvent(it.tickDelta))
+//
+//        GL11.glLineWidth(1.0f)
+//
+//        render(it.tickDelta)
+//
+//        // Run the deferred tasks
+//        while (true) {
+//            val currentTask = deferredForRenderThread.poll() ?: break
+//
+//            currentTask.run()
+//        }
+//    }
 
     /**
      * Initialization
@@ -156,14 +156,14 @@ object RenderEngine : Listenable {
      * @param layer The layer it is supposed to be rendered on (See this class's description)
      */
     fun enqueueForRendering(layer: Int, task: RenderTask) {
-        this.renderTaskTable[layer].renderTasks.add(task)
+        // this.renderTaskTable[layer].renderTasks.add(task)
     }
 
     /**
      * @see enqueueForRendering
      */
     fun enqueueForRendering(layer: Int, task: Array<RenderTask>) {
-        this.renderTaskTable[layer].renderTasks.addAll(task)
+        // this.renderTaskTable[layer].renderTasks.addAll(task)
     }
 
     /**
