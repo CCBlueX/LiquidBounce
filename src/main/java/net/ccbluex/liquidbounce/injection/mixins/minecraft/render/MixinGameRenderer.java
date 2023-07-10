@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.event.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -41,6 +42,7 @@ import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -76,6 +78,18 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     public void hookGameRender(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameRenderEvent());
+    }
+
+    /**
+     * Hook world render event
+     */
+    @Inject(method = "renderWorld", at = @At(value = "FIELD",
+            target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z",
+            opcode = Opcodes.GETFIELD,
+            ordinal = 0))
+    public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack,
+                                final CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, partialTicks));
     }
 
     /**

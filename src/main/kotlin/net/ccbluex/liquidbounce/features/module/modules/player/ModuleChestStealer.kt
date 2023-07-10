@@ -43,7 +43,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private var lastSlot = 0
     private val timer = Chronometer()
 
-    val repeatable = handler<GameRenderEvent> {
+    val repeatable = handler<WorldRenderEvent> {
         if (!timer.hasElapsed()) {
             return@handler
         }
