@@ -72,6 +72,8 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        private val outline by boolean("Outline", true)
+
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
@@ -97,8 +99,10 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                                 drawSolidBox(box, matrixStack)
                             }
 
-                            withColor(outlineColor) {
-                                drawOutlinedBox(box, matrixStack)
+                            if (outline) {
+                                withColor(outlineColor) {
+                                    drawOutlinedBox(box, matrixStack)
+                                }
                             }
                         }
                     }
