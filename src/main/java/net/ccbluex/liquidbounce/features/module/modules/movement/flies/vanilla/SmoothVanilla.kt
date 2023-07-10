@@ -8,9 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import org.lwjgl.input.Keyboard
 
-class SmoothVanillaFly : FlyMode("SmoothVanilla") {
+class SmoothVanilla : FlyMode("SmoothVanilla") {
     override fun onMotion() {}
 
     override fun onEnable() {}
@@ -26,5 +25,6 @@ class SmoothVanillaFly : FlyMode("SmoothVanilla") {
         mc.timer.timerSpeed = Fly.vanillaTimer
         //Fly.handleVanillaKickBypass()
     }
+
     override fun onMove(event: MoveEvent) {}
 }

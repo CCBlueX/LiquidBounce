@@ -9,9 +9,8 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
-import org.lwjgl.input.Keyboard
 
-class VanillaFly : FlyMode("Vanilla") {
+class Vanilla : FlyMode("Vanilla") {
     override fun onMotion() {}
 
     override fun onEnable() {}
@@ -32,5 +31,6 @@ class VanillaFly : FlyMode("Vanilla") {
         mc.timer.timerSpeed = Fly.vanillaTimer
         //Fly.handleVanillaKickBypass()
     }
+
     override fun onMove(event: MoveEvent) {}
 }
