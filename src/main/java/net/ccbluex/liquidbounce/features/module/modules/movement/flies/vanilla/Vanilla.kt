@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.minecraft.network.play.client.C00PacketKeepAlive
 
 class Vanilla : FlyMode("Vanilla") {
     override fun onMotion() {}
