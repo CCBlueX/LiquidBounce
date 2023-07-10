@@ -40,7 +40,7 @@ import java.awt.Color
 import kotlin.math.sqrt
 
 /**
- * Traces module
+ * Tracers module
  *
  * Draws a line to every entity a certain radius.
  */
