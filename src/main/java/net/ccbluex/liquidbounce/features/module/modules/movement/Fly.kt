@@ -90,11 +90,12 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     }
 
     val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f) {
-        selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla" /*"KeepAlive", "MineSecure", "BugSpartan"*/)
+        selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla" /*"MineSecure", "BugSpartan"*/)
     }
     val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
+    val vanillaKeepAlive by BoolValue("VanillaKeepAlive", false) { selectedFlyMode == "Vanilla" }
     val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
