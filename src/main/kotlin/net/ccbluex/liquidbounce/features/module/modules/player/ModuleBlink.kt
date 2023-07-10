@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs.makeLines
-import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.rainbow
@@ -114,7 +114,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             if (BreadcrumbsOption.enabled) {
                 renderEnvironment(matrixStack) {
                     withColor(color) {
-                        drawLines(makeLines(color, positions, event.partialTicks), matrixStack)
+                        drawLineStrip(makeLines(color, positions, event.partialTicks), matrixStack)
                     }
                 }
             }

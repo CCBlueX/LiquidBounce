@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
@@ -66,6 +67,14 @@ fun withColor(color4b: Color4b, draw: () -> Unit) {
 }
 
 fun drawLines(lines: Array<Vec3>, matrixStack: MatrixStack) {
+    drawLines(lines, matrixStack, DrawMode.DEBUG_LINES)
+}
+
+fun drawLineStrip(lines: Array<Vec3>, matrixStack: MatrixStack) {
+    drawLines(lines, matrixStack, DrawMode.DEBUG_LINE_STRIP)
+}
+
+private fun drawLines(lines: Array<Vec3>, matrixStack: MatrixStack, mode: DrawMode = DrawMode.DEBUG_LINES) {
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
@@ -76,7 +85,7 @@ fun drawLines(lines: Array<Vec3>, matrixStack: MatrixStack) {
     // Draw the vertices of the box
     with(bufferBuilder) {
         // Begin drawing lines with position format
-        begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION)
+        begin(mode, VertexFormats.POSITION)
 
         // Draw the vertices of the box
         lines.forEach { (x, y, z) ->

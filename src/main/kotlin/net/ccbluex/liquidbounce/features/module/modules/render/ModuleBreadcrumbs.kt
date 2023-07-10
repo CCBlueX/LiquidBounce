@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -67,7 +67,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         synchronized(positions) {
             renderEnvironment(matrixStack) {
                 withColor(color) {
-                    drawLines(makeLines(color, positions, event.partialTicks), matrixStack)
+                    drawLineStrip(makeLines(color, positions, event.partialTicks), matrixStack)
                 }
             }
         }
