@@ -3,7 +3,7 @@
   "id": "liquidbounce",
   "version": "${version}",
   "name": "LiquidBounce",
-  "description": "A free mixin-based injection hacked-client",
+  "description": "A free mixin-based injection hacked-client for Minecraft using the Fabric modding toolchain.",
   "authors": [
     "CCBlueX"
   ],
@@ -31,9 +31,12 @@
     "liquidbounce.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.14.21",
-    "fabric-language-kotlin": ">=1.9.2+kotlin.1.8.10",
-    "minecraft": "1.20.1"
+    "minecraft": "${minecraft_version}",
+    "fabricloader": ">=${loader_version}",
+    "fabric-language-kotlin": ">=${fabric_kotlin_version}"
+  },
+  "suggests": {
+    "fabric": ">=${fabric_version}"
   },
   "accessWidener": "liquidbounce.accesswidener"
 }

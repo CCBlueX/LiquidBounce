@@ -115,14 +115,25 @@ dependencies {
 processResources {
     inputs.property "version", project.version
 
+    inputs.property "minecraft_version", minecraft_version
+    inputs.property "fabric_version", fabric_version
+    inputs.property "loader_version", loader_version
+    inputs.property "fabric_kotlin_version", fabric_kotlin_version
+
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand([
+                version: project.version,
+                minecraft_version: minecraft_version,
+                fabric_version: fabric_version,
+                loader_version: loader_version,
+                fabric_kotlin_version: fabric_kotlin_version
+        ])
     }
 }
 
 // The following code will include the theme into the build
 
-task makeTheme(type: Exec) {
+tasks.register('makeTheme', Exec) {
     workingDir file("src-theme")
     commandLine "python", "build.py"
     doLast {
@@ -154,7 +165,7 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = 17
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
@@ -201,7 +212,7 @@ remapJar {
     inputFile = shadowJar.archiveFile
 }
 
-task copyZipInclude(type: Copy) {
+tasks.register('copyZipInclude', Copy) {
     from 'zip_include/'
     into 'build/libs/zip'
 }
