@@ -188,7 +188,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,
-            ModuleTraces,
+            ModuleTracers,
             ModuleTrajectories,
             ModuleTrueSight,
             ModuleXRay,

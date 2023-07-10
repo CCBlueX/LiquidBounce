@@ -278,7 +278,7 @@
   "liquidbounce.module.hud.description": "Shows an in-game overlay with various useful tools.",
   "liquidbounce.module.itemEsp.description": "Allows you to see dropped items through walls.",
   "liquidbounce.module.nametags.description": "Makes player name tags more visible and adds useful information.",
-  "liquidbounce.module.traces.description": "Draws a line to every entity a certain radius.",
+  "liquidbounce.module.tracers.description": "Draws a line to every entity a certain radius.",
   "liquidbounce.module.chestAura.description": "Automatically opens chests around you.",
   "liquidbounce.module.fastBreak.description": "Allows you to break blocks faster.",
   "liquidbounce.module.fastPlace.description": "Allows you to place blocks faster.",

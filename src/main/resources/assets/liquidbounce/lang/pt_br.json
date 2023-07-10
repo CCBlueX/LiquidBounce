@@ -222,7 +222,7 @@
   "liquidbounce.module.hud.description": "Mostra o hud do client.",
   "liquidbounce.module.itemEsp.description": "Deixa você ver itens dropados pela parede.",
   "liquidbounce.module.nametags.description": "Faz nomes mais viziveis e mostra mais informações.",
-  "liquidbounce.module.traces.description": "Mostra linhas em entidades a uma certa distancia de você.",
+  "liquidbounce.module.tracers.description": "Mostra linhas em entidades a uma certa distancia de você.",
   "liquidbounce.module.chestAura.description": "Automaticamente abre baus em volta de você.",
   "liquidbounce.module.fastBreak.description": "Deixa você quebrar blocos mais rapido.",
   "liquidbounce.module.fastBreak.description": "Deixa você colocar blocos mais rapido.",

@@ -203,7 +203,7 @@
   "liquidbounce.module.hud.description": "在游戏中显示有关水影客户端的信息(显示游戏中界面的功能)。",
   "liquidbounce.module.itemEsp.description": "允许你透过方块看到掉落物。",
   "liquidbounce.module.nametags.description": "让玩家名变得更可见并加入了一些有用的信息。",
-  "liquidbounce.module.traces.description": "一条线连接你和你附近的实体。",
+  "liquidbounce.module.tracers.description": "一条线连接你和你附近的实体。",
   "liquidbounce.module.chestAura.description": "自动打开你身边的箱子。",
   "liquidbounce.module.fastBreak.description": "允许你更快的破坏方块。",
   "liquidbounce.module.fastPlace.description": "允许你更快的放置方块。",
