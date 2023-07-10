@@ -57,7 +57,8 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
         private val outline by boolean("Outline", true)
 
-        val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+        // todo: use box of block, not hardcoded
+        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
