@@ -68,7 +68,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         // todo: use box of block, not hardcoded
         val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
-        val tickHandler = handler<WorldRenderEvent> { event ->
+        val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val blocksToRender = locations.entries.filter { it.value.shouldRender(it.key) }
 
