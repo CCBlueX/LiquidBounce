@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 
 class Vanilla : FlyMode("Vanilla") {
     override fun onMotion() {}
@@ -21,6 +22,7 @@ class Vanilla : FlyMode("Vanilla") {
 
     override fun onUpdate() {
         val thePlayer = mc.thePlayer
+        if (Fly.vanillaKeepAlive) sendPacket(C00PacketKeepAlive())
         thePlayer.capabilities.isFlying = false
         thePlayer.motionY = 0.0
         thePlayer.motionX = 0.0
