@@ -65,6 +65,29 @@ fun withColor(color4b: Color4b, draw: () -> Unit) {
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
 }
 
+fun drawLines(lines: Array<Vec3>, matrixStack: MatrixStack) {
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position program
+    RenderSystem.setShader { GameRenderer.getPositionProgram() }
+
+    // Draw the vertices of the box
+    with(bufferBuilder) {
+        // Begin drawing lines with position format
+        begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION)
+
+        // Draw the vertices of the box
+        lines.forEach { (x, y, z) ->
+            vertex(matrix, x, y, z).next()
+        }
+    }
+
+    // Draw the outlined box
+    tessellator.draw()
+}
+
 /**
  * Draws an outlined box using the specified [box] and [matrixStack].
  */
