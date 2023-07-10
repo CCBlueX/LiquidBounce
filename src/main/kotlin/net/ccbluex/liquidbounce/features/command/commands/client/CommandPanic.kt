@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.text.MutableText
-import net.minecraft.text.TranslatableTextContent
 
 object CommandPanic {
 
@@ -57,6 +56,7 @@ object CommandPanic {
                         modules = modules.filter { it.category != Category.RENDER }
                         msg = command.result("disabledAllCategoryModules", command.result("nonRender"))
                     }
+
                     else -> {
                         val category = Category.values().find { it.readableName.equals(type, true) }
                             ?: throw CommandException(command.result("categoryNotFound", type))

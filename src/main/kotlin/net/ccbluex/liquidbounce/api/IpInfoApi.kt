@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ object IpInfoApi {
 
     private const val API_URL = "https://ipinfo.io/json"
 
-    var localIpInfo: IpInfo = requestIpInfo()
+    var localIpInfo: IpInfo? = requestIpInfo()
         private set
 
     /**
@@ -41,12 +41,12 @@ object IpInfoApi {
      *
      * todo: add support for proxy
      */
-    private fun requestIpInfo(): IpInfo = endpointRequest(API_URL)
+    private fun requestIpInfo(): IpInfo? = endpointRequest(API_URL)
 
     /**
      * Request endpoint and parse JSON to data class
      */
-    private inline fun <reified T> endpointRequest(endpoint: String): T = decode(makeEndpointRequest(endpoint))
+    private inline fun <reified T> endpointRequest(endpoint: String): T? = decode(makeEndpointRequest(endpoint))
 
     /**
      * Request to endpoint with custom agent and session token
@@ -55,13 +55,13 @@ object IpInfoApi {
 }
 
 data class IpInfo(
-    val ip: String,
-    val hostname: String,
-    val city: String,
-    val region: String,
-    val country: String,
-    val loc: String,
-    val org: String,
-    val postal: String,
-    val timezone: String
+    val ip: String?,
+    val hostname: String?,
+    val city: String?,
+    val region: String?,
+    val country: String?,
+    val loc: String?,
+    val org: String?,
+    val postal: String?,
+    val timezone: String?
 )

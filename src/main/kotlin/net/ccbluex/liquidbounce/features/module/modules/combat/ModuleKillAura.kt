@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,33 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.RenderEngine
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
+import net.ccbluex.liquidbounce.render.engine.memory.putVertex
+import net.ccbluex.liquidbounce.render.utils.drawBoxNew
+import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
+import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
+import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
@@ -44,11 +55,15 @@ import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import org.apache.commons.lang3.RandomUtils
+import org.apache.commons.lang3.tuple.MutablePair
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -90,59 +105,137 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
-    private val blockingTicks by int("BlockingTicks", 0, 0..20)
+    private val whileUsingItem by boolean("WhileUsingItem", true)
+
+    object WhileBlocking : ToggleableConfigurable(this, "WhileBlocking", true) {
+        val blockingTicks by int("BlockingTicks", 0, 0..20)
+    }
+
+    init {
+        tree(WhileBlocking)
+    }
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
     private val failRate by int("FailRate", 0, 0..100)
+
+    private object FailSwing : ToggleableConfigurable(this, "FailSwing", false) {
+        object UseOwnCPS : ToggleableConfigurable(ModuleKillAura, "UseOwnCPS", true) {
+            val cps by intRange("CPS", 5..8, 0..20)
+        }
+
+        object LimitRange : ToggleableConfigurable(ModuleKillAura, "LimitRange", false) {
+            val asExtraRange by boolean("AsExtraRange", true)
+            val range by float("Range", 2f, 0f..10f)
+        }
+
+        init {
+            tree(UseOwnCPS)
+            tree(LimitRange)
+        }
+    }
+
+    init {
+        tree(FailSwing)
+    }
+
+    private object NotifyWhenFail : ToggleableConfigurable(this, "NotifyWhenFail", false) {
+        val mode = choices("Mode", Box, arrayOf(Box, Sound))
+
+        object Box : Choice("Box") {
+            override val parent: ChoiceConfigurable
+                get() = mode
+
+            val fadeSeconds by int("FadeSeconds", 4, 1..10)
+
+            val color by color("Color", Color4b(255, 179, 72, 255))
+            val colorRainbow by boolean("Rainbow", false)
+        }
+
+        object Sound : Choice("Sound") {
+            override val parent: ChoiceConfigurable
+                get() = mode
+
+            val volume by float("Volume", 50f, 0f..100f)
+
+            object NoPitchRandomization : ToggleableConfigurable(ModuleKillAura, "NoPitchRandomization", false) {
+                val pitch by float("Pitch", 0.8f, 0f..2f)
+            }
+
+            init {
+                tree(NoPitchRandomization)
+            }
+        }
+    }
+
+    init {
+        tree(NotifyWhenFail)
+    }
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private val cpsTimer = tree(CpsScheduler())
 
+    private val boxFadeSeconds
+        get() = 50 * NotifyWhenFail.Box.fadeSeconds
+
     override fun disable() {
         targetTracker.cleanup()
+        failedHits.clear()
     }
 
-//    val renderHandler = handler<EngineRenderEvent> {
-//        val currentTarget = targetTracker.lockedOnTarget ?: return@handler
-//
-//        val bb = currentTarget.boundingBox
-//
-//        val renderTask = ColoredPrimitiveRenderTask(6 * 10 * 10 * 2, PrimitiveType.Lines)
-//
-//        for (direction in Direction.values()) {
-//            val maxRaysOnAxis = 10 - 1
-//            val stepFactor = 1.0 / maxRaysOnAxis;
-//
-//            val face = bb.getFace(direction)
-//
-//            val outerPoints = face.getAllPoints(Vec3d.of(direction.vector))
-//
-//            var idx = 0
-//
-//            for (outerPoint in outerPoints) {
-//                val vex = Vec3(outerPoint) - Vec3(
-//                    0.0, 0.0, 1.0
-//                )
-//                val color = Color4b(Color.getHSBColor(idx / 4.0f, 1.0f, 1.0f))
-//
-//                renderTask.index(renderTask.vertex(vex, Color4b.WHITE))
-//                renderTask.index(renderTask.vertex(vex + Vec3(direction.vector), color))
-//
-//                idx++
-//            }
-//
-//            //            for (x in (0..maxRaysOnAxis)) {
-//            //                for (y in (0..maxRaysOnAxis)) {
-//            //                    renderTask.index(renderTask.vertex(Vec3(plane.getPoint(x * stepFactor, y * stepFactor)) - Vec3(0.0, 0.0, 1.0), Color4b.WHITE))
-//            //                }
-//            //            }
-//        }
-//
-//        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
-//    }
+    private var failedHits: ArrayList<MutablePair<Vec3d, Long>> = arrayListOf()
+
+    val renderHandler = handler<EngineRenderEvent> { event ->
+        if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
+            failedHits.clear()
+            return@handler
+        }
+
+        failedHits.forEach { it.setRight(it.getRight() + 1) }
+
+        failedHits = failedHits.filter { it.right <= boxFadeSeconds } as ArrayList<MutablePair<Vec3d, Long>>
+
+        val box = drawBoxNew(Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05), Color4b.WHITE)
+
+        val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05), Color4b.WHITE)
+
+        val base = if (NotifyWhenFail.Box.colorRainbow) rainbow() else NotifyWhenFail.Box.color
+
+        val markedBlocks = failedHits
+
+        val instanceBuffer = PositionColorVertexFormat()
+        val instanceBufferOutline = PositionColorVertexFormat()
+
+        instanceBuffer.initBuffer(markedBlocks.size)
+        instanceBufferOutline.initBuffer(markedBlocks.size)
+
+        for ((pos, opacity) in markedBlocks) {
+            val pos3 = Vec3(pos.x, pos.y, pos.z)
+
+            val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
+
+            val baseColor = Color4b(base.r, base.g, base.b, fade)
+            val outlineColor = Color4b(base.r, base.g, base.b, fade)
+
+            instanceBuffer.putVertex {
+                this.position = pos3; this.color = baseColor
+            }
+
+            instanceBufferOutline.putVertex {
+                this.position = pos3; this.color = outlineColor
+            }
+        }
+
+        RenderEngine.enqueueForRendering(
+            RenderEngine.CAMERA_VIEW_LAYER, espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
+        )
+        RenderEngine.enqueueForRendering(
+            RenderEngine.CAMERA_VIEW_LAYER,
+            espBoxInstancedOutlineRenderTask(instanceBufferOutline, boxOutline.first, boxOutline.second)
+        )
+    }
 
     val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
         // Killaura in spectator-mode is pretty useless, trust me.
@@ -167,11 +260,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         // Check if there is target to attack
-        val target = targetTracker.lockedOnTarget ?: return@repeatable
+        val target = targetTracker.lockedOnTarget
         // Did you ever send a rotation before?
-        val rotation = RotationManager.currentRotation ?: return@repeatable
+        val rotation = RotationManager.currentRotation
 
-        if (target.boxedDistanceTo(player) <= range && facingEnemy(
+        if (rotation != null && target != null && target.boxedDistanceTo(player) <= range && facingEnemy(
                 target, rotation, range.toDouble(), wallRange.toDouble()
             )
         ) {
@@ -204,6 +297,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                 val blocking = player.isBlocking
 
+                if (blocking) {
+                    if (!WhileBlocking.enabled) {
+                        return@repeat // return if it's not allowed to attack while using blocking with a shield
+                    }
+                } else if (player.isUsingItem && !whileUsingItem) {
+                    return@repeat // return if it's not allowed to attack while the player is using another item that's not a shield
+                }
+
                 // Make sure to unblock now
                 if (blocking) {
                     network.sendPacket(
@@ -213,11 +314,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     )
 
                     // Wait until the un-blocking delay time is up
-                    if (blockingTicks > 0) {
-                        wait(blockingTicks)
+                    if (WhileBlocking.blockingTicks > 0) {
+                        mc.options.useKey.isPressed = false
+                        wait(WhileBlocking.blockingTicks)
                     }
                 }
-
                 // Fail rate
                 if (failRate > 0 && failRate > Random.nextInt(100)) {
                     // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
@@ -227,7 +328,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
                     }
 
-                    // todo: might notify client-user about fail hit
+                    // Notify the user about the failed hit
+                    notifyForFailedHit(raycastedEntity, rotation)
                 } else {
                     // Attack enemy
                     attackEntity(raycastedEntity)
@@ -236,19 +338,51 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 // Make sure to block again
                 if (blocking) {
                     // Wait until the blocking delay time is up
-                    if (blockingTicks > 0) {
-                        wait(blockingTicks)
+                    if (WhileBlocking.blockingTicks > 0) {
+                        wait(WhileBlocking.blockingTicks)
                     }
 
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(player.activeHand, sequence)
                     }
+                    mc.options.useKey.isPressed = true
 
                     if (simulateInventoryClosing && isInInventoryScreen) {
                         openInventorySilently()
                     }
 
                 }
+            }
+
+            return@repeatable
+        }
+
+        if (!FailSwing.enabled) {
+            return@repeatable
+        }
+
+        val entity = target ?: world.findEnemy(FailSwing.LimitRange.range)?.first
+
+        val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
+
+        val shouldSwing = if (FailSwing.LimitRange.enabled) {
+            entity != null && entity.boxedDistanceTo(player) <= reach
+        } else !FailSwing.LimitRange.enabled && rotation != null
+
+        val chosenCPS = if (FailSwing.UseOwnCPS.enabled) FailSwing.UseOwnCPS.cps else cps
+        val supposedRotation = rotation ?: player.rotation
+
+        val clicks = cpsTimer.clicks({
+            shouldSwing && (entity == null || raytraceEntity(
+                range.toDouble(), supposedRotation
+            ) { true } == null)
+        }, chosenCPS)
+
+        repeat(clicks) {
+            if (swing) {
+                player.swingHand(Hand.MAIN_HAND)
+            } else {
+                network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
             }
         }
     }
@@ -295,7 +429,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break
         }
     }
@@ -343,6 +477,40 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // reset cooldown
         player.resetLastAttackedTicks()
+    }
+
+    private fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
+        if (!NotifyWhenFail.enabled) {
+            return
+        }
+
+        when (NotifyWhenFail.mode.activeChoice) {
+            NotifyWhenFail.Box -> {
+                val centerDistance = entity.box.center.subtract(player.eyes).length()
+                val boxSpot = player.eyes.add(rotation.rotationVec.multiply(centerDistance))
+
+                failedHits.add(MutablePair(boxSpot, 0L))
+            }
+
+            NotifyWhenFail.Sound -> {
+                // Maybe a custom sound would be better
+                val pitch =
+                    if (NotifyWhenFail.Sound.NoPitchRandomization.enabled) NotifyWhenFail.Sound.NoPitchRandomization.pitch else RandomUtils.nextFloat(
+                        0f, 2f
+                    )
+
+                world.playSound(
+                    player,
+                    player.x,
+                    player.y,
+                    player.z,
+                    SoundEvents.UI_BUTTON_CLICK.value(),
+                    player.soundCategory,
+                    NotifyWhenFail.Sound.volume / 100f,
+                    pitch
+                )
+            }
+        }
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
