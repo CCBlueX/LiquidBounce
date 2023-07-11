@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.render.GameRenderer
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 
 fun renderEnvironment(matrixStack: MatrixStack, draw: () -> Unit) {
     val camera = mc.entityRenderDispatcher.camera ?: return
@@ -97,6 +97,68 @@ private fun drawLines(lines: Array<Vec3>, matrixStack: MatrixStack, mode: DrawMo
     tessellator.draw()
 }
 
+fun drawSideBox(box: Box, side: Direction, matrixStack: MatrixStack) {
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position program
+    RenderSystem.setShader { GameRenderer.getPositionProgram() }
+
+    // Draw the vertices of the box
+    with(bufferBuilder) {
+        // Begin drawing lines with position format
+        begin(DrawMode.QUADS, VertexFormats.POSITION)
+
+        // Draw the vertices of the box
+        val vertices = when (side) {
+            Direction.DOWN -> listOf(
+                Vec3(box.minX, box.minY, box.maxZ),
+                Vec3(box.minX, box.minY, box.minZ),
+                Vec3(box.maxX, box.minY, box.minZ),
+                Vec3(box.maxX, box.minY, box.maxZ)
+            )
+            Direction.UP -> listOf(
+                Vec3(box.minX, box.maxY, box.minZ),
+                Vec3(box.minX, box.maxY, box.maxZ),
+                Vec3(box.maxX, box.maxY, box.maxZ),
+                Vec3(box.maxX, box.maxY, box.minZ)
+            )
+            Direction.NORTH -> listOf(
+                Vec3(box.maxX, box.maxY, box.minZ),
+                Vec3(box.maxX, box.minY, box.minZ),
+                Vec3(box.minX, box.minY, box.minZ),
+                Vec3(box.minX, box.maxY, box.minZ)
+            )
+            Direction.SOUTH -> listOf(
+                Vec3(box.minX, box.maxY, box.maxZ),
+                Vec3(box.minX, box.minY, box.maxZ),
+                Vec3(box.maxX, box.minY, box.maxZ),
+                Vec3(box.maxX, box.maxY, box.maxZ)
+            )
+            Direction.WEST -> listOf(
+                Vec3(box.minX, box.maxY, box.minZ),
+                Vec3(box.minX, box.minY, box.minZ),
+                Vec3(box.minX, box.minY, box.maxZ),
+                Vec3(box.minX, box.maxY, box.maxZ)
+            )
+            Direction.EAST -> listOf(
+                Vec3(box.maxX, box.maxY, box.maxZ),
+                Vec3(box.maxX, box.minY, box.maxZ),
+                Vec3(box.maxX, box.minY, box.minZ),
+                Vec3(box.maxX, box.maxY, box.minZ)
+            )
+        }
+
+        vertices.forEach { (x, y, z) ->
+            vertex(matrix, x, y, z).next()
+        }
+    }
+
+    // Draw the outlined box
+    tessellator.draw()
+}
+
 /**
  * Draws an outlined box using the specified [box] and [matrixStack].
  */
@@ -111,38 +173,38 @@ fun drawOutlinedBox(box: Box, matrixStack: MatrixStack) {
     // Draw the vertices of the box
     with(bufferBuilder) {
         // Begin drawing lines with position format
-        begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION)
+        begin(DrawMode.DEBUG_LINES, VertexFormats.POSITION)
 
         // Draw the vertices of the box
         val vertices = listOf(
-            Triple(box.minX, box.minY, box.minZ),
-            Triple(box.maxX, box.minY, box.minZ),
-            Triple(box.maxX, box.minY, box.minZ),
-            Triple(box.maxX, box.minY, box.maxZ),
-            Triple(box.maxX, box.minY, box.maxZ),
-            Triple(box.minX, box.minY, box.maxZ),
-            Triple(box.minX, box.minY, box.maxZ),
-            Triple(box.minX, box.minY, box.minZ),
-            Triple(box.minX, box.minY, box.minZ),
-            Triple(box.minX, box.maxY, box.minZ),
-            Triple(box.maxX, box.minY, box.minZ),
-            Triple(box.maxX, box.maxY, box.minZ),
-            Triple(box.maxX, box.minY, box.maxZ),
-            Triple(box.maxX, box.maxY, box.maxZ),
-            Triple(box.minX, box.minY, box.maxZ),
-            Triple(box.minX, box.maxY, box.maxZ),
-            Triple(box.minX, box.maxY, box.minZ),
-            Triple(box.maxX, box.maxY, box.minZ),
-            Triple(box.maxX, box.maxY, box.minZ),
-            Triple(box.maxX, box.maxY, box.maxZ),
-            Triple(box.maxX, box.maxY, box.maxZ),
-            Triple(box.minX, box.maxY, box.maxZ),
-            Triple(box.minX, box.maxY, box.maxZ),
-            Triple(box.minX, box.maxY, box.minZ)
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ)
         )
 
         vertices.forEach { (x, y, z) ->
-            vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat()).next()
+            vertex(matrix, x, y, z).next()
         }
     }
 
@@ -165,38 +227,38 @@ fun drawSolidBox(box: Box, matrixStack: MatrixStack) {
 
     with(bufferBuilder) {
         // Begin drawing lines with position format
-        begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION)
+        begin(DrawMode.QUADS, VertexFormats.POSITION)
 
         // Draw the vertices of the box
         val vertices = listOf(
-            Triple(box.minX, box.minY, box.minZ),
-            Triple(box.maxX, box.minY, box.minZ),
-            Triple(box.maxX, box.minY, box.maxZ),
-            Triple(box.minX, box.minY, box.maxZ),
-            Triple(box.minX, box.maxY, box.minZ),
-            Triple(box.minX, box.maxY, box.maxZ),
-            Triple(box.maxX, box.maxY, box.maxZ),
-            Triple(box.maxX, box.maxY, box.minZ),
-            Triple(box.minX, box.minY, box.minZ),
-            Triple(box.minX, box.maxY, box.minZ),
-            Triple(box.maxX, box.maxY, box.minZ),
-            Triple(box.maxX, box.minY, box.minZ),
-            Triple(box.maxX, box.minY, box.minZ),
-            Triple(box.maxX, box.maxY, box.minZ),
-            Triple(box.maxX, box.maxY, box.maxZ),
-            Triple(box.maxX, box.minY, box.maxZ),
-            Triple(box.minX, box.minY, box.maxZ),
-            Triple(box.maxX, box.minY, box.maxZ),
-            Triple(box.maxX, box.maxY, box.maxZ),
-            Triple(box.minX, box.maxY, box.maxZ),
-            Triple(box.minX, box.minY, box.minZ),
-            Triple(box.minX, box.minY, box.maxZ),
-            Triple(box.minX, box.maxY, box.maxZ),
-            Triple(box.minX, box.maxY, box.minZ)
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ)
         )
 
         vertices.forEach { (x, y, z) ->
-            vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat()).next()
+            vertex(matrix, x, y, z).next()
         }
     }
 
