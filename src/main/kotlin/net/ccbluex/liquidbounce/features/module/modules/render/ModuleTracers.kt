@@ -124,14 +124,8 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
 
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
-                val lines = arrayOf(
-                    eyeVector,
-                    pos,
-                    Vec3(0f, entity.height, 0f)
-                )
-
                 withColor(color) {
-                    drawLines(lines, matrixStack)
+                    drawLines(eyeVector, pos, Vec3(0f, entity.height, 0f))
                 }
             }
         }

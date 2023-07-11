@@ -166,7 +166,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
             renderEnvironment(matrixStack) {
                 withColor(Color4b.WHITE) {
-                    drawLineStrip(lines.toTypedArray(), matrixStack)
+                    drawLineStrip(*lines.toTypedArray())
                 }
             }
         }

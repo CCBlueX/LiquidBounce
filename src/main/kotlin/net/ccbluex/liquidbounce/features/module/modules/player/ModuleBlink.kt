@@ -114,7 +114,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             if (BreadcrumbsOption.enabled) {
                 renderEnvironment(matrixStack) {
                     withColor(color) {
-                        drawLineStrip(makeLines(color, positions, event.partialTicks), matrixStack)
+                        drawLineStrip(*makeLines(color, positions, event.partialTicks))
                     }
                 }
             }

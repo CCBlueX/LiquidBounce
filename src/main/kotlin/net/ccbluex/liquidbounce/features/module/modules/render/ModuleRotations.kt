@@ -60,14 +60,9 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
             .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
             .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)
 
-        val lines = arrayOf(
-            eyeVector,
-            eyeVector + Vec3(serverRotation.rotationVec * 2.0)
-        )
-
         renderEnvironment(matrixStack) {
             withColor(Color4b.WHITE) {
-                drawLineStrip(lines, matrixStack)
+                drawLineStrip(eyeVector, eyeVector + Vec3(serverRotation.rotationVec * 2.0))
             }
         }
     }

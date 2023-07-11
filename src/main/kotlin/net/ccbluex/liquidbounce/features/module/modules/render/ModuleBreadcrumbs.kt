@@ -67,7 +67,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         synchronized(positions) {
             renderEnvironment(matrixStack) {
                 withColor(color) {
-                    drawLineStrip(makeLines(color, positions, event.partialTicks), matrixStack)
+                    drawLineStrip(*makeLines(color, positions, event.partialTicks))
                 }
             }
         }

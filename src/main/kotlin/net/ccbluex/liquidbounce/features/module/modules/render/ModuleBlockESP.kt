@@ -73,14 +73,14 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                     val baseColor = base.alpha(50)
                     val outlineColor = base.alpha(100)
 
-                    matrixStack.withPosition(vec3) {
+                    withPosition(vec3) {
                         withColor(baseColor) {
-                            drawSolidBox(box, matrixStack)
+                            drawSolidBox(box)
                         }
 
                         if (outline) {
                             withColor(outlineColor) {
-                                drawOutlinedBox(box, matrixStack)
+                                drawOutlinedBox(box)
                             }
                         }
                     }

@@ -134,7 +134,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 if (bestBox != null) {
                     renderEnvironment(matrixStack) {
                         withColor(Color4b(0, 160, 255, 150)) {
-                            drawSideBox(bestBox, landingPosition.side, matrixStack)
+                            drawSideBox(bestBox, landingPosition.side)
                         }
                     }
                 }
@@ -144,9 +144,9 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     val vec = landingPosition.entity
                         .interpolateCurrentPosition(event.partialTicks)
 
-                    matrixStack.withPosition(vec) {
+                    withPosition(vec) {
                         withColor(Color4b(255, 0, 0, 100)) {
-                            drawSolidBox(landingPosition.entity.box, matrixStack)
+                            drawSolidBox(landingPosition.entity.box)
                         }
                     }
                 }
@@ -315,7 +315,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
         renderEnvironment(matrixStack) {
             withColor(color) {
-                drawLineStrip(lines.toTypedArray(), matrixStack)
+                drawLineStrip(*lines.toTypedArray())
             }
         }
 

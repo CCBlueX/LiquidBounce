@@ -207,13 +207,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 val baseColor = base.alpha(fade)
                 val outlineColor = base.alpha(fade)
 
-                matrixStack.withPosition(vec3) {
+                withPosition(vec3) {
                     withColor(baseColor) {
-                        drawSolidBox(box, matrixStack)
+                        drawSolidBox(box)
                     }
 
                     withColor(outlineColor) {
-                        drawOutlinedBox(box, matrixStack)
+                        drawOutlinedBox(box)
                     }
                 }
             }

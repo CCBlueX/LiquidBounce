@@ -94,14 +94,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                         val baseColor = color.alpha(50)
                         val outlineColor = color.alpha(100)
 
-                        matrixStack.withPosition(pos) {
+                        withPosition(pos) {
                             withColor(baseColor) {
-                                drawSolidBox(box, matrixStack)
+                                drawSolidBox(box)
                             }
 
                             if (outline) {
                                 withColor(outlineColor) {
-                                    drawOutlinedBox(box, matrixStack)
+                                    drawOutlinedBox(box)
                                 }
                             }
                         }

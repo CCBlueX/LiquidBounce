@@ -68,13 +68,13 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
                 for (entity in filtered) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
-                    matrixStack.withPosition(pos) {
+                    withPosition(pos) {
                         withColor(baseColor) {
-                            drawSolidBox(box, matrixStack)
+                            drawSolidBox(box)
                         }
 
                         withColor(outlineColor) {
-                            drawOutlinedBox(box, matrixStack)
+                            drawOutlinedBox(box)
                         }
                     }
                 }
