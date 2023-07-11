@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.S
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.Vanilla
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.value.DoubleValue
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
