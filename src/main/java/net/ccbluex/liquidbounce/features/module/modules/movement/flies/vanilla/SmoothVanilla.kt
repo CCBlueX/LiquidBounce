@@ -15,6 +15,7 @@ class SmoothVanilla : FlyMode("SmoothVanilla") {
     override fun onEnable() {}
 
     override fun onDisable() {
+        mc.thePlayer.capabilities.isFlying = false
         super.onDisable()
     }
 
