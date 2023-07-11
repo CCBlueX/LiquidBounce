@@ -23,13 +23,16 @@ class Vanilla : FlyMode("Vanilla") {
 
     override fun onUpdate() {
         val thePlayer = mc.thePlayer
+        var isJumping = mc.gameSettings.keyBindJump.isKeyDown
+        var isSneaking = mc.gameSettings.keyBindSneak.isKeyDown
+
         if (Fly.vanillaKeepAlive) sendPacket(C00PacketKeepAlive())
         thePlayer.capabilities.isFlying = false
-        thePlayer.motionY = Fly.vanillaY
+        if (!isJumping && !isSneaking) thePlayer.motionY = Fly.vanillaY
         thePlayer.motionX = 0.0
         thePlayer.motionZ = 0.0
-        if (mc.gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += Fly.vanillaUpwardsY
-        if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= Fly.vanillaDownwardsY
+        if (isJumping) thePlayer.motionY = Fly.vanillaUpwardsY
+        if (isSneaking) thePlayer.motionY = Fly.vanillaDownwardsY
         strafe(Fly.vanillaSpeed)
         mc.timer.timerSpeed = Fly.vanillaTimer
         //Fly.handleVanillaKickBypass()
