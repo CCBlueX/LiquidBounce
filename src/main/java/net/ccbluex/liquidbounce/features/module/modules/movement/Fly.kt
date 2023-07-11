@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.S
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.Vanilla
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.DoubleValue
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -96,9 +95,9 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
-    val vanillaY by DoubleValue("VanillaY", 0.0, -5.0..5.0) { selectedFlyMode == "Vanilla" }
-    val vanillaUpwardsY by DoubleValue("VanillaUpwardsY", 0.0, -5.0..5.0) { selectedFlyMode == "Vanilla" }
-    val vanillaDownwardsY by DoubleValue("VanillaDownwardsY", 0.0, -5.0..5.0) { selectedFlyMode == "Vanilla" }
+    val vanillaY by FloatValue("VanillaY", 0f, -5f..5f) { selectedFlyMode == "Vanilla" }
+    val vanillaUpwardsY by FloatValue("VanillaUpwardsY", 0.0, -5f..5f) { selectedFlyMode == "Vanilla" }
+    val vanillaDownwardsY by FloatValue("VanillaDownwardsY", 0f, -5f..5f) { selectedFlyMode == "Vanilla" }
     val vanillaKeepAlive by BoolValue("VanillaKeepAlive", false) { selectedFlyMode == "Vanilla" }
     val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
