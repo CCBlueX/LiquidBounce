@@ -132,11 +132,11 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     .minByOrNull { it.center.squaredDistanceTo(landingPosition.pos) }
 
                 if (bestBox != null) {
-                    // todo: side box
-//                    RenderEngine.enqueueForRendering(
-//                        RenderEngine.CAMERA_VIEW_LAYER,
-//                        espBoxRenderTask(drawBoxSide(bestBox, landingPosition.side, Color4b(0, 160, 255, 150)))
-//                    )
+                    renderEnvironment(matrixStack) {
+                        withColor(Color4b(0, 160, 255, 150)) {
+                            drawSideBox(bestBox, landingPosition.side, matrixStack)
+                        }
+                    }
                 }
             } else if (landingPosition is EntityHitResult) {
                 // todo: check if this even works
