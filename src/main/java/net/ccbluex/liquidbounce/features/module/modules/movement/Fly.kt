@@ -95,9 +95,9 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
-    val vanillaY by DoubleValue("VanillaY", 0.0, -5.0 5.0) { selectedFlyMode == "Vanilla" }
-    val vanillaUpwardsY by FloatValue("VanillaUpwardsY", 0f, -5f 5f) { selectedFlyMode == "Vanilla" }
-    val vanillaDownwardsY by FloatValue("VanillaDownwardsY", 0f, -5f 5f) { selectedFlyMode == "Vanilla" }
+    val vanillaY by FloatValue("VanillaY", 0f, -5f..5f) { selectedFlyMode == "Vanilla" }
+    val vanillaUpwardsY by FloatValue("VanillaUpwardsY", 0f, -5f..5f) { selectedFlyMode == "Vanilla" }
+    val vanillaDownwardsY by FloatValue("VanillaDownwardsY", 0f, -5f..5f) { selectedFlyMode == "Vanilla" }
     val vanillaKeepAlive by BoolValue("VanillaKeepAlive", false) { selectedFlyMode == "Vanilla" }
     val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
