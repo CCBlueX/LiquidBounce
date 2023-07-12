@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
 class NCP : FlyMode("NCP") {
@@ -49,7 +50,6 @@ class NCP : FlyMode("NCP") {
 
     override fun onMove(event: MoveEvent) {}
 
-    @EventTarget
     fun onPacket(event: PacketEvent) {
         if (noPacketModify) return
 
