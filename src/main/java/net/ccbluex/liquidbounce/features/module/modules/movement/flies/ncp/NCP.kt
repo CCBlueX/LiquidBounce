@@ -20,11 +20,12 @@ class NCP : FlyMode("NCP") {
     override fun onMotion() {}
 
     override fun onEnable() {
+        val thePlayer = mc.thePlayer
         val x = thePlayer.posX
         val y = thePlayer.posY
         val z = thePlayer.posZ
-        val thePlayer = mc.thePlayer
-        if (!thePlayer.onGround) return@run
+
+        if (!thePlayer.onGround) return
 
         repeat(65) {
             sendPackets(
@@ -45,7 +46,7 @@ class NCP : FlyMode("NCP") {
     }
 
     override fun onUpdate() {
-        mc.thePlayer.motionY = (-ncpMotion).toDouble()
+        mc.thePlayer.motionY = (-Fly.ncpMotion).toDouble()
         if (mc.gameSettings.keyBindSneak.isKeyDown) mc.thePlayer.motionY = -0.5
         strafe()
     }
@@ -53,7 +54,7 @@ class NCP : FlyMode("NCP") {
     override fun onMove(event: MoveEvent) {}
 
     fun onPacket(event: PacketEvent) {
-        if (noPacketModify) return
+        if (Fly.noPacketModify) return
 
         if (event.packet is C03PacketPlayer) {
             event.packet.onGround = true
