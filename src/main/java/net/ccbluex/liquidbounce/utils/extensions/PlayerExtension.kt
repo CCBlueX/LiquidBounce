@@ -102,3 +102,13 @@ operator fun EntityPlayerSP.plusAssign(value: Float) {
     fixedSensitivityYaw += value
     fixedSensitivityPitch += value
 }
+
+fun EntityPlayerSP.stopXZ() {
+    motionX = 0.0
+    motionZ = 0.0
+}
+
+fun EntityPlayerSP.stop() {
+    stopXZ()
+    motionY = 0.0
+}

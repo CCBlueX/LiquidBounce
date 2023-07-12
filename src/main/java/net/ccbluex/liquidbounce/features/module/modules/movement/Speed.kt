@@ -8,13 +8,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan.SpartanYPort
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreBHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spartan.SpartanYPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -22,56 +22,40 @@ import net.ccbluex.liquidbounce.value.ListValue
 
 object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
-    private val speedModes = arrayOf( // NCP
-            NCPBHop(),
-            NCPFHop(),
-            SNCPBHop(),
-            NCPHop(),
-            YPort(),
-            YPort2(),
-            NCPYPort(),
-            Boost(),
-            Frame(),
-            MiJump(),
-            OnGround(),
-            // AAC
-            AACBHop(),
-            AAC2BHop(),
-            AAC3BHop(),
-            AAC4BHop(),
-            AAC5BHop(),
-            AAC6BHop(),
-            AAC7BHop(),
-            AACHop3313(),
-            AACHop350(),
-            AACHop438(),
-            AACLowHop(),
-            AACLowHop2(),
-            AACLowHop3(),
-            AACGround(),
-            AACGround2(),
-            AACYPort(),
-            AACYPort2(),
-            AACPort(),
-            OldAACBHop(),
-            // Spartan
-            SpartanYPort(),
-            // Spectre
-            SpectreLowHop(),
-            SpectreBHop(),
-            SpectreOnGround(),
-            TeleportCubeCraft(),
-            // Server
-            HiveHop(),
-            HypixelHop(),
-            Mineplex(),
-            MineplexGround(),
-            // Other
-            Matrix(),
-            SlowHop(),
-            CustomSpeed(),
-            Legit()
+    private val speedModes = arrayOf(
+        
+        // NCP
+        NCPBHop, NCPFHop, SNCPBHop, NCPHop, NCPYPort,
+        
+        // YPort
+        YPort, YPort2, 
+        
+        // AAC
+        AACBHop, AAC2BHop, AAC3BHop, AAC4BHop, AAC5BHop, AAC6BHop, AAC7BHop, AACHop3313, AACHop350, AACHop438, OldAACBHop, 
+        AACLowHop, AACLowHop2, AACLowHop3,
+        AACGround, AACGround2,
+        AACYPort, AACYPort2, AACPort,
+        
+        // Spartan
+        SpartanYPort,
+        
+        // Spectre
+        SpectreLowHop, SpectreBHop, SpectreOnGround,
+            
+        // Server specific
+        TeleportCubeCraft,
+        HiveHop,
+        HypixelHop,
+        Mineplex,
+        MineplexGround,
+        
+        // Other
+        Matrix,
+        Boost, Frame, MiJump, OnGround, SlowHop, Legit, CustomSpeed
+        
     )
+
+    private val modes = speedModes.map { it.modeName }.toTypedArray()
 
     val mode by object : ListValue("Mode", modes, "NCPBHop") {
         override fun onChange(oldValue: String, newValue: String): String {
@@ -109,7 +93,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
             thePlayer.isSprinting = true
         }
 
-        modeModule?.onUpdate()
+        modeModule.onUpdate()
     }
 
     @EventTarget
@@ -122,7 +106,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (isMoving)
             thePlayer.isSprinting = true
 
-        modeModule?.onMotion()
+        modeModule.onMotion()
     }
 
     @EventTarget
@@ -130,7 +114,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (mc.thePlayer.isSneaking)
             return
 
-        modeModule?.onMove(event)
+        modeModule.onMove(event)
     }
 
     @EventTarget
@@ -138,7 +122,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (mc.thePlayer.isSneaking)
             return
 
-        modeModule?.onTick()
+        modeModule.onTick()
     }
 
     override fun onEnable() {
@@ -147,7 +131,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
         mc.timer.timerSpeed = 1f
 
-        modeModule?.onEnable()
+        modeModule.onEnable()
     }
 
     override fun onDisable() {
@@ -156,15 +140,12 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
         mc.timer.timerSpeed = 1f
 
-        modeModule?.onDisable()
+        modeModule.onDisable()
     }
 
     override val tag
         get() = mode
 
     private val modeModule
-        get() = speedModes.find { it.modeName == mode }
-
-    private val modes
-        get() = speedModes.map { it.modeName }.toTypedArray()
+        get() = speedModes.find { it.modeName == mode }!!
 }
