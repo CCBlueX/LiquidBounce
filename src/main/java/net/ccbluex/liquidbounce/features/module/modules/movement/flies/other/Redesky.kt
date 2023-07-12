@@ -10,6 +10,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import kotlin.math.sin
+import kotlin.math.cos
 
 class Redesky : FlyMode("Redesky") {
     override fun onMotion() {}
