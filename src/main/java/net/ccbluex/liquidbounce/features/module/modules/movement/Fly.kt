@@ -102,7 +102,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
     val vanillaTimer by FloatValue("VanillaTimer", 1f, 0.1f..2f) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
-
+    val vanillaUpwardsY by FloatValue("VanillaUpwardsTimer", 1f, 0.1f..2f) { selectedFlyMode == "Vanilla" }
+    val vanillaDownwardsY by FloatValue("VanillaDownwardsTimer", 1f, 0.1f..2f) { selectedFlyMode == "Vanilla" }
     val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { selectedFlyMode == "NCP" }
 
         // AAC
