@@ -14,13 +14,15 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
 class NCP : FlyMode("NCP") {
     override fun onMotion() {}
 
     override fun onEnable() {
+        val x = thePlayer.posX
+        val y = thePlayer.posY
+        val z = thePlayer.posZ
         val thePlayer = mc.thePlayer
         if (!thePlayer.onGround) return@run
 
