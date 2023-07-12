@@ -175,6 +175,15 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         buffer.put(idx + 3, a.toByte())
     }
 
+
+    fun red(red: Int) = Color4b(red, this.g, this.b, this.a)
+
+    fun green(green: Int) = Color4b(this.r, green, this.b, this.a)
+
+    fun blue(blue: Int) = Color4b(this.r, this.g, blue, this.a)
+
+    fun alpha(alpha: Int) = Color4b(this.r, this.g, this.b, alpha)
+
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 }
 

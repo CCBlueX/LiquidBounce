@@ -275,7 +275,7 @@
   "liquidbounce.module.hud.description": "Показывает внутриигровой оверлей с различными полезными инструментами.",
   "liquidbounce.module.itemEsp.description": "Позволяет видеть лежащие предметы через стены.",
   "liquidbounce.module.nametags.description": "Делает имена игроков более заметными и добавляет полезную информацию.",
-  "liquidbounce.module.traces.description": "Рисует линию к каждой сущности определённого радиуса.",
+  "liquidbounce.module.tracers.description": "Рисует линию к каждой сущности определённого радиуса.",
   "liquidbounce.module.chestAura.description": "Автоматически открывает сундуки вокруг Вас.",
   "liquidbounce.module.fastBreak.description": "Позволяет Вам ломать блоки быстрее.",
   "liquidbounce.module.fastPlace.description": "Позволяет Вам ставить блоки быстрее.",

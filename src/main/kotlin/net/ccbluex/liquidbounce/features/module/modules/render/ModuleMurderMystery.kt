@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.GameRenderEvent
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -77,7 +77,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         this.murdererSkins.clear()
     }
 
-    private val gameRenderEvent = handler<GameRenderEvent> {
+    private val gameRenderEvent = handler<WorldRenderEvent> {
         if (playHurt) {
             mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("entity.villager.hurt")), 1F))
 

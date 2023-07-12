@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.GameRenderEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -29,7 +29,7 @@ import org.lwjgl.glfw.GLFW
 
 object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER) {
 
-    private val onUpdate = handler<GameRenderEvent> {
+    private val onUpdate = handler<WorldRenderEvent> {
         if (!InputUtil.isKeyPressed(mc.window.handle, bind)) {
             this.enabled = false
         }

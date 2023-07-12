@@ -36,6 +36,7 @@ object EventManager {
         ChunkUnloadEvent::class,
         WorldDisconnectEvent::class,
         GameRenderEvent::class,
+        WorldRenderEvent::class,
         EngineRenderEvent::class,
         OverlayRenderEvent::class,
         ScreenRenderEvent::class,

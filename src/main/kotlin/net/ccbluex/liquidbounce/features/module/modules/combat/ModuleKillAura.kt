@@ -26,13 +26,9 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
-import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.utils.drawBoxNew
-import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
@@ -43,8 +39,6 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
@@ -185,56 +179,45 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         failedHits.clear()
     }
 
-    private var failedHits: ArrayList<MutablePair<Vec3d, Long>> = arrayListOf()
+    private var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
-    val renderHandler = handler<EngineRenderEvent> { event ->
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+
         if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
             failedHits.clear()
             return@handler
         }
 
         failedHits.forEach { it.setRight(it.getRight() + 1) }
-
         failedHits = failedHits.filter { it.right <= boxFadeSeconds } as ArrayList<MutablePair<Vec3d, Long>>
-
-        val box = drawBoxNew(Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05), Color4b.WHITE)
-
-        val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05), Color4b.WHITE)
-
-        val base = if (NotifyWhenFail.Box.colorRainbow) rainbow() else NotifyWhenFail.Box.color
 
         val markedBlocks = failedHits
 
-        val instanceBuffer = PositionColorVertexFormat()
-        val instanceBufferOutline = PositionColorVertexFormat()
+        val base = if (NotifyWhenFail.Box.colorRainbow) rainbow() else NotifyWhenFail.Box.color
 
-        instanceBuffer.initBuffer(markedBlocks.size)
-        instanceBufferOutline.initBuffer(markedBlocks.size)
+        val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
 
-        for ((pos, opacity) in markedBlocks) {
-            val pos3 = Vec3(pos.x, pos.y, pos.z)
+        renderEnvironment(matrixStack) {
+            for ((pos, opacity) in markedBlocks) {
+                val vec3 = Vec3(pos)
 
-            val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
+                val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
-            val baseColor = Color4b(base.r, base.g, base.b, fade)
-            val outlineColor = Color4b(base.r, base.g, base.b, fade)
+                val baseColor = base.alpha(fade)
+                val outlineColor = base.alpha(fade)
 
-            instanceBuffer.putVertex {
-                this.position = pos3; this.color = baseColor
-            }
+                withPosition(vec3) {
+                    withColor(baseColor) {
+                        drawSolidBox(box)
+                    }
 
-            instanceBufferOutline.putVertex {
-                this.position = pos3; this.color = outlineColor
+                    withColor(outlineColor) {
+                        drawOutlinedBox(box)
+                    }
+                }
             }
         }
-
-        RenderEngine.enqueueForRendering(
-            RenderEngine.CAMERA_VIEW_LAYER, espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
-        )
-        RenderEngine.enqueueForRendering(
-            RenderEngine.CAMERA_VIEW_LAYER,
-            espBoxInstancedOutlineRenderTask(instanceBufferOutline, boxOutline.first, boxOutline.second)
-        )
     }
 
     val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {

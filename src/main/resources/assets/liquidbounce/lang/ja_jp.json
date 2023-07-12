@@ -254,7 +254,7 @@
   "liquidbounce.module.hud.description": "さまざまな便利なツールを備えたゲーム内オーバーレイを表示します。",
   "liquidbounce.module.itemEsp.description": "壁を通してドロップされたアイテムを見ることができます。",
   "liquidbounce.module.nametags.description": "プレイヤーの名前をより見やすくし、役立つ情報を追加します。",
-  "liquidbounce.module.traces.description": "すべてのエンティティに一定の半径で線を引きます。",
+  "liquidbounce.module.tracers.description": "すべてのエンティティに一定の半径で線を引きます。",
   "liquidbounce.module.chestAura.description": "あなたの周りのチェストを自動的に開きます。",
   "liquidbounce.module.fastBreak.description": "ブロックをより速く壊すことができます。",
   "liquidbounce.module.fastPlace.description": "ブロックをより速く配置できます。",

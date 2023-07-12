@@ -179,7 +179,7 @@
   "liquidbounce.module.hud.description": "Zeigt in Overlay mit zahlreichen nützlichen Funktionen.",
   "liquidbounce.module.itemEsp.description": "Erlaubt es dir, fallengelassene Items durch Wände zu sehen.",
   "liquidbounce.module.nametags.description": "Macht die Nametags anderer Spieler besser sichtbar und fügt nützliche Informationen hinzu.",
-  "liquidbounce.module.traces.description": "Zeigt eine Linie zu jedem Spieler im Umkreis.",
+  "liquidbounce.module.tracers.description": "Zeigt eine Linie zu jedem Spieler im Umkreis.",
   "liquidbounce.module.chestAura.description": "Öffnest automatisch Kisten um dich herum.",
   "liquidbounce.module.fastBreak.description": "Erlaubt es dir, Blöcke schneller abzubauen.",
   "liquidbounce.module.fastPlace.description": "Erlaubt es dir, Blöcke schneller zu platzieren.",
