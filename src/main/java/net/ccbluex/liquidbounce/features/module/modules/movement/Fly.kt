@@ -31,7 +31,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         SmoothVanilla(),
 
         /* NCP */
-        // NCP(),
+        NCP(),
         // OldNCP(),
 
         /* AAC */
@@ -124,6 +124,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
     // Values
     private val groundTimer = MSTimer()
+    // Variables
+    public var noPacketModify = false
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
