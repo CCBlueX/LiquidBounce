@@ -173,54 +173,6 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         flyModeModule?.onTick()
     }
 
-    /*    public fun handleVanillaKickBypass() {
-            if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
-            val ground = calculateGround()
-            val thePlayer = mc.thePlayer
-            run {
-                var posY = thePlayer.posY
-                while (posY > ground) {
-                    sendPacket(C04PacketPlayerPosition(thePlayer.posX, posY, thePlayer.posZ, true))
-                    if (posY - 8.0 < ground) break // Prevent next step
-                    posY -= 8.0
-                }
-            }
-            sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, ground, thePlayer.posZ, true))
-            var posY = ground
-            while (posY < thePlayer.posY) {
-                sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, thePlayer.posZ, true))
-                if (posY + 8.0 > thePlayer.posY) break // Prevent next step
-                posY += 8.0
-            }
-            sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
-            groundTimer.reset()
-        }
-
-        // TODO: Make better and faster calculation lol
-        private fun calculateGround(): Double {
-            val playerBoundingBox = mc.thePlayer.entityBoundingBox
-            var blockHeight = 1.0
-            var ground = mc.thePlayer.posY
-            while (ground > 0.0) {
-                val customBox = AxisAlignedBB.fromBounds(
-                    playerBoundingBox.maxX,
-                    ground + blockHeight,
-                    playerBoundingBox.maxZ,
-                    playerBoundingBox.minX,
-                    ground,
-                    playerBoundingBox.minZ
-                )
-                if (mc.theWorld.checkBlockCollision(customBox)) {
-                    if (blockHeight <= 0.05) return ground + blockHeight
-                    ground += blockHeight
-                    blockHeight = 0.05
-                }
-                ground -= blockHeight
-            }
-            return 0.0
-        }*/
-
-
     override fun onEnable() {
         if (mc.thePlayer == null) return
 
