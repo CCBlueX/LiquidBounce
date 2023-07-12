@@ -177,7 +177,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleItemESP,
             ModuleMobOwners,
             ModuleMurderMystery,
-            ModuleNametags,
+            // ModuleNametags,
             ModuleNoBob,
             ModuleNoFov,
             ModuleNoHurtCam,
