@@ -103,10 +103,10 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
 
-    /*    public val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
+    val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
         // AAC
-        public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
+        /*public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
         public val aacFast by BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
         public val aacMotion by FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
         public val aacMotion2 by FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
