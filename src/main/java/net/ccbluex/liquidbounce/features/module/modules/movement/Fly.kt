@@ -32,7 +32,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
         /* NCP */
         NCP(),
-        // OldNCP(),
+        OldNCP(),
 
         /* AAC */
         // AAC1910(),
