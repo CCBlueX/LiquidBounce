@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-//import net.ccbluex.liquidbounce.features.module.modules.movement.flies.ncp.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.ncp.*
 //import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.*
 //import net.ccbluex.liquidbounce.features.module.modules.movement.flies.cubecraft.Cubecraft
 //import net.ccbluex.liquidbounce.features.module.modules.movement.flies.hypixel.*
@@ -103,7 +103,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         selectedFlyMode in arrayOf("Vanilla", "SmoothVanilla")
     }
 
-    val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
+    val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { selectedFlyMode == "NCP" }
 
         // AAC
         /*public val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
