@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanill
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.Vanilla
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.stop
+import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -116,8 +117,10 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!mode.startsWith("AAC") && mode != "Hypixel")
-            thePlayer.stop()
+        if (!mode.startsWith("AAC") && mode != "Hypixel") {
+            if (mode == "CubeCraft") thePlayer.stopXZ()
+            else thePlayer.stop()
+        }
 
         thePlayer.capabilities.isFlying = wasFlying
         mc.timer.timerSpeed = 1f
