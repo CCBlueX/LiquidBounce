@@ -124,6 +124,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
     // Values
     private val groundTimer = MSTimer()
+    public val startY = 0.0
     // Variables
     public var noPacketModify = false
 
@@ -180,6 +181,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
         mc.timer.timerSpeed = 1f
 
+        val startY = mc.thePlayer.posY
+        
         flyModeModule?.onEnable()
     }
 
