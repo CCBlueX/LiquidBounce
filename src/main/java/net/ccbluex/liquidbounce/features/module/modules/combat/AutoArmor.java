@@ -24,6 +24,7 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
 import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.network.play.client.C0DPacketCloseWindow;
 import net.minecraft.network.play.client.C16PacketClientStatus;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
-import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
 import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.isEmpty;
 import static net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT;
 
@@ -76,12 +76,24 @@ public class AutoArmor extends Module {
     private final IntegerValue itemTicksValue = new IntegerValue("ItemTicks", 0, 0, 20);
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
 
+    // Sacrifices 1 tick speed for complete undetectability
+    private final BoolValue switchBackLegit = new BoolValue("SwitchBackLegit", true);
+
     private long delay;
+
+    private boolean switchBack = false;
 
     private boolean locked = false;
 
     @EventTarget
     public void onTick(final TickEvent event) {
+        // After waiting for the next tick, we set it back to the original slot
+        if (switchBack) {
+            sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+            switchBack = false;
+            return;
+        }
+
         if (!InventoryUtils.INSTANCE.getCLICK_TIMER().hasTimePassed(delay * 50L) || mc.thePlayer == null || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
             return;
 
@@ -137,11 +149,16 @@ public class AutoArmor extends Module {
      */
     private boolean move(int item, boolean isArmorSlot) {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !(mc.currentScreen instanceof GuiInventory)) {
-            sendPackets(
-                new C09PacketHeldItemChange(item),
-                new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()),
-                new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
-            );
+            sendPacket(new C09PacketHeldItemChange(item));
+
+            useItem(item + 36);
+
+            if (!switchBackLegit.get()) {
+                sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+            }
+
+            // Change slot in the next tick. Prevents detection by anti-cheats.
+            switchBack = switchBackLegit.get();
 
             delay = TimeUtils.INSTANCE.randomDelay(minTicksValue.get(), maxTicksValue.get());
 
@@ -170,13 +187,27 @@ public class AutoArmor extends Module {
 
             delay = TimeUtils.INSTANCE.randomDelay(minTicksValue.get(), maxTicksValue.get());
 
-            if (openInventory)
-                sendPacket(new C0DPacketCloseWindow());
+            if (openInventory) sendPacket(new C0DPacketCloseWindow());
 
             return true;
         }
 
         return false;
+    }
+
+    // Useful when silently switching slots.
+    private void useItem(int slot) {
+        ItemStack stack = mc.thePlayer.inventoryContainer.getSlot(slot).getStack();
+        sendPacket((new C08PacketPlayerBlockPlacement(stack)));
+        int i = stack.stackSize;
+        ItemStack itemstack = stack.useItemRightClick(mc.theWorld, mc.thePlayer);
+        if (itemstack != stack || itemstack.stackSize != i) {
+            mc.thePlayer.inventory.mainInventory[slot - 36] = itemstack;
+            if (itemstack.stackSize <= 0) {
+                mc.thePlayer.inventory.mainInventory[slot - 36] = null;
+                ForgeEventFactory.onPlayerDestroyItem(mc.thePlayer, itemstack);
+            }
+        }
     }
 
 }
