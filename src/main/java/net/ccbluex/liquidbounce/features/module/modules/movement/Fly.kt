@@ -117,7 +117,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!mode.startsWith("AAC") && mode != "Hypixel") {
+        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla") {
             if (mode == "CubeCraft") thePlayer.stopXZ()
             else thePlayer.stop()
         }
