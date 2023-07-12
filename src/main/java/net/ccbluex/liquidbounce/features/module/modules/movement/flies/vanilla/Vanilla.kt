@@ -29,18 +29,18 @@ class Vanilla : FlyMode("Vanilla") {
         if (Fly.vanillaKeepAlive) sendPacket(C00PacketKeepAlive())
         thePlayer.capabilities.isFlying = false
         if (!isJumping && !isSneaking) { 
-            thePlayer.motionY = Fly.vanillaY.toDouble() 
+            thePlayer.motionY = Fly.vanillaY.toDouble()
+            mc.timer.timerSpeed = Fly.vanillaTimer
+        } else if (isJumping && !isSneaking) {
+            thePlayer.motionY = Fly.vanillaUpwardsY.toDouble()
+            mc.timer.timerSpeed = Fly.vanillaUpwardsTimer
+        } else if (!isJumping && isSneaking) {
+            thePlayer.motionY = Fly.vanillaDownwardsY.toDouble()
+            mc.timer.timerSpeed = Fly.vanillaDownwardsTimer
         }
         thePlayer.motionX = 0.0
         thePlayer.motionZ = 0.0
-        if (isJumping) {
-            thePlayer.motionY = Fly.vanillaUpwardsY.toDouble() 
-        }
-        if (isSneaking) { 
-            thePlayer.motionY = Fly.vanillaDownwardsY.toDouble() 
-        }
         strafe(Fly.vanillaSpeed)
-        mc.timer.timerSpeed = Fly.vanillaTimer
         //Fly.handleVanillaKickBypass()
     }
 
