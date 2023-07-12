@@ -195,7 +195,7 @@ public class AutoArmor extends Module {
         return false;
     }
 
-    //
+    // Useful when silently switching slots.
     private void useItem(int slot) {
         ItemStack stack = mc.thePlayer.inventoryContainer.getSlot(slot).getStack();
         sendPacket((new C08PacketPlayerBlockPlacement(stack)));
