@@ -37,7 +37,7 @@ class Vanilla : FlyMode("Vanilla") {
             thePlayer.motionY = Fly.vanillaUpwardsY.toDouble() 
         }
         if (isSneaking) { 
-            thePlayer.motionY = = Fly.vanillaDownwardsY.toDouble() 
+            thePlayer.motionY = Fly.vanillaDownwardsY.toDouble() 
         }
         strafe(Fly.vanillaSpeed)
         mc.timer.timerSpeed = Fly.vanillaTimer
