@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.ncp.*
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.Flag
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.SmoothVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.Vanilla
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -58,7 +58,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
         // Mineplex(),
         // NeruxVace(),
         // Minesucht(),
-        // Redesky(),
+        Redesky(),
 
         /* Spartan */
         // Spartan(),
@@ -119,8 +119,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT) {
 
         // Other
         public val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
-        public val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 0..20) { mode == "NeruxVace" }
-        public val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }*/
+        public val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 0..20) { mode == "NeruxVace" }*/
+    public val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { selectedFlyMode == "Redesky" }
     private val stopOnDisable by BoolValue("StopOnDisable", true)
 
     // Values
