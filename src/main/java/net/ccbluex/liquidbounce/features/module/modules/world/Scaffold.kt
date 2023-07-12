@@ -57,10 +57,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
+import kotlin.math.*
 
 object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
@@ -83,6 +80,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         override fun isSupported() = extraClicks.isActive() && !extraClickMaxCPSValue.isMinimal()
     }
+
+    private val placementAttempt by ListValue(
+        "PlacementAttempt", arrayOf("Fail", "Independent"), "Fail"
+    ) { extraClicks.isActive() }
 
     // Delay
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0..1000) {
@@ -484,6 +485,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             } else {
                 sendPacket(C0APacketAnimation())
             }
+        } else {
+            if (mc.playerController.sendUseItem(player, world, itemStack)) {
+                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+            }
         }
 
         if (autoBlock == "Switch") {
@@ -509,38 +514,43 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
+        val block = stack.item as ItemBlock
+
         val raytrace = performBlockRaytrace(currRotation, mc.playerController.blockReachDistance) ?: return
 
-        val shouldHelpWithDelay =
-            !delayTimer.hasTimePassed(delay) && (raytrace.sideHit.axis != EnumFacing.Axis.Y || !sameY && raytrace.blockPos.y < player.posY - 1)
+        val isOnTheSamePos = raytrace.blockPos.x == player.posX.toInt() && raytrace.blockPos.z == player.posZ.toInt()
 
-        if (raytrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || (stack.item as ItemBlock).canPlaceBlockOnSide(
-                world, raytrace.blockPos, raytrace.sideHit, player, stack
-            ) && !shouldHelpWithDelay
-        ) {
+        val isBlockBelowPlayer = if (sameY) {
+            raytrace.blockPos.y == launchY - 1 && !block.canPlaceBlockOnSide(
+                world, raytrace.blockPos, EnumFacing.UP, player, stack
+            )
+        } else {
+            raytrace.blockPos.y <= player.posY - 1 && (placementAttempt == "Independent" && isOnTheSamePos || !block.canPlaceBlockOnSide(
+                world, raytrace.blockPos, EnumFacing.UP, player, stack
+            ))
+        }
+
+        val shouldPlace = placementAttempt == "Independent" || !block.canPlaceBlockOnSide(
+            world, raytrace.blockPos, raytrace.sideHit, player, stack
+        )
+
+        if (raytrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || !isBlockBelowPlayer || !shouldPlace) {
             return
         }
 
-        // This should only occur when delay is not catching up
         if (mc.playerController.onPlayerRightClick(
                 player, world, stack, raytrace.blockPos, raytrace.sideHit, raytrace.hitVec
             )
         ) {
-            if (shouldHelpWithDelay) {
-                delayTimer.reset()
-                delay = randomDelay(minDelay, maxDelay)
-            }
-
             if (swing) {
                 player.swingItem()
             } else {
                 sendPacket(C0APacketAnimation())
             }
-        }
-
-        // This however must occur.
-        if (mc.playerController.sendUseItem(player, world, stack)) {
-            mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+        } else {
+            if (mc.playerController.sendUseItem(player, world, stack)) {
+                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+            }
         }
     }
 
@@ -689,6 +699,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (!canBeClicked(neighbor)) {
                 continue
             }
+
             if (!area) {
                 currPlaceRotation =
                     findTargetPlace(blockPosition, neighbor, Vec3(0.5, 0.5, 0.5), side, eyes, maxReach, raycast)
@@ -794,9 +805,20 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         var rotation = toRotation(vec, false)
 
         rotation = if (stabilizedRotation) {
-            Rotation((rotation.yaw / 45f).roundToInt() * 45f, rotation.pitch)
+            Rotation(round(rotation.yaw / 45f) * 45f, rotation.pitch)
         } else {
             rotation
+        }
+
+        // If the current rotation already looks at the target block and side, then return right here
+        performBlockRaytrace(currRotation, maxReach)?.let { raytrace ->
+            if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
+                return PlaceRotation(
+                    PlaceInfo(
+                        raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3(offsetPos), !raycast)
+                    ), currRotation
+                )
+            }
         }
 
         val raytrace = performBlockRaytrace(rotation, maxReach) ?: return null

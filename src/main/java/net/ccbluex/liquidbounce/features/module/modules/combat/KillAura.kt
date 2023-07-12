@@ -442,21 +442,16 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Close inventory when open
         if (openInventory) sendPacket(C0DPacketCloseWindow())
 
-        // Check is not hitable or check failrate
+        updateHitable()
+
+        // Check if enemy is not hitable or check failrate
         if (!hitable || failHit) {
             if (swing && (fakeSwing || failHit)) thePlayer.swingItem()
         } else {
             blockStopInDead = false
             // Attack
             if (!multi) {
-                currentTarget.let {
-                    // Make sure we actually face the enemy at requested range
-                    val faced = isRotationFaced(it, range.toDouble(), targetRotation ?: thePlayer.rotation)
-
-                    if (faced || maxTurnSpeedValue.isMinimal()) {
-                        attackEntity(it)
-                    }
-                }
+                attackEntity(currentTarget)
             } else {
                 var targets = 0
 
