@@ -31,8 +31,19 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 
+/**
+ * Data class representing the rendering environment.
+ *
+ * @property matrixStack The matrix stack for rendering.
+ */
 data class RenderEnvironment(val matrixStack: MatrixStack)
 
+/**
+ * Helper function to render an environment with the specified [matrixStack] and [draw] block.
+ *
+ * @param matrixStack The matrix stack for rendering.
+ * @param draw The block of code to be executed in the rendering environment.
+ */
 fun renderEnvironment(matrixStack: MatrixStack, draw: RenderEnvironment.() -> Unit) {
     val camera = mc.entityRenderDispatcher.camera ?: return
     val cameraPosition = camera.pos
@@ -56,6 +67,12 @@ fun renderEnvironment(matrixStack: MatrixStack, draw: RenderEnvironment.() -> Un
     RenderSystem.enableDepthTest()
 }
 
+/**
+ * Extension function to apply a position transformation to the current rendering environment.
+ *
+ * @param pos The position vector.
+ * @param draw The block of code to be executed in the transformed environment.
+ */
 fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit) {
     with(matrixStack) {
         push()
@@ -65,20 +82,42 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
     }
 }
 
+/**
+ * Extension function to apply a color transformation to the current rendering environment.
+ *
+ * @param color4b The color transformation.
+ * @param draw The block of code to be executed in the transformed environment.
+ */
 fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
     RenderSystem.setShaderColor(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f)
     draw()
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
 }
 
+/**
+ * Function to draw lines using the specified [lines] vectors.
+ *
+ * @param lines The vectors representing the lines.
+ */
 fun RenderEnvironment.drawLines(vararg lines: Vec3) {
     drawLines(*lines, mode = DrawMode.DEBUG_LINES)
 }
 
+/**
+ * Function to draw a line strip using the specified [lines] vectors.
+ *
+ * @param lines The vectors representing the line strip.
+ */
 fun RenderEnvironment.drawLineStrip(vararg lines: Vec3) {
     drawLines(*lines, mode = DrawMode.DEBUG_LINE_STRIP)
 }
 
+/**
+ * Helper function to draw lines using the specified [lines] vectors and draw mode.
+ *
+ * @param lines The vectors representing the lines.
+ * @param mode The draw mode for the lines.
+ */
 private fun RenderEnvironment.drawLines(vararg lines: Vec3, mode: DrawMode = DrawMode.DEBUG_LINES) {
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
@@ -102,6 +141,12 @@ private fun RenderEnvironment.drawLines(vararg lines: Vec3, mode: DrawMode = Dra
     tessellator.draw()
 }
 
+/**
+ * Function to draw a side box using the specified [box] and [side].
+ *
+ * @param box The bounding box of the side.
+ * @param side The direction of the side.
+ */
 fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
@@ -165,7 +210,9 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
 }
 
 /**
- * Draws an outlined box using the specified [box] and [matrixStack].
+ * Function to draw an outlined box using the specified [box].
+ *
+ * @param box The bounding box of the box.
  */
 fun RenderEnvironment.drawOutlinedBox(box: Box) {
     val matrix = matrixStack.peek().positionMatrix
@@ -218,7 +265,9 @@ fun RenderEnvironment.drawOutlinedBox(box: Box) {
 }
 
 /**
- * Draws a solid box using the specified [box] and [matrixStack].
+ * Function to draw a solid box using the specified [box].
+ *
+ * @param box The bounding box of the box.
  */
 fun RenderEnvironment.drawSolidBox(box: Box) {
     val matrix = matrixStack.peek().positionMatrix

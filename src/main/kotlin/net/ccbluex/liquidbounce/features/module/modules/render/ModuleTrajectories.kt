@@ -104,6 +104,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     continue
                 }
 
+                // todo: add rect support
 //                val vertexFormat = PositionColorVertexFormat()
 //
 //                vertexFormat.initBuffer(4)
@@ -139,7 +140,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     }
                 }
             } else if (landingPosition is EntityHitResult) {
-                // todo: check if this even works
                 renderEnvironment(matrixStack) {
                     val vec = landingPosition.entity
                         .interpolateCurrentPosition(event.partialTicks)
