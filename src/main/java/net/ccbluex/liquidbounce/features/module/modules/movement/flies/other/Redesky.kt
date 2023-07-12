@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import kotlin.math.sin
 import kotlin.math.cos
@@ -57,9 +58,15 @@ class Redesky : FlyMode("Redesky") {
         )
     }
     
-   private fun redeskyVClip1(vertical: Float) {
-       mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + vertical, mc.thePlayer.posZ)
-   }
-   private fun redeskyVClip2(vertical: Double) =
-   sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + vertical, mc.thePlayer.posZ, false))
+    private fun redeskyVClip1(vertical: Float) {
+        mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + vertical, mc.thePlayer.posZ)
+    }
+    private fun redeskyVClip2(vertical: Double) =
+    sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + vertical, mc.thePlayer.posZ, false))
+
+    private fun redeskySpeed(speed: Int) {
+        val playerYaw = mc.thePlayer.rotationYaw.toRadiansD()
+        mc.thePlayer.motionX = speed * -sin(playerYaw)
+        mc.thePlayer.motionZ = speed * cos(playerYaw)
+    }
 }
