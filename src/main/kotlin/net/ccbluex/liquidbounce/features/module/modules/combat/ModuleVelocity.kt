@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,9 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.listener.ClientPlayPacketListener
@@ -42,7 +44,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Strafe, AAC442
+            Modify, Strafe, AAC442, Intave, IntaveHit, Test
         )
     }
 
@@ -54,9 +56,14 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         tree(Delayed)
     }
 
+    var count = 0
+    var wasOnGround = false
+
     val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
 
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+            wasOnGround = player.isOnGround
         if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.original && Delayed.enabled) {
             it.cancelEvent()
 
@@ -90,13 +97,113 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
 
         val repeatable = repeatable {
-            if (player.hurtTime > 0 && !player.isOnGround){
+            if (player.hurtTime > 0 && !player.isOnGround) {
                 val reduce = aac442MotionReducer
                 player.velocity.x *= reduce
                 player.velocity.z *= reduce
             }
         }
     }
+
+    private object Intave : Choice("Intave") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val vertical by float("Vertical", 0f, 0f..1f)
+        val horizontal by float("Horizontal", 1f, 0f..1f)
+        val delay by int("Delay", 20, 0..20)
+        val wasOn by boolean("WasOnGround", true)
+
+        val packetHandler = sequenceHandler<PacketEvent> { event ->
+            val packet = event.packet
+
+            // Check if this is a regular velocity update
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && (player.isOnGround || !wasOn) && player.moving && (packet.velocityX != 0 || packet.velocityY != 0 ||packet.velocityZ != 0)) {
+                val doHorizontal = packet.velocityX != 0 || packet.velocityZ != 0
+                val doVertical = packet.velocityY != 0
+                wait { delay }
+                chat("reduced")
+                if (doHorizontal) {
+                    player.velocity.x *= horizontal
+                    player.velocity.z *= horizontal
+                }
+                if (doVertical)
+                    player.velocity.y *= vertical
+            }
+        }
+    }
+
+    private object Test : Choice("Test") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        private val reduce6 by float("Reduce6", 1f, -1f..1.5f)
+        private val reduce7 by float("Reduce7", 1f, -1f..1.5f)
+        private val reduce8 by float("Reduce8", 1f, -1f..1.5f)
+        private val reduce9 by float("Reduce9", 1f, -1f..1.5f)
+        val wasOn by boolean("WasOnGround", true)
+
+        val repeatable = repeatable {
+            if (wasOnGround != wasOn)
+                return@repeatable
+            when (player.hurtTime) {
+                9 -> {
+                    if (reduce9 != 1f) {
+                        chat("reduced")
+                    }
+                    player.velocity.x *= reduce9
+                    player.velocity.z *= reduce9
+                }
+
+                8 -> {
+                    if (reduce8 != 1f) {
+                        chat("reduced")
+                    }
+                    player.velocity.x *= reduce8
+                    player.velocity.z *= reduce8
+                }
+
+                7 -> {
+                    if (reduce7 != 1f) {
+                        chat("reduced")
+                    }
+                    player.velocity.x *= reduce7
+                    player.velocity.z *= reduce7
+                }
+
+                6 -> {
+                    if (reduce6 != 1f) {
+                        chat("reduced")
+                    }
+                    player.velocity.x *= reduce6
+                    player.velocity.z *= reduce6
+                }
+            }
+        }
+    }
+
+    private object IntaveHit : Choice("IntaveHit") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val testY by float("testY", 0f, 0f..1f)
+        val testXZ by float("testXZ", 1f, 0f..1f)
+        val sprint by boolean("Sprint", false)
+
+        val attackHandler = handler<AttackEvent> {
+            if (player.handSwinging && player.hurtTime > 0) {
+                player.velocity.y *= testY.toDouble()
+                player.velocity.x *= testXZ.toDouble()
+                player.velocity.z *= testXZ.toDouble()
+                chat("reduced")
+                if (sprint) {
+                    player.isSprinting = false
+                }
+            }
+        }
+    }
+
 
     /**
      *
