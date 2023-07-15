@@ -148,6 +148,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
     private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
     private val zitterStrength by FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode == "Teleport" }
+    private val maxZitterDelayValue: IntegerValue = object : IntegerValue("MaxZitterDelay", 50, 0..250) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minZitterDelay)
+
+        override fun isSupported() = zitterMode == "Smooth"
+    }
+    private val maxZitterDelay by maxZitterDelayValue
+
+    private val minZitterDelay by object : IntegerValue("MinZitterDelay", 50, 0..250) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxZitterDelay)
+
+        override fun isSupported() = zitterMode == "Smooth" && !maxZitterDelayValue.isMinimal()
+    }
 
     // Game
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
@@ -279,7 +291,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                         mc.gameSettings.keyBindLeft.pressed = false
                     }
 
-                    if (zitterTimer.hasTimePassed(100)) {
+                    if (zitterTimer.hasTimePassed(randomDelay(minZitterDelay, maxZitterDelay))) {
                         zitterDirection = !zitterDirection
                         zitterTimer.reset()
                     }
