@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import kotlin.math.cos
 import kotlin.math.sin
@@ -22,12 +23,17 @@ object MovementUtils : MinecraftInstance() {
     val hasMotion
         get() = mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && mc.thePlayer.motionY != 0.0
 
-    fun strafe(speed: Float = this.speed) {
-        if (!isMoving) return
+    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false) {
+        if (!isMoving) {
+            if (stopWhenNoInput)
+                mc.thePlayer.stopXZ()
+
+            return
+        }
+
         val yaw = direction
-        val thePlayer = mc.thePlayer
-        thePlayer.motionX = -sin(yaw) * speed
-        thePlayer.motionZ = cos(yaw) * speed
+        mc.thePlayer.motionX = -sin(yaw) * speed
+        mc.thePlayer.motionZ = cos(yaw) * speed
     }
 
     fun forward(length: Double) {
