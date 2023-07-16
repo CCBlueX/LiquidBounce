@@ -31,3 +31,15 @@ infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     }
     return sequence.asIterable()
 }
+
+fun ClosedFloatingPointRange<Float>.random(): Double {
+    require(start.isFinite())
+    require(endInclusive.isFinite())
+    return start + (endInclusive - start) * Math.random()
+}
+
+fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {
+    require(start.isFinite())
+    require(endInclusive.isFinite())
+    return start.toDouble()..endInclusive.toDouble()
+}

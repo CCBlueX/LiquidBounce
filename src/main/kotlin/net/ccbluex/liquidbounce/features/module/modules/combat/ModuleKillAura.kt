@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
@@ -391,7 +392,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 continue
             }
 
-            val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
+            val predictedTicks = predict.random()
 
             val targetPrediction = Vec3d(
                 target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ

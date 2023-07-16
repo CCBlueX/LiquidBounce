@@ -46,6 +46,7 @@ import kotlin.math.sqrt
  * Configurable to configure the dynamic rotation engine
  */
 class RotationsConfigurable : Configurable("Rotations") {
+    val silentRotation by boolean("SilentRotation", true)
     val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
     val fixVelocity by boolean("FixVelocity", true)
     val threshold by float("Threshold", 2f, 0f..50f)
@@ -328,7 +329,7 @@ object RotationManager : Listenable {
             if (rotationDifference(
                     currentRotation ?: serverRotation,
                     playerRotation
-                ) < activeConfigurable!!.threshold
+                ) < activeConfigurable!!.threshold || !activeConfigurable!!.silentRotation
             ) {
                 ticksUntilReset = -1
 
@@ -344,16 +345,28 @@ object RotationManager : Listenable {
                 return
             }
 
-            if (canRotate)
-                currentRotation =
-                    limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity()
+            if (canRotate) {
+                limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity().let {
+                    currentRotation = it
+                    if (!activeConfigurable!!.silentRotation)
+                        mc.player!!.applyRotation(it)
+                }
+            }
             return
         }
-        if (canRotate)
+        if (canRotate) {
             targetRotation?.let { targetRotation ->
-                currentRotation =
-                    limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed).fixedSensitivity()
+                limitAngleChange(
+                    currentRotation ?: playerRotation,
+                    targetRotation,
+                    turnSpeed
+                ).fixedSensitivity().let {
+                    currentRotation = it
+                    if (!activeConfigurable!!.silentRotation)
+                        mc.player!!.applyRotation(it)
+                }
             }
+        }
     }
 
     /**
