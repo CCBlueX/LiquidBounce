@@ -128,12 +128,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
     private val aimMode = enumChoice("RotationMode", STABILIZED, AimMode.values())
+
     object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
-        val xRange by floatRange("XRange", 0f..1f, 0f..0.5f)
-        val yRange by floatRange("YRange", 0f..1f, 0f..0.5f)
-        val zRange by floatRange("ZRange", 0f..1f, 0f..0.5f)
+        val xRange by floatRange("XRange", 0f..1f, 0f..1f)
+        val yRange by floatRange("YRange", 0f..1f, 0f..1f)
+        val zRange by floatRange("ZRange", 0f..1f, 0f..1f)
         val step by float("Step", 0.1f, 0f..1f)
     }
+
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
@@ -181,7 +183,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val target = currentTarget ?: return@handler
 
-        RotationManager.aimAt(target.rotation, openInventory = ignoreOpenInventory, configurable = rotationsConfigurable)
+        RotationManager.aimAt(
+            target.rotation,
+            openInventory = ignoreOpenInventory,
+            configurable = rotationsConfigurable
+        )
     }
 
     val moveHandler = repeatable {
@@ -584,11 +590,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         fun stabilized(): Vec3d {
             val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1-gcd
-            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1-gcd
-            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1-gcd
+            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1 - gcd
+            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1 - gcd
+            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1 - gcd
             val x = (player.pos.x - floor(player.pos.x)).coerceIn(xRange)
-            val y = Random.nextDouble(yRange.start, yRange.endInclusive)
+            val y = Random.nextDouble(yRange.start, (yRange.endInclusive - step).coerceAtLeast(yRange.start))
             val z = (player.pos.z - floor(player.pos.z)).coerceIn(zRange)
             return Vec3d(
                 if (from.x != to.x) x else from.x,
@@ -600,17 +606,31 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val random: Vec3d
             get() {
                 val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-                val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1-gcd
-                val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1-gcd
-                val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1-gcd
+                val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1 - gcd
+                val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1 - gcd
+                val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1 - gcd
                 return Vec3d(
-                    if (from.x != to.x) Random.nextDouble(xRange.start, xRange.endInclusive) else from.x,
-                    if (from.y != to.y) Random.nextDouble(yRange.start, yRange.endInclusive) else from.y,
-                    if (from.z != to.z) Random.nextDouble(zRange.start, zRange.endInclusive) else from.z
+                    if (from.x != to.x) Random.nextDouble(
+                        xRange.start,
+                        (xRange.endInclusive - step).coerceAtLeast(xRange.start)
+                    ) else from.x,
+                    if (from.y != to.y) Random.nextDouble(
+                        yRange.start,
+                        (yRange.endInclusive - step).coerceAtLeast(yRange.start)
+                    ) else from.y,
+                    if (from.z != to.z) Random.nextDouble(
+                        zRange.start,
+                        (zRange.endInclusive - step).coerceAtLeast(zRange.start)
+                    ) else from.z
                 )
             }
 
-        private fun rotationList(xRange: ClosedFloatingPointRange<Double>, yRange: ClosedFloatingPointRange<Double>, zRange: ClosedFloatingPointRange<Double>, step: Double): MutableList<Vec3d> {
+        private fun rotationList(
+            xRange: ClosedFloatingPointRange<Double>,
+            yRange: ClosedFloatingPointRange<Double>,
+            zRange: ClosedFloatingPointRange<Double>,
+            step: Double
+        ): MutableList<Vec3d> {
             // Collects all possible rotations
             val possibleRotations = mutableListOf<Vec3d>()
 
@@ -635,9 +655,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val yawToCompare =
                 if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
             val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1-gcd
-            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1-gcd
-            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1-gcd
+            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1 - gcd
+            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1 - gcd
+            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1 - gcd
             val step = if (AdvancedRotation.enabled) step.toDouble() else gcd
             return rotationList(xRange, yRange, zRange, step).minBy {
                 abs(

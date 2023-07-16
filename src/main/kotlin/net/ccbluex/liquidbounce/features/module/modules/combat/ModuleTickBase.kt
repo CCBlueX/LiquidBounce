@@ -45,7 +45,7 @@ object ModuleTickBase : Module("TickBase", Category.COMBAT) {
         ) {
             // Tick as much as we can
             repeat(min(tickBalance.toInt(), maxTicksAtATime)) {
-                player.tick()
+                player.tickMovement()
                 tickBalance -= 1
             }
             ticksToSkip = pauseAfterTick

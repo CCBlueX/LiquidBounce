@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -190,6 +191,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         val testY by float("testY", 0f, 0f..1f)
         val testXZ by float("testXZ", 1f, 0f..1f)
         val sprint by boolean("Sprint", false)
+        val ticks by int("ticks", 20, 0..100)
 
         val attackHandler = handler<AttackEvent> {
             if (player.handSwinging && player.hurtTime > 0) {
@@ -198,6 +200,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 player.velocity.z *= testXZ.toDouble()
                 chat("reduced")
                 if (sprint) {
+                    ModuleSprint.ticksToSkip = ticks
                     player.isSprinting = false
                 }
             }
