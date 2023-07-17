@@ -22,11 +22,6 @@ jobs:
           cache: "gradle"
       - name: Build
         run: ./gradlew setupCiWorkspace && ./gradlew build
-      - name: Upload artifact to GH Actions
-        uses: actions/upload-artifact@v2
-        with:
-          name: LiquidBounce
-          path: build/libs
       - name: Upload artifact to LiquidBounce.net
         run: |
           cd build/libs
