@@ -36,6 +36,9 @@ import kotlin.math.roundToInt
 
 object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val health by BoolValue("Health", true)
+    private val healthInInt by BoolValue("HealthInIntegers", true)
+    private val healthPrefix by TextValue("HealthPrefix", "") { health }
+    private val healthSuffix by TextValue("HealthSuffix", "") { health }
     private val ping by BoolValue("Ping", false)
     private val healthBar by BoolValue("Bar", false)
     private val distance by BoolValue("Distance", false)
@@ -133,7 +136,8 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         val distanceText = if (distance) "§7${playerDistance.roundToInt()}m " else ""
         val pingText = if (ping && entity is EntityPlayer) " §7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7]" else ""
-        val healthText = if (health) "§7§c " + entity.health.toInt() + " HP" else ""
+        val hp = if (healthInInt) entity.health.toInt() else entity.health
+        val healthText = if (health) healthPrefix + "§7§c " + hp + healthSuffix else ""
         val botText = if (bot) " §c§lBot" else ""
 
         val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
