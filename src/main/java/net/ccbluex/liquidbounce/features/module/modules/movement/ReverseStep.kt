@@ -17,7 +17,7 @@ import net.minecraft.util.AxisAlignedBB
 
 object ReverseStep : Module("ReverseStep", ModuleCategory.MOVEMENT) {
 
-    private val motionValue = FloatValue("Motion", 1f, 0.21f, 1f)
+    private val motion by FloatValue("Motion", 1f, 0.21f..1f)
     private var jumped = false
 
     @EventTarget(ignoreCondition = true)
@@ -39,7 +39,7 @@ object ReverseStep : Module("ReverseStep", ModuleCategory.MOVEMENT) {
             }) return
 
         if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.motionY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped)
-            thePlayer.motionY = (-motionValue.get()).toDouble()
+            thePlayer.motionY = (-motion).toDouble()
     }
 
     @EventTarget(ignoreCondition = true)

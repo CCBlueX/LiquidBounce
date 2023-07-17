@@ -7,37 +7,34 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
+import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
 object Derp : Module("Derp", ModuleCategory.FUN) {
 
-    private val headlessValue = BoolValue("Headless", false)
-    private val spinnyValue = BoolValue("Spinny", false)
-    private val incrementValue = object : FloatValue("Increment", 1F, 0F, 50F) {
-        override fun isSupported() = spinnyValue.get()
-    }
+    private val headless by BoolValue("Headless", false)
+    private val spinny by BoolValue("Spinny", false)
+    private val increment by FloatValue("Increment", 1F, 0F..50F) { spinny }
 
     private var currentSpin = 0F
 
-    val rotation: FloatArray
+    val rotation: Rotation
         get() {
-            val derpRotations = floatArrayOf(mc.thePlayer.rotationYaw + nextFloat(-180f, 180f), nextFloat(-90f, 90f))
+            val rot = Rotation(mc.thePlayer.rotationYaw + nextFloat(-180f, 180f), nextFloat(-90f, 90f))
 
-            if (headlessValue.get())
-                derpRotations[1] = 180F
+            if (headless)
+                rot.pitch = 180F
 
-            if (spinnyValue.get()) {
-                derpRotations[0] = currentSpin + incrementValue.get()
-                currentSpin = derpRotations[0]
+            if (spinny) {
+                currentSpin += increment
+                rot.yaw = currentSpin
             }
 
-            derpRotations[0] = getFixedSensitivityAngle(derpRotations[0], mc.thePlayer.rotationYaw)
-            derpRotations[1] = getFixedSensitivityAngle(derpRotations[1], mc.thePlayer.rotationPitch)
+            rot.fixedSensitivity()
 
-            return derpRotations
+            return rot
         }
 
 }

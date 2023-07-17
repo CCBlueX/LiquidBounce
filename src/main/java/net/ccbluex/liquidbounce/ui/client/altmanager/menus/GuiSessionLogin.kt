@@ -38,11 +38,11 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
 
         // Add buttons to screen
 
-        loginButton = GuiButton(1, width / 2 - 100, height / 2 - 60, "Login")
-        buttonList.add(loginButton)
+        buttonList.run {
+            add(GuiButton(1, width / 2 - 100, height / 2 - 60, "Login").also { loginButton = it })
 
-
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 - 30, "Back"))
+            add(GuiButton(0, width / 2 - 100, height / 2 - 30, "Back"))
+        }
 
         // Add fields to screen
         sessionTokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
@@ -119,13 +119,23 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
      * Handle key typed
      */
     override fun keyTyped(typedChar: Char, keyCode: Int) {
-        // Check if user want to escape from screen
-        if (Keyboard.KEY_ESCAPE == keyCode) {
-            // Send back to prev screen
-            mc.displayGuiScreen(prevGui)
+        when (keyCode) {
+            // Check if user want to escape from screen
+            Keyboard.KEY_ESCAPE -> {
+                // Send back to prev screen
+                mc.displayGuiScreen(prevGui)
+                return
+            }
 
-            // Quit
-            return
+            Keyboard.KEY_TAB -> {
+                sessionTokenField.isFocused = true
+                return
+            }
+
+            Keyboard.KEY_RETURN -> {
+                actionPerformed(loginButton)
+                return
+            }
         }
 
         // Check if field is focused, then call key typed

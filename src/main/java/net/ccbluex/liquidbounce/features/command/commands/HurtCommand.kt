@@ -6,6 +6,11 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.extensions.component1
+import net.ccbluex.liquidbounce.utils.extensions.component2
+import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class HurtCommand : Command("hurt") {
@@ -25,15 +30,16 @@ class HurtCommand : Command("hurt") {
         }
 
         // Latest NoCheatPlus damage exploit
-        val x = mc.thePlayer.posX
-        val y = mc.thePlayer.posY
-        val z = mc.thePlayer.posZ
+        val (x, y, z) = mc.thePlayer
 
-        for (i in 0 until 65 * damage) {
-            mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.049, z, false))
-            mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
+        repeat(65 * damage) {
+            sendPackets(
+                C04PacketPlayerPosition(x, y + 0.049, z, false),
+                C04PacketPlayerPosition(x, y, z, false)
+            )
         }
-        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, true))
+
+        sendPacket(C04PacketPlayerPosition(x, y, z, true))
 
         // Output message
         chat("You were damaged.")

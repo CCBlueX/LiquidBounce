@@ -13,10 +13,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.item.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -25,21 +27,21 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 
-    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1f, 0.2F, 1f)
-    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1f, 0.2F, 1f)
+    private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
+    private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1f, 0.2F, 1f)
-    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F, 1f)
+    private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
+    private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1f, 0.2F, 1f)
-    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1f, 0.2F, 1f)
+    private val bowForwardMultiplier by FloatValue("BowForwardMultiplier", 1f, 0.2F..1f)
+    private val bowStrafeMultiplier by FloatValue("BowStrafeMultiplier", 1f, 0.2F..1f)
 
     // NCP mode
-    private val packet = BoolValue("Packet", true)
+    private val packet by BoolValue("Packet", true)
 
     // Blocks
-    val soulsandValue = BoolValue("Soulsand", true)
-    val liquidPushValue = BoolValue("LiquidPush", true)
+    val soulsand by BoolValue("Soulsand", true)
+    val liquidPush by BoolValue("LiquidPush", true)
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
@@ -52,16 +54,12 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
         if (!thePlayer.isBlocking && !KillAura.blockStatus)
             return
 
-        if (packet.get()) {
+        if (packet) {
             when (event.eventState) {
-                EventState.PRE -> {
-                    val digging = C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN)
-                    mc.netHandler.addToSendQueue(digging)
-                }
-                EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f)
-                    mc.netHandler.addToSendQueue(blockPlace)
-                }
+                EventState.PRE ->
+                    sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN))
+                EventState.POST ->
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f))
             }
         }
     }
@@ -74,19 +72,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
         event.strafe = getMultiplier(heldItem, false)
     }
 
-    private fun getMultiplier(item: Item?, isForward: Boolean): Float {
-        return when (item) {
+    private fun getMultiplier(item: Item?, isForward: Boolean) =
+        when (item) {
             is ItemFood, is ItemPotion, is ItemBucketMilk ->
-                if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
+                if (isForward) consumeForwardMultiplier else consumeStrafeMultiplier
 
             is ItemSword ->
-                if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
+                if (isForward) blockForwardMultiplier else blockStrafeMultiplier
 
             is ItemBow ->
-                if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
+                if (isForward) bowForwardMultiplier else bowStrafeMultiplier
 
             else -> 0.2F
         }
-    }
-
 }

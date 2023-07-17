@@ -26,8 +26,8 @@ public class MixinNetworkPlayerInfo {
     private void injectSkinProtect(CallbackInfoReturnable<ResourceLocation> cir) {
         final NameProtect nameProtect = NameProtect.INSTANCE;
 
-        if (nameProtect.getState() && nameProtect.getSkinProtectValue().get()) {
-            if (nameProtect.getAllPlayersValue().get() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {
+        if (nameProtect.getState() && nameProtect.getSkinProtect()) {
+            if (nameProtect.getAllPlayers() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {
                 cir.setReturnValue(DefaultPlayerSkin.getDefaultSkin(gameProfile.getId()));
                 cir.cancel();
             }

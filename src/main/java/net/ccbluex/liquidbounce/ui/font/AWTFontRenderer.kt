@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.GlStateManager.bindTexture
 import net.minecraft.client.renderer.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
@@ -16,6 +17,7 @@ import java.awt.Font
 import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import kotlin.math.roundToInt
 
 /**
  * Generate new bitmap based font renderer
@@ -60,13 +62,13 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
     private var textureWidth = 0
     private var textureHeight = 0
 
-    val height: Int
+    val height
         get() = (fontHeight - 8) / 2
 
     init {
         renderBitmap(startChar, stopChar)
 
-        activeFontRenderers.add(this)
+        activeFontRenderers += this
     }
 
     /**
@@ -85,10 +87,11 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
         glScaled(scale, scale, scale)
         glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
-        if (loadingScreen)
+        if (loadingScreen) {
             glBindTexture(GL_TEXTURE_2D, textureID)
-        else
+        } else {
             bindTexture(textureID)
+        }
 
         val red = (color shr 16 and 0xff) / 255F
         val green = (color shr 8 and 0xff) / 255F
@@ -97,17 +100,15 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
         glColor4f(red, green, blue, alpha)
 
-        var currX = 0.0
+        var currX = 0.0f
+        var unicodeWidth = 0.0f
 
-        val cached: CachedFont? = cachedStrings[text]
+        val cached = cachedStrings[text]
 
         if (cached != null) {
             glCallList(cached.displayList)
-
             cached.lastUsage = System.currentTimeMillis()
-
             glPopMatrix()
-
             return
         }
 
@@ -122,29 +123,35 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
         glBegin(GL_QUADS)
 
         for (char in text.toCharArray()) {
-            if (char.code >= charLocations.size) {
+            val fontChar = charLocations.getOrNull(char.code)
+
+            if (fontChar == null) {
                 glEnd()
 
-                // Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
+                GlStateManager.resetColor()
+
+                GlStateManager.pushMatrix()
                 glScaled(reverse, reverse, reverse)
-                mc.fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, 2f, color, false)
-                currX += mc.fontRendererObj.getStringWidth("$char") * reverse
+                val fontScaling = font.size / 32.0
 
-                glScaled(scale, scale, scale)
+                glScaled(fontScaling, fontScaling, 0.0)
+                mc.fontRendererObj.posY = 1.0f
+                mc.fontRendererObj.posX = (currX / 4) + unicodeWidth
+                val width = mc.fontRendererObj.renderUnicodeChar(char, false)
+                    .coerceAtLeast(0.0f) // A few characters have a negative width due to not being supported by the minecraft font renderer
+                unicodeWidth += width
 
-                if (loadingScreen)
+                if (loadingScreen) {
                     glBindTexture(GL_TEXTURE_2D, textureID)
-                else
+                } else {
                     bindTexture(textureID)
-
-                glColor4f(red, green, blue, alpha)
+                }
+                GlStateManager.popMatrix()
 
                 glBegin(GL_QUADS)
             } else {
-                val fontChar = charLocations[char.code] ?: continue
-
-                drawChar(fontChar, currX.toFloat(), 0f)
-                currX += fontChar.width - 8.0
+                drawChar(fontChar, currX + (unicodeWidth * 4), 0f)
+                currX += fontChar.width - 8.0f
             }
         }
 
@@ -275,19 +282,23 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
      */
     fun getStringWidth(text: String): Int {
         var width = 0
+        var mcWidth = 0
+
+        val fontScaling = font.size / 32.0
 
         for (c in text.toCharArray()) {
-            val fontChar = charLocations[
-                    if (c.code < charLocations.size)
-                        c.code
-                    else
-                        '\u0003'.code
-            ] ?: continue
+            val fontChar = charLocations.getOrNull(c.code)
 
-            width += fontChar.width - 8
+            if (fontChar == null) {
+                mcWidth += ((mc.fontRendererObj.getCharWidth(c) + 8) * fontScaling)
+                    .coerceAtLeast(0.0)
+                    .roundToInt()
+            } else {
+                width += fontChar.width - 8
+            }
         }
 
-        return width / 2
+        return (width / 2) + mcWidth
     }
 
     fun delete() {

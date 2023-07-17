@@ -1,7 +1,9 @@
 {
     "locale": "en_US",
     "contributors": [
-        "1zuna"
+        "1zuna",
+        "Zywl",
+        "CzechHek"
     ],
     "translations": {
         "menu.altManager": "Alt Manager",
@@ -57,7 +59,9 @@
 
         "module.velocity.description": "Allows you to modify the amount of knockback you take.",
 
-        "module.abortBreaking.description:": "Allows you to abort breaking.",
+        "module.abortBreaking.description": "Allows you to abort breaking without losing your break progress.",
+
+        "module.ambience.description": "Change your world time and weather client-side.",
 
         "module.antiHunger.description": "Prevents you from getting hungry.",
 
@@ -79,7 +83,7 @@
         
         "module.antiCactus.description": "Prevents cacti from damaging you.",
         
-        "module.antiFireBall.description": "Automatically punches fireballs away from you.",
+        "module.antiFireball.description": "Automatically punches fireballs away from you.",
         
         "module.atAllProvider.description": "Automatically mentions everyone on the server when using '@a' in your message.",
         
@@ -96,6 +100,8 @@
         "module.autoTool.description": "Automatically selects the best tool in your inventory to mine a block.",
         
         "module.autoWalk.description": "Automatically makes you walk.",
+
+        "module.avoidHazards.description": "Prevents you from walking into blocks that might be harmful to you.",
         
         "module.blink.description": "Suspends all movement packets.",
         
@@ -248,6 +254,8 @@
         "module.portalMenu.description": "Allows you to open a menu while being in a portal.",
         
         "module.potionSaver.description": "Freezes all potion effects while you are standing still.",
+
+        "module.potionSpoof.description": "Allows the player to have potion effects without actually having the potion.",
         
         "module.projectiles.description": "Allows you to see where arrows will land.",
         
@@ -312,5 +320,5 @@
         "module.xRay.description": "Allows you to see ores through walls.",
         
         "module.zoot.description": "Removes all bad potion effects/fire."
-}
+    }
 }

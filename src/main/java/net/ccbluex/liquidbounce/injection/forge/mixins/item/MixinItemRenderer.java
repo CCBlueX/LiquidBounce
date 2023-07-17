@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
@@ -27,8 +28,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import static net.minecraft.client.renderer.GlStateManager.*;
 
@@ -133,7 +133,7 @@ public abstract class MixinItemRenderer {
             }else{
                 final Animations animations = Animations.INSTANCE;
 
-                if (!animations.getState() || !animations.getOddSwing().get()) {
+                if (!animations.getState() || !animations.getOddSwing()) {
                     doItemUsedTransformations(f1);
                 }
 
@@ -150,22 +150,14 @@ public abstract class MixinItemRenderer {
         RenderHelper.disableStandardItemLighting();
     }
 
-    @Inject(method = "renderFireInFirstPerson", at = @At("HEAD"), cancellable = true)
-    private void renderFireInFirstPerson(final CallbackInfo callbackInfo) {
-        final AntiBlind antiBlind = AntiBlind.INSTANCE;
 
-        if(antiBlind.getState() && antiBlind.getFireEffect().get()) {
-            //vanilla's method
-            color(1f, 1f, 1f, 0.9F);
-            depthFunc(519);
-            depthMask(false);
-            enableBlend();
-            tryBlendFuncSeparate(770, 771, 1, 0);
-            color(1f, 1f, 1f, 1f);
-            disableBlend();
-            depthMask(true);
-            depthFunc(515);
-            callbackInfo.cancel();
+    @Redirect(method="renderFireInFirstPerson", at=@At(value="INVOKE", target="Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"))
+    private void renderFireInFirstPerson(float p_color_0_, float p_color_1_, float p_color_2_, float p_color_3_) {
+        final AntiBlind antiBlind = AntiBlind.INSTANCE;
+        if(p_color_3_ != 1F && antiBlind.getState()){
+            GlStateManager.color(p_color_0_, p_color_1_, p_color_2_, antiBlind.getFireEffect());
+        }else{
+            GlStateManager.color(p_color_0_, p_color_1_, p_color_2_, p_color_3_);
         }
     }
 }

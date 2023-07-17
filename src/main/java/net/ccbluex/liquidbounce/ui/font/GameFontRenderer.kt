@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
-import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLine
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
@@ -80,8 +80,6 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
 
         if (currentColor and -0x4000000 == 0)
             currentColor = currentColor or -16777216
-
-        val defaultColor = currentColor
 
         val alpha = (currentColor shr 24 and 0xff)
 
@@ -197,8 +195,9 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
             var italic = false
 
             parts.forEachIndexed { index, part ->
-                if (part.isEmpty())
+                if (part.isEmpty()) {
                     return@forEachIndexed
+                }
 
                 if (index == 0) {
                     width += currentFont.getStringWidth(part)
@@ -233,8 +232,9 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
             }
 
             width / 2
-        } else
+        } else {
             defaultFont.getStringWidth(currentText) / 2
+        }
     }
 
     override fun getCharWidth(character: Char) = getStringWidth(character.toString())

@@ -25,57 +25,35 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 
 object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
-    private val speedLimitValue = BoolValue("SpeedLimit", true)
-    private val maxSpeedValue = object : FloatValue("MaxSpeed", 2f, 1f, 5f) {
-        override fun isSupported() = speedLimitValue.get()
-    }
-    private val bufferValue = BoolValue("Buffer", true)
+    private val speedLimit by BoolValue("SpeedLimit", true)
+    private val maxSpeed by FloatValue("MaxSpeed", 2f, 1f..5f) { speedLimit }
+    private val buffer by BoolValue("Buffer", true)
 
-    private val stairsValue = BoolValue("Stairs", true)
-    private val stairsModeValue = object : ListValue("StairsMode", arrayOf("Old", "New"), "New") {
-        override fun isSupported() = stairsValue.get()
-    }
-    private val stairsBoostValue = object : FloatValue("StairsBoost", 1.87f, 1f, 2f) {
-        override fun isSupported() = stairsValue.get() && stairsModeValue.get() == "Old"
-    }
+    private val stairs by BoolValue("Stairs", true)
+    private val stairsMode by ListValue("StairsMode", arrayOf("Old", "New"), "New") { stairs }
+    private val stairsBoost by FloatValue("StairsBoost", 1.87f, 1f..2f) { stairs && stairsMode == "Old" }
 
-    private val slabsValue = BoolValue("Slabs", true)
-    private val slabsModeValue = object : ListValue("SlabsMode", arrayOf("Old", "New"), "New") {
-        override fun isSupported() = slabsValue.get()
-    }
-    private val slabsBoostValue = object : FloatValue("SlabsBoost", 1.87f, 1f, 2f) {
-        override fun isSupported() = slabsValue.get() && slabsModeValue.get() == "Old"
-    }
+    private val slabs by BoolValue("Slabs", true)
+    private val slabsMode by ListValue("SlabsMode", arrayOf("Old", "New"), "New") { slabs }
+    private val slabsBoost by FloatValue("SlabsBoost", 1.87f, 1f..2f) { slabs && slabsMode == "Old" }
 
-    private val iceValue = BoolValue("Ice", false)
-    private val iceBoostValue = object : FloatValue("IceBoost", 1.342f, 1f, 2f) {
-        override fun isSupported() = iceValue.get()
-    }
+    private val ice by BoolValue("Ice", false)
+    private val iceBoost by FloatValue("IceBoost", 1.342f, 1f..2f) { ice }
 
-    private val snowValue = BoolValue("Snow", true)
-    private val snowBoostValue = object : FloatValue("SnowBoost", 1.87f, 1f, 2f) {
-        override fun isSupported() = snowValue.get()
-    }
-    private val snowPortValue = object : BoolValue("SnowPort", true) {
-        override fun isSupported() = snowValue.get()
-    }
+    private val snow by BoolValue("Snow", true)
+    private val snowBoost by FloatValue("SnowBoost", 1.87f, 1f..2f) { snow }
+    private val snowPort by BoolValue("SnowPort", true) { snow }
 
-    private val wallValue = BoolValue("Wall", true)
-    private val wallModeValue = object : ListValue("WallMode", arrayOf("Old", "New"), "New") {
-        override fun isSupported() = wallValue.get()
-    }
-    private val wallBoostValue = object : FloatValue("WallBoost", 1.87f, 1f, 2f) {
-        override fun isSupported() = wallValue.get() && wallModeValue.get() == "Old"
-    }
+    private val wall by BoolValue("Wall", true)
+    private val wallMode by ListValue("WallMode", arrayOf("Old", "New"), "New") { wall }
+    private val wallBoost by FloatValue("WallBoost", 1.87f, 1f..2f) { wall && wallMode == "Old" }
 
-    private val headBlockValue = BoolValue("HeadBlock", true)
-    private val headBlockBoostValue = object : FloatValue("HeadBlockBoost", 1.87f, 1f, 2f) {
-        override fun isSupported() = headBlockValue.get()
-    }
+    private val headBlock by BoolValue("HeadBlock", true)
+    private val headBlockBoost by FloatValue("HeadBlockBoost", 1.87f, 1f..2f) { headBlock }
 
-    private val slimeValue = BoolValue("Slime", true)
-    private val airStrafeValue = BoolValue("AirStrafe", false)
-    private val noHurtValue = BoolValue("NoHurt", true)
+    private val slime by BoolValue("Slime", true)
+    private val airStrafe by BoolValue("AirStrafe", false)
+    private val noHurt by BoolValue("NoHurt", true)
 
     private var speed = 0.0
     private var down = false
@@ -88,7 +66,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (Speed.state || noHurtValue.get() && thePlayer.hurtTime > 0) {
+        if (Speed.state || noHurt && thePlayer.hurtTime > 0) {
             reset()
             return
         }
@@ -117,7 +95,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
         if (thePlayer.onGround) {
             fastHop = false
 
-            if (slimeValue.get() && (getBlock(blockPos.down()) is BlockSlime || getBlock(blockPos) is BlockSlime)) {
+            if (slime && (getBlock(blockPos.down()) is BlockSlime || getBlock(blockPos) is BlockSlime)) {
                 thePlayer.jump()
 
                 thePlayer.motionX = thePlayer.motionY * 1.132
@@ -127,10 +105,10 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                 down = true
                 return
             }
-            if (slabsValue.get() && getBlock(blockPos) is BlockSlab) {
-                when (slabsModeValue.get().lowercase()) {
+            if (slabs && getBlock(blockPos) is BlockSlab) {
+                when (slabsMode.lowercase()) {
                     "old" -> {
-                        boost(slabsBoostValue.get())
+                        boost(slabsBoost)
                         return
                     }
                     "new" -> {
@@ -151,10 +129,10 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                     }
                 }
             }
-            if (stairsValue.get() && (getBlock(blockPos.down()) is BlockStairs || getBlock(blockPos) is BlockStairs)) {
-                when (stairsModeValue.get().lowercase()) {
+            if (stairs && (getBlock(blockPos.down()) is BlockStairs || getBlock(blockPos) is BlockStairs)) {
+                when (stairsMode.lowercase()) {
                     "old" -> {
-                        boost(stairsBoostValue.get())
+                        boost(stairsBoost)
                         return
                     }
                     "new" -> {
@@ -177,19 +155,19 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
             }
             legitHop = true
 
-            if (headBlockValue.get() && getBlock(blockPos.up(2)) == Blocks.air) {
-                boost(headBlockBoostValue.get())
+            if (headBlock && getBlock(blockPos.up(2)) == Blocks.air) {
+                boost(headBlockBoost)
                 return
             }
 
-            if (iceValue.get() && (getBlock(blockPos.down()) == Blocks.ice || getBlock(blockPos.down()) == Blocks.packed_ice)) {
-                boost(iceBoostValue.get())
+            if (ice && (getBlock(blockPos.down()) == Blocks.ice || getBlock(blockPos.down()) == Blocks.packed_ice)) {
+                boost(iceBoost)
                 return
             }
 
-            if (snowValue.get() && getBlock(blockPos) == Blocks.snow_layer && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500)) {
+            if (snow && getBlock(blockPos) == Blocks.snow_layer && (snowPort || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500)) {
                 if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) {
-                    boost(snowBoostValue.get())
+                    boost(snowBoost)
                 } else {
                     thePlayer.jump()
                     forceDown = true
@@ -197,10 +175,10 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                 return
             }
 
-            if (wallValue.get()) {
-                when (wallModeValue.get().lowercase()) {
+            if (wall) {
+                when (wallMode.lowercase()) {
                     "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer).up(2)) != Blocks.air) {
-                        boost(wallBoostValue.get())
+                        boost(wallBoost)
                         return
                     }
                     "new" ->
@@ -219,14 +197,14 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
             if (speed < currentSpeed)
                 speed = currentSpeed
 
-            if (bufferValue.get() && speed > 0.2) {
+            if (buffer && speed > 0.2) {
                 speed /= 1.0199999809265137
                 strafe(speed.toFloat())
             }
         } else {
             speed = 0.0
 
-            if (airStrafeValue.get())
+            if (airStrafe)
                 strafe()
         }
     }
@@ -261,19 +239,19 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
 
         speed = MovementUtils.speed.toDouble()
 
-        if (speedLimitValue.get() && speed > maxSpeedValue.get())
-            speed = maxSpeedValue.get().toDouble()
+        if (speedLimit && speed > maxSpeed)
+            speed = maxSpeed.toDouble()
     }
 
     private val isNearBlock: Boolean
         get() {
             val thePlayer = mc.thePlayer
             val theWorld = mc.theWorld
-            val blocks: MutableList<BlockPos> = ArrayList()
-            blocks.add(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
-            blocks.add(BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
-            blocks.add(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
-            blocks.add(BlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
+            val blocks = mutableListOf<BlockPos>()
+            blocks += BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7)
+            blocks += BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ)
+            blocks += BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7)
+            blocks += BlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ)
             for (blockPos in blocks) {
                 val blockState = theWorld.getBlockState(blockPos)
 

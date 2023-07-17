@@ -14,23 +14,31 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.minecraft.client.gui.FontRenderer
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
-abstract class Value<T>(val name: String, protected open var value: T) {
+abstract class Value<T>(val name: String, protected open var value: T, private val isSupported: (() -> Boolean)?)
+    : ReadWriteProperty<Any?, T> {
 
-    fun set(newValue: T) {
+    fun set(newValue: T): Boolean {
         if (newValue == value)
-            return
+            return false
 
-        val oldValue = get()
+        val oldValue = value
 
         try {
-            onChange(oldValue, newValue)
-            changeValue(newValue)
-            onChanged(oldValue, newValue)
-            onUpdate(newValue)
+            val handledValue = onChange(oldValue, newValue)
+            if (handledValue == oldValue) return false
+
+            changeValue(handledValue)
+            onChanged(oldValue, handledValue)
+            onUpdate(handledValue)
+
             saveConfig(valuesConfig)
+            return true
         } catch (e: Exception) {
             LOGGER.error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
+            return false
         }
     }
 
@@ -48,8 +56,6 @@ abstract class Value<T>(val name: String, protected open var value: T) {
 
         onInit(value)
         onUpdate(value)
-
-        val range = 0..1
     }
 
     abstract fun toJsonF(): JsonElement?
@@ -57,26 +63,32 @@ abstract class Value<T>(val name: String, protected open var value: T) {
 
     protected open fun onInit(value: T) {}
     protected open fun onUpdate(value: T) {}
-    protected open fun onChange(oldValue: T, newValue: T) {}
+    protected open fun onChange(oldValue: T, newValue: T) = newValue
     protected open fun onChanged(oldValue: T, newValue: T) {}
-    open fun isSupported() = true
+    open fun isSupported() = isSupported?.invoke() ?: true
 
+    // Support for delegating values using the `by` keyword.
+    override operator fun getValue(thisRef: Any?, property: KProperty<*>) = value
+    override operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+        set(value)
+    }
 }
 
 /**
  * Bool value represents a value with a boolean
  */
-open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value) {
+open class BoolValue(name: String, value: Boolean, isSupported: (() -> Boolean)? = null) : Value<Boolean>(name, value, isSupported) {
+
+    // TODO: Remove when all modules are ported to Kotlin
+    constructor(name: String, value: Boolean) : this(name, value, null)
 
     override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJsonF(element: JsonElement): Boolean? {
-        if (element.isJsonPrimitive)
-            return element.asBoolean || element.asString.equals("true", ignoreCase = true)
-        return null
-    }
+    override fun fromJsonF(element: JsonElement) =
+        if (element.isJsonPrimitive) element.asBoolean || element.asString.equals("true", ignoreCase = true)
+        else null
 
-    fun toggle() = changeValue(!value)
+    fun toggle() = set(!value)
 
     fun isActive() = value && isSupported()
 
@@ -85,8 +97,11 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
 /**
  * Integer value represents a value with a integer
  */
-open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maximum: Int = Integer.MAX_VALUE)
-    : Value<Int>(name, value) {
+open class IntegerValue(name: String, value: Int, val range: IntRange = 0..Int.MAX_VALUE, isSupported: (() -> Boolean)? = null)
+    : Value<Int>(name, value, isSupported) {
+
+    // TODO: Remove when all modules are ported to Kotlin
+    constructor(name: String, value: Int, minimum: Int, maximum: Int) : this(name, value, minimum..maximum, null)
 
     fun set(newValue: Number) = set(newValue.toInt())
 
@@ -97,14 +112,15 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
     fun isMinimal() = value <= minimum
     fun isMaximal() = value >= maximum
 
-    val range = minimum..maximum
+    val minimum = range.first
+    val maximum = range.last
 }
 
 /**
  * Float value represents a value with a float
  */
-open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE)
-    : Value<Float>(name, value) {
+open class FloatValue(name: String, value: Float, val range: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
+                      isSupported: (() -> Boolean)? = null) : Value<Float>(name, value, isSupported) {
 
     fun set(newValue: Number) = set(newValue.toFloat())
 
@@ -115,13 +131,14 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
     fun isMinimal() = value <= minimum
     fun isMaximal() = value >= maximum
 
-    val range = minimum..maximum
+    val minimum = range.start
+    val maximum = range.endInclusive
 }
 
 /**
  * Text value represents a value with a string
  */
-open class TextValue(name: String, value: String) : Value<String>(name, value) {
+open class TextValue(name: String, value: String, isSupported: (() -> Boolean)? = null) : Value<String>(name, value, isSupported) {
 
     override fun toJsonF() = JsonPrimitive(value)
 
@@ -131,25 +148,26 @@ open class TextValue(name: String, value: String) : Value<String>(name, value) {
 /**
  * Font value represents a value with a font
  */
-class FontValue(valueName: String, value: FontRenderer) : Value<FontRenderer>(valueName, value) {
+open class FontValue(name: String, value: FontRenderer, isSupported: (() -> Boolean)? = null)
+    : Value<FontRenderer>(name, value, isSupported) {
 
     override fun toJsonF(): JsonElement? {
         val fontDetails = Fonts.getFontDetails(value) ?: return null
         val valueObject = JsonObject()
-        valueObject.addProperty("fontName", fontDetails.name)
-        valueObject.addProperty("fontSize", fontDetails.fontSize)
+        valueObject.run {
+            addProperty("fontName", fontDetails.name)
+            addProperty("fontSize", fontDetails.fontSize)
+        }
         return valueObject
     }
 
-    override fun fromJsonF(element: JsonElement): FontRenderer? {
+    override fun fromJsonF(element: JsonElement) =
         if (element.isJsonObject) {
             val valueObject = element.asJsonObject
-            return Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
-        }
-        return null
-    }
+            Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
+        } else null
 
-    val displayName: String
+    val displayName
         get() = when (value) {
             is GameFontRenderer -> "Font: ${(value as GameFontRenderer).defaultFont.font.name} - ${(value as GameFontRenderer).defaultFont.font.size}"
             Fonts.minecraftFont -> "Font: Minecraft"
@@ -175,12 +193,16 @@ class FontValue(valueName: String, value: FontRenderer) : Value<FontRenderer>(va
 /**
  * Block value represents a value with a block
  */
-class BlockValue(name: String, value: Int) : IntegerValue(name, value, 1, 197)
+open class BlockValue(name: String, value: Int, isSupported: (() -> Boolean)? = null) : IntegerValue(name, value, 1..197, isSupported)
 
 /**
  * List value represents a selectable list of values
  */
-open class ListValue(name: String, val values: Array<String>, override var value: String) : Value<String>(name, value) {
+open class ListValue(name: String, val values: Array<String>, override var value: String, isSupported: (() -> Boolean)? = null)
+    : Value<String>(name, value, isSupported) {
+
+    // TODO: Remove when all modules are ported to Kotlin
+    constructor(name: String, values: Array<String>, value: String) : this(name, values, value, null)
 
     var openList = false
 

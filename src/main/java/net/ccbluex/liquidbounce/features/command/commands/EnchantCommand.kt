@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
@@ -27,7 +28,7 @@ class EnchantCommand : Command("enchant") {
                 return
             }
 
-            val enchantID: Int = try {
+            val enchantID = try {
                 args[1].toInt()
             } catch (e: NumberFormatException) {
                 val enchantment = Enchantment.getEnchantmentByLocation(args[1])
@@ -55,7 +56,7 @@ class EnchantCommand : Command("enchant") {
             }
 
             item.addEnchantment(enchantment, level)
-            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
+            sendPacket(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }

@@ -8,11 +8,13 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 
 abstract class Element : MinecraftInstance() {
+
     var x = 0
     var y = 0
     var width = 0
     abstract val height: Int
     var isVisible = true
+
     fun setLocation(x: Int, y: Int) {
         this.x = x
         this.y = y

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
@@ -32,12 +33,12 @@ import net.minecraft.util.EnumFacing
 
 object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
 
-    private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
-    private val delayValue = IntegerValue("Delay", 100, 50, 200)
-    private val throughWallsValue = BoolValue("ThroughWalls", true)
-    private val visualSwing = BoolValue("VisualSwing", true)
-    private val chestValue = BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
-    private val rotationsValue = BoolValue("Rotations", true)
+    private val range by FloatValue("Range", 5F, 1F..6F)
+    private val delay by IntegerValue("Delay", 100, 50..200)
+    private val throughWalls by BoolValue("ThroughWalls", true)
+    private val visualSwing by BoolValue("VisualSwing", true)
+    private val chest by BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
+    private val rotations by BoolValue("Rotations", true)
 
     private var currentBlock: BlockPos? = null
     private val timer = MSTimer()
@@ -57,17 +58,17 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
                 if (mc.currentScreen is GuiContainer)
                     timer.reset()
 
-                val radius = rangeValue.get() + 1
+                val radius = range + 1
 
                 val eyesPos = thePlayer.eyes
 
                 currentBlock = searchBlocks(radius.toInt())
                         .filter {
-                            Block.getIdFromBlock(it.value) == chestValue.get() && it.key !in clickedBlocks
-                                    && getCenterDistance(it.key) < rangeValue.get()
+                            Block.getIdFromBlock(it.value) == chest && it.key !in clickedBlocks
+                                    && getCenterDistance(it.key) < range
                         }
                         .filter {
-                            if (throughWallsValue.get())
+                            if (throughWalls)
                                 return@filter true
 
                             val blockPos = it.key
@@ -77,20 +78,20 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
                         }
                         .minByOrNull { getCenterDistance(it.key) }?.key
 
-                if (rotationsValue.get())
+                if (rotations)
                     setTargetRotation((faceBlock(currentBlock ?: return)
                             ?: return).rotation)
             }
 
-            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get())) {
+            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delay)) {
                 if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld, thePlayer.heldItem, currentBlock!!,
                                 EnumFacing.DOWN, currentBlock!!.getVec())) {
-                    if (visualSwing.get())
+                    if (visualSwing)
                         thePlayer.swingItem()
                     else
-                        mc.netHandler.addToSendQueue(C0APacketAnimation())
+                        sendPacket(C0APacketAnimation())
 
-                    clickedBlocks.add(currentBlock!!)
+                    clickedBlocks += currentBlock!!
                     currentBlock = null
                     timer.reset()
                 }

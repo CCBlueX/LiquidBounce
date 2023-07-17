@@ -11,7 +11,11 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.component1
+import net.ccbluex.liquidbounce.utils.extensions.component2
+import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -34,10 +38,10 @@ import kotlin.math.max
 
 object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
 
-    private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
-    private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 255)
-    private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
-    private val indicator = BoolValue("Indicator", true)
+    private val mode by ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
+    private val maxFallDistance by IntegerValue("MaxFallDistance", 10, 2..255)
+    private val maxDistanceWithoutGround by FloatValue("MaxDistanceToSetback", 2.5f, 1f..30f)
+    private val indicator by BoolValue("Indicator", true)
 
     private var detectedLocation: BlockPos? = null
     private var lastFound = 0F
@@ -69,12 +73,12 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
             detectedLocation = fallingPlayer.findCollision(60)?.pos
 
             if (detectedLocation != null && abs(thePlayer.posY - detectedLocation!!.y) +
-                    thePlayer.fallDistance <= maxFallDistance.get()) {
+                    thePlayer.fallDistance <= maxFallDistance) {
                 lastFound = thePlayer.fallDistance
             }
 
-            if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get()) {
-                val mode = modeValue.get()
+            if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround) {
+                val mode = mode
 
                 when (mode.lowercase()) {
                     "teleportback" -> {
@@ -86,11 +90,11 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
                         thePlayer.motionY += 0.1
                         thePlayer.fallDistance = 0F
                     }
-                    "ongroundspoof" -> mc.netHandler.addToSendQueue(C03PacketPlayer(true))
+                    "ongroundspoof" -> sendPacket(C03PacketPlayer(true))
 
                     "motionteleport-flag" -> {
                         thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
                         thePlayer.motionY = 0.1
 
                         strafe()
@@ -105,13 +109,11 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
     fun onRender3D(event: Render3DEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (detectedLocation == null || !indicator.get() ||
+        if (detectedLocation == null || !indicator ||
                 thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
             return
 
-        val x = detectedLocation!!.x
-        val y = detectedLocation!!.y
-        val z = detectedLocation!!.z
+        val (x, y, z) = detectedLocation!!
 
         val renderManager = mc.renderManager
 

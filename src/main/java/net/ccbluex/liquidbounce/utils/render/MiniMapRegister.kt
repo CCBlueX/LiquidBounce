@@ -3,7 +3,6 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-
 package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -24,7 +23,7 @@ object MiniMapRegister : MinecraftInstance(), Listenable {
 
     fun updateChunk(chunk: Chunk) {
         synchronized(queuedChunkUpdates) {
-            queuedChunkUpdates.add(chunk)
+            queuedChunkUpdates += chunk
         }
     }
 
@@ -71,7 +70,7 @@ object MiniMapRegister : MinecraftInstance(), Listenable {
 
     fun unloadChunk(x: Int, z: Int) {
         synchronized(queuedChunkDeletions) {
-            queuedChunkDeletions.add(ChunkLocation(x, z))
+            queuedChunkDeletions += ChunkLocation(x, z)
         }
     }
 

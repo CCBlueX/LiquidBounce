@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.ClientUpdate;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
@@ -17,7 +18,6 @@ import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
-import net.ccbluex.liquidbounce.api.UpdateInfo;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
@@ -128,7 +128,7 @@ public abstract class MixinMinecraft {
     private void afterMainScreen(CallbackInfo callbackInfo) {
         if (FileManager.INSTANCE.getFirstStart()) {
             displayGuiScreen(new GuiWelcome());
-        } else if (UpdateInfo.INSTANCE.hasUpdate()) {
+        } else if (ClientUpdate.INSTANCE.hasUpdate()) {
             displayGuiScreen(new GuiUpdate());
         }
     }
@@ -168,7 +168,7 @@ public abstract class MixinMinecraft {
         return (Sys.getTime() * 1000) / Sys.getTimerResolution();
     }
 
-    @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = At.Shift.BEFORE))
+    @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", ordinal = 0))
     private void onTick(final CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new TickEvent());
     }
@@ -190,7 +190,7 @@ public abstract class MixinMinecraft {
     private void setWindowIcon(CallbackInfo callbackInfo) {
         if (Util.getOSType() != Util.EnumOS.OSX) {
             if (GuiClientConfiguration.Companion.getEnabledClientTitle()) {
-                final ByteBuffer[] liquidBounceFavicon = IconUtils.getFavicon();
+                final ByteBuffer[] liquidBounceFavicon = IconUtils.INSTANCE.getFavicon();
                 if (liquidBounceFavicon != null) {
                     Display.setIcon(liquidBounceFavicon);
                     callbackInfo.cancel();
@@ -206,7 +206,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "clickMouse", at = @At("HEAD"))
     private void clickMouse(CallbackInfo callbackInfo) {
-        CPSCounter.registerClick(CPSCounter.MouseButton.LEFT);
+        CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.LEFT);
 
         if (AutoClicker.INSTANCE.getState()) {
             leftClickCounter = 0;
@@ -215,20 +215,18 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "middleClickMouse", at = @At("HEAD"))
     private void middleClickMouse(CallbackInfo ci) {
-        CPSCounter.registerClick(CPSCounter.MouseButton.MIDDLE);
+        CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.MIDDLE);
     }
 
     @Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = At.Shift.AFTER))
     private void rightClickMouse(final CallbackInfo callbackInfo) {
-        CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
+        CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.RIGHT);
 
         final FastPlace fastPlace = FastPlace.INSTANCE;
-        if (!fastPlace.getState())
-            return;
+        if (!fastPlace.getState()) return;
 
         // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocksValue().get()
-                && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+        if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
             return;
 
         if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
@@ -238,9 +236,9 @@ public abstract class MixinMinecraft {
             // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
             if (blockState.getBlock().hasTileEntity(blockState)) return;
             // Return if not facing a block
-        } else if (fastPlace.getFacingBlocksValue().get()) return;
+        } else if (fastPlace.getFacingBlocks()) return;
 
-        rightClickDelayTimer = fastPlace.getSpeedValue().get();
+        rightClickDelayTimer = fastPlace.getSpeed();
     }
 
     @Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/WorldClient;Ljava/lang/String;)V", at = @At("HEAD"))

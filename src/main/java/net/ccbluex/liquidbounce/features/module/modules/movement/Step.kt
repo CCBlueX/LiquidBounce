@@ -12,11 +12,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.stats.StatList
 import kotlin.math.cos
 import kotlin.math.sin
@@ -27,17 +30,13 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
      * OPTIONS
      */
 
-    private val modeValue = ListValue("Mode", arrayOf(
+    private val mode by ListValue("Mode", arrayOf(
             "Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "Spartan", "Rewinside"
     ), "NCP")
 
-    private val heightValue = object : FloatValue("Height", 1F, 0.6F, 10F) {
-        override fun isSupported() = modeValue.get() !in setOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4")
-    }
-    private val jumpHeightValue = object : FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F) {
-        override fun isSupported() = modeValue.get() == "Jump"
-    }
-    private val delayValue = IntegerValue("Delay", 0, 0, 500)
+    private val height by FloatValue("Height", 1F, 0.6F..10F) { mode !in arrayOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4") }
+    private val jumpHeight by FloatValue("JumpHeight", 0.42F, 0.37F..0.42F) { mode == "Jump" }
+    private val delay by IntegerValue("Delay", 0, 0..500)
 
     /**
      * VALUES
@@ -63,7 +62,7 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val mode = modeValue.get()
+        val mode = mode
         val thePlayer = mc.thePlayer ?: return
 
         // Motion steps
@@ -71,11 +70,11 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
             "Jump" ->
                 if (thePlayer.isCollidedHorizontally && thePlayer.onGround && !mc.gameSettings.keyBindJump.isKeyDown) {
                     fakeJump()
-                    thePlayer.motionY = jumpHeightValue.get().toDouble()
+                    thePlayer.motionY = jumpHeight.toDouble()
                 }
             "LAAC" ->
                 if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
-                    if (thePlayer.onGround && timer.hasTimePassed(delayValue.get())) {
+                    if (thePlayer.onGround && timer.hasTimePassed(delay)) {
                         isStep = true
 
                         fakeJump()
@@ -112,7 +111,7 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (modeValue.get() != "MotionNCP" || !thePlayer.isCollidedHorizontally || mc.gameSettings.keyBindJump.isKeyDown)
+        if (mode != "MotionNCP" || !thePlayer.isCollidedHorizontally || mc.gameSettings.keyBindJump.isKeyDown)
             return
 
         // Motion steps
@@ -152,24 +151,24 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
         }
 
         // Some fly modes should disable step
-        if (Fly.state && Fly.modeValue.get() in setOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+        if (Fly.state && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
             return
         }
 
-        val mode = modeValue.get()
+        val mode = mode
 
         // Set step to default in some cases
-        if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get()) ||
-                mode in setOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4")) {
+        if (!thePlayer.onGround || !timer.hasTimePassed(delay) ||
+                mode in arrayOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4")) {
             thePlayer.stepHeight = 0.6F
             event.stepHeight = 0.6F
             return
         }
 
         // Set step height
-        val height = heightValue.get()
+        val height = height
         thePlayer.stepHeight = height
         event.stepHeight = height
 
@@ -191,22 +190,14 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
 
         if (thePlayer.entityBoundingBox.minY - stepY > 0.6) { // Check if full block step
 
-            when (modeValue.get()) {
+            when (mode) {
                 "NCP", "AAC" -> {
                     fakeJump()
 
                     // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-                    mc.netHandler.addToSendQueue(
-                        C03PacketPlayer.C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.41999998688698, stepZ, false
-                        )
-                    )
-                    mc.netHandler.addToSendQueue(
-                        C03PacketPlayer.C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.7531999805212, stepZ, false
-                        )
+                    sendPackets(
+                        C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
+                        C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)
                     )
                     timer.reset()
                 }
@@ -215,31 +206,13 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
 
                     if (spartanSwitch) {
                         // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                        mc.netHandler.addToSendQueue(
-                            C03PacketPlayer.C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 0.41999998688698, stepZ, false
-                            )
-                        )
-                        mc.netHandler.addToSendQueue(
-                            C03PacketPlayer.C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 0.7531999805212, stepZ, false
-                            )
-                        )
-                        mc.netHandler.addToSendQueue(
-                            C03PacketPlayer.C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 1.001335979112147, stepZ, false
-                            )
+                        sendPackets(
+                            C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
+                            C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false),
+                            C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)
                         )
                     } else // Force step
-                        mc.netHandler.addToSendQueue(
-                            C03PacketPlayer.C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 0.6, stepZ, false
-                            )
-                        )
+                        sendPacket(C04PacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
 
                     // Spartan allows one unlegit step so just swap between legit and unlegit
                     spartanSwitch = !spartanSwitch
@@ -251,23 +224,10 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
                     fakeJump()
 
                     // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                    mc.netHandler.addToSendQueue(
-                        C03PacketPlayer.C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.41999998688698, stepZ, false
-                        )
-                    )
-                    mc.netHandler.addToSendQueue(
-                        C03PacketPlayer.C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.7531999805212, stepZ, false
-                        )
-                    )
-                    mc.netHandler.addToSendQueue(
-                        C03PacketPlayer.C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 1.001335979112147, stepZ, false
-                        )
+                    sendPackets(
+                        C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
+                        C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false),
+                        C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)
                     )
 
                     // Reset timer
@@ -286,7 +246,7 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer && isStep && modeValue.get() == "OldNCP") {
+        if (packet is C03PacketPlayer && isStep && mode == "OldNCP") {
             packet.y += 0.07
             isStep = false
         }
@@ -310,5 +270,5 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

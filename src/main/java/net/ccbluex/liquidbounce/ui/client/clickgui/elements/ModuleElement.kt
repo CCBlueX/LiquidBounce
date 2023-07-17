@@ -7,21 +7,30 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce.clickGui
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.spacedModules
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import org.lwjgl.input.Mouse
 
 @SideOnly(Side.CLIENT)
-class ModuleElement(val module: Module) : ButtonElement(module.name) {
+class ModuleElement(val module: Module) : ButtonElement(module.name, buttonAction = {
+    // This module element handles the click action itself.
+}) {
+    override val displayName
+        get() = module.getName(spacedModules)
+
+    override var hoverText = ""
+        get() = module.description
+
     var showSettings = false
     var settingsWidth = 0
         set(value) {
-            if (value > settingsWidth) field = value
+            if (value > settingsWidth) {
+                field = value
+            }
         }
 
     var settingsHeight = 0
 
-    private var wasPressed = false
     var slowlyFade = 0
         set(value) {
             field = value.coerceIn(0, 255)
@@ -31,7 +40,9 @@ class ModuleElement(val module: Module) : ButtonElement(module.name) {
         clickGui.style.drawModuleElementAndClick(mouseX, mouseY, this, mouseButton)
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-        if (!isHovered(mouseX, mouseY)) return false
+        if (!isHovered(mouseX, mouseY)) {
+            return false
+        }
 
         when (mouseButton) {
             0 -> {
@@ -49,9 +60,4 @@ class ModuleElement(val module: Module) : ButtonElement(module.name) {
         return true
     }
 
-    fun notPressed() = !wasPressed
-
-    fun updatePressed() {
-        wasPressed = Mouse.isButtonDown(0)
-    }
 }

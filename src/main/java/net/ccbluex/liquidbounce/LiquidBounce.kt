@@ -5,6 +5,9 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
+import net.ccbluex.liquidbounce.api.loadSettings
+import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.cape.CapeService
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
@@ -35,9 +38,6 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.loa
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.font.Fonts.loadFonts
-import net.ccbluex.liquidbounce.api.UpdateInfo.gitInfo
-import net.ccbluex.liquidbounce.api.loadSettings
-import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
@@ -51,14 +51,15 @@ object LiquidBounce {
 
     // Client information
     const val CLIENT_NAME = "LiquidBounce"
-    val CLIENT_VERSION: String = gitInfo["git.build.version"]?.toString() ?: "unknown"
+    val CLIENT_VERSION = gitInfo["git.build.version"]?.toString() ?: "unknown"
     var CLIENT_VERSION_INT = CLIENT_VERSION.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
-    val CLIENT_COMMIT: String = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
+    val CLIENT_COMMIT = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
+    val CLIENT_BRANCH = gitInfo["git.branch"]?.toString() ?: "unknown"
     const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
-    const val CLIENT_API = "https://api.liquidbounce.net/api/v1"
+
     val CLIENT_TITLE = CLIENT_NAME + " " + CLIENT_VERSION + " " + CLIENT_COMMIT + "  | " + MINECRAFT_VERSION + if (IN_DEV) " | DEVELOPMENT BUILD" else ""
 
     var isStarting = true
@@ -97,11 +98,16 @@ object LiquidBounce {
         registerListener(ClientFixes)
         registerListener(BungeeCordSpoof)
         registerListener(CapeService)
-        registerListener(InventoryUtils())
+        registerListener(InventoryUtils)
         registerListener(MiniMapRegister)
 
         // Load client fonts
         loadFonts()
+
+        // Load settings
+        loadSettings(false) {
+            LOGGER.info("Successfully loaded ${it.count()} settings.")
+        }
 
         // Register commands
         registerCommands()
@@ -138,11 +144,6 @@ object LiquidBounce {
 
         // Load alt generators
         loadActiveGenerators()
-
-        // Load settings
-        loadSettings(false) {
-            LOGGER.info("Successfully loaded ${it.count()} settings.")
-        }
 
         // Load message of the day
         messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }

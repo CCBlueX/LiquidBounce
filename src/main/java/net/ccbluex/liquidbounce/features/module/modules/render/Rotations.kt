@@ -14,14 +14,19 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object Rotations : Module("Rotations", ModuleCategory.RENDER
-) {
+object Rotations : Module("Rotations", ModuleCategory.RENDER) {
 
-    private val bodyValue = BoolValue("Body", true)
+    private val body by BoolValue("Body", true)
+
+    var prevHeadPitch = 0f
+    var headPitch = 0f
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
+
+        prevHeadPitch = headPitch
+        headPitch = serverRotation.pitch
 
         if (!shouldRotate()) {
             return
@@ -29,13 +34,17 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER
 
         thePlayer.rotationYawHead = serverRotation.yaw
 
-        if (bodyValue.get()) {
+        if (body) {
             thePlayer.renderYawOffset = thePlayer.rotationYawHead
         }
+    }
+
+    fun lerp(tickDelta: Float, old: Float, new: Float): Float {
+        return old + (new - old) * tickDelta
     }
 
     /**
      * Rotate when current rotation is not null or special modules which do not make use of RotationUtils like Derp are enabled.
      */
-    fun shouldRotate() = Derp.state || targetRotation != null
+    fun shouldRotate() = state && (Derp.state || targetRotation != null)
 }

@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.client.renderer.Tessellator
@@ -25,7 +26,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object RenderUtils : MinecraftInstance() {
-    private val glCapMap: MutableMap<Int, Boolean> = HashMap()
+    private val glCapMap = mutableMapOf<Int, Boolean>()
     private val DISPLAY_LISTS_2D = IntArray(4)
     var deltaTime = 0
 
@@ -395,9 +396,10 @@ object RenderUtils : MinecraftInstance() {
         glBegin(GL_LINE_STRIP)
         var i = end.toFloat()
         while (i >= start) {
+            val rad = i.toRadians()
             glVertex2f(
-                (x + cos(i * Math.PI / 180) * (radius * 1.001f)).toFloat(),
-                (y + sin(i * Math.PI / 180) * (radius * 1.001f)).toFloat()
+                x + cos(rad) * (radius * 1.001f),
+                y + sin(rad) * (radius * 1.001f)
             )
             i -= 360 / 90f
         }
@@ -476,6 +478,22 @@ object RenderUtils : MinecraftInstance() {
         worldrenderer.pos((x + width).toDouble(), y.toDouble(), 0.0)
             .tex(((u + width) * f).toDouble(), (v * f1).toDouble()).endVertex()
         worldrenderer.pos(x.toDouble(), y.toDouble(), 0.0).tex((u * f).toDouble(), (v * f1).toDouble()).endVertex()
+        tessellator.draw()
+    }
+
+    /**
+     * Draws a textured rectangle at the stored z-value. Args: x, y, u, v, width, height.
+     */
+    fun drawTexturedModalRect(x: Int, y: Int, textureX: Int, textureY: Int, width: Int, height: Int, zLevel: Float) {
+        val f = 0.00390625f
+        val f1 = 0.00390625f
+        val tessellator = Tessellator.getInstance()
+        val worldrenderer = tessellator.worldRenderer
+        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX)
+        worldrenderer.pos(x.toDouble(), (y + height).toDouble(), zLevel.toDouble()).tex((textureX.toFloat() * f).toDouble(), ((textureY + height).toFloat() * f1).toDouble()).endVertex()
+        worldrenderer.pos((x + width).toDouble(), (y + height).toDouble(), zLevel.toDouble()).tex(((textureX + width).toFloat() * f).toDouble(), ((textureY + height).toFloat() * f1).toDouble()).endVertex()
+        worldrenderer.pos((x + width).toDouble(), y.toDouble(), zLevel.toDouble()).tex(((textureX + width).toFloat() * f).toDouble(), (textureY.toFloat() * f1).toDouble()).endVertex()
+        worldrenderer.pos(x.toDouble(), y.toDouble(), zLevel.toDouble()).tex((textureX.toFloat() * f).toDouble(), (textureY.toFloat() * f1).toDouble()).endVertex()
         tessellator.draw()
     }
 

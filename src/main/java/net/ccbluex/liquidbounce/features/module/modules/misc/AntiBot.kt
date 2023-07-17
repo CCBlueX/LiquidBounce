@@ -24,40 +24,34 @@ import net.minecraft.network.play.server.S14PacketEntity
 
 object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
 
-    private val tabValue = BoolValue("Tab", true)
-    private val tabModeValue = object : ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") {
-        override fun isSupported() = tabValue.get()
-    }
-    private val entityIDValue = BoolValue("EntityID", true)
-    private val colorValue = BoolValue("Color", false)
-    private val livingTimeValue = BoolValue("LivingTime", false)
-    private val livingTimeTicksValue = object : IntegerValue("LivingTimeTicks", 40, 1, 200) {
-        override fun isSupported() = livingTimeValue.get()
-    }
-    private val groundValue = BoolValue("Ground", true)
-    private val airValue = BoolValue("Air", false)
-    private val invalidGroundValue = BoolValue("InvalidGround", true)
-    private val swingValue = BoolValue("Swing", false)
-    private val healthValue = BoolValue("Health", false)
-    private val derpValue = BoolValue("Derp", true)
-    private val wasInvisibleValue = BoolValue("WasInvisible", false)
-    private val armorValue = BoolValue("Armor", false)
-    private val pingValue = BoolValue("Ping", false)
-    private val needHitValue = BoolValue("NeedHit", false)
-    private val duplicateInWorldValue = BoolValue("DuplicateInWorld", false)
-    private val duplicateInTabValue = BoolValue("DuplicateInTab", false)
-    private val alwaysInRadiusValue = BoolValue("AlwaysInRadius", false)
-    private val alwaysRadiusValue = object : FloatValue("AlwaysInRadiusBlocks", 20f, 5f, 30f) {
-        override fun isSupported() = alwaysInRadiusValue.get()
-    }
+    private val tab by BoolValue("Tab", true)
+    private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }
+    private val entityID by BoolValue("EntityID", true)
+    private val color by BoolValue("Color", false)
+    private val livingTime by BoolValue("LivingTime", false)
+    private val livingTimeTicks by IntegerValue("LivingTimeTicks", 40, 1..200) { livingTime }
+    private val ground by BoolValue("Ground", true)
+    private val air by BoolValue("Air", false)
+    private val invalidGround by BoolValue("InvalidGround", true)
+    private val swing by BoolValue("Swing", false)
+    private val health by BoolValue("Health", false)
+    private val derp by BoolValue("Derp", true)
+    private val wasInvisible by BoolValue("WasInvisible", false)
+    private val armor by BoolValue("Armor", false)
+    private val ping by BoolValue("Ping", false)
+    private val needHit by BoolValue("NeedHit", false)
+    private val duplicateInWorld by BoolValue("DuplicateInWorld", false)
+    private val duplicateInTab by BoolValue("DuplicateInTab", false)
+    private val alwaysInRadius by BoolValue("AlwaysInRadius", false)
+    private val alwaysRadius by FloatValue("AlwaysInRadiusBlocks", 20f, 5f..30f) { alwaysInRadius }
 
-    private val ground = mutableListOf<Int>()
-    private val air = mutableListOf<Int>()
-    private val invalidGround = mutableMapOf<Int, Int>()
-    private val swing = mutableListOf<Int>()
-    private val invisible = mutableListOf<Int>()
-    private val hit = mutableListOf<Int>()
-    private val notAlwaysInRadius = mutableListOf<Int>()
+    private val groundList = mutableListOf<Int>()
+    private val airList = mutableListOf<Int>()
+    private val invalidGroundList = mutableMapOf<Int, Int>()
+    private val swingList = mutableListOf<Int>()
+    private val invisibleList = mutableListOf<Int>()
+    private val hitList = mutableListOf<Int>()
+    private val notAlwaysInRadiusList = mutableListOf<Int>()
 
     fun isBot(entity: EntityLivingBase): Boolean {
         // Check if entity is a player
@@ -70,52 +64,52 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
 
         // Anti Bot checks
 
-        if (colorValue.get() && "§" !in entity.displayName.formattedText.replace("§r", ""))
+        if (color && "§" !in entity.displayName.formattedText.replace("§r", ""))
             return true
 
-        if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get())
+        if (livingTime && entity.ticksExisted < livingTimeTicks)
             return true
 
-        if (groundValue.get() && entity.entityId !in ground)
+        if (ground && entity.entityId !in groundList)
             return true
 
-        if (airValue.get() && entity.entityId !in air)
+        if (air && entity.entityId !in airList)
             return true
 
-        if (swingValue.get() && entity.entityId !in swing)
+        if (swing && entity.entityId !in swingList)
             return true
 
-        if (healthValue.get() && entity.health > 20F)
+        if (health && entity.health > 20F)
             return true
 
-        if (entityIDValue.get() && (entity.entityId >= 1000000000 || entity.entityId <= -1))
+        if (entityID && (entity.entityId >= 1000000000 || entity.entityId <= -1))
             return true
 
-        if (derpValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F))
+        if (derp && (entity.rotationPitch > 90F || entity.rotationPitch < -90F))
             return true
 
-        if (wasInvisibleValue.get() && entity.entityId in invisible)
+        if (wasInvisible && entity.entityId in invisibleList)
             return true
 
-        if (armorValue.get()) {
+        if (armor) {
             if (entity.inventory.armorInventory[0] == null && entity.inventory.armorInventory[1] == null &&
                     entity.inventory.armorInventory[2] == null && entity.inventory.armorInventory[3] == null)
                 return true
         }
 
-        if (pingValue.get()) {
+        if (ping) {
             if (mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == 0)
                 return true
         }
 
-        if (needHitValue.get() && entity.entityId !in hit)
+        if (needHit && entity.entityId !in hitList)
             return true
 
-        if (invalidGroundValue.get() && invalidGround.getOrDefault(entity.entityId, 0) >= 10)
+        if (invalidGround && invalidGroundList.getOrDefault(entity.entityId, 0) >= 10)
             return true
 
-        if (tabValue.get()) {
-            val equals = tabModeValue.get() == "Equals"
+        if (tab) {
+            val equals = tabMode == "Equals"
             val targetName = stripColor(entity.displayName.formattedText)
 
             for (networkPlayerInfo in mc.netHandler.playerInfoMap) {
@@ -128,15 +122,15 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
             return true
         }
 
-        if (duplicateInWorldValue.get() &&
+        if (duplicateInWorld &&
             mc.theWorld.loadedEntityList.count { it is EntityPlayer && it.displayNameString == it.displayNameString } > 1) // TODO: I'm 99% certain this doesn't make sense
             return true
 
-        if (duplicateInTabValue.get() &&
+        if (duplicateInTab &&
             mc.netHandler.playerInfoMap.count { entity.name == stripColor(it.getFullName()) } > 1)
             return true
 
-        if (alwaysInRadiusValue.get() && entity.entityId !in notAlwaysInRadius)
+        if (alwaysInRadius && entity.entityId !in notAlwaysInRadiusList)
             return true
 
         return entity.name.isEmpty() || entity.name == mc.thePlayer.name
@@ -158,28 +152,28 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
             val entity = packet.getEntity(mc.theWorld)
 
             if (entity is EntityPlayer) {
-                if (entity.onGround && entity.entityId !in ground)
-                    ground.add(entity.entityId)
+                if (entity.onGround && entity.entityId !in groundList)
+                    groundList += entity.entityId
 
-                if (!entity.onGround && entity.entityId !in air)
-                    air.add(entity.entityId)
+                if (!entity.onGround && entity.entityId !in airList)
+                    airList += entity.entityId
 
                 if (entity.onGround) {
                     if (entity.prevPosY != entity.posY)
-                        invalidGround[entity.entityId] = invalidGround.getOrDefault(entity.entityId, 0) + 1
+                        invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
                 } else {
-                    val currentVL = invalidGround.getOrDefault(entity.entityId, 0) / 2
+                    val currentVL = invalidGroundList.getOrDefault(entity.entityId, 0) / 2
                     if (currentVL <= 0)
-                        invalidGround.remove(entity.entityId)
+                        invalidGroundList -= entity.entityId
                     else
-                        invalidGround[entity.entityId] = currentVL
+                        invalidGroundList[entity.entityId] = currentVL
                 }
 
-                if (entity.isInvisible && entity.entityId !in invisible)
-                    invisible.add(entity.entityId)
+                if (entity.isInvisible && entity.entityId !in invisibleList)
+                    invisibleList += entity.entityId
 
-                if (entity.entityId !in notAlwaysInRadius && mc.thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get())
-                    notAlwaysInRadius.add(entity.entityId)
+                if (entity.entityId !in notAlwaysInRadiusList && mc.thePlayer.getDistanceToEntity(entity) > alwaysRadius)
+                    notAlwaysInRadiusList += entity.entityId
             }
         }
 
@@ -187,8 +181,8 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
             val entity = mc.theWorld.getEntityByID(packet.entityID)
 
             if (entity != null && entity is EntityLivingBase && packet.animationType == 0
-                    && entity.entityId !in swing)
-                swing.add(entity.entityId)
+                    && entity.entityId !in swingList)
+                swingList += entity.entityId
         }
     }
 
@@ -196,8 +190,8 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
     fun onAttack(e: AttackEvent) {
         val entity = e.targetEntity
 
-        if (entity != null && entity is EntityLivingBase && entity.entityId !in hit)
-            hit.add(entity.entityId)
+        if (entity != null && entity is EntityLivingBase && entity.entityId !in hitList)
+            hitList += entity.entityId
     }
 
     @EventTarget
@@ -206,12 +200,12 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
     }
 
     private fun clearAll() {
-        hit.clear()
-        swing.clear()
-        ground.clear()
-        invalidGround.clear()
-        invisible.clear()
-        notAlwaysInRadius.clear()
+        hitList.clear()
+        swingList.clear()
+        groundList.clear()
+        invalidGroundList.clear()
+        invisibleList.clear()
+        notAlwaysInRadiusList.clear()
     }
 
 }

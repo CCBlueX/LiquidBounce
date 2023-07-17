@@ -7,27 +7,36 @@ package net.ccbluex.liquidbounce.ui.client.clickgui
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
+import net.ccbluex.liquidbounce.api.ClientApi
+import net.ccbluex.liquidbounce.api.autoSettingsList
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scaleValue
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrollsValue
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrolls
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
-import net.ccbluex.liquidbounce.ui.client.GuiClientSettings
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.BlackStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
+import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
+import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
+import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.renderer.GlStateManager.disableLighting
 import net.minecraft.client.renderer.RenderHelper
@@ -35,15 +44,26 @@ import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11.glScaled
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 object ClickGui : GuiScreen() {
+
     val panels = mutableListOf<Panel>()
     private val hudIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
-    private val settingsIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/settings_icon.png")
     var style: Style = LiquidBounceStyle
-    var mouseX = 0
-    var mouseY = 0
+    private var mouseX = 0
+        set(value) {
+            field = value.coerceAtLeast(0)
+        }
+    private var mouseY = 0
+        set(value) {
+            field = value.coerceAtLeast(0)
+        }
+
+    // Used when closing ClickGui using its key bind, prevents it from getting closed instantly after getting opened.
+    // Caused by keyTyped being called along with onKey that opens the ClickGui.
+    private var ignoreClosing = false
 
     fun setDefault() {
         panels.clear()
@@ -53,97 +73,99 @@ object ClickGui : GuiScreen() {
         var yPos = 5
 
         for (category in ModuleCategory.values()) {
-            panels.add(object : Panel(category.displayName, 100, yPos, width, height, false) {
-                override val elements = moduleManager.modules.filter { it.category == category }.map { ModuleElement(it) }
-            })
+            panels += object : Panel(category.displayName, 100, yPos, width, height, false) {
+                override val elements =
+                    moduleManager.modules.filter { it.category == category }.map { ModuleElement(it) }
+            }
 
             yPos += 20
         }
 
         yPos += 20
-        panels.add(object : Panel("Targets", 100, yPos, width, height, false) {
+        panels += setupTargetsPanel(100, yPos, width, height)
+
+        // Settings Panel
+        yPos += 20
+        panels += setupSettingsPanel(100, yPos, width, height)
+    }
+
+    private fun setupTargetsPanel(xPos: Int = 100, yPos: Int, width: Int, height: Int) =
+        object : Panel("Targets", xPos, yPos, width, height, false) {
+
             override val elements = listOf(
-                object : ButtonElement("Players") {
-                    override val color
-                        get() = if (targetPlayer) guiColor else Int.MAX_VALUE
-
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetPlayer = !targetPlayer
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
+                ButtonElement("Players", { if (targetPlayer) guiColor else Int.MAX_VALUE }) {
+                    targetPlayer = !targetPlayer
                 },
-                object : ButtonElement("Mobs") {
-                    override val color
-                        get() = if (targetMobs) guiColor else Int.MAX_VALUE
-
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetMobs = !targetMobs
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
+                ButtonElement("Mobs", { if (targetMobs) guiColor else Int.MAX_VALUE }) {
+                    targetMobs = !targetMobs
                 },
-                object : ButtonElement("Animals") {
-                    override val color
-                        get() = if (targetAnimals) guiColor else Int.MAX_VALUE
-
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetAnimals = !targetAnimals
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
+                ButtonElement("Animals", { if (targetAnimals) guiColor else Int.MAX_VALUE }) {
+                    targetAnimals = !targetAnimals
                 },
-                object : ButtonElement("Invisible") {
-                    override val color
-                        get() = if (targetInvisible) guiColor else Int.MAX_VALUE
-
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetInvisible = !targetInvisible
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
+                ButtonElement("Invisible", { if (targetInvisible) guiColor else Int.MAX_VALUE }) {
+                    targetInvisible = !targetInvisible
                 },
-                object : ButtonElement("Dead") {
-                    override val color
-                        get() = if (targetDead) guiColor else Int.MAX_VALUE
+                ButtonElement("Dead", { if (targetDead) guiColor else Int.MAX_VALUE }) {
+                    targetDead = !targetDead
+                },
+            )
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetDead = !targetDead
-                            style.clickSound()
-                            return true
+        }
+
+    private fun setupSettingsPanel(xPos: Int = 100, yPos: Int, width: Int, height: Int) =
+        object : Panel("Auto Settings", xPos, yPos, width, height, false) {
+
+            /**
+             * Auto settings list
+             */
+            override val elements = autoSettingsList?.map {
+                ButtonElement(it.name, { Integer.MAX_VALUE }) {
+                    thread {
+                        runCatching {
+                            displayChatMessage("Loading settings...")
+
+                            // Load settings and apply them
+                            val settings = ClientApi.requestSettingsScript(it.settingId)
+
+                            displayChatMessage("Applying settings...")
+                            SettingsUtils.applyScript(settings)
+                        }.onSuccess {
+                            displayChatMessage("§6Settings applied successfully")
+                            HUD.addNotification(Notification("Updated Settings"))
+                            mc.soundHandler.playSound(
+                                PositionedSoundRecord.create(
+                                    ResourceLocation("random.anvil_use"), 1F
+                                )
+                            )
+                        }.onFailure {
+                            ClientUtils.LOGGER.error("Failed to load settings", it)
+                            displayChatMessage("Failed to load settings: ${it.message}")
                         }
-                        return false
+                    }
+                }.apply {
+                    this.hoverText = buildString {
+                        appendLine("§7Description: §e${it.description.ifBlank { "No description available" }}")
+                        appendLine("§7Type: §e${it.type.displayName}")
+                        appendLine("§7Contributors: §e${it.contributors}")
+                        appendLine("§7Last updated: §e${it.date}")
+                        append("§7Status: §e${it.statusType.displayName} §a(${it.statusDate})")
                     }
                 }
-            )
-        })
-    }
+            } ?: emptyList()
+
+        }
 
     override fun drawScreen(x: Int, y: Int, partialTicks: Float) {
         // Enable DisplayList optimization
         assumeNonVolatile = true
 
-        mouseX = (x / scaleValue.get()).roundToInt()
-        mouseY = (y / scaleValue.get()).roundToInt()
+        mouseX = (x / scale).roundToInt()
+        mouseY = (y / scale).roundToInt()
 
         drawDefaultBackground()
         drawImage(hudIcon, 9, height - 41, 32, 32)
-        drawImage(settingsIcon, 46, height - 41, 32, 32)
 
-        val scale = scaleValue.get().toDouble()
+        val scale = scale.toDouble()
         glScaled(scale, scale, scale)
 
         for (panel in panels) {
@@ -151,11 +173,20 @@ object ClickGui : GuiScreen() {
             panel.drawScreenAndClick(mouseX, mouseY)
         }
 
-        for (panel in panels) {
+        descriptions@ for (panel in panels.reversed()) {
+            // Don't draw hover text when hovering over a panel header.
+            if (panel.isHovered(mouseX, mouseY)) break
+
             for (element in panel.elements) {
-                if (element is ModuleElement) {
-                    if (element.isVisible && element.isHovered(mouseX, mouseY) && element.y <= panel.y + panel.fade)
-                        style.drawDescription(mouseX, mouseY, element.module.description)
+                if (element is ButtonElement) {
+                    if (element.isVisible && element.hoverText.isNotBlank() && element.isHovered(
+                            mouseX, mouseY
+                        ) && element.y <= panel.y + panel.fade
+                    ) {
+                        style.drawHoverText(mouseX, mouseY, element.hoverText)
+                        // Don't draw hover text for any elements below.
+                        break@descriptions
+                    }
                 }
             }
         }
@@ -188,10 +219,9 @@ object ClickGui : GuiScreen() {
 
     private fun handleScroll(wheel: Int) {
         if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
-            scaleValue.set(scaleValue.get() + wheel * 0.0001)
-        }
-        else if (scrollsValue.get()) {
-            for (panel in panels) panel.y += wheel / 10
+            scale += wheel * 0.0001f
+        } else if (scrolls) {
+            for (panel in panels) panel.y = panel.parseY(panel.y + wheel / 10)
         }
     }
 
@@ -199,18 +229,14 @@ object ClickGui : GuiScreen() {
         if (mouseButton == 0 && x in 5..50 && y in height - 50..height - 5) {
             mc.displayGuiScreen(GuiHudDesigner())
             return
-        } else if (mouseButton == 0 && x in 42..87 && y in height - 50..height - 5) {
-            mc.displayGuiScreen(GuiClientSettings())
-            return
         }
 
-        mouseX = (x / scaleValue.get()).roundToInt()
-        mouseY = (y / scaleValue.get()).roundToInt()
+        mouseX = (x / scale).roundToInt()
+        mouseY = (y / scale).roundToInt()
 
         // Handle foremost panel.
-        for (panel in panels.reversed()) {
-            if (panel.mouseClicked(mouseX, mouseY, mouseButton))
-                return
+        panels.reversed().forEachIndexed { index, panel ->
+            if (panel.mouseClicked(mouseX, mouseY, mouseButton)) return
 
             panel.drag = false
 
@@ -218,27 +244,29 @@ object ClickGui : GuiScreen() {
                 panel.x2 = panel.x - mouseX
                 panel.y2 = panel.y - mouseY
                 panel.drag = true
+
+                // Move dragged panel to top.
+                panels.removeAt(panels.lastIndex - index)
+                panels += panel
                 return
             }
         }
     }
 
     public override fun mouseReleased(x: Int, y: Int, state: Int) {
-        mouseX = (x / scaleValue.get()).roundToInt()
-        mouseY = (y / scaleValue.get()).roundToInt()
+        mouseX = (x / scale).roundToInt()
+        mouseY = (y / scale).roundToInt()
 
         for (panel in panels) panel.mouseReleased(mouseX, mouseY, state)
     }
 
     override fun updateScreen() {
-        if (style is SlowlyStyle) {
+        if (style is SlowlyStyle || style is BlackStyle) {
             for (panel in panels) {
                 for (element in panel.elements) {
-                    if (element is ButtonElement)
-                        element.hoverTime += if (element.isHovered(mouseX, mouseY)) 1 else -1
+                    if (element is ButtonElement) element.hoverTime += if (element.isHovered(mouseX, mouseY)) 1 else -1
 
-                    if (element is ModuleElement)
-                        element.slowlyFade += if (element.module.state) 20 else -20
+                    if (element is ModuleElement) element.slowlyFade += if (element.module.state) 20 else -20
                 }
             }
         }
@@ -246,10 +274,28 @@ object ClickGui : GuiScreen() {
         super.updateScreen()
     }
 
+    override fun keyTyped(typedChar: Char, keyCode: Int) {
+        // Close ClickGUI by using its key bind.
+        if (keyCode == ClickGUI.keyBind) {
+            if (ignoreClosing) ignoreClosing = false
+            else mc.displayGuiScreen(null)
+
+            return
+        }
+
+        super.keyTyped(typedChar, keyCode)
+    }
+
     override fun onGuiClosed() {
         saveConfig(clickGuiConfig)
         for (panel in panels) panel.fade = 0
     }
+
+    override fun initGui() {
+        ignoreClosing = true
+    }
+
+    fun Int.clamp(min: Int, max: Int): Int = this.coerceIn(min, max.coerceAtLeast(0))
 
     override fun doesGuiPauseGame() = false
 }

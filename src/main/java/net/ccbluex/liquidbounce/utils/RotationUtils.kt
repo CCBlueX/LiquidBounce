@@ -8,9 +8,8 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
-import net.ccbluex.liquidbounce.utils.extensions.eyes
-import net.ccbluex.liquidbounce.utils.extensions.hitBox
-import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -27,11 +26,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (targetRotation != null) {
+        targetRotation?.let { rotation ->
             if (keepLength > 0) {
                 keepLength--
             } else {
-                resetRotation()
+                if (getRotationDifference(rotation, mc.thePlayer.rotation) <= angleThresholdForReset) {
+                    resetRotation()
+                } else {
+                    val speed = RandomUtils.nextFloat(speedForReset.first, speedForReset.second)
+                    targetRotation = limitAngleChange(rotation, mc.thePlayer.rotation, speed).fixedSensitivity()
+                }
             }
         }
 
@@ -69,10 +73,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
 
         targetRotation?.let {
-            if (!keepCurrentRotation && (it.yaw != serverRotation.yaw || it.pitch != serverRotation.pitch)) {
-                packet.yaw = it.yaw
-                packet.pitch = it.pitch
-            }
+            packet.yaw = it.yaw
+            packet.pitch = it.pitch
         }
 
         serverRotation = Rotation(packet.yaw, packet.pitch)
@@ -87,6 +89,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     var strafe = false
     var strict = false
+
+    var speedForReset = 0f to 0f
+    var angleThresholdForReset = 0f
 
     var targetRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
@@ -117,14 +122,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     val posVec = startPos.addVector(xSearch, ySearch, zSearch)
                     val dist = eyesPos.distanceTo(posVec)
 
-                    val diffX = posVec.xCoord - eyesPos.xCoord
-                    val diffY = posVec.yCoord - eyesPos.yCoord
-                    val diffZ = posVec.zCoord - eyesPos.zCoord
+                    val (diffX, diffY, diffZ) = posVec.subtract(eyesPos)
                     val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
 
                     val rotation = Rotation(
-                        MathHelper.wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
-                        MathHelper.wrapAngleTo180_float(-Math.toDegrees(atan2(diffY, diffXZ)).toFloat())
+                        MathHelper.wrapAngleTo180_float(atan2(diffZ, diffX).toDegreesF() - 90f),
+                        MathHelper.wrapAngleTo180_float(-atan2(diffY, diffXZ).toDegreesF())
                     )
 
                     val rotationVector = getVectorForRotation(rotation)
@@ -173,9 +176,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         velocity = min((velocity * velocity + velocity * 2) / 3, 1f)
 
         val rotation = Rotation(
-            Math.toDegrees(atan2(posZ, posX)).toFloat() - 90,
-            -Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)))
-                .toFloat()
+            atan2(posZ, posX).toDegreesF() - 90f,
+            atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)).toDegreesF()
         )
         if (silent) setTargetRotation(rotation)
         else limitAngleChange(
@@ -190,17 +192,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict predict new location of your body
      * @return rotation
      */
-    fun toRotation(vec: Vec3, predict: Boolean): Rotation {
-        val eyesPos = mc.thePlayer.eyes
-        if (predict) eyesPos.addVector(mc.thePlayer.motionX, mc.thePlayer.motionY, mc.thePlayer.motionZ)
-        val diffX = vec.xCoord - eyesPos.xCoord
-        val diffY = vec.yCoord - eyesPos.yCoord
-        val diffZ = vec.zCoord - eyesPos.zCoord
+    fun toRotation(vec: Vec3, predict: Boolean, fromEntity: Entity = mc.thePlayer): Rotation {
+        val eyesPos = fromEntity.eyes
+        if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
+
+        val (diffX, diffY, diffZ) = vec.subtract(eyesPos)
         return Rotation(
             MathHelper.wrapAngleTo180_float(
-                Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f
+                atan2(diffZ, diffX).toDegreesF() - 90f
             ), MathHelper.wrapAngleTo180_float(
-                -Math.toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ))).toFloat()
+                -atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)).toDegreesF()
             )
         )
     }
@@ -212,7 +213,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return center of box
      */
     fun getCenter(bb: AxisAlignedBB) = Vec3(
-        bb.minX + (bb.maxX - bb.minX) * 0.5, bb.minY + (bb.maxY - bb.minY) * 0.5, bb.minZ + (bb.maxZ - bb.minZ) * 0.5
+        (bb.minX + bb.maxX) * 0.5, (bb.minY + bb.maxY) * 0.5, (bb.minZ + bb.maxZ) * 0.5
     )
 
     /**
@@ -292,6 +293,15 @@ object RotationUtils : MinecraftInstance(), Listenable {
             x += 0.1
         }
 
+        if (vecRotation == null) {
+            val vec = getNearestPointBB(eyes, bb)
+            val dist = eyes.distanceTo(vec)
+
+            if (dist <= distance && (throughWalls || isVisible(vec))) {
+                return VecRotation(vec, toRotation(vec, predict))
+            }
+        }
+
         return vecRotation
     }
 
@@ -306,21 +316,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
     )
 
     /**
-     * Calculate difference between the server rotation and your rotation
-     *
-     * @param rotation your rotation
-     * @return difference between rotation
-     */
-    fun getRotationDifference(rotation: Rotation) = getRotationDifference(rotation, serverRotation)
-
-    /**
      * Calculate difference between two rotations
      *
      * @param a rotation
      * @param b rotation
      * @return difference between rotation
      */
-    fun getRotationDifference(a: Rotation, b: Rotation) = hypot(getAngleDifference(a.yaw, b.yaw), (a.pitch - b.pitch))
+    fun getRotationDifference(a: Rotation, b: Rotation = serverRotation) =
+        hypot(getAngleDifference(a.yaw, b.yaw), a.pitch - b.pitch)
 
     /**
      * Limit your rotation using a turn speed
@@ -354,11 +357,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return target vector
      */
     fun getVectorForRotation(rotation: Rotation): Vec3 {
-        val yawCos = cos(-rotation.yaw * 0.017453292 - Math.PI)
-        val yawSin = sin(-rotation.yaw * 0.017453292 - Math.PI)
-        val pitchCos = -cos(-rotation.pitch * 0.017453292)
-        val pitchSin = sin(-rotation.pitch * 0.017453292)
-        return Vec3(yawSin * pitchCos, pitchSin, yawCos * pitchCos)
+        val f = MathHelper.cos(-rotation.yaw.toRadians() - PI.toFloat())
+        val f1 = MathHelper.sin(-rotation.yaw.toRadians() - PI.toFloat())
+        val f2 = -MathHelper.cos(-rotation.pitch.toRadians())
+        val f3 = MathHelper.sin(-rotation.pitch.toRadians())
+        return Vec3((f1 * f2).toDouble(), f3.toDouble(), (f * f2).toDouble())
     }
 
     /**
@@ -392,7 +395,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
      *
      * @param rotation your target rotation
      */
-    fun setTargetRotation(rotation: Rotation, keepLength: Int = 1, strafe: Boolean = false, strict: Boolean = false) {
+    fun setTargetRotation(
+        rotation: Rotation,
+        keepLength: Int = 1,
+        strafe: Boolean = false,
+        strict: Boolean = false,
+        resetSpeed: Pair<Float, Float> = 180f to 180f,
+        angleThresholdForReset: Float = 180f
+    ) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) return
 
         targetRotation = rotation.fixedSensitivity()
@@ -400,6 +410,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         this.strafe = strafe
         this.strict = strict
         this.keepLength = keepLength
+        this.speedForReset = resetSpeed
+        this.angleThresholdForReset = angleThresholdForReset
     }
 
     fun resetRotation() {
@@ -416,17 +428,15 @@ object RotationUtils : MinecraftInstance(), Listenable {
         strict = false
     }
 
-
-    fun getFixedAngleDelta(sensitivity: Float = mc.gameSettings.mouseSensitivity): Float {
-        val f = sensitivity * 0.6f + 0.2f
-        return f * f * f * 1.2f
-    }
+    /**
+     * Returns smallest angle difference possible with a specific sensitivity ("gcd")
+     */
+    fun getFixedAngleDelta(sensitivity: Float = mc.gameSettings.mouseSensitivity) =
+        (sensitivity * 0.6f + 0.2f).pow(3) * 1.2f
 
     /**
      * Returns angle that is legitimately accomplishable with player's current sensitivity
      */
-    fun getFixedSensitivityAngle(targetAngle: Float, startAngle: Float = 0f, gcd: Float = getFixedAngleDelta()): Float {
-        val angleDelta = targetAngle - startAngle
-        return startAngle + (angleDelta / gcd).roundToInt() * gcd
-    }
+    fun getFixedSensitivityAngle(targetAngle: Float, startAngle: Float = 0f, gcd: Float = getFixedAngleDelta()) =
+        startAngle + ((targetAngle - startAngle) / gcd).roundToInt() * gcd
 }

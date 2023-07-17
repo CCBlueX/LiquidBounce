@@ -182,7 +182,7 @@ public class GuiPortScanner extends GuiScreen {
                 buttonToggle.displayString = running ? "Stop" : "Start";
                 break;
             case 2:
-                final File selectedFile = MiscUtils.saveFileChooser();
+                final File selectedFile = MiscUtils.INSTANCE.saveFileChooser();
 
                 if (selectedFile == null || selectedFile.isDirectory())
                     return;
@@ -205,7 +205,7 @@ public class GuiPortScanner extends GuiScreen {
                     JOptionPane.showMessageDialog(null, "Exported successfully!", "Port Scanner", JOptionPane.INFORMATION_MESSAGE);
                 } catch (final Exception e) {
                     e.printStackTrace();
-                    MiscUtils.showErrorPopup("Error", "Exception class: " + e.getClass().getName() + "\nMessage: " + e.getMessage());
+                    MiscUtils.INSTANCE.showErrorPopup("Error", "Exception class: " + e.getClass().getName() + "\nMessage: " + e.getMessage());
                 }
                 break;
         }
@@ -220,7 +220,7 @@ public class GuiPortScanner extends GuiScreen {
         }
 
         if (Keyboard.KEY_TAB == keyCode)
-            TabUtils.tab(hostField, minPortField, maxPortField);
+            TabUtils.INSTANCE.tab(hostField, minPortField, maxPortField, threadsField);
 
         if (running)
             return;

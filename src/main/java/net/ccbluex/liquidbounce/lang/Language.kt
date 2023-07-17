@@ -1,9 +1,8 @@
 package net.ccbluex.liquidbounce.lang
 
-import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.resources.I18n
 
 fun translationMenu(key: String, vararg args: Any) = LanguageManager.getTranslation("menu.$key", *args)
 fun translation(key: String, vararg args: Any) = LanguageManager.getTranslation(key, *args)
@@ -23,7 +22,8 @@ object LanguageManager : MinecraftInstance() {
     // List of all languages
     val knownLanguages = arrayOf(
         "en_US",
-        "pt_BR"
+        "pt_BR",
+        "zh_CN",
     )
     private val languageMap = mutableMapOf<String, Language>()
 
@@ -37,7 +37,7 @@ object LanguageManager : MinecraftInstance() {
         for (language in knownLanguages) {
             runCatching {
                 val languageFile = javaClass.getResourceAsStream("/assets/minecraft/liquidbounce/lang/$language.json")
-                val languageJson = FileManager.PRETTY_GSON.fromJson(languageFile.bufferedReader(), Language::class.java)
+                val languageJson = PRETTY_GSON.fromJson(languageFile.bufferedReader(), Language::class.java)
                 languageMap[language] = languageJson
             }.onSuccess {
                 LOGGER.info("Loaded language $language")
@@ -59,8 +59,8 @@ object LanguageManager : MinecraftInstance() {
 
 class Language(val locale: String, val contributors: List<String>, val translations: Map<String, String>) {
 
-    fun getTranslation(key: String, vararg args: Any): String? = translations[key]?.format(*args)
+    fun getTranslation(key: String, vararg args: Any) = translations[key]?.format(*args)
 
-    override fun toString(): String = locale
+    override fun toString() = locale
 
 }

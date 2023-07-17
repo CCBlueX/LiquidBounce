@@ -33,8 +33,8 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
             if (shortcutJson !is JsonObject)
                 continue
 
-            val name = shortcutJson.get("name")?.asString ?: continue
-            val scriptJson = shortcutJson.get("script")?.asJsonArray ?: continue
+            val name = shortcutJson["name"]?.asString ?: continue
+            val scriptJson = shortcutJson["script"]?.asJsonArray ?: continue
 
             val script = mutableListOf<Pair<Command, Array<String>>>()
 
@@ -42,12 +42,12 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
                 if (scriptCommand !is JsonObject)
                     continue
 
-                val commandName = scriptCommand.get("name")?.asString ?: continue
-                val arguments = scriptCommand.get("arguments")?.asJsonArray ?: continue
+                val commandName = scriptCommand["name"]?.asString ?: continue
+                val arguments = scriptCommand["arguments"]?.asJsonArray ?: continue
 
                 val command = commandManager.getCommand(commandName) ?: continue
 
-                script.add(Pair(command, arguments.map { it.asString }.toTypedArray()))
+                script += command to arguments.map { it.asString }.toTypedArray()
             }
 
             commandManager.registerCommand(Shortcut(name, script))

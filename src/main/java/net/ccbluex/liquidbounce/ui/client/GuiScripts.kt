@@ -37,13 +37,15 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
         list.elementClicked(-1, false, 0, 0)
 
         val j = 22
-        buttonList.add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
-        buttonList.add(GuiButton(1, width - 80, j + 24, 70, 20, "Import"))
-        buttonList.add(GuiButton(2, width - 80, j + 24 * 2, 70, 20, "Delete"))
-        buttonList.add(GuiButton(3, width - 80, j + 24 * 3, 70, 20, "Reload"))
-        buttonList.add(GuiButton(4, width - 80, j + 24 * 4, 70, 20, "Folder"))
-        buttonList.add(GuiButton(5, width - 80, j + 24 * 5, 70, 20, "Docs"))
-        buttonList.add(GuiButton(6, width - 80, j + 24 * 6, 70, 20, "Find Scripts"))
+        buttonList.run {
+            add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
+            add(GuiButton(1, width - 80, j + 24, 70, 20, "Import"))
+            add(GuiButton(2, width - 80, j + 24 * 2, 70, 20, "Delete"))
+            add(GuiButton(3, width - 80, j + 24 * 3, 70, 20, "Reload"))
+            add(GuiButton(4, width - 80, j + 24 * 4, 70, 20, "Folder"))
+            add(GuiButton(5, width - 80, j + 24 * 5, 70, 20, "Docs"))
+            add(GuiButton(6, width - 80, j + 24 * 6, 70, 20, "Find Scripts"))
+        }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -91,7 +93,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                         fileStream.close()
 
                         if ("/" !in entryName)
-                            scriptFiles.add(entryFile)
+                            scriptFiles += entryFile
                     }
 
                     scriptFiles.forEach { scriptFile -> scriptManager.loadScript(scriptFile) }
@@ -103,7 +105,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 MiscUtils.showErrorPopup("Wrong file extension.", "The file extension has to be .js or .zip")
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while importing a script.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
 
             2 -> try {
@@ -116,19 +118,19 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 }
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while deleting a script.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
             3 -> try {
                 reloadScripts()
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while reloading all scripts.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
             4 -> try {
                 Desktop.getDesktop().open(scriptsFolder)
             } catch (t: Throwable) {
                 LOGGER.error("Something went wrong while trying to open your scripts folder.", t)
-                MiscUtils.showErrorPopup(t.javaClass.name, t.message)
+                MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
             5 -> try {
                 Desktop.getDesktop().browse(URL("https://liquidbounce.net/docs/ScriptAPI/Getting%20Started").toURI())

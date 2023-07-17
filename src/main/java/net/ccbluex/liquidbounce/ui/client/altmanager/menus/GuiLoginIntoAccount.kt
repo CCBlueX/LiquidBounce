@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomUsername
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -31,17 +31,19 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         Keyboard.enableRepeatEvents(true)
 
         // Add button
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 - 60 , if (directLogin) "Login" else "Add")
-            .also { addButton = it })
+        buttonList.run {
+            add(GuiButton(1, width / 2 - 100, height / 2 - 60 , if (directLogin) "Login" else "Add")
+                .also { addButton = it })
 
-        // Random button
-        buttonList.add(GuiButton(2, width / 2 + 105, height / 2 - 90, 40, 20, "Random"))
+            // Random button
+            add(GuiButton(2, width / 2 + 105, height / 2 - 90, 40, 20, "Random"))
 
-        // Login via Microsoft account
-        buttonList.add(GuiButton(3, width / 2 - 100, height / 2, "${if (directLogin) "Login to" else "Add"} a Microsoft account"))
+            // Login via Microsoft account
+            add(GuiButton(3, width / 2 - 100, height / 2, "${if (directLogin) "Login to" else "Add"} a Microsoft account"))
 
-        // Back button
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
+            // Back button
+            add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
+        }
 
         username = GuiTextField(2, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
         username.isFocused = false
@@ -79,7 +81,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
             }
 
             2 -> {
-                username.text = RandomUtils.randomUsername()
+                username.text = randomUsername()
             }
 
             3 -> {
@@ -105,6 +107,11 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
 
             Keyboard.KEY_RETURN -> {
                 actionPerformed(addButton)
+                return
+            }
+
+            Keyboard.KEY_TAB -> {
+                username.isFocused = true
                 return
             }
         }

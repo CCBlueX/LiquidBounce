@@ -34,7 +34,7 @@ class XrayCommand : Command("xray") {
                             return
                         }
 
-                        XRay.xrayBlocks.add(block)
+                        XRay.xrayBlocks += block
                         saveConfig(xrayConfig)
                         chat("§7Added block §8${block.localizedName}§7.")
                         playEdit()

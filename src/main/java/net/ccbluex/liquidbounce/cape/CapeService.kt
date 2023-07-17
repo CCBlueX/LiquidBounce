@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_API
+import net.ccbluex.liquidbounce.api.ClientApi.API_ENDPOINT
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.SessionEvent
@@ -49,16 +49,16 @@ object CapeService : Listenable, MinecraftInstance() {
     var clientCapeUser: CapeSelfUser? = null
 
     /**
-     * The API URL to get all cape carriers.
-     * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
-     */
-    private const val CAPE_CARRIERS_URL = "$CLIENT_API/cape/carriers"
-
-    /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
      * we have a separate domain.
      */
     private const val CAPE_API = "http://capes.liquidbounce.net/api/v1/cape"
+
+    /**
+     * The API URL to get all cape carriers.
+     * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
+     */
+    private const val CAPE_CARRIERS_URL = "$CAPE_API/carriers"
 
     private const val SELF_CAPE_URL = "$CAPE_API/self"
 
@@ -96,7 +96,7 @@ object CapeService : Listenable, MinecraftInstance() {
                             // Should be a JSON Array. It will fail if not.
                             val arrayInArray = objInArray.asJsonArray
                             // 1. is UUID 2. is name of cape
-                            val (uuid, name) = Pair(arrayInArray.get(0).asString, arrayInArray.get(1).asString)
+                            val (uuid, name) = arrayInArray[0].asString to arrayInArray[1].asString
 
                             val dashedUuid = Regex("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)")
                                 .replace(uuid, "$1-$2-$3-$4-$5")
@@ -135,13 +135,13 @@ object CapeService : Listenable, MinecraftInstance() {
         if (uuid == mc.session.profile.id && clientCapeUser != null) {
             // If the UUID is the same as the current user, we can use the clientCapeUser
             val capeName = clientCapeUser.capeName
-            return Pair(capeName, String.format(CAPE_NAME_DL_BASE_URL, capeName))
+            return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)
         }
 
         // Lookup cape carrier by UUID, if UUID is matching
         val capeCarrier = capeCarriers.find { it.uuid == uuid } ?: return null
 
-        return Pair(capeCarrier.capeName, String.format(CAPE_NAME_DL_BASE_URL, capeCarrier.capeName))
+        return capeCarrier.capeName to String.format(CAPE_NAME_DL_BASE_URL, capeCarrier.capeName)
     }
 
     fun login(token: String) {

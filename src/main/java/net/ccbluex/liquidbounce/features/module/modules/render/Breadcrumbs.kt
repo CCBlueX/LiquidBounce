@@ -19,21 +19,15 @@ import java.awt.Color
 import java.util.*
 
 object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
-    val colorRainbow = BoolValue("Rainbow", false)
-    val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    val colorGreenValue = object : IntegerValue("G", 179, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    val colorBlueValue = object : IntegerValue("B", 72, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
+    val colorRainbow by BoolValue("Rainbow", false)
+    val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
+    val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
+    val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
     private val positions = LinkedList<DoubleArray>()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+        val color = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
 
         synchronized(positions) {
             glPushMatrix()
@@ -68,7 +62,7 @@ object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         synchronized(positions) {
-            positions.add(doubleArrayOf(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY, mc.thePlayer.posZ))
+            positions += doubleArrayOf(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY, mc.thePlayer.posZ)
         }
     }
 
@@ -76,17 +70,13 @@ object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
         val thePlayer = mc.thePlayer ?: return
 
         synchronized(positions) {
-            positions.add(doubleArrayOf(thePlayer.posX,
-                    thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight * 0.5f,
-                    thePlayer.posZ))
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight * 0.5f, thePlayer.posZ)
 
-            positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ))
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
         }
-        super.onEnable()
     }
 
     override fun onDisable() {
         synchronized(positions) { positions.clear() }
-        super.onDisable()
     }
 }

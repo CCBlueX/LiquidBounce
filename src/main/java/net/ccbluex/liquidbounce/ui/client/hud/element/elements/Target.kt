@@ -35,7 +35,7 @@ import kotlin.math.pow
 class Target : Element() {
 
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
-    private val fadeSpeed = FloatValue("FadeSpeed", 2F, 1F, 9F)
+    private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
 
     private var easingHealth = 0F
     private var lastTarget: Entity? = null
@@ -70,7 +70,7 @@ class Target : Element() {
                 drawRect((easingHealth / target.maxHealth) * width, 34F,
                         (target.health / target.maxHealth) * width, 36F, Color(44, 201, 144).rgb)
 
-            easingHealth += ((target.health - easingHealth) / 2f.pow(10f - fadeSpeed.get())) * deltaTime
+            easingHealth += ((target.health - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
 
             target.name?.let { Fonts.font40.drawString(it, 36, 3, 0xffffff) }
             Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)

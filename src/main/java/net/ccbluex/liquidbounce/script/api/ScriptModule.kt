@@ -12,7 +12,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.value.Value
 
-class ScriptModule(name: String, description: String, category: ModuleCategory, private val moduleObject: JSObject) : Module(name, category, description) {
+class ScriptModule(name: String, category: ModuleCategory, description: String, private val moduleObject: JSObject)
+    : Module(name, category, forcedDescription = description) {
 
     private val events = HashMap<String, JSObject>()
     private val _values = LinkedHashMap<String, Value<*>>()
@@ -38,7 +39,7 @@ class ScriptModule(name: String, description: String, category: ModuleCategory, 
     override val values
         get() = _values.values.toList()
 
-    override var tag: String?
+    override var tag
         get() = _tag
         set(value) {
             _tag = value
@@ -120,7 +121,7 @@ class ScriptModule(name: String, description: String, category: ModuleCategory, 
         try {
             events[eventName]?.call(moduleObject, payload)
         } catch (throwable: Throwable) {
-            LOGGER.error("[ScriptAPI] Exception in module '$name'!", throwable)
+            LOGGER.error("[ScriptAPI] Exception in module '${getName()}'!", throwable)
         }
     }
 }

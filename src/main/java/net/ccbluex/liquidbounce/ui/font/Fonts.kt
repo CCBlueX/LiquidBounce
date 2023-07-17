@@ -24,6 +24,7 @@ import java.util.zip.ZipInputStream
 import kotlin.io.path.inputStream
 
 object Fonts : MinecraftInstance() {
+
     @FontDetails(fontName = "Minecraft Font")
     val minecraftFont: FontRenderer = mc.fontRendererObj
 
@@ -123,17 +124,17 @@ object Fonts : MinecraftInstance() {
 
     val fonts: List<FontRenderer>
         get() {
-            val fonts: MutableList<FontRenderer> = ArrayList()
+            val fonts = mutableListOf<FontRenderer>()
             for (fontField in Fonts::class.java.declaredFields) {
                 try {
                     fontField.isAccessible = true
                     val fontObj = fontField[null]
-                    if (fontObj is FontRenderer) fonts.add(fontObj)
+                    if (fontObj is FontRenderer) fonts += fontObj
                 } catch (e: IllegalAccessException) {
                     e.printStackTrace()
                 }
             }
-            fonts.addAll(CUSTOM_FONT_RENDERERS.values)
+            fonts += CUSTOM_FONT_RENDERERS.values
             return fonts
         }
 

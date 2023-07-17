@@ -13,8 +13,10 @@ import org.lwjgl.input.Keyboard
 class GuiTools(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun initGui() {
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Port Scanner"))
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 48 + 25 * 2 + 5, "Back"))
+        buttonList.run {
+            add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Port Scanner"))
+            add(GuiButton(0, width / 2 - 100, height / 4 + 48 + 25 * 2 + 5, "Back"))
+        }
     }
 
     override fun actionPerformed(button: GuiButton) {

@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.EventManager.unregisterListener
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.CommandManager.registerCommand
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
@@ -56,13 +56,14 @@ object ModuleManager : Listenable {
             Aimbot,
             AirJump,
             AirLadder,
+            Ambience,
             Animations,
             AntiAFK,
             AntiBlind,
             AntiBot,
             AntiCactus,
             AntiHunger,
-            AntiFireBall,
+            AntiFireball,
             AtAllProvider,
             AttackEffects,
             AutoAccount,
@@ -78,6 +79,7 @@ object ModuleManager : Listenable {
             AutoTool,
             AutoWalk,
             AutoWeapon,
+            AvoidHazards,
             Backtrack,
             BedGodMode,
             Blink,
@@ -161,6 +163,7 @@ object ModuleManager : Listenable {
             Plugins,
             PortalMenu,
             PotionSaver,
+            PotionSpoof,
             Projectiles,
             ProphuntESP,
             Reach,
@@ -254,7 +257,7 @@ object ModuleManager : Listenable {
         if (values.isEmpty())
             return
 
-        CommandManager.registerCommand(ModuleCommand(module, values))
+        registerCommand(ModuleCommand(module, values))
     }
 
     /**

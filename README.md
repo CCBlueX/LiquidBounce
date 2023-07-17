@@ -49,3 +49,6 @@ We appreciate contributions. So if you want to support us, feel free to make cha
 2. Re-work most of the render code.
 
 If you have experience in one or more of these fields, we would highly appreciate your support.
+
+## Stats
+![Alt](https://repobeats.axiom.co/api/embed/53a8b71ca387182c6f12a1c98a88edbe0a7bae99.svg "Repobeats analytics image")

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.chat.packet
 
 import com.google.gson.*
+import me.liuli.elixir.utils.set
 import net.ccbluex.liquidbounce.chat.packet.packets.Packet
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import java.lang.reflect.Type
@@ -45,13 +46,13 @@ class PacketDeserializer : JsonDeserializer<Packet> {
         // TODO: Use SerializedPacket class
 
         val packetObject = json.asJsonObject
-        val packetName = packetObject.get("m").asString
+        val packetName = packetObject["m"].asString
 
-        if(packetName !in packetRegistry) return null
+        if (packetName !in packetRegistry) return null
 
-        if(!packetObject.has("c")) packetObject.add("c", JsonObject())
+        if (!packetObject.has("c")) packetObject["c"] = JsonObject()
 
-        return PRETTY_GSON.fromJson(packetObject.get("c"), packetRegistry[packetName])
+        return PRETTY_GSON.fromJson(packetObject["c"], packetRegistry[packetName])
 
     }
 

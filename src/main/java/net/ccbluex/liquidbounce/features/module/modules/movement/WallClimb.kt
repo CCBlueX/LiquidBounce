@@ -19,13 +19,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
-    private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
-    private val clipMode = object : ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast") {
-        override fun isSupported() = modeValue.get() == "Clip"
-    }
-    private val checkerClimbMotionValue = object : FloatValue("CheckerClimbMotion", 0f, 0f, 1f) {
-        override fun isSupported() = modeValue.get() == "CheckerClimb"
-    }
+    private val mode by ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
+    private val clipMode by ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast") { mode == "Clip" }
+    private val checkerClimbMotion by FloatValue("CheckerClimbMotion", 0f, 0f..1f) { mode == "CheckerClimb" }
 
     private var glitch = false
     private var waited = 0
@@ -37,7 +33,7 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
         if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava)
             return
 
-        if (modeValue.get() == "Simple") {
+        if (mode == "Simple") {
             event.y = 0.2
             thePlayer.motionY = 0.0
         }
@@ -51,12 +47,12 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
             return
 
 
-        when (modeValue.get().lowercase()) {
+        when (mode.lowercase()) {
             "clip" -> {
                 if (thePlayer.motionY < 0)
                     glitch = true
                 if (thePlayer.isCollidedHorizontally) {
-                    when (clipMode.get().lowercase()) {
+                    when (clipMode.lowercase()) {
                         "jump" -> if (thePlayer.onGround)
                             thePlayer.jump()
                         "fast" -> if (thePlayer.onGround)
@@ -70,7 +66,7 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
                 val isInsideBlock = collideBlockIntersects(thePlayer.entityBoundingBox) {
                     it != Blocks.air
                 }
-                val motion = checkerClimbMotionValue.get()
+                val motion = checkerClimbMotion
 
                 if (isInsideBlock && motion != 0f)
                     thePlayer.motionY = motion.toDouble()
@@ -113,7 +109,7 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
     fun onBlockBB(event: BlockBBEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        val mode = modeValue.get()
+        val mode = mode
 
         when (mode.lowercase()) {
             "checkerclimb" -> if (event.y > thePlayer.posY) event.boundingBox = null

@@ -117,7 +117,7 @@ object CommandManager {
                             || it.alias.any { alias -> alias.startsWith(rawInput, true) }
                     }
                     .map {
-                        val alias: String = if (it.command.startsWith(rawInput, true))
+                        val alias = if (it.command.startsWith(rawInput, true))
                             it.command
                         else {
                             it.alias.first { alias -> alias.startsWith(rawInput, true) }
@@ -150,7 +150,7 @@ object CommandManager {
             registerCommand(Shortcut(name, ShortcutParser.parse(script).map {
                 val command = getCommand(it[0]) ?: throw IllegalArgumentException("Command ${it[0]} not found!")
 
-                Pair(command, it.toTypedArray())
+                command to it.toTypedArray()
             }))
 
             saveConfig(shortcutsConfig)

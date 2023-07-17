@@ -8,10 +8,11 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.item.isEmpty
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
@@ -31,69 +32,68 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
      * OPTIONS
      */
 
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 200, 0, 400) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = minDelayValue.get()
-            if (i > newValue)
-                set(i)
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 200, 0..400) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 
-            nextDelay = randomDelay(minDelayValue.get(), get())
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            nextDelay = randomDelay(minDelay, newValue)
         }
     }
+    private val maxDelay by maxDelayValue
 
-    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 150, 0, 400) {
+    private val minDelay: Int by object : IntegerValue("MinDelay", 150, 0..400) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = maxDelayValue.get()
-
-            if (i < newValue)
-                set(i)
-
-            nextDelay = randomDelay(get(), maxDelayValue.get())
+            nextDelay = randomDelay(newValue, maxDelay)
         }
 
         override fun isSupported() = !maxDelayValue.isMinimal()
     }
-    private val delayOnFirstValue = BoolValue("DelayOnFirst", false)
+    private val delayOnFirst by BoolValue("DelayOnFirst", false)
 
-    private val takeRandomizedValue = BoolValue("TakeRandomized", false)
-    private val onlyItemsValue = BoolValue("OnlyItems", false)
-    private val noCompassValue = BoolValue("NoCompass", false)
-    private val autoCloseValue = BoolValue("AutoClose", true)
+    private val takeRandomized by BoolValue("TakeRandomized", false)
+    private val onlyItems by BoolValue("OnlyItems", false)
+    private val noCompass by BoolValue("NoCompass", false)
+    private val autoClose by BoolValue("AutoClose", true)
 
-    private val autoCloseMaxDelayValue: IntegerValue = object : IntegerValue("AutoCloseMaxDelay", 0, 0, 400) {
+    private val autoCloseMaxDelayValue: IntegerValue = object : IntegerValue("AutoCloseMaxDelay", 0, 0..400) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(autoCloseMinDelay)
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = autoCloseMinDelayValue.get()
-            if (i > newValue) set(i)
-            nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), get())
+            nextCloseDelay = randomDelay(autoCloseMinDelay, newValue)
         }
 
-        override fun isSupported() = autoCloseValue.get()
+        override fun isSupported() = autoClose
     }
+    private val autoCloseMaxDelay by autoCloseMaxDelayValue
 
-    private val autoCloseMinDelayValue: IntegerValue = object : IntegerValue("AutoCloseMinDelay", 0, 0, 400) {
+    private val autoCloseMinDelay: Int by object : IntegerValue("AutoCloseMinDelay", 0, 0..400) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(autoCloseMaxDelay)
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = autoCloseMaxDelayValue.get()
-            if (i < newValue) set(i)
-            nextCloseDelay = randomDelay(get(), autoCloseMaxDelayValue.get())
+            nextCloseDelay = randomDelay(newValue, autoCloseMaxDelay)
         }
 
-        override fun isSupported() = autoCloseValue.get() && !autoCloseMaxDelayValue.isMinimal()
+        override fun isSupported() = autoClose && !autoCloseMaxDelayValue.isMinimal()
     }
 
-    private val closeOnFullValue = BoolValue("CloseOnFull", true)
-    private val chestTitleValue = BoolValue("ChestTitle", false)
+    private val closeOnFull by BoolValue("CloseOnFull", true)
+    private val chestTitle by BoolValue("ChestTitle", false)
 
     /**
      * VALUES
      */
 
     private val delayTimer = MSTimer()
-    private var nextDelay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+    private var nextDelay = randomDelay(minDelay, maxDelay)
 
     private val autoCloseTimer = MSTimer()
-    private var nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+    private var nextCloseDelay = randomDelay(autoCloseMinDelay, autoCloseMaxDelay)
 
     private var contentReceived = 0
+
+    private var tickedActions = hashMapOf<() -> Unit, Int>()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -102,9 +102,9 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         val screen = mc.currentScreen ?: return
 
         if (screen !is GuiChest || mc.currentScreen == null) {
-            if (delayOnFirstValue.get())
-                delayTimer.reset()
+            if (delayOnFirst) delayTimer.reset()
             autoCloseTimer.reset()
+            tickedActions.clear()
             return
         }
 
@@ -113,23 +113,29 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
             return
         }
 
-
-
         // No Compass
-        if (noCompassValue.get() && thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass")
+        if (noCompass && thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass") {
             return
+        }
 
         // Chest title
-        if (chestTitleValue.get() && (screen.lowerChestInventory == null ||
-            ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))).displayName !in screen.lowerChestInventory.name))
+        if (chestTitle && (screen.lowerChestInventory == null || ItemStack(
+                Item.itemRegistry.getObject(
+                    ResourceLocation(
+                        "minecraft:chest"
+                    )
+                )
+            ).displayName !in screen.lowerChestInventory.name)
+        ) {
             return
+        }
 
         // Is empty?
-        if (!isEmpty(screen) && (!closeOnFullValue.get() || !fullInventory)) {
+        if (!isEmpty(screen) && (!closeOnFull || !fullInventory)) {
             autoCloseTimer.reset()
 
             // Randomized
-            if (takeRandomizedValue.get()) {
+            if (takeRandomized) {
                 do {
                     val items = mutableListOf<Slot>()
 
@@ -138,14 +144,22 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                         val stack = slot.stack
 
-                        if (stack != null && (!onlyItemsValue.get() || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1)))
-                            items.add(slot)
+                        if (stack != null && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(
+                                stack, -1
+                            )) && !tickedActions.containsValue(slot.slotNumber)
+                        ) items += slot
                     }
 
-                    val randomSlot = nextInt(endExclusive = items.size)
-                    val slot = items[randomSlot]
+                    if (items.size > 0) {
+                        val randomSlot = nextInt(endExclusive = items.size)
+                        val slot = items[randomSlot]
 
-                    move(screen, slot)
+                        tickedActions[{
+                            move(screen, slot)
+                        }] = slot.slotNumber
+
+                        resetDelay()
+                    }
                 } while (delayTimer.hasTimePassed(nextDelay) && items.isNotEmpty())
                 return
             }
@@ -156,14 +170,37 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                 val stack = slot.stack
 
-                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack)) {
-                    move(screen, slot)
+                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, slot.slotNumber)) {
+                    tickedActions[{
+                        move(screen, slot)
+                    }] = slot.slotNumber
+
+                    resetDelay()
                 }
             }
-        } else if (autoCloseValue.get() && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay)) {
-            thePlayer.closeScreen()
-            nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+        } else if (autoClose && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(
+                nextCloseDelay
+            ) && !tickedActions.containsValue(-1)
+        ) {
+            tickedActions[{
+                thePlayer.closeScreen()
+            }] = -1
+
+            nextCloseDelay = randomDelay(autoCloseMinDelay, autoCloseMaxDelay)
         }
+    }
+
+    override fun onEnable() {
+        tickedActions.clear()
+    }
+
+    @EventTarget
+    private fun onTick(event: TickEvent) {
+        for (action in tickedActions) {
+            action.key()
+        }
+
+        tickedActions.clear()
     }
 
     @EventTarget
@@ -175,15 +212,21 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         }
     }
 
-    private fun shouldTake(stack: ItemStack?): Boolean {
-        return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || stack.item !is ItemBlock)
-                && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1))
+    private fun shouldTake(stack: ItemStack?, slot: Int): Boolean {
+        return stack != null && !stack.isEmpty && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(
+            stack, -1
+        )) && !tickedActions.containsValue(
+            slot
+        )
     }
 
     private fun move(screen: GuiChest, slot: Slot) {
         screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
+    }
+
+    private fun resetDelay() {
         delayTimer.reset()
-        nextDelay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+        nextDelay = randomDelay(minDelay, maxDelay)
     }
 
     private fun isEmpty(chest: GuiChest): Boolean {
@@ -192,13 +235,12 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
             val stack = slot.stack
 
-            if (shouldTake(stack))
-                return false
+            if (shouldTake(stack, -2)) return false
         }
 
         return true
     }
 
     private val fullInventory
-        get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
+        get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemStack::isEmpty) ?: false
 }

@@ -13,19 +13,19 @@ import net.ccbluex.liquidbounce.value.FloatValue
 
 object FastBreak : Module("FastBreak", ModuleCategory.WORLD) {
 
-    private val breakDamage = FloatValue("BreakDamage", 0.8F, 0.1F, 1F)
+    private val breakDamage by FloatValue("BreakDamage", 0.8F, 0.1F..1F)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         mc.playerController.blockHitDelay = 0
 
-        if (mc.playerController.curBlockDamageMP > breakDamage.get())
+        if (mc.playerController.curBlockDamageMP > breakDamage)
             mc.playerController.curBlockDamageMP = 1F
 
-        if (Fucker.currentDamage > breakDamage.get())
+        if (Fucker.currentDamage > breakDamage)
             Fucker.currentDamage = 1F
 
-        if (Nuker.currentDamage > breakDamage.get())
+        if (Nuker.currentDamage > breakDamage)
             Nuker.currentDamage = 1F
     }
 }

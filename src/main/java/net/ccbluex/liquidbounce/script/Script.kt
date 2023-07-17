@@ -32,7 +32,7 @@ import javax.script.ScriptEngine
 class Script(val scriptFile: File) : MinecraftInstance() {
 
     private val scriptEngine: ScriptEngine
-    private val scriptText: String = scriptFile.readText()
+    private val scriptText = scriptFile.readText()
 
     // Script information
     lateinit var scriptName: String
@@ -108,7 +108,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         } ?: ModuleCategory.FUN
 
 
-        val module = ScriptModule(name, description, category, moduleObject)
+        val module = ScriptModule(name, category, description, moduleObject)
         moduleManager.registerModule(module)
         registeredModules += module
         callback.call(moduleObject, module)

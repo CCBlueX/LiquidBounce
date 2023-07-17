@@ -16,10 +16,10 @@ import net.minecraft.client.gui.GuiChat
 import net.minecraft.util.ResourceLocation
 
 object HUD : Module("HUD", ModuleCategory.RENDER, defaultInArray = false) {
-    val blackHotbarValue = BoolValue("BlackHotbar", true)
-    val inventoryParticle = BoolValue("InventoryParticle", false)
-    private val blurValue = BoolValue("Blur", false)
-    val fontChatValue = BoolValue("FontChat", false)
+    val blackHotbar by BoolValue("BlackHotbar", true)
+    val inventoryParticle by BoolValue("InventoryParticle", false)
+    private val blur by BoolValue("Blur", false)
+    val fontChat by BoolValue("FontChat", false)
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
@@ -38,7 +38,7 @@ object HUD : Module("HUD", ModuleCategory.RENDER, defaultInArray = false) {
     @EventTarget(ignoreCondition = true)
     fun onScreen(event: ScreenEvent) {
         if (mc.theWorld == null || mc.thePlayer == null) return
-        if (state && blurValue.get() && !mc.entityRenderer.isShaderActive && event.guiScreen != null &&
+        if (state && blur && !mc.entityRenderer.isShaderActive && event.guiScreen != null &&
                 !(event.guiScreen is GuiChat || event.guiScreen is GuiHudDesigner)) mc.entityRenderer.loadShader(
             ResourceLocation(CLIENT_NAME.lowercase() + "/blur.json")
         ) else if (mc.entityRenderer.shaderGroup != null &&

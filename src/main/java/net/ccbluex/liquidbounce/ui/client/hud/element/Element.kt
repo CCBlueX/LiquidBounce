@@ -37,10 +37,10 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
         this.scale = scale
     }
 
-    val name: String
+    val name
         get() = info.name
 
-    var renderX: Double
+    var renderX
         get() = when (side.horizontal) {
             Side.Horizontal.LEFT -> x
             Side.Horizontal.MIDDLE -> (ScaledResolution(mc).scaledWidth / 2) - x
@@ -55,7 +55,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
             }
         }
 
-    var renderY: Double
+    var renderY
         get() = when (side.vertical) {
             Side.Vertical.UP -> y
             Side.Vertical.MIDDLE -> (ScaledResolution(mc).scaledHeight / 2) - y

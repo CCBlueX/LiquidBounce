@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
 import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.network.play.server.S40PacketDisconnect
+import net.minecraft.network.play.server.S45PacketTitle
 import net.minecraft.util.ChatComponentText
 import net.minecraft.util.Session
 import java.util.*
@@ -24,61 +25,65 @@ import kotlin.concurrent.schedule
 
 object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
 
-    private val registerValue = BoolValue("AutoRegister", true)
+    private val register by BoolValue("AutoRegister", true)
 
-    private val loginValue = BoolValue("AutoLogin", true)
+    private val login by BoolValue("AutoLogin", true)
 
     // Gamster requires 8 chars+
     private val passwordValue = object : TextValue("Password", "axolotlaxolotl") {
-        override fun changeValue(newValue: String) {
+        override fun onChange(oldValue: String, newValue: String) =
             when {
-                newValue.equals("reset", true) -> {
-                    super.changeValue("axolotlaxolotl")
-                    displayChatMessage("§7[§a§lAutoAccount§7] §3Password reset to its default value.")
+                " " in newValue -> {
+                    displayChatMessage("§7[§a§lAutoAccount§7] §cPassword cannot contain a space!")
+                    oldValue
                 }
-                newValue.length < 4 -> displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
-                else -> super.changeValue(newValue)
+                newValue.equals("reset", true) -> {
+                    displayChatMessage("§7[§a§lAutoAccount§7] §3Password reset to its default value.")
+                    "axolotlaxolotl"
+                }
+                newValue.length < 4 -> {
+                    displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
+                    oldValue
+                }
+                else -> super.onChange(oldValue, newValue)
             }
-        }
 
-        override fun isSupported() = registerValue.get() || loginValue.get()
+        override fun isSupported() = register || login
     }
+    private val password by passwordValue
 
     // Needed for Gamster
-    private val sendDelayValue = object : IntegerValue("SendDelay", 250, 0, 500) {
-        override fun isSupported() = passwordValue.isSupported()
-    }
+    private val sendDelay by IntegerValue("SendDelay", 250, 0..500) { passwordValue.isSupported() }
 
-    private val autoSessionValue = BoolValue("AutoSession", false)
+    private val autoSession by BoolValue("AutoSession", false)
 
-    private val startupValue = object : BoolValue("RandomAccountOnStart", false) {
-        override fun isSupported() = autoSessionValue.get()
-    }
+    private val startupValue = BoolValue("RandomAccountOnStart", false) { autoSession }
 
-    private val relogInvalidValue = object : BoolValue("RelogWhenPasswordInvalid", true) {
-        override fun isSupported() = autoSessionValue.get()
-    }
+    private val relogInvalidValue = BoolValue("RelogWhenPasswordInvalid", true) { autoSession }
 
-    private val relogKickedValue = object : BoolValue("RelogWhenKicked", false) {
-        override fun isSupported() = autoSessionValue.get()
-    }
+    private val relogKickedValue = BoolValue("RelogWhenKicked", false) { autoSession }
 
-    private val reconnectDelayValue = object : IntegerValue("ReconnectDelay", 1000, 0, 2500) {
-        override fun isSupported() = relogInvalidValue.isActive() || relogKickedValue.isActive()
+    private val reconnectDelayValue = IntegerValue("ReconnectDelay", 1000, 0..2500) {
+        relogInvalidValue.isActive() || relogKickedValue.isActive()
     }
+    private val reconnectDelay by reconnectDelayValue
 
     private val accountModeValue = object : ListValue("AccountMode", arrayOf("RandomName", "RandomAlt"), "RandomName") {
         override fun isSupported() = reconnectDelayValue.isSupported() || startupValue.isActive()
 
-        override fun changeValue(newValue: String) {
-            if (newValue == "RandomAlt" && accountsConfig.accounts.filterIsInstance<CrackedAccount>().size <= 1)
+        override fun onChange(oldValue: String, newValue: String): String {
+            if (newValue == "RandomAlt" && accountsConfig.accounts.filterIsInstance<CrackedAccount>().size <= 1) {
                 displayChatMessage("§7[§a§lAutoAccount§7] §cAdd more cracked accounts in AltManager to use RandomAlt option!")
-            else super.changeValue(newValue)
+                return oldValue
+            }
+
+            return super.onChange(oldValue, newValue)
         }
     }
+    private val accountMode by accountModeValue
 
-    private val saveValue = object : BoolValue("SaveToAlts", false) {
-        override fun isSupported() = accountModeValue.isSupported() && accountModeValue.get() != "RandomAlt"
+    private val saveValue = BoolValue("SaveToAlts", false) {
+        accountModeValue.isSupported() && accountMode != "RandomAlt"
     }
 
     private var status = Status.WAITING
@@ -87,7 +92,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         // Disconnect from server
         if (mc.currentServerData != null && mc.theWorld != null)
              mc.netHandler.networkManager.closeChannel(
-                 ChatComponentText("$info\n\nReconnecting with a random account in ${reconnectDelayValue.get()}ms")
+                 ChatComponentText("$info\n\nReconnecting with a random account in ${reconnectDelay}ms")
              )
 
         // Log in to account with a random name, optionally save it
@@ -97,41 +102,42 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         if (reconnectDelayValue.isMinimal()) return ServerUtils.connectToLastServer()
 
         // Delay the reconnect, connectToLastServer gets called from a TimerThread with no OpenGL context
-        Timer().schedule(reconnectDelayValue.get().toLong()) {
+        Timer().schedule(reconnectDelay.toLong()) {
             ServerUtils.connectToLastServer(true)
         }
     }
 
-    private fun respond(msg: String?): Boolean {
-        if (msg == null) return false
-
-        when {
-            registerValue.get() && "/reg" in msg -> {
-                addNotification(Notification("Trying to register."))
-                Timer().schedule(sendDelayValue.get().toLong()) {
-                    mc.thePlayer.sendChatMessage("/register ${passwordValue.get()} ${passwordValue.get()}")
-                }
+    private fun respond(msg: String) = when {
+        register && "/reg" in msg -> {
+            addNotification(Notification("Trying to register."))
+            Timer().schedule(sendDelay.toLong()) {
+                mc.thePlayer.sendChatMessage("/register $password $password")
             }
-            loginValue.get() && "/log" in msg -> {
-                addNotification(Notification("Trying to log in."))
-                Timer().schedule(sendDelayValue.get().toLong()) {
-                    mc.thePlayer.sendChatMessage("/login ${passwordValue.get()}")
-                }
-            }
-            else -> return false
+            true
         }
-        return true
+        login && "/log" in msg -> {
+            addNotification(Notification("Trying to log in."))
+            Timer().schedule(sendDelay.toLong()) {
+                mc.thePlayer.sendChatMessage("/login $password")
+            }
+            true
+        }
+        else -> false
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
         when (packet) {
-            is S02PacketChat -> {
+            is S02PacketChat, is S45PacketTitle -> {
                 // Don't respond to register / login prompts when failed once
                 if (!passwordValue.isSupported() || status == Status.STOPPED) return
 
-                val msg = packet.chatComponent?.unformattedText?.lowercase() ?: return
+                val msg = when (packet) {
+                    is S02PacketChat -> packet.chatComponent?.unformattedText?.lowercase()
+                    is S45PacketTitle -> packet.message?.unformattedText?.lowercase()
+                    else -> return
+                } ?: return
 
                 if (status == Status.WAITING) {
                     // Try to register / log in, return if invalid message
@@ -217,7 +223,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
     }
 
     private fun changeAccount() {
-        if (accountModeValue.get() == "RandomAlt") {
+        if (accountMode == "RandomAlt") {
             val account = accountsConfig.accounts.filter { it is CrackedAccount && it.name != mc.session.username }
                 .randomOrNull() ?: return
             mc.session = Session(
@@ -240,7 +246,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
         }
     }
 
-    enum class Status {
+    private enum class Status {
         WAITING, SENT_COMMAND, STOPPED
     }
 }

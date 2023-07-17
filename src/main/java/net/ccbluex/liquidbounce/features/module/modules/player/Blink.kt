@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -20,6 +21,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.*
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
@@ -31,16 +34,14 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
     private var fakePlayer: EntityOtherPlayerMP? = null
     private var disableLogger = false
     private val positions = LinkedList<DoubleArray>()
-    private val pulseValue = BoolValue("Pulse", false)
-    private val pulseDelayValue = object : IntegerValue("PulseDelay", 1000, 500, 5000) {
-        override fun isSupported() = pulseValue.get()
-    }
+    private val pulse by BoolValue("Pulse", false)
+    private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
     private val pulseTimer = MSTimer()
 
     override fun onEnable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!pulseValue.get()) {
+        if (!pulse) {
             val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
             faker.rotationYawHead = thePlayer.rotationYawHead
@@ -52,14 +53,8 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
             fakePlayer = faker
         }
         synchronized(positions) {
-            positions.add(
-                doubleArrayOf(
-                    thePlayer.posX,
-                    thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2,
-                    thePlayer.posZ
-                )
-            )
-            positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ))
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2, thePlayer.posZ)
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
         }
         pulseTimer.reset()
     }
@@ -88,13 +83,13 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
         if (packet is C03PacketPlayer) // Cancel all movement stuff
             event.cancelEvent()
 
-        if (packet is C03PacketPlayer.C04PacketPlayerPosition || packet is C03PacketPlayer.C06PacketPlayerPosLook ||
+        if (packet is C04PacketPlayerPosition || packet is C06PacketPlayerPosLook ||
             packet is C08PacketPlayerBlockPlacement ||
             packet is C0APacketAnimation ||
             packet is C0BPacketEntityAction || packet is C02PacketUseEntity
         ) {
             event.cancelEvent()
-            packets.add(packet)
+            packets += packet
         }
     }
 
@@ -103,15 +98,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
         val thePlayer = mc.thePlayer ?: return
 
         synchronized(positions) {
-            positions.add(
-                doubleArrayOf(
-                    thePlayer.posX,
-                    thePlayer.entityBoundingBox.minY,
-                    thePlayer.posZ
-                )
-            )
+            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
         }
-        if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get())) {
+        if (pulse && pulseTimer.hasTimePassed(pulseDelay)) {
             blink()
             pulseTimer.reset()
         }
@@ -119,11 +108,10 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val color = if (Breadcrumbs.colorRainbow.get()) rainbow() else Color(
-            Breadcrumbs.colorRedValue.get(),
-            Breadcrumbs.colorGreenValue.get(),
-            Breadcrumbs.colorBlueValue.get()
-        )
+        val color =
+            if (Breadcrumbs.colorRainbow) rainbow()
+            else Color(Breadcrumbs.colorRed, Breadcrumbs.colorGreen, Breadcrumbs.colorBlue)
+
         synchronized(positions) {
             glPushMatrix()
             glDisable(GL_TEXTURE_2D)
@@ -134,9 +122,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
             mc.entityRenderer.disableLightmap()
             glBegin(GL_LINE_STRIP)
             glColor(color)
-            val renderPosX: Double = mc.renderManager.viewerPosX
-            val renderPosY: Double = mc.renderManager.viewerPosY
-            val renderPosZ: Double = mc.renderManager.viewerPosZ
+            val renderPosX = mc.renderManager.viewerPosX
+            val renderPosY = mc.renderManager.viewerPosY
+            val renderPosZ = mc.renderManager.viewerPosZ
             for (pos in positions) glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
             glColor4d(1.0, 1.0, 1.0, 1.0)
             glEnd()
@@ -155,9 +143,8 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
         try {
             disableLogger = true
 
-            while (!packets.isEmpty()) {
-                mc.netHandler.networkManager.sendPacket(packets.take())
-            }
+            while (!packets.isEmpty())
+                sendPacket(packets.take())
 
             disableLogger = false
         } catch (e: Exception) {

@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.ClickWindowEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
+import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -45,6 +46,10 @@ public class MixinPlayerControllerMP {
 
         if (event.isCancelled()) {
             callbackInfo.cancel();
+            return;
         }
+
+        // Only reset click delay, if a click didn't get cancelled
+        InventoryUtils.INSTANCE.getCLICK_TIMER().reset();
     }
 }

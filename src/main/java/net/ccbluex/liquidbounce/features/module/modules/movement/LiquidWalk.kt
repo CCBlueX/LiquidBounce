@@ -21,13 +21,11 @@ import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
-object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_J) {
+object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, Keyboard.KEY_J) {
 
-    val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC", "AAC3.3.11", "AACFly", "Spartan", "Dolphin"), "NCP")
-    private val noJumpValue = BoolValue("NoJump", false)
-    private val aacFlyValue = object : FloatValue("AACFlyMotion", 0.5f, 0.1f, 1f) {
-        override fun isSupported() = modeValue.get() == "AACFly"
-    }
+    val mode by ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC", "AAC3.3.11", "AACFly", "Spartan", "Dolphin"), "NCP")
+    private val noJump by BoolValue("NoJump", false)
+    private val aacFly by FloatValue("AACFlyMotion", 0.5f, 0.1f..1f) { mode == "AACFly" }
 
     private var nextTick = false
 
@@ -37,7 +35,7 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, keyBind = Keyb
 
         if (thePlayer == null || thePlayer.isSneaking) return
 
-        when (modeValue.get().lowercase()) {
+        when (mode.lowercase()) {
             "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
             "aac" -> {
                 val blockPos = thePlayer.position.down()
@@ -89,9 +87,9 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, keyBind = Keyb
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if ("aacfly" == modeValue.get().lowercase() && mc.thePlayer.isInWater) {
-            event.y = aacFlyValue.get().toDouble()
-            mc.thePlayer.motionY = aacFlyValue.get().toDouble()
+        if ("aacfly" == mode.lowercase() && mc.thePlayer.isInWater) {
+            event.y = aacFly.toDouble()
+            mc.thePlayer.motionY = aacFly.toDouble()
         }
     }
 
@@ -101,7 +99,7 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, keyBind = Keyb
             return
 
         if (event.block is BlockLiquid && !collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer.isSneaking) {
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "ncp", "vanilla" -> event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }
         }
@@ -111,7 +109,7 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, keyBind = Keyb
     fun onPacket(event: PacketEvent) {
         val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || modeValue.get() != "NCP")
+        if (thePlayer == null || mode != "NCP")
             return
 
         if (event.packet is C03PacketPlayer) {
@@ -130,10 +128,10 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, keyBind = Keyb
 
         val block = getBlock(BlockPos(thePlayer.posX, thePlayer.posY - 0.01, thePlayer.posZ))
 
-        if (noJumpValue.get() && block is BlockLiquid)
+        if (noJump && block is BlockLiquid)
             event.cancelEvent()
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

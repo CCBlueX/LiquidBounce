@@ -29,7 +29,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
     // Status
     private var status = ""
 
-    private val loggedIntoAccount: Boolean
+    private val loggedIntoAccount
         get() = CapeService.clientCapeUser != null
 
     /**
@@ -47,9 +47,13 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         else
             "Enable visibility"
 
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 - 60, upperButtonText).apply { upperButton = this })
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 2 - 35, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
+        buttonList.run{
+            add(GuiButton(1, width / 2 - 100, height / 2 - 60, upperButtonText).apply { upperButton = this })
+            add(GuiButton(2, width / 2 - 100, height / 2 - 35, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
+            add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
+        }
+
+
 
         // Add fields to screen
         transferCodeField = GuiPasswordField(666, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
@@ -160,17 +164,27 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
      * Handle key typed
      */
     override fun keyTyped(typedChar : Char, keyCode : Int) {
-        // Check if user want to escape from screen
-        if(Keyboard.KEY_ESCAPE == keyCode) {
-            // Send back to prev screen
-            mc.displayGuiScreen(prevGui)
+        when (keyCode) {
+            // Check if user want to escape from screen
+            Keyboard.KEY_ESCAPE -> {
+                // Send back to prev screen
+                mc.displayGuiScreen(prevGui)
+                return
+            }
 
-            // Quit
-            return
+            Keyboard.KEY_TAB -> {
+                transferCodeField.isFocused = true
+                return
+            }
+
+            Keyboard.KEY_RETURN -> {
+                actionPerformed(upperButton)
+                return
+            }
         }
 
         // Check if field is focused, then call key typed
-        if(!loggedIntoAccount && transferCodeField.isFocused)
+        if (!loggedIntoAccount && transferCodeField.isFocused)
             transferCodeField.textboxKeyTyped(typedChar, keyCode)
 
         // Call sub method

@@ -26,19 +26,19 @@ import kotlin.math.sqrt
 class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
                  side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
-    private val yMultiplier = FloatValue("yMultiplier", 7F, 1F, 20F)
-    private val height = IntegerValue("Height", 50, 30, 150)
-    private val width = IntegerValue("Width", 150, 100, 300)
-    private val thickness = FloatValue("Thickness", 2F, 1F, 3F)
-    private val colorRedValue = IntegerValue("R", 0, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 111, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+    private val yMultiplier by FloatValue("yMultiplier", 7F, 1F..20F)
+    private val height by IntegerValue("Height", 50, 30..150)
+    private val width by IntegerValue("Width", 150, 100..300)
+    private val thickness by FloatValue("Thickness", 2F, 1F..3F)
+    private val colorRed by IntegerValue("R", 0, 0..255)
+    private val colorGreen by IntegerValue("G", 111, 0..255)
+    private val colorBlue by IntegerValue("B", 255, 0..255)
 
-    private val speedList = ArrayList<Double>()
+    private val speedList = mutableListOf<Double>()
     private var lastTick = -1
 
     override fun drawElement(): Border {
-        val width = width.get()
+        val width = width
 
         val player = mc.thePlayer
 
@@ -52,7 +52,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
             if (speed < 0)
                 speed = -speed
 
-            speedList.add(speed)
+            speedList += speed
             while (speedList.size > width) {
                 speedList.removeAt(0)
             }
@@ -60,7 +60,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
         glEnable(GL_LINE_SMOOTH)
-        glLineWidth(thickness.get())
+        glLineWidth(thickness)
         glDisable(GL_TEXTURE_2D)
         glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
@@ -71,12 +71,12 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
 
         val start = (if (size > width) size - width else 0)
         for (i in start until size - 1) {
-            val y = speedList[i] * 10 * yMultiplier.get()
-            val y1 = speedList[i + 1] * 10 * yMultiplier.get()
+            val y = speedList[i] * 10 * yMultiplier
+            val y1 = speedList[i + 1] * 10 * yMultiplier
 
-            glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
-            glVertex2d(i.toDouble() - start, height.get() + 1 - y.coerceAtMost(height.get().toDouble()))
-            glVertex2d(i + 1.0 - start, height.get() + 1 - y1.coerceAtMost(height.get().toDouble()))
+            glColor(Color(colorRed, colorGreen, colorBlue, 255))
+            glVertex2d(i.toDouble() - start, height + 1 - y.coerceAtMost(height.toDouble()))
+            glVertex2d(i + 1.0 - start, height + 1 - y1.coerceAtMost(height.toDouble()))
         }
 
         glEnd()
@@ -88,6 +88,6 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
         glDisable(GL_BLEND)
         resetColor()
 
-        return Border(0F, 0F, width.toFloat(), height.get().toFloat() + 2)
+        return Border(0F, 0F, width.toFloat(), height.toFloat() + 2)
     }
 }

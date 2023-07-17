@@ -16,10 +16,10 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.entity.item.EntityTNTPrimed
 import net.minecraft.item.ItemSword
 
-object TNTBlock : Module("TNTBlock", category = ModuleCategory.COMBAT) {
-    private val fuseValue = IntegerValue("Fuse", 10, 0, 80)
-    private val rangeValue = FloatValue("Range", 9F, 1F, 20F)
-    private val autoSwordValue = BoolValue("AutoSword", true)
+object TNTBlock : Module("TNTBlock", ModuleCategory.COMBAT, spacedName = "TNT Block") {
+    private val fuse by IntegerValue("Fuse", 10, 0..80)
+    private val range by FloatValue("Range", 9F, 1F..20F)
+    private val autoSword by BoolValue("AutoSword", true)
     private var blocked = false
 
     @EventTarget
@@ -28,9 +28,9 @@ object TNTBlock : Module("TNTBlock", category = ModuleCategory.COMBAT) {
         val theWorld = mc.theWorld ?: return
 
         for (entity in theWorld.loadedEntityList) {
-            if (entity is EntityTNTPrimed && mc.thePlayer.getDistanceToEntity(entity) <= rangeValue.get()) {
-                if (entity.fuse <= fuseValue.get()) {
-                    if (autoSwordValue.get()) {
+            if (entity is EntityTNTPrimed && mc.thePlayer.getDistanceToEntity(entity) <= range) {
+                if (entity.fuse <= fuse) {
+                    if (autoSword) {
                         var slot = -1
                         var bestDamage = 1f
                         for (i in 0..8) {

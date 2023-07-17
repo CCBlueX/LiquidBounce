@@ -15,7 +15,7 @@ import net.minecraft.util.EnumParticleTypes
 
 object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
 
-    private val particle = ListValue(
+    private val particle by ListValue(
         "Particle", arrayOf(
             "None",
             "Blood",
@@ -29,11 +29,9 @@ object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
         ), "Blood"
     )
 
-    private val amount = object : IntegerValue("ParticleAmount", 5, 1, 20) {
-        override fun isSupported() = particle.get() != "None"
-    }
+    private val amount by IntegerValue("ParticleAmount", 5, 1..20) { particle != "None" }
 
-    private val sound = ListValue("Sound", arrayOf("None", "Hit", "Orb"), "Hit")
+    private val sound by ListValue("Sound", arrayOf("None", "Hit", "Orb"), "Hit")
 
 
     @EventTarget
@@ -41,7 +39,7 @@ object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
         val target = event.targetEntity
 
         if (target is EntityLivingBase) {
-            repeat(amount.get()) {
+            repeat(amount) {
                 doEffect(target)
             }
 
@@ -50,14 +48,14 @@ object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
     }
 
     private fun doSound() {
-        when (sound.get()) {
+        when (sound) {
             "Hit" -> mc.thePlayer.playSound("random.bowhit", 1f, 1f)
             "Orb" -> mc.thePlayer.playSound("random.orb", 1f, 1f)
         }
     }
 
     private fun doEffect(target: EntityLivingBase) {
-        when (particle.get()) {
+        when (particle) {
             "Blood" -> mc.theWorld.spawnParticle(
                 EnumParticleTypes.BLOCK_CRACK,
                 target.posX,

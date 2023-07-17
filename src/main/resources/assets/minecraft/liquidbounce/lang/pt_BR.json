@@ -50,9 +50,271 @@
         "module.superKnockback.description": "Aumenta o knockback negociado para outras entidades.",
 
         "module.teleportHit.description": "Permite atingir entidades de longe.",
-      
-        "module.speed.description": "Permite que você se mova mais rápido.",
-      
-        "module.Sprint.description": "Corre automaticamente o tempo todo."
+
+        "module.trigger.description": "Ataca automaticamente a entidade que você está olhando.",
+
+        "module.velocity.description": "Permite modificar a quantidade de recuo que você recebe.",
+
+        "module.abortBreaking.description": "Permite interromper a quebra de blocos.",
+
+        "module.ambience.description": "Permite que você possa trocar o horário e o clima.",
+
+        "module.antiHunger.description": "Impede que você fique com fome.",
+
+        "module.bedGodMode.description": "Permite andar deitado em uma cama. (Para a versão 1.9)",
+
+        "module.clip.description": "Permite atravessar blocos.",
+
+        "module.airJump.description": "Permite pular no ar.",
+
+        "module.airLadder.description": "Permite subir escadas / videiras sem tocá-las.",
+
+        "module.animations.description": "Personaliza sua animação de bloqueio.",
+
+        "module.antiAFK.description": "Impede que você seja expulso por estar AFK (Inativo).",
+
+        "module.antiBlind.description": "Cancela efeitos de cegueira.",
+
+        "module.antiBot.description": "Impede que o KillAura ataque bots de AntiCheat.",
+
+        "module.antiCactus.description": "Impede que cactos o danifiquem.",
+
+        "module.antiFireball.description": "Automáticamente tira as bolas de fogo longe de você.",
+
+        "module.atAllProvider.description": "Menciona automaticamente todos no servidor ao usar '@a' em sua mensagem.",
+
+        "module.attackEffects.description": "Mostra um efeito quando você ataca.",
+
+        "module.autoAccount.description": "Gerenciador de registro / login e conta automático mais completo.",
+
+        "module.autoBreak.description": "Quebra automaticamente o bloco que você está olhando.",
+
+        "module.autoFish.description": "Pesca automaticamente ao usar uma vara de pesca.",
+
+        "module.autoRespawn.description": "Faz você ressurgir automaticamente após a morte.",
+
+        "module.autoTool.description": "Seleciona automaticamente a melhor ferramenta em seu inventário para minerar um bloco.",
+
+        "module.autoWalk.description": "Faz você andar automaticamente.",
+
+        "module.avoidHazards.description": "UNTRANSLATED: Prevents you from walking into blocks that might be harmful to you.",
+
+        "module.blink.description": "Suspende todos os pacotes de movimento.",
+
+        "module.blockESP.description": "Permite ver um bloco selecionado através das paredes.",
+
+        "module.blockOverlay.description": "Permite alterar o design da sobreposição de blocos.",
+
+        "module.blockWalk.description": "Permite caminhar em blocos não completos.",
+
+        "module.breadcrumbs.description": "Deixa um rastro atrás de você.",
+
+        "module.bufferSpeed.description": "Permite caminhar mais rápido em lajes e escadas.",
+
+        "module.bugUp.description": "Automaticamente impulsiona você para cima após cair uma certa distância.",
+
+        "module.cameraClip.description": "Permite ver através das paredes em vista de terceira pessoa.",
+
+        "module.chams.description": "Permite ver alvos através dos blocos.",
+
+        "module.chestAura.description": "Abre automaticamente baús ao seu redor.",
+
+        "module.chestStealer.description": "Rouba automaticamente todos os itens de um baú.",
+
+        "module.civBreak.description": "Permite quebrar blocos instantaneamente..",
+
+        "module.clickGUI.description": "Abre o ClickGUI.",
+
+        "module.componentOnHover.description": "Permite que você veja a ação onclick e o valor dos componentes da mensagem de chat quando passar o mouse sobre eles.",
+
+        "module.consoleSpammer.description": "Spamma o console do servidor com erros.",
+
+        "module.damage.description": "Causa dano a si mesmo.",
+
+        "module.derp.description": "Faz parecer que você está agindo de maneira boba.",
+
+        "module.eSP.description": "Permite que você veja alvos através de paredes.",
+
+        "module.eagle.description": "Faz você ser como uma águia (também conhecido como FastBridge).",
+
+        "module.fastBreak.description": "Permite que você quebre blocos mais rapidamente.",
+
+        "module.fastClimb.description": "Permite que você suba escadas e cipós mais rapidamente.",
+
+        "module.fastPlace.description": "Permite que você coloque blocos mais rapidamente.",
+
+        "module.fastStairs.description": "Permite que você suba escadas mais rapidamente.",
+
+        "module.fastUse.description": "Permite que você use itens mais rapidamente.",
+
+        "module.fly.description": "Permite que você voe no modo de sobrevivência.",
+
+        "module.forceUnicodeChat.description": "Permite que você envie mensagens unicode no chat.",
+
+        "module.freeCam.description": "Permite que você saia do seu corpo.",
+
+        "module.freeze.description": "Permite que você fique preso no ar.",
+
+        "module.fucker.description": "Destroi blocos selecionados ao seu redor. (também conhecido como IDNuker)",
+
+        "module.fullbright.description": "Ilumina o mundo ao seu redor.",
+
+        "module.ghost.description": "Permite que você ande e interaja com o ambiente após morrer.",
+
+        "module.ghostHand.description": "Permite que você interaja com blocos selecionados através de paredes.",
+
+        "module.godMode.description": "Exploit GodMode para AAC",
+
+        "module.hUD.description": "Alterna a visibilidade do HUD.",
+
+        "module.highJump.description": "Permite que você pule mais alto.",
+
+        "module.iceSpeed.description": "Permite que você ande mais rapidamente no gelo.",
+
+        "module.inventoryCleaner.description": "Descarta automaticamente itens inúteis.",
+
+        "module.inventoryMove.description": "Permite que você ande enquanto um inventário está aberto.",
+
+        "module.itemESP.description": "Permite que você veja itens através de paredes.",
+
+        "module.itemTeleport.description": "Permite que você pegue itens à distância.",
+
+        "module.keepAlive.description": "Tenta impedir que você morra.",
+
+        "module.keepContainer.description": "Permite que você abra um contêiner de inventário anteriormente fechado em qualquer lugar. (Pressione a tecla INSERT para abrir)",
+
+        "module.kick.description": "Permite que você se expulse de um servidor.",
+
+        "module.ladderJump.description": "Impulsiona você quando toca uma escada.",
+
+        "module.liquidChat.description": "Permite que você intereja com outros usuários do LiquidBounce.",
+
+        "module.liquidWalk.description": "Permite que você ande sobre a água.",
+
+        "module.liquids.description": "Permite que você interaja com líquidos.",
+
+        "module.longJump.description": "Permite que você pule mais longe.",
+
+        "module.midClick.description": "Permite que você adicione um jogador como amigo clicando com o botão direito do mouse nele.",
+
+        "module.moreCarry.description": "Permite que você armazene itens em seus slots de criação.",
+
+        "module.multiActions.description": "Permite que você use itens enquanto quebra blocos.",
+
+        "module.nameProtect.description": "Muda o nome dos jogadores no cliente.",
+
+        "module.nameTags.description": "Altera a escala das tags de nome para que você sempre possa lê-las.",
+
+        "module.noBob.description": "Desativa o efeito de balanço de visão.",
+
+        "module.noBooks.description": "Bloqueia o servidor de abrir livros (anúncios forçados)",
+
+        "module.noClip.description": "Permite que você se mova livremente através de paredes (um bloco de areia deve cair em sua cabeça).",
+
+        "module.noFOV.description": "Desativa as mudanças de FOV causadas pelo efeito de velocidade, etc.",
+
+        "module.noFall.description": "Impede que você sofra danos de queda.",
+
+        "module.noFluid.description": "Ignora líquidos como água e lava.",
+
+        "module.noHurtCam.description": "Desativa o efeito de câmera de dano quando você é ferido.",
+
+        "module.noJumpDelay.description": "Remove o atraso entre pulos.",
+
+        "module.noPitchLimit.description": "Permite que você gire sua cabeça indefinidamente em todas as direções.",
+
+        "module.noRotateSet.description": "Impede que o servidor gire sua cabeça.",
+
+        "module.noScoreboard.description": "Desativa o ScoreBoard.",
+
+        "module.noSlow.description": "Cancela os efeitos de lentidão causados Por Areia da Alma e uso de itens.",
+
+        "module.noSlowBreak.description": "Remove o atraso de quebrar blocos.",
+
+        "module.noSwing.description": "Desativa o efeito de balanço ao atingir uma entidade/minerar um bloco.",
+
+        "module.noWeb.description": "Impede que você seja desacelerado em teias.",
+
+        "module.nuker.description": "Destroi todos os blocos ao seu redor.",
+
+        "module.parkour.description": "Pula automaticamente ao chegar na borda de um bloco.",
+
+        "module.perfectHorseJump.description": "Pula automaticamente quando a barra de salto de um cavalo estiver completamente cheia.",
+
+        "module.phase.description": "Permite que você ande através de blocos.",
+
+        "module.pingSpoof.description": "Falsifica seu ping para um determinado valor.",
+
+        "module.plugins.description": "Permite que você veja quais plugins o servidor está usando.",
+
+        "module.portalMenu.description": "Permite que você abra um menu enquanto estiver em um portal.",
+
+        "module.potionSaver.description": "Congela todos os efeitos de poção enquanto você está parado.",
+
+        "module.potionSpoof.description": "Permite que o jogador tenha efeitos de poção sem realmente ter a poção.",
+
+        "module.projectiles.description": "Permite que você veja onde as flechas vão pousar.",
+
+        "module.prophuntESP.description": "Permite ver jogadores disfarçados no PropHunt.",
+
+        "module.reach.description": "Aumenta seu alcance de acertar o hit.",
+
+        "module.refill.description": "Reabastece itens como blocos e comida do inventário para a barra de atalhos.",
+
+        "module.regen.description": "Regenera sua saúde muito mais rápido.",
+
+        "module.resourcePackSpoof.description": "Impede que servidores o forcem a baixar seu pacote de recursos.",
+
+        "module.reverseStep.description": "Permite descer blocos mais rápido.",
+
+        "module.rotations.description": "Permite ver rotações de cabeça e corpo do servidor.",
+
+        "module.safeWalk.description": "Evita que você caia como se estivesse agachado.",
+
+        "module.scaffold.description": "Automaticamente coloca blocos sob seus pés.",
+
+        "module.serverCrasher.description": "Permite que você derrube certos servidores.",
+
+        "module.skinDerp.description": "Faz com que sua pele pisque (requer pele de múltiplas camadas).",
+
+        "module.slimeJump.description": "Permite saltar mais alto em blocos de slime.",
+
+        "module.sneak.description": "Automaticamente agacha o tempo todo.",
+
+        "module.spammer.description": "Spamma o chat com uma mensagem dada.",
+
+        "module.speed.description": "Permite mover-se mais rápido.",
+
+        "module.sprint.description": "Automaticamente corre o tempo todo.",
+
+        "module.step.description": "Permite subir blocos.",
+
+        "module.storageESP.description": "Permite ver baús, etc. através de paredes.",
+
+        "module.strafe.description": "Permite mover-se livremente no ar.",
+
+        "module.tNTESP.description": "Permite ver blocos de TNT acesos através de paredes.",
+
+        "module.teams.description": "Impede que o Killaura ataque companheiros de equipe.",
+
+        "module.teleport.description": "Permite teletransportar-se pelo mapa.",
+
+        "module.timer.description": "Muda a velocidade de todo o jogo.",
+
+        "module.tower.description": "Automaticamente constrói uma torre debaixo de você.",
+
+        "module.tracers.description": "Desenha uma linha para alvos ao seu redor.",
+
+        "module.trueSight.description": "Permite ver entidades invisíveis e barreiras.",
+
+        "module.vehicleOneHit.description": "Permite quebrar veículos com um único golpe.",
+
+        "module.wallClimb.description": "Permite escalar paredes como uma aranha.",
+
+        "module.waterSpeed.description": "Permite nadar mais rápido.",
+
+        "module.xRay.description": "Permite ver minérios através de paredes.",
+
+        "module.zoot.description": "Remove todos os efeitos ruins de poções/fogo."
     }
 }

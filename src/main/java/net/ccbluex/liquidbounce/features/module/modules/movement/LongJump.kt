@@ -21,11 +21,10 @@ import net.minecraft.util.EnumFacing
 
 object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
 
-    private val modeValue = ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3", "Redesky"), "NCP")
-    private val ncpBoostValue = object : FloatValue("NCPBoost", 4.25f, 1f, 10f) {
-        override fun isSupported() = modeValue.get() == "NCP"
-    }
-    private val autoJumpValue = BoolValue("AutoJump", false)
+    private val mode by ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3", "Redesky"), "NCP")
+    private val ncpBoost by FloatValue("NCPBoost", 4.25f, 1f..10f) { mode == "NCP" }
+    private val autoJump by BoolValue("AutoJump", false)
+
     private var jumped = false
     private var canBoost = false
     private var teleported = false
@@ -39,7 +38,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
         val thePlayer = mc.thePlayer ?: return
 
         if (jumped) {
-            val mode = modeValue.get()
+            val mode = mode
 
             if (thePlayer.onGround || thePlayer.capabilities.isFlying) {
                 jumped = false
@@ -54,7 +53,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
             run {
                 when (mode.lowercase()) {
                     "ncp" -> {
-                        speed *= if (canBoost) ncpBoostValue.get() else 1f
+                        speed *= if (canBoost) ncpBoost else 1f
                         canBoost = false
                     }
                     "aacv1" -> {
@@ -111,7 +110,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
                 }
             }
         }
-        if (autoJumpValue.get() && thePlayer.onGround && isMoving) {
+        if (autoJump && thePlayer.onGround && isMoving) {
             jumped = true
             thePlayer.jump()
         }
@@ -120,7 +119,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
     @EventTarget
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
-        val mode = modeValue.get()
+        val mode = mode
 
         if (mode == "Mineplex3") {
             if (thePlayer.fallDistance != 0f)
@@ -139,7 +138,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
         teleported = false
 
         if (state) {
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "mineplex" -> event.motion = event.motion * 4.08f
                 "mineplex2" -> {
                     if (mc.thePlayer.isCollidedHorizontally) {
@@ -153,5 +152,5 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
-import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
@@ -29,6 +29,8 @@ import net.minecraft.util.Vec3
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.getDistanceToEntityBox(entity: Entity) = eyes.distanceTo(getNearestPointBB(eyes, entity.hitBox))
+
+fun Entity.getDistanceToBox(box: AxisAlignedBB) = eyes.distanceTo(getNearestPointBB(eyes, box))
 
 fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
     val origin = doubleArrayOf(eye.xCoord, eye.yCoord, eye.zCoord)
@@ -61,8 +63,8 @@ fun EntityPlayer.isClientFriend(): Boolean {
     return friendsConfig.isFriend(stripColor(entityName))
 }
 
-val Entity.rotation
-    get() = Rotation(rotationYaw, rotationPitch)
+val Entity?.rotation
+    get() = Rotation(this?.rotationYaw ?: 0f, this?.rotationPitch ?: 0f)
 
 val Entity.hitBox: AxisAlignedBB
     get() {
@@ -99,4 +101,14 @@ var EntityPlayerSP.fixedSensitivityPitch
 operator fun EntityPlayerSP.plusAssign(value: Float) {
     fixedSensitivityYaw += value
     fixedSensitivityPitch += value
+}
+
+fun EntityPlayerSP.stopXZ() {
+    motionX = 0.0
+    motionZ = 0.0
+}
+
+fun EntityPlayerSP.stop() {
+    stopXZ()
+    motionY = 0.0
 }

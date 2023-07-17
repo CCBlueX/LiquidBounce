@@ -17,9 +17,9 @@ import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 
 object IceSpeed : Module("IceSpeed", ModuleCategory.MOVEMENT) {
-    private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
+    private val mode by ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
     override fun onEnable() {
-        if (modeValue.get() == "NCP") {
+        if (mode == "NCP") {
             Blocks.ice.slipperiness = 0.39f
             Blocks.packed_ice.slipperiness = 0.39f
         }
@@ -28,7 +28,7 @@ object IceSpeed : Module("IceSpeed", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val mode = modeValue.get()
+        val mode = mode
         if (mode == "NCP") {
             Blocks.ice.slipperiness = 0.39f
             Blocks.packed_ice.slipperiness = 0.39f

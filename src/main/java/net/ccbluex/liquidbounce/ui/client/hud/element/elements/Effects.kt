@@ -25,8 +25,8 @@ import net.minecraft.potion.Potion
 class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
               side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side) {
 
-    private val fontValue = FontValue("Font", Fonts.font35)
-    private val shadow = BoolValue("Shadow", true)
+    private val font by FontValue("Font", Fonts.font35)
+    private val shadow by BoolValue("Shadow", true)
 
     /**
      * Draw element
@@ -34,8 +34,6 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
     override fun drawElement(): Border {
         var y = 0F
         var width = 0F
-
-        val fontRenderer = fontValue.get()
 
         assumeNonVolatile = true
 
@@ -57,13 +55,13 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
             }
 
             val name = "${I18n.format(potion.name)} $number§f: §7${Potion.getDurationString(effect)}"
-            val stringWidth = fontRenderer.getStringWidth(name).toFloat()
+            val stringWidth = font.getStringWidth(name).toFloat()
 
             if (width < stringWidth)
                 width = stringWidth
 
-            fontRenderer.drawString(name, -stringWidth, y, potion.liquidColor, shadow.get())
-            y -= fontRenderer.FONT_HEIGHT
+            font.drawString(name, -stringWidth, y, potion.liquidColor, shadow)
+            y -= font.FONT_HEIGHT
         }
 
         assumeNonVolatile = false
@@ -74,6 +72,6 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
         if (y == 0F)
             y = -10F
 
-        return Border(2F, fontRenderer.FONT_HEIGHT.toFloat(), -width - 2F, y + fontRenderer.FONT_HEIGHT - 2F)
+        return Border(2F, font.FONT_HEIGHT.toFloat(), -width - 2F, y + font.FONT_HEIGHT - 2F)
     }
 }

@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.minecraft.network.play.client.C19PacketResourcePackStatus
+import net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.*
 import net.minecraft.network.play.server.S48PacketResourcePackSend
 import java.net.URI
 import java.net.URISyntaxException
@@ -35,13 +38,13 @@ object ResourcePackSpoof : Module("ResourcePackSpoof", ModuleCategory.MISC) {
                 if (isLevelProtocol && (".." in url || !url.endsWith("/resources.zip")))
                     throw URISyntaxException(url, "Invalid levelstorage resourcepack path")
 
-                mc.netHandler.addToSendQueue(C19PacketResourcePackStatus(packet.hash,
-                    C19PacketResourcePackStatus.Action.ACCEPTED))
-                mc.netHandler.addToSendQueue(C19PacketResourcePackStatus(packet.hash,
-                    C19PacketResourcePackStatus.Action.SUCCESSFULLY_LOADED))
+                sendPackets(
+                    C19PacketResourcePackStatus(packet.hash, ACCEPTED),
+                    C19PacketResourcePackStatus(packet.hash, SUCCESSFULLY_LOADED)
+                )
             } catch (e: URISyntaxException) {
                 LOGGER.error("Failed to handle resource pack", e)
-                mc.netHandler.addToSendQueue(C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD))
+                sendPacket(C19PacketResourcePackStatus(hash, FAILED_DOWNLOAD))
             }
         }
     }

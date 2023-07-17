@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 
 object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
 
-    private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
+    private val mode by ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -22,7 +22,7 @@ object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
         if (!thePlayer.isInWeb)
             return
 
-        when (modeValue.get().lowercase()) {
+        when (mode.lowercase()) {
             "none" -> thePlayer.isInWeb = false
             "aac" -> {
                 thePlayer.jumpMovementFactor = 0.59f
@@ -49,5 +49,5 @@ object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

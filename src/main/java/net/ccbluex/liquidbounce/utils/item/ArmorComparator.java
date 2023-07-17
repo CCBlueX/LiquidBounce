@@ -14,7 +14,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 
-import static net.ccbluex.liquidbounce.utils.item.ItemUtils.getEnchantmentCount;
+import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.getEnchantmentCount;
+import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.getEnchantmentLevel;
 
 public class ArmorComparator extends MinecraftInstance implements Comparator<ArmorPiece> {
 
@@ -92,7 +93,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
         float sum = 0f;
 
         for (int i = 0; i < DAMAGE_REDUCTION_ENCHANTMENTS.length; i++) {
-            sum += ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i];
+            sum += getEnchantmentLevel(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i];
         }
 
         return sum;
@@ -103,7 +104,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
         float sum = 0f;
 
         for (int i = 0; i < OTHER_ENCHANTMENTS.length; i++) {
-            sum += ItemUtils.getEnchantment(itemStack, OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_FACTORS[i];
+            sum += getEnchantmentLevel(itemStack, OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_FACTORS[i];
         }
 
         return sum;

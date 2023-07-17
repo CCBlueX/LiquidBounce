@@ -9,37 +9,38 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
 
 object Zoot : Module("Zoot", ModuleCategory.PLAYER) {
 
-    private val badEffectsValue = BoolValue("BadEffects", true)
-    private val fireValue = BoolValue("Fire", true)
-    private val noAirValue = BoolValue("NoAir", false)
+    private val badEffects by BoolValue("BadEffects", true)
+    private val fire by BoolValue("Fire", true)
+    private val noAir by BoolValue("NoAir", false)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (noAirValue.get() && !thePlayer.onGround)
+        if (noAir && !thePlayer.onGround)
             return
 
-        if (badEffectsValue.get()) {
+        if (badEffects) {
             val effect = thePlayer.activePotionEffects.maxByOrNull { it.duration }
 
             if (effect != null) {
                 repeat(effect.duration / 20) {
-                    mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
+                    sendPacket(C03PacketPlayer(thePlayer.onGround))
                 }
             }
         }
 
 
-        if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.isBurning) {
+        if (fire && !thePlayer.capabilities.isCreativeMode && thePlayer.isBurning) {
             repeat(9) {
-                mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
+                sendPacket(C03PacketPlayer(thePlayer.onGround))
             }
         }
     }
