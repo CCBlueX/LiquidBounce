@@ -42,7 +42,7 @@ object BlockUtils : MinecraftInstance() {
      */
     fun canBeClicked(blockPos: BlockPos): Boolean {
         val state = getState(blockPos) ?: return false
-        val block = state.block
+        val block = state.block ?: return false
 
         return block.canCollideCheck(state, false) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable
                 && !block.hasTileEntity(state) && isFullBlock(blockPos, state)
@@ -60,7 +60,7 @@ object BlockUtils : MinecraftInstance() {
     fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
-        val box = state.block.getCollisionBoundingBox(mc.theWorld, blockPos, state)
+        val box = state.block.getCollisionBoundingBox(mc.theWorld, blockPos, state) ?: return false
         return box.maxX - box.minX == 1.0 && box.maxY - box.minY == 1.0 && box.maxZ - box.minZ == 1.0
     }
 
