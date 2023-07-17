@@ -180,6 +180,7 @@ object ModuleManager : Listenable {
             Sneak,
             Spammer,
             Speed,
+            Disabler,
             Sprint,
             Step,
             StorageESP,

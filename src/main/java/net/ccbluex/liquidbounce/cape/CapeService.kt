@@ -49,16 +49,16 @@ object CapeService : Listenable, MinecraftInstance() {
     var clientCapeUser: CapeSelfUser? = null
 
     /**
-     * The API URL to get all cape carriers.
-     * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
-     */
-    private const val CAPE_CARRIERS_URL = "$API_ENDPOINT/cape/carriers"
-
-    /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
      * we have a separate domain.
      */
     private const val CAPE_API = "http://capes.liquidbounce.net/api/v1/cape"
+
+    /**
+     * The API URL to get all cape carriers.
+     * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
+     */
+    private const val CAPE_CARRIERS_URL = "$CAPE_API/carriers"
 
     private const val SELF_CAPE_URL = "$CAPE_API/self"
 
