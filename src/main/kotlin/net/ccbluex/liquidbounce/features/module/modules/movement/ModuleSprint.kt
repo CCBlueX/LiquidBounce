@@ -54,13 +54,8 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
         val hasForwardMovement =
             forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways * MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
 
-        var skip = false
-        if (ticksToSkip-- != 0) {
-            chat("skipped sprint tick")
-            skip = true
-        }
         val preventSprint =
-            ((if (player.isOnGround) stopOnGround else stopOnAir) && !shouldSprintOmnidirectionally() && RotationManager.activeConfigurable?.fixVelocity == false && !hasForwardMovement) || skip
+            (if (player.isOnGround) stopOnGround else stopOnAir) && !shouldSprintOmnidirectionally() && RotationManager.activeConfigurable?.fixVelocity == false && !hasForwardMovement
 
         return enabled && preventSprint
     }
