@@ -41,8 +41,8 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         if (balanceTimer <= 0)
             reachedTheLimit = false
 
-        if (world.findEnemy(0..distanceToStartWorking) != null && !reachedTheLimit) {
-            if (world.findEnemy(0..distanceToSpeedUp) != null) {
+        if (world.findEnemy(0f..distanceToStartWorking) != null && !reachedTheLimit) {
+            if (world.findEnemy(0f..distanceToSpeedUp) != null) {
                 if (balanceTimer < timerBalanceLimit * 2)
                     mc.timer.timerSpeed = boostSpeed
                 else {

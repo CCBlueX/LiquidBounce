@@ -25,10 +25,6 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.step
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.xRange
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.yRange
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.zRange
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AimMode.*
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.blocksToEagle
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.edgeDistance
@@ -514,7 +510,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         }
 
                         STABILIZED -> {
-                            face.stabilized()
+                            face.stabilized(currPos)
                         }
                     }
                     Pair(
@@ -555,6 +551,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private fun shouldDisableSafeWalk() = shouldGoDown && player.blockPos.add(0, -2, 0).canStandOn()
 
     data class Face(val from: Vec3d, val to: Vec3d) {
+        private val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
+        private val xRange = if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else gcd..1 - gcd
+        private val yRange = if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else gcd..1 - gcd
+        private val zRange = if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else gcd..1 - gcd
+        private val step = if (AdvancedRotation.enabled) AdvancedRotation.step.toDouble() else gcd
 
         val area: Double
             get() {
@@ -572,27 +573,27 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 (to.z + from.z) * 0.5
             )
 
-        fun stabilized(): Vec3d {
-            val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1 - gcd
-            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1 - gcd
-            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1 - gcd
+        fun stabilized(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
+            val pitchToCompare =
+                if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
             val x = (player.pos.x - floor(player.pos.x)).coerceIn(xRange)
-            val y = Random.nextDouble(yRange.start, (yRange.endInclusive - step).coerceAtLeast(yRange.start))
             val z = (player.pos.z - floor(player.pos.z)).coerceIn(zRange)
-            return Vec3d(
-                if (from.x != to.x) x else from.x,
-                if (from.y != to.y) y else from.y,
-                if (from.z != to.z) z else from.z
-            )
+            return rotationList(x..x, yRange, z..z, step).minBy {
+                abs(
+                    RotationManager.angleDifference(
+                        RotationManager.makeRotation(
+                            it.add(
+                                Vec3d.of(pos)
+                            ), eyes
+                        ).pitch,
+                        pitchToCompare
+                    )
+                )
+            }
         }
 
         val random: Vec3d
             get() {
-                val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-                val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1 - gcd
-                val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1 - gcd
-                val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1 - gcd
                 return Vec3d(
                     if (from.x != to.x) Random.nextDouble(
                         xRange.start,
@@ -635,14 +636,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         fun closeRotation(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
-            // Sort them by angleDifference between it and currentTarget.rotation
             val yawToCompare =
                 if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
-            val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd..1 - gcd
-            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd..1 - gcd
-            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd..1 - gcd
-            val step = if (AdvancedRotation.enabled) step.toDouble() else gcd
+            // Sort them by angleDifference between it and currentTarget.rotation
             return rotationList(xRange, yRange, zRange, step).minBy {
                 abs(
                     RotationManager.angleDifference(
