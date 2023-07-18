@@ -43,7 +43,7 @@ val ClientPlayerEntity.moving
 
 fun Entity.isCloseToEdge(distance: Double = 0.1): Boolean {
     Direction.values().drop(2).forEach { side ->
-        if (this.pos.offset(side, distance).add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
+        if (!this.pos.offset(side, distance).add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
             return true
     }
     return false
