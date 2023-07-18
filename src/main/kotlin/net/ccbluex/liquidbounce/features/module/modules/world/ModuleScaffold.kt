@@ -33,11 +33,15 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Aim
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.blocksToEagle
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.edgeDistance
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Slow.slowSpeed
-import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.item.notABlock
@@ -76,42 +80,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         STABILIZED("Stabilized"),
         CLOSE_ROTATION("CloseRotation");
     }
-
-    private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
-        { o1, o2 ->
-            compareByCondition(
-                o1,
-                o2
-            ) { (it.item as BlockItem).block.defaultState.isSolid }
-        },
-        { o1, o2 ->
-            compareByCondition(
-                o1,
-                o2
-            ) {
-                (it.item as BlockItem).block.defaultState.isFullCube(
-                    world,
-                    BlockPos(
-                        0,
-                        0,
-                        0
-                    )
-                )
-            }
-        },
-        { o1, o2 ->
-            (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness)
-        },
-        Comparator.comparingDouble {
-            (
-                    1.5 - (it.item as BlockItem).block.defaultState.getHardness(
-                        world,
-                        BlockPos(0, 0, 0)
-                    )
-                    ).absoluteValue
-        },
-        { o1, o2 -> o2.count.compareTo(o1.count) }
-    )
 
     private val silent by boolean("Silent", true)
     private var delay by intRange("Delay", 3..5, 0..40)
@@ -166,6 +134,42 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var startY = 0
     private var placedBlocks = 0
+    private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
+        { o1, o2 ->
+            compareByCondition(
+                o1,
+                o2
+            ) { (it.item as BlockItem).block.defaultState.isSolid }
+        },
+        { o1, o2 ->
+            compareByCondition(
+                o1,
+                o2
+            ) {
+                (it.item as BlockItem).block.defaultState.isFullCube(
+                    world,
+                    BlockPos(
+                        0,
+                        0,
+                        0
+                    )
+                )
+            }
+        },
+        { o1, o2 ->
+            (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness)
+        },
+        Comparator.comparingDouble {
+            (
+                    1.5 - (it.item as BlockItem).block.defaultState.getHardness(
+                        world,
+                        BlockPos(0, 0, 0)
+                    )
+                    ).absoluteValue
+        },
+        { o1, o2 -> o2.count.compareTo(o1.count) }
+    )
+
     private val shouldGoDown: Boolean
         get() = this.down && mc.options.sneakKey.isPressed
 
@@ -275,29 +279,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val repeatable = handler<StateUpdateEvent> {
-        var dif = 0.5
-        if (Eagle.enabled) {
-            // Gets player distance to the edge
-
-            for (side in Direction.values().drop(2)) {
-                val neighbor = player.blockPos.down().offset(side)
-
-                if (neighbor.getState()!!.isReplaceable) {
-                    val calcDif = abs(
-                        0.5 + if (side.axis == Direction.Axis.Z) {
-                            neighbor.z - player.pos.z
-                        } else {
-                            neighbor.x - player.pos.x
-                        }
-                    ) - 0.5
-
-                    dif = min(dif, calcDif)
-                }
-            }
-        }
         if (shouldDisableSafeWalk()) {
             it.state.enforceEagle = false
-        } else if (!player.abilities.flying && Eagle.enabled && dif <= edgeDistance && placedBlocks == 0) {
+        } else if (!player.abilities.flying && Eagle.enabled && player.isCloseToEdge(edgeDistance.toDouble()) && placedBlocks == 0) {
             it.state.enforceEagle = true
         }
     }

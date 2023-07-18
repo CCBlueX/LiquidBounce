@@ -77,7 +77,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-           val entitiesWithBoxes = world.entities.filter { it.shouldBeShown() }.groupBy { entity ->
+            val entitiesWithBoxes = world.entities.filter { it.shouldBeShown() }.groupBy { entity ->
                 val dimensions = entity.getDimensions(entity.pose)
 
                 val d = dimensions.width.toDouble() / 2.0
@@ -110,9 +110,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             }
 
 
-
         }
-
 
 
     }
