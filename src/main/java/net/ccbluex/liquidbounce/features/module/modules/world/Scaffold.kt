@@ -148,18 +148,21 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
     private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
     private val zitterStrength by FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode == "Teleport" }
-    private val maxZitterDelayValue: IntegerValue = object : IntegerValue("MaxZitterDelay", 50, 0..250) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minZitterDelay)
-
+    private val maxZitterTicksValue: IntegerValue = object : IntegerValue("MaxZitterTicks", 3, 0..6) {
         override fun isSupported() = zitterMode == "Smooth"
-    }
-    private val maxZitterDelay by maxZitterDelayValue
 
-    private val minZitterDelay by object : IntegerValue("MinZitterDelay", 50, 0..250) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxZitterDelay)
-
-        override fun isSupported() = zitterMode == "Smooth" && !maxZitterDelayValue.isMinimal()
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minZitterTicks)
     }
+
+    private val maxZitterTicks by maxZitterTicksValue
+
+    private val minZitterTicksValue: IntegerValue = object : IntegerValue("MinZitterTicks", 2, 0..6) {
+        override fun isSupported() = zitterMode == "Smooth" && !maxZitterTicksValue.isMinimal()
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxZitterTicks)
+    }
+
+    private val minZitterTicks by minZitterTicksValue
 
     // Game
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
@@ -185,12 +188,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // AutoBlock
     private var slot = -1
 
-    // Zitter Direction
+    // Zitter
     private var zitterDirection = false
+    private var ticksSinceZitter = 0
 
     // Delay
     private val delayTimer = MSTimer()
-    private val zitterTimer = MSTimer()
+    private var zitterTicks = randomDelay(minZitterTicks, maxZitterTicks)
     private var delay = 0
 
     // Eagle
@@ -214,6 +218,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         launchY = player.posY.roundToInt()
         slot = player.inventory.currentItem
+
+        ticksSinceZitter = 0
     }
 
     // Events
@@ -291,9 +297,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                         mc.gameSettings.keyBindLeft.pressed = false
                     }
 
-                    if (zitterTimer.hasTimePassed(randomDelay(minZitterDelay, maxZitterDelay))) {
+                    if (ticksSinceZitter >= zitterTicks) {
+                        ticksSinceZitter = 0
+
                         zitterDirection = !zitterDirection
-                        zitterTimer.reset()
+                        zitterTicks = randomDelay(minZitterTicks, maxZitterTicks)
+                    } else {
+                        ticksSinceZitter++
                     }
 
                     if (zitterDirection) {
