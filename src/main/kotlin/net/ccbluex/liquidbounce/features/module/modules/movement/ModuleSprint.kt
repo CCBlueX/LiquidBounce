@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.util.math.MathHelper
 
 /**
@@ -38,7 +37,6 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
     val stopOnGround by boolean("StopOnGround", true)
     val stopOnAir by boolean("StopOnAir", true)
 
-    var ticksToSkip = 0
     fun shouldSprintOmnidirectionally() = enabled && allDirections
 
     fun shouldIgnoreBlindness() = enabled && ignoreBlindness
