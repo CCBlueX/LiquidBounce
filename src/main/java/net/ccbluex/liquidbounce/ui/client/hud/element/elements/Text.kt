@@ -113,9 +113,9 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
                 "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
                 "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
-                "xdp" -> return thePlayer.posX.toString()
-                "ydp" -> return thePlayer.posY.toString()
-                "zdp" -> return thePlayer.posZ.toString()
+                "xdp" -> return thePlayer.posX
+                "ydp" -> return thePlayer.posY
+                "zdp" -> return thePlayer.posZ
                 "velocity" -> return DECIMAL_FORMAT.format(speed)
                 "ping" -> return thePlayer.getPing().toString()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
@@ -124,8 +124,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "pitch" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch)
                 "yawInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw).toInt()
                 "pitchInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch).toInt()
-                "food" -> return thePlayer.foodStats.foodLevel.toString()
-                "onGround" -> return mc.thePlayer.onGround.toString()
+                "food" -> return thePlayer.foodStats.foodLevel
+                "onGround" -> return mc.thePlayer.onGround
             }
         }
 
