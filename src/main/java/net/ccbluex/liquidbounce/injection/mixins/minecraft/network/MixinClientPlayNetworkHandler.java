@@ -97,7 +97,7 @@ public class MixinClientPlayNetworkHandler {
                 return radius;
             }
         }
-        return instance.radius;
+        return instance.getRadius();
     }
 
     @Redirect(method = "onGameStateChange", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/GameStateChangeS2CPacket;getReason()Lnet/minecraft/network/packet/s2c/play/GameStateChangeS2CPacket$Reason;"))
