@@ -35,6 +35,7 @@ import net.minecraft.network.ClientConnection;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -66,9 +67,9 @@ public class MixinClientPlayNetworkHandler {
     private Vec3d onExplosionVelocity(final Vec3d instance, final double x, final double y, final double z) {
         final Vec3d originalVector = new Vec3d(x, y, z);
         if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitExplosionStrength()) {
-            final double fixedX = Math.max(-1000.0, Math.min(x, 1000.0));
-            final double fixedY = Math.max(-1000.0, Math.min(y, 1000.0));
-            final double fixedZ = Math.max(-1000.0, Math.min(z, 1000.0));
+            final double fixedX = MathHelper.clamp(x, -1000.0, 1000.0);
+            final double fixedY = MathHelper.clamp(y, -1000.0, 1000.0);
+            final double fixedZ = MathHelper.clamp(z, -1000.0, 1000.0);
             final Vec3d newVector = new Vec3d(fixedX, fixedY, fixedZ);
             if (!originalVector.equals(newVector)) {
                 ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too strong explosion", true);
@@ -99,7 +100,7 @@ public class MixinClientPlayNetworkHandler {
     @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ExplosionS2CPacket;getRadius()F"))
     private float onExplosionWorld(final ExplosionS2CPacket instance) {
         if (ModuleAntiExploit.INSTANCE.getLimitExplosionRange()) {
-            final float radius = Math.max(-1000.0f, Math.min(instance.getRadius(), 1000.0f));
+            final float radius = MathHelper.clamp(instance.getRadius(), -1000.0, 1000.0);
             if (radius != instance.getRadius()) {
                 ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too big TNT explosion radius", true);
                 return radius;
