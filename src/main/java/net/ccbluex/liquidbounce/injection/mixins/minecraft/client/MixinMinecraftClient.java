@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -68,9 +69,11 @@ public abstract class MixinMinecraftClient {
     @Nullable
     public HitResult crosshairTarget;
 
-    @Shadow public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
+    @Shadow
+    public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
-    @Shadow public abstract Window getWindow();
+    @Shadow
+    public abstract Window getWindow();
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -152,6 +155,7 @@ public abstract class MixinMinecraftClient {
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
         final ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
+        //  || screen instanceof AccessibilityOnboardingScreen
         if (event.isCancelled()) callbackInfo.cancel();
     }
 

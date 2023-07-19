@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.Choice;
 import net.ccbluex.liquidbounce.event.ChunkLoadEvent;
 import net.ccbluex.liquidbounce.event.ChunkUnloadEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -33,15 +34,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -53,19 +53,66 @@ public class MixinClientPlayNetworkHandler {
     private ClientConnection connection;
 
     @Inject(method = "onChunkData", at = @At("RETURN"))
-    private void injectChunkLoadEvent(ChunkDataS2CPacket packet, CallbackInfo ci) {
+    private void injectChunkLoadEvent(final ChunkDataS2CPacket packet, final CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.getX(), packet.getZ()));
     }
 
     @Inject(method = "onUnloadChunk", at = @At("RETURN"))
-    private void injectUnloadEvent(UnloadChunkS2CPacket packet, CallbackInfo ci) {
+    private void injectUnloadEvent(final UnloadChunkS2CPacket packet, final CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.getX(), packet.getZ()));
     }
 
+    @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
+    private Vec3d onExplosionVelocity(final Vec3d instance, final double x, final double y, final double z) {
+        if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitExplosionStrength()) {
+            final double fixedX = Math.max(-1000.0, Math.min(x, 1000.0));
+            final double fixedY = Math.max(-1000.0, Math.min(y, 1000.0));
+            final double fixedZ = Math.max(-1000.0, Math.min(z, 1000.0));
+            return new Vec3d(fixedX, fixedY, fixedZ);
+        }
+        return instance.add(x, y, z);
+    }
+
+    @Redirect(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getCount()I"))
+    private int onParticleAmount(final ParticleS2CPacket instance) {
+        if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitParticlesAmount() && 500 <= instance.getCount()) {
+            return 100;
+        }
+        return instance.getCount();
+    }
+
+    @Redirect(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getSpeed()F"))
+    private float onParticleSpeed(final ParticleS2CPacket instance) {
+        if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitParticlesSpeed() && 10f <= instance.getSpeed()) {
+            return 10f;
+        }
+        return instance.getCount();
+    }
+
+    @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ExplosionS2CPacket;getRadius()F"))
+    private float onExplosionWorld(final ExplosionS2CPacket instance) {
+        if (ModuleAntiExploit.INSTANCE.getLimitExplosionRange()) {
+            final float radius = Math.max(-1000.0f, Math.min(instance.radius, 1000.0f));
+            if (radius != instance.radius) {
+                return radius;
+            }
+        }
+        return instance.radius;
+    }
+
+    @Redirect(method = "onGameStateChange", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/GameStateChangeS2CPacket;getReason()Lnet/minecraft/network/packet/s2c/play/GameStateChangeS2CPacket$Reason;"))
+    private GameStateChangeS2CPacket.Reason onGameStateChange(final GameStateChangeS2CPacket instance) {
+        if (ModuleAntiExploit.INSTANCE.getEnabled() && instance.getReason() == GameStateChangeS2CPacket.DEMO_MESSAGE_SHOWN && ModuleAntiExploit.INSTANCE.getCancelDemo()) {
+            return null;
+        } else {
+            return instance.getReason();
+        }
+    }
+
     @Inject(method = "onPlayerPositionLook", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(DDD)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void injectNoRotateSet(PlayerPositionLookS2CPacket packet, CallbackInfo ci, PlayerEntity playerEntity, Vec3d vec3d, boolean bl, boolean bl2, boolean bl3, double d, double e, double f, double g, double h, double i) {
-        float j = packet.getYaw();
-        float k = packet.getPitch();
+    private void injectNoRotateSet(final PlayerPositionLookS2CPacket packet, final CallbackInfo ci, final PlayerEntity playerEntity, final Vec3d vec3d, final boolean bl, final boolean bl2, final boolean bl3, final double d, final double e, final double f, final double g, final double h, final double i) {
+        final float j = packet.getYaw();
+        final float k = packet.getPitch();
 
         if (!ModuleNoRotateSet.INSTANCE.getEnabled() || MinecraftClient.getInstance().currentScreen instanceof DownloadingTerrainScreen) {
             return;
@@ -75,7 +122,7 @@ public class MixinClientPlayNetworkHandler {
         this.connection.send(new TeleportConfirmC2SPacket(packet.getTeleportId()));
         // Silently accept yaw and pitch values requested by the server.
         this.connection.send(new PlayerMoveC2SPacket.Full(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ(), j, k, false));
-        Choice activeChoice = ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice();
+        final Choice activeChoice = ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice();
         if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
             // Changes you server side rotation and then resets it with provided settings
             RotationManager.INSTANCE.setTicksUntilReset(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().getKeepRotationTicks());

@@ -107,6 +107,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
             // Misc
             ModuleAntiBot,
+            ModuleClickRecorder,
             ModuleFriendClicker,
             ModuleKeepChatAfterDeath,
             ModuleNameProtect,
@@ -146,6 +147,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
             // Player
             ModuleAntiAFK,
+            ModuleAntiExploit,
             ModuleAutoBreak,
             ModuleAutoFish,
             ModuleAutoRespawn,
@@ -205,8 +207,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlowBreak,
             ModuleProjectilePuncher,
             ModuleScaffold,
-            ModuleTimer,
-            ModuleClickRecorder
+            ModuleTimer
         )
 
         builtin.apply {
