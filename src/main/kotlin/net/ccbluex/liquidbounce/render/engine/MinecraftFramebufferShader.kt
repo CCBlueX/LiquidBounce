@@ -71,20 +71,15 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
         // Render the framebuffer if something was rendered to it
         if (this.isDirty) {
             val framebuffer = assureLoaded(framebuffer)
-
             val originalFramebuffer = mc.worldRenderer.entityOutlinesFramebuffer
 
             mc.worldRenderer.entityOutlinesFramebuffer = framebuffer
-
             vertexConsumerProvider?.draw()
-
             mc.worldRenderer.entityOutlinesFramebuffer = originalFramebuffer
-
             postEffectProcessor?.render(tickDelta)
         }
 
         mc.framebuffer.beginWrite(false)
-
     }
 
     fun setDirty() {
