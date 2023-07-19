@@ -45,7 +45,7 @@ object SequenceManager : Listenable {
 
 }
 
-open class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T) {
+open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val event: T) {
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         SequenceManager.sequences += this@Sequence
