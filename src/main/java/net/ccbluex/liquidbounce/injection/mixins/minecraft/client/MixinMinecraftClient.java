@@ -155,8 +155,7 @@ public abstract class MixinMinecraftClient {
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
         final ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
-        //  || screen instanceof AccessibilityOnboardingScreen
-        if (event.isCancelled()) callbackInfo.cancel();
+        if (event.isCancelled() || screen instanceof AccessibilityOnboardingScreen) callbackInfo.cancel();
     }
 
     /**
