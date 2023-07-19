@@ -100,7 +100,7 @@ public class MixinClientPlayNetworkHandler {
     @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ExplosionS2CPacket;getRadius()F"))
     private float onExplosionWorld(final ExplosionS2CPacket instance) {
         if (ModuleAntiExploit.INSTANCE.getLimitExplosionRange()) {
-            final float radius = MathHelper.clamp(instance.getRadius(), -1000.0, 1000.0);
+            final float radius = MathHelper.clamp(instance.getRadius(), -1000.0f, 1000.0f);
             if (radius != instance.getRadius()) {
                 ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too big TNT explosion radius", true);
                 return radius;
