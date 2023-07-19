@@ -43,7 +43,7 @@ import kotlin.math.atan2
 
 object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
-    private val positions = mutableListOf<Double>()
+    private val positions = mutableMapOf<SimulatedArrow, MutableList<Vec3>>()
 
     val tickRep = handler<MovementInputEvent> { event ->
         val world = world
@@ -137,10 +137,9 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
                 val lastPos = arrow.pos
                 val hitResult = arrow.tick()
 
-                positions.addAll(listOf(arrow.pos.x, arrow.pos.y, arrow.pos.z))
+                positions.getOrPut(arrow) { mutableListOf() }.add(Vec3(arrow.pos))
 
                 val playerHitBox = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3).expand(0.3).offset(simulatedPlayer.pos)
-
                 val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
                 raycastResult.orElse(null)?.let { hitPos ->
@@ -154,19 +153,17 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
     data class HitInfo(val hitPos: Vec3d, val prevArrowPos: Vec3d, val arrowVelocity: Vec3d)
 
-    // todo: fix when multiple arrows are shot, it will show odd lines
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
         synchronized(positions) {
-            val lines = mutableListOf<Vec3>()
-            for (i in 0 until positions.size / 3) {
-                lines += Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
-            }
+            // Get all positions for each arrow
 
             renderEnvironment(matrixStack) {
                 withColor(Color4b.WHITE) {
-                    drawLineStrip(*lines.toTypedArray())
+                    for ((_, positions) in positions) {
+                        drawLineStrip(*positions.toTypedArray())
+                    }
                 }
             }
         }
