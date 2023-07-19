@@ -64,11 +64,16 @@ public class MixinClientPlayNetworkHandler {
 
     @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d onExplosionVelocity(final Vec3d instance, final double x, final double y, final double z) {
+        final Vec3d originalVector = new Vec3d(x, y, z);
         if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitExplosionStrength()) {
             final double fixedX = Math.max(-1000.0, Math.min(x, 1000.0));
             final double fixedY = Math.max(-1000.0, Math.min(y, 1000.0));
             final double fixedZ = Math.max(-1000.0, Math.min(z, 1000.0));
-            return new Vec3d(fixedX, fixedY, fixedZ);
+            final Vec3d newVector = new Vec3d(fixedX, fixedY, fixedZ);
+            if (!originalVector.equals(newVector)) {
+                ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too strong explosion", true);
+                return instance.add(newVector);
+            }
         }
         return instance.add(x, y, z);
     }
@@ -76,6 +81,7 @@ public class MixinClientPlayNetworkHandler {
     @Redirect(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getCount()I"))
     private int onParticleAmount(final ParticleS2CPacket instance) {
         if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitParticlesAmount() && 500 <= instance.getCount()) {
+            ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too many particles", true);
             return 100;
         }
         return instance.getCount();
@@ -83,8 +89,9 @@ public class MixinClientPlayNetworkHandler {
 
     @Redirect(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getSpeed()F"))
     private float onParticleSpeed(final ParticleS2CPacket instance) {
-        if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitParticlesSpeed() && 10f <= instance.getSpeed()) {
-            return 10f;
+        if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitParticlesSpeed() && 10.0f <= instance.getSpeed()) {
+            ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too fast particles speed", true);
+            return 10.0f;
         }
         return instance.getCount();
     }
@@ -94,6 +101,7 @@ public class MixinClientPlayNetworkHandler {
         if (ModuleAntiExploit.INSTANCE.getLimitExplosionRange()) {
             final float radius = Math.max(-1000.0f, Math.min(instance.getRadius(), 1000.0f));
             if (radius != instance.getRadius()) {
+                ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too big TNT explosion radius", true);
                 return radius;
             }
         }
@@ -103,6 +111,7 @@ public class MixinClientPlayNetworkHandler {
     @Redirect(method = "onGameStateChange", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/GameStateChangeS2CPacket;getReason()Lnet/minecraft/network/packet/s2c/play/GameStateChangeS2CPacket$Reason;"))
     private GameStateChangeS2CPacket.Reason onGameStateChange(final GameStateChangeS2CPacket instance) {
         if (ModuleAntiExploit.INSTANCE.getEnabled() && instance.getReason() == GameStateChangeS2CPacket.DEMO_MESSAGE_SHOWN && ModuleAntiExploit.INSTANCE.getCancelDemo()) {
+            ModuleAntiExploit.INSTANCE.notifyAboutExploit("Cancelled demo GUI (just annoying thing)", false);
             return null;
         } else {
             return instance.getReason();
