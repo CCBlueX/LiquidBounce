@@ -117,7 +117,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "ydp" -> return thePlayer.posY
                 "zdp" -> return thePlayer.posZ
                 "velocity" -> return DECIMAL_FORMAT.format(speed)
-                "ping" -> return thePlayer.getPing().toString()
+                "ping" -> return thePlayer.getPing()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
                 "yaw" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw)
@@ -135,13 +135,13 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "clientversion" -> CLIENT_VERSION
             "clientcommit" -> CLIENT_COMMIT
             "clientcreator" -> CLIENT_CREATOR
-            "fps" -> Minecraft.getDebugFPS().toString()
+            "fps" -> Minecraft.getDebugFPS()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
             "serverip" -> ServerUtils.remoteIp
-            "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT).toString()
-            "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
-            "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
+            "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT)
+            "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE)
+            "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT)
             else -> null // Null = don't replace
         }
     }
