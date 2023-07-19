@@ -27,6 +27,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
@@ -74,6 +75,9 @@ public abstract class MixinMinecraftClient {
 
     @Shadow
     public abstract Window getWindow();
+
+    @Shadow
+    public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -155,7 +159,12 @@ public abstract class MixinMinecraftClient {
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
         final ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
-        if (event.isCancelled() || screen instanceof AccessibilityOnboardingScreen) callbackInfo.cancel();
+        if (event.isCancelled()) callbackInfo.cancel();
+        // Who need this GUI?
+        if (screen instanceof AccessibilityOnboardingScreen) {
+            callbackInfo.cancel();
+            this.setScreen(new TitleScreen(true));
+        }
     }
 
     /**
