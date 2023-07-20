@@ -330,10 +330,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     }
 
                     mc.options.useKey.isPressed = true
+                }
 
-                    if (simulateInventoryClosing && isInInventoryScreen) {
-                        openInventorySilently()
-                    }
+                if (simulateInventoryClosing && isInInventoryScreen) {
+                    openInventorySilently()
                 }
             }
 
