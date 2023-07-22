@@ -124,14 +124,14 @@ object CommandConfig {
                                     chat(regular(files.name))
                                 }
                             }
-                            "online" -> {
+                            "online" -> {/*
                                 Json.stri
                                 val jelement: JsonElement = JsonParser().parse(requestSettingsList())
                                 var jobject: JsonObject = jelement.getAsJsonObject()
                                 val jarray: JsonArray = jobject.getAsJsonArray("name")
                                 jarray.forEach {
                                     chat(it.asString)
-                                }
+                                }*/
                             }
                         }
                     }
