@@ -18,7 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import kotlinx.serialization.json.Json
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.requestSetting
+import net.ccbluex.liquidbounce.config.requestSettingsList
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -44,22 +51,88 @@ object CommandConfig {
                             .required()
                             .build()
                     )
+                    .parameter(
+                        ParameterBuilder
+                            .begin<String>("online")
+                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .optional()
+                            .build()
+                    )
                     .handler { command, args ->
                         val name = args[0] as String
 
                         // TODO: Add online configs
 
-                        ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
-                            if (!exists()) {
-                                chat(regular(command.result("notFound", variable(name))))
-                                return@handler
-                            }
+                        val state =
+                        if (args[1] != null) {
+                            args[1].toString().lowercase()
+                        } else {
+                            "local"
+                        }
+                        when (state) {
+                            "local" -> {
+                                ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
+                                    if (!exists()) {
+                                        chat(regular(command.result("notFound", variable(name))))
+                                        return@handler
+                                    }
 
-                            ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
-                        }.onFailure {
-                            chat(regular(command.result("failedToLoad", variable(name))))
-                        }.onSuccess {
-                            chat(regular(command.result("loaded", variable(name))))
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                }.onFailure {
+                                    chat(regular(command.result("failedToLoad", variable(name))))
+                                }.onSuccess {
+                                    chat(regular(command.result("loaded", variable(name))))
+                                }
+                            }
+                            "online" -> {
+                                requestSetting(name).runCatching {
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                }.onFailure {
+                                    chat(regular(command.result("failedToLoad", variable(name))))
+                                }.onSuccess {
+                                    chat(regular(command.result("loaded", variable(name))))
+                                }
+                            }
+                        }
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("list")
+                    .parameter(
+                        ParameterBuilder
+                            .begin<String>("online")
+                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .optional()
+                            .build()
+                    )
+                    .handler { command, args ->
+
+                        // TODO: Add online configs
+
+                        val state =
+                            if (args[0] != null) {
+                                args[0].toString().lowercase()
+                            } else {
+                                "local"
+                            }
+                        when (state) {
+                            "local" -> {
+                                chat("§cSettings:")
+                                for (files in ConfigSystem.userConfigsFolder.listFiles()!!) {
+                                    chat(regular(files.name))
+                                }
+                            }
+                            "online" -> {
+                                Json.stri
+                                val jelement: JsonElement = JsonParser().parse(requestSettingsList())
+                                var jobject: JsonObject = jelement.getAsJsonObject()
+                                val jarray: JsonArray = jobject.getAsJsonArray("name")
+                                jarray.forEach {
+                                    chat(it.asString)
+                                }
+                            }
                         }
                     }
                     .build()

@@ -207,6 +207,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlowBreak,
             ModuleProjectilePuncher,
             ModuleScaffold,
+            ModuleTest,
             ModuleTimer
         )
 
