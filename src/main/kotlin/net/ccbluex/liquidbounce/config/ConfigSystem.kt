@@ -28,8 +28,10 @@ import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import java.io.File
@@ -171,8 +173,21 @@ object ConfigSystem {
         runCatching {
             val jsonObject = jsonElement.asJsonObject
 
+            val chatMessages = jsonObject.getAsJsonArray("chat")
+            if (chatMessages != null) {
+                for (messages in chatMessages) {
+                    chat(messages.asString)
+                }
+            }
+
+            val date = jsonObject.getAsJsonPrimitive("date").let { if (it == null) "" else it.asString }
+            val time = jsonObject.getAsJsonPrimitive("time").let { if (it == null) "" else it.asString }
+            val author = jsonObject.getAsJsonPrimitive("author").let { if (it == null) "" else "by $it" }
+            if (date != "" || time != "" || author != "") {
+                chat(regular("Config was created ${if (date != "" || time != "") "on $date $time" else ""} $author"))
+            }
             if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-                throw IllegalStateException()
+                throw IllegalStateException(jsonObject.getAsJsonPrimitive("name").asString + configurable.name)
             }
 
             val values =
