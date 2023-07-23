@@ -115,6 +115,10 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     }
 
     object GlowMode : Choice("Glow") {
+        
+        override val parent: ChoiceConfigurable
+            get() = modes
+        
     }
 
     object OutlineMode : Choice("Outline") {
