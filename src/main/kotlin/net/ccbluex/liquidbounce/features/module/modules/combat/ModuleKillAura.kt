@@ -329,12 +329,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(player.activeHand, sequence)
                     }
+
                     mc.options.useKey.isPressed = true
+                }
 
-                    if (simulateInventoryClosing && isInInventoryScreen) {
-                        openInventorySilently()
-                    }
-
+                if (simulateInventoryClosing && isInInventoryScreen) {
+                    openInventorySilently()
                 }
             }
 
@@ -349,17 +349,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
 
-        val shouldSwing = if (FailSwing.LimitRange.enabled) {
-            entity != null && entity.boxedDistanceTo(player) <= reach
-        } else !FailSwing.LimitRange.enabled && rotation != null
+        val shouldSwing =
+            entity != null && !entity.isRemoved && (!FailSwing.LimitRange.enabled || entity.boxedDistanceTo(player) <= reach)
 
         val chosenCPS = if (FailSwing.UseOwnCPS.enabled) FailSwing.UseOwnCPS.cps else cps
         val supposedRotation = rotation ?: player.rotation
 
         val clicks = cpsTimer.clicks({
-            shouldSwing && (entity == null || raytraceEntity(
+            shouldSwing && raytraceEntity(
                 range.toDouble(), supposedRotation
-            ) { true } == null)
+            ) { true } == null
         }, chosenCPS)
 
         repeat(clicks) {

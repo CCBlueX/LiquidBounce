@@ -77,7 +77,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
             antiSprint = false
         }
 
-        val attackHandler = sequenceHandler<AttackEvent> {
+        val attackHandler = sequenceHandler<AttackEvent> { event ->
             if (!shouldStopSprinting(event)) {
                 return@sequenceHandler
             }
@@ -105,7 +105,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
             stopMoving = false
         }
 
-        val attackHandler = sequenceHandler<AttackEvent> {
+        val attackHandler = sequenceHandler<AttackEvent> { event ->
             if (!shouldStopSprinting(event)) {
                 return@sequenceHandler
             }

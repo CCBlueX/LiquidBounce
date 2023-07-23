@@ -31,6 +31,7 @@ object CommandEnemy {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("enemy")
+            .alias("enemies", "target", "targets")
             .hub()
             .subcommand(
                 CommandBuilder

@@ -24,7 +24,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.render.shaders.OutlineShader;
+import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
@@ -53,7 +55,7 @@ public abstract class MixinWorldRenderer {
         try {
             OutlineShader.INSTANCE.load();
         } catch (Throwable e) {
-            e.printStackTrace();
+            ClientUtilsKt.getLogger().error("Failed to load outline shader", e);
         }
     }
 
@@ -62,7 +64,7 @@ public abstract class MixinWorldRenderer {
         try {
             OutlineShader.INSTANCE.begin(ModuleESP.OutlineMode.INSTANCE.getWidth());
         } catch (Throwable e) {
-            e.printStackTrace();
+            ClientUtilsKt.getLogger().error("Failed to begin outline shader", e);
         }
     }
 
@@ -124,4 +126,34 @@ public abstract class MixinWorldRenderer {
     private boolean hookFreeCamRenderPlayerFromAllPerspectives(LivingEntity instance) {
         return ModuleFreeCam.INSTANCE.renderPlayerFromAllPerspectives(instance);
     }
+
+    /**
+     * Enable outline glow when ESP is enabled and glow mode is active
+     *
+     * @author 1zuna
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
+    private boolean injectHasOutline(MinecraftClient instance, Entity entity) {
+        if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive() && CombatExtensionsKt.shouldBeShown(entity)) {
+            return true;
+        }
+
+        return instance.hasOutline(entity);
+    }
+
+    /**
+     * Inject ESP color as glow color
+     *
+     * @author 1zuna
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
+    private int injectTeamColor(Entity instance) {
+        if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive()) {
+            final Color4b color = ModuleESP.INSTANCE.getColor(instance);
+            return color.toRGBA();
+        }
+
+        return instance.getTeamColorValue();
+    }
+
 }
