@@ -364,6 +364,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         moveKeys.forEach {
             it.enforced = null
         }
+        // Makes you shift until first block placed, so with eagle enabled you won't fall off, when enabled
+        placedBlocks = 0
         mc.timer.timerSpeed = 1f
         SilentHotbar.resetSlot(this)
     }
