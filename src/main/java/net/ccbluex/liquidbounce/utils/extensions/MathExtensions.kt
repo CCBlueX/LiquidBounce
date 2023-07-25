@@ -77,4 +77,4 @@ class RangeIterator(private val range: ClosedFloatingPointRange<Double>, private
 	}
 }
 operator fun ClosedFloatingPointRange<Double>.iterator() = RangeIterator(this)
-private infix fun ClosedFloatingPointRange<Double>.step(step: Double) = RangeIterator(this, step)
+infix fun ClosedFloatingPointRange<Double>.step(step: Double) = RangeIterator(this, step)
