@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -23,40 +23,23 @@ import net.minecraft.network.Packet
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-import java.util.*
-import java.util.concurrent.LinkedBlockingQueue
 
 object Blink : Module("Blink", ModuleCategory.PLAYER) {
 
-    private val packets = LinkedBlockingQueue<Packet<*>>()
+    private val packets = mutableListOf<Packet<*>>()
     private var fakePlayer: EntityOtherPlayerMP? = null
-    private var disableLogger = false
-    private val positions = LinkedList<DoubleArray>()
+    private val positions = mutableListOf<Vec3>()
     private val pulse by BoolValue("Pulse", false)
     private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
     private val pulseTimer = MSTimer()
 
     override fun onEnable() {
-        val thePlayer = mc.thePlayer ?: return
-
-        if (!pulse) {
-            val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
-
-            faker.rotationYawHead = thePlayer.rotationYawHead
-            faker.renderYawOffset = thePlayer.renderYawOffset
-            faker.copyLocationAndAnglesFrom(thePlayer)
-            faker.rotationYawHead = thePlayer.rotationYawHead
-            mc.theWorld.addEntityToWorld(-1337, faker)
-
-            fakePlayer = faker
-        }
-        synchronized(positions) {
-            positions += doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2, thePlayer.posZ)
-            positions += doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
-        }
         pulseTimer.reset()
+
+        addFakePlayer()
     }
 
     override fun onDisable() {
@@ -64,32 +47,23 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
             return
 
         blink()
-
-        val faker = fakePlayer
-
-        if (faker != null) {
-            mc.theWorld?.removeEntityFromWorld(faker.entityId)
-            fakePlayer = null
-        }
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || disableLogger)
+        if (mc.thePlayer == null)
             return
 
-        if (packet is C03PacketPlayer) // Cancel all movement stuff
-            event.cancelEvent()
+        when (packet) {
+            is C04PacketPlayerPosition, is C06PacketPlayerPosLook, is C08PacketPlayerBlockPlacement,
+            is C0APacketAnimation, is C0BPacketEntityAction, is C02PacketUseEntity -> {
+                event.cancelEvent()
+                packets += packet
+            }
 
-        if (packet is C04PacketPlayerPosition || packet is C06PacketPlayerPosLook ||
-            packet is C08PacketPlayerBlockPlacement ||
-            packet is C0APacketAnimation ||
-            packet is C0BPacketEntityAction || packet is C02PacketUseEntity
-        ) {
-            event.cancelEvent()
-            packets += packet
+            is C03PacketPlayer -> event.cancelEvent()
         }
     }
 
@@ -97,11 +71,11 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        synchronized(positions) {
-            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
-        }
+        positions += thePlayer.positionVector
+
         if (pulse && pulseTimer.hasTimePassed(pulseDelay)) {
             blink()
+            addFakePlayer()
             pulseTimer.reset()
         }
     }
@@ -122,10 +96,14 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
             mc.entityRenderer.disableLightmap()
             glBegin(GL_LINE_STRIP)
             glColor(color)
+
             val renderPosX = mc.renderManager.viewerPosX
             val renderPosY = mc.renderManager.viewerPosY
             val renderPosZ = mc.renderManager.viewerPosZ
-            for (pos in positions) glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
+
+            for (pos in positions)
+                glVertex3d(pos.xCoord - renderPosX, pos.yCoord - renderPosY, pos.zCoord - renderPosZ)
+
             glColor4d(1.0, 1.0, 1.0, 1.0)
             glEnd()
             glEnable(GL_DEPTH_TEST)
@@ -140,17 +118,35 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
         get() = packets.size.toString()
 
     private fun blink() {
-        try {
-            disableLogger = true
+        sendPackets(*packets.toTypedArray(), triggerEvents = false)
 
-            while (!packets.isEmpty())
-                sendPacket(packets.take())
+        packets.clear()
+        positions.clear()
 
-            disableLogger = false
-        } catch (e: Exception) {
-            e.printStackTrace()
-            disableLogger = false
+        // Remove fake player
+        fakePlayer?.let {
+            mc.theWorld?.removeEntityFromWorld(it.entityId)
+            fakePlayer = null
         }
-        synchronized(positions) { positions.clear() }
+    }
+
+    private fun addFakePlayer() {
+        val thePlayer = mc.thePlayer ?: return
+
+        val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
+
+        faker.rotationYawHead = thePlayer.rotationYawHead
+        faker.renderYawOffset = thePlayer.renderYawOffset
+        faker.copyLocationAndAnglesFrom(thePlayer)
+        faker.rotationYawHead = thePlayer.rotationYawHead
+        faker.inventory = thePlayer.inventory
+        mc.theWorld.addEntityToWorld(-1337, faker)
+
+        fakePlayer = faker
+
+        // Add positions indicating a blink start
+        val pos = thePlayer.positionVector
+        positions += pos.addVector(.0, thePlayer.eyeHeight / 2.0, .0)
+        positions += pos
     }
 }
