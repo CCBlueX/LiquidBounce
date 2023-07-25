@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.*
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Target
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.component1
+import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.minecraft.client.gui.ScaledResolution
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.max
@@ -109,7 +111,7 @@ object HUD : MinecraftInstance() {
   fun handleMouseMove(mouseX: Int, mouseY: Int) {
     if (mc.currentScreen !is GuiHudDesigner) return
 
-    val scaledResolution = ScaledResolution(mc)
+    val (scaledWidth, scaledHeight) = ScaledResolution(mc)
 
     for (element in elements) {
       val scaledX = mouseX / element.scale
@@ -134,8 +136,8 @@ object HUD : MinecraftInstance() {
         val maxX = max(border.x, border.x2) - 1
         val maxY = max(border.y, border.y2) - 1
 
-        val width = scaledResolution.scaledWidth / element.scale
-        val height = scaledResolution.scaledHeight / element.scale
+        val width = scaledWidth / element.scale
+        val height = scaledHeight / element.scale
 
         if ((element.renderX + minX + moveX >= 0.0 || moveX > 0) &&
             (element.renderX + maxX + moveX <= width || moveX < 0))

@@ -113,16 +113,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var vecRotation: VecRotation? = null
         val eyesPos = mc.thePlayer.eyes
         val startPos = Vec3(blockPos)
-        var xSearch = 0.1
-        while (xSearch < 0.9) {
-            var ySearch = 0.1
-            while (ySearch < 0.9) {
-                var zSearch = 0.1
-                while (zSearch < 0.9) {
-                    val posVec = startPos.addVector(xSearch, ySearch, zSearch)
+
+
+
+        for (x in 0.1..0.9) {
+            for (y in 0.1..0.9) {
+                for (z in 0.1..0.9) {
+                    val posVec = startPos.addVector(x, y, z)
                     val dist = eyesPos.distanceTo(posVec)
 
-                    val (diffX, diffY, diffZ) = posVec.subtract(eyesPos)
+                    val (diffX, diffY, diffZ) = posVec - eyesPos
                     val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
 
                     val rotation = Rotation(
@@ -131,9 +131,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     )
 
                     val rotationVector = getVectorForRotation(rotation)
-                    val vector = eyesPos.addVector(
-                        rotationVector.xCoord * dist, rotationVector.yCoord * dist, rotationVector.zCoord * dist
-                    )
+                    val vector = eyesPos + (rotationVector * dist)
 
                     mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)?.let {
                         if (it.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
@@ -144,12 +142,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
                             ) vecRotation = currentVec
                         }
                     }
-                    zSearch += 0.1
                 }
-                ySearch += 0.1
             }
-            xSearch += 0.1
         }
+
         return vecRotation
     }
 
@@ -196,7 +192,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val eyesPos = fromEntity.eyes
         if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
 
-        val (diffX, diffY, diffZ) = vec.subtract(eyesPos)
+        val (diffX, diffY, diffZ) = vec - eyesPos
         return Rotation(
             MathHelper.wrapAngleTo180_float(
                 atan2(diffZ, diffX).toDegreesF() - 90f
@@ -255,15 +251,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
             }
         }
 
-        var x = 0.1
-        while (x < 0.9) {
-
-            var y = 0.1
-            while (y < 0.9) {
-
-                var z = 0.1
-                while (z < 0.9) {
-
+        for (x in 0.1..0.9) {
+            for (y in 0.1..0.9) {
+                for (z in 0.1..0.9) {
                     val vec = Vec3(
                         bb.minX + (bb.maxX - bb.minX) * x,
                         bb.minY + (bb.maxY - bb.minY) * y,
@@ -278,19 +268,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
                             val currentVec = VecRotation(vec, rotation)
                             val rotationToCompare = if (random) randomRotation else targetRotation ?: serverRotation
 
-                            if (vecRotation == null || getRotationDifference(
-                                    rotation, rotationToCompare
-                                ) < getRotationDifference(vecRotation.rotation, rotationToCompare)
-                            ) {
-                                vecRotation = currentVec
-                            }
+                            if (vecRotation == null || getRotationDifference(rotation, rotationToCompare)
+                                < getRotationDifference(vecRotation.rotation, rotationToCompare)
+                            ) vecRotation = currentVec
                         }
                     }
-                    z += 0.1
                 }
-                y += 0.1
             }
-            x += 0.1
         }
 
         if (vecRotation == null) {

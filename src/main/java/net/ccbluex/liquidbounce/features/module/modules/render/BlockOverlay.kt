@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.component1
+import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledBox
@@ -90,18 +92,18 @@ object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER) {
             val block = getBlock(blockPos) ?: return
 
             val info = "${block.localizedName} §7ID: ${Block.getIdFromBlock(block)}"
-            val scaledResolution = ScaledResolution(mc)
+            val (width, height) = ScaledResolution(mc)
 
             drawBorderedRect(
-                    scaledResolution.scaledWidth / 2 - 2F,
-                    scaledResolution.scaledHeight / 2 + 5F,
-                    scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2F,
-                    scaledResolution.scaledHeight / 2 + 16F,
+                    width / 2 - 2F,
+                    height / 2 + 5F,
+                    width / 2 + Fonts.font40.getStringWidth(info) + 2F,
+                    height / 2 + 16F,
                     3F, Color.BLACK.rgb, Color.BLACK.rgb
             )
 
             resetColor()
-            Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, Color.WHITE.rgb, false)
+            Fonts.font40.drawString(info, width / 2f, height / 2f + 7f, Color.WHITE.rgb, false)
         }
     }
 }

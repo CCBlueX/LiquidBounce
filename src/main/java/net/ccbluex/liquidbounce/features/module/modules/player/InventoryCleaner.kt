@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils.CLICK_TIMER
-import net.ccbluex.liquidbounce.utils.InventoryUtils.openInventory
+import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.item.*
@@ -117,14 +117,14 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                     else garbageItems.firstOrNull()
                 ) ?: return
 
-            if (!openInventory && simulateInventory) {
+            if (!serverOpenInventory && simulateInventory) {
                 sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
             }
 
             mc.playerController.windowClick(thePlayer.openContainer.windowId, garbageItem, 1, 4, thePlayer)
             garbageItems.remove(garbageItem)
 
-            if (openInventory && simulateInventory && mc.currentScreen !is GuiInventory) {
+            if (serverOpenInventory && simulateInventory && mc.currentScreen !is GuiInventory) {
                 sendPacket(C0DPacketCloseWindow())
             }
 
@@ -201,12 +201,12 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
             if (bestItem != index) {
 
-                if (!openInventory && simulateInventory)
+                if (!serverOpenInventory && simulateInventory)
                     sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
                 mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer)
 
-                if (openInventory && simulateInventory && mc.currentScreen !is GuiInventory)
+                if (serverOpenInventory && simulateInventory && mc.currentScreen !is GuiInventory)
                     sendPacket(C0DPacketCloseWindow())
 
                 delay = randomDelay(minDelay, maxDelay)
