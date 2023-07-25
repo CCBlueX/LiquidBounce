@@ -140,6 +140,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandXRay.createCommand())
         addCommand(CommandEnemy.createCommand())
         addCommand(CommandConfig.createCommand())
+        addCommand(CommandAutoDisable.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
