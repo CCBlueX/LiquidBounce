@@ -179,8 +179,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Launch position
     private var launchY = 0
 
-    // Zitter Direction
+    // Zitter
     private var zitterDirection = false
+    private var ticksSinceZitter = 0
 
     // Delay
     private val delayTimer = MSTimer()
