@@ -25,7 +25,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
@@ -68,9 +70,14 @@ public abstract class MixinMinecraftClient {
     @Nullable
     public HitResult crosshairTarget;
 
-    @Shadow public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
+    @Shadow
+    public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
-    @Shadow public abstract Window getWindow();
+    @Shadow
+    public abstract Window getWindow();
+
+    @Shadow
+    public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -153,6 +160,11 @@ public abstract class MixinMinecraftClient {
         final ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
         if (event.isCancelled()) callbackInfo.cancel();
+        // Who need this GUI?
+        if (screen instanceof AccessibilityOnboardingScreen) {
+            callbackInfo.cancel();
+            this.setScreen(new TitleScreen(true));
+        }
     }
 
     /**

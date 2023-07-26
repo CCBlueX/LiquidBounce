@@ -1,9 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import kotlin.math.min
 
@@ -25,8 +28,6 @@ object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     private var tickBalance = 0f
     private var reachedTheLimit = false
 
-    private val targetTracker = tree(TargetTracker())
-
     val repeatable = handler<PlayerTickEvent> {
         if (ticksToSkip-- > 0) {
             return@handler
@@ -40,12 +41,10 @@ object ModuleTickBase : Module("TickBase", Category.COMBAT) {
         if (tickBalance <= balanceMaxValue) {
             tickBalance += balanceRecoveryIncrement
         }
-        if (targetTracker.enemies()
-                .any { player.distanceTo(it) in distanceToWork.start..distanceToWork.endInclusive && it != player } && !reachedTheLimit
-        ) {
+        if (world.findEnemy(distanceToWork.start..distanceToWork.endInclusive) != null && !reachedTheLimit) {
             // Tick as much as we can
             repeat(min(tickBalance.toInt(), maxTicksAtATime)) {
-                player.tick()
+                player.tickMovement()
                 tickBalance -= 1
             }
             ticksToSkip = pauseAfterTick

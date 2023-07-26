@@ -1,5 +1,5 @@
 <script>
-    import { onMount } from "svelte";
+    import {onMount} from "svelte";
 
     export let name;
     export let value;
@@ -10,7 +10,7 @@
     onMount(() => {
         pickr = Pickr.create({
             el: colorPicker,
-            theme: "classic", 
+            theme: "classic",
             showAlways: true,
             inline: true,
             default: value,
@@ -40,10 +40,10 @@
 
     // TODO: use hex colors
     function handleValueChange(e) {
-/*         const v = e.target.value;
-        if (v.length === 6) {
-            pickr.setColor(`#${v}`);
-        } */
+        /*         const v = e.target.value;
+                if (v.length === 6) {
+                    pickr.setColor(`#${v}`);
+                } */
     }
 </script>
 
@@ -51,7 +51,7 @@
     <div class="name">{name}</div>
     <input class="value" {value} on:input={handleValueChange}>
     <div class="animation-fix color-picker">
-        <div bind:this={colorPicker} />
+        <div bind:this={colorPicker}/>
     </div>
 </div>
 
