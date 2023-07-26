@@ -32,7 +32,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
      * OPTIONS
      */
     private val mode by ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-        "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
+        "Reverse", "SmoothReverse", "Intave" "Glitch", "Legit"), "Simple")
 
     private val horizontal by FloatValue("Horizontal", 0F, 0F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by FloatValue("Vertical", 0F, 0F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -107,7 +107,17 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 } else if (velocityTimer.hasTimePassed(80))
                     velocityInput = false
             }
-
+              "intave" -> {
+                if (mc.thePlayer.hurtTime == 9) {
+                    if (++jumped % 2 == 0 && mc.thePlayer.onGround && mc.thePlayer.isSprinting && mc.currentScreen == null) {
+                        mc.gameSettings.keyBindJump.pressed = true
+                        jumped = 0 // reset
+                    }
+                } else {
+                    mc.gameSettings.keyBindJump.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindJump)
+                }
+            }
+              
             "smoothreverse" -> {
                 if (!velocityInput) {
                     thePlayer.speedInAir = 0.02F
