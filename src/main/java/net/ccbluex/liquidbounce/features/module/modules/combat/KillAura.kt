@@ -370,11 +370,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             return
         }
 
-        if (noConsumeAttack == "NoHits" && isConsumingItem()) {
-            clicks = 0
-            return
-        }
-
         if (target != null && currentTarget != null) {
             while (clicks > 0) {
                 runAttack()
@@ -438,6 +433,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         val thePlayer = mc.thePlayer ?: return
         val theWorld = mc.theWorld ?: return
+
+        if (noConsumeAttack == "NoHits" && isConsumingItem()) {
+            return
+        }
 
         // Settings
         val failRate = failRate
