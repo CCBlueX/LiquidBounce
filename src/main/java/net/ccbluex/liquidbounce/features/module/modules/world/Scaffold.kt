@@ -113,9 +113,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f) { eagle != "Off" }
 
     // Rotation Options
-    private val rotations by BoolValue("Rotations", true)
+    private val rotationMode by ListValue("RotationMode", arrayOf("Off", "Normal", "Stabilized", "Backwards"), "Normal")
     private val strafe by BoolValue("Strafe", false)
-    private val stabilizedRotation by BoolValue("StabilizedRotation", false)
     private val silentRotation by BoolValue("SilentRotation", true)
     private val keepRotation by BoolValue("KeepRotation", true)
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
@@ -143,6 +142,21 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
     private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
     private val zitterStrength by FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode == "Teleport" }
+        private val maxZitterTicksValue: IntegerValue = object : IntegerValue("MaxZitterTicks", 3, 0..6) {
+        override fun isSupported() = zitterMode == "Smooth"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minZitterTicks)
+    }
+
+    private val maxZitterTicks by maxZitterTicksValue
+
+    private val minZitterTicksValue: IntegerValue = object : IntegerValue("MinZitterTicks", 2, 0..6) {
+        override fun isSupported() = zitterMode == "Smooth" && !maxZitterTicksValue.isMinimal()
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxZitterTicks)
+    }
+
+    private val minZitterTicks by minZitterTicksValue
 
     // Game
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
@@ -170,7 +184,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Delay
     private val delayTimer = MSTimer()
-    private val zitterTimer = MSTimer()
+    private var zitterTicks = randomDelay(minZitterTicks, maxZitterTicks)
     private var delay = 0
 
     // Eagle
@@ -270,9 +284,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                         mc.gameSettings.keyBindLeft.pressed = false
                     }
 
-                    if (zitterTimer.hasTimePassed(100)) {
+                    if (ticksSinceZitter >= zitterTicks) {
+                        ticksSinceZitter = 0
+
                         zitterDirection = !zitterDirection
-                        zitterTimer.reset()
+                        zitterTicks = randomDelay(minZitterTicks, maxZitterTicks)
+                    } else {
+                        ticksSinceZitter++
                     }
 
                     if (zitterDirection) {
@@ -299,7 +317,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onMotion(event: MotionEvent) {
         val rotation = targetRotation
 
-        if (rotations && keepRotation && rotation != null) {
+        if (rotationMode != "Off" && keepRotation && rotation != null) {
             setRotation(rotation, 1)
         }
 
@@ -700,7 +718,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         placeRotation ?: return false
 
-        if (rotations) {
+        if (rotationMode != "Off") {
             val limitedRotation = limitAngleChange(
                 currRotation, placeRotation.rotation, nextFloat(minTurnSpeed, maxTurnSpeed)
             )
@@ -760,10 +778,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         var rotation = toRotation(vec, false)
 
-        rotation = if (stabilizedRotation) {
+
+        rotation = if (rotationMode == "Stabilized") {
             Rotation(round(rotation.yaw / 45f) * 45f, rotation.pitch)
-        } else {
+        } else if (rotationMode == "Normal") {
             rotation
+        } else {
+            Rotation(mc.thePlayer.rotationYaw + 180f, rotation.pitch)
         }
 
         // If the current rotation already looks at the target block and side, then return right here
