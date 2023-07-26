@@ -32,7 +32,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
      * OPTIONS
      */
     private val mode by ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-        "Reverse", "SmoothReverse", "Jump", "Glitch", "Intave", "Legit"), "Simple")
+        "Reverse", "SmoothReverse", "Intave" "Glitch", "Legit"), "Simple")
 
     private val horizontal by FloatValue("Horizontal", 0F, 0F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by FloatValue("Vertical", 0F, 0F..1F) { mode in arrayOf("Simple", "Legit") }
