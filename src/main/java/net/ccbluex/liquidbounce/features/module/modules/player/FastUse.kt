@@ -17,9 +17,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.item.ItemBucketMilk
-import net.minecraft.item.ItemFood
-import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C03PacketPlayer
 
 object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
@@ -91,13 +88,10 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!state || !thePlayer.isUsingItem || !noMove)
+        if (!state || !isConsumingItem() || !noMove)
             return
 
-        val usingItem = thePlayer.itemInUse.item
-
-        if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion)
-            event.zero()
+        event.zero()
     }
 
     override fun onDisable() {
