@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.item.ItemUtils.isConsumingItem
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -43,49 +44,45 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
             usedTimer = false
         }
 
-        if (!thePlayer.isUsingItem) {
+        if (!isConsumingItem()) {
             msTimer.reset()
             return
         }
 
-        val usingItem = thePlayer.itemInUse.item
-
-        if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) {
-            when (mode.lowercase()) {
-                "instant" -> {
-                    repeat(35) {
-                        sendPacket(C03PacketPlayer(thePlayer.onGround))
-                    }
-
-                    mc.playerController.onStoppedUsingItem(thePlayer)
+        when (mode.lowercase()) {
+            "instant" -> {
+                repeat(35) {
+                    sendPacket(C03PacketPlayer(thePlayer.onGround))
                 }
 
-                "ncp" -> if (thePlayer.itemInUseDuration > 14) {
-                    repeat(20) {
-                        sendPacket(C03PacketPlayer(thePlayer.onGround))
-                    }
+                mc.playerController.onStoppedUsingItem(thePlayer)
+            }
 
-                    mc.playerController.onStoppedUsingItem(thePlayer)
+            "ncp" -> if (thePlayer.itemInUseDuration > 14) {
+                repeat(20) {
+                    sendPacket(C03PacketPlayer(thePlayer.onGround))
                 }
 
-                "aac" -> {
-                    mc.timer.timerSpeed = 1.22F
-                    usedTimer = true
+                mc.playerController.onStoppedUsingItem(thePlayer)
+            }
+
+            "aac" -> {
+                mc.timer.timerSpeed = 1.22F
+                usedTimer = true
+            }
+
+            "custom" -> {
+                mc.timer.timerSpeed = customTimer
+                usedTimer = true
+
+                if (!msTimer.hasTimePassed(delay))
+                    return
+
+                repeat(customSpeed) {
+                    sendPacket(C03PacketPlayer(thePlayer.onGround))
                 }
-                
-                "custom" -> {
-                    mc.timer.timerSpeed = customTimer
-                    usedTimer = true
 
-                    if (!msTimer.hasTimePassed(delay))
-                        return
-
-                    repeat(customSpeed) {
-                        sendPacket(C03PacketPlayer(thePlayer.onGround))
-                    }
-
-                    msTimer.reset()
-                }
+                msTimer.reset()
             }
         }
     }
