@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils.misc
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.util.BlockPos
@@ -75,7 +76,7 @@ class FallingPlayer(
             val end = Vec3(x, y, z)
 
             for (offset in offsets) {
-                rayTrace(start.add(offset), end)?.let { return CollisionResult(it, i) }
+                rayTrace(start + offset, end)?.let { return CollisionResult(it, i) }
             }
         }
         return null

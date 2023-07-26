@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.InventoryUtils.openInventory
+import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.item.hasItemDelayPassed
@@ -90,12 +90,12 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
             }
         }
 
-        if (simulateInventory && openInventory && mc.currentScreen !is GuiInventory)
+        if (simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory)
             sendPacket(C0DPacketCloseWindow(mc.thePlayer.openContainer.windowId))
     }
 
     fun click(slot: Int, button: Int, mode: Int, stack: ItemStack) {
-        if (simulateInventory && !openInventory)
+        if (simulateInventory && !serverOpenInventory)
             sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
         sendPacket(

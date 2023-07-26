@@ -10,6 +10,8 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
+import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.ccbluex.liquidbounce.utils.extensions.times
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 
@@ -28,11 +30,7 @@ object RaycastUtils : MinecraftInstance() {
             var blockReachDistance = range
             val eyePosition = renderViewEntity.eyes
             val entityLook = getVectorForRotation(Rotation(yaw, pitch))
-            val vec = eyePosition.addVector(
-                entityLook.xCoord * blockReachDistance,
-                entityLook.yCoord * blockReachDistance,
-                entityLook.zCoord * blockReachDistance
-            )
+            val vec = eyePosition + (entityLook * blockReachDistance)
 
             val entityList = mc.theWorld.getEntitiesInAABBexcluding(
                 renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(

@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.PlaceRotation
@@ -24,8 +25,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import net.ccbluex.liquidbounce.utils.extensions.eyes
-import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -99,23 +99,13 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
     private val tickTimer = TickTimer()
     private var jumpGround = 0.0
 
-    // AutoBlock
-    private var slot = 0
-
-    override fun onEnable() {
-        val thePlayer = mc.thePlayer ?: return
-
-        slot = thePlayer.inventory.currentItem
-
-    }
-
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
         mc.timer.timerSpeed = 1f
         lockRotation = null
 
-        if (slot != thePlayer.inventory.currentItem) {
+        if (serverSlot != thePlayer.inventory.currentItem) {
             sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
         }
     }
@@ -132,7 +122,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         val eventState = event.eventState
 
         // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
-        if (eventState.stateName == (if (mode == "Packet") "POST" else placeMode))
+        if (eventState.stateName == (if (mode == "Packet") "POST" else placeMode.uppercase()))
             place()
 
         if (eventState == EventState.PRE) {
@@ -273,7 +263,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 }
 
                 "Spoof", "Switch" -> {
-                    if (blockSlot - 36 != slot) {
+                    if (blockSlot - 36 != serverSlot) {
                         sendPacket(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
@@ -292,7 +282,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 sendPacket(C0APacketAnimation())
             }
         }
-        if (autoBlock == "Switch" && slot != mc.thePlayer.inventory.currentItem)
+        if (autoBlock == "Switch" && serverSlot != mc.thePlayer.inventory.currentItem)
             sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
 
         placeInfo = null
@@ -318,68 +308,48 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 continue
             }
             val dirVec = Vec3(facingType.directionVec)
-            val matrix = matrix
-            var xSearch = 0.1
-            while (xSearch < 0.9) {
-                var ySearch = 0.1
-                while (ySearch < 0.9) {
-                    var zSearch = 0.1
-                    while (zSearch < 0.9) {
+
+            for (x in 0.1..0.9) {
+                for (y in 0.1..0.9) {
+                    for (z in 0.1..0.9) {
                         val posVec = Vec3(blockPosition).addVector(
-                            if (matrix) 0.5 else xSearch, if (matrix) 0.5 else ySearch, if (matrix) 0.5 else zSearch
+                            if (matrix) 0.5 else x, if (matrix) 0.5 else y, if (matrix) 0.5 else z
                         )
+
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
-                        val hitVec = posVec.add(Vec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-                        if (eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(
-                                posVec.add(
-                                    dirVec
-                                )
-                            ) || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
-                        ) {
-                            zSearch += 0.1
-                            continue
-                        }
+                        val hitVec = posVec + (dirVec * 0.5)
+
+                        if (eyesPos.distanceTo(hitVec) > 4.25
+	                        || distanceSqPosVec > eyesPos.squareDistanceTo(posVec + dirVec)
+                            || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
+                        ) continue
 
                         // face block
                         val rotation = toRotation(hitVec, false)
 
                         val rotationVector = getVectorForRotation(rotation)
-                        val vector = eyesPos.addVector(
-                            rotationVector.xCoord * 4.25, rotationVector.yCoord * 4.25, rotationVector.zCoord * 4.25
-                        )
+                        val vector = eyesPos + (rotationVector * 4.25)
+
                         val obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true) ?: continue
 
-                        if (obj.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || obj.blockPos != neighbor) {
-                            zSearch += 0.1
+                        if (obj.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || obj.blockPos != neighbor)
                             continue
-                        }
 
                         if (placeRotation == null || getRotationDifference(rotation) < getRotationDifference(placeRotation.rotation))
                             placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
-
-                        zSearch += 0.1
                     }
-                    ySearch += 0.1
                 }
-                xSearch += 0.1
             }
         }
-        if (placeRotation == null) return false
+
+        placeRotation ?: return false
+
         if (rotations) {
             setTargetRotation(placeRotation.rotation)
             lockRotation = placeRotation.rotation
         }
         placeInfo = placeRotation.placeInfo
         return true
-    }
-
-    @EventTarget
-    fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null) return
-        val packet = event.packet
-        if (packet is C09PacketHeldItemChange) {
-            slot = packet.slotId
-        }
     }
 
     /**
@@ -396,13 +366,13 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
-            val scaledResolution = ScaledResolution(mc)
+            val (width, height) = ScaledResolution(mc)
 
             drawBorderedRect(
-                scaledResolution.scaledWidth / 2f - 2,
-                scaledResolution.scaledHeight / 2f + 5,
-                scaledResolution.scaledWidth / 2f + Fonts.font40.getStringWidth(info) + 2,
-                scaledResolution.scaledHeight / 2f + 16,
+                width / 2f - 2,
+                height / 2f + 5,
+                width / 2f + Fonts.font40.getStringWidth(info) + 2,
+                height / 2f + 16,
                 3f,
                 Color.BLACK.rgb,
                 Color.BLACK.rgb
@@ -412,8 +382,8 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
 
             Fonts.font40.drawString(
                 info,
-                scaledResolution.scaledWidth / 2.toFloat(),
-                scaledResolution.scaledHeight / 2 + 7.toFloat(),
+                width / 2.toFloat(),
+                height / 2 + 7.toFloat(),
                 Color.WHITE.rgb
             )
             glPopMatrix()

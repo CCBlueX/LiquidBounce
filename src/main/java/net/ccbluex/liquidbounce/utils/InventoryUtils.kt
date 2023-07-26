@@ -21,11 +21,11 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 object InventoryUtils : MinecraftInstance(), Listenable {
 
     // What slot is selected on server-side?
-    var slot = -1
+    var serverSlot = -1
         private set
 
     // Is inventory open on server-side?
-    var openInventory = false
+    var serverOpenInventory = false
         private set
 
     val CLICK_TIMER = MSTimer()
@@ -104,19 +104,19 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
             is C16PacketClientStatus ->
                 if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
-                    if (openInventory) event.cancelEvent()
-                    else openInventory = true
+                    if (serverOpenInventory) event.cancelEvent()
+                    else serverOpenInventory = true
                 }
 
-            is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInventory = false
+            is C0DPacketCloseWindow, is S2EPacketCloseWindow -> serverOpenInventory = false
 
             is C09PacketHeldItemChange -> {
                 // Support for Singleplayer
                 // (client packets get sent and received, duplicates would get cancelled, making slot changing impossible)
                 if (event.eventType == EventState.RECEIVE) return
 
-                if (packet.slotId == slot) event.cancelEvent()
-                else slot = packet.slotId
+                if (packet.slotId == serverSlot) event.cancelEvent()
+                else serverSlot = packet.slotId
             }
         }
     }
@@ -124,8 +124,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     @EventTarget
     fun onWorld(event: WorldEvent) {
         // Prevent desync
-        slot = -1
-        openInventory = false
+        serverSlot = -1
+        serverOpenInventory = false
     }
 
     override fun handleEvents() = true

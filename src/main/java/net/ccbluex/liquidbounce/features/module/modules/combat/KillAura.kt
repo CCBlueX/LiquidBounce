@@ -786,7 +786,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 val hitVec = movingObject.hitVec
 
                 sendPackets(
-                    C02PacketUseEntity(interactEntity, hitVec.subtract(interactEntity.positionVector)),
+                    C02PacketUseEntity(interactEntity, hitVec - interactEntity.positionVector),
                     C02PacketUseEntity(interactEntity, INTERACT)
                 )
             }

@@ -14,6 +14,8 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts.font35
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.extensions.component1
+import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -66,8 +68,9 @@ object BlackStyle : Style() {
         val height = (font35.fontHeight * lines.size) + 3
 
         // Don't draw hover text beyond window boundaries
-        val x = mouseX.clamp(0, (ScaledResolution(mc).scaledWidth / scale - width).roundToInt())
-        val y = mouseY.clamp(0, (ScaledResolution(mc).scaledHeight / scale - height).roundToInt())
+        val (scaledWidth, scaledHeight) = ScaledResolution(mc)
+        val x = mouseX.clamp(0, (scaledWidth / scale - width).roundToInt())
+        val y = mouseY.clamp(0, (scaledHeight / scale - height).roundToInt())
 
         drawBorderedRect(x + 9, y, x + width, y + height, 3, Color(40, 40, 40).rgb, Color(40, 40, 40).rgb)
 

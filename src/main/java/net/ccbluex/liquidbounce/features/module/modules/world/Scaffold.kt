@@ -12,7 +12,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PlaceRotation
@@ -26,10 +27,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import net.ccbluex.liquidbounce.utils.extensions.eyes
-import net.ccbluex.liquidbounce.utils.extensions.rotation
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
@@ -63,29 +61,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand"), "Normal")
 
+    // Expand
+    private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false) { mode == "Expand" }
+    private val expandLength by IntegerValue("ExpandLength", 1, 1..6) { mode == "Expand" }
+
     // Placeable delay
     private val placeDelay by BoolValue("PlaceDelay", true)
-
-    private val extraClicks = BoolValue("DoExtraClicks", false)
-
-    private val extraClickMaxCPSValue: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0..50) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(extraClickMinCPS)
-
-        override fun isSupported() = extraClicks.isActive()
-    }
-    private val extraClickMaxCPS by extraClickMaxCPSValue
-
-    private val extraClickMinCPS by object : IntegerValue("ExtraClickMinCPS", 3, 0..50) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(extraClickMaxCPS)
-
-        override fun isSupported() = extraClicks.isActive() && !extraClickMaxCPSValue.isMinimal()
-    }
-
-    private val placementAttempt by ListValue(
-        "PlacementAttempt", arrayOf("Fail", "Independent"), "Fail"
-    ) { extraClicks.isActive() }
-
-    // Delay
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0..1000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 
@@ -98,6 +79,24 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         override fun isSupported() = placeDelay && !maxDelayValue.isMinimal()
     }
+
+    // Extra clicks
+    private val extraClicks by BoolValue("DoExtraClicks", false)
+
+    private val extraClickMaxCPSValue: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0..50) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(extraClickMinCPS)
+
+        override fun isSupported() = extraClicks
+    }
+    private val extraClickMaxCPS by extraClickMaxCPSValue
+
+    private val extraClickMinCPS by object : IntegerValue("ExtraClickMinCPS", 3, 0..50) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(extraClickMaxCPS)
+
+        override fun isSupported() = extraClicks && !extraClickMaxCPSValue.isMinimal()
+    }
+
+    private val placementAttempt by ListValue("PlacementAttempt", arrayOf("Fail", "Independent"), "Fail") { extraClicks }
 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
@@ -112,10 +111,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val eagle by ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal")
     private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10) { eagle != "Off" }
     private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f) { eagle != "Off" }
-
-    // Expand
-    private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false)
-    private val expandLength by IntegerValue("ExpandLength", 1, 1..6)
 
     // Rotation Options
     private val rotations by BoolValue("Rotations", true)
@@ -158,7 +153,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Safety
     private val sameY by BoolValue("SameY", false)
     private val safeWalk by BoolValue("SafeWalk", true)
-    private val airSafe by BoolValue("AirSafe", false)
+    private val airSafe by BoolValue("AirSafe", false) { safeWalk }
 
     // Visuals
     private val counterDisplay by BoolValue("Counter", true)
@@ -169,9 +164,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Launch position
     private var launchY = 0
-
-    // AutoBlock
-    private var slot = -1
 
     // Zitter Direction
     private var zitterDirection = false
@@ -201,7 +193,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
 
         launchY = player.posY.roundToInt()
-        slot = player.inventory.currentItem
     }
 
     // Events
@@ -305,24 +296,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     }
 
     @EventTarget
-    fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null) {
-            return
-        }
-
-        val packet = event.packet
-
-        if (packet is C09PacketHeldItemChange) {
-            if (slot == packet.slotId) {
-                event.cancelEvent()
-                return
-            }
-
-            slot = packet.slotId
-        }
-    }
-
-    @EventTarget
     fun onMotion(event: MotionEvent) {
         val rotation = targetRotation
 
@@ -339,7 +312,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onTick(event: TickEvent) {
         val target = targetPlace
 
-        if (extraClicks.get()) {
+        if (extraClicks) {
             while (extraClick.clicks > 0) {
                 extraClick.clicks--
 
@@ -460,7 +433,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 }
 
                 "spoof", "switch" -> {
-                    if (blockSlot - 36 != slot) {
+                    if (blockSlot - 36 != serverSlot) {
                         sendPacket(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
@@ -492,7 +465,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (autoBlock == "Switch") {
-            if (slot != player.inventory.currentItem) {
+            if (serverSlot != player.inventory.currentItem) {
                 sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
             }
         }
@@ -504,11 +477,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
-        if (slot == -1) {
-            return
-        }
-
-        val stack = player.inventoryContainer.getSlot(slot + 36).stack ?: return
+        val stack = player.inventoryContainer.getSlot(serverSlot + 36).stack ?: return
 
         if (stack.item !is ItemBlock || InventoryUtils.BLOCK_BLACKLIST.contains((stack.item as ItemBlock).block)) {
             return
@@ -575,7 +544,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         targetPlace = null
         mc.timer.timerSpeed = 1f
 
-        if (slot != player.inventory.currentItem) {
+        if (serverSlot != player.inventory.currentItem) {
             sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
         }
     }
@@ -603,13 +572,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null) glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
-            val scaledResolution = ScaledResolution(mc)
+            val (width, height) = ScaledResolution(mc)
 
             drawBorderedRect(
-                scaledResolution.scaledWidth / 2 - 2,
-                scaledResolution.scaledHeight / 2 + 5,
-                scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2,
-                scaledResolution.scaledHeight / 2 + 16,
+                width / 2 - 2,
+                height / 2 + 5,
+                width / 2 + Fonts.font40.getStringWidth(info) + 2,
+                height / 2 + 16,
                 3,
                 Color.BLACK.rgb,
                 Color.BLACK.rgb
@@ -618,7 +587,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             resetColor()
 
             Fonts.font40.drawString(
-                info, scaledResolution.scaledWidth / 2, scaledResolution.scaledHeight / 2 + 7, Color.WHITE.rgb
+                info, width / 2, height / 2 + 7, Color.WHITE.rgb
             )
             glPopMatrix()
         }
@@ -630,7 +599,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
 
         val shouldBother =
-            !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks.get() && MovementUtils.isMoving
+            !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks && isMoving
 
         if (shouldBother) {
             currRotation.let {
@@ -712,32 +681,19 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                     placeRotation = currPlaceRotation
                 }
             } else {
-                var x = 0.1
-                while (x < 0.9) {
-                    var y = 0.1
-                    while (y < 0.9) {
-                        var z = 0.1
-                        while (z < 0.9) {
+                for (x in 0.1..0.9) {
+                    for (y in 0.1..0.9) {
+                        for (z in 0.1..0.9) {
                             currPlaceRotation =
                                 findTargetPlace(blockPosition, neighbor, Vec3(x, y, z), side, eyes, maxReach, raycast)
+                                    ?: continue
 
-                            if (currPlaceRotation == null) {
-                                z += 0.1
-                                continue
-                            }
-
-                            if (placeRotation == null || getRotationDifference(
-                                    currPlaceRotation.rotation, currRotation
-                                ) < getRotationDifference(placeRotation.rotation, currRotation)
-                            ) {
-                                placeRotation = currPlaceRotation
-                            }
-
-                            z += 0.1
+                            if (placeRotation == null ||
+                                getRotationDifference(currPlaceRotation.rotation, currRotation)
+                                < getRotationDifference(placeRotation.rotation, currRotation)
+                            ) placeRotation = currPlaceRotation
                         }
-                        y += 0.1
                     }
-                    x += 0.1
                 }
             }
         }
@@ -782,7 +738,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     ): PlaceRotation? {
         val world = mc.theWorld ?: return null
 
-        val vec = Vec3(pos).add(vec3).addVector(
+        val vec = (Vec3(pos) + vec3).addVector(
             side.directionVec.x * vec3.xCoord, side.directionVec.y * vec3.yCoord, side.directionVec.z * vec3.zCoord
         )
 
@@ -792,7 +748,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return null
         }
 
-        val diff = vec.subtract(eyes)
+        val diff = vec - eyes
 
         if (side.axis != EnumFacing.Axis.Y) {
             val dist = abs(if (side.axis == EnumFacing.Axis.Z) diff.zCoord else diff.xCoord)
@@ -841,8 +797,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val eyes = player.eyes
         val rotationVec = getVectorForRotation(rotation)
 
-        val reach =
-            eyes.addVector(rotationVec.xCoord * maxReach, rotationVec.yCoord * maxReach, rotationVec.zCoord * maxReach)
+        val reach = eyes + (rotationVec * maxReach.toDouble())
 
         return world.rayTraceBlocks(eyes, reach, false, false, true)
     }
