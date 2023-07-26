@@ -48,9 +48,9 @@ val logger: Logger
 val protocolVersion: Int
     get() = runCatching {
         ViaLoadingBase.getInstance().targetVersion.index
-    }.getOrElse { MC_1_19_4 }
+    }.getOrElse { MC_1_20_1 }
 
-const val MC_1_19_4: Int = 762
+const val MC_1_20_1: Int = 763
 const val MC_1_8: Int = 47
 
 // Chat formatting

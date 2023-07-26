@@ -43,7 +43,9 @@ import java.util.List;
 @Mixin(Window.class)
 public class MixinWindow {
 
-    @Shadow @Final private long handle;
+    @Shadow
+    @Final
+    private long handle;
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V"))
     private void hookOpenGl33(int hint, int value) {
@@ -59,7 +61,7 @@ public class MixinWindow {
     /**
      * Set window icon to our client icon.
      *
-     * @return
+     * @return modified game icon
      */
     @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Icons;getIcons(Lnet/minecraft/resource/ResourcePack;)Ljava/util/List;"))
     private List<InputSupplier<InputStream>> setupIcon(Icons instance, ResourcePack resourcePack) throws IOException {
