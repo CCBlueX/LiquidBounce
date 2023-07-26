@@ -3,6 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
+
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_COMMIT
@@ -47,13 +48,14 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         /**
          * Create default element
          */
+
         fun defaultClient(): Text {
             val text = Text(x = 2.0, y = 2.0, scale = 2F)
 
             text.displayString = "%clientName%"
             text.shadow = true
             text.font = Fonts.font40
-            text.color = Color(0, 111, 255)
+            text.color = Color(0, 111, 255, 255)
 
             return text
         }
@@ -62,19 +64,19 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
     private var displayString by TextValue("DisplayText", "")
 
-    private val rainbow by BoolValue("Rainbow", false)
-    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { rainbow }
-    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { rainbow }
+    private val textColor by ListValue("TextColor", arrayOf("Custom", "Rainbow"), "Custom")
+    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { textColor == "Rainbow" }
+    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { textColor == "Rainbow" }
 
-    private var red by IntegerValue("Red", 255, 0..255) { !rainbow }
-    private var green by IntegerValue("Green", 255, 0..255) { !rainbow }
-    private var blue by IntegerValue("Blue", 255, 0..255) { !rainbow }
-    private var alpha by IntegerValue("Alpha", 255, 0..255) { !rainbow }
+    private var alpha by IntegerValue("Alpha", 255, 0..255) { textColor == "Custom" }
+    private var red by IntegerValue("Red", 255, 0..255) { alpha > 0 }
+    private var green by IntegerValue("Green", 255, 0..255) { alpha > 0 }
+    private var blue by IntegerValue("Blue", 255, 0..255) { alpha > 0 }
 
-    private var backgroundRed by IntegerValue("BackgroundRed", 0, 0..255)
-    private var backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255)
-    private var backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255)
-    private var backgroundAlpha by IntegerValue("BackgroundAlpha", 100, 0..255)
+    private var backgroundAlpha by IntegerValue("BackgroundAlpha", 0, 0..255)
+    private var backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
+    private var backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
+    private var backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
 
     private var shadow by BoolValue("Shadow", true)
     private var font by FontValue("Font", Fonts.font40)
@@ -122,10 +124,10 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
                 "yaw" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw)
                 "pitch" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch)
-                "yawInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw).toInt()
-                "pitchInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch).toInt()
+                "yawint" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw).toInt()
+                "pitchint" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch).toInt()
                 "food" -> return thePlayer.foodStats.foodLevel
-                "onGround" -> return mc.thePlayer.onGround
+                "onground" -> return mc.thePlayer.onGround
             }
         }
 
@@ -180,17 +182,28 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
      * Draw element
      */
     override fun drawElement(): Border {
-        val rainbow = rainbow
+        val rainbow = (textColor == "Rainbow")
 
-        drawRect(-2F, -2F, font.getStringWidth(displayText) + 2F, font.FONT_HEIGHT + 0F, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha))
+        if (backgroundAlpha > 0) { drawRect(-2F, -2F, font.getStringWidth(displayText) + 2F, font.FONT_HEIGHT + 0F, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha)) }
 
-        RainbowFontShader.begin(rainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-            font.drawString(displayText, 0F, 0F, if (rainbow)
-                0 else color.rgb, shadow)
+        if (alpha > 0) {
+            RainbowFontShader.begin(
+                rainbow,
+                if (rainbowX == 0f) 0f else 1f / rainbowX,
+                if (rainbowY == 0f) 0f else 1f / rainbowY,
+                System.currentTimeMillis() % 10000 / 10000F
+            ).use {
+                font.drawString(
+                    displayText, 0F, 0F, if (rainbow)
+                        0 else color.rgb, shadow
+                )
 
-            if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
-                font.drawString("_", font.getStringWidth(displayText) + 2F,
-                        0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color.rgb, shadow)
+                if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
+                    font.drawString(
+                        "_", font.getStringWidth(displayText) + 2F,
+                        0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color.rgb, shadow
+                    )
+            }
         }
 
         if (editMode && mc.currentScreen !is GuiHudDesigner) {
