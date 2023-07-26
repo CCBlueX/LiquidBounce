@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.Minecraft
@@ -68,6 +69,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private var red by IntegerValue("Red", 255, 0..255) { !rainbow }
     private var green by IntegerValue("Green", 255, 0..255) { !rainbow }
     private var blue by IntegerValue("Blue", 255, 0..255) { !rainbow }
+    private var alpha by IntegerValue("Alpha", 255, 0..255) { !rainbow }
+
+    private var backgroundRed by IntegerValue("BackgroundRed", 0, 0..255)
+    private var backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255)
+    private var backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255)
+    private var backgroundAlpha by IntegerValue("BackgroundAlpha", 100, 0..255)
 
     private var shadow by BoolValue("Shadow", true)
     private var font by FontValue("Font", Fonts.font40)
@@ -90,14 +97,15 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         }
 
     private var color: Color
-        get() = Color(red, green, blue)
+        get() = Color(red, green, blue, alpha)
         set(value) {
             red = value.red
             green = value.green
             blue = value.blue
+            alpha = value.alpha
         }
 
-    private fun getReplacement(str: String): String? {
+    private fun getReplacement(str: String): Any? {
         val thePlayer = mc.thePlayer
 
         if (thePlayer != null) {
@@ -105,14 +113,19 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
                 "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
                 "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
-                "xdp" -> return thePlayer.posX.toString()
-                "ydp" -> return thePlayer.posY.toString()
-                "zdp" -> return thePlayer.posZ.toString()
+                "xdp" -> return thePlayer.posX
+                "ydp" -> return thePlayer.posY
+                "zdp" -> return thePlayer.posZ
                 "velocity" -> return DECIMAL_FORMAT.format(speed)
-                "ping" -> return thePlayer.getPing().toString()
+                "ping" -> return thePlayer.getPing()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
-                "food" -> return thePlayer.foodStats.foodLevel.toString()
+                "yaw" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw)
+                "pitch" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch)
+                "yawInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw).toInt()
+                "pitchInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch).toInt()
+                "food" -> return thePlayer.foodStats.foodLevel
+                "onGround" -> return mc.thePlayer.onGround
             }
         }
 
@@ -122,13 +135,13 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "clientversion" -> CLIENT_VERSION
             "clientcommit" -> CLIENT_COMMIT
             "clientcreator" -> CLIENT_CREATOR
-            "fps" -> Minecraft.getDebugFPS().toString()
+            "fps" -> Minecraft.getDebugFPS()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
             "serverip" -> ServerUtils.remoteIp
-            "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT).toString()
-            "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
-            "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
+            "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT)
+            "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE)
+            "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT)
             else -> null // Null = don't replace
         }
     }
@@ -168,6 +181,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
      */
     override fun drawElement(): Border {
         val rainbow = rainbow
+
+        drawRect(-2F, -2F, font.getStringWidth(displayText) + 2F, font.FONT_HEIGHT + 0F, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha))
 
         RainbowFontShader.begin(rainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
             font.drawString(displayText, 0F, 0F, if (rainbow)
