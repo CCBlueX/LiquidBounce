@@ -10,6 +10,9 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.ItemFood
+import net.minecraft.item.ItemPotion
+import net.minecraft.item.ItemBucketMilk
 import net.minecraft.nbt.JsonToNBT
 import net.minecraft.util.ResourceLocation
 
@@ -63,6 +66,19 @@ object ItemUtils : MinecraftInstance() {
         }
 
         return items
+    }
+
+
+    /**
+     * Allows you to check if player is consuming item
+     */
+    fun isConsumingItem(): Boolean {
+        if (!mc.thePlayer.isUsingItem) {
+            return false
+        }
+
+        val usingItem = mc.thePlayer.itemInUse.item
+        return usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion
     }
 }
 
