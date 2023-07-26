@@ -31,7 +31,6 @@ import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
 import net.minecraft.text.TextColor
-import java.util.*
 
 /**
  * NameProtect module
@@ -51,13 +50,17 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
         val colorRainbow by boolean("Rainbow", false)
     }
 
+    init {
+        tree(ReplaceFriendNames)
+    }
+
     val replacements = ArrayList<ReplacementMapping>()
 
     val renderEventHandler = handler<GameRenderEvent> {
         replacements.clear()
 
         if (ReplaceFriendNames.enabled) {
-            FriendManager.friends.withIndex().forEach {(id, friend) ->
+            FriendManager.friends.withIndex().forEach { (id, friend) ->
                 val color4b = if (ReplaceFriendNames.colorRainbow) rainbow() else ReplaceFriendNames.color
 
                 replacements.add(ReplacementMapping(friend.name, "Friend $id", color4b))
