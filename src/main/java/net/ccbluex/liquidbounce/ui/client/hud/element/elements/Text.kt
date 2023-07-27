@@ -68,15 +68,15 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { textColor == "Rainbow" }
     private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { textColor == "Rainbow" }
 
-    private var alpha by IntegerValue("Alpha", 255, 0..255) { textColor == "Custom" }
-    private var red by IntegerValue("Red", 255, 0..255) { alpha > 0 }
-    private var green by IntegerValue("Green", 255, 0..255) { alpha > 0 }
-    private var blue by IntegerValue("Blue", 255, 0..255) { alpha > 0 }
+    private var textAlpha by IntegerValue("Text-Alpha", 255, 0..255) { textColor == "Custom" }
+    private var textRed by IntegerValue("Text-R", 255, 0..255) { textColor == "Custom" && textAlpha > 0 }
+    private var textGreen by IntegerValue("Text-G", 255, 0..255) { textColor == "Custom" && textAlpha > 0 }
+    private var textBlue by IntegerValue("Text-B", 255, 0..255) { textColor == "Custom" && textAlpha > 0 }
 
-    private var backgroundAlpha by IntegerValue("BackgroundAlpha", 0, 0..255)
-    private var backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
-    private var backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
-    private var backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
+    private var backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255)
+    private var backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundAlpha > 0 }
+    private var backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundAlpha > 0 }
+    private var backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundAlpha > 0 }
 
     private var shadow by BoolValue("Shadow", true)
     private var font by FontValue("Font", Fonts.font40)
@@ -99,12 +99,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         }
 
     private var color: Color
-        get() = Color(red, green, blue, alpha)
+        get() = Color(textRed, textGreen, textBlue, textAlpha)
         set(value) {
-            red = value.red
-            green = value.green
-            blue = value.blue
-            alpha = value.alpha
+            textRed = value.red
+            textGreen = value.green
+            textBlue = value.blue
+            textAlpha = value.alpha
         }
 
     private fun getReplacement(str: String): Any? {
@@ -186,7 +186,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
         if (backgroundAlpha > 0) { drawRect(-2F, -2F, font.getStringWidth(displayText) + 2F, font.FONT_HEIGHT + 0F, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha)) }
 
-        if (alpha > 0) {
+        if (textAlpha > 0) {
             RainbowFontShader.begin(
                 rainbow,
                 if (rainbowX == 0f) 0f else 1f / rainbowX,
