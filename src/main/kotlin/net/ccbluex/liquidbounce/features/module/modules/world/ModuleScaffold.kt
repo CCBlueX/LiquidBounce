@@ -25,23 +25,24 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.step
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.xRange
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.yRange
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AdvancedRotation.zRange
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.AimMode.*
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.blocksToEagle
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.edgeDistance
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Slow.slowSpeed
-import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.item.notABlock
 import net.ccbluex.liquidbounce.utils.kotlin.step
+import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.block.ShapeContext
@@ -76,6 +77,59 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         CLOSE_ROTATION("CloseRotation");
     }
 
+    private val silent by boolean("Silent", true)
+    private var delay by intRange("Delay", 3..5, 0..40)
+
+    private val swing by boolean("Swing", true)
+
+    object Eagle : ToggleableConfigurable(this, "Eagle", false) {
+        val blocksToEagle by int("BlocksToEagle", 1, 1..10)
+        val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
+    }
+
+    val down by boolean("Down", false)
+
+    // Rotation
+    private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val aimMode = enumChoice("RotationMode", STABILIZED, AimMode.values())
+
+    object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
+        val xRange by floatRange("XRange", 0f..1f, 0f..1f)
+        val yRange by floatRange("YRange", 0f..1f, 0f..1f)
+        val zRange by floatRange("ZRange", 0f..1f, 0f..1f)
+        val step by float("Step", 0.1f, 0f..1f)
+    }
+
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+
+    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val zitterModes = choices(
+        "ZitterMode",
+        Off, arrayOf(
+            Off,
+            Teleport,
+            Smooth
+        )
+    )
+    private val timer by float("Timer", 1f, 0.01f..10f)
+    private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
+
+    object Slow : ToggleableConfigurable(this, "Slow", false) {
+        val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..3f)
+    }
+
+    private val safeWalk by boolean("SafeWalk", true)
+    private val sameY by boolean("SameY", false)
+    private var currentTarget: Target? = null
+
+    init {
+        tree(Eagle)
+        tree(Slow)
+        tree(AdvancedRotation)
+    }
+
+    private var startY = 0
+    private var placedBlocks = 0
     private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
         { o1, o2 ->
             compareByCondition(
@@ -112,57 +166,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         { o1, o2 -> o2.count.compareTo(o1.count) }
     )
 
-    private val silent by boolean("Silent", true)
-    private var delay by intRange("Delay", 3..5, 0..40)
-
-    private val swing by boolean("Swing", true)
-
-    object Eagle : ToggleableConfigurable(this, "Eagle", false) {
-        val blocksToEagle by int("BlocksToEagle", 1, 1..10)
-        val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
-    }
-
-    val down by boolean("Down", false)
-
-    // Rotation
-    private val rotationsConfigurable = tree(RotationsConfigurable())
-    private val aimMode = enumChoice("RotationMode", STABILIZED, AimMode.values())
-    object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
-        val xRange by float("XRange", 0f, 0f..0.5f)
-        val yRange by float("YRange", 0f, 0f..0.5f)
-        val zRange by float("ZRange", 0f, 0f..0.5f)
-        val step by float("Step", 0.1f, 0f..1f)
-    }
-    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-
-    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
-    private val zitterModes = choices(
-        "ZitterMode",
-        Off, arrayOf(
-            Off,
-            Teleport,
-            Smooth
-        )
-    )
-    private val timer by float("Timer", 1f, 0.01f..10f)
-    private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
-
-    object Slow : ToggleableConfigurable(this, "Slow", false) {
-        val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..3f)
-    }
-
-    private val safeWalk by boolean("SafeWalk", true)
-    private val sameY by boolean("SameY", false)
-    private var currentTarget: Target? = null
-
-    init {
-        tree(Eagle)
-        tree(Slow)
-        tree(AdvancedRotation)
-    }
-
-    private var startY = 0
-    private var placedBlocks = 0
     private val shouldGoDown: Boolean
         get() = this.down && mc.options.sneakKey.isPressed
 
@@ -180,7 +183,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val target = currentTarget ?: return@handler
 
-        RotationManager.aimAt(target.rotation, openInventory = ignoreOpenInventory, configurable = rotationsConfigurable)
+        RotationManager.aimAt(
+            target.rotation,
+            openInventory = ignoreOpenInventory,
+            configurable = rotationsConfigurable
+        )
     }
 
     val moveHandler = repeatable {
@@ -268,29 +275,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val repeatable = handler<StateUpdateEvent> {
-        var dif = 0.5
-        if (Eagle.enabled) {
-            // Gets player distance to the edge
-
-            for (side in Direction.values().drop(2)) {
-                val neighbor = player.blockPos.down().offset(side)
-
-                if (neighbor.getState()!!.isReplaceable) {
-                    val calcDif = abs(
-                        0.5 + if (side.axis == Direction.Axis.Z) {
-                            neighbor.z - player.pos.z
-                        } else {
-                            neighbor.x - player.pos.x
-                        }
-                    ) - 0.5
-
-                    dif = min(dif, calcDif)
-                }
-            }
-        }
         if (shouldDisableSafeWalk()) {
             it.state.enforceEagle = false
-        } else if (!player.abilities.flying && Eagle.enabled && dif <= edgeDistance && placedBlocks == 0) {
+        } else if (!player.abilities.flying && Eagle.enabled && player.isCloseToEdge(edgeDistance.toDouble()) && placedBlocks == 0) {
             it.state.enforceEagle = true
         }
     }
@@ -377,6 +364,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         moveKeys.forEach {
             it.enforced = null
         }
+        // Makes you shift until first block placed, so with eagle enabled you won't fall off, when enabled
+        placedBlocks = 0
         mc.timer.timerSpeed = 1f
         SilentHotbar.resetSlot(this)
     }
@@ -523,7 +512,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         }
 
                         STABILIZED -> {
-                            face.stabilized()
+                            face.stabilized(currPos)
                         }
                     }
                     Pair(
@@ -564,6 +553,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private fun shouldDisableSafeWalk() = shouldGoDown && player.blockPos.add(0, -2, 0).canStandOn()
 
     data class Face(val from: Vec3d, val to: Vec3d) {
+        private val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
+        private val xRange = if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else gcd..1 - gcd
+        private val yRange = if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else gcd..1 - gcd
+        private val zRange = if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else gcd..1 - gcd
+        private val step = if (AdvancedRotation.enabled) AdvancedRotation.step.toDouble() else gcd
 
         val area: Double
             get() {
@@ -581,45 +575,59 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 (to.z + from.z) * 0.5
             )
 
-        fun stabilized(): Vec3d {
-            val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd
-            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd
-            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd
-            val x = (player.pos.x - floor(player.pos.x)).coerceIn(xRange..1 - xRange)
-            val y = Random.nextDouble(from.y + yRange, to.y - yRange)
-            val z = (player.pos.z - floor(player.pos.z)).coerceIn(zRange..1 - zRange)
-            return Vec3d(
-                if (from.x != to.x) x else from.x,
-                if (from.y != to.y) y else from.y,
-                if (from.z != to.z) z else from.z
-            )
+        fun stabilized(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
+            val pitchToCompare =
+                if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
+            val x = (player.pos.x - floor(player.pos.x)).coerceIn(xRange)
+            val z = (player.pos.z - floor(player.pos.z)).coerceIn(zRange)
+            return rotationList(x..x, yRange, z..z, step).minBy {
+                abs(
+                    RotationManager.angleDifference(
+                        RotationManager.makeRotation(
+                            it.add(
+                                Vec3d.of(pos)
+                            ), eyes
+                        ).pitch,
+                        pitchToCompare
+                    )
+                )
+            }
         }
 
         val random: Vec3d
             get() {
-                val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-                val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd
-                val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd
-                val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd
                 return Vec3d(
-                    if (from.x != to.x) Random.nextDouble(from.x + xRange, to.x - xRange) else from.x,
-                    if (from.y != to.y) Random.nextDouble(from.y + yRange, to.y - yRange) else from.y,
-                    if (from.z != to.z) Random.nextDouble(from.z + zRange, to.z - zRange) else from.z
+                    if (from.x != to.x) Random.nextDouble(
+                        xRange.start,
+                        (xRange.endInclusive - step).coerceAtLeast(xRange.start)
+                    ) else from.x,
+                    if (from.y != to.y) Random.nextDouble(
+                        yRange.start,
+                        (yRange.endInclusive - step).coerceAtLeast(yRange.start)
+                    ) else from.y,
+                    if (from.z != to.z) Random.nextDouble(
+                        zRange.start,
+                        (zRange.endInclusive - step).coerceAtLeast(zRange.start)
+                    ) else from.z
                 )
             }
 
-        private fun rotationList(xRange: Double, yRange: Double, zRange: Double, step: Double): MutableList<Vec3d> {
+        private fun rotationList(
+            xRange: ClosedFloatingPointRange<Double>,
+            yRange: ClosedFloatingPointRange<Double>,
+            zRange: ClosedFloatingPointRange<Double>,
+            step: Double
+        ): MutableList<Vec3d> {
             // Collects all possible rotations
             val possibleRotations = mutableListOf<Vec3d>()
 
-            val xAd = if (from.x == to.x) 0.0 else xRange
-            val yAd = if (from.y == to.y) 0.0 else yRange
-            val zAd = if (from.z == to.z) 0.0 else zRange
+            val currentRangeX = if (from.x == to.x) from.x..to.x else xRange
+            val currentRangeY = if (from.y == to.y) from.y..to.y else yRange
+            val currentRangeZ = if (from.z == to.z) from.z..to.z else zRange
 
-            for (x in (from.x + xAd)..(to.x - xAd) step step) {
-                for (y in (from.y + yAd)..(to.y - yAd) step step) {
-                    for (z in (from.z + zAd)..(to.z - zAd) step step) {
+            for (x in currentRangeX step step) {
+                for (y in currentRangeY step step) {
+                    for (z in currentRangeZ step step) {
                         val vec3 = Vec3d(x, y, z)
 
                         possibleRotations.add(vec3)
@@ -630,14 +638,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         fun closeRotation(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
-            // Sort them by angleDifference between it and currentTarget.rotation
             val yawToCompare =
                 if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
-            val gcd = RotationManager.gcd.coerceIn(0.02, 0.15)
-            val xRange = if (AdvancedRotation.enabled) xRange.toDouble() else gcd
-            val yRange = if (AdvancedRotation.enabled) yRange.toDouble() else gcd
-            val zRange = if (AdvancedRotation.enabled) zRange.toDouble() else gcd
-            val step = if (AdvancedRotation.enabled) step.toDouble() else gcd
+            // Sort them by angleDifference between it and currentTarget.rotation
             return rotationList(xRange, yRange, zRange, step).minBy {
                 abs(
                     RotationManager.angleDifference(

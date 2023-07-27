@@ -26,15 +26,19 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.CharacterVisitor;
 import net.minecraft.text.OrderedText;
+import net.minecraft.text.StringVisitable;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.util.Optional;
+
 @Mixin(TextRenderer.class)
 public abstract class MixinTextRenderer implements IMixinGameRenderer {
-    @Shadow protected abstract float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, TextRenderer.TextLayerType layerType, int underlineColor, int light);
+    @Shadow
+    protected abstract float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, TextRenderer.TextLayerType layerType, int underlineColor, int light);
 
     @Redirect(method = "drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;IIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;drawLayer(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)F"))
     private float injectNameProtectA(TextRenderer textRenderer, String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, TextRenderer.TextLayerType layerType, int underlineColor, int light) {
@@ -44,6 +48,16 @@ public abstract class MixinTextRenderer implements IMixinGameRenderer {
     @Redirect(method = "getWidth(Ljava/lang/String;)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Ljava/lang/String;)F"))
     private float injectNameProtectWidthA(TextHandler textHandler, String text) {
         return textHandler.getWidth(ModuleNameProtect.INSTANCE.replace(text));
+    }
+
+    @Redirect(method = "getWidth(Lnet/minecraft/text/StringVisitable;)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Lnet/minecraft/text/StringVisitable;)F"))
+    private float injectNameProtectWidthB(TextHandler instance, StringVisitable text) {
+        StringBuilder stringBuilder = new StringBuilder();
+        text.visit((asString -> {
+            stringBuilder.append(asString);
+            return Optional.empty();
+        }));
+        return instance.getWidth(ModuleNameProtect.INSTANCE.replace(stringBuilder.toString()));
     }
 
     @Redirect(method = "drawLayer(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z"))

@@ -48,7 +48,8 @@
         <div class="clickgui-container">
             <SearchBar root="{clickGuiModule}" modules={modules}/>
             {#each panels as panel}
-                <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top} startLeft={panel.left}/>
+                <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top}
+                       startLeft={panel.left}/>
             {/each}
         </div>
     {/if}
