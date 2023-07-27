@@ -44,13 +44,7 @@ object CommandPanic {
                 var modules = ModuleManager.filter { it.enabled }
                 val msg: MutableText
 
-                val type = if (args.isNotEmpty()) {
-                    args[0] as String
-                } else {
-                    "nonrender"
-                }
-
-                when (type) {
+                when (val type = args[0] as String? ?: "nonrender") {
                     "all" -> msg = command.result("disabledAllModules")
                     "nonrender" -> {
                         modules = modules.filter { it.category != Category.RENDER }
