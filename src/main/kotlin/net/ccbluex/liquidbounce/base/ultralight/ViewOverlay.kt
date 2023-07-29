@@ -63,7 +63,7 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
         // Make sure renderer setups config correctly
         viewRenderer.setupConfig(viewConfig)
 
-        ultralightView.lock(UltralightEngine.renderer.get().createView(width, height, viewConfig))
+        ultralightView.lock(UltralightEngine.ultralight.get().createView(width, height, viewConfig))
         ultralightView.get().setViewListener(ViewListener())
         ultralightView.get().setLoadListener(ViewLoadListener(this))
 

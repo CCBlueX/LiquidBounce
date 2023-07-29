@@ -18,14 +18,6 @@
  */
 package net.ccbluex.liquidbounce.base.ultralight
 
-import com.labymedia.ultralight.UltralightJava
-import com.labymedia.ultralight.UltralightPlatform
-import com.labymedia.ultralight.UltralightRenderer
-import com.labymedia.ultralight.config.FontHinting
-import com.labymedia.ultralight.config.UltralightConfig
-import com.labymedia.ultralight.gpu.UltralightGPUDriverNativeUtil
-import com.labymedia.ultralight.os.OperatingSystem
-import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
 import net.ccbluex.liquidbounce.base.ultralight.hooks.UltralightIntegrationHook
 import net.ccbluex.liquidbounce.base.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.base.ultralight.impl.BrowserFileSystem
@@ -43,8 +35,8 @@ import net.minecraft.client.gui.screen.Screen
 object UltralightEngine {
 
     val window = mc.window.handle
-    var platform = ThreadLock<UltralightPlatform>()
-    var renderer = ThreadLock<UltralightRenderer>()
+    var platform = ThreadLock<PlatformEnvironment>()
+    var ultralight = ThreadLock<UltralightJavaReborn>()
 
     lateinit var clipboardAdapter: GlfwClipboardAdapter
     lateinit var cursorAdapter: GlfwCursorAdapter
@@ -97,7 +89,7 @@ object UltralightEngine {
 
         val ulRenderer = UltralightRenderer.create()
         ulRenderer.logMemoryUsage()
-        renderer.lock(ulRenderer)
+        ultralight.lock(ulRenderer)
 
         // Setup hooks
         UltralightIntegrationHook
@@ -157,7 +149,7 @@ object UltralightEngine {
     fun update() {
         viewOverlays
             .forEach(ViewOverlay::update)
-        renderer.get().update()
+        ultralight.get().update()
     }
 
     fun render(layer: RenderLayer, context: DrawContext) {
@@ -179,7 +171,7 @@ object UltralightEngine {
             return
         }
 
-        renderer.get().render()
+        ultralight.get().render()
         lastRenderTime = time
     }
 

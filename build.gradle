@@ -90,10 +90,10 @@ dependencies {
 
     implementation "com.github.CCBlueX:Elixir:1.2.6"
 
-    implementation "com.labymedia:ultralight-java-base:0.4.12"
-    implementation "com.labymedia:ultralight-java-databind:0.4.12"
-    implementation "com.labymedia:ultralight-java-gpu:0.4.12"
-    implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
+    implementation "net.janrupf.ultralight:ultralight-java-reborn-core:0.0.1-SNAPSHOT"
+    implementation "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.1-SNAPSHOT:windows-x64"
+    implementation "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.1-SNAPSHOT:linux-x64"
+    implementation "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.1-SNAPSHOT:macos-x64"
 
     implementation "org.graalvm.sdk:graal-sdk:23.0.0"
     implementation "org.graalvm.truffle:truffle-api:23.0.0"
