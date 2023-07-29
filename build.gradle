@@ -196,9 +196,9 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
-        include(dependency("org.graalvm.sdk:graal-sdk:23.0.0"))
-        include(dependency("org.graalvm.truffle:truffle-api:23.0.0"))
-        include(dependency("org.graalvm.js:js:23.0.0"))
+        include(dependency("org.graalvm.sdk:graal-sdk:23.0.1"))
+        include(dependency("org.graalvm.truffle:truffle-api:23.0.1"))
+        include(dependency("org.graalvm.js:js:23.0.1"))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
     }
