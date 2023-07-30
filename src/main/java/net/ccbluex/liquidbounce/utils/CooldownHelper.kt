@@ -48,11 +48,11 @@ object CooldownHelper {
         }
         
         if (mc.thePlayer.isPotionActive(Potion.digSlowdown)) {
-            genericAttackSpeed *= 1.0 - min(1.0, 0.1 * mc.thePlayer.getActivePotionEffect(Potion.digSlowdown).amplifier + 1)
+            genericAttackSpeed *= 1.0 - min(1.0, 0.1 * (mc.thePlayer.getActivePotionEffect(Potion.digSlowdown).amplifier + 1))
         }
         
         if (mc.thePlayer.isPotionActive(Potion.digSpeed)) {
-            genericAttackSpeed *= 1.0 + (0.1 * mc.thePlayer.getActivePotionEffect(Potion.digSpeed).amplifier + 1)
+            genericAttackSpeed *= 1.0 + 0.1 * (mc.thePlayer.getActivePotionEffect(Potion.digSpeed).amplifier + 1)
         } 
     }
 

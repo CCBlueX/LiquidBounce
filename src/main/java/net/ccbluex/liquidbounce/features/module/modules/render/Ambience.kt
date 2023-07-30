@@ -21,9 +21,9 @@ object Ambience : Module("Ambience", ModuleCategory.RENDER) {
     private val timeMode by ListValue("Mode", arrayOf("None", "Normal", "Custom"), "Custom")
     private val weatherMode by ListValue("WeatherMode", arrayOf("None", "Sun", "Rain", "Thunder"), "None")
 
-    private val customWorldTime by IntegerValue("Time", 19000, 0..24000) { timeMode != "Custom" }
+    private val customWorldTime by IntegerValue("Time", 19000, 0..24000) { timeMode == "Custom" }
 
-    private val changeWorldTimeSpeed by IntegerValue("TimeSpeed", 150, 10..500) { timeMode != "None" }
+    private val changeWorldTimeSpeed by IntegerValue("TimeSpeed", 150, 10..500) { timeMode == "Normal" }
 
     private val weatherStrength by FloatValue("WeatherStrength", 1f, 0f..1f) { weatherMode != "None" }
 
@@ -37,11 +37,8 @@ object Ambience : Module("Ambience", ModuleCategory.RENDER) {
     fun onUpdate(event: UpdateEvent) {
         when (timeMode.lowercase()) {
             "normal" -> {
-                if (i < 24000) {
-                    i += changeWorldTimeSpeed
-                } else {
-                    i = 0
-                }
+                i += changeWorldTimeSpeed
+                i %= 24000
                 mc.theWorld.worldTime = i
             }
             "custom" -> {
@@ -49,18 +46,20 @@ object Ambience : Module("Ambience", ModuleCategory.RENDER) {
             }
         }
 
+		val strength = weatherStrength.coerceIn(0F, 1F)
+
         when (weatherMode.lowercase()) {
             "sun" -> {
                 mc.theWorld.setRainStrength(0f)
                 mc.theWorld.setThunderStrength(0f)
             }
             "rain" -> {
-                mc.theWorld.setRainStrength(weatherStrength)
+                mc.theWorld.setRainStrength(strength)
                 mc.theWorld.setThunderStrength(0f)
             }
             "thunder" -> {
-                mc.theWorld.setRainStrength(weatherStrength)
-                mc.theWorld.setThunderStrength(weatherStrength)
+                mc.theWorld.setRainStrength(strength)
+                mc.theWorld.setThunderStrength(strength)
             }
         }
     }
