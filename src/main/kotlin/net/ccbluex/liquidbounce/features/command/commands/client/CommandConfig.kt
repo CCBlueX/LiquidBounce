@@ -99,6 +99,10 @@ object CommandConfig {
                                     chat(regular(command.result("loadedOnline", variable(name))))
                                 }
                             }
+
+                            else -> {
+                                chat(regular(command.result("loadedOnline", variable(name))))
+                            }
                         }
                     }
                     .build()

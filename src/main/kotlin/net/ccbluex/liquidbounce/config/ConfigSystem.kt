@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
-import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import me.liuli.elixir.account.MinecraftAccount
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -33,15 +32,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.io.HttpClient.get
-import net.ccbluex.liquidbounce.utils.io.HttpClient.request
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import java.io.File
 import java.io.Reader
 import java.io.Writer
-import java.text.SimpleDateFormat
-import kotlin.concurrent.thread
 
 /**
  * A config system which uses configurables
@@ -52,8 +47,7 @@ object ConfigSystem {
 
     // Config directory folder
     val rootFolder = File(
-        mc.runDirectory,
-        LiquidBounce.CLIENT_NAME
+        mc.runDirectory, LiquidBounce.CLIENT_NAME
     ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
@@ -62,8 +56,7 @@ object ConfigSystem {
 
     // User config directory folder
     val userConfigsFolder = File(
-        rootFolder,
-        "configs"
+        rootFolder, "configs"
     ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
@@ -192,7 +185,7 @@ object ConfigSystem {
                 chat(regular("Config was created ${if (date != "" || time != "") "on $date $time" else ""} $author"))
             }
             if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-                throw IllegalStateException(jsonObject.getAsJsonPrimitive("name").asString + configurable.name)
+                throw IllegalStateException()
             }
 
             val values =
