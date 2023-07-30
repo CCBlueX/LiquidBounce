@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.api.ClientApi.requestSettingsList
+import net.ccbluex.liquidbounce.api.ClientApi.requestSettingsScript
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -27,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.io.HttpClient.get
 
 object CommandConfig {
     fun createCommand(): Command {
@@ -44,22 +47,101 @@ object CommandConfig {
                             .required()
                             .build()
                     )
+                    .parameter(
+                        ParameterBuilder
+                            .begin<String>("online")
+                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .optional()
+                            .build()
+                    )
                     .handler { command, args ->
                         val name = args[0] as String
 
-                        // TODO: Add online configs
+                        @Suppress("SENSELESS_COMPARISON")
+                        val state =
+                            if (args[1] != null) {
+                                args[1].toString().lowercase()
+                            } else {
+                                "local"
+                            }
+                        if (name.startsWith("http")) {
+                            get(name).runCatching {
+                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                            }.onFailure {
+                                chat(regular(command.result("failedToLoadOnline", variable(name))))
+                            }.onSuccess {
+                                chat(regular(command.result("loadedOnline", variable(name))))
+                            }
+                            return@handler
+                        }
+                        when (state) {
+                            "local" -> {
+                                ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
+                                    if (!exists()) {
+                                        chat(regular(command.result("notFoundLocal", variable(name))))
+                                        return@handler
+                                    }
 
-                        ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
-                            if (!exists()) {
-                                chat(regular(command.result("notFound", variable(name))))
-                                return@handler
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                }.onFailure {
+                                    chat(regular(command.result("failedToLoadLocal", variable(name))))
+                                }.onSuccess {
+                                    chat(regular(command.result("loadedLocal", variable(name))))
+                                }
                             }
 
-                            ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
-                        }.onFailure {
-                            chat(regular(command.result("failedToLoad", variable(name))))
-                        }.onSuccess {
-                            chat(regular(command.result("loaded", variable(name))))
+                            "online" -> {
+                                requestSettingsScript(name).runCatching {
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                }.onFailure {
+                                    chat(regular(command.result("failedToLoadOnline", variable(name))))
+                                }.onSuccess {
+                                    chat(regular(command.result("loadedOnline", variable(name))))
+                                }
+                            }
+
+                            else -> {
+                                chat(regular(command.result("loadedOnline", variable(name))))
+                            }
+                        }
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("list")
+                    .parameter(
+                        ParameterBuilder
+                            .begin<String>("online")
+                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .optional()
+                            .build()
+                    )
+                    .handler { command, args ->
+
+                        @Suppress("SENSELESS_COMPARISON")
+                        val state =
+                            if (args[0] != null) {
+                                args[0].toString().lowercase()
+                            } else {
+                                "local"
+                            }
+                        when (state) {
+                            "local" -> {
+                                chat("§cSettings:")
+                                for (files in ConfigSystem.userConfigsFolder.listFiles()!!) {
+                                    chat(regular(files.name))
+                                }
+                            }
+
+                            "online" -> {
+                                chat(regular("Loading settings..."))
+                                requestSettingsList().forEach {
+                                    chat(regular("> ${it.settingId}"))
+                                    chat("Last updated: ${it.date}")
+                                    chat("Status: ${it.statusType.displayName}")
+                                }
+                            }
                         }
                     }
                     .build()
