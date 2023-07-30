@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.script.bindings.globals
 
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 
 object JsClient {
 

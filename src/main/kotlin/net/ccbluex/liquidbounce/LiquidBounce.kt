@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
@@ -34,11 +32,15 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.script.ScriptManager
+import net.ccbluex.liquidbounce.ultralight.window.WindowController
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
+import net.ccbluex.liquidbounce.web.WebController
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
 
@@ -123,7 +125,12 @@ object LiquidBounce : Listenable {
             RenderEngine.init()
 
             // Load up web platform
-            UltralightEngine.init()
+            val windowController = WindowController()
+            val webController = WebController(windowController)
+            webController.init()
+
+            val window = webController.createWindow(mc.window.width.toLong(), mc.window.height.toLong(), "Ultralight Window")
+            window.view.loadURL("https://liquidbounce.net/")
 
             // Register commands and modules
             CommandManager.registerInbuilt()
@@ -155,7 +162,6 @@ object LiquidBounce : Listenable {
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
         ConfigSystem.storeAll()
-        UltralightEngine.shutdown()
 
         ChunkScanner.ChunkScannerThread.stopThread()
     }

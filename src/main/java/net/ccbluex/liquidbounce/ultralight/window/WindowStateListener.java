@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,20 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.base.ultralight.js.bindings
+package net.ccbluex.liquidbounce.ultralight.window;
 
-/**
- * An easy way to create kotlin things in JS
- */
-object UltralightJsKotlin {
+public interface WindowStateListener {
+    void onFramebufferSizeChange(int width, int height);
 
-    fun intRange(from: Int, to: Int) = from..to
+    void onCursorPos(double x, double y);
 
-    fun floatRange(from: Float, to: Float) = from..to
+    void onMouseButton(int button, int action, int mods);
 
+    void onScroll(double x, double y);
+
+    void onCharMods(int codepoint, int mods);
+
+    void onKey(int key, int scancode, int action, int mods);
+
+    void onFocusChange(boolean isFocused);
 }

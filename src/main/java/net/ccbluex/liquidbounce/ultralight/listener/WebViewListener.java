@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,35 +17,24 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.base.ultralight.js.bindings
+package net.ccbluex.liquidbounce.ultralight.listener;
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.ultralight.WebWindow;
+import net.ccbluex.liquidbounce.ultralight.translators.CursorTranslator;
+import net.janrupf.ujr.api.UltralightView;
+import net.janrupf.ujr.api.cursor.UlCursor;
+import net.janrupf.ujr.api.listener.UltralightViewListener;
 
-/**
- * Ultralight storage
- * a replacement for the JS LocalStorage
- **/
-object UltralightStorage : Configurable("storage") {
+public class WebViewListener implements UltralightViewListener {
+    private final WebWindow window;
 
-    var map by value("map", mutableMapOf<String, String>())
-
-    init {
-        ConfigSystem.root(this)
+    public WebViewListener(WebWindow window) {
+        this.window = window;
     }
 
-    fun setItem(name: String, value: Boolean) {
-        setItem(name, value.toString())
+    @Override
+    public void onChangeCursor(UltralightView view, UlCursor cursor) {
+        int cursorId = CursorTranslator.ultralightToGlfwCursor(cursor);
+        window.getWindow().setCursor(cursorId);
     }
-
-    fun setItem(name: String, value: Int) {
-        setItem(name, value.toString())
-    }
-
-    fun setItem(name: String, value: String) {
-        map[name] = value
-    }
-
-    fun getItem(name: String): String? = map[name]
-
 }

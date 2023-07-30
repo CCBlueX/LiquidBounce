@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import com.google.gson.JsonObject
-import com.labymedia.ultralight.javascript.JavascriptObject
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.thealtening.api.TheAltening
@@ -97,19 +96,6 @@ object AccountManager : Configurable("Accounts") {
         }
     }
 
-    @RequiredByScript
-    fun newMicrosoftAccount(success: JavascriptObject, error: JavascriptObject) {
-        newMicrosoftAccount(
-            success = { account ->
-               // todo: fix this
-               // success.callAsFunction(null, JavascriptValue(account))
-            },
-            error = { errorString ->
-                // todo: fix this
-                // error.callAsFunction(null, errorString)
-            }
-        )
-    }
 
     /**
      * Create a new Microsoft Account using the OAuth2 flow which opens a browser window to authenticate the user

@@ -51,13 +51,26 @@ loom {
 repositories {
     mavenCentral()
     mavenLocal()
-    maven { url = "https://maven.fabricmc.net/" }
-    maven { url = "https://jitpack.io" }
     maven {
-        name = 'TerraformersMC'
+        name = "FabricMC"
+        url = "https://maven.fabricmc.net/"
+    }
+    maven {
+        name = "jitpack"
+        url = "https://jitpack.io"
+    }
+    maven {
+        name = "TerraformersMC"
         url = 'https://maven.terraformersmc.com/'
     }
-    maven { url = "https://repo.viaversion.com/" }
+    maven {
+        name = "ViaVersion"
+        url = "https://repo.viaversion.com/"
+    }
+    maven {
+        name = "Sonatype Snapshots"
+        url = "https://s01.oss.sonatype.org/content/repositories/snapshots"
+    }
 }
 
 dependencies {
@@ -92,9 +105,7 @@ dependencies {
     implementation "com.github.CCBlueX:Elixir:1.2.6"
 
     implementation "net.janrupf.ultralight:ultralight-java-reborn-core:0.0.1-SNAPSHOT"
-    implementation "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.1-SNAPSHOT:windows-x64"
-    implementation "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.1-SNAPSHOT:linux-x64"
-    implementation "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.1-SNAPSHOT:macos-x64"
+    runtimeOnly "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.1-SNAPSHOT:win-x64"
 
     implementation "org.graalvm.sdk:graal-sdk:23.0.1"
     implementation "org.graalvm.truffle:truffle-api:23.0.1"
@@ -193,10 +204,8 @@ shadowJar {
     exclude "native-binaries/*"
 
     dependencies {
-        include(dependency('com.labymedia:ultralight-java-base'))
-        include(dependency('com.labymedia:ultralight-java-databind'))
-        include(dependency('com.labymedia:ultralight-java-gpu'))
-        include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
+        include(dependency('net.janrupf.ultralight:ultralight-java-reborn-core'))
+        include(dependency('net.janrupf.ultralight:ultralight-java-reborn-platform-jni'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
         include(dependency("org.graalvm.sdk:graal-sdk:23.0.1"))

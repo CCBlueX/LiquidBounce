@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.impl.glfw
+package net.ccbluex.liquidbounce.web.impl.bridge
 
-import com.labymedia.ultralight.plugin.clipboard.UltralightClipboard
+import net.janrupf.ujr.api.clipboard.UltralightClipboard
 import org.lwjgl.glfw.GLFW
 
 /**
  * Clipboard using GLFW
  */
-class GlfwClipboardAdapter : UltralightClipboard {
+class GlfwClipboardBridge : UltralightClipboard {
 
     /**
      * This is called by Ultralight when the clipboard is requested as a string.

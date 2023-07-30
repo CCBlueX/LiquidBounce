@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,30 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.impl.renderer
 
-import com.labymedia.ultralight.UltralightView
-import com.labymedia.ultralight.config.UltralightViewConfig
-import net.minecraft.client.gui.DrawContext
+package net.ccbluex.liquidbounce.ultralight.surface;
+
+import net.janrupf.ujr.api.surface.UltralightSurface;
+import net.janrupf.ujr.api.surface.UltralightSurfaceFactory;
 
 /**
- * Render Views
+ * This replaces the default bitmap surface factory so that Ultralight renders into GL textures.
  */
-interface ViewRenderer {
+public class GlfwSurfaceFactory implements UltralightSurfaceFactory {
+    @Override
+    public UltralightSurface createSurface(long width, long height) {
+        return new GlfwSurface(width, height);
+    }
 
-    /**
-     * Setup [viewConfig]
-     */
-    fun setupConfig(viewConfig: UltralightViewConfig)
-
-    /**
-     * Render view
-     */
-    fun render(view: UltralightView, context: DrawContext)
-
-    /**
-     * Delete
-     */
-    fun delete()
-
+    @Override
+    public void destroySurface(UltralightSurface surface) {
+        ((GlfwSurface) surface).destroy();
+    }
 }
