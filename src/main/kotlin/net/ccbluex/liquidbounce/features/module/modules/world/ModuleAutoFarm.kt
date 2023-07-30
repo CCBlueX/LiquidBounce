@@ -19,17 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
-import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -46,6 +47,10 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.minecraft.entity.Entity
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 
 /**
@@ -67,25 +72,107 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val rotations = RotationsConfigurable()
     private val fortune by boolean("fortune", true)
 
+    private object Visualize : ToggleableConfigurable(this, "Visualize", true) {
+
+        private val outline by boolean("Outline", true)
+
+        private val color by color("Color", Color4b(36, 237, 0, 255))
+        private val colorRainbow by boolean("Rainbow", false)
+
+        // todo: use box of block, not hardcoded
+        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
+            val base = if (colorRainbow) rainbow() else color
+
+            val markedBlocks = BlockTracker.trackedBlockMap.keys
+
+            renderEnvironment(matrixStack) {
+                for (pos in markedBlocks) {
+                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
+                    val baseColor = base.alpha(50)
+                    val outlineColor = base.alpha(100)
+
+                    withPosition(vec3) {
+                        withColor(baseColor) {
+                            drawSolidBox(box)
+                        }
+
+                        if (outline) {
+                            withColor(outlineColor) {
+                                drawOutlinedBox(box)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    private object GotoCrops : ToggleableConfigurable(this, "GotoCrops", false){
+        val toReplace by boolean("ToReplace", true)
+    }
     init {
         tree(AutoPlaceCrops)
         tree(rotations)
+        tree(GotoCrops)
+        tree(Visualize)
     }
 
 
     // Rotation
 
     private var currentTarget: BlockPos? = null
+    private var moveToBlock = false
 
+    private var farmLandBlocks: HashSet<Vec3d> = hashSetOf<Vec3d>()
+    val velocityHandler = handler<PlayerVelocityStrafe> { event ->
+        if (!moveToBlock){
+            return@handler
+        }
+        RotationManager.currentRotation?.let { rotation ->
+            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed, rotation.yaw)
+        }
+    }
     val networkTickHandler = repeatable { _ ->
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
         updateTarget()
 
+        currentTarget ?: run {
+            if(!GotoCrops.enabled){
+                return@repeatable
+            }
+
+            if(BlockTracker.trackedBlockMap.isEmpty() && farmLandBlocks.isEmpty()){
+                return@repeatable
+            }
+
+            val closestCropBlock = BlockTracker.trackedBlockMap.keys.map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))}
+                .minByOrNull { it.distanceTo(player.pos) } ?: return@repeatable;
+            val closestBlock = if (!GotoCrops.toReplace) closestCropBlock else
+                listOf(closestCropBlock, farmLandBlocks.minByOrNull { it.distanceTo(player.pos) })
+                .minByOrNull { it?.distanceTo(player.pos) ?: Double.MAX_VALUE} ?: return@repeatable
+
+            RotationManager.aimAt(RotationManager.makeRotation(closestBlock, player.eyes), configurable = rotations)
+            moveToBlock = true;
+
+            return@repeatable
+//            val rotation = RotationManager.currentRotation ?: return@repeatable
+
+//            player.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), player.movementSpeed, rotation.yaw).add(player.velocity)
+
+        }
+
+        moveToBlock = false
+
         val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        val rayTraceResult = raycast(range.toDouble(), rotation) ?: return@repeatable
+        val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
 
 
         if (ModuleBlink.enabled) {
@@ -101,7 +188,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val state = rayTraceResult.blockPos.getState() ?: return@repeatable
         if(isTargeted(
                 state,
-                rayTraceResult.blockPos
+                blockPos
             )){
 
             if (!state.isAir) {
@@ -115,10 +202,15 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                     player.swingHand(Hand.MAIN_HAND)
                 }
+                if(blockPos.down().getState()?.let { isFarmBlock(it, blockPos.down()) } == true && GotoCrops.toReplace){
+                    farmLandBlocks.add(Vec3d.ofCenter(blockPos))
+                }
+
+
             }
-        } else if(isFarmBlock(
+        } else if(isFarmBlockWithAir(
                 state,
-                rayTraceResult.blockPos.offset(rayTraceResult.side).down())){
+                blockPos.offset(rayTraceResult.side).down())){
             val item =
                 findClosestItem(
                     if(state.block is FarmlandBlock) {
@@ -130,6 +222,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if(item != null){
                 SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                 placeCrop(rayTraceResult)
+
+                if(GotoCrops.toReplace){
+                    farmLandBlocks.remove(Vec3d.ofCenter(rayTraceResult.blockPos.offset(rayTraceResult.side)))
+                }
+
+
             }
         }
 
@@ -190,7 +288,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             !state.isAir && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
-            ).squaredDistanceTo(eyesPos) <= radiusSquared && isFarmBlock(state, pos)
+            ).squaredDistanceTo(eyesPos) <= radiusSquared && isFarmBlockWithAir(state, pos)
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return} else return
 
         val (pos, state) = blockToProcess
@@ -230,18 +328,42 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     /**
      * checks if the block is either a farmland or soulsand block and has air above it
      */
+    private fun isFarmBlockWithAir(state: BlockState, pos: BlockPos): Boolean {
+        return isFarmBlock(state, pos) && pos.up().getState()?.isAir == true
+    }
+
     private fun isFarmBlock(state: BlockState, pos: BlockPos): Boolean {
         val block = state.block
-
-        return if(when (block) {
-            is FarmlandBlock -> true
-            is SoulSandBlock -> true
-            else -> false
-        }) {pos.up().getState()?.isAir == true} else {false}
+        return when (block) {
+                is FarmlandBlock -> true
+                is SoulSandBlock -> true
+                else -> false
+        }
     }
 
     private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
         return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
+    }
+
+
+    override fun enable() {
+        ChunkScanner.subscribe(BlockTracker)
+    }
+
+    override fun disable() {
+        ChunkScanner.unsubscribe(BlockTracker)
+    }
+    private object TrackedState
+
+    private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
+        override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
+            return if (state.block is CropBlock && (state.block as CropBlock).isMature(state)) {
+                TrackedState
+            } else {
+                null
+            }
+        }
+
     }
 
 
