@@ -68,10 +68,12 @@ class WebController(val windowController: WindowController) : AutoCloseable {
             FilesystemBridge()
         ultralightPlatform.logger = LoggerBridge()
         ultralightPlatform.clipboard = GlfwClipboardBridge()
+
+        val ultralightFolder = ConfigSystem.rootFolder.resolve("ultralight")
         ultralightPlatform.setConfig(
             UltralightConfigBuilder()
-                .cachePath(ConfigSystem.rootFolder.resolve("cache").toString())
-                .resourcePathPrefix(FilesystemBridge.RESOURCE_PREFIX)
+                .cachePath(ultralightFolder.resolve("cache").toString() + "\\")
+                .resourcePathPrefix(ultralightFolder.resolve("resources").toString() + "\\")
                 .fontHinting(UlFontHinting.SMOOTH)
         )
 
