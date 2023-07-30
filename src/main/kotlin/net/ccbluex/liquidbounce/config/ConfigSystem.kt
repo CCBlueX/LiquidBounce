@@ -234,47 +234,4 @@ object ConfigSystem {
             }
         }.onFailure { it.printStackTrace() }
     }
-
-    // Define a loadingLock object to synchronize access to the settings loading code
-    private val loadingLock = Object()
-
-    // Define a mutable list of AutoSetting objects to store the loaded settings
-    var autoSettingsList: Array<AutoSettings>? = null
 }
-data class AutoSettings(
-    @SerializedName("setting_id")
-    val settingId: String,
-    val name: String,
-    @SerializedName("setting_type")
-    val type: AutoSettingsType,
-    val description: String,
-    var date: String,
-    val contributors: String,
-    @SerializedName("status_type")
-    val statusType: AutoSettingsStatusType,
-    @SerializedName("status_date")
-    var statusDate: String
-)
-
-enum class AutoSettingsStatusType(val displayName: String) {
-    @SerializedName("NotBypassing")
-    NOT_BYPASSING("Not Bypassing"),
-    @SerializedName("Bypassing")
-    BYPASSING("Bypassing"),
-    @SerializedName("Undetectable")
-    UNDETECTABLE("Undetectable"),
-    @SerializedName("Unknown")
-    UNKNOWN("Unknown")
-}
-
-enum class AutoSettingsType(val displayName: String) {
-    @SerializedName("Rage")
-    RAGE("Rage"),
-    @SerializedName("Legit")
-    LEGIT("Legit")
-}
-
-
-fun requestSettingsList() = get("https://api.liquidbounce.net/api/v1/client/nextgen/settings")
-
-fun requestSetting(name: String) = get("https://raw.githubusercontent.com/be4dev/LiquidCloud/master/LiquidBounce/settings/$name")

@@ -26,13 +26,19 @@ import java.net.URL
 
 object HttpClient {
 
-    private const val DEFAULT_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.60"
+    private const val DEFAULT_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.60"
 
     init {
         HttpURLConnection.setFollowRedirects(true)
     }
 
-    private fun make(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): HttpURLConnection {
+    private fun make(
+        url: String,
+        method: String,
+        agent: String = DEFAULT_AGENT,
+        headers: Array<Pair<String, String>> = emptyArray()
+    ): HttpURLConnection {
         val httpConnection = URL(url).openConnection() as HttpURLConnection
 
         httpConnection.requestMethod = method
@@ -51,13 +57,23 @@ object HttpClient {
         return httpConnection
     }
 
-    fun request(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): String {
+    fun request(
+        url: String,
+        method: String,
+        agent: String = DEFAULT_AGENT,
+        headers: Array<Pair<String, String>> = emptyArray()
+    ): String {
         val connection = make(url, method, agent)
 
         return connection.inputStream.reader().readText()
     }
 
-    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): InputStream {
+    fun requestStream(
+        url: String,
+        method: String,
+        agent: String = DEFAULT_AGENT,
+        headers: Array<Pair<String, String>> = emptyArray()
+    ): InputStream {
         val connection = make(url, method, agent)
 
         return connection.inputStream
