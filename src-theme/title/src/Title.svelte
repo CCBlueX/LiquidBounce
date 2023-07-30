@@ -29,6 +29,10 @@
         pages.open("multiplayer_realms", screen);
     }
 
+    function openCustomize() {
+        pages.open("customize", screen);
+    }
+
     function openOptions() {
         pages.open("options", screen);
     }
@@ -85,7 +89,7 @@
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>
                     <ChildButton text="Realms" icon="realms" {hovered} on:click={openRealms} />
                 </MainButton>
-                <MainButton text="Customize" icon="customize" />
+                <MainButton text="Customize" icon="customize" on:click={openCustomize} />
                 <MainButton text="Options" icon="options" on:click={openOptions} />
             </MainButtons>
 
