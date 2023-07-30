@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
@@ -36,6 +37,7 @@ class Target : Element() {
 
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
+    private val absorption by BoolValue("Absorption", false)
 
     private var easingHealth = 0F
     private var lastTarget: Entity? = null
@@ -44,9 +46,11 @@ class Target : Element() {
         val target = KillAura.target
 
         if (target is EntityPlayer) {
+            val targetHealth = target.health + if (absorption) target.absorptionAmount else 0f
+
             if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
-                    abs(easingHealth - target.health) < 0.01) {
-                easingHealth = target.health
+                    abs(easingHealth - targetHealth) < 0.01) {
+                easingHealth = targetHealth
             }
 
             val width = (38 + (target.name?.let(Fonts.font40::getStringWidth) ?: 0))
@@ -57,20 +61,20 @@ class Target : Element() {
             drawBorderedRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
             // Damage animation
-            if (easingHealth > target.health)
-                drawRect(0F, 34F, (easingHealth / target.maxHealth) * width,
+            if (easingHealth > targetHealth.coerceAtMost(target.maxHealth))
+                drawRect(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width,
                         36F, Color(252, 185, 65).rgb)
 
             // Health bar
-            drawRect(0F, 34F, (target.health / target.maxHealth) * width,
+            drawRect(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width,
                     36F, Color(252, 96, 66).rgb)
 
             // Heal animation
-            if (easingHealth < target.health)
-                drawRect((easingHealth / target.maxHealth) * width, 34F,
-                        (target.health / target.maxHealth) * width, 36F, Color(44, 201, 144).rgb)
+            if (easingHealth < targetHealth)
+                drawRect((easingHealth / target.maxHealth).coerceAtMost(1f) * width, 34F,
+                        (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(44, 201, 144).rgb)
 
-            easingHealth += ((target.health - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
+            easingHealth += ((targetHealth - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
 
             target.name?.let { Fonts.font40.drawString(it, 36, 3, 0xffffff) }
             Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)

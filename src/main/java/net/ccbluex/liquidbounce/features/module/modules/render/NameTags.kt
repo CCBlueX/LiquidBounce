@@ -33,13 +33,21 @@ import net.minecraft.potion.PotionEffect
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 import kotlin.math.roundToInt
 
 object NameTags : Module("NameTags", ModuleCategory.RENDER) {
+    private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
+
     private val health by BoolValue("Health", true)
-    private val healthInInt by BoolValue("HealthInIntegers", true)
-    private val healthPrefix by TextValue("HealthPrefix", "") { health }
-    private val healthSuffix by TextValue("HealthSuffix", "") { health }
+    private val absorption by BoolValue("Absorption", false) { health || healthBar }
+    private val healthInInt by BoolValue("HealthInIntegers", true) { health }
+    private val healthPrefix by BoolValue("HealthPrefix", false) { health }
+    private val healthPrefixText by TextValue("HealthPrefixText", "") { health && healthPrefix }
+    private val healthSuffix by BoolValue("HealthSuffix", true) { health }
+    private val healthSuffixText by TextValue("HealthSuffifText", " HP") { health && healthSuffix }
     private val ping by BoolValue("Ping", false)
     private val healthBar by BoolValue("Bar", false)
     private val distance by BoolValue("Distance", false)
@@ -137,8 +145,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         val distanceText = if (distance) "§7${playerDistance.roundToInt()}m " else ""
         val pingText = if (ping && entity is EntityPlayer) " §7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7]" else ""
-        val hp = if (healthInInt) entity.health.toInt() else entity.health
-        val healthText = if (health) healthPrefix + "§7§c " + hp + healthSuffix else ""
+        val healthText = if (health) getHealthString(entity) else ""
         val botText = if (bot) " §c§lBot" else ""
 
         val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
@@ -173,7 +180,8 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         if (healthBar) {
             quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + dist, fontRenderer.FONT_HEIGHT + 4F, Color(10, 155, 10).rgb)
-            quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + (dist * (entity.health / entity.maxHealth).coerceIn(0F, 1F)), fontRenderer.FONT_HEIGHT + 4F, Color(10, 255, 10).rgb)
+            val currHealth = entity.health + if (absorption) entity.absorptionAmount else 0f
+            quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + (dist * (currHealth / entity.maxHealth).coerceIn(0F, 1F)), fontRenderer.FONT_HEIGHT + 4F, Color(10, 255, 10).rgb)
         }
 
         glEnable(GL_TEXTURE_2D)
@@ -237,5 +245,12 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         // Pop
         glPopMatrix()
+    }
+
+    private fun getHealthString(entity : EntityLivingBase) : String {
+        val result = entity.health + if (absorption) entity.absorptionAmount else 0f
+        val prefix = if (healthPrefix) healthPrefixText else ""
+        val suffix = if (healthSuffix) healthSuffixText else ""
+        return prefix + "§c " + ( if (healthInInt) result.toInt() else decimalFormat.format(result) ) + suffix
     }
 }

@@ -53,6 +53,7 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
         fakePlayer = EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.gameProfile)
         fakePlayer.clonePlayer(mc.thePlayer, true)
         fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead
+        fakePlayer.absorptionAmount = mc.thePlayer.absorptionAmount
         fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer)
         mc.theWorld.addEntityToWorld(-1000, fakePlayer)
         if (noClip) {
