@@ -96,7 +96,7 @@ object Cosmetics {
 
         // Request cape from URL which should be our API. (https://api.liquidbounce.net/api/v1/cape/uuid/%s)
         val connection = capeURL.openConnection()
-        connection.addRequestProperty("User-Agent", "${LiquidBounce.CLIENT_NAME}_${LiquidBounce.CLIENT_VERSION}_${mc.gameVersion}")
+        connection.addRequestProperty("User-Agent", "${LiquidBounce.CLIENT_NAME}_${LiquidBounce.clientVersion}_${mc.gameVersion}")
         connection.readTimeout = 5000
         connection.connectTimeout = 2500
         connection.connect()

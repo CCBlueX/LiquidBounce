@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
+import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
@@ -55,10 +57,18 @@ object LiquidBounce : Listenable {
      * WARNING: Please read the GNU General Public License
      */
     const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_VERSION = "1.0.0"
     const val CLIENT_AUTHOR = "CCBlueX"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
+    val clientVersion = gitInfo["git.build.version"]?.toString() ?: "unknown"
+    val clientCommit = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
+    val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
+
+    /**
+     * Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning.
+     *
+     * TODO: Replace this approach with full semantic versioning.
+     */
     const val IN_DEVELOPMENT = true
 
     /**
@@ -67,11 +77,16 @@ object LiquidBounce : Listenable {
     val logger = LogManager.getLogger(CLIENT_NAME)!!
 
     /**
+     * Client update information
+     */
+    val updateAvailable by lazy { hasUpdate() }
+
+    /**
      * Should be executed to start the client.
      */
     val startHandler = handler<ClientStartEvent> {
         runCatching {
-            logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
+            logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
             // Load mappings
@@ -119,6 +134,10 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
+
+            if (updateAvailable) {
+                logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
+            }
 
             // Connect to chat server
             Chat.connectAsync()

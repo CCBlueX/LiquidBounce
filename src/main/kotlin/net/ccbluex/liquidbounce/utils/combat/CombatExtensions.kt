@@ -124,8 +124,9 @@ fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurab
  * Find the best emeny in current world in a specific range.
  */
 fun ClientWorld.findEnemy(
-    range: Float,
+    range: ClosedFloatingPointRange<Float>,
     player: Entity = mc.player!!,
     enemyConf: EnemyConfigurable = globalEnemyConfigurable
 ) = entities.filter { it.shouldBeAttacked(enemyConf) }.map { Pair(it, it.boxedDistanceTo(player)) }
-    .filter { (_, distance) -> distance <= range }.minByOrNull { (_, distance) -> distance }
+    .filter { (_, distance) -> distance > range.start && distance <= range.endInclusive }
+    .minByOrNull { (_, distance) -> distance }

@@ -62,7 +62,10 @@ inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -> Boolea
 /**
  * Search blocks around the player in a specific [radius]
  */
-inline fun searchBlocksInRadius(radius: Float, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+inline fun searchBlocksInRadius(
+    radius: Float,
+    filter: (BlockPos, BlockState) -> Boolean
+): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
     val thePlayer = mc.player ?: return blocks

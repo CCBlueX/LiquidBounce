@@ -113,5 +113,6 @@ function constructConfig(partname) {
 export default [
     constructConfig("hud"),
     constructConfig("clickgui"),
-    constructConfig("title") 
+    constructConfig("title"),
+    constructConfig("customize")
 ]

@@ -122,11 +122,13 @@ public abstract class MixinMinecraftClient {
 
         final StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
         titleBuilder.append(" v");
-        titleBuilder.append(LiquidBounce.CLIENT_VERSION);
+        titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
 
         if (LiquidBounce.IN_DEVELOPMENT) {
-            titleBuilder.append(" (dev)");
+            titleBuilder.append(" (dev) ");
         }
+
+        titleBuilder.append(LiquidBounce.INSTANCE.getClientCommit());
 
         titleBuilder.append(" | ");
         titleBuilder.append(SharedConstants.getGameVersion().getName());
