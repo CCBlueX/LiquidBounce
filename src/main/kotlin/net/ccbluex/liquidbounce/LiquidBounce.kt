@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.web.WebController
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import org.apache.logging.log4j.LogManager
-import org.lwjgl.glfw.GLFW
 import kotlin.system.exitProcess
 
 /**
@@ -131,9 +130,7 @@ object LiquidBounce : Listenable {
             webController.init()
 
             val window = webController.createWindow(mc.window.width.toLong(), mc.window.height.toLong(), "Ultralight Window")
-            window.view.loadURL("https://google.com/")
-
-            GLFW.glfwMakeContextCurrent(mc.window.handle)
+            window.view.loadURL("http://www.example.com/")
 
             // Register commands and modules
             CommandManager.registerInbuilt()

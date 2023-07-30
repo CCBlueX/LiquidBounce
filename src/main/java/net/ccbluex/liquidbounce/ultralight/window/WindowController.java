@@ -75,6 +75,11 @@ public class WindowController implements AutoCloseable {
     }
 
     public Window createWindow(long width, long height, String title) {
+        // Get position of window
+        int[] x = new int[1];
+        int[] y = new int[1];
+        GLFW.glfwGetWindowPos(rootWindow, x, y);
+
         GLFW.glfwDefaultWindowHints();
         GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API);
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_NATIVE_CONTEXT_API);
@@ -91,12 +96,15 @@ public class WindowController implements AutoCloseable {
 
         LOGGER.debug("Creating window with size {}x{} and title \"{}\"", width, height, title);
 
-        // Create a new window which shares the existing OpenGLES context so that we can use
+        // Create a new window which shares the existing OpenGL context so that we can use
         // the Ultralight views backed by PBO's and render into the windows framebuffer
         long handle = GLFW.glfwCreateWindow((int) width, (int) height, title, 0, rootWindow);
         if (handle == 0) {
             throw new IllegalStateException("Failed to create window");
         }
+
+        // Set window position
+        GLFW.glfwSetWindowPos(handle, x[0], y[0]);
 
         Window window = new Window(this, handle);
         windows.add(window);
