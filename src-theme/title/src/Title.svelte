@@ -29,6 +29,10 @@
         pages.open("multiplayer_realms", screen);
     }
 
+    function openCustomize() {
+        pages.open("customize", screen);
+    }
+
     function openOptions() {
         pages.open("options", screen);
     }
@@ -65,11 +69,19 @@
     const faceUrl = client.getSessionService().getFaceUrl();
     const accountType = client.getSessionService().getAccountType();
     const location = client.getSessionService().getLocation();
+
+    const updateAvailable = client.isUpdateAvailable();
 </script>
 
 <main>
     <div class="scale">
         <div class="wrapper">
+            {#if updateAvailable}
+                <div class="update-available">
+                    <span on:click={browseWebsite}>Update available! Go to https://liquidbounce.net/</span>
+                </div>
+            {/if}
+
             <Logo />
             <Account username={username} location={location} faceUrl={faceUrl} accountType={accountType} on:proxyManagerClick={openProxyManager} on:altManagerClick={openAltManager} />
             <MainButtons>
@@ -77,7 +89,7 @@
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>
                     <ChildButton text="Realms" icon="realms" {hovered} on:click={openRealms} />
                 </MainButton>
-                <MainButton text="Customize" icon="customize" />
+                <MainButton text="Customize" icon="customize" on:click={openCustomize} />
                 <MainButton text="Options" icon="options" on:click={openOptions} />
             </MainButtons>
 
@@ -85,7 +97,6 @@
                 <IconTextButton text="Change Background" icon="change-background" />
                 <IconTextButton text="Exit" icon="exit" on:click={scheduleStop} />
             </ButtonWrapperLeft>
-
 
             <ButtonWrapperRight>
                 <IconButton text="Forum" icon="nodebb" on:click={browseForum} />
@@ -108,6 +119,21 @@
         -webkit-user-select: none;
         cursor: default !important;
 	}
+
+    .update-available {
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        width: 420px;
+        border-radius: 6px;
+        padding: 10px;
+
+        cursor: pointer;
+        background-color: rgba(0, 0, 0, .68);
+        color: white;
+    }
 
     .wrapper {
         position: relative;

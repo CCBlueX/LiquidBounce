@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.timer
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -25,7 +25,6 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
     private val distanceToStartWorking by float("DistanceToStartWorking", 100f, 0f..500f)
     private val pauseOnFlag by boolean("PauseOnFlag", true)
 
-    private val targetTracker = tree(TargetTracker())
     private var reachedTheLimit = false
     private var balanceTimer = 0f
 
@@ -42,8 +41,8 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         if (balanceTimer <= 0)
             reachedTheLimit = false
 
-        if (targetTracker.enemies().any { player.distanceTo(it) < distanceToStartWorking && it != player } && !reachedTheLimit) {
-            if (targetTracker.enemies().any { player.distanceTo(it) < distanceToSpeedUp && it != player }) {
+        if (world.findEnemy(0f..distanceToStartWorking) != null && !reachedTheLimit) {
+            if (world.findEnemy(0f..distanceToSpeedUp) != null) {
                 if (balanceTimer < timerBalanceLimit * 2)
                     mc.timer.timerSpeed = boostSpeed
                 else {

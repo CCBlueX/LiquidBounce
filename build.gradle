@@ -22,6 +22,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm"
     id "com.github.johnrengelman.shadow" version "7.1.2"
     id "org.jlleitschuh.gradle.ktlint" version "11.5.0"
+    id "com.gorylenko.gradle-git-properties" version "2.4.0"
 }
 
 ktlint {
@@ -95,21 +96,23 @@ dependencies {
     implementation "com.labymedia:ultralight-java-gpu:0.4.12"
     implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
 
-    implementation "org.graalvm.sdk:graal-sdk:23.0.0"
-    implementation "org.graalvm.truffle:truffle-api:23.0.0"
-    implementation "org.graalvm.js:js:23.0.0"
+    implementation "org.graalvm.sdk:graal-sdk:23.0.1"
+    implementation "org.graalvm.truffle:truffle-api:23.0.1"
+    implementation "org.graalvm.js:js:23.0.1"
 
-    runtimeOnly "org.graalvm.tools:profiler:23.0.0"
-    runtimeOnly "org.graalvm.tools:chromeinspector:23.0.0"
+    runtimeOnly "org.graalvm.tools:profiler:23.0.1"
+    runtimeOnly "org.graalvm.tools:chromeinspector:23.0.1"
 
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
     implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
 
+    implementation 'com.vdurmont:semver4j:3.1.0'
+
     // Test libraries
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.9.2"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.0"
 }
 
 processResources {
@@ -196,11 +199,12 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
-        include(dependency("org.graalvm.sdk:graal-sdk:23.0.0"))
-        include(dependency("org.graalvm.truffle:truffle-api:23.0.0"))
-        include(dependency("org.graalvm.js:js:23.0.0"))
+        include(dependency("org.graalvm.sdk:graal-sdk:23.0.1"))
+        include(dependency("org.graalvm.truffle:truffle-api:23.0.1"))
+        include(dependency("org.graalvm.js:js:23.0.1"))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
+        include(dependency('com.vdurmont:semver4j:3.1.0'))
     }
 }
 

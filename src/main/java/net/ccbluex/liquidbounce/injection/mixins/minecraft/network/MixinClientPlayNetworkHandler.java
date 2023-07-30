@@ -20,9 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.config.Choice;
-import net.ccbluex.liquidbounce.event.ChunkLoadEvent;
-import net.ccbluex.liquidbounce.event.ChunkUnloadEvent;
-import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -116,6 +114,14 @@ public class MixinClientPlayNetworkHandler {
             return null;
         } else {
             return instance.getReason();
+        }
+    }
+
+    @Inject(method = "onHealthUpdate", at = @At("RETURN"))
+    private void injectHealthUpdate(HealthUpdateS2CPacket packet, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new HealthUpdateEvent(packet.getHealth(), packet.getFood(), packet.getSaturation()));
+        if (packet.getHealth() == 0) {
+            EventManager.INSTANCE.callEvent(new DeathEvent());
         }
     }
 
