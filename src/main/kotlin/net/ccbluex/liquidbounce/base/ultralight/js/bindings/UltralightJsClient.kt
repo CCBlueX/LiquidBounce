@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.base.ultralight.js.bindings
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
@@ -38,6 +39,8 @@ object UltralightJsClient {
     val sessionService = MinecraftSession
 
     fun exitClient() = mc.scheduleStop()
+
+    fun isUpdateAvailable() = LiquidBounce.updateAvailable
 
     /**
      * Access session service from Ultralight
