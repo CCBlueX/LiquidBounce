@@ -71,6 +71,9 @@ class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event
 @Nameable("screenRender")
 class ScreenRenderEvent(val screen: Screen, val context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) : Event()
 
+@Nameable("windowMove")
+class WindowMoveEvent(val window: Long, val x: Int, val y: Int) : Event()
+
 @Nameable("windowResize")
 class WindowResizeEvent(val window: Long, val width: Int, val height: Int) : Event()
 

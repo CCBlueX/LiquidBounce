@@ -30,7 +30,7 @@ import static org.lwjgl.opengl.GL42.glViewport;
  * Helper class to hold the state of a GLFW window.
  */
 public class Window {
-    private final long handle;
+    public final long handle;
 
     private WindowStateListener stateListener;
 

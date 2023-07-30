@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.ultralight.bridge.LoggerBridge
 import net.ccbluex.liquidbounce.ultralight.surface.GlfwSurfaceFactory
 import net.ccbluex.liquidbounce.ultralight.window.WindowController
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.web.hooks.UlWindowHooks
 import net.ccbluex.liquidbounce.web.impl.bridge.GlfwClipboardBridge
 import net.janrupf.ujr.api.UltralightConfigBuilder
 import net.janrupf.ujr.api.UltralightPlatform
@@ -33,6 +34,7 @@ import net.janrupf.ujr.api.UltralightViewConfigBuilder
 import net.janrupf.ujr.api.config.UlFontHinting
 import net.janrupf.ujr.core.UltralightJavaReborn
 import net.janrupf.ujr.core.platform.PlatformEnvironment
+import org.lwjgl.glfw.GLFW
 
 class WebController(val windowController: WindowController) : AutoCloseable {
 
@@ -81,6 +83,7 @@ class WebController(val windowController: WindowController) : AutoCloseable {
 
         // Setup GLFW adapters
         clipboardAdapter = GlfwClipboardBridge()
+        UlWindowHooks(this)
 
         logger.info("Successfully loaded ultralight!")
     }
@@ -124,8 +127,16 @@ class WebController(val windowController: WindowController) : AutoCloseable {
         windowController.activateRootContext()
     }
 
-    fun resize(width: Long, height: Long) {
+    fun resize(width: Int, height: Int) {
+        for (window in windows) {
+            GLFW.glfwSetWindowSize(window.window.handle, width, height)
+        }
+    }
 
+    fun move(width: Int, height: Int) {
+        for (window in windows) {
+            GLFW.glfwSetWindowPos(window.window.handle, width, height)
+        }
     }
 
     /**

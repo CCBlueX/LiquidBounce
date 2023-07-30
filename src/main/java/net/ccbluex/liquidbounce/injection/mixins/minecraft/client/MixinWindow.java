@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.WindowFocusEvent;
+import net.ccbluex.liquidbounce.event.WindowMoveEvent;
 import net.ccbluex.liquidbounce.event.WindowResizeEvent;
 import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.Window;
@@ -80,6 +81,13 @@ public class MixinWindow {
         }
 
         return List.of(() -> stream16, () -> stream32);
+    }
+
+    @Inject(method = "onWindowPosChanged", at = @At("HEAD"))
+    public void hookMove(long window, int x, int y, CallbackInfo callbackInfo) {
+        if (window == handle) {
+            EventManager.INSTANCE.callEvent(new WindowMoveEvent(window, x, y));
+        }
     }
 
     /**

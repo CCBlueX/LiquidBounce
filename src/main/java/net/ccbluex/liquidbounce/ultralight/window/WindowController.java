@@ -19,12 +19,10 @@
 
 package net.ccbluex.liquidbounce.ultralight.window;
 
+import net.minecraft.client.MinecraftClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GLCapabilities;
-import org.lwjgl.system.Configuration;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,44 +32,12 @@ import java.util.Set;
 public class WindowController implements AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger(WindowController.class);
 
-    private final long rootWindow;
+    private final long rootWindow = MinecraftClient.getInstance().getWindow().getHandle();
     private final Set<Window> windows;
     private final Map<Integer, Long> standardCursors;
 
     public WindowController() {
         this.windows = new HashSet<>();
-
-        LOGGER.debug("Initializing GLFW...");
-        if (!GLFW.glfwInit()) {
-            LOGGER.fatal("Failed to initialize GLFW!");
-            throw new IllegalStateException("glfwInit() returned false");
-        }
-
-        LOGGER.info("GLFW initialized!");
-        LOGGER.debug("Using GLFW {}", GLFW.glfwGetVersionString());
-
-        // Create an invisible root window, this will hold the OpenGLES 4.2 context
-        GLFW.glfwDefaultWindowHints();
-        GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API);
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_NATIVE_CONTEXT_API);
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 4);
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 2);
-        GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
-
-        rootWindow = GLFW.glfwCreateWindow(1, 1, "", 0, 0);
-        LOGGER.debug("Created invisible root window {}", rootWindow);
-
-        GLFW.glfwMakeContextCurrent(rootWindow);
-        GLFW.glfwSwapInterval(1);
-
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
-            // Most windows systems don't have OpenGLES available - however, for this
-            // example just using the OpenGL library works fine
-            Configuration.OPENGLES_LIBRARY_NAME.set("opengl32");
-        }
-
-        GLCapabilities capabilities = GL.createCapabilities();
-        LOGGER.info("OpenGL ES initialized!");
 
         this.standardCursors = new HashMap<>();
         int[] cursors = {
@@ -101,10 +67,6 @@ public class WindowController implements AutoCloseable {
             LOGGER.trace("Destroying cursor {} -> {}...", entry.getKey(), entry.getValue());
             GLFW.glfwDestroyCursor(entry.getValue());
         }
-
-        LOGGER.debug("Terminating GLFW...");
-        GLFW.glfwDestroyWindow(rootWindow);
-        GLFW.glfwTerminate();
     }
 
     @Override
@@ -114,12 +76,18 @@ public class WindowController implements AutoCloseable {
 
     public Window createWindow(long width, long height, String title) {
         GLFW.glfwDefaultWindowHints();
-        GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_ES_API);
+        GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_API);
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_NATIVE_CONTEXT_API);
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 0);
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 4);
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 2);
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_TRUE);
         GLFW.glfwWindowHint(GLFW.GLFW_SAMPLES, 4);
+
+        // Overlay window on top of root window
+        GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GLFW.GLFW_FALSE);
+        GLFW.glfwWindowHint(GLFW.GLFW_FLOATING, GLFW.GLFW_TRUE);
+        GLFW.glfwWindowHint(GLFW.GLFW_FOCUS_ON_SHOW, GLFW.GLFW_FALSE);
+        GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, GLFW.GLFW_TRUE);
 
         LOGGER.debug("Creating window with size {}x{} and title \"{}\"", width, height, title);
 
