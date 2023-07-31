@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -48,7 +49,10 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.entity.Entity
+import net.minecraft.entity.ItemEntity
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
@@ -112,13 +116,17 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
 
-    private object GotoCrops : ToggleableConfigurable(this, "GotoCrops", false){
+    private object Walk : ToggleableConfigurable(this, "GotoCrops", false){
+
+        // makes the player move to farmland blocks where there is need for crop replacement
         val toReplace by boolean("ToReplace", true)
+
+        val toItems by boolean("ToItems", true);
     }
     init {
         tree(AutoPlaceCrops)
         tree(rotations)
-        tree(GotoCrops)
+        tree(Walk)
         tree(Visualize)
     }
 
@@ -130,11 +138,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private var farmLandBlocks: HashSet<Vec3d> = hashSetOf<Vec3d>()
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
-        if (!moveToBlock){
+        if (!moveToBlock || mc.currentScreen is HandledScreen<*>){
+            player.isSprinting = false;
             return@handler
         }
+        player.isSprinting = true;
         RotationManager.currentRotation?.let { rotation ->
-            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed, rotation.yaw)
+            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed * 1.3f, rotation.yaw)
         }
     }
     val networkTickHandler = repeatable { _ ->
@@ -144,19 +154,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         updateTarget()
 
         currentTarget ?: run {
-            if(!GotoCrops.enabled){
+            if(!Walk.enabled){
                 return@repeatable
             }
+            val closestBlock = (findWalkToBlock() ?: if(Walk.toItems && player.inventory.main.any { it.isEmpty }) findWalkToItem() else null) ?: return@repeatable
 
-            if(BlockTracker.trackedBlockMap.isEmpty() && farmLandBlocks.isEmpty()){
-                return@repeatable
-            }
-
-            val closestCropBlock = BlockTracker.trackedBlockMap.keys.map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))}
-                .minByOrNull { it.distanceTo(player.pos) } ?: return@repeatable;
-            val closestBlock = if (!GotoCrops.toReplace) closestCropBlock else
-                listOf(closestCropBlock, farmLandBlocks.minByOrNull { it.distanceTo(player.pos) })
-                .minByOrNull { it?.distanceTo(player.pos) ?: Double.MAX_VALUE} ?: return@repeatable
 
             RotationManager.aimAt(RotationManager.makeRotation(closestBlock, player.eyes), configurable = rotations)
             moveToBlock = true;
@@ -202,7 +204,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                     player.swingHand(Hand.MAIN_HAND)
                 }
-                if(blockPos.down().getState()?.let { isFarmBlock(it, blockPos.down()) } == true && GotoCrops.toReplace){
+                if(blockPos.down().getState()?.let { isFarmBlock(it, blockPos.down()) } == true && Walk.toReplace){
                     farmLandBlocks.add(Vec3d.ofCenter(blockPos))
                 }
 
@@ -223,7 +225,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                 placeCrop(rayTraceResult)
 
-                if(GotoCrops.toReplace){
+                if(Walk.toReplace){
                     farmLandBlocks.remove(Vec3d.ofCenter(rayTraceResult.blockPos.offset(rayTraceResult.side)))
                 }
 
@@ -233,6 +235,27 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
     }
+
+    private fun findWalkToBlock(): Vec3d?{
+
+        if(BlockTracker.trackedBlockMap.isEmpty() && farmLandBlocks.isEmpty()){
+            return null
+        }
+
+        val closestCropBlock = BlockTracker.trackedBlockMap.keys.map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))}
+            .minByOrNull { it.distanceTo(player.pos) };
+        val closestFarmBlock = farmLandBlocks.minByOrNull { it.distanceTo(player.pos) }
+
+        val closestBlock = (if (!Walk.toReplace) closestCropBlock else
+            listOf(closestCropBlock, closestFarmBlock)
+                .minByOrNull { it?.distanceTo(player.pos) ?: Double.MAX_VALUE})
+
+        return closestBlock
+    }
+
+    private fun findWalkToItem() = world.entities.filter {it is ItemEntity &&  it.distanceTo(player) < 20}.minByOrNull { it.distanceTo(player) }?.pos
+
+
 
     private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
         .minByOrNull { abs(player.inventory.selectedSlot - it) }
@@ -357,11 +380,18 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (state.block is CropBlock && (state.block as CropBlock).isMature(state)) {
+            val block = state.block
+
+            return if (when (block) {
+                    is CropBlock -> block.isMature(state)
+                    is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= 3
+                    else -> false
+                }) {
                 TrackedState
             } else {
                 null
             }
+
         }
 
     }
