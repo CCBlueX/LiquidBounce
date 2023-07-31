@@ -160,12 +160,7 @@ object FileManager : MinecraftInstance() {
         }
 
         if (backgroundFile != null) {
-            try {
-                background = createBackground(backgroundFile)
-                LOGGER.info("[FileManager] Loaded background.")
-            } catch (e: Exception) {
-                LOGGER.error("[FileManager] Failed to load background.", e)
-            }
+            background = createBackground(backgroundFile)
         }
     }
 }
