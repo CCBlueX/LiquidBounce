@@ -161,7 +161,13 @@ object LiquidBounce {
 
         // Login into known token if not empty
         if (CapeService.knownToken.isNotBlank()) {
-            CapeService.login(CapeService.knownToken)
+            runCatching {
+                CapeService.login(CapeService.knownToken)
+            }.onFailure {
+                LOGGER.error("Failed to login into known cape token.", it)
+            }.onSuccess {
+                LOGGER.info("Successfully logged in into known cape token.")
+            }
         }
 
         // Refresh cape service
