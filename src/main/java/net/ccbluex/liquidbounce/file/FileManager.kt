@@ -44,7 +44,6 @@ object FileManager : MinecraftInstance() {
      */
     init {
         setupFolder()
-        loadBackground()
     }
 
     /**
@@ -159,6 +158,7 @@ object FileManager : MinecraftInstance() {
         } else if (backgroundShaderFile.exists()) {
             backgroundFile = backgroundShaderFile
         }
+
         if (backgroundFile != null) {
             try {
                 background = createBackground(backgroundFile)

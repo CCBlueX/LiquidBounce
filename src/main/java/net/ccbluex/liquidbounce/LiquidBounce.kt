@@ -175,6 +175,15 @@ object LiquidBounce {
             LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
         }
 
+        // Load background
+        runCatching {
+            FileManager.loadBackground()
+        }.onFailure {
+            LOGGER.error("Failed to load background.", it)
+        }.onSuccess {
+            LOGGER.info("Successfully loaded background.")
+        }
+
         // Set is starting status
         isStarting = false
 
