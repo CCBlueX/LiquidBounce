@@ -64,6 +64,8 @@ dependencies {
     include 'com.github.TheAltening:TheAltening4j:d0771f42d3'
     include 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
 
+    include 'org.apache.httpcomponents:httpmime:4.3.3'
+
     include fileTree(include: ["*.jar"], dir: "libs")
 }
 

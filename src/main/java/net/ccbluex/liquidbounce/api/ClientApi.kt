@@ -3,9 +3,13 @@ package net.ccbluex.liquidbounce.api
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.post
 
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.request
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import org.apache.http.HttpEntity
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.mime.MultipartEntityBuilder
 
 /**
  * LiquidBounce Client API
@@ -29,22 +33,43 @@ object ClientApi {
 
     fun requestSettingsList(branch: String = HARD_CODED_BRANCH) = endpointRequest<Array<AutoSettings>>("client/$branch/settings")
 
-    fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) = plainEndpointRequest("client/$branch/settings/$settingId")
+    fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) = textEndpointRequest("client/$branch/settings/$settingId")
 
     /**
-     * todo: this was not implemented yet, might be added in future versions
+     * Reports settings for any reason
+     *
+     * todo: add reason and change to POST instead of GET
      */
-    fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) = endpointRequest<EmptyResponse>("client/$branch/settings/report/$settingId")
+    fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) = endpointRequest<ReportResponse>("client/$branch/settings/report/$settingId")
 
     /**
-     * todo: this was not implemented yet, might be added in future versions
+     * Uploads settings to the API
      */
-    fun uploadSettings(settings: String, branch: String = HARD_CODED_BRANCH) = endpointRequest<EmptyResponse>("client/$branch/settings/upload")
+    fun uploadSettings(name: String, contributors: String, script: String, branch: String = HARD_CODED_BRANCH): UploadResponse {
+        val res = textEndpointPost("client/$branch/settings/upload") {
+            // Create http entity with settings_file as file, name as string, contributors as string to form body
+
+            val entity = MultipartEntityBuilder.create()
+                .addTextBody("name", name)
+                .addTextBody("contributors", contributors)
+                .addBinaryBody("settings_file", script.toByteArray(), ContentType.APPLICATION_OCTET_STREAM, "settings_file")
+                .setLaxMode() // strict mode is not supported by the API, so we have to use lax mode
+                .build()
+            entity
+        }
+
+        return runCatching {
+            parse<UploadResponse>(res)
+        }.getOrElse {
+            UploadResponse(Status.ERROR, res, "none")
+        }
+    }
+
 
     /**
      * Request endpoint and parse JSON to data class
      */
-    private inline fun <reified T> endpointRequest(endpoint: String): T = parse(plainEndpointRequest(endpoint))
+    private inline fun <reified T> endpointRequest(endpoint: String): T = parse(textEndpointRequest(endpoint))
 
     /**
      * Parse JSON to data class
@@ -67,12 +92,20 @@ object ClientApi {
     /**
      * Request to endpoint with custom agent and session token
      */
-    private fun plainEndpointRequest(endpoint: String) = request(
+    private fun textEndpointRequest(endpoint: String) = request(
         "$API_ENDPOINT/$endpoint",
         method = "GET",
         agent = ENDPOINT_AGENT,
         headers = arrayOf("X-Session-Token" to SESSION_TOKEN)
     )
+
+    private fun textEndpointPost(endpoint: String, entity: () -> HttpEntity) = post(
+        "$API_ENDPOINT/$endpoint",
+        agent = ENDPOINT_AGENT,
+        headers = arrayOf("X-Session-Token" to SESSION_TOKEN),
+        entity = entity
+    )
+
 }
 
 /**
@@ -152,3 +185,20 @@ enum class AutoSettingsStatusType(val displayName: String) {
  * Empty response
  */
 class EmptyResponse
+
+/**
+ * Upload response
+ */
+data class UploadResponse(val status: Status, val message: String, val token: String)
+
+/**
+ * Report response
+ */
+data class ReportResponse(val status: Status, val message: String)
+
+enum class Status {
+    @SerializedName("success")
+    SUCCESS,
+    @SerializedName("error")
+    ERROR
+}

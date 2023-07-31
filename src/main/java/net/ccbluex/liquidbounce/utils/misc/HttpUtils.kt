@@ -7,6 +7,9 @@
 package net.ccbluex.liquidbounce.utils.misc
 
 import org.apache.commons.io.FileUtils.copyInputStreamToFile
+import org.apache.http.HttpEntity
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.impl.client.HttpClientBuilder
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -50,6 +53,23 @@ object HttpUtils {
     @Throws(IOException::class)
     fun request(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()) =
         requestStream(url, method, agent, headers).reader().readText()
+
+    fun post(url: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray(), entity: () -> HttpEntity): String {
+        val httpClient = HttpClientBuilder
+            .create()
+            .setUserAgent(agent)
+            .build()
+
+        val httpPost = HttpPost(url)
+        httpPost.entity = entity()
+
+        for ((key, value) in headers) {
+            httpPost.setHeader(key, value)
+        }
+
+        val response = httpClient.execute(httpPost)
+        return response.entity.content.reader().readText()
+    }
 
     @Throws(IOException::class)
     fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): InputStream =
