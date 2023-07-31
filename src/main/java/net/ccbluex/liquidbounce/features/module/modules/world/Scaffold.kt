@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -59,7 +60,7 @@ import kotlin.math.*
 
 object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
-    private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand"), "Normal")
+    private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand", "GodBridge"), "Normal")
 
     // Expand
     private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false) { mode == "Expand" }
@@ -96,7 +97,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = extraClicks && !extraClickMaxCPSValue.isMinimal()
     }
 
-    private val placementAttempt by ListValue("PlacementAttempt", arrayOf("Fail", "Independent"), "Fail") { extraClicks }
+    private val placementAttempt by ListValue(
+        "PlacementAttempt", arrayOf("Fail", "Independent"), "Fail"
+    ) { extraClicks }
 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
@@ -105,7 +108,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     val sprint by BoolValue("Sprint", false)
     private val swing by BoolValue("Swing", true)
     private val search by BoolValue("Search", true)
-    private val down by BoolValue("Down", true)
+    private val down by BoolValue("Down", true) { mode != "GodBridge" }
+
+    private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
+    private val preFallChanceBlocksJump by IntegerValue(
+        "PreFallChanceBlocksJump", 4, 1..8
+    ) { mode == "GodBridge" && !jumpAutomatically }
 
     // Eagle
     private val eagle by ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal")
@@ -115,7 +123,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Rotation Options
     private val rotations by BoolValue("Rotations", true)
     private val strafe by BoolValue("Strafe", false)
-    private val stabilizedRotation by BoolValue("StabilizedRotation", false)
+    private val stabilizedRotation by BoolValue("StabilizedRotation", false) { mode != "GodBridge" }
     private val silentRotation by BoolValue("SilentRotation", true)
     private val keepRotation by BoolValue("KeepRotation", true)
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
@@ -123,8 +131,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     }
 
     // Search options
-    private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area")
-    private val minDist by FloatValue("MinDist", 0f, 0f..0.2f)
+    private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { mode != "GodBridge" }
+    private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { mode != "GodBridge" }
 
     // Turn Speed
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f..180f) {
@@ -151,19 +159,22 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
 
     // Safety
-    private val sameY by BoolValue("SameY", false)
+    private val sameY by BoolValue("SameY", false) { mode != "GodBridge" }
     private val safeWalk by BoolValue("SafeWalk", true)
     private val airSafe by BoolValue("AirSafe", false) { safeWalk }
 
     // Visuals
     private val counterDisplay by BoolValue("Counter", true)
     private val mark by BoolValue("Mark", false)
+    private val trackCPS by BoolValue("TrackCPS", false)
 
     // Target placement
     private var targetPlace: PlaceInfo? = null
 
     // Launch position
     private var launchY = 0
+    private val shouldKeepLaunchPosition
+        get() = sameY && mode != "GodBridge"
 
     // Zitter Direction
     private var zitterDirection = false
@@ -179,7 +190,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Downwards
     private val shouldGoDown
-        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && blocksAmount > 1
+        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && mode != "GodBridge" && blocksAmount > 1
 
     // Current rotation
     private val currRotation
@@ -187,6 +198,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Extra clicks
     private var extraClick = ExtraClickInfo(randomClickDelay(extraClickMinCPS, extraClickMaxCPS), 0L, 0)
+
+    // GodBridge
+    private var blocksPlacedUntilJump = 0
+    private val isManualJumpOptionActive
+        get() = mode == "GodBridge" && !jumpAutomatically
 
     // Enabling module
     override fun onEnable() {
@@ -253,10 +269,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (player.onGround) {
+            // Still a thing?
             if (mode == "Rewinside") {
                 strafe(0.2F)
                 player.motionY = 0.0
             }
+
             when (zitterMode.lowercase()) {
                 "off" -> {
                     return
@@ -330,7 +348,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown)
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (it != null && it.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
+            if (it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
                 val result = if (raycastProperly) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
                 } else {
@@ -379,7 +397,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             } else {
                 BlockPos(player.posX, player.posY - 0.6, player.posZ).down()
             }
-        } else if (sameY && launchY <= player.posY) {
+        } else if (shouldKeepLaunchPosition && launchY <= player.posY) {
             BlockPos(player.posX, launchY - 1.0, player.posZ)
         } else if (player.posY == player.posY.roundToInt() + 0.5) {
             BlockPos(player)
@@ -415,11 +433,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
-        if (!delayTimer.hasTimePassed(delay) || sameY && launchY - 1 != placeInfo.vec3.yCoord.toInt()) {
+        if (!delayTimer.hasTimePassed(delay) || shouldKeepLaunchPosition && launchY - 1 != placeInfo.vec3.yCoord.toInt()) {
             return
         }
 
         var itemStack = player.heldItem
+
         //TODO: blacklist more blocks than only bushes
         if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || player.heldItem.stackSize <= 0) {
             val blockSlot = InventoryUtils.findBlockInHotbar() ?: return
@@ -458,6 +477,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             } else {
                 sendPacket(C0APacketAnimation())
             }
+
+            if (isManualJumpOptionActive) {
+                blocksPlacedUntilJump++
+            }
         } else {
             if (mc.playerController.sendUseItem(player, world, itemStack)) {
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
@@ -468,6 +491,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (serverSlot != player.inventory.currentItem) {
                 sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
             }
+        }
+
+        if (trackCPS) {
+            CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
         }
 
         targetPlace = null
@@ -489,7 +516,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         val isOnTheSamePos = raytrace.blockPos.x == player.posX.toInt() && raytrace.blockPos.z == player.posZ.toInt()
 
-        val isBlockBelowPlayer = if (sameY) {
+        val isBlockBelowPlayer = if (shouldKeepLaunchPosition) {
             raytrace.blockPos.y == launchY - 1 && !block.canPlaceBlockOnSide(
                 world, raytrace.blockPos, EnumFacing.UP, player, stack
             )
@@ -516,10 +543,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             } else {
                 sendPacket(C0APacketAnimation())
             }
+
+            if (isManualJumpOptionActive) {
+                blocksPlacedUntilJump++
+            }
         } else {
             if (mc.playerController.sendUseItem(player, world, stack)) {
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
             }
+        }
+
+        if (trackCPS) {
+            CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
         }
     }
 
@@ -598,8 +633,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onRender3D(event: Render3DEvent) {
         val player = mc.thePlayer ?: return
 
-        val shouldBother =
-            !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks && isMoving
+        val shouldBother = !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks && isMoving
 
         if (shouldBother) {
             currRotation.let {
@@ -627,7 +661,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             val z = if (omniDirectionalExpand) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
             val blockPos = BlockPos(
                 player.posX + x * i,
-                if (sameY && launchY <= player.posY) launchY - 1.0 else player.posY - (if (player.posY == player.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
+                if (shouldKeepLaunchPosition && launchY <= player.posY) launchY - 1.0 else player.posY - (if (player.posY == player.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
                 player.posZ + z * i
             )
             val placeInfo = PlaceInfo.get(blockPos)
@@ -662,10 +696,44 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         var currPlaceRotation: PlaceRotation?
 
+        var considerStablePitch: PlaceRotation? = null
+
         for (side in EnumFacing.values()) {
             val neighbor = blockPosition.offset(side)
 
             if (!canBeClicked(neighbor)) {
+                continue
+            }
+
+            if (mode == "GodBridge") {
+                // Selection of these values only. Mostly used by Godbridgers.
+                val list = arrayOf(-135f, -45f, 45f, 135f)
+
+                // Selection of pitch values that should be OK in non-complex situations.
+                val pitchList = 55.0..75.7
+
+                for (yaw in list) {
+                    for (pitch in pitchList step 0.1) {
+                        val rotation = Rotation(yaw, pitch.toFloat())
+
+                        val raytrace = performBlockRaytrace(rotation, maxReach) ?: continue
+
+                        currPlaceRotation =
+                            PlaceRotation(PlaceInfo(raytrace.blockPos, raytrace.sideHit, raytrace.hitVec), rotation)
+
+                        if (raytrace.blockPos == neighbor && raytrace.sideHit == side.opposite) {
+                            val isInStablePitchRange = pitch in 73.5..75.7
+
+                            // The module should be looking to aim at (nearly) the upper face of the block. Provides stable bridging most of the time.
+                            if (isInStablePitchRange) {
+                                considerStablePitch = compareDifferences(currPlaceRotation, considerStablePitch)
+                            }
+
+                            placeRotation = compareDifferences(currPlaceRotation, placeRotation)
+                        }
+                    }
+                }
+
                 continue
             }
 
@@ -674,12 +742,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                     findTargetPlace(blockPosition, neighbor, Vec3(0.5, 0.5, 0.5), side, eyes, maxReach, raycast)
                         ?: continue
 
-                if (placeRotation == null || getRotationDifference(
-                        currPlaceRotation.rotation, currRotation
-                    ) < getRotationDifference(placeRotation.rotation, currRotation)
-                ) {
-                    placeRotation = currPlaceRotation
-                }
+                placeRotation = compareDifferences(currPlaceRotation, placeRotation)
             } else {
                 for (x in 0.1..0.9) {
                     for (y in 0.1..0.9) {
@@ -688,21 +751,42 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                                 findTargetPlace(blockPosition, neighbor, Vec3(x, y, z), side, eyes, maxReach, raycast)
                                     ?: continue
 
-                            if (placeRotation == null ||
-                                getRotationDifference(currPlaceRotation.rotation, currRotation)
-                                < getRotationDifference(placeRotation.rotation, currRotation)
-                            ) placeRotation = currPlaceRotation
+                            placeRotation = compareDifferences(currPlaceRotation, placeRotation)
                         }
                     }
                 }
             }
         }
 
+        placeRotation = considerStablePitch ?: placeRotation
+
         placeRotation ?: return false
 
         if (rotations) {
+            var targetRotation = placeRotation.rotation
+
+            val info = placeRotation.placeInfo
+
+            if (mode == "GodBridge") {
+                val shouldJumpForcefully = isManualJumpOptionActive && blocksPlacedUntilJump >= preFallChanceBlocksJump
+
+                performBlockRaytrace(currRotation, maxReach)?.let {
+                    if (it.blockPos == info.blockPos && (it.sideHit != info.enumFacing || shouldJumpForcefully) && isMoving && currRotation.yaw.roundToInt() % 45f == 0f) {
+                        if (player.onGround) {
+                            player.jump()
+                        }
+
+                        if (shouldJumpForcefully) {
+                            blocksPlacedUntilJump = 0
+                        }
+
+                        targetRotation = currRotation
+                    }
+                }
+            }
+
             val limitedRotation = limitAngleChange(
-                currRotation, placeRotation.rotation, nextFloat(minTurnSpeed, maxTurnSpeed)
+                currRotation, targetRotation, nextFloat(minTurnSpeed, maxTurnSpeed)
             )
 
             setRotation(limitedRotation, keepTicks)
@@ -748,7 +832,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return null
         }
 
-        val diff = vec - eyes
+        val diff = vec3 - eyes
 
         if (side.axis != EnumFacing.Axis.Y) {
             val dist = abs(if (side.axis == EnumFacing.Axis.Z) diff.zCoord else diff.xCoord)
@@ -768,7 +852,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         // If the current rotation already looks at the target block and side, then return right here
         performBlockRaytrace(currRotation, maxReach)?.let { raytrace ->
-            if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
+            if (raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
                 return PlaceRotation(
                     PlaceInfo(
                         raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3(offsetPos), !raycast)
@@ -779,7 +863,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         val raytrace = performBlockRaytrace(rotation, maxReach) ?: return null
 
-        if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
+        if (raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
             return PlaceRotation(
                 PlaceInfo(
                     raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3(offsetPos), !raycast)
@@ -800,6 +884,19 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val reach = eyes + (rotationVec * maxReach.toDouble())
 
         return world.rayTraceBlocks(eyes, reach, false, false, true)
+    }
+
+    private fun compareDifferences(
+        new: PlaceRotation, old: PlaceRotation?, rotation: Rotation = currRotation
+    ): PlaceRotation {
+        if (old == null || getRotationDifference(new.rotation, rotation) < getRotationDifference(
+                old.rotation, rotation
+            )
+        ) {
+            return new
+        }
+
+        return old
     }
 
     /**
