@@ -79,7 +79,8 @@ shadowJar {
     exclude "META-INF/maven/**"
     exclude "META-INF/versions/**"
 
-    exclude "org/apache/**"
+    exclude "org/apache/log4j/**"
+    exclude "org/apache/commons/**"
     exclude "org/junit/**"
 }
 
