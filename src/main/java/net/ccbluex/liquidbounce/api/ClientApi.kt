@@ -55,7 +55,7 @@ object ClientApi {
      * User agent
      * LiquidBounce/<version> (<commit>, <branch>, <build-type>, <platform>)
      */
-    private val ENDPOINT_AGENT = "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.CLIENT_VERSION} (${LiquidBounce.CLIENT_COMMIT}, ${LiquidBounce.CLIENT_BRANCH}, ${if (LiquidBounce.IN_DEV) "dev" else "release"}, ${System.getProperty("os.name")})"
+    private val ENDPOINT_AGENT = "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersionText} (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, ${if (LiquidBounce.IN_DEV) "dev" else "release"}, ${System.getProperty("os.name")})"
 
     /**
      * Session token

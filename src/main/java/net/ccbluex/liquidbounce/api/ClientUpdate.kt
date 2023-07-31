@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.api
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION_INT
+import net.ccbluex.liquidbounce.LiquidBounce.clientVersionNumber
 import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import java.text.SimpleDateFormat
@@ -28,7 +28,7 @@ object ClientUpdate {
     val newestVersion by lazy {
         // https://api.liquidbounce.net/api/v1/version/builds/legacy
         try {
-            requestNewestBuildEndpoint(branch = LiquidBounce.CLIENT_BRANCH, release = !IN_DEV)
+            requestNewestBuildEndpoint(branch = LiquidBounce.clientBranch, release = !IN_DEV)
         } catch (e: Exception) {
             LOGGER.error("Unable to receive update information", e)
             return@lazy null
@@ -47,7 +47,7 @@ object ClientUpdate {
                 newestVersionDate.after(currentVersionDate)
             } else {
                 // check if version number is higher than current version number (on release builds only!)
-                newestVersion.release && actualVersionNumber > CLIENT_VERSION_INT
+                newestVersion.release && actualVersionNumber > clientVersionNumber
             }
         } catch (e: Exception) {
             LOGGER.error("Unable to check for update", e)

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_TITLE
+import net.ccbluex.liquidbounce.LiquidBounce.clientTitle
 import net.ccbluex.liquidbounce.LiquidBounce.background
 import net.ccbluex.liquidbounce.file.FileManager.backgroundImageFile
 import net.ccbluex.liquidbounce.file.FileManager.backgroundShaderFile
@@ -38,7 +38,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
         fun updateClientWindow() {
             if (enabledClientTitle) {
                 // Set LiquidBounce title
-                Display.setTitle(CLIENT_TITLE)
+                Display.setTitle(clientTitle)
                 // Update favicon
                 IconUtils.getFavicon()?.let { icons ->
                     Display.setIcon(icons)

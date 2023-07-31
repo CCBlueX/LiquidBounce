@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION
+import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
@@ -44,7 +44,7 @@ class GuiMainMenu : GuiScreen() {
         drawRect(width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175, Integer.MIN_VALUE)
 
         Fonts.fontBold180.drawCenteredString(CLIENT_NAME, width / 2F, height / 8F, 4673984, true)
-        Fonts.font35.drawCenteredString(CLIENT_VERSION, width / 2F + 148, height / 8F + Fonts.font35.fontHeight, 0xffffff, true)
+        Fonts.font35.drawCenteredString(clientVersionText, width / 2F + 148, height / 8F + Fonts.font35.fontHeight, 0xffffff, true)
 
         val messageOfTheDay = messageOfTheDay?.message;
         if (messageOfTheDay?.isNotBlank() == true) {

@@ -136,7 +136,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = At.Shift.AFTER))
     private void createDisplay(CallbackInfo callbackInfo) {
         if (GuiClientConfiguration.Companion.getEnabledClientTitle()) {
-            Display.setTitle(LiquidBounce.INSTANCE.getCLIENT_TITLE());
+            Display.setTitle(LiquidBounce.INSTANCE.getClientTitle());
         }
     }
 
