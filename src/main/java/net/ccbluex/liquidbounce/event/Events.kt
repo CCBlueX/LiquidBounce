@@ -79,6 +79,14 @@ class MotionEvent(val eventState: EventState) : Event()
 class SlowDownEvent(var strafe: Float, var forward: Float) : Event()
 
 /**
+ * Called in "onLivingUpdate" when the player is sneaking.
+ *
+ * @param strafe the applied strafe slow down
+ * @param forward the applied forward slow down
+ */
+class SneakSlowDownEvent(var strafe: Float, var forward: Float) : Event()
+
+/**
  * Called in "moveFlying"
  */
 class StrafeEvent(val strafe: Float, val forward: Float, val friction: Float) : CancellableEvent()

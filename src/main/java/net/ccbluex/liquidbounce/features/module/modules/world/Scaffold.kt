@@ -116,7 +116,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     ) { mode == "GodBridge" && !jumpAutomatically }
 
     // Eagle
-    private val eagle by ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal")
+    val eagle by ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal")
+    private val eagleSpeed by FloatValue("EagleSpeed", 0.3f, 0.3f..1.0f) { eagle == "Normal" }
+    val eagleSprint by BoolValue("EagleSprint", false) { eagle == "Normal" }
     private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10) { eagle != "Off" }
     private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f) { eagle != "Off" }
 
@@ -358,6 +360,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 place(result)
             }
         }
+    }
+
+    @EventTarget
+    fun onSneakSlowDown(event: SneakSlowDownEvent) {
+        event.forward *= eagleSpeed / 0.3f
+        event.strafe *= eagleSpeed / 0.3f
     }
 
     fun update() {
@@ -832,7 +840,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return null
         }
 
-        val diff = vec3 - eyes
+        val diff = vec - eyes
 
         if (side.axis != EnumFacing.Axis.Y) {
             val dist = abs(if (side.axis == EnumFacing.Axis.Z) diff.zCoord else diff.xCoord)
