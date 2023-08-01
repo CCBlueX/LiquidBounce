@@ -61,7 +61,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         // Spartan
         Spartan, Spartan2, BugSpartan,
 
-        // Other anticheats
+        // Other anti-cheats
         MineSecure, HawkEye, HAC, WatchCat,
 
         // Other

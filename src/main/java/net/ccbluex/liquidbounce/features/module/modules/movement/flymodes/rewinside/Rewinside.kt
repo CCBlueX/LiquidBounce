@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.StepEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
 
@@ -18,7 +18,7 @@ object Rewinside : FlyMode("Rewinside") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == Blocks.air && event.y < mc.thePlayer.posY)
+		if (event.block == air && event.y < mc.thePlayer.posY)
 			event.boundingBox = AxisAlignedBB.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),
