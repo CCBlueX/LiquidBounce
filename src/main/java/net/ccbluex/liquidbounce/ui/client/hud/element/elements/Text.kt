@@ -52,7 +52,6 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
             text.displayString = "%clientName%"
             text.shadow = true
-            text.font = Fonts.font40
             text.color = Color(0, 111, 255)
 
             return text
@@ -74,7 +73,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private var backgroundRed by IntegerValue("BackgroundRed", 0, 0..255)
     private var backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255)
     private var backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255)
-    private var backgroundAlpha by IntegerValue("BackgroundAlpha", 100, 0..255)
+    private var backgroundAlpha by IntegerValue("BackgroundAlpha", 0, 0..255)
 
     private var shadow by BoolValue("Shadow", true)
     private var font by FontValue("Font", Fonts.font40)
