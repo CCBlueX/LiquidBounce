@@ -152,8 +152,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (sprinting != serverSprintState) {
             if (sprinting)
                 sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, START_SPRINTING));
-            else
-                sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, STOP_SPRINTING));
+            else sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, STOP_SPRINTING));
 
             serverSprintState = sprinting;
         }
@@ -163,8 +162,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (sneaking != serverSneakState && (!sneak.getState() || sneak.getMode().equals("Legit"))) {
             if (sneaking)
                 sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, START_SNEAKING));
-            else
-                sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, STOP_SNEAKING));
+            else sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, STOP_SNEAKING));
 
             serverSneakState = sneaking;
         }
@@ -322,6 +320,13 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         boolean flag2 = movementInput.moveForward >= f;
         movementInput.updatePlayerMoveState();
 
+        if (movementInput.sneak) {
+            final SneakSlowDownEvent sneakSlowDownEvent = new SneakSlowDownEvent(movementInput.moveStrafe, movementInput.moveForward);
+            EventManager.INSTANCE.callEvent(sneakSlowDownEvent);
+            movementInput.moveStrafe = sneakSlowDownEvent.getStrafe();
+            movementInput.moveForward = sneakSlowDownEvent.getForward();
+        }
+
         final NoSlow noSlow = NoSlow.INSTANCE;
         final KillAura killAura = KillAura.INSTANCE;
 
@@ -331,13 +336,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             movementInput.moveStrafe *= slowDownEvent.getStrafe();
             movementInput.moveForward *= slowDownEvent.getForward();
             sprintToggleTimer = 0;
-        }
-
-        if (isSneaking()) {
-            final SneakSlowDownEvent sneakSlowDownEvent = new SneakSlowDownEvent(1F, 1F);
-            EventManager.INSTANCE.callEvent(sneakSlowDownEvent);
-            movementInput.moveStrafe *= sneakSlowDownEvent.getStrafe();
-            movementInput.moveForward *= sneakSlowDownEvent.getForward();
         }
 
         pushOutOfBlocks(posX - width * 0.35, getEntityBoundingBox().minY + 0.5, posZ + width * 0.35);
@@ -350,6 +348,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         final boolean legitSprint = sprint.getMode().equals("Legit");
 
         boolean flag3 = !(sprint.getState() && !legitSprint && sprint.getFood()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
+
         if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
             if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown()) {
                 sprintToggleTimer = 7;
@@ -742,4 +741,3 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         }
     }
 }
-
