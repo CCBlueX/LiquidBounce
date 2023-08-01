@@ -128,6 +128,7 @@ object ModuleManager : Listenable {
             ItemESP,
             KeepAlive,
             KeepContainer,
+            KeyPearl,
             Kick,
             KillAura,
             LadderJump,

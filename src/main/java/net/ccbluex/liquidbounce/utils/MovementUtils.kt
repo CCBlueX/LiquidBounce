@@ -20,6 +20,9 @@ object MovementUtils : MinecraftInstance() {
     val isMoving
         get() = mc.thePlayer != null && (mc.thePlayer.movementInput.moveForward != 0f || mc.thePlayer.movementInput.moveStrafe != 0f)
 
+    val movingYaw: Float
+        get() = (direction * 180f / Math.PI).toFloat()
+
     val hasMotion
         get() = mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && mc.thePlayer.motionY != 0.0
 

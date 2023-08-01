@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.KeyBinding.setKeyBindState
 import net.minecraft.potion.Potion
@@ -24,7 +25,15 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
 
+    val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
+
+    private val allDirectionsLimitSpeed by FloatValue("AllDirectionsLimitSpeed", 1f, 0.75f..1f) { mode == "Vanilla" && allDirections }
+
+    private val allDirectionsLimitSpeedGround by BoolValue("AllDirectionsLimitSpeedOnlyGround", true) { mode == "Vanilla" && allDirections }
+
     private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
+
+    private val usingItem by BoolValue("UsingItem", false) { mode == "Vanilla" }
 
     val food by BoolValue("Food", true) { mode == "Vanilla" }
 
@@ -59,13 +68,20 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
             ) < 0.8
 
         if (mode == "Vanilla") {
-            if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)) {
+            if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || usingItem && mc.thePlayer.isUsingItem || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)) {
                 mc.thePlayer.isSprinting = false
                 return
             }
 
-            if (allDirections || mc.thePlayer.movementInput.moveForward >= 0.8f) {
+            if (mc.thePlayer.movementInput.moveForward >= 0.8f) {
                 mc.thePlayer.isSprinting = true
+            }
+            else if (allDirections) {
+                mc.thePlayer.isSprinting = true
+                if (!allDirectionsLimitSpeedGround || mc.thePlayer.onGround) {
+                    mc.thePlayer.motionX *= allDirectionsLimitSpeed
+                    mc.thePlayer.motionZ *= allDirectionsLimitSpeed
+                }
             }
         }
     }

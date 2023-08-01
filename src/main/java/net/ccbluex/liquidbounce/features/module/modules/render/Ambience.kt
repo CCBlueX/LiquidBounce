@@ -25,7 +25,7 @@ object Ambience : Module("Ambience", ModuleCategory.RENDER) {
 
     private val changeWorldTimeSpeed by IntegerValue("TimeSpeed", 150, 10..500) { timeMode == "Normal" }
 
-    private val weatherStrength by FloatValue("WeatherStrength", 1f, 0f..1f) { weatherMode != "None" }
+    private val weatherStrength by FloatValue("WeatherStrength", 1f, 0f..1f) { weatherMode == "Rain" || weatherMode == "Thunder" }
 
     var i = 0L
 
