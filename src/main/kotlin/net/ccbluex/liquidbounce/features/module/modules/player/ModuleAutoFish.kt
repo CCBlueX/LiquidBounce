@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.FishingRodItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -87,7 +88,7 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
             return@handler
         }
 
-        if (event.packet !is PlaySoundS2CPacket || event.packet.sound != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
+        if (event.packet !is PlaySoundS2CPacket || event.packet.sound.value() != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
             return@handler
         }
 
