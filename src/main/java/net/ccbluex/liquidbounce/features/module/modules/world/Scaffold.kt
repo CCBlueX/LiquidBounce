@@ -364,8 +364,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     @EventTarget
     fun onSneakSlowDown(event: SneakSlowDownEvent) {
-        event.forward = eagleSpeed
-        event.strafe = eagleSpeed
+        event.forward = eagleSpeed * 5
+        event.strafe = eagleSpeed * 5
     }
 
     fun update() {
