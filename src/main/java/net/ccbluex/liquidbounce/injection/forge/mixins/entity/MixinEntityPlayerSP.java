@@ -333,6 +333,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             sprintToggleTimer = 0;
         }
 
+        if (isSneaking()) {
+            final SneakSlowDownEvent sneakSlowDownEvent = new SneakSlowDownEvent(0.2F, 0.2F);
+            EventManager.INSTANCE.callEvent(sneakSlowDownEvent);
+            movementInput.moveStrafe *= (sneakSlowDownEvent.getStrafe() * 5);
+            movementInput.moveForward *= (sneakSlowDownEvent.getForward() * 5);
+            // Uncommenting this until I figure out what this is sprintToggleTimer = 0;
+        }
+
         pushOutOfBlocks(posX - width * 0.35, getEntityBoundingBox().minY + 0.5, posZ + width * 0.35);
         pushOutOfBlocks(posX - width * 0.35, getEntityBoundingBox().minY + 0.5, posZ - width * 0.35);
         pushOutOfBlocks(posX + width * 0.35, getEntityBoundingBox().minY + 0.5, posZ - width * 0.35);
@@ -343,7 +351,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         final boolean legitSprint = sprint.getMode().equals("Legit");
 
         boolean flag3 = !(sprint.getState() && !legitSprint && sprint.getFood()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
-
         if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
             if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown()) {
                 sprintToggleTimer = 7;
@@ -364,6 +371,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         if ((scaffold.getState() && !scaffold.getSprint()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide() && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections() && shouldStop))
             setSprinting(false);
+
+        if ((scaffold.getState() && scaffold.getSprint() && scaffold.getEagleSprint() && scaffold.getEagle() == "Normal" && mc.gameSettings.keyBindSprint.isKeyDown() && mc.gameSettings.keyBindSneak.isKeyDown()))
+            setSprinting(true);
 
         if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirections()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
             setSprinting(false);
