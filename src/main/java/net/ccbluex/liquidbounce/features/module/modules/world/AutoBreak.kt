@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 
 object AutoBreak : Module("AutoBreak", ModuleCategory.WORLD) {
 
@@ -19,7 +19,7 @@ object AutoBreak : Module("AutoBreak", ModuleCategory.WORLD) {
         if (mc.objectMouseOver == null || mc.objectMouseOver.blockPos == null || mc.theWorld == null)
             return
 
-        mc.gameSettings.keyBindAttack.pressed = getBlock(mc.objectMouseOver.blockPos) != Blocks.air
+        mc.gameSettings.keyBindAttack.pressed = getBlock(mc.objectMouseOver.blockPos) != air
     }
 
     override fun onDisable() {

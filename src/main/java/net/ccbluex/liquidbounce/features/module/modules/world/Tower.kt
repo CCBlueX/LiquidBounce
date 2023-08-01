@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockBush
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.resetColor
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.item.ItemBlock
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C09PacketHeldItemChange
@@ -133,10 +133,10 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 (autoBlock != "Off" && InventoryUtils.findBlockInHotbar() != null) || thePlayer.heldItem?.item is ItemBlock
 
             if (update) {
-                if (!stopWhenBlockAbove || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
+                if (!stopWhenBlockAbove || getBlock(BlockPos(thePlayer).up(2)) == air) move()
 
                 val blockPos = BlockPos(thePlayer).down()
-                if (blockPos.getBlock() == Blocks.air) {
+                if (blockPos.getBlock() == air) {
                     if (search(blockPos) && rotations) {
                         val vecRotation = faceBlock(blockPos)
                         if (vecRotation != null) {

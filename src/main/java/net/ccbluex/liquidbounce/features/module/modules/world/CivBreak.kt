@@ -17,7 +17,8 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.bedrock
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
@@ -41,7 +42,7 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
-        if (event.clickedBlock?.let { getBlock(it) } == Blocks.bedrock)
+        if (event.clickedBlock?.let { getBlock(it) } == bedrock)
             return
 
         blockPos = event.clickedBlock ?: return
@@ -57,7 +58,7 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
     @EventTarget
     fun onUpdate(event: MotionEvent) {
         val pos = blockPos ?: return
-        val isAirBlock = getBlock(pos) == Blocks.air
+        val isAirBlock = getBlock(pos) == air
 
         if (airReset && isAirBlock ||
                 rangeReset && getCenterDistance(pos) > range) {
