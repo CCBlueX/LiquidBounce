@@ -334,11 +334,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         }
 
         if (isSneaking()) {
-            final SneakSlowDownEvent sneakSlowDownEvent = new SneakSlowDownEvent(0.2F, 0.2F);
+            final SneakSlowDownEvent sneakSlowDownEvent = new SneakSlowDownEvent(1F, 1F);
             EventManager.INSTANCE.callEvent(sneakSlowDownEvent);
-            movementInput.moveStrafe *= (sneakSlowDownEvent.getStrafe() * 5);
-            movementInput.moveForward *= (sneakSlowDownEvent.getForward() * 5);
-            // Uncommenting this until I figure out what this is sprintToggleTimer = 0;
+            movementInput.moveStrafe *= sneakSlowDownEvent.getStrafe();
+            movementInput.moveForward *= sneakSlowDownEvent.getForward();
         }
 
         pushOutOfBlocks(posX - width * 0.35, getEntityBoundingBox().minY + 0.5, posZ + width * 0.35);
@@ -372,7 +371,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if ((scaffold.getState() && !scaffold.getSprint()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide() && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections() && shouldStop))
             setSprinting(false);
 
-        if ((scaffold.getState() && scaffold.getSprint() && scaffold.getEagleSprint() && scaffold.getEagle() == "Normal" && mc.gameSettings.keyBindSprint.isKeyDown() && mc.gameSettings.keyBindSneak.isKeyDown()))
+        if ((scaffold.getState() && scaffold.getSprint() && scaffold.getEagleSprint() && scaffold.getEagle.equals("Normal") && mc.gameSettings.keyBindSprint.isKeyDown() && mc.gameSettings.keyBindSneak.isKeyDown()))
             setSprinting(true);
 
         if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirections()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
