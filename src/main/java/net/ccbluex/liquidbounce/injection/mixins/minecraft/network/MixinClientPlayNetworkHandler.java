@@ -141,7 +141,7 @@ public class MixinClientPlayNetworkHandler {
         final Choice activeChoice = ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice();
         if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
             // Changes you server side rotation and then resets it with provided settings
-            RotationManager.INSTANCE.setTicksUntilReset(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().getKeepRotationTicks());
+            RotationManager.INSTANCE.setTicksUntilReset(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().getTicksUntilReset());
             RotationManager.INSTANCE.setActiveConfigurable(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable());
             RotationManager.INSTANCE.setCurrentRotation(new Rotation(j, k));
             RotationManager.INSTANCE.setTargetRotation(new Rotation(j, k));
