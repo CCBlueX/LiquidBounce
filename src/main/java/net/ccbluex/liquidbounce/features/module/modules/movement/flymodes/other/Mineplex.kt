@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
@@ -68,7 +69,7 @@ object Mineplex : FlyMode("Mineplex") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == Blocks.air && event.y < mc.thePlayer.posY)
+		if (event.block == air && event.y < mc.thePlayer.posY)
 			event.boundingBox = AxisAlignedBB.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),

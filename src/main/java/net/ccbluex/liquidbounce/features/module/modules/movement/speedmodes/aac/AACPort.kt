@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.BlockPos
 import kotlin.math.cos
@@ -31,7 +31,7 @@ object AACPort : SpeedMode("AACPort") {
             val x = thePlayer.posX - sin(f) * d
             val z = thePlayer.posZ + cos(f) * d
 
-            if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && getBlock(BlockPos(x, thePlayer.posY, z)) != Blocks.air)
+            if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && getBlock(BlockPos(x, thePlayer.posY, z)) != air)
                 break
             sendPacket(C04PacketPlayerPosition(x, thePlayer.posY, z, true))
             d += 0.2

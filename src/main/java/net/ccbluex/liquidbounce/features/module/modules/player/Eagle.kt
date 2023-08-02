@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.minecraft.client.settings.GameSettings
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.util.BlockPos
 
 object Eagle : Module("Eagle", ModuleCategory.PLAYER) {
@@ -20,7 +20,7 @@ object Eagle : Module("Eagle", ModuleCategory.PLAYER) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        mc.gameSettings.keyBindSneak.pressed = mc.thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) == Blocks.air
+        mc.gameSettings.keyBindSneak.pressed = mc.thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) == air
     }
 
     override fun onDisable() {

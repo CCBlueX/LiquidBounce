@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.block.BlockLiquid
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.bedrock
 import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
@@ -234,6 +235,6 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     /**
      * Check if [block] is a valid block to break
      */
-    private fun validBlock(block: Block) = block != Blocks.air && block !is BlockLiquid && block != Blocks.bedrock
+    private fun validBlock(block: Block) = block != air && block !is BlockLiquid && block != bedrock
 
 }

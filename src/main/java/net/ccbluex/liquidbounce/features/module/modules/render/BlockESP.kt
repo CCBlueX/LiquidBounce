@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.util.BlockPos
 import java.awt.Color
 
@@ -46,7 +46,7 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
             val radius = radius
             val selectedBlock = Block.getBlockById(block)
 
-            if (selectedBlock == null || selectedBlock == Blocks.air)
+            if (selectedBlock == null || selectedBlock == air)
                 return
 
             thread = Thread({

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.block.Block
 import net.minecraft.block.material.Material
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.potion.Potion
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
@@ -32,7 +32,7 @@ object YPort : SpeedMode("YPort") {
     private var safeJump = false
     override fun onMotion() {
         if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInsideOfMaterial(
-                Material.water) && !mc.thePlayer.isInsideOfMaterial(Material.lava) && !mc.thePlayer.isInWater && (getBlock(-1.1) != Blocks.air && getBlock(-1.1) != Blocks.air || getBlock(-0.1) != Blocks.air && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && !mc.thePlayer.onGround && mc.thePlayer.fallDistance < 3f && mc.thePlayer.fallDistance > 0.05) && level == 3) mc.thePlayer.motionY = -0.3994
+                Material.water) && !mc.thePlayer.isInsideOfMaterial(Material.lava) && !mc.thePlayer.isInWater && (getBlock(-1.1) != air && getBlock(-1.1) != air || getBlock(-0.1) != air && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && !mc.thePlayer.onGround && mc.thePlayer.fallDistance < 3f && mc.thePlayer.fallDistance > 0.05) && level == 3) mc.thePlayer.motionY = -0.3994
         val xDist = mc.thePlayer.posX - mc.thePlayer.prevPosX
         val zDist = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)

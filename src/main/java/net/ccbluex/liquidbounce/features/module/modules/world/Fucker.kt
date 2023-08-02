@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
-import net.minecraft.init.Blocks
+import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.util.BlockPos
@@ -91,7 +91,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
             val blockPos = mc.theWorld.rayTraceBlocks(eyes, rotation.vec, false,
                     false, true)?.blockPos
 
-            if (blockPos != null && blockPos.getBlock() != Blocks.air) {
+            if (blockPos != null && blockPos.getBlock() != air) {
                 if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z)
                     areSurroundings = true
 
