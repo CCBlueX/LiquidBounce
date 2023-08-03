@@ -209,6 +209,11 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
         if (packet is S30PacketWindowItems) {
             contentReceived = packet.func_148911_c()
+
+            // Confirm the timer gets reset
+            if (delayOnFirst) {
+                delayTimer.reset()
+            }
         }
     }
 
