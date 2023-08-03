@@ -121,10 +121,10 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
                 "yaw" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw)
                 "pitch" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch)
-                "yawInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw).toInt()
-                "pitchInt" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch).toInt()
+                "yawint" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw).toInt()
+                "pitchint" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch).toInt()
                 "food" -> return thePlayer.foodStats.foodLevel
-                "onGround" -> return mc.thePlayer.onGround
+                "onground" -> return mc.thePlayer.onGround
             }
         }
 
