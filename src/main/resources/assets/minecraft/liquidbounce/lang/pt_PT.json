@@ -42,9 +42,9 @@
 
         "module.hitBox.description": "Torna as \"\"hitboxes\"\" dos alvos maiores.",
 
-        "module.ignite.description": "Automaticamente mete os teus alvos á volta de tí em fogo.",
+        "module.ignite.description": "Automaticamente mete os teus alvos á volta de ti em fogo.",
 
-        "module.killAura.description": "Automaticamente ataca alvos á volta de tí.",
+        "module.killAura.description": "Automaticamente ataca alvos á volta de ti.",
 
         "module.noFriends.description": "Permite que tu ataques amigos.",
 
@@ -154,7 +154,7 @@
         
         "module.freeze.description": "Permite que tu estejas parado no meio do ár.",
         
-        "module.fucker.description": "Destrói blocos selecionados á volta de ti. (tambem conhecido como IDNuker)",
+        "module.fucker.description": "Destrói blocos selecionados á volta de ti. (também conhecido como IDNuker)",
         
         "module.fullbright.description": "Brightens up the world around you.",
         
