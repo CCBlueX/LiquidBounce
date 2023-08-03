@@ -49,10 +49,7 @@ import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.START_SNEAKING
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.STOP_SNEAKING
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.MovingObjectPosition
-import net.minecraft.util.Vec3
+import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -116,11 +113,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     ) { mode == "GodBridge" && !jumpAutomatically }
 
     // Eagle
-    val eagle by ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal")
-    private val eagleSpeed by FloatValue("EagleSpeed", 0.3f, 0.3f..1.0f) { eagle == "Normal" }
-    val eagleSprint by BoolValue("EagleSprint", false) { eagle == "Normal" }
-    private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10) { eagle != "Off" }
-    private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f) { eagle != "Off" }
+    private val eagleValue: ListValue = object : ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") {
+        override fun isSupported() = mode != "GodBridge"
+    }
+
+    val eagle by eagleValue
+
+    private val eagleSpeed by FloatValue("EagleSpeed", 0.3f, 0.3f..1.0f) { eagleValue.isSupported() && eagle != "Off" }
+    val eagleSprint by BoolValue("EagleSprint", false) { eagleValue.isSupported() && eagle == "Normal" }
+    private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10) { eagleValue.isSupported() && eagle != "Off" }
+    private val edgeDistance by FloatValue(
+        "EagleEdgeDistance", 0f, 0f..0.5f
+    ) { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
     private val rotations by BoolValue("Rotations", true)
@@ -153,21 +157,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
     private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
     private val zitterStrength by FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode == "Teleport" }
-    private val maxZitterTicksValue: IntegerValue = object : IntegerValue("MaxZitterTicks", 3, 0..6) {
-        override fun isSupported() = zitterMode == "Smooth"
-
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minZitterTicks)
-    }
-
-    private val maxZitterTicks by maxZitterTicksValue
-
-    private val minZitterTicksValue: IntegerValue = object : IntegerValue("MinZitterTicks", 2, 0..6) {
-        override fun isSupported() = zitterMode == "Smooth" && !maxZitterTicksValue.isMinimal()
-
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxZitterTicks)
-    }
-
-    private val minZitterTicks by minZitterTicksValue
 
     // Game
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
@@ -193,14 +182,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val shouldKeepLaunchPosition
         get() = sameY && mode != "GodBridge"
 
-    // Zitter
+    // Zitter Direction
     private var zitterDirection = false
-    private var ticksSinceZitter = 0
 
     // Delay
     private val delayTimer = MSTimer()
     private val zitterTimer = MSTimer()
-    private var zitterTicks = randomDelay(minZitterTicks, maxZitterTicks)
     private var delay = 0
 
     // Eagle
@@ -247,7 +234,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         // Eagle
-        if (eagle != "Off" && !shouldGoDown) {
+        if (eagle != "Off" && !shouldGoDown && mode != "GodBridge") {
             var dif = 0.5
             val blockPos = BlockPos(player).down()
 
@@ -307,12 +294,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                         mc.gameSettings.keyBindLeft.pressed = false
                     }
 
-                    if (ticksSinceZitter >= zitterTicks) {
-                        ticksSinceZitter = 0
+                    if (zitterTimer.hasTimePassed(100)) {
                         zitterDirection = !zitterDirection
-                        zitterTicks = randomDelay(minZitterTicks, maxZitterTicks)
-                    } else {
-                        ticksSinceZitter++
                         zitterTimer.reset()
                     }
 
@@ -385,6 +368,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     @EventTarget
     fun onSneakSlowDown(event: SneakSlowDownEvent) {
+        if (eagle != "Normal") {
+            return
+        }
+
         event.forward *= eagleSpeed / 0.3f
         event.strafe *= eagleSpeed / 0.3f
     }
@@ -727,6 +714,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         var considerStablePitch: PlaceRotation? = null
 
+        val isLookingDiagonally = run {
+            val yaw = abs(MathHelper.wrapAngleTo180_float(player.rotationYaw))
+
+            arrayOf(45f, 135f).any { yaw in it - 10f..it + 10f } && player.movementInput.moveStrafe == 0f
+        }
+
         for (side in EnumFacing.values()) {
             val neighbor = blockPosition.offset(side)
 
@@ -739,7 +732,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 val list = arrayOf(-135f, -45f, 45f, 135f)
 
                 // Selection of pitch values that should be OK in non-complex situations.
-                val pitchList = 55.0..75.7
+                val pitchList = 55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
 
                 for (yaw in list) {
                     for (pitch in pitchList step 0.1) {
@@ -751,7 +744,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                             PlaceRotation(PlaceInfo(raytrace.blockPos, raytrace.sideHit, raytrace.hitVec), rotation)
 
                         if (raytrace.blockPos == neighbor && raytrace.sideHit == side.opposite) {
-                            val isInStablePitchRange = pitch in 73.5..75.7
+                            val isInStablePitchRange = if (isLookingDiagonally) {
+                                pitch >= 75.6
+                            } else {
+                                pitch in 73.5..75.7
+                            }
 
                             // The module should be looking to aim at (nearly) the upper face of the block. Provides stable bridging most of the time.
                             if (isInStablePitchRange) {
@@ -801,7 +798,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
                 performBlockRaytrace(currRotation, maxReach)?.let {
                     if (it.blockPos == info.blockPos && (it.sideHit != info.enumFacing || shouldJumpForcefully) && isMoving && currRotation.yaw.roundToInt() % 45f == 0f) {
-                        if (player.onGround) {
+                        if (player.onGround && !isLookingDiagonally) {
                             player.jump()
                         }
 
