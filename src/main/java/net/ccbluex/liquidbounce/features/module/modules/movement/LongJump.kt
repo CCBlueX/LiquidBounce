@@ -21,7 +21,7 @@ import net.minecraft.util.EnumFacing
 
 object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
 
-    private val mode by ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3", "Redesky"), "NCP")
+    private val mode by ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3", "Redesky", "Hycraft"), "NCP")
     private val ncpBoost by FloatValue("NCPBoost", 4.25f, 1f..10f) { mode == "NCP" }
     private val autoJump by BoolValue("AutoJump", false)
 
@@ -106,6 +106,15 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
                     "redesky" -> {
                         thePlayer.jumpMovementFactor = 0.15f
                         thePlayer.motionY += 0.05f
+                    }
+                    "hycraft" -> {
+                        if(thePlayer.motionY < 0) {
+                            thePlayer.motionY *= 0.75f
+                            thePlayer.jumpMovementFactor = 0.055f
+                        } else {
+                            thePlayer.motionY += 0.02f
+                            thePlayer.jumpMovementFactor = 0.08f
+                        }
                     }
                 }
             }
