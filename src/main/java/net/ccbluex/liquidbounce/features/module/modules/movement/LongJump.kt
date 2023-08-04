@@ -107,6 +107,10 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
                         thePlayer.jumpMovementFactor = 0.15f
                         thePlayer.motionY += 0.05f
                     }
+                    /**
+                     * Original creator: halflin
+                     * @author gabrielvicenteYT
+                     */
                     "hycraft" -> {
                         if(thePlayer.motionY < 0) {
                             thePlayer.motionY *= 0.75f
