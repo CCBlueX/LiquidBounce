@@ -33,18 +33,13 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
         NCP,
 
         // AAC
-        AACv1,
-        AACv2,
-        AACv3,
+        AACv1, AACv2, AACv3,
 
         // Mineplex
-        Mineplex,
-        Mineplex2,
-        Mineplex3,
+        Mineplex, Mineplex2, Mineplex3,
 
         // Other
-        Redesky,
-        Hycraft
+        Redesky, Hycraft
     )
 
     private val modes = longJumpModes.map { it.modeName }.toTypedArray()
@@ -62,8 +57,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (LadderJump.jumped)
-            speed *= 1.08f
+        if (LadderJump.jumped) speed *= 1.08f
 
         if (jumped) {
             val mode = mode
