@@ -7,13 +7,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFal
 
 object LAAC : NoFallMode("LAAC") {
     private var jumped = false
+    private val thePlayer = mc.thePlayer
     override fun onUpdate() {
-        if (mc.thePlayer.onGround) jumped = false
+        if (thePlayer.onGround) jumped = false
 
-        if (mc.thePlayer.motionY > 0) jumped = true
+        if (thePlayer.motionY > 0) jumped = true
 
-        if (!jumped && mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb)
-            mc.thePlayer.motionY = -6.0
+        if (!jumped && thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInWeb)
+            thePlayer.motionY = -6.0
     }
 
     @EventTarget(ignoreCondition = true)
@@ -23,7 +24,7 @@ object LAAC : NoFallMode("LAAC") {
 
     @EventTarget
     override fun onMove(event: MoveEvent) {
-        if (!jumped && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb && mc.thePlayer.motionY < 0.0)
+        if (!jumped && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInWeb && thePlayer.motionY < 0.0)
             event.zeroXZ()
     }
 }
