@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockLiquid
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.AxisAlignedBB.fromBounds
 
 object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     private val noFallModes = arrayOf(
@@ -49,16 +49,17 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer
         if (!state || FreeCam.state) return
 
-        if (BlockUtils.collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } || BlockUtils.collideBlock(
-                AxisAlignedBB.fromBounds(
-                    mc.thePlayer.entityBoundingBox.maxX,
-                    mc.thePlayer.entityBoundingBox.maxY,
-                    mc.thePlayer.entityBoundingBox.maxZ,
-                    mc.thePlayer.entityBoundingBox.minX,
-                    mc.thePlayer.entityBoundingBox.minY - 0.01,
-                    mc.thePlayer.entityBoundingBox.minZ
+        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
+                fromBounds(
+                    thePlayer.entityBoundingBox.maxX,
+                    thePlayer.entityBoundingBox.maxY,
+                    thePlayer.entityBoundingBox.maxZ,
+                    thePlayer.entityBoundingBox.minX,
+                    thePlayer.entityBoundingBox.minY - 0.01,
+                    thePlayer.entityBoundingBox.minZ
                 )
             ) { it is BlockLiquid }
         ) return
@@ -102,16 +103,17 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (BlockUtils.collideBlock(
-                mc.thePlayer.entityBoundingBox
-            ) { it is BlockLiquid } || BlockUtils.collideBlock(
-                AxisAlignedBB.fromBounds(
-                    mc.thePlayer.entityBoundingBox.maxX,
-                    mc.thePlayer.entityBoundingBox.maxY,
-                    mc.thePlayer.entityBoundingBox.maxZ,
-                    mc.thePlayer.entityBoundingBox.minX,
-                    mc.thePlayer.entityBoundingBox.minY - 0.01,
-                    mc.thePlayer.entityBoundingBox.minZ
+        val thePlayer = mc.thePlayer
+        if (collideBlock(
+                thePlayer.entityBoundingBox
+            ) { it is BlockLiquid } || collideBlock(
+                fromBounds(
+                    thePlayer.entityBoundingBox.maxX,
+                    thePlayer.entityBoundingBox.maxY,
+                    thePlayer.entityBoundingBox.maxZ,
+                    thePlayer.entityBoundingBox.minX,
+                    thePlayer.entityBoundingBox.minY - 0.01,
+                    thePlayer.entityBoundingBox.minZ
                 )
             ) { it is BlockLiquid }
         ) return
