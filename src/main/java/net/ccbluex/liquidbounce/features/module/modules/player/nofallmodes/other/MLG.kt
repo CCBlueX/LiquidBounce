@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other
 
-import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventState.PRE
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.minFallDistance
@@ -30,7 +30,7 @@ object MLG : NoFallMode("MLG") {
         var currentMlgItemIndex = 0
         var currentMlgBlock: BlockPos? = null
 
-        if (event.eventState == EventState.PRE) {
+        if (event.eventState == PRE) {
             currentMlgRotation = null
 
             mlgTimer.update()

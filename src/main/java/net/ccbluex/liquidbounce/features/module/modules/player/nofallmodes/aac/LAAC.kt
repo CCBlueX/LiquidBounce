@@ -7,8 +7,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFal
 
 object LAAC : NoFallMode("LAAC") {
     private var jumped = false
-    private val thePlayer = mc.thePlayer
     override fun onUpdate() {
+        val thePlayer = mc.thePlayer
+
         if (thePlayer.onGround) jumped = false
 
         if (thePlayer.motionY > 0) jumped = true
@@ -24,6 +25,8 @@ object LAAC : NoFallMode("LAAC") {
 
     @EventTarget
     override fun onMove(event: MoveEvent) {
+        val thePlayer = mc.thePlayer
+
         if (!jumped && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInWeb && thePlayer.motionY < 0.0)
             event.zeroXZ()
     }
