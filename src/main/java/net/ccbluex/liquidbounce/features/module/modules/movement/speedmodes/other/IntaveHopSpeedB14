@@ -8,8 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.oth
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
-import net.minecraft.client.settings.GameSettings
 import net.ccbluex.liquidbounce.features.value.BoolValue
 
 class IntaveHopSpeedB14 : SpeedMode("IntaveHopB14") {
