@@ -5,14 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
+import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
-import net.minecraft.client.settings.GameSettings
-import net.ccbluex.liquidbounce.features.value.BoolValue
 
-class MineBlazeSpeed : SpeedMode("MineBlazeHop") {
-            
+object MineBlazeSpeed : SpeedMode("MineBlazeHop") {
+           override fun onMotion() {
              if (mc.thePlayer.motionY > 0.003) {
                 mc.thePlayer.motionX *= 1.0015
                 mc.thePlayer.motionZ *= 1.0015
@@ -21,4 +20,3 @@ class MineBlazeSpeed : SpeedMode("MineBlazeHop") {
         }
        
     }
-}
