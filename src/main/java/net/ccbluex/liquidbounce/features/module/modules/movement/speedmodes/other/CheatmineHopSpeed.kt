@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.value.BoolValue
 
 class CheatmineHopSpeed : SpeedMode("CheatmineHop") {
             
+       override fun onUpdate() {  
         if (mc.thePlayer.motionY > 0.003) {
         mc.thePlayer.motionX *= 1.0014
         mc.thePlayer.motionZ *= 1.0014
