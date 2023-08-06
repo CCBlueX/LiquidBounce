@@ -13,22 +13,11 @@ import net.minecraft.client.settings.GameSettings
 import net.ccbluex.liquidbounce.features.value.BoolValue
 
 class IntaveHopSpeedB14 : SpeedMode("IntaveHopB14") {
-    private val groundStrafe = BoolValue("OldIntave Strafe", false)
-
-    override fun onUpdate() {
-        mc.gameSettings.keyBindJump.pressed = GameSettings.isKeyDown(mc.gameSettings.keyBindJump)
-        if (MovementUtils.isMoving()) {
-            if (mc.thePlayer.onGround) {
-                mc.gameSettings.keyBindJump.pressed = false
-                mc.timer.timerSpeed = 1.0f
-                if (groundStrafe.get()) MovementUtils.strafe()
-                mc.thePlayer.jump()
-            }
             
-             if (mc.thePlayer.motionY > 0.003) {
-                mc.thePlayer.motionX *= 1.0015
-                mc.thePlayer.motionZ *= 1.0015
-                mc.timer.timerSpeed = 1.06f
+        if (mc.thePlayer.motionY > 0.003) {
+        mc.thePlayer.motionX *= 1.0015
+        mc.thePlayer.motionZ *= 1.0015
+        mc.timer.timerSpeed = 1.06f
              }
         }
        
