@@ -18,7 +18,5 @@ class CheatmineHopSpeed : SpeedMode("CheatmineHop") {
         mc.thePlayer.motionZ *= 1.0014
         mc.timer.timerSpeed = 1.06f
              }
-        }
-       
+        } 
     }
-}
