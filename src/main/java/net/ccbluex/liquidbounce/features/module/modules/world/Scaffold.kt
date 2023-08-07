@@ -64,18 +64,21 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val expandLength by IntegerValue("ExpandLength", 1, 1..6) { mode == "Expand" }
 
     // Placeable delay
-    private val placeDelay by BoolValue("PlaceDelay", true)
+    private val placeDelay: BoolValue = object : BoolValue("PlaceDelay", true) {
+        override fun isSupported() = mode != "GodBridge"
+    }
+
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0..1000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 
-        override fun isSupported() = placeDelay
+        override fun isSupported() = placeDelay.isActive()
     }
     private val maxDelay by maxDelayValue
 
     private val minDelay by object : IntegerValue("MinDelay", 0, 0..1000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 
-        override fun isSupported() = placeDelay && !maxDelayValue.isMinimal()
+        override fun isSupported() = placeDelay.isActive() && !maxDelayValue.isMinimal()
     }
 
     // Extra clicks
@@ -181,8 +184,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Safety
     private val sameY by BoolValue("SameY", false) { mode != "GodBridge" }
-    private val safeWalk by BoolValue("SafeWalk", true)
-    private val airSafe by BoolValue("AirSafe", false) { safeWalk }
+    private val safeWalk: BoolValue = object : BoolValue("SafeWalk", true) {
+        override fun isSupported() = mode != "GodBridge"
+    }
+
+    private val airSafe by BoolValue("AirSafe", false) { safeWalk.isActive() }
 
     // Visuals
     private val counterDisplay by BoolValue("Counter", true)
@@ -210,6 +216,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Eagle
     private var placedBlocksWithoutEagle = 0
     private var eagleSneaking = false
+    private val isEagleEnabled
+        get() = eagle != "Off" && !shouldGoDown && mode != "GodBridge"
 
     // Downwards
     private val shouldGoDown
@@ -251,7 +259,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         // Eagle
-        if (eagle != "Off" && !shouldGoDown && mode != "GodBridge") {
+        if (isEagleEnabled) {
             var dif = 0.5
             val blockPos = BlockPos(player).down()
 
@@ -366,7 +374,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (target == null) {
-            if (placeDelay) {
+            if (placeDelay.isActive()) {
                 delayTimer.reset()
             }
             return
@@ -389,7 +397,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     @EventTarget
     fun onSneakSlowDown(event: SneakSlowDownEvent) {
-        if (eagle != "Normal") {
+        if (!isEagleEnabled || eagle != "Normal") {
             return
         }
 
@@ -505,7 +513,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             )
         ) {
             delayTimer.reset()
-            delay = if (!placeDelay) 0 else randomDelay(minDelay, maxDelay)
+            delay = if (!placeDelay.isActive()) 0 else randomDelay(minDelay, maxDelay)
 
             if (player.onGround) {
                 player.motionX *= speedModifier
@@ -629,7 +637,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onMove(event: MoveEvent) {
         val player = mc.thePlayer ?: return
 
-        if (!safeWalk || shouldGoDown) {
+        if (!safeWalk.isActive() || shouldGoDown) {
             return
         }
 
