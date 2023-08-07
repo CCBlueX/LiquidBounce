@@ -457,10 +457,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             }
         } else if (search) {
             for (x in -1..1) {
-                for (z in -1..1) {
-                    if (search(blockPosition.add(x, 0, z), !shouldGoDown, area)) {
-                        return
-                    }
+                if (search(blockPosition.add(x, 0, 0), !shouldGoDown, area)) {
+                    return
+                }
+            }
+            for (z in -1..1) {
+                if (search(blockPosition.add(0, 0, z), !shouldGoDown, area)) {
+                    return
                 }
             }
         }
