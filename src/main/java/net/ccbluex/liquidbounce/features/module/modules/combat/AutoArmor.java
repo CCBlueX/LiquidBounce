@@ -77,7 +77,13 @@ public class AutoArmor extends Module {
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
 
     // Sacrifices 1 tick speed for complete undetectability
-    private final BoolValue switchBackLegit = new BoolValue("SwitchBackLegit", true);
+    private final BoolValue switchBackLegit = new BoolValue("SwitchBackLegit", true) {
+
+        @Override
+        public boolean isSupported() {
+            return hotbarValue.get();
+        }
+    };
 
     private long delay;
 

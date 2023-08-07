@@ -51,6 +51,7 @@
     "render.MixinRender",
     "render.MixinRenderEntityItem",
     "render.MixinRendererLivingEntity",
+    "render.MixinRenderManager",
     "render.MixinTileEntityChestRenderer",
     "render.MixinTileEntityItemStackRenderer",
     "render.MixinTileEntityMobSpawnerRenderer",
