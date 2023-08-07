@@ -5,9 +5,11 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.minecraft.network.play.client.C03PacketPlayer
 
 object AAC : NoFallMode("AAC") {
+
+    private var currentState = 0
+
     override fun onUpdate() {
         val thePlayer = mc.thePlayer
-        var currentState = 0
 
         if (thePlayer.fallDistance > 2f) {
             sendPacket(C03PacketPlayer(true))
@@ -17,6 +19,7 @@ object AAC : NoFallMode("AAC") {
             currentState = 3
             return
         }
+
         when (currentState) {
             3 -> {
                 thePlayer.motionY = 0.1

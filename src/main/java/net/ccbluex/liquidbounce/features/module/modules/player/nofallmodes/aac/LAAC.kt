@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac
 
-import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
 
 object LAAC : NoFallMode("LAAC") {
     private var jumped = false
+
     override fun onUpdate() {
         val thePlayer = mc.thePlayer
 
@@ -18,12 +18,10 @@ object LAAC : NoFallMode("LAAC") {
             thePlayer.motionY = -6.0
     }
 
-    @EventTarget(ignoreCondition = true)
     override fun onJump(event: JumpEvent) {
         jumped = true
     }
 
-    @EventTarget
     override fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer
 
