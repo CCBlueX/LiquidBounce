@@ -1,10 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other
 
 import net.ccbluex.liquidbounce.event.EventState.PRE
-import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.minFallDistance
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
+import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.VecRotation
@@ -19,23 +19,22 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import kotlin.math.ceil
-import kotlin.math.sqrt
 
 object MLG : NoFallMode("MLG") {
-    @EventTarget
-    private fun onMotionUpdate(event: MotionEvent) {
-        val mlgTimer = TickTimer()
+
+    private val mlgTimer = TickTimer()
+    private var currentMlgRotation: VecRotation? = null
+    private var currentMlgBlock: BlockPos? = null
+
+    override fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer
-        var currentMlgRotation: VecRotation? = null
-        var currentMlgItemIndex = 0
-        var currentMlgBlock: BlockPos? = null
 
         if (event.eventState == PRE) {
             currentMlgRotation = null
 
             mlgTimer.update()
 
-            if (mlgTimer.hasTimePassed(10)) return
+            if (!mlgTimer.hasTimePassed(10)) return
 
             if (thePlayer.fallDistance > minFallDistance) {
                 val fallingPlayer = FallingPlayer(thePlayer)
@@ -45,55 +44,45 @@ object MLG : NoFallMode("MLG") {
                 val collision =
                     fallingPlayer.findCollision(ceil(1.0 / thePlayer.motionY * -maxDist).toInt()) ?: return
 
-                var ok = thePlayer.eyes
-                    .distanceTo(
-                        Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
-                    ) < mc.playerController.blockReachDistance + sqrt(0.75)
+                val isOK = (thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) ||
+                        (thePlayer.eyes.distanceTo(
+                            Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
+                        ) < mc.playerController.blockReachDistance + 0.866025) //sqrt(0.75)
 
-                if (thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) {
-                    ok = true
-                }
+                if (!isOK) return
 
-                if (!ok) return
-
-                var index = -1
+                var index: Int? = null
 
                 for (i in 36..44) {
-                    val itemStack = thePlayer.inventoryContainer.getSlot(i).stack
+                    val itemStack = thePlayer.inventoryContainer.getSlot(i).stack ?: continue
 
-                    if (itemStack != null && (itemStack.item == water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == web)
-                    ) {
+                    if (itemStack.item == water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == web) {
                         index = i - 36
 
                         if (thePlayer.inventory.currentItem == index) break
                     }
                 }
-                if (index == -1) return
 
-                currentMlgItemIndex = index
+                index ?: return
+
                 currentMlgBlock = collision.pos
 
-                if (thePlayer.inventory.currentItem != index) {
+                if (thePlayer.inventory.currentItem != index)
                     sendPacket(C09PacketHeldItemChange(index))
-                }
 
                 currentMlgRotation = faceBlock(collision.pos)
                 currentMlgRotation?.rotation?.toPlayer(thePlayer)
             }
         } else if (currentMlgRotation != null) {
-            val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex)
+            val stack = thePlayer.inventory.getStackInSlot(serverSlot)
 
-            if (stack.item is ItemBucket) {
-                mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack)
-            } else {
-                if (mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack)) {
-                    mlgTimer.reset()
-                }
-            }
-            if (thePlayer.inventory.currentItem != currentMlgItemIndex)
-                sendPacket(
-                    C09PacketHeldItemChange(thePlayer.inventory.currentItem)
-                )
+            // If used item was a water bucket, try to pick it back up later
+            if (mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack) && stack.item is ItemBucket)
+                mlgTimer.reset()
+
+
+            if (thePlayer.inventory.currentItem != serverSlot)
+                sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
         }
     }
 }

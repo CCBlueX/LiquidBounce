@@ -8,8 +8,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC
+import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC3311
+import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC3315
+import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.LAAC
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.*
-import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -34,11 +37,10 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
     private val modes = noFallModes.map { it.modeName }.toTypedArray()
 
-    val mode by ListValue(
-        "Mode", modes, "SpoofGround"
-    )
+    val mode by ListValue("Mode", modes, "SpoofGround")
 
     val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f) { mode == "MLG" }
+
     override fun onEnable() {
         modeModule.onEnable()
     }
@@ -87,7 +89,8 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         modeModule.onBB(event)
     }
 
-    @EventTarget
+    // Ignore condition used in LAAC mode
+    @EventTarget(ignoreCondition = true)
     fun onJump(event: JumpEvent) {
         modeModule.onJump(event)
     }
@@ -106,9 +109,8 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer
 
-        if (collideBlock(
-                thePlayer.entityBoundingBox
-            ) { it is BlockLiquid } || collideBlock(
+        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid }
+            || collideBlock(
                 fromBounds(
                     thePlayer.entityBoundingBox.maxX,
                     thePlayer.entityBoundingBox.maxY,
