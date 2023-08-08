@@ -11,7 +11,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 
 object MineBlazeHop : SpeedMode("MineBlazeHop") {
-           override fun onMotion() {
+           
+          override fun onUpdate() {
              if (mc.thePlayer.motionY > 0.003) {
                 mc.thePlayer.motionX *= 1.0015
                 mc.thePlayer.motionZ *= 1.0015
