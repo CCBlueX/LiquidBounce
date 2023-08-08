@@ -41,34 +41,34 @@ object MLG : NoFallMode("MLG") {
 
                 val maxDist = mc.playerController.blockReachDistance + 1.5
 
-                val collision =
-                    fallingPlayer.findCollision(ceil(1.0 / thePlayer.motionY * -maxDist).toInt()) ?: return
+                val collision = fallingPlayer.findCollision(ceil(1.0 / thePlayer.motionY * -maxDist).toInt()) ?: return
 
-                val isOK = (thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) ||
-                        (thePlayer.eyes.distanceTo(
-                            Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
-                        ) < mc.playerController.blockReachDistance + 0.866025) //sqrt(0.75)
-
-                if (isOK) {
+                if ((thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) || thePlayer.eyes.distanceTo(
+                        Vec3(
+                            collision.pos
+                        ).addVector(0.5, 0.5, 0.5)
+                    ) < mc.playerController.blockReachDistance + 0.866025
+                ) {
                     var index: Int? = null
-    
+
                     for (i in 36..44) {
                         val itemStack = thePlayer.inventoryContainer.getSlot(i).stack ?: continue
-    
+
                         if (itemStack.item == water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == web) {
                             index = i - 36
-    
+
                             if (thePlayer.inventory.currentItem == index) break
                         }
                     }
-    
+
                     index ?: return
-    
+
                     currentMlgBlock = collision.pos
-    
-                    if (thePlayer.inventory.currentItem != index)
+
+                    if (thePlayer.inventory.currentItem != index) {
                         sendPacket(C09PacketHeldItemChange(index))
-    
+                    }
+
                     currentMlgRotation = faceBlock(collision.pos)
                     currentMlgRotation?.rotation?.toPlayer(thePlayer)
                 }
@@ -77,12 +77,11 @@ object MLG : NoFallMode("MLG") {
             val stack = thePlayer.inventory.getStackInSlot(serverSlot)
 
             // If used item was a water bucket, try to pick it back up later
-            if (mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack) && stack.item is ItemBucket)
+            if (mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack) && stack.item is ItemBucket) {
                 mlgTimer.reset()
+            }
 
-
-            if (thePlayer.inventory.currentItem != serverSlot)
-                sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+            if (thePlayer.inventory.currentItem != serverSlot) sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
         }
     }
 }
