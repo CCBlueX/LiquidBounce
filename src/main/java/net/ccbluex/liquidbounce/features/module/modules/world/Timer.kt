@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 object Timer : Module("Timer", ModuleCategory.WORLD) {
 
     private val speed by FloatValue("Speed", 2F, 0.1F..10F)
-    private val timing by ListValue("Timing", arrayOf("OnMove", "NoMove", "Both"), "OnMove")
+    private val mode by ListValue("Mode", arrayOf("OnMove", "NoMove", "Always"), "OnMove")
 
     override fun onDisable() {
         if (mc.thePlayer == null)
@@ -28,7 +28,7 @@ object Timer : Module("Timer", ModuleCategory.WORLD) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (timing == "Both" || timing == "OnMove" && isMoving || timing == "NoMove" && !isMoving) {
+        if (mode == "Always" || mode == "OnMove" && isMoving || mode == "NoMove" && !isMoving) {
             mc.timer.timerSpeed = speed
             return
         }
