@@ -49,29 +49,29 @@ object MLG : NoFallMode("MLG") {
                             Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
                         ) < mc.playerController.blockReachDistance + 0.866025) //sqrt(0.75)
 
-                if (!isOK) return
-
-                var index: Int? = null
-
-                for (i in 36..44) {
-                    val itemStack = thePlayer.inventoryContainer.getSlot(i).stack ?: continue
-
-                    if (itemStack.item == water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == web) {
-                        index = i - 36
-
-                        if (thePlayer.inventory.currentItem == index) break
+                if (isOK) {
+                    var index: Int? = null
+    
+                    for (i in 36..44) {
+                        val itemStack = thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+    
+                        if (itemStack.item == water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == web) {
+                            index = i - 36
+    
+                            if (thePlayer.inventory.currentItem == index) break
+                        }
                     }
+    
+                    index ?: return
+    
+                    currentMlgBlock = collision.pos
+    
+                    if (thePlayer.inventory.currentItem != index)
+                        sendPacket(C09PacketHeldItemChange(index))
+    
+                    currentMlgRotation = faceBlock(collision.pos)
+                    currentMlgRotation?.rotation?.toPlayer(thePlayer)
                 }
-
-                index ?: return
-
-                currentMlgBlock = collision.pos
-
-                if (thePlayer.inventory.currentItem != index)
-                    sendPacket(C09PacketHeldItemChange(index))
-
-                currentMlgRotation = faceBlock(collision.pos)
-                currentMlgRotation?.rotation?.toPlayer(thePlayer)
             }
         } else if (currentMlgRotation != null) {
             val stack = thePlayer.inventory.getStackInSlot(serverSlot)
