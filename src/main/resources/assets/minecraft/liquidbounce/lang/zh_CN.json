@@ -23,15 +23,15 @@
 
         "module.autoLeave.description": "血量低时自动退出服务器。",
 
-        "module.autoPot.description": "自动投掷治疗药水。",
+        "module.autoPot.description": "血量低时自动投掷治疗药水。",
 
         "module.autoRod.description": "自动将钓鱼竿用于PVP对战",
 
         "module.autoSoup.description": "血量低时自动喝汤。",
 
-        "module.autoWeapon.description": "自动选择快捷栏中伤害最高的武器。",
+        "module.autoWeapon.description": "攻击时自动切换到快捷栏中伤害最高的武器。",
 
-        "module.backtrack.description": "允许你通过攻击玩家之前存在过的位置来攻击玩家。",
+        "module.backtrack.description": "允许你通过攻击玩家曾经处于的位置对其进行攻击。",
 
         "module.bowAimbot.description": "拉弓时自动瞄准玩家。",
 
@@ -41,9 +41,9 @@
 
         "module.hitBox.description": "增大目标的判定箱。",
 
-        "module.ignite.description": "自动在你周围的目标脚下点火。",
+        "module.ignite.description": "自动在周围的目标脚下点火。",
 
-        "module.killAura.description": "自动攻击你周围的目标。",
+        "module.killAura.description": "自动攻击周围的目标。",
 
         "module.noFriends.description": "忽略朋友功能。",
 
@@ -51,17 +51,17 @@
 
         "module.teleportHit.description": "允许你手动攻击时打击远处的生物。",
 
-        "module.tNTBlock.description": "当你周围的TNT爆炸时，自动用剑格挡。",
+        "module.tNTBlock.description": "当周围的TNT爆炸时，自动用剑格挡。",
 
-        "module.trigger.description": "自动攻击你瞄准的目标。",
+        "module.trigger.description": "自动攻击瞄准的目标。",
 
-        "module.velocity.description": "修改你所受到的击退。",
+        "module.velocity.description": "修改受到的击退的大小。",
 
         "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度。",
 
-        "module.ambience.description": "改变你的世界时间和天气。(视觉上)",
+        "module.ambience.description": "改变世界时间和天气。(视觉上)",
 
-        "module.antiHunger.description": "防止你饥饿。",
+        "module.antiHunger.description": "防止饥饿。",
 
         "module.bedGodMode.description": "允许你躺在床上四处走动。(对于1.9)",
 
@@ -73,13 +73,13 @@
         
         "module.animations.description": "自定义格挡动画。",
         
-        "module.antiAFK.description": "防止你挂机时被踢。",
+        "module.antiAFK.description": "防止挂机时被踢。",
         
         "module.antiBlind.description": "消除失明效果。(视觉上)",
         
         "module.antiBot.description": "防止杀戮光环攻击反作弊发的假人。",
         
-        "module.antiCactus.description": "防止仙人掌伤害你。",
+        "module.antiCactus.description": "防止受到仙人掌伤害。",
         
         "module.antiFireball.description": "自动打走火球。",
         
@@ -259,7 +259,7 @@
         
         "module.projectiles.description": "允许你看到投掷物的落点。",
         
-        "module.prophuntESP.description": "允许你在PropHunt中看到伪装的玩家。",
+        "module.prophuntESP.description": "允许你在道具躲猫猫中看到伪装的玩家。",
 
         "module.reach.description": "增加你的攻击距离。",
         
@@ -303,7 +303,7 @@
         
         "module.teleport.description": "允许你四处传送。",
 
-        "module.timer.description": "改变整个游戏的速度。",
+        "module.timer.description": "改变游戏的运行速度。",
         
         "module.tower.description": "自动搭高。",
         
