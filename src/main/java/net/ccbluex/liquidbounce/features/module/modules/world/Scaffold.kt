@@ -215,7 +215,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Eagle
     private var placedBlocksWithoutEagle = 0
-    private var eagleSneaking = false
+    var eagleSneaking = false
     private val isEagleEnabled
         get() = eagle != "Off" && !shouldGoDown && mode != "GodBridge"
 
@@ -292,6 +292,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                     eagleSneaking = shouldEagle
                 } else {
                     mc.gameSettings.keyBindSneak.pressed = shouldEagle
+                    eagleSneaking = shouldEagle
                 }
                 placedBlocksWithoutEagle = 0
             } else {
