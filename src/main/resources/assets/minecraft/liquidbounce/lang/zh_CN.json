@@ -55,7 +55,7 @@
 
         "module.trigger.description": "自动攻击瞄准的目标。",
 
-        "module.velocity.description": "修改受到的击退的大小。",
+        "module.velocity.description": "修改受到的击退大小。",
 
         "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度。",
 
@@ -157,7 +157,7 @@
         
         "module.freeze.description": "允许你停留在空中。",
         
-        "module.fucker.description": "破坏你周围的指定的方块.(别名：IDNuker)",
+        "module.fucker.description": "破坏周围的指定的方块。(别名：IDNuker)",
         
         "module.fullbright.description": "让你在黑暗中看清一切。",
         
