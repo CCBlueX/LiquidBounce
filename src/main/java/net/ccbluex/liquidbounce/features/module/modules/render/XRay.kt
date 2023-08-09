@@ -47,7 +47,17 @@ object XRay : Module("XRay", ModuleCategory.RENDER) {
         Blocks.lit_furnace
     )
 
+    private var prevGammaLevel = 0f
+
+    override fun onEnable() {
+        prevGammaLevel = mc.gameSettings.gammaSetting
+    }
+
     override fun onToggle(state: Boolean) {
         mc.renderGlobal.loadRenderers()
+    }
+
+    override fun onDisable() {
+        mc.gameSettings.gammaSetting = prevGammaLevel
     }
 }
