@@ -189,7 +189,7 @@ public abstract class MixinEntity {
         final HitBox hitBox = HitBox.INSTANCE;
 
         if (hitBox.getState())
-            callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSize());
+            callbackInfoReturnable.setReturnValue(0.1F + hitBox.determineSize((Entity) (Object) this));
     }
 
     @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
@@ -208,14 +208,12 @@ public abstract class MixinEntity {
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
         //noinspection ConstantConditions
-        if ((Object) this != mc.thePlayer)
-            return;
+        if ((Object) this != mc.thePlayer) return;
 
         final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
         EventManager.INSTANCE.callEvent(strafeEvent);
 
-        if (strafeEvent.isCancelled())
-            callbackInfo.cancel();
+        if (strafeEvent.isCancelled()) callbackInfo.cancel();
     }
 
     @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
