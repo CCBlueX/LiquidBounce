@@ -13,7 +13,6 @@ import net.minecraft.util.Session
 import kotlin.random.Random
 
 object RandomUtils {
-
     fun nextInt(startInclusive: Int = 0, endExclusive: Int = Int.MAX_VALUE) =
         if (endExclusive - startInclusive <= 0) startInclusive else startInclusive + Random.nextInt(endExclusive - startInclusive)
 
