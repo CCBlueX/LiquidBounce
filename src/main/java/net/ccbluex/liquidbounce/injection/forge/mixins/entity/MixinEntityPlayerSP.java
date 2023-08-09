@@ -370,7 +370,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (scaffold.getState() && !scaffold.getSprint() || sprint.getState() && !legitSprint && sprint.getCheckServerSide() && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections() && shouldStop)
             setSprinting(false);
 
-        if (scaffold.getState() && scaffold.getSprint() && scaffold.getEagleSprint() && scaffold.getEagle().equals("Normal") && MovementUtils.isMoving() && Scaffold.eagleSneaking())
+        if (scaffold.getState() && scaffold.getSprint() && scaffold.getEagleSprint() && scaffold.getEagle().equals("Normal") && MovementUtils.INSTANCE.isMoving() && scaffold.getEagleSneaking())
             setSprinting(true);
 
         if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirections()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
