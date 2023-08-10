@@ -27,9 +27,16 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
 
-    private val allDirectionsLimitSpeed by FloatValue("AllDirectionsLimitSpeed", 1f, 0.75f..1f) { mode == "Vanilla" && allDirections }
+    private val allDirectionsLimitSpeed by FloatValue(
+        "AllDirectionsLimitSpeed",
+        1f,
+        0.75f..1f
+    ) { mode == "Vanilla" && allDirections }
 
-    private val allDirectionsLimitSpeedGround by BoolValue("AllDirectionsLimitSpeedOnlyGround", true) { mode == "Vanilla" && allDirections }
+    private val allDirectionsLimitSpeedGround by BoolValue(
+        "AllDirectionsLimitSpeedOnlyGround",
+        true
+    ) { mode == "Vanilla" && allDirections }
 
     private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
 
@@ -43,7 +50,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
     override val tag
         get() = mode
 
-    @EventTarget
+    /*@EventTarget
     fun onTick(event: TickEvent) {
         if (mode == "Legit") setKeyBindState(mc.gameSettings.keyBindSprint.keyCode, true)
     }
@@ -53,7 +60,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
             val keyCode = mc.gameSettings.keyBindSprint.keyCode
             setKeyBindState(keyCode, keyCode > 0 && mc.gameSettings.keyBindSprint.isKeyDown)
         }
-    }
+    }*/
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -67,20 +74,28 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
                 (rotationYaw - targetRotation.yaw).toRadians()
             ) < 0.8
 
-        if (mode == "Vanilla") {
-            if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || usingItem && mc.thePlayer.isUsingItem || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)) {
-                mc.thePlayer.isSprinting = false
-                return
+        when (mode) {
+            "Vanilla" -> {
+                if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || usingItem && mc.thePlayer.isUsingItem || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)) {
+                    mc.thePlayer.isSprinting = false
+                    return
+                }
+
+                if (mc.thePlayer.movementInput.moveForward >= 0.8f) {
+                    mc.thePlayer.isSprinting = true
+                } else if (allDirections) {
+                    mc.thePlayer.isSprinting = true
+                    if (!allDirectionsLimitSpeedGround || mc.thePlayer.onGround) {
+                        mc.thePlayer.motionX *= allDirectionsLimitSpeed
+                        mc.thePlayer.motionZ *= allDirectionsLimitSpeed
+                    }
+                }
             }
 
-            if (mc.thePlayer.movementInput.moveForward >= 0.8f) {
-                mc.thePlayer.isSprinting = true
-            }
-            else if (allDirections) {
-                mc.thePlayer.isSprinting = true
-                if (!allDirectionsLimitSpeedGround || mc.thePlayer.onGround) {
-                    mc.thePlayer.motionX *= allDirectionsLimitSpeed
-                    mc.thePlayer.motionZ *= allDirectionsLimitSpeed
+            "Legit" -> {
+                if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || usingItem && mc.thePlayer.isUsingItem || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || shouldStop) {
+                    mc.thePlayer.isSprinting = false
+                    return
                 }
             }
         }
