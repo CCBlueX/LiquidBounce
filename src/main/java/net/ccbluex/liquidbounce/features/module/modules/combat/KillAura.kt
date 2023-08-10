@@ -405,7 +405,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             target!!, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70)
         )
 
-        if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) && currentTarget!!.hurtTime <= hurtTime) {
+        if (currentTarget != null && attackTimer.hasTimePassed(attackDelay)) {
             clicks++
             attackTimer.reset()
             attackDelay = randomClickDelay(minCPS, maxCPS)
@@ -451,7 +451,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         updateHitable()
 
         // Check if enemy is not hitable or check failrate
-        if (!hitable || failHit) {
+        if (!hitable || failHit || currentTarget.hurtTime > hurtTime) {
             if (swing && (fakeSwing || failHit)) thePlayer.swingItem()
         } else {
             blockStopInDead = false
@@ -498,7 +498,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         target = null
 
         // Settings
-        val hurtTime = hurtTime
         val fov = fov
         val switchMode = targetMode == "Switch"
 
@@ -521,7 +520,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             }
             val entityFov = getRotationDifference(entity)
 
-            if (distance <= maxRange && (fov == 180F || entityFov <= fov) && entity.hurtTime <= hurtTime) {
+            if (distance <= maxRange && (fov == 180F || entityFov <= fov)) {
                 targets += entity
             }
         }
@@ -758,8 +757,12 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     ).isNotEmpty())
                 }
 
-            if (raycast && raycastedEntity != null && raycastedEntity is EntityLivingBase && (NoFriends.state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend()))) currentTarget =
-                raycastedEntity
+            if (raycast && raycastedEntity != null && raycastedEntity is EntityLivingBase && (NoFriends.state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend()))) {
+                val prevHurtTime = currentTarget!!.hurtTime
+                currentTarget = raycastedEntity
+                currentTarget!!.hurtTime = prevHurtTime
+            }
+
 
             hitable = currentTarget == raycastedEntity
         } else hitable = isRotationFaced(currentTarget!!, range.toDouble(), currentRotation)
