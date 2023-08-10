@@ -17,6 +17,7 @@ object MineBlazeHop : SpeedMode("MineBlazeHop") {
                 mc.thePlayer.motionX *= 1.0015
                 mc.thePlayer.motionZ *= 1.0015
                 mc.timer.timerSpeed = 1.06f
+                mc.thePlayer.jump()
              }
         }
        
