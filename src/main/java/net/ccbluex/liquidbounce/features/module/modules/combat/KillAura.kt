@@ -405,7 +405,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             target!!, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70)
         )
 
-        if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) && currentTarget!!.hurtTime <= hurtTime) {
+        if (currentTarget != null && attackTimer.hasTimePassed(attackDelay)) {
             clicks++
             attackTimer.reset()
             attackDelay = randomClickDelay(minCPS, maxCPS)
@@ -451,7 +451,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         updateHitable()
 
         // Check if enemy is not hitable or check failrate
-        if (!hitable || failHit) {
+        if (!hitable || failHit || currentTarget.hurtTime > hurtTime) {
             if (swing && (fakeSwing || failHit)) thePlayer.swingItem()
         } else {
             blockStopInDead = false
