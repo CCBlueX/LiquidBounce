@@ -124,7 +124,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                         }
                     }.onFailure {
                         LOGGER.error("Failed to upload settings", it)
-                        chat("Failed to report settings: ${it.message}")
+                        chat("Failed to upload settings: ${it.message}")
                     }
                 }
             }
