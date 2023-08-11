@@ -63,7 +63,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     @Shadow
     public abstract ItemStack getHeldItem();
 
-    @Shadow protected abstract void updateAITick();
+    @Shadow
+    protected abstract void updateAITick();
 
     /**
      * @author CCBlueX
@@ -72,21 +73,21 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     protected void jump() {
         final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
         EventManager.INSTANCE.callEvent(jumpEvent);
-        if(jumpEvent.isCancelled())
-            return;
+        if (jumpEvent.isCancelled()) return;
 
         motionY = jumpEvent.getMotion();
 
-        if(isPotionActive(Potion.jump))
+        if (isPotionActive(Potion.jump))
             motionY += (float) (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
 
-        if(isSprinting()) {
-            final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
+        if (isSprinting()) {
             float fixedYaw = this.rotationYaw;
-            if (targetRotation != null) {
-                fixedYaw = RotationUtils.INSTANCE.getTargetRotation().getYaw();
-            }
 
+            final RotationUtils rotationUtils = RotationUtils.INSTANCE;
+            final Rotation targetRotation = rotationUtils.getTargetRotation();
+            if (targetRotation != null && rotationUtils.getStrafe()) {
+                fixedYaw = targetRotation.getYaw();
+            }
 
             final Sprint sprint = Sprint.INSTANCE;
             if (sprint.getState() && sprint.getAllDirections() && sprint.getJumpDirections()) {
@@ -103,8 +104,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
     private void headLiving(CallbackInfo callbackInfo) {
-        if (NoJumpDelay.INSTANCE.getState())
-            jumpTicks = 0;
+        if (NoJumpDelay.INSTANCE.getState()) jumpTicks = 0;
     }
 
     @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
@@ -116,8 +116,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
         final LiquidWalk liquidWalk = LiquidWalk.INSTANCE;
 
-        if (liquidWalk.getState() && !isJumping && !isSneaking() && isInWater() &&
-                liquidWalk.getMode().equals("Swim")) {
+        if (liquidWalk.getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getMode().equals("Swim")) {
             updateAITick();
         }
     }
@@ -125,7 +124,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     @Inject(method = "getLook", at = @At("HEAD"), cancellable = true)
     private void getLook(CallbackInfoReturnable<Vec3> callbackInfoReturnable) {
         //noinspection ConstantConditions
-        if(((EntityLivingBase) (Object) this) instanceof EntityPlayerSP)
+        if (((EntityLivingBase) (Object) this) instanceof EntityPlayerSP)
             callbackInfoReturnable.setReturnValue(getVectorForRotation(rotationPitch, rotationYaw));
     }
 

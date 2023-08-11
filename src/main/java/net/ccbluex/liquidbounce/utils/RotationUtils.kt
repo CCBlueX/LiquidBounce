@@ -114,8 +114,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val eyesPos = mc.thePlayer.eyes
         val startPos = Vec3(blockPos)
 
-
-
         for (x in 0.1..0.9) {
             for (y in 0.1..0.9) {
                 for (z in 0.1..0.9) {
@@ -268,8 +266,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
                             val currentVec = VecRotation(vec, rotation)
                             val rotationToCompare = if (random) randomRotation else targetRotation ?: serverRotation
 
-                            if (vecRotation == null || getRotationDifference(rotation, rotationToCompare)
-                                < getRotationDifference(vecRotation.rotation, rotationToCompare)
+                            if (vecRotation == null || getRotationDifference(
+                                    rotation, rotationToCompare
+                                ) < getRotationDifference(vecRotation.rotation, rotationToCompare)
                             ) vecRotation = currentVec
                         }
                     }
