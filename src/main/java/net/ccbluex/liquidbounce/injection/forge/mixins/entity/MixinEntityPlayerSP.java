@@ -367,7 +367,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean shouldStop = targetRotation != null && movementInput.moveForward * MathHelper.cos(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) + movementInput.moveStrafe * MathHelper.sin(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) < 0.8;
 
-        if (scaffold.getState() && !scaffold.getSprint() || (sprint.getState() && sprint.getCheckServerSide() || sprint.getState() && legitSprint) && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections() && shouldStop || legitSprint shouldStop)
+        if (scaffold.getState() && !scaffold.getSprint() || (sprint.getState() && sprint.getCheckServerSide() || sprint.getState() && legitSprint) && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections() && shouldStop || legitSprint && shouldStop)
             setSprinting(false);
 
         if (scaffold.getState() && scaffold.getSprint() && scaffold.getEagleSprint() && scaffold.getEagle().equals("Normal") && MovementUtils.INSTANCE.isMoving() && scaffold.getEagleSneaking())
