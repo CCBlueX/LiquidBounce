@@ -15,6 +15,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -27,26 +29,45 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
 
     private val delay by IntegerValue("Delay", 0, 0, 500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0, 10)
-    private val mode by ListValue("Mode", arrayOf("Legit", "Old", "Silent", "Packet", "SneakPacket"), "Old")
+    private val mode by ListValue("Mode", arrayOf("SprintTap", "WTap", "Old", "Silent", "Packet", "SneakPacket"), "Old")
+    private val reSprintMaxTicks: IntegerValue = object : IntegerValue("ReSprintMaxTicks", 2, 1..5) {
+        override fun isSupported() = mode == "WTap"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(reSprintMinTicks.get())
+    }
+    private val reSprintMinTicks: IntegerValue = object : IntegerValue("ReSprintMinTicks", 1, 1..5) {
+        override fun isSupported() = mode == "WTap"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(reSprintMaxTicks.get())
+    }
+
     private val onlyGround by BoolValue("OnlyGround", false)
 
-    private val onlyMove by BoolValue("OnlyMove", true)
-    private val onlyMoveForward by BoolValue("OnlyMoveForward", true) { onlyMove }
+    val onlyMove by BoolValue("OnlyMove", true)
+    val onlyMoveForward by BoolValue("OnlyMoveForward", true) { onlyMove }
 
     private var ticks = 0
-
     private val timer = MSTimer()
+
+    // WTap
+    private var blockInput = false
+    private var allowInputTicks = randomDelay(reSprintMinTicks.get(), reSprintMaxTicks.get())
+    private var ticksElapsed = 0
+
+    override fun onToggle(state: Boolean) {
+        // Make sure the user won't have their input forever blocked
+        blockInput = false
+    }
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity !is EntityLivingBase)
-            return
+        val player = mc.thePlayer ?: return
 
-        if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || (onlyGround && !mc.thePlayer.onGround))
-            return
+        if (event.targetEntity !is EntityLivingBase) return
 
-        if (onlyMove && (!isMoving || (onlyMoveForward && mc.thePlayer.movementInput.moveStrafe != 0f)))
-            return
+        if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || (onlyGround && !mc.thePlayer.onGround)) return
+
+        if (onlyMove && (!isMoving || (onlyMoveForward && mc.thePlayer.movementInput.moveStrafe != 0f))) return
 
         when (mode) {
             "Old" -> {
@@ -65,7 +86,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
                 mc.thePlayer.serverSprintState = true
             }
 
-            "Legit", "Silent" -> ticks = 2
+            "SprintTap", "Silent" -> ticks = 2
 
             "Packet" -> {
                 sendPackets(
@@ -82,6 +103,14 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
                     C0BPacketEntityAction(mc.thePlayer, STOP_SNEAKING)
                 )
             }
+
+            "WTap" -> {
+                // We want the player to be sprinting before we block inputs
+                if (player.isSprinting && player.serverSprintState) {
+                    blockInput = true
+                    allowInputTicks = randomDelay(reSprintMinTicks.get(), reSprintMaxTicks.get())
+                }
+            }
         }
 
         timer.reset()
@@ -89,13 +118,20 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mode == "Legit") {
+        if (mode == "SprintTap") {
             if (ticks == 2) {
                 mc.thePlayer.isSprinting = false
                 ticks--
             } else if (ticks == 1) {
                 mc.thePlayer.isSprinting = true
                 ticks--
+            }
+        } else if (mode == "WTap" && blockInput) {
+            if (ticksElapsed >= allowInputTicks) {
+                blockInput = false
+                ticksElapsed = 0
+            } else {
+                ticksElapsed++
             }
         }
     }
@@ -113,6 +149,8 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
             }
         }
     }
+
+    fun shouldBlockInput() = state && mode == "WTap" && blockInput
 
     override val tag
         get() = mode
