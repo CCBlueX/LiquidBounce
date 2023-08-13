@@ -321,7 +321,7 @@ object RotationManager : Listenable {
 
         val playerRotation = mc.player?.rotation ?: return
 
-        if (ticksUntilReset == 0 || !shouldUpdate() || !activeConfigurable!!.silent) {
+        if (ticksUntilReset == 0 || !shouldUpdate()) {
 
             if (rotationDifference(
                     currentRotation ?: serverRotation, playerRotation
