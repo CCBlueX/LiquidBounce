@@ -48,6 +48,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
@@ -177,6 +178,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
     }
     val networkTickHandler = repeatable { _ ->
+        // return if the user is inside a screen like the inventory
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
@@ -184,10 +186,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         updateTarget()
 
+        // return if the blink module is enabled
         if (ModuleBlink.enabled) {
             return@repeatable
         }
 
+        // disable the module and return if the inventory is full and the setting for disabling the module is enabled
         if(disableOnFullInventory && !hasInventorySpace()){
             notification("Inventory is Full", "autoFarm has been disabled", NotificationEvent.Severity.ERROR)
             disable()
@@ -195,6 +199,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
+        // if there is no currentTarget (a block close enough to be interacted with) walk if needet
         currentTarget ?: run {
             if(!Walk.enabled){
                 return@repeatable
@@ -208,7 +213,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
             walkTarget = (findWalkToBlock() ?: if(Walk.toItems && invHasSpace) findWalkToItem() else null)
 
-            val target = walkTarget ?: return@repeatable
+            val target = walkTarget ?: run {
+                movingToBlock = false
+                walkTarget = null
+                return@repeatable
+            }
             RotationManager.aimAt(RotationManager.makeRotation(target, player.eyes), configurable = rotations)
             movingToBlock = true
 
@@ -219,12 +228,14 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         }
 
-        movingToBlock = false
-        walkTarget = null
+
+        movingToBlock = false // disabling to stop the player from moving forward (see velocityHandler)
+        walkTarget = null // resetting walkTarget to null to stop rendering
 
         val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
+        val rayTraceResult = raycast(range.toDouble(), rotation) ?: return@repeatable
+
 
 
 
