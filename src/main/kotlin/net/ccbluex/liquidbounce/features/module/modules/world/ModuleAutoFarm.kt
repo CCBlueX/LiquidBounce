@@ -96,8 +96,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         private object FarmebleBlocks : ToggleableConfigurable(this.module, "FarmableBlocks", true) {
             val outline by boolean("Outline", true)
 
-            val color by color("Color", Color4b(36, 237, 0, 255))
-            val colorRainbow by boolean("Rainbow", false)
+            private val color by color("Color", Color4b(36, 237, 0, 255))
+            private val colorRainbow by boolean("Rainbow", false)
+            private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
             val renderHandler = handler<WorldRenderEvent> { event ->
                 val matrixStack = event.matrixStack
@@ -134,7 +135,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
         // todo: use box of block, not hardcoded
-        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 
     }
@@ -166,10 +166,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private var farmLandBlocks: HashSet<Vec3d> = hashSetOf<Vec3d>()
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
-            player.isSprinting = false
             return@handler
         }
-        player.isSprinting = true
         RotationManager.currentRotation?.let { rotation ->
             event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed * 1.3f, rotation.yaw)
         }
