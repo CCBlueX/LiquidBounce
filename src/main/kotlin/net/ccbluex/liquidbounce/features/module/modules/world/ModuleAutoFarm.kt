@@ -48,6 +48,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
@@ -128,6 +129,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
         init {
             tree(Path)
+            tree(FarmebleBlocks)
         }
 
 
@@ -159,6 +161,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private var movingToBlock = false
     private var walkTarget: Vec3d? = null // Vec3d to support blocks and items
 
+    private var invHadSpace = false
+
     private var farmLandBlocks: HashSet<Vec3d> = hashSetOf<Vec3d>()
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
@@ -180,7 +184,14 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if(!Walk.enabled){
                 return@repeatable
             }
-            walkTarget = (findWalkToBlock() ?: if(Walk.toItems && player.inventory.main.any { it.isEmpty }) findWalkToItem() else null)
+
+            val invHasSpace = player.inventory.main.any { it.isEmpty }
+            if(!invHasSpace && invHadSpace && Walk.toItems){
+                notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
+            }
+            invHadSpace = invHasSpace
+
+            walkTarget = (findWalkToBlock() ?: if(Walk.toItems && invHasSpace) findWalkToItem() else null)
 
             val target = walkTarget ?: return@repeatable
             RotationManager.aimAt(RotationManager.makeRotation(target, player.eyes), configurable = rotations)
