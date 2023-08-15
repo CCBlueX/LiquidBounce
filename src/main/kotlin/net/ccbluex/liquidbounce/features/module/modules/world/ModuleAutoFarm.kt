@@ -49,7 +49,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.util.math.Vec3d
@@ -79,53 +78,63 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private object Visualize : ToggleableConfigurable(this, "Visualize", true) {
         private object Path : ToggleableConfigurable(this.module, "Path", true) {
             val color by color("PathColor", Color4b(36, 237, 0, 255))
-        }
-        init {
-            tree(Path)
-        }
-        private val outline by boolean("Outline", true)
 
-        private val color by color("Color", Color4b(36, 237, 0, 255))
-        private val colorRainbow by boolean("Rainbow", false)
-
-        // todo: use box of block, not hardcoded
-        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
-        val renderHandler = handler<WorldRenderEvent> { event ->
-            val matrixStack = event.matrixStack
-            val base = if (colorRainbow) rainbow() else color
-
-            val markedBlocks = BlockTracker.trackedBlockMap.keys
-
-            renderEnvironment(matrixStack) {
-                for (pos in markedBlocks) {
-                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-
-                    val baseColor = base.alpha(50)
-                    val outlineColor = base.alpha(100)
-
-                    withPosition(vec3) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
-
-                        if (outline) {
-                            withColor(outlineColor) {
-                                drawOutlinedBox(box)
-                            }
-                        }
-                    }
-                }
-                if(Path.enabled){
-                    withColor(Path.color){
+            val renderHandler = handler<WorldRenderEvent> { event ->
+                renderEnvironment(event.matrixStack){
+                    withColor(color){
                         walkTarget?.let { target ->
                             drawLines(player.interpolateCurrentPosition(event.partialTicks), Vec3(target))
                         }
                     }
                 }
+
             }
 
         }
+
+        private object FarmebleBlocks : ToggleableConfigurable(this.module, "FarmableBlocks", true) {
+            val outline by boolean("Outline", true)
+
+            val color by color("Color", Color4b(36, 237, 0, 255))
+            val colorRainbow by boolean("Rainbow", false)
+
+            val renderHandler = handler<WorldRenderEvent> { event ->
+                val matrixStack = event.matrixStack
+                val base = if (colorRainbow) rainbow() else color
+
+                val markedBlocks = BlockTracker.trackedBlockMap.keys
+
+                renderEnvironment(matrixStack) {
+                    for (pos in markedBlocks) {
+                        val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
+                        val baseColor = base.alpha(50)
+                        val outlineColor = base.alpha(100)
+
+                        withPosition(vec3) {
+                            withColor(baseColor) {
+                                drawSolidBox(box)
+                            }
+
+                            if (outline) {
+                                withColor(outlineColor) {
+                                    drawOutlinedBox(box)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        init {
+            tree(Path)
+        }
+
+
+        // todo: use box of block, not hardcoded
+        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+
     }
 
 
@@ -134,7 +143,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         // makes the player move to farmland blocks where there is need for crop replacement
         val toReplace by boolean("ToReplace", true)
 
-        val toItems by boolean("ToItems", true);
+        val toItems by boolean("ToItems", true)
     }
     init {
         tree(AutoPlaceCrops)
@@ -148,15 +157,15 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private var currentTarget: BlockPos? = null
     private var movingToBlock = false
-    private var walkTarget: Vec3d? = null; // Vec3d to support blocks and items
+    private var walkTarget: Vec3d? = null // Vec3d to support blocks and items
 
     private var farmLandBlocks: HashSet<Vec3d> = hashSetOf<Vec3d>()
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
-            player.isSprinting = false;
+            player.isSprinting = false
             return@handler
         }
-        player.isSprinting = true;
+        player.isSprinting = true
         RotationManager.currentRotation?.let { rotation ->
             event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed * 1.3f, rotation.yaw)
         }
@@ -173,9 +182,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             }
             walkTarget = (findWalkToBlock() ?: if(Walk.toItems && player.inventory.main.any { it.isEmpty }) findWalkToItem() else null)
 
-            var target = walkTarget ?: return@repeatable
+            val target = walkTarget ?: return@repeatable
             RotationManager.aimAt(RotationManager.makeRotation(target, player.eyes), configurable = rotations)
-            movingToBlock = true;
+            movingToBlock = true
 
             return@repeatable
 //            val rotation = RotationManager.currentRotation ?: return@repeatable
@@ -258,7 +267,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
         val closestCropBlock = BlockTracker.trackedBlockMap.keys.map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))}
-            .minByOrNull { it.distanceTo(player.pos) };
+            .minByOrNull { it.distanceTo(player.pos) }
         val closestFarmBlock = farmLandBlocks.minByOrNull { it.distanceTo(player.pos) }
 
         val closestBlock = (if (!Walk.toReplace) closestCropBlock else
