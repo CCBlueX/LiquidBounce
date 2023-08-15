@@ -228,7 +228,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                     player.swingHand(Hand.MAIN_HAND)
                 }
-                if(blockPos.down().getState()?.let { isFarmBlock(it, blockPos.down()) } == true && Walk.toReplace){
+                if(blockPos.down().getState()?.let { isFarmBlock(it) } == true && Walk.toReplace){
                     farmLandBlocks.add(Vec3d.ofCenter(blockPos))
                 }
 
@@ -376,10 +376,10 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
      * checks if the block is either a farmland or soulsand block and has air above it
      */
     private fun isFarmBlockWithAir(state: BlockState, pos: BlockPos): Boolean {
-        return isFarmBlock(state, pos) && pos.up().getState()?.isAir == true
+        return isFarmBlock(state) && pos.up().getState()?.isAir == true
     }
 
-    private fun isFarmBlock(state: BlockState, pos: BlockPos): Boolean {
+    private fun isFarmBlock(state: BlockState): Boolean {
         val block = state.block
         return when (block) {
                 is FarmlandBlock -> true
