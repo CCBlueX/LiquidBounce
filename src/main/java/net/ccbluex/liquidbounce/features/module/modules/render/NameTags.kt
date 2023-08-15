@@ -20,11 +20,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.TextValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
@@ -93,11 +89,9 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
 
-            renderNameTag(entity,
-                    if (clearNames)
-                        ColorUtils.stripColor(entity.displayName?.unformattedText ?: continue)
-                    else
-                        (entity.displayName ?: continue).unformattedText
+            renderNameTag(
+                entity, if (clearNames) ColorUtils.stripColor(entity.displayName?.unformattedText ?: continue)
+                else (entity.displayName ?: continue).unformattedText
             )
         }
 
@@ -122,9 +116,9 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val renderManager = mc.renderManager
 
         glTranslated( // Translate to player position with render pos and interpolate it
-                entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
-                entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
-                entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+            entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
+            entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
+            entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
         )
 
         glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
@@ -144,7 +138,8 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val playerDistance = thePlayer.getDistanceToEntity(entity)
 
         val distanceText = if (distance) "§7${playerDistance.roundToInt()}m " else ""
-        val pingText = if (ping && entity is EntityPlayer) " §7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7]" else ""
+        val pingText =
+            if (ping && entity is EntityPlayer) " §7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7]" else ""
         val healthText = if (health) getHealthString(entity) else ""
         val botText = if (bot) " §c§lBot" else ""
 
@@ -156,7 +151,9 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         glScalef(-scale, -scale, scale)
 
         val width = fontRenderer.getStringWidth(text) * 0.5f
-        fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
+        fontRenderer.drawString(
+            text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, fontShadow
+        )
 
         val dist = width + 4F - (-width - 2F)
 
@@ -173,25 +170,48 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         val borderColor = Color(borderColorRed, borderColorGreen, borderColorBlue, borderColorAlpha)
 
-        if (border)
-            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F, 2F, borderColor.rgb, bgColor.rgb)
-        else
-            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F, bgColor.rgb)
+        if (border) quickDrawBorderedRect(
+            -width - 2F,
+            -2F,
+            width + 4F,
+            fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F,
+            2F,
+            borderColor.rgb,
+            bgColor.rgb
+        )
+        else quickDrawRect(
+            -width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F, bgColor.rgb
+        )
 
         if (healthBar) {
-            quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + dist, fontRenderer.FONT_HEIGHT + 4F, Color(10, 155, 10).rgb)
+            quickDrawRect(
+                -width - 2F,
+                fontRenderer.FONT_HEIGHT + 3F,
+                -width - 2F + dist,
+                fontRenderer.FONT_HEIGHT + 4F,
+                Color(10, 155, 10).rgb
+            )
             val currHealth = entity.health + if (absorption) entity.absorptionAmount else 0f
-            quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + (dist * (currHealth / entity.maxHealth).coerceIn(0F, 1F)), fontRenderer.FONT_HEIGHT + 4F, Color(10, 255, 10).rgb)
+            quickDrawRect(
+                -width - 2F,
+                fontRenderer.FONT_HEIGHT + 3F,
+                -width - 2F + (dist * (currHealth / entity.maxHealth).coerceIn(0F, 1F)),
+                fontRenderer.FONT_HEIGHT + 4F,
+                Color(10, 255, 10).rgb
+            )
         }
 
         glEnable(GL_TEXTURE_2D)
 
-        fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F,
-                0xFFFFFF, fontShadow)
+        fontRenderer.drawString(
+            text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, Color.white.rgb, fontShadow
+        )
 
         var foundPotion = false
         if (potion && entity is EntityPlayer) {
-            val potions = (entity.getActivePotionEffects() as Collection<PotionEffect>).map { Potion.potionTypes[it.getPotionID()] }.filter { it.hasStatusIcon() }
+            val potions =
+                (entity.getActivePotionEffects() as Collection<PotionEffect>).map { Potion.potionTypes[it.getPotionID()] }
+                    .filter { it.hasStatusIcon() }
             if (!potions.isEmpty()) {
                 foundPotion = true
 
@@ -228,7 +248,9 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
                 }
 
                 mc.renderItem.zLevel = -147F
-                mc.renderItem.renderItemAndEffectIntoGUI(entity.getEquipmentInSlot(index), -50 + index * 20, if (potion && foundPotion) -42 else -22)
+                mc.renderItem.renderItemAndEffectIntoGUI(
+                    entity.getEquipmentInSlot(index), -50 + index * 20, if (potion && foundPotion) -42 else -22
+                )
             }
 
             enableAlpha()
@@ -247,10 +269,10 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         glPopMatrix()
     }
 
-    private fun getHealthString(entity : EntityLivingBase) : String {
+    private fun getHealthString(entity: EntityLivingBase): String {
         val result = entity.health + if (absorption) entity.absorptionAmount else 0f
         val prefix = if (healthPrefix) healthPrefixText else ""
         val suffix = if (healthSuffix) healthSuffixText else ""
-        return prefix + "§c " + ( if (healthInInt) result.toInt() else decimalFormat.format(result) ) + suffix
+        return prefix + "§c " + (if (healthInInt) result.toInt() else decimalFormat.format(result)) + suffix
     }
 }
