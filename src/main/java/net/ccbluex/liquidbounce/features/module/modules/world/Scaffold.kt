@@ -381,11 +381,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown)
+        val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotations
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
-                val result = if (raycastProperly) {
+            if (!rotations || (it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing))) {
+                val result = if (raycastProperly && it != null) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
                 } else {
                     target
