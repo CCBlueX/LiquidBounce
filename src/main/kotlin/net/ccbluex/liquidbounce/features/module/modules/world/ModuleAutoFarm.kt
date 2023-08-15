@@ -66,7 +66,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val range by float("Range", 4.5F, 1F..6F)
     private val extraSearchRange by float("extraSearchRange", 0F, 0F..3F)
     private val throughWalls by boolean("ThroughWalls", false)
+    private val breakDelay by intRange("BreakDelay", 0..1, 1..15)
 
+    private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
     private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlaceCrops", true) {
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
@@ -98,6 +100,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
             private val color by color("Color", Color4b(36, 237, 0, 255))
             private val colorRainbow by boolean("Rainbow", false)
+
+            // todo: use box of block, not hardcoded
             private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
             val renderHandler = handler<WorldRenderEvent> { event ->
@@ -134,7 +138,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
 
-        // todo: use box of block, not hardcoded
+
 
 
     }
@@ -176,14 +180,27 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
+
+
         updateTarget()
+
+        if (ModuleBlink.enabled) {
+            return@repeatable
+        }
+
+        if(disableOnFullInventory && !hasInventorySpace()){
+            notification("Inventory is Full", "autoFarm has been disabled", NotificationEvent.Severity.ERROR)
+            disable()
+            enabled = false
+            return@repeatable
+        }
 
         currentTarget ?: run {
             if(!Walk.enabled){
                 return@repeatable
             }
 
-            val invHasSpace = player.inventory.main.any { it.isEmpty }
+            val invHasSpace = hasInventorySpace()
             if(!invHasSpace && invHadSpace && Walk.toItems){
                 notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
             }
@@ -210,9 +227,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
 
 
-        if (ModuleBlink.enabled) {
-            return@repeatable
-        }
+
 
         if (rayTraceResult.type != HitResult.Type.BLOCK
         ) {
@@ -231,7 +246,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                     findBestItem (1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
                         ?.let { (slot, _) ->
                             SilentHotbar.selectSlotSilently(this, slot, 2)
-                        }
+                        } // swap to a fortune item to increase drops
                 }
                 val direction = rayTraceResult.side
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
@@ -304,7 +319,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
         ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
 
-
+    private fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
     private fun placeCrop(rayTraceResult: BlockHitResult){
         val stack = player.mainHandStack
         val count = stack.count
