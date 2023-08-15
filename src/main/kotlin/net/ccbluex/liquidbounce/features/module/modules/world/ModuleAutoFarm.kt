@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -49,7 +48,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
@@ -76,8 +75,14 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val rotations = RotationsConfigurable()
     private val fortune by boolean("fortune", true)
 
-    private object Visualize : ToggleableConfigurable(this, "Visualize", true) {
 
+    private object Visualize : ToggleableConfigurable(this, "Visualize", true) {
+        private object Path : ToggleableConfigurable(this.module, "Path", true) {
+            val color by color("PathColor", Color4b(36, 237, 0, 255))
+        }
+        init {
+            tree(Path)
+        }
         private val outline by boolean("Outline", true)
 
         private val color by color("Color", Color4b(36, 237, 0, 255))
@@ -111,7 +116,15 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                         }
                     }
                 }
+                if(Path.enabled){
+                    withColor(Path.color){
+                        walkTarget?.let { target ->
+                            drawLines(player.interpolateCurrentPosition(event.partialTicks), Vec3(target))
+                        }
+                    }
+                }
             }
+
         }
     }
 
@@ -134,11 +147,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     // Rotation
 
     private var currentTarget: BlockPos? = null
-    private var moveToBlock = false
+    private var movingToBlock = false
+    private var walkTarget: Vec3d? = null; // Vec3d to support blocks and items
 
     private var farmLandBlocks: HashSet<Vec3d> = hashSetOf<Vec3d>()
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
-        if (!moveToBlock || mc.currentScreen is HandledScreen<*>){
+        if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
             player.isSprinting = false;
             return@handler
         }
@@ -157,11 +171,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if(!Walk.enabled){
                 return@repeatable
             }
-            val closestBlock = (findWalkToBlock() ?: if(Walk.toItems && player.inventory.main.any { it.isEmpty }) findWalkToItem() else null) ?: return@repeatable
+            walkTarget = (findWalkToBlock() ?: if(Walk.toItems && player.inventory.main.any { it.isEmpty }) findWalkToItem() else null)
 
-
-            RotationManager.aimAt(RotationManager.makeRotation(closestBlock, player.eyes), configurable = rotations)
-            moveToBlock = true;
+            var target = walkTarget ?: return@repeatable
+            RotationManager.aimAt(RotationManager.makeRotation(target, player.eyes), configurable = rotations)
+            movingToBlock = true;
 
             return@repeatable
 //            val rotation = RotationManager.currentRotation ?: return@repeatable
@@ -170,7 +184,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         }
 
-        moveToBlock = false
+        movingToBlock = false
+        walkTarget = null
 
         val rotation = RotationManager.currentRotation ?: return@repeatable
 
