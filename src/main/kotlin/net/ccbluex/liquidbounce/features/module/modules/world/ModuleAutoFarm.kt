@@ -242,6 +242,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         if (rayTraceResult.type != HitResult.Type.BLOCK
         ) {
+            chat("hdhefef")
             return@repeatable
         }
         val blockPos = rayTraceResult.blockPos
@@ -356,7 +357,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val radius = range + extraSearchRange
         val radiusSquared = radius * radius
-        val eyesPos = mc.player!!.eyes
+        val eyesPos = player.eyes
 
         // searches for any blocks within the radius that need to be destroyed, such as crops.
         // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on
