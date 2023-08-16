@@ -64,8 +64,6 @@ class Script(val scriptFile: File) : MinecraftInstance() {
 
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())
-
-        supportLegacyScripts()
     }
 
     fun initScript() {
@@ -157,17 +155,6 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         }
 
         return null
-    }
-
-    /**
-     * Adds support for scripts made for LiquidBounce's original script API.
-     */
-    private fun supportLegacyScripts() {
-        if (getMagicComment("api_version") != "2") {
-            LOGGER.info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
-            val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
-            scriptEngine.eval(legacyScript)
-        }
     }
 
     /**
