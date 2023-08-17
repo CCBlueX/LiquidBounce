@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spartan.SpartanYPort
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreBHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreLowHop
@@ -42,6 +44,9 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         // Spectre
         SpectreLowHop, SpectreBHop, SpectreOnGround,
             
+        // Verus
+        VerusHop, VerusLowHop,
+        
         // Server specific
         TeleportCubeCraft,
         HiveHop,
