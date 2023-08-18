@@ -26,10 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Custom.Rotate.angle
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
 
