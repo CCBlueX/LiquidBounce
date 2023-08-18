@@ -130,13 +130,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     ) { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
-    private val rotations by BoolValue("Rotations", true)
-    private val strafe by BoolValue("Strafe", false)
-    private val stabilizedRotation by BoolValue("StabilizedRotation", false) { mode != "GodBridge" }
-    private val silentRotation by BoolValue("SilentRotation", true)
-    private val keepRotation by BoolValue("KeepRotation", true)
+    private val rotationMode by ListValue("RotationMode", arrayOf("Off", "Normal", "Stabilized"), "Normal")
+    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
+    private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
+    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
+        override fun isSupported() = rotationMode != "Off"
     }
 
     // Search options
@@ -146,15 +146,16 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Turn Speed
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+        override fun isSupported() = rotationMode != "Off"
     }
     private val maxTurnSpeed by maxTurnSpeedValue
     private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
 
-        override fun isSupported() = !maxTurnSpeedValue.isMinimal()
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotationMode != "Off"
     }
 
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotationMode != "Off" }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -353,7 +354,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onMotion(event: MotionEvent) {
         val rotation = targetRotation
 
-        if (rotations && keepRotation && rotation != null) {
+        if (rotationMode != "Off" && keepRotation && rotation != null) {
             setRotation(rotation, 1)
         }
 
@@ -381,10 +382,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotations
+        val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (!rotations || (it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing))) {
+            if (rotationMode == "Off" || (it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing))) {
                 val result = if (raycastProperly && it != null) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
                 } else {
@@ -821,7 +822,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         placeRotation ?: return false
 
-        if (rotations) {
+        if (rotationMode != "Off") {
             var targetRotation = placeRotation.rotation
 
             val info = placeRotation.placeInfo
@@ -903,10 +904,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         var rotation = toRotation(vec, false)
 
-        rotation = if (stabilizedRotation) {
-            Rotation(round(rotation.yaw / 45f) * 45f, rotation.pitch)
-        } else {
-            rotation
+        rotation = when (rotationMode) {
+            "Stabilized" -> Rotation(round(rotation.yaw / 45f) * 45f, rotation.pitch)
+            else -> rotation
         }
 
         // If the current rotation already looks at the target block and side, then return right here
