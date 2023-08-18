@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Custom.Rotate.angle
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
@@ -101,30 +102,32 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                     }
                     timer.reset()
                 }
+
                 1 -> {
                     if (!player.handSwinging) {
                         player.swingHand(Hand.MAIN_HAND)
                     }
                     timer.reset()
                 }
+
                 2 -> {
                     delay = RandomUtils.nextInt(0, 1000).toLong()
                     shouldMove = true
                     timer.reset()
                 }
+
                 3 -> {
                     player.inventory.selectedSlot = RandomUtils.nextInt(0, 9)
                     timer.reset()
                 }
+
                 4 -> {
-                    player.yaw += RandomUtils.nextFloat(-180f, 180f)
+                    player.yaw += RandomUtils.nextFloat(0f, 360f) - 180f
                     timer.reset()
                 }
+
                 5 -> {
-                    if (player.pitch <= -90f || player.pitch >= 90) {
-                        player.pitch = 0f
-                    }
-                    player.pitch += RandomUtils.nextFloat(-10f, 10f)
+                    player.pitch = (RandomUtils.nextFloat(0f, 10f) - 5f + player.pitch).coerceIn(-90f, 90f)
                     timer.reset()
                 }
             }
@@ -163,9 +166,6 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val move by boolean("Move", true)
 
         override fun disable() {
-            if (!mc.options.forwardKey.pressedOnKeyboard) {
-                mc.options.forwardKey.isPressed = false
-            }
         }
 
         val repeatable = repeatable {
@@ -180,10 +180,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             if (Rotate.enabled) {
                 wait(Rotate.delay)
                 player.yaw += angle
-                if (player.pitch <= -90f || player.pitch >= 90) {
-                    player.pitch = 0f
-                }
-                player.pitch += RandomUtils.nextFloat(0f, 1f) * 2 - 1
+                player.pitch = (RandomUtils.nextFloat(0f, 10f) - 5f + player.pitch).coerceIn(-90f..90f)
             }
 
             if (Swing.enabled && !player.handSwinging) {

@@ -210,33 +210,46 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return@repeatable
         }
 
-        var hasBlockInHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot), target)
+        var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot), target)
+        val hasBlockInOffHand = isValidBlock(player.offHandStack, target)
 
         // Handle silent block selection
-        if (silent && !hasBlockInHand) {
-            val slot = (0..8).filter { isValidBlock(player.inventory.getStack(it), target) }.mapNotNull {
+        if (silent && !hasBlockInMainHand && (!hasBlockInOffHand || !canUseOffHand(player.inventory.mainHandStack))) {
+            val mainHandSlot = (0..8).filter { isValidBlock(player.inventory.getStack(it), target) }.mapNotNull {
                 val stack = player.inventory.getStack(it)
 
                 if (stack.item is BlockItem) Pair(it, stack)
                 else null
             }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR.compare(o1.second, o2.second) }?.first
 
-            if (slot != null) {
-                SilentHotbar.selectSlotSilently(this, slot, 20)
+            if (mainHandSlot != null) {
+                SilentHotbar.selectSlotSilently(this, mainHandSlot)
 
-                hasBlockInHand = true
+                hasBlockInMainHand = true
+            } else {
+                if (hasBlockInOffHand) {
+                    // We try to switch to the hotbar slot, which allows using second hand slot
+                    val offHandSlot = (0..8).filter { canUseOffHand(player.inventory.getStack(it)) }
+                    if (offHandSlot.isNotEmpty()) {
+                        SilentHotbar.selectSlotSilently(this, offHandSlot.first())
+
+                        hasBlockInMainHand = true
+                    }
+                }
             }
         } else {
             SilentHotbar.resetSlot(this)
         }
 
-        if (!hasBlockInHand) {
+        if (!hasBlockInMainHand && (!hasBlockInOffHand && !canUseOffHand(player.inventory.mainHandStack))) {
             return@repeatable
         }
 
+        // no need for additional checks
+        val handToTry = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         val result = interaction.interactBlock(
             player,
-            Hand.MAIN_HAND,
+            handToTry,
             rayTraceResult
         )
 
@@ -248,7 +261,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.velocity.z *= speedModifier
             }
             if (result.shouldSwingHand() && swing) {
-                player.swingHand(Hand.MAIN_HAND)
+                player.swingHand(handToTry)
             }
 
             currentTarget = null
@@ -368,6 +381,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         placedBlocks = 0
         mc.timer.timerSpeed = 1f
         SilentHotbar.resetSlot(this)
+    }
+
+    private fun canUseOffHand(stack: ItemStack?): Boolean {
+        stack ?: return true
+
+        val item = stack.item
+
+        return item !is BlockItem
     }
 
     private fun isValidBlock(stack: ItemStack?, target: Target): Boolean {
