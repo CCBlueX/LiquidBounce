@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Custom.Rotate.angle
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Custom.Rotate.ignoreOpenInventory
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Custom.Rotate.rotationsConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.angle
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.enforced
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
+import kotlin.random.Random
 
 /**
  * AntiAFK module
@@ -44,12 +45,12 @@ import org.apache.commons.lang3.RandomUtils
 object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private val modes = choices(
-        "Mode", Random, arrayOf(
-            Old, Random, Custom
+        "Mode", RandomMode, arrayOf(
+            OldMode, RandomMode, CustomMode
         )
     )
 
-    private object Old : Choice("Old") {
+    private object OldMode : Choice("Old") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -61,7 +62,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         }
     }
 
-    private object Random : Choice("Random") {
+    private object RandomMode : Choice("Random") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -113,7 +114,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         }
     }
 
-    private object Custom : Choice("Custom") {
+    private object CustomMode : Choice("Custom") {
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -154,7 +155,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             if (Rotate.enabled) {
                 wait { Rotate.delay }
                 val serverRotation = RotationManager.serverRotation
-                val pitchRandomization = RandomUtils.nextFloat(0f, 10f) - 5f
+                val pitchRandomization = Random.nextDouble(-5.0, 5.0).toFloat()
                 RotationManager.aimAt(
                     Rotation(
                         serverRotation.yaw + angle, (serverRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)

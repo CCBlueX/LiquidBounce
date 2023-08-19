@@ -128,6 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(AdvancedRotation)
     }
 
+    var randomization = Random.nextDouble(-0.01, 0.01)
     private var startY = 0
     private var placedBlocks = 0
     private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
@@ -170,6 +171,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         get() = this.down && mc.options.sneakKey.isPressed
 
     override fun enable() {
+        // Chooses a new randomization value
+        randomization = Random.nextDouble(-0.01, 0.01)
         startY = player.blockPos.y
         super.enable()
     }
@@ -599,8 +602,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         fun stabilized(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
             val pitchToCompare =
                 if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
-            val x = (player.pos.x - floor(player.pos.x)).coerceIn(xRange)
-            val z = (player.pos.z - floor(player.pos.z)).coerceIn(zRange)
+            val x = (player.pos.x - floor(player.pos.x) + randomization).coerceIn(xRange)
+            val z = (player.pos.z - floor(player.pos.z) + randomization).coerceIn(zRange)
             return rotationList(x..x, yRange, z..z, step).minBy {
                 abs(
                     RotationManager.angleDifference(
