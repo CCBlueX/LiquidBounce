@@ -3,7 +3,6 @@ accessWidener	v1	named
 accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
-accessible method net/minecraft/client/MinecraftClient doItemUse ()V
 mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
 
 accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
