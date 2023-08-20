@@ -129,6 +129,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleHighJump,
             ModuleInventoryMove,
             ModuleLiquidWalk,
+            ModuleLongJump,
             ModuleNoClip,
             ModuleNoJumpDelay,
             ModuleNoPush,

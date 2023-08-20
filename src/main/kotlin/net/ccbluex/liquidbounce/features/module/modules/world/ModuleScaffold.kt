@@ -128,6 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(AdvancedRotation)
     }
 
+    var randomization = Random.nextDouble(-0.01, 0.01)
     private var startY = 0
     private var placedBlocks = 0
     private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
@@ -170,6 +171,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         get() = this.down && mc.options.sneakKey.isPressed
 
     override fun enable() {
+        // Chooses a new randomization value
+        randomization = Random.nextDouble(-0.01, 0.01)
         startY = player.blockPos.y
         super.enable()
     }
@@ -210,33 +213,46 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return@repeatable
         }
 
-        var hasBlockInHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot), target)
+        var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot), target)
+        val hasBlockInOffHand = isValidBlock(player.offHandStack, target)
 
         // Handle silent block selection
-        if (silent && !hasBlockInHand) {
-            val slot = (0..8).filter { isValidBlock(player.inventory.getStack(it), target) }.mapNotNull {
+        if (silent && !hasBlockInMainHand && (!hasBlockInOffHand || !canUseOffHand(player.inventory.mainHandStack))) {
+            val mainHandSlot = (0..8).filter { isValidBlock(player.inventory.getStack(it), target) }.mapNotNull {
                 val stack = player.inventory.getStack(it)
 
                 if (stack.item is BlockItem) Pair(it, stack)
                 else null
             }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR.compare(o1.second, o2.second) }?.first
 
-            if (slot != null) {
-                SilentHotbar.selectSlotSilently(this, slot, 20)
+            if (mainHandSlot != null) {
+                SilentHotbar.selectSlotSilently(this, mainHandSlot)
 
-                hasBlockInHand = true
+                hasBlockInMainHand = true
+            } else {
+                if (hasBlockInOffHand) {
+                    // We try to switch to the hotbar slot, which allows using second hand slot
+                    val offHandSlot = (0..8).filter { canUseOffHand(player.inventory.getStack(it)) }
+                    if (offHandSlot.isNotEmpty()) {
+                        SilentHotbar.selectSlotSilently(this, offHandSlot.first())
+
+                        hasBlockInMainHand = true
+                    }
+                }
             }
         } else {
             SilentHotbar.resetSlot(this)
         }
 
-        if (!hasBlockInHand) {
+        if (!hasBlockInMainHand && (!hasBlockInOffHand && !canUseOffHand(player.inventory.mainHandStack))) {
             return@repeatable
         }
 
+        // no need for additional checks
+        val handToTry = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         val result = interaction.interactBlock(
             player,
-            Hand.MAIN_HAND,
+            handToTry,
             rayTraceResult
         )
 
@@ -248,7 +264,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.velocity.z *= speedModifier
             }
             if (result.shouldSwingHand() && swing) {
-                player.swingHand(Hand.MAIN_HAND)
+                player.swingHand(handToTry)
             }
 
             currentTarget = null
@@ -368,6 +384,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         placedBlocks = 0
         mc.timer.timerSpeed = 1f
         SilentHotbar.resetSlot(this)
+    }
+
+    private fun canUseOffHand(stack: ItemStack?): Boolean {
+        stack ?: return true
+
+        val item = stack.item
+
+        return item !is BlockItem
     }
 
     private fun isValidBlock(stack: ItemStack?, target: Target): Boolean {
@@ -578,8 +602,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         fun stabilized(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
             val pitchToCompare =
                 if (RotationManager.targetRotation != null) RotationManager.targetRotation!!.yaw else player.yaw
-            val x = (player.pos.x - floor(player.pos.x)).coerceIn(xRange)
-            val z = (player.pos.z - floor(player.pos.z)).coerceIn(zRange)
+            val x = (player.pos.x - floor(player.pos.x) + randomization).coerceIn(xRange)
+            val z = (player.pos.z - floor(player.pos.z) + randomization).coerceIn(zRange)
             return rotationList(x..x, yRange, z..z, step).minBy {
                 abs(
                     RotationManager.angleDifference(
