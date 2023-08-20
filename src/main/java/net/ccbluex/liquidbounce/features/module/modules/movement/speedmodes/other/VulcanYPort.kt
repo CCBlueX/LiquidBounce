@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode.strafe
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+
 class VulcanYPort : SpeedMode("VulcanYPort") {
 
     private var wasTimer = false
