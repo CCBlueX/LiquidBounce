@@ -32,7 +32,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
      * OPTIONS
      */
     private val mode by ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-        "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
+        "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit", "Grim"), "Simple")
 
     private val horizontal by FloatValue("Horizontal", 0F, 0F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by FloatValue("Vertical", 0F, 0F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -188,6 +188,25 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     thePlayer.motionX *= horizontal.toDouble()
                     thePlayer.motionZ *= horizontal.toDouble()
                     thePlayer.motionY *= vertical.toDouble()
+
+
+                    "grim" -> {
+                        if (legitDisableInAirValue.get() && !isOnGround(0.5))
+                            return;
+
+                        if (mc.thePlayer.maxHurtResistantTime != mc.thePlayer.hurtResistantTime || mc.thePlayer.maxHurtResistantTime == 0))
+                        return;
+
+                        if (nextInt(endExclusive = 100) < legitChanceValue.get()) {
+                            var horizontal = horizontalValue.get() / 100;
+                            var vertical = verticalValue.get() / 100;
+
+                            thePlayer.motionX *= horizontal;
+                            thePlayer.motionZ *= horizontal;
+                            thePlayer.motionY *= vertical;
+                        }
+
+                    }
                 }
             }
         }
