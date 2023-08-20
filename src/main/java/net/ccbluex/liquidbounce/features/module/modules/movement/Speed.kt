@@ -51,7 +51,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         
         // Other
         Matrix,
-        Boost, Frame, MiJump, OnGround, SlowHop, Legit, CustomSpeed, MineBlazeHop, Vulcan
+        Boost, Frame, MiJump, OnGround, SlowHop, Legit, CustomSpeed, MineBlazeHop, VulcanYPort
         
     )
 
