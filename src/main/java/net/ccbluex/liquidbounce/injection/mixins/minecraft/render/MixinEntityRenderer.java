@@ -40,9 +40,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderer.class)
 public abstract class MixinEntityRenderer<T extends Entity> {
 
-    @Shadow @Final protected EntityRenderDispatcher dispatcher;
+    @Shadow
+    @Final
+    protected EntityRenderDispatcher dispatcher;
 
-    @Shadow public abstract TextRenderer getTextRenderer();
+    @Shadow
+    public abstract TextRenderer getTextRenderer();
 
     @Inject(method = "render", at = @At("HEAD"))
     private void renderMobOwners(T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
@@ -65,9 +68,9 @@ public abstract class MixinEntityRenderer<T extends Entity> {
             Matrix4f matrix4f = matrices.peek().getPositionMatrix();
 
             float g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
-            int j = (int)(g * 255.0F) << 24;
+            int j = (int) (g * 255.0F) << 24;
             TextRenderer textRenderer = this.getTextRenderer();
-            float h = (float)(-textRenderer.getWidth(ownerName) / 2);
+            float h = (float) (-textRenderer.getWidth(ownerName) / 2);
 
 //            textRenderer.draw(ownerName, h, (float) 0, 553648127, false, matrix4f, vertexConsumers, true, j, light);
             textRenderer.draw(ownerName, h, 0, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, j, light);

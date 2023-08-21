@@ -40,7 +40,7 @@ class BrowserFileSystem : UltralightFileSystem {
     private val openFiles = mutableMapOf<Long, FileChannel>()
 
     /**
-     * This is called by Ultralight to check if a given file exists.
+     * Ultralight calls this to check if a given file exists.
      *
      * Note that Ultralight might pass invalid paths, so check for them!
      *
@@ -148,7 +148,7 @@ class BrowserFileSystem : UltralightFileSystem {
     }
 
     /**
-     * Closes the given handle. This is called by Ultralight when a file is no longer needed and its resources can be
+     * Closes the given handle. Ultralight calls this when a file is no longer needed and its resources can be
      * disposed.
      *
      * @param handle The handle of the file to close

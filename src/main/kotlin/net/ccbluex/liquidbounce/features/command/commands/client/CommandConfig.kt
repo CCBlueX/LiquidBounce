@@ -101,7 +101,7 @@ object CommandConfig {
                             }
 
                             else -> {
-                                chat(regular(command.result("loadedOnline", variable(name))))
+                                chat(regular(command.result("unresolvedName", variable(name))))
                             }
                         }
                     }

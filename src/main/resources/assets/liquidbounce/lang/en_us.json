@@ -210,7 +210,7 @@
   "liquidbounce.command.config.subcommand.load.result.loadedLocal": "Local configuration file named %s has been loaded.",
   "liquidbounce.command.config.subcommand.load.result.failedToLoadOnline": "Failed to load online configuration file named %s.",
   "liquidbounce.command.config.subcommand.load.result.loadedOnline": "Online configuration file named %s has been loaded.",
-  "liquidbounce.command.config.subcommand.list.result.loadedOnline": "Online configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.load.result.unresolvedName": "Unresolved info %s, expected \"local\" or \"online\".",
   "liquidbounce.command.config.subcommand.create.parameter.name.description": "Name of the configuration file.",
   "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Overwrite existing configuration file.",
   "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Failed to create configuration file named %s.",

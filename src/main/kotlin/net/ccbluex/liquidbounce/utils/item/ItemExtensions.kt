@@ -34,9 +34,10 @@ import net.minecraft.util.Identifier
  *
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
-fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
-    ItemStackArgument(it.item, it.nbt).createStack(amount, false)
-}
+fun createItem(stack: String, amount: Int = 1): ItemStack =
+    ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
+        ItemStackArgument(it.item, it.nbt).createStack(amount, false)
+    }
 
 fun findHotbarSlot(item: Item): Int? = findHotbarSlot { it.item == item }
 

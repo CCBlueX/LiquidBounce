@@ -69,9 +69,11 @@ public abstract class MixinEntity {
     @Shadow
     public abstract boolean isOnGround();
 
-    @Shadow protected boolean submergedInWater;
+    @Shadow
+    protected boolean submergedInWater;
 
-    @Shadow public abstract boolean hasVehicle();
+    @Shadow
+    public abstract boolean hasVehicle();
 
     /**
      * Hook entity margin modification event

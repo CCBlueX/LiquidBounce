@@ -85,7 +85,7 @@ dependencies {
     implementation "com.google.code.findbugs:jsr305:3.0.2"
 
     // Client libraries
-    implementation ('com.thealtening.api:api:4.1.0') {
+    implementation('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
@@ -125,10 +125,10 @@ processResources {
 
     filesMatching("fabric.mod.json") {
         expand([
-                version: project.version,
-                minecraft_version: minecraft_version,
-                fabric_version: fabric_version,
-                loader_version: loader_version,
+                version              : project.version,
+                minecraft_version    : minecraft_version,
+                fabric_version       : fabric_version,
+                loader_version       : loader_version,
                 fabric_kotlin_version: fabric_kotlin_version
         ])
     }

@@ -59,7 +59,15 @@ object CommandFriend {
                             if (friend.alias == null) {
                                 chat(regular(command.result("success", variable(friend.name))))
                             } else {
-                                chat(regular(command.result("successAlias", variable(friend.name), variable(friend.alias!!))))
+                                chat(
+                                    regular(
+                                        command.result(
+                                            "successAlias",
+                                            variable(friend.name),
+                                            variable(friend.alias!!)
+                                        )
+                                    )
+                                )
                             }
                         } else {
                             throw CommandException(command.result("alreadyFriends", variable(friend.name)))
@@ -96,7 +104,14 @@ object CommandFriend {
                         ParameterBuilder
                             .begin<String>("name")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith { begin -> FriendManager.friends.filter { it.name.startsWith(begin, true) }.map { it.name } }
+                            .autocompletedWith { begin ->
+                                FriendManager.friends.filter {
+                                    it.name.startsWith(
+                                        begin,
+                                        true
+                                    )
+                                }.map { it.name }
+                            }
                             .required()
                             .build()
                     )
@@ -130,7 +145,13 @@ object CommandFriend {
                         } else {
                             FriendManager.friends.forEach {
                                 if (it.alias != null) {
-                                    chat(regular("- "), variable(it.name), regular(" ("), variable(it.alias!!), regular(")"))
+                                    chat(
+                                        regular("- "),
+                                        variable(it.name),
+                                        regular(" ("),
+                                        variable(it.alias!!),
+                                        regular(")")
+                                    )
                                 } else {
                                     chat(regular("- "), variable(it.name))
                                 }

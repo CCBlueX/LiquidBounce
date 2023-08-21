@@ -27,14 +27,14 @@ import org.lwjgl.glfw.GLFW
 class GlfwClipboardAdapter : UltralightClipboard {
 
     /**
-     * This is called by Ultralight when the clipboard is requested as a string.
+     * Ultralight calls this when the clipboard is requested as a string.
      *
      * @return The clipboard content as a string
      */
     override fun readPlainText() = GLFW.glfwGetClipboardString(0)!!
 
     /**
-     * This is called by Ultralight when the clipboard content should be overwritten.
+     * Ultralight calls this when the clipboard content should be overwritten.
      *
      * @param text The plain text to write to the clipboard
      */
@@ -43,7 +43,7 @@ class GlfwClipboardAdapter : UltralightClipboard {
     }
 
     /**
-     * This is called by Ultralight when the clipboard should be cleared.
+     * Ultralight calls this when the clipboard should be cleared.
      */
     override fun clear() {
         GLFW.glfwSetClipboardString(0, "")

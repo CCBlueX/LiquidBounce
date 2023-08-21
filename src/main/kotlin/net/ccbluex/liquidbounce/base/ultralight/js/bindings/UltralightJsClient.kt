@@ -59,7 +59,8 @@ object UltralightJsClient {
         /**
          * Get if account is premium or cracked
          */
-        fun getAccountType() = if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) && mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"
+        fun getAccountType() =
+            if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) && mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"
 
         /**
          * Get location of session

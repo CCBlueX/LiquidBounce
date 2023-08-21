@@ -45,9 +45,15 @@ import java.util.function.Consumer;
 @Mixin(SplashOverlay.class)
 public class MixinSplashOverlay {
 
-    @Shadow @Final private MinecraftClient client;
-    @Shadow @Final private ResourceReload reload;
-    @Shadow @Final private Consumer<Optional<Throwable>> exceptionHandler;
+    @Shadow
+    @Final
+    private MinecraftClient client;
+    @Shadow
+    @Final
+    private ResourceReload reload;
+    @Shadow
+    @Final
+    private Consumer<Optional<Throwable>> exceptionHandler;
     private ViewOverlay viewOverlay = null;
     private boolean closing = false;
 
