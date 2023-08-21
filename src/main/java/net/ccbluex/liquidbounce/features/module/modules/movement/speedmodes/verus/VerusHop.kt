@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.minecraft.potion.Potion
 
@@ -9,8 +9,11 @@ object VerusHop : SpeedMode("VerusHop") {
 
     private var speed = 0.0f
 
-    override fun onMotion() {
-        if (MovementUtils.isMoving) {
+    override fun onUpdate() {
+        if (mc.thePlayer == null) {
+            return
+        }
+        if (isMoving) {
             if (mc.thePlayer.onGround) {
                 if (mc.thePlayer.isPotionActive(Potion.moveSpeed) && mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier == 1) {
                     speed = 0.46f
