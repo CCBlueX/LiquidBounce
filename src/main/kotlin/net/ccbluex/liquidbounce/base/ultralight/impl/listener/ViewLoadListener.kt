@@ -82,7 +82,7 @@ class ViewLoadListener(private val viewOverlay: ViewOverlay) : UltralightLoadLis
     /**
      * Called by Ultralight when the history of a view changes.
      */
-    override fun onUpdateHistory() { }
+    override fun onUpdateHistory() {}
 
     /**
      * Called by Ultralight when the window object is ready. This point can be used to inject Javascript.
@@ -105,6 +105,6 @@ class ViewLoadListener(private val viewOverlay: ViewOverlay) : UltralightLoadLis
      * @param isMainFrame Whether the frame is the main frame
      * @param url         The url that the frame currently contains
      */
-    override fun onDOMReady(frameId: Long, isMainFrame: Boolean, url: String) { }
+    override fun onDOMReady(frameId: Long, isMainFrame: Boolean, url: String) {}
 
 }

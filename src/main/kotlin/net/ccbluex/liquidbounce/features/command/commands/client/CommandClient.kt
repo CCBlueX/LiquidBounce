@@ -45,8 +45,14 @@ object CommandClient {
                     .begin("info")
                     .handler { command, _ ->
                         chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
-                        chat(regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))), prefix = false)
-                        chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false)
+                        chat(
+                            regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))),
+                            prefix = false
+                        )
+                        chat(
+                            regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))),
+                            prefix = false
+                        )
                     }
                     .build()
             )
@@ -77,20 +83,20 @@ object CommandClient {
                                     val url = URL(args[0] as String)
 
                                     (
-                                        {
-                                            it.loadUrl(url.toString())
-                                        }
-                                        )
+                                            {
+                                                it.loadUrl(url.toString())
+                                            }
+                                            )
                                 } catch (_: MalformedURLException) {
                                     val name = args[0] as String
                                     val page = ThemeManager.page(name)
                                         ?: throw CommandException(command.result("pageNotFound", name))
 
                                     (
-                                        {
-                                            it.loadPage(page)
-                                        }
-                                        )
+                                            {
+                                                it.loadPage(page)
+                                            }
+                                            )
                                 }
 
                                 val emptyScreen = EmptyScreen()

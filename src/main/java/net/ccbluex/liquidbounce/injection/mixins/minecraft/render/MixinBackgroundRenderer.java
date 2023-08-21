@@ -53,7 +53,7 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
             }
 
             return !((StatusEffects.BLINDNESS == effect && module.getAntiBlind()) ||
-                (StatusEffects.DARKNESS == effect && module.getAntiDarkness()));
+                    (StatusEffects.DARKNESS == effect && module.getAntiDarkness()));
         });
     }
 

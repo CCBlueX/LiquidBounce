@@ -48,7 +48,15 @@ object CommandToggle {
 
                 val newState = !module.enabled
                 module.enabled = newState
-                chat(regular(command.result("moduleToggled", variable(module.name), variable(if (newState) command.result("enabled") else command.result("disabled")))))
+                chat(
+                    regular(
+                        command.result(
+                            "moduleToggled",
+                            variable(module.name),
+                            variable(if (newState) command.result("enabled") else command.result("disabled"))
+                        )
+                    )
+                )
             }
             .build()
     }

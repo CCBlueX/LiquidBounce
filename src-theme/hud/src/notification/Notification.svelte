@@ -1,13 +1,13 @@
 <script>
-  export let title;
-  export let content;
-  export let severity;
+    export let title;
+    export let content;
+    export let severity;
 </script>
 
 <div class="notification">
-  <div class="icon {severity.toString().toLowerCase()}" />
-  <div class="title">{title}</div>
-  <div class="content">{content}</div>
+    <div class="icon {severity.toString().toLowerCase()}"/>
+    <div class="title">{title}</div>
+    <div class="content">{content}</div>
 </div>
 
 <style lang="scss">

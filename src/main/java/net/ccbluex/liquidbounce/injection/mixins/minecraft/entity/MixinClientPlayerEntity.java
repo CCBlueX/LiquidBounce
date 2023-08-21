@@ -146,7 +146,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook sprint affect from NoSlow module
+     * Hook sprint effect from NoSlow module
      */
     @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
     private boolean hookSprintAffectStart(ClientPlayerEntity playerEntity) {

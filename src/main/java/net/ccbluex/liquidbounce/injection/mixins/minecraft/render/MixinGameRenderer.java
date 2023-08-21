@@ -70,7 +70,8 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     @Shadow
     protected abstract double getFov(Camera camera, float tickDelta, boolean changingFov);
 
-    @Shadow protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
+    @Shadow
+    protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
 
     /**
      * Hook game render event

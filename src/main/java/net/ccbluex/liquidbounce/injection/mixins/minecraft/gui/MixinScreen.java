@@ -28,7 +28,8 @@ import javax.annotation.Nullable;
 @Mixin(Screen.class)
 public abstract class MixinScreen {
 
-    @Shadow @Nullable
+    @Shadow
+    @Nullable
     protected MinecraftClient client;
 
 }

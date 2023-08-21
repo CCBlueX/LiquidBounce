@@ -30,7 +30,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RealmsMainScreen.class)
 public class MixinRealmsMainScreen {
 
-    @Shadow private static Screen realmsGenericErrorScreen;
+    @Shadow
+    private static Screen realmsGenericErrorScreen;
 
     @Inject(method = "init", at = @At("HEAD"))
     private void hookGenericErrorScreenReset(final CallbackInfo callbackInfo) {

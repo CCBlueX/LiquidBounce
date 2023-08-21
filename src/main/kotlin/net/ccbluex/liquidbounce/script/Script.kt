@@ -79,7 +79,7 @@ class Script(val scriptFile: File) {
     private val registeredModules = mutableListOf<Module>()
 
     /**
-     * Initialization of script
+     * Initialization of scripts
      */
     fun initScript() {
         // Evaluate script
@@ -142,7 +142,8 @@ class Script(val scriptFile: File) {
     fun registerCommand(commandObject: Map<String, Any>, callback: (CommandBuilder) -> Unit) {
         val command = CommandBuilder
             .begin(commandObject["name"] as String)
-            .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }.toTypedArray())
+            .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }
+                .toTypedArray())
             .apply { callback(this) }
             .build()
 

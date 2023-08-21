@@ -1,5 +1,5 @@
 <div class="buttons">
-    <slot />
+    <slot/>
 </div>
 
 <style>

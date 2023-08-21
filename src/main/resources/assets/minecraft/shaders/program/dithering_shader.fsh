@@ -36,7 +36,7 @@ float find_closest(int x, int y, float c0) {
 
 
     if (c0 < limit)
-        return 0.0;
+    return 0.0;
 
     return 1.0;
 }

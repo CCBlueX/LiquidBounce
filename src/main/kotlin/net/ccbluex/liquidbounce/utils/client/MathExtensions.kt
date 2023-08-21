@@ -33,22 +33,27 @@ fun Box.getFace(direction: Direction): ModuleScaffold.Face {
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.maxX, this.minY, this.maxZ)
         )
+
         Direction.UP -> ModuleScaffold.Face(
             Vec3d(this.minX, this.maxY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
+
         Direction.SOUTH -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.maxZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
+
         Direction.NORTH -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.minZ)
         )
+
         Direction.EAST -> ModuleScaffold.Face(
             Vec3d(this.maxX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
+
         Direction.WEST -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.minX, this.maxY, this.maxZ)

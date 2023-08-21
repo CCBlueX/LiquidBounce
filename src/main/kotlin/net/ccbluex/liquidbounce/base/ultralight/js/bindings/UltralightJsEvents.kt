@@ -146,6 +146,6 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
         return !viewCloseEvent.isCancelled
     }
 
-    inner class ViewCloseEvent : CancellableEvent()
+    class ViewCloseEvent : CancellableEvent()
 
 }
