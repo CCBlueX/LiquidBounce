@@ -72,7 +72,7 @@ class Command(
     }
 
     /**
-     * Returns the name of the command with the name of it's parent classes
+     * Returns the name of the command with the name of its parent classes
      */
     fun getFullName(): String {
         val parent = this.parentCommand

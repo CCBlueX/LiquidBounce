@@ -79,7 +79,7 @@ class Script(val scriptFile: File) {
     private val registeredModules = mutableListOf<Module>()
 
     /**
-     * Initialization of script
+     * Initialization of scripts
      */
     fun initScript() {
         // Evaluate script

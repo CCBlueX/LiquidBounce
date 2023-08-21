@@ -184,7 +184,7 @@ object ChunkScanner : Listenable {
         /**
          * Registers a block update and asks the subscriber to make a decision about what should be done.
          *
-         * @param cleared true if the section the block is in was already cleared
+         * @param cleared true, if the section the block is in was already cleared
          */
         fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean)
         fun clearChunk(x: Int, z: Int)

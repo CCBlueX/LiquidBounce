@@ -128,7 +128,7 @@ public abstract class MixinWorldRenderer {
     }
 
     /**
-     * Enable outline glow when ESP is enabled and glow mode is active
+     * Enables an outline glow when ESP is enabled and glow mode is active
      *
      * @author 1zuna
      */

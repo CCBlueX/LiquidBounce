@@ -1,6 +1,6 @@
 # Project LiquidBounce Coding Standards
 
-We invite everyone to participate in the development of LiquidBounce by submitting pull requests and opening issues in 
+We invite everyone to participate in the development of LiquidBounce by submitting pull requests and opening issues in
 this repository. However, we have to enforce certain standards to keep our code readable, consistent and easier to
 maintain.
 

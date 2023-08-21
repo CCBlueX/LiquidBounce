@@ -99,7 +99,7 @@ function constructConfig(partname) {
             // Close live reload server when done
             {closeWatcher},
 
-            // If we"re building for production (npm run build
+            // If we're building for production (npm run build
             // instead of npm run dev), minify
             production && terser()
         ],

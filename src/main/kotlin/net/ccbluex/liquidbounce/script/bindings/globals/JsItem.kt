@@ -29,7 +29,7 @@ object JsItem {
     /**
      * Create [ItemStack] from [arguments]
      */
-    fun create(arguments: String): ItemStack = createItem(arguments, 1)
+    fun create(arguments: String): ItemStack = createItem(arguments)
 
     /**
      * Create [amount]x [ItemStack] from [arguments]

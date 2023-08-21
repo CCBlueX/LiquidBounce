@@ -38,13 +38,13 @@ interface Pattern {
 /**
  * A very basic human-like rotation pattern
  *
- * So the idea is that, when a player is standing still he is unlikely to move his mouse.
+ * So the idea is that, when a player is standing still, he is unlikely to move his mouse.
  * It is more likely to choose a new spot when a player is moving.
  * Is it also very unlikely to snap to a new spot. So I've implemented a speed-limit on how fast a new spot is being applied.
  *
  * We're also using the gaussian algorithm to make the rotations more human-like.
  *
- * This is of course more like a random-set of thoughts about values of a human-like pattern. Not something very.
+ * This is, of course, more like a random-set of thoughts about the values of a human-like pattern. Not something very.
  * Might train a data-set in the future.
  *
  * Tested on:

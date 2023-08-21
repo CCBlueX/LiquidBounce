@@ -30,7 +30,7 @@ class EventHook<T : Event>(
 interface Listenable {
 
     /**
-     * Allows to disable event handling when condition is false.
+     * Allows disabling event handling when condition is false.
      */
     fun handleEvents(): Boolean = parent()?.handleEvents() ?: true
 

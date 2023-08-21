@@ -28,7 +28,7 @@ name.
 
 ### Implementation
 
-We are lacking Web DEVs and therefore the progress of implementing these design concepts into our client is a slow
+We are lacking Web DEVs, and therefore, the progress of implementing these design concepts into our client is a slow
 progress.
 If you are capable to work with Svelte and JS and have a good understanding of turning design concepts into HTML and
 CSS, contact us on our support@liquidbounce.net email or on GitHub (the faster way).
@@ -47,8 +47,8 @@ CSS, contact us on our support@liquidbounce.net email or on GitHub (the faster w
 
 ## Building
 
-To build the themes, you need to have NodeJS and Python installed. \
-Then run `python build.py` to build the theme. \
+To build the themes, you need to have Node.js and Python installed.
+Then run `python build.py` to build the theme.
 
 ### Testing
 
@@ -75,7 +75,7 @@ It will automatically be built and added to the client resources.
 ## Contributing
 
 If you want to contribute to this theme, you can do so by creating a pull request. \
-We will review it and if it fits our design guidelines, we will merge it.
+We will review it, and if it fits our design guidelines, we will merge it.
 
 ## License
 

@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceReload;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,8 +59,7 @@ public class MixinSplashOverlay {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void hookSplashInit(CallbackInfo callbackInfo) {
         final Page page = ThemeManager.INSTANCE.page("splashscreen");
-        if (page == null)
-            return;
+        if (page == null) return;
 
         viewOverlay = UltralightEngine.INSTANCE.newSplashView();
         viewOverlay.loadPage(page);

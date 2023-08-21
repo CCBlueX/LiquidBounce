@@ -88,7 +88,7 @@ class UltralightResources {
             logger.info("Extracting resources...")
             extractZip(pkgNatives, ultralightRoot)
             versionsFile.createNewFile()
-            versionsFile.writeText(LIBRARY_VERSION.toString())
+            versionsFile.writeText(LIBRARY_VERSION)
 
             // Make sure to delete zip archive to save space
             logger.debug("Deleting resources bundle...")

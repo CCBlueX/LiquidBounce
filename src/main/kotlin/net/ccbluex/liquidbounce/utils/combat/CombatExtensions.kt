@@ -35,15 +35,15 @@ import net.minecraft.entity.player.PlayerEntity
 /**
  * Global enemy configurable
  *
- * Modules can have their own enemy configurable if required. If not they should use this as default.
- * Global enemy configurable can be used to configure which entities should be considered as enemy.
+ * Modules can have their own enemy configurable if required. If not, they should use this as default.
+ * Global enemy configurable can be used to configure which entities should be considered as an enemy.
  *
  * This can be adjusted by the .enemy command and the panel inside the ClickGUI.
  */
 val globalEnemyConfigurable = EnemyConfigurable()
 
 /**
- * Configurable to configure which entities and their state (like being dead) should be considered as enemy
+ * Configurable to configure which entities and their state (like being dead) should be considered as an enemy
  */
 class EnemyConfigurable : Configurable("Enemies") {
 
@@ -74,10 +74,10 @@ class EnemyConfigurable : Configurable("Enemies") {
     }
 
     /**
-     * Check if entity is considered an enemy
+     * Check if an entity is considered an enemy
      */
     fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
-        // Check if enemy is living and not dead (or ignore being dead)
+        // Check if the enemy is living and not dead (or ignore being dead)
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
@@ -85,7 +85,7 @@ class EnemyConfigurable : Configurable("Enemies") {
                     return false
                 }
 
-                // Check if enemy is a player and should be considered as enemy
+                // Check if enemy is a player and should be considered as an enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
                     if (attackable && !friends && FriendManager.isFriend(suspect.gameProfile.name)) {
                         return false
@@ -121,7 +121,7 @@ fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurab
 )
 
 /**
- * Find the best emeny in current world in a specific range.
+ * Find the best enemy in the current world in a specific range.
  */
 fun ClientWorld.findEnemy(
     range: ClosedFloatingPointRange<Float>,

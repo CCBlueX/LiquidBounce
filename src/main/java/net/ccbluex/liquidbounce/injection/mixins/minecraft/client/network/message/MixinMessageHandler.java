@@ -15,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.time.Instant;
 
-import static net.ccbluex.liquidbounce.utils.client.ClientUtilsKt.chat;
-
 @Mixin(MessageHandler.class)
 public class MixinMessageHandler {
 

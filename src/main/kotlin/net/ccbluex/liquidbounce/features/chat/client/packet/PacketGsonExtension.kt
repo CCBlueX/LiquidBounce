@@ -24,7 +24,7 @@ import java.lang.reflect.Type
 /**
  * Packet Serializer
  *
- * Allows to serialize packets from class to json
+ * Allows serializing packets from class to json
  */
 class PacketSerializer : JsonSerializer<Packet> {
 
@@ -65,7 +65,7 @@ class PacketSerializer : JsonSerializer<Packet> {
 /**
  * Packet Deserializer
  *
- * Allows to deserialize packets from json to class
+ * Allows deserializing packets from json to class
  */
 class PacketDeserializer : JsonDeserializer<Packet> {
 
@@ -84,7 +84,7 @@ class PacketDeserializer : JsonDeserializer<Packet> {
      *
      * In the implementation of this call-back method, you should consider invoking
      * [JsonDeserializationContext.deserialize] method to create objects
-     * for any non-trivial field of the returned object. However, you should never invoke it on the
+     * for any non-trivial field of the returned object. However, you should never invoke it on
      * the same type passing `json` since that will cause an infinite loop (Gson will call your
      * call-back method again).
      *

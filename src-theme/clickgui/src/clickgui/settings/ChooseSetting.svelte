@@ -48,7 +48,7 @@
     transition: ease border-radius .2s;
 
     &.expanded {
-      border-radius: 5px 5px 0px 0px;
+      border-radius: 5px 5px 0 0;
 
       &::after {
         transform: translateY(-50%) rotate(180deg);
@@ -74,7 +74,7 @@
 
   .values {
     background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 0px 0px 5px 5px;
+    border-radius: 0 0 5px 5px;
     overflow: hidden;
 
     .value {

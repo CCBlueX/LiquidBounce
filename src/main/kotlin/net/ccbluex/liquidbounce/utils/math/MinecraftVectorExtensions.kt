@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.minecraft.util.math.*
-import java.util.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 import kotlin.math.floor
 
 inline operator fun Vec3d.plus(other: Vec3d): Vec3d {

@@ -39,7 +39,7 @@ object Cosmetics {
     /**
      * Cached capes
      *
-     * This is OK because the cape texture is only loaded for players that own a cape. This is very rare for most people and therefore the cache is not that big.
+     * This is OK because the cape texture is only loaded for players that own a cape. This is very rare for most people, and therefore the cache is not that big.
      * We also don't need to worry about memory leaks, because the cache is cleared when the player disconnects from the world.
      */
     private var cachedCapes = mutableMapOf<String, Identifier>()
@@ -64,7 +64,7 @@ object Cosmetics {
             runCatching {
                 val uuid = player.id.toString()
 
-                // Check if cape is cached
+                // Check if the cape is cached
                 if (cachedCapes.containsKey(uuid)) {
                     response.response(cachedCapes[uuid]!!)
                     return@execute

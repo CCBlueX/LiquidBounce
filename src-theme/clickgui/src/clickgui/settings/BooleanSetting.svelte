@@ -51,7 +51,7 @@
       height: 12px;
       width: 12px;
       top: -2px;
-      left: 0px;
+      left: 0;
       background-color: white;
       transition: ease 0.4s;
       border-radius: 50%;

@@ -26,8 +26,8 @@ interface Packet
 /**
  * Serialized packet
  *
- * @param packetName name of packet
- * @param packetContent content of packet
+ * @param packetName name of the packet
+ * @param packetContent content of the packet
  */
 data class SerializedPacket(
     @SerializedName("m")

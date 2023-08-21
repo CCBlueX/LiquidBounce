@@ -35,7 +35,7 @@
     }
 
     button:hover {
-        background-position: left bottom
+        background-position: left bottom;
     }
 
     .wrapper {

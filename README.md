@@ -43,7 +43,7 @@ nor legally binding.
 ## Setting up a Workspace
 
 LiquidBounce uses Gradle, to make sure that it is installed properly you can
-check [Gradle's website](https://gradle.org/install/). It also requires NodeJS and Python to be installed for
+check [Gradle's website](https://gradle.org/install/). It also requires Node.js and Python to be installed for
 our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 
 1. Clone the repository using `git clone --recurse-submodules https://github.com/CCBlueX/LiquidBounce`.

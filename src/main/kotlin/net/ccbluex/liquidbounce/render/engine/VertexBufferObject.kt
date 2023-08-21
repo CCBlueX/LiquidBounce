@@ -35,11 +35,10 @@ class VertexBufferObject(val target: VBOTarget, val storageType: VBOStorageType)
     /**
      * OpenGL's id for the buffer
      */
-    val id: Int
+    val id: Int = GL20.glGenBuffers()
 
     init {
         // Get an id for our VBO
-        id = GL20.glGenBuffers()
     }
 
     /**

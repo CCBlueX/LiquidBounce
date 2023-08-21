@@ -31,7 +31,7 @@ object MojangApi {
 
         // Read response content and get id from json
         try {
-            // Make a http connection to Mojang API and ask for UUID of username
+            // Make an http connection to Mojang API and ask for UUID of username
             val text = HttpClient.get("https://api.mojang.com/users/profiles/minecraft/$username")
 
             val jsonElement = JsonParser().parse(text)

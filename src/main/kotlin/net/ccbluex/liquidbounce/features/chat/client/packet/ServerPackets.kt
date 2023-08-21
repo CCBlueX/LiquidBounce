@@ -26,11 +26,11 @@ import java.util.*
  *
  * https://github.com/CCBlueX/axochat_server/blob/master/PROTOCOL.md
  *
- * Server Packets are received by the server.
+ * The server receives Server Packets.
  */
 
 /**
- * To login via mojang, the client has to send a RequestMojangInfo packet.
+ * To log in via mojang, the client has to send a RequestMojangInfo packet.
  * The server will then send a MojangInfo to the client.
  * This packet has no body.
  */
@@ -59,7 +59,7 @@ data class ServerLoginMojangPacket(
 ) : Packet
 
 /**
- * To login using a json web token, the client has to send a LoginJWT packet.
+ * To log in using a json web token, the client has to send a LoginJWT packet.
  * it will send Success if the login was successful.
  *
  * @param token can be retrieved by sending RequestJWT on an already authenticated connection.
@@ -78,7 +78,7 @@ data class ServerLoginJWTPacket(
 /**
  * The content of this packet will be sent to every client as Message if it fits the validation scheme.
  *
- * @param content content of message.
+ * @param content content of the message.
  */
 data class ServerMessagePacket(
 
@@ -90,8 +90,8 @@ data class ServerMessagePacket(
 /**
  * The content of this packet will be sent to the specified client as PrivateMessage if it fits the validation scheme.
  *
- * @param receiver receiver is an Id.
- * @param content content of message.
+ * @param receiver receiver is an ID.
+ * @param content content of the message.
  */
 data class ServerPrivateMessagePacket(
 
@@ -106,7 +106,7 @@ data class ServerPrivateMessagePacket(
 /**
  * A client can send this packet to ban other users from using this chat.
  *
- * @param user user is an Id.
+ * @param user user is an ID.
  */
 data class ServerBanUserPacket(
 
@@ -118,7 +118,7 @@ data class ServerBanUserPacket(
 /**
  * A client can send this packet to unban other users.
  *
- * @param user user is an Id.
+ * @param user user is an ID.
  */
 data class ServerUnbanUserPacket(
 
@@ -128,7 +128,7 @@ data class ServerUnbanUserPacket(
 ) : Packet
 
 /**
- * To login using LoginJWT, a client needs to own a json web token.
+ * To log in using LoginJWT, a client needs to own a json web token.
  * This token can be retrieved by sending RequestJWT as an already authenticated client to the server.
  * The server will send a NewJWT packet to the client.
  *

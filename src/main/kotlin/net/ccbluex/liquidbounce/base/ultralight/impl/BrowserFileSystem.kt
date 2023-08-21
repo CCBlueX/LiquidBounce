@@ -36,7 +36,7 @@ class BrowserFileSystem : UltralightFileSystem {
     // unless you have 9,223,372,036,854,775,807 files open. Please reconsider your application then!
     private var nextFileHandle: Long = 0
 
-    // Map from handle to file channel, see class description for more details.
+    // Map from handle to a file channel, see class description for more details.
     private val openFiles = mutableMapOf<Long, FileChannel>()
 
     /**
@@ -82,7 +82,7 @@ class BrowserFileSystem : UltralightFileSystem {
     }
 
     /**
-     * Retrieves the mime type of a given file. Ultralight needs this in order to determine how to load content.
+     * Retrieves the mime type of given file. Ultralight needs this in order to determine how to load content.
      *
      * @param path The path to check the mime type for
      * @return The mime type of the file at the given path, or `null`, if the mime type could not be determined
@@ -112,7 +112,7 @@ class BrowserFileSystem : UltralightFileSystem {
     }
 
     /**
-     * Opens a file at the given location. Ultralight calls this when it needs to read files. Currently the parameter
+     * Opens a file at the given location. Ultralight calls this when it needs to read files. Currently, the parameter
      * `openForWriting` is always `false`, and a `write` method is missing from Ultralight as well.
      *
      * @param path           The path of the file to open
@@ -215,7 +215,7 @@ class BrowserFileSystem : UltralightFileSystem {
     /**
      * Helper method to scratch malformed paths
      *
-     * @param path The path to convert to an NIO path
+     * @param strPath The path to convert to an NIO path
      * @return The converted path, or `null`, if the path failed to convert
      */
     private fun getPath(strPath: String): Path? {
