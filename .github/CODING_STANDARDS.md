@@ -66,6 +66,13 @@ of the file:
 
 You are allowed to use the `@author <author-name>` tag, but try to limit its usage as much as possible.
 
+You are recommended to use the following tags for bypasses:
+
+`@anticheat <anticheat-name>`
+`@anticheatVersion <anticheat-version>`
+`@testedOn <anticheat-test-server>`
+`@note <note-text>` - used for a special comments on a bypass
+
 You aren't allowed to use any other tags.
 
 # Packages
