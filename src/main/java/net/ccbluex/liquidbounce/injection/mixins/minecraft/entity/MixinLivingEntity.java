@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -172,5 +173,37 @@ public abstract class MixinLivingEntity extends MixinEntity {
         Rotation rotation = rotations.displayRotations();
 
         return rotations.shouldDisplayRotations() ? rotation.getYaw() : instance.getYaw();
+    }
+
+    /**
+     * Fall flying using modified-rotation
+     */
+    @Redirect(method = "travel", at  = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
+    private float hookModifyFallFlyingPitch(LivingEntity instance) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        RotationsConfigurable configurable = rotationManager.getActiveConfigurable();
+
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getFixVelocity() || !configurable.getSilent()) {
+            return instance.getPitch();
+        }
+
+        return rotation.getPitch();
+    }
+
+    /**
+     * Fall flying using modified-rotation
+     */
+    @Redirect(method = "travel", at  = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;"))
+    private Vec3d hookModifyFallFlyingRotationVector(LivingEntity instance) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        RotationsConfigurable configurable = rotationManager.getActiveConfigurable();
+
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getFixVelocity() || !configurable.getSilent()) {
+            return instance.getRotationVector();
+        }
+
+        return rotation.getRotationVec();
     }
 }
