@@ -56,6 +56,11 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
     var canBoost = false
     var boosted = false
 
+    /**
+     * @anticheat NoCheatPlus
+     * @anticheatVersion 3.16.1-SNAPSHOT-sMD5NET-b115s
+     * @testedOn eu.loyisa.cn
+     */
     private object NCP : Choice("NCP") {
         override val parent: ChoiceConfigurable
             get() = mode
@@ -79,6 +84,11 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         }
     }
 
+    /**
+     * @anticheat NoCheatPlus
+     * @anticheatVersion 3.16.1-SNAPSHOT-sMD5NET-b115s
+     * @testedOn eu.loyisa.cn
+     */
 
     private object NCPBow : Choice("NCP-bow") {
 

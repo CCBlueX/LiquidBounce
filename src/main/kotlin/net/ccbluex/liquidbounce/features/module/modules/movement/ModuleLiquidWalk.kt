@@ -54,8 +54,6 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
     }
 
     /**
-     * NoCheatPlus LiquidWalk aka. Jesus
-     *
      * @anticheat NoCheatPlus
      * @anticheatVersion 3.16.1-SNAPSHOT-sMD5NET-b115s
      * @testedOn eu.loyisa.cn and poke.sexy

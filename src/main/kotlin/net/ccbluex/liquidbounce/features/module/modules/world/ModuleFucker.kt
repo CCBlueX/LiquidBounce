@@ -109,9 +109,17 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 val direction = rayTraceResult.side
 
                 if (forceImmediateBreak) {
-                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction))
+                    network.sendPacket(
+                        PlayerActionC2SPacket(
+                            PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction
+                        )
+                    )
                     swingHand()
-                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction))
+                    network.sendPacket(
+                        PlayerActionC2SPacket(
+                            PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction
+                        )
+                    )
                 } else {
                     if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                         swingHand()
@@ -180,7 +188,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
 
     enum class DestroyAction(override val choiceName: String) : NamedChoice {
-        DESTROY("Destroy"),
-        USE("Use")
+        DESTROY("Destroy"), USE("Use")
     }
 }
