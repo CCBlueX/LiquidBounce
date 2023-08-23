@@ -59,7 +59,7 @@ public class MixinWindow {
     }
 
     /**
-     * Set window icon to our client icon.
+     * Set the window icon to our client icon.
      *
      * @return modified game icon
      */
@@ -71,7 +71,7 @@ public class MixinWindow {
         final InputStream stream16 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_16x16.png");
         final InputStream stream32 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_32x32.png");
 
-        // In case one of the icons are not found
+        // In case one of the icons was not found
         if (stream16 == null || stream32 == null) {
             LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
 

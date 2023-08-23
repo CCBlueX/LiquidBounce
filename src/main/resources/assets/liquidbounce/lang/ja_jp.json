@@ -181,9 +181,6 @@
   "liquidbounce.command.enemy.subcommand.teammates.result.disabled": "チームメイトは敵と見なされなくなりました。",
   "liquidbounce.command.config.subcommand.load.description": "設定ファイルを読み込みます。",
   "liquidbounce.command.config.subcommand.load.parameter.name.description": "設定ファイルの名前。",
-  "liquidbounce.command.config.subcommand.load.result.notFound": "%s という名前の構成ファイルは存在しません。",
-  "liquidbounce.command.config.subcommand.load.result.failedToLoad": "%s という名前の構成ファイルの読み込みに失敗しました。",
-  "liquidbounce.command.config.subcommand.load.result.loaded": "%s という名前の構成ファイルが読み込まれました。",
   "liquidbounce.command.config.subcommand.create.parameter.name.description": "設定ファイルの名前。",
   "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "既存の構成ファイルを上書きします。",
   "liquidbounce.command.config.subcommand.create.result.failedToCreate": "%s という名前の構成ファイルの作成に失敗しました。",
@@ -358,5 +355,12 @@
   "liquidbounce.command.items.subcommand.list.result.pageCount": "Page: %s",
   "liquidbounce.command.items.subcommand.list.result.page": "page",
   "liquidbounce.command.items.subcommand.clear.description": "Clears the list of rendered blocks.",
-  "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared."
+  "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared.",
+  "liquidbounce.command.config.subcommand.load.result.notFoundLocal": "Local configuration file named %s does not exist.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadLocal": "Failed to load local configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedLocal": "Local configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadOnline": "Failed to load online configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedOnline": "Online configuration file named %s has been loaded.",
+  "liquidbounce.module.clickRecorder.description": "Records your clicks which then can be used by cps-utilizing modules.",
+  "liquidbounce.command.config.subcommand.load.result.unresolvedName": "Unresolved info %s, expected \"local\" or \"online\"."
 }

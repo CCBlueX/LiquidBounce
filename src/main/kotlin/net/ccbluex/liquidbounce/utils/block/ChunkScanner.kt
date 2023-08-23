@@ -48,7 +48,12 @@ object ChunkScanner : Listenable {
     }
 
     val blockChangeEvent = handler<BlockChangeEvent> { event ->
-        ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.BlockUpdateEvent(event.blockPos, event.newState))
+        ChunkScannerThread.enqueueChunkUpdate(
+            ChunkScannerThread.UpdateRequest.BlockUpdateEvent(
+                event.blockPos,
+                event.newState
+            )
+        )
     }
 
     val disconnectHandler = handler<WorldDisconnectEvent> { event ->
@@ -102,7 +107,11 @@ object ChunkScanner : Listenable {
                     synchronized(ChunkScanner) {
                         when (chunkUpdate) {
                             is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)
-                            is UpdateRequest.ChunkUnloadRequest -> removeMarkedBlocksFromChunk(chunkUpdate.x, chunkUpdate.z)
+                            is UpdateRequest.ChunkUnloadRequest -> removeMarkedBlocksFromChunk(
+                                chunkUpdate.x,
+                                chunkUpdate.z
+                            )
+
                             is UpdateRequest.BlockUpdateEvent -> {
                                 for (sub in subscriber) {
                                     sub.recordBlock(chunkUpdate.blockPos, chunkUpdate.newState, false)
@@ -163,7 +172,9 @@ object ChunkScanner : Listenable {
         }
 
         sealed class UpdateRequest {
-            class ChunkUpdateRequest(val chunk: WorldChunk, val singleSubscriber: BlockChangeSubscriber? = null) : UpdateRequest()
+            class ChunkUpdateRequest(val chunk: WorldChunk, val singleSubscriber: BlockChangeSubscriber? = null) :
+                UpdateRequest()
+
             class ChunkUnloadRequest(val x: Int, val z: Int) : UpdateRequest()
             class BlockUpdateEvent(val blockPos: BlockPos, val newState: BlockState) : UpdateRequest()
         }
@@ -173,7 +184,7 @@ object ChunkScanner : Listenable {
         /**
          * Registers a block update and asks the subscriber to make a decision about what should be done.
          *
-         * @param cleared true if the section the block is in was already cleared
+         * @param cleared true, if the section the block is in was already cleared
          */
         fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean)
         fun clearChunk(x: Int, z: Int)

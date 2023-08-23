@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.block.FluidBlock
+import net.minecraft.fluid.Fluids
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.shape.VoxelShapes
 
@@ -45,7 +46,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
             get() = modes
 
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
+            if (event.state.fluidState.isOf(Fluids.WATER) && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
@@ -53,8 +54,6 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
     }
 
     /**
-     * NoCheatPlus LiquidWalk aka. Jesus
-     *
      * @anticheat NoCheatPlus
      * @anticheatVersion 3.16.1-SNAPSHOT-sMD5NET-b115s
      * @testedOn eu.loyisa.cn and poke.sexy
@@ -67,7 +66,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
         private var tick = false
 
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
+            if (event.state.fluidState.isOf(Fluids.WATER) && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
             }
         }

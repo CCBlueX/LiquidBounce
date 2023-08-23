@@ -1,5 +1,5 @@
 <script>
-    import { fade } from "svelte/transition";
+    import {fade} from "svelte/transition";
 
     export let name;
     export let active;

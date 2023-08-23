@@ -6,8 +6,8 @@
 </script>
 
 <main>
-    <ArrayList />
-    <Watermark />
-    <TabGui />
-    <Notifications />
+    <ArrayList/>
+    <Watermark/>
+    <TabGui/>
+    <Notifications/>
 </main>

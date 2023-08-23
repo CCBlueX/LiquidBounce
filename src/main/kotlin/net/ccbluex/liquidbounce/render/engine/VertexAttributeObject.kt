@@ -60,7 +60,14 @@ class VertexAttributeObject(private vararg val attribs: VertexAttribute) {
             attrib.vertexFormat.components.forEach {
                 GL20.glEnableVertexAttribArray(attribIndex)
 
-                GL20.glVertexAttribPointer(attribIndex, it.count, it.type.openGlEnum, it.normalized, attrib.vertexFormat.length, it.offset.toLong())
+                GL20.glVertexAttribPointer(
+                    attribIndex,
+                    it.count,
+                    it.type.openGlEnum,
+                    it.normalized,
+                    attrib.vertexFormat.length,
+                    it.offset.toLong()
+                )
 
                 if (attrib.isPerInstance) {
                     GL33.glVertexAttribDivisor(attribIndex, 1)

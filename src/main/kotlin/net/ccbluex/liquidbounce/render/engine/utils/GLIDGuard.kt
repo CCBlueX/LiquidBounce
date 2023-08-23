@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.render.engine.utils
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
 
 /**
- * Provides a guard for IDs provided by OpenGL which handles freeing of it
+ * Provides a guard for IDs provided by OpenGL, which handles freeing of it
  *
  * @param deletionFunction A function that is called when the object should be deallocated
  */

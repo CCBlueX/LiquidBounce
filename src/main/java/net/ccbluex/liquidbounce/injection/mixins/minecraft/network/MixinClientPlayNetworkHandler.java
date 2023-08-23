@@ -20,9 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.config.Choice;
-import net.ccbluex.liquidbounce.event.ChunkLoadEvent;
-import net.ccbluex.liquidbounce.event.ChunkUnloadEvent;
-import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -119,6 +117,14 @@ public class MixinClientPlayNetworkHandler {
         }
     }
 
+    @Inject(method = "onHealthUpdate", at = @At("RETURN"))
+    private void injectHealthUpdate(HealthUpdateS2CPacket packet, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new HealthUpdateEvent(packet.getHealth(), packet.getFood(), packet.getSaturation()));
+        if (packet.getHealth() == 0) {
+            EventManager.INSTANCE.callEvent(new DeathEvent());
+        }
+    }
+
     @Inject(method = "onPlayerPositionLook", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(DDD)V", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
     private void injectNoRotateSet(final PlayerPositionLookS2CPacket packet, final CallbackInfo ci, final PlayerEntity playerEntity, final Vec3d vec3d, final boolean bl, final boolean bl2, final boolean bl3, final double d, final double e, final double f, final double g, final double h, final double i) {
         final float j = packet.getYaw();
@@ -134,13 +140,13 @@ public class MixinClientPlayNetworkHandler {
         this.connection.send(new PlayerMoveC2SPacket.Full(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ(), j, k, false));
         final Choice activeChoice = ModuleNoRotateSet.INSTANCE.getMode().getActiveChoice();
         if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
-            // Changes you server side rotation and then resets it with provided settings
-            RotationManager.INSTANCE.setTicksUntilReset(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().getKeepRotationTicks());
+            // Changes your server side rotation and then resets it with provided settings
+            RotationManager.INSTANCE.setTicksUntilReset(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().getTicksUntilReset());
             RotationManager.INSTANCE.setActiveConfigurable(ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable());
             RotationManager.INSTANCE.setCurrentRotation(new Rotation(j, k));
             RotationManager.INSTANCE.setTargetRotation(new Rotation(j, k));
         } else {
-            // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotations server-side.
+            // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotation server-side.
             playerEntity.setYaw(playerEntity.prevYaw + 0.000001f);
             playerEntity.setPitch(playerEntity.prevPitch + 0.000001f);
         }

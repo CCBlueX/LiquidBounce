@@ -253,9 +253,6 @@
   "liquidbounce.command.enemy.subcommand.teammates.result.disabled": "Teammates are no longer considered to be your enemy.",
   "liquidbounce.command.config.subcommand.load.description": "Loads a configuration file.",
   "liquidbounce.command.config.subcommand.load.parameter.name.description": "Name of the configuration file.",
-  "liquidbounce.command.config.subcommand.load.result.notFound": "Configuration file named %s does not exist.",
-  "liquidbounce.command.config.subcommand.load.result.failedToLoad": "Failed to load configuration file named %s.",
-  "liquidbounce.command.config.subcommand.load.result.loaded": "Configuration file named %s has been loaded.",
   "liquidbounce.command.config.subcommand.create.parameter.name.description": "Name of the configuration file.",
   "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Overwrite existing configuration file.",
   "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Failed to create configuration file named %s.",
@@ -358,5 +355,12 @@
   "liquidbounce.command.items.subcommand.list.result.pageCount": "Page: %s",
   "liquidbounce.command.items.subcommand.list.result.page": "page",
   "liquidbounce.command.items.subcommand.clear.description": "Clears the list of rendered blocks.",
-  "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared."
+  "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared.",
+  "liquidbounce.command.config.subcommand.load.result.notFoundLocal": "Local configuration file named %s does not exist.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadLocal": "Failed to load local configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedLocal": "Local configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadOnline": "Failed to load online configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedOnline": "Online configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.load.result.unresolvedName": "Unresolved info %s, expected \"local\" or \"online\".",
+  "liquidbounce.module.clickRecorder.description": "Records your clicks which then can be used by cps-utilizing modules."
 }

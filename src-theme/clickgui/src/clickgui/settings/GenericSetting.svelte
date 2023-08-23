@@ -14,17 +14,17 @@
 </script>
 
 {#if type === "BOOLEAN"}
-    <BooleanSetting {instance} />
+    <BooleanSetting {instance}/>
 {:else if type === "CHOOSE"}
-    <ChooseSetting {instance} /> 
+    <ChooseSetting {instance}/>
 {:else if type === "TOGGLEABLE"}
-    <TogglableSetting {instance} />
+    <TogglableSetting {instance}/>
 {:else if type === "INT" || type === "INT_RANGE" || type === "FLOAT" || type === "FLOAT_RANGE"}
-    <RangeSetting {instance} />
+    <RangeSetting {instance}/>
 {:else if type === "CHOICE"}
-    <ChoiceSetting {instance} />
+    <ChoiceSetting {instance}/>
 {:else if type === "CONFIGURABLE"}
-    <ConfigurableSetting {instance} />
+    <ConfigurableSetting {instance}/>
 {:else if type === "TEXT"}
-    <TextSetting {instance} />
+    <TextSetting {instance}/>
 {/if}

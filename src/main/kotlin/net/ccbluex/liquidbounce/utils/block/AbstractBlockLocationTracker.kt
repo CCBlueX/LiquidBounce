@@ -45,7 +45,7 @@ abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscri
             return
         }
 
-        this.trackedBlockMap.put(targetBlockPos, newState)
+        this.trackedBlockMap[targetBlockPos] = newState
     }
 
     override fun clearChunk(x: Int, z: Int) {

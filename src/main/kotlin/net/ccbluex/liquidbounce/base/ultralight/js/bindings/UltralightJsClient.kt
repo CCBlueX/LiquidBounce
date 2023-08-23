@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.base.ultralight.js.bindings
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
@@ -39,6 +40,8 @@ object UltralightJsClient {
 
     fun exitClient() = mc.scheduleStop()
 
+    fun isUpdateAvailable() = LiquidBounce.updateAvailable
+
     /**
      * Access session service from Ultralight
      */
@@ -54,9 +57,10 @@ object UltralightJsClient {
         fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuid}?size=100"
 
         /**
-         * Get if account is premium or cracked
+         * Get if an account is premium or cracked
          */
-        fun getAccountType() = if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) && mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"
+        fun getAccountType() =
+            if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) && mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"
 
         /**
          * Get location of session

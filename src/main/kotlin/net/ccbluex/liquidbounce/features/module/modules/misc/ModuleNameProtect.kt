@@ -19,14 +19,18 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
-import net.minecraft.util.Formatting
+import net.minecraft.text.TextColor
 
 /**
  * NameProtect module
@@ -37,14 +41,35 @@ import net.minecraft.util.Formatting
 object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     val replacement by text("Replacement", "You")
-    val replaceFriendNames by boolean("ObfuscateFriends", true)
+
+    val color by color("Color", Color4b.WHITE)
+    val colorRainbow by boolean("Rainbow", false)
+
+    object ReplaceFriendNames : ToggleableConfigurable(this, "ObfuscateFriends", true) {
+        val color by color("Color", Color4b(255, 179, 72, 255))
+        val colorRainbow by boolean("Rainbow", false)
+    }
+
+    init {
+        tree(ReplaceFriendNames)
+    }
 
     val replacements = ArrayList<ReplacementMapping>()
 
     val renderEventHandler = handler<GameRenderEvent> {
         replacements.clear()
 
-        replacements.add(ReplacementMapping(mc.session.username, this.replacement))
+        if (ReplaceFriendNames.enabled) {
+            FriendManager.friends.withIndex().forEach { (id, friend) ->
+                val color4b = if (ReplaceFriendNames.colorRainbow) rainbow() else ReplaceFriendNames.color
+
+                replacements.add(ReplacementMapping(friend.name, "Friend $id", color4b))
+            }
+        }
+
+        val color4b = if (colorRainbow) rainbow() else color
+
+        replacements.add(ReplacementMapping(mc.session.username, this.replacement, color4b))
 
         // Prevent shorter names being replaced before longer names
         replacements.sortByDescending { it.originalName.length }
@@ -129,7 +154,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
         return charsIndex - index
     }
 
-    class ReplacementMapping(val originalName: String, val replacement: String)
+    class ReplacementMapping(val originalName: String, val replacement: String, val color4b: Color4b)
 
     class NameProtectOrderedText(original: OrderedText) : OrderedText {
         private val mappedCharacters = ArrayList<MappedCharacter>()
@@ -160,23 +185,18 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                         for ((replacementIdx, c) in replacement.originalName.toCharArray().withIndex()) {
                             val origIndex = index + replacementIdx
 
-                            if (originalCharacters.lastIndex < origIndex || originalCharacters[origIndex].codePoint != c.toInt()) {
+                            if (originalCharacters.lastIndex < origIndex || originalCharacters[origIndex].codePoint != c.code) {
                                 canReplace = false
                                 break
                             }
                         }
 
                         if (canReplace) {
-                            this.mappedCharacters.addAll(
-                                replacement.replacement.map {
-                                    MappedCharacter(
-                                        originalChar.style.withColor(
-                                            Formatting.RED
-                                        ),
-                                        it.toInt()
-                                    )
-                                }
-                            )
+                            this.mappedCharacters.addAll(replacement.replacement.map {
+                                MappedCharacter(
+                                    originalChar.style.withColor(TextColor.parse(replacement.color4b.toHex())), it.code
+                                )
+                            })
                             index += replacement.originalName.length
                             return@run
                         }

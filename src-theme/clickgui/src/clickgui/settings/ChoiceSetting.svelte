@@ -1,6 +1,6 @@
 <script>
-    import { sineInOut } from "svelte/easing";
-    import { fade, slide } from "svelte/transition";
+    import {sineInOut} from "svelte/easing";
+    import {fade, slide} from "svelte/transition";
     import GenericSetting from "./GenericSetting.svelte";
 
     export let instance;
@@ -55,78 +55,78 @@
     {#if settings.length > 0}
         <div class="settings" transition:fade|local={{duration: 200, easing: sineInOut}}>
             {#each settings as s}
-                <GenericSetting instance={s} />
+                <GenericSetting instance={s}/>
             {/each}
         </div>
     {/if}
 </div>
 
 <style lang="scss">
-    .settings {
-        background-color: rgba(0, 0, 0, 0.36);
-        border-right: solid 4px #4677FF;
-        overflow: hidden;
-        margin-top: 10px;
+  .settings {
+    background-color: rgba(0, 0, 0, 0.36);
+    border-right: solid 4px #4677FF;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+
+  .setting {
+    overflow: hidden;
+  }
+
+  .choice {
+    padding: 7px 10px;
+  }
+
+  .name {
+    background-color: #4677ff;
+    padding: 7px 10px;
+    position: relative;
+    font-weight: 500;
+    color: white;
+    font-size: 12px;
+    border-radius: 5px;
+    transition: ease border-radius .2s;
+
+    &.expanded {
+      border-radius: 5px 5px 0 0;
+
+      &::after {
+        transform: translateY(-50%) rotate(180deg);
+      }
     }
 
-    .setting {
-        overflow: hidden;
+    &::after {
+      content: "";
+      display: block;
+      position: absolute;
+      height: 10px;
+      width: 10px;
+      right: 10px;
+      top: 50%;
+      transition: ease transform .2s;
+      transform: translateY(-50%);
+      background-image: url("../img/settings-expand.svg");
+      background-position: center;
+      background-repeat: no-repeat;
     }
+  }
 
-    .choice {
-        padding: 7px 10px;
+  .values {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 0 0 5px 5px;
+    overflow: hidden;
+
+    .value {
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+      font-size: 12px;
+      text-align: center;
+      padding: 7px;
+      transition: ease color .2s;
+
+      &.enabled {
+        color: #4677ff;
+      }
     }
-
-    .name {
-        background-color: #4677ff;
-        padding: 7px 10px;
-        position: relative;
-        font-weight: 500;
-        color: white;
-        font-size: 12px;
-        border-radius: 5px;
-        transition: ease border-radius .2s;
-
-        &.expanded {
-            border-radius: 5px 5px 0px 0px;
-
-            &::after {
-                transform: translateY(-50%) rotate(180deg);  
-            }
-        }
-
-        &::after {
-            content: "";
-            display: block;
-            position: absolute;
-            height: 10px;
-            width: 10px;
-            right: 10px;
-            top: 50%;
-            transition: ease transform .2s;
-            transform: translateY(-50%);
-            background-image: url("../img/settings-expand.svg");
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-    }
-
-    .values {
-        background-color: rgba(0, 0, 0, 0.5);
-        border-radius: 0px 0px 5px 5px;
-        overflow: hidden;
-
-        .value {
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 500;
-            font-size: 12px;
-            text-align: center;
-            padding: 7px;
-            transition: ease color .2s;
-
-            &.enabled {
-                color: #4677ff;
-            }
-        }
-    }
+  }
 </style>

@@ -20,13 +20,16 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
@@ -34,6 +37,15 @@ import kotlin.math.sqrt
 
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
+
+
+fun Entity.isCloseToEdge(distance: Double = 0.1): Boolean {
+    Direction.values().drop(2).forEach { side ->
+        if (!this.pos.offset(side, distance).add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
+            return true
+    }
+    return false
+}
 
 val ClientPlayerEntity.pressingMovementButton
     get() = input.pressingForward || input.pressingBack || input.pressingLeft || input.pressingRight
@@ -74,7 +86,7 @@ val PlayerEntity.sqrtSpeed: Double
 fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
     // Might be a jump
     if (isOnGround && increment) {
-        // Allows to bypass modern anti cheat techniques
+        // Allows to bypass modern anti-cheat techniques
         incrementStat(Stats.JUMP)
     }
 

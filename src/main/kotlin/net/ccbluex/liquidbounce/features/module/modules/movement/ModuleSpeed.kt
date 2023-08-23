@@ -39,12 +39,8 @@ import net.ccbluex.liquidbounce.utils.entity.upwards
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices(
-        "Mode",
-        SpeedYPort,
-        arrayOf(
-            SpeedYPort,
-            LegitHop,
-            Custom
+        "Mode", SpeedYPort, arrayOf(
+            SpeedYPort, LegitHop, Custom
         )
     )
 
@@ -104,9 +100,12 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
                         player.strafe(speed = horizontalSpeed.toDouble())
                         player.velocity.y = verticalSpeed.toDouble()
                     }
+
                     customStrafe -> player.strafe(speed = strafe.toDouble())
                     else -> player.strafe()
                 }
+            } else {
+                mc.timer.timerSpeed - 1f
             }
         }
 

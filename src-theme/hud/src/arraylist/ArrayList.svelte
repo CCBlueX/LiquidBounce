@@ -67,7 +67,7 @@
 <div class="arraylist">
     {#each modules as aModule (aModule)}
         <div animate:flip={{ duration: 200 }} transition:fly={{ x: 10, duration: 200 }}>
-            <Module name={aModule.name} />
+            <Module name={aModule.name}/>
         </div>
     {/each}
 </div>

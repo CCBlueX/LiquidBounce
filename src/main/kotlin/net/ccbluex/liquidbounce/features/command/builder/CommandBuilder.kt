@@ -65,7 +65,7 @@ class CommandBuilder private constructor(val name: String) {
      * For example: <code>.friend</code>
      *
      * The command _friend_ would not be executable since it just acts as a
-     * hub for it's subcommands
+     * hub for its subcommands
      */
     fun hub(): CommandBuilder {
         this.executable = false

@@ -116,9 +116,11 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        val onGround by boolean("OnGround", true)
+
         val packetHandler = handler<PacketEvent> { event ->
             if (event.packet is PlayerMoveC2SPacket) {
-                event.packet.onGround = true
+                event.packet.onGround = onGround
             }
         }
         val shapeHandler = handler<BlockShapeEvent> { event ->
@@ -167,8 +169,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                     if (player.pitch <= 80) {
                         RotationManager.aimAt(
-                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
-                            configurable = rotations
+                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)), configurable = rotations
                         )
                     }
 

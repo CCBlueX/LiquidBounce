@@ -34,7 +34,7 @@ class ViewListener : UltralightViewListener {
      *
      * @param title The new page title
      */
-    override fun onChangeTitle(title: String) { }
+    override fun onChangeTitle(title: String) {}
 
     /**
      * Called by Ultralight when the view URL changes.
@@ -50,7 +50,7 @@ class ViewListener : UltralightViewListener {
      *
      * @param tooltip The new page tooltip
      */
-    override fun onChangeTooltip(tooltip: String) { }
+    override fun onChangeTooltip(tooltip: String) {}
 
     /**
      * Called by Ultralight when the cursor changes. Ultralight supports a lot of cursors, but currently not a custom
@@ -90,7 +90,7 @@ class ViewListener : UltralightViewListener {
      *
      * @param openerUrl The URL of the page that initiated this request
      * @param targetUrl The URL that the new View will navigate to
-     * @param isPopup   Whether or not this was triggered by window.open()
+     * @param isPopup   Whether this was triggered by window.open()
      * @param popupRect Popups can optionally request certain dimensions and coordinates via window.open(). You can
      * choose to respect these or not by resizing/moving the View to this rect.
      * @return The view to display the new URL in, or `null`, if the request should not be further handled by

@@ -66,8 +66,21 @@ object CommandItemGive {
                 }
 
                 mc.player!!.inventory!!.setStack(emptySlot, itemStack)
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
-                chat(regular(command.result("itemGiven", itemStack.toHoverableText(), variable(itemStack.count.toString()))))
+                mc.networkHandler!!.sendPacket(
+                    CreativeInventoryActionC2SPacket(
+                        if (emptySlot < 9) emptySlot + 36 else emptySlot,
+                        itemStack
+                    )
+                )
+                chat(
+                    regular(
+                        command.result(
+                            "itemGiven",
+                            itemStack.toHoverableText(),
+                            variable(itemStack.count.toString())
+                        )
+                    )
+                )
             }
             .build()
     }

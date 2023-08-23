@@ -48,8 +48,9 @@ import kotlin.math.sqrt
 class RotationsConfigurable : Configurable("Rotations") {
     val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
     val fixVelocity by boolean("FixVelocity", true)
-    val threshold by float("Threshold", 2f, 0f..50f)
-    val keepRotationTicks by int("KeepRotationTicks", 30, 0..300)
+    val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
+    val ticksUntilReset by int("TicksUntilReset", 5, 1..30)
+    val silent by boolean("Silent", true)
 }
 
 /**
@@ -279,7 +280,7 @@ object RotationManager : Listenable {
 
         activeConfigurable = configurable
         targetRotation = rotation
-        ticksUntilReset = configurable.keepRotationTicks
+        ticksUntilReset = configurable.ticksUntilReset
         ignoreOpenInventory = openInventory
     }
 
@@ -307,10 +308,6 @@ object RotationManager : Listenable {
         // Prevents any rotation changes, when inventory is opened
         val canRotate =
             (mc.currentScreen !is InventoryScreen && mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
-        // Update reset ticks
-        if (ticksUntilReset > 0) {
-            ticksUntilReset--
-        }
 
         // Update patterns
         for (pattern in AIMING_PATTERNS) {
@@ -318,17 +315,17 @@ object RotationManager : Listenable {
         }
 
         // Update rotations
-        val turnSpeed =
-            RandomUtils.nextFloat(activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive)
+        val speed = RandomUtils.nextFloat(
+            activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive
+        )
 
         val playerRotation = mc.player?.rotation ?: return
 
         if (ticksUntilReset == 0 || !shouldUpdate()) {
 
             if (rotationDifference(
-                    currentRotation ?: serverRotation,
-                    playerRotation
-                ) < activeConfigurable!!.threshold
+                    currentRotation ?: serverRotation, playerRotation
+                ) < activeConfigurable!!.resetThreshold || !activeConfigurable!!.silent
             ) {
                 ticksUntilReset = -1
 
@@ -344,16 +341,29 @@ object RotationManager : Listenable {
                 return
             }
 
-            if (canRotate)
-                currentRotation =
-                    limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity()
+            if (canRotate) {
+                limitAngleChange(currentRotation ?: serverRotation, playerRotation, speed).fixedSensitivity().let {
+                    currentRotation = it
+                    if (!activeConfigurable!!.silent) mc.player!!.applyRotation(it)
+                }
+            }
             return
         }
-        if (canRotate)
+        if (canRotate) {
             targetRotation?.let { targetRotation ->
-                currentRotation =
-                    limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed).fixedSensitivity()
+                limitAngleChange(
+                    currentRotation ?: playerRotation, targetRotation, speed
+                ).fixedSensitivity().let {
+                    currentRotation = it
+                    if (!activeConfigurable!!.silent) mc.player!!.applyRotation(it)
+                }
             }
+        }
+
+        // Update reset ticks
+        if (ticksUntilReset > 0) {
+            ticksUntilReset--
+        }
     }
 
     /**
@@ -387,14 +397,14 @@ object RotationManager : Listenable {
     /**
      * Limit your rotations
      */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, speed: Float): Rotation {
         val yawDifference = angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
 
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * turnSpeed
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * turnSpeed
+        val straightLineYaw = abs(yawDifference / rotationDifference) * speed
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * speed
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),

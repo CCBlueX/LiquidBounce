@@ -37,7 +37,6 @@ import java.util.Set;
 @Mixin(targets = "me.jellysquid.mods.sodium.client.render.occlusion.BlockOcclusionCache", remap = false)
 public class MixinSodiumBlockOcclusionCache {
 
-    @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "shouldDrawSide", at = @At("RETURN"), cancellable = true)
     private void injectXRay(BlockState selfState, BlockView view, BlockPos pos, Direction facing, CallbackInfoReturnable<Boolean> cir) {
         ModuleXRay module = ModuleXRay.INSTANCE;

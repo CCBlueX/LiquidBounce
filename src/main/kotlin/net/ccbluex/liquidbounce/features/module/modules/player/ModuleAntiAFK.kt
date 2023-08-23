@@ -24,13 +24,17 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Custom.Rotate.angle
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.angle
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.client.enforced
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
+import kotlin.random.Random
 
 /**
  * AntiAFK module
@@ -41,111 +45,82 @@ import org.apache.commons.lang3.RandomUtils
 object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private val modes = choices(
-        "Mode",
-        Random,
-        arrayOf(
-            Old,
-            Random,
-            Custom
+        "Mode", RandomMode, arrayOf(
+            OldMode, RandomMode, CustomMode
         )
     )
 
-    private object Old : Choice("Old") {
+    private object OldMode : Choice("Old") {
 
         override val parent: ChoiceConfigurable
             get() = modes
 
-        override fun disable() {
-            if (!mc.options.forwardKey.pressedOnKeyboard) {
-                mc.options.forwardKey.isPressed = false
-            }
-        }
-
         val repeatable = repeatable {
-            mc.options.forwardKey.isPressed = true
-            wait(10)
+            mc.options.forwardKey.enforced = true
+            wait { 10 }
             player.yaw += 180f
         }
     }
 
-    private object Random : Choice("Random") {
+    private object RandomMode : Choice("Random") {
 
         override val parent: ChoiceConfigurable
             get() = modes
 
-        var delay = 500L
-        var shouldMove = false
-        val timer = Chronometer()
-
-        override fun disable() {
-            mc.options.rightKey.isPressed = false
-            mc.options.leftKey.isPressed = false
-            mc.options.backKey.isPressed = false
-            mc.options.forwardKey.isPressed = false
-        }
-
         val repeatable = repeatable {
-            randomKeyBind()!!.isPressed = shouldMove
-
-            if (!timer.hasElapsed(delay)) {
-                return@repeatable
-            }
-
-            shouldMove = false
-            delay = 500L
 
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
                     if (player.isOnGround) {
                         player.jump()
                     }
-                    timer.reset()
                 }
+
                 1 -> {
                     if (!player.handSwinging) {
                         player.swingHand(Hand.MAIN_HAND)
                     }
-                    timer.reset()
                 }
+
                 2 -> {
-                    delay = RandomUtils.nextInt(0, 1000).toLong()
-                    shouldMove = true
-                    timer.reset()
+                    val key = randomKeyBind()
+                    key.enforced = true
+                    wait { RandomUtils.nextInt(3, 7) }
+                    key.enforced = false
                 }
+
                 3 -> {
                     player.inventory.selectedSlot = RandomUtils.nextInt(0, 9)
-                    timer.reset()
                 }
+
                 4 -> {
-                    player.yaw += RandomUtils.nextFloat(-180f, 180f)
-                    timer.reset()
+                    player.yaw += RandomUtils.nextFloat(0f, 360f) - 180f
                 }
+
                 5 -> {
-                    if (player.pitch <= -90f || player.pitch >= 90) {
-                        player.pitch = 0f
-                    }
-                    player.pitch += RandomUtils.nextFloat(-10f, 10f)
-                    timer.reset()
+                    player.pitch = (RandomUtils.nextFloat(0f, 10f) - 5f + player.pitch).coerceIn(-90f, 90f)
                 }
             }
+            wait { RandomUtils.nextInt(4, 7) }
         }
     }
 
-    private fun randomKeyBind(): KeyBinding? {
-        return when (RandomUtils.nextInt(0, 4)) {
+    private fun randomKeyBind(): KeyBinding {
+        return when (RandomUtils.nextInt(0, 3)) {
             0 -> mc.options.rightKey
             1 -> mc.options.leftKey
             2 -> mc.options.backKey
-            3 -> mc.options.forwardKey
-            else -> null
+            else -> mc.options.forwardKey
         }
     }
 
-    private object Custom : Choice("Custom") {
+    private object CustomMode : Choice("Custom") {
         override val parent: ChoiceConfigurable
             get() = modes
 
         private object Rotate : ToggleableConfigurable(ModuleAntiAFK, "Rotate", true) {
+            val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+            val rotationsConfigurable = tree(RotationsConfigurable())
             val delay by int("Delay", 5, 0..20)
             val angle by float("Angle", 1f, -180f..180f)
         }
@@ -162,12 +137,12 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val jump by boolean("Jump", true)
         val move by boolean("Move", true)
 
-        override fun disable() {
-            if (!mc.options.forwardKey.pressedOnKeyboard) {
-                mc.options.forwardKey.isPressed = false
+        val swingRepeatable = repeatable {
+            if (Swing.enabled && !player.handSwinging) {
+                wait { Swing.delay }
+                player.swingHand(Hand.MAIN_HAND)
             }
         }
-
         val repeatable = repeatable {
             if (move) {
                 mc.options.forwardKey.isPressed = true
@@ -178,18 +153,16 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
 
             if (Rotate.enabled) {
-                wait(Rotate.delay)
-                player.yaw += angle
-                if (player.pitch <= -90f || player.pitch >= 90) {
-                    player.pitch = 0f
-                }
-                player.pitch += RandomUtils.nextFloat(0f, 1f) * 2 - 1
+                wait { Rotate.delay }
+                val serverRotation = RotationManager.serverRotation
+                val pitchRandomization = Random.nextDouble(-5.0, 5.0).toFloat()
+                RotationManager.aimAt(
+                    Rotation(
+                        serverRotation.yaw + angle, (serverRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
+                    ), ignoreOpenInventory, rotationsConfigurable
+                )
             }
 
-            if (Swing.enabled && !player.handSwinging) {
-                wait(Swing.delay)
-                player.swingHand(Hand.MAIN_HAND)
-            }
         }
     }
 }
