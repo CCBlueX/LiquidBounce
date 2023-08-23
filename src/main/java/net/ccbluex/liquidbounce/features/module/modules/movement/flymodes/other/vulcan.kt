@@ -21,4 +21,4 @@ import kotlin.math.*
 //Vulcan
  private val timerValue =
         FloatValue("VulcanFast-Timer", 3f, 1f, 3f) { modeValue.get().equals("vulcanfast", ignoreCase = true) }
-    
+
