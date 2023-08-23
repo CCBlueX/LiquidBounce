@@ -35,6 +35,7 @@ import net.janrupf.ujr.api.config.UlFontHinting
 import net.janrupf.ujr.core.UltralightJavaReborn
 import net.janrupf.ujr.core.platform.PlatformEnvironment
 import org.lwjgl.glfw.GLFW
+import java.io.File
 
 class WebController(val windowController: WindowController) : AutoCloseable {
 
@@ -74,8 +75,8 @@ class WebController(val windowController: WindowController) : AutoCloseable {
         val ultralightFolder = ConfigSystem.rootFolder.resolve("ultralight")
         ultralightPlatform.setConfig(
             UltralightConfigBuilder()
-                .cachePath(ultralightFolder.resolve("cache").toString() + "\\")
-                .resourcePathPrefix(ultralightFolder.resolve("resources").toString() + "\\")
+                .cachePath(ultralightFolder.resolve("cache").toString() + File.separator)
+                .resourcePathPrefix(ultralightFolder.resolve("resources").toString() + File.separator)
                 .fontHinting(UlFontHinting.SMOOTH)
         )
 
