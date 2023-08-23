@@ -53,7 +53,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
     /**
      * @anticheat Vulcan
      * @anticheatVersion 2.7.5
-     * @testedOn eu.loyisa.cn
+     * @testedOn eu.loyisa.cn; eu.anticheat-test.com
      * @note this still flags a bit
      */
     private object Vulcan : Choice("Vulcan") {
