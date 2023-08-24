@@ -76,10 +76,10 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         }
 
         val timerRepeatable = repeatable {
-            mc.timer.timerSpeed = 1f
-            wait { 100 }
             mc.timer.timerSpeed = 2f
             wait { 1 }
+            mc.timer.timerSpeed = 1f
+            wait { 100 }
         }
 
         override fun disable() {
