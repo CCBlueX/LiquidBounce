@@ -85,4 +85,14 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
             else -> 0.2F
         }
+    fun getNoSlowBlockState(): Boolean {
+        return blockForwardMultiplier != 0.2F && blockStrafeMultiplier != 0.2F
+    }
+    fun getNoSlowConsumeState(): Boolean {
+        return consumeForwardMultiplier != 0.2F && consumeStrafeMultiplier != 0.2F
+    }
+    fun getNoSlowBowState(): Boolean {
+        return bowForwardMultiplier != 0.2F && bowStrafeMultiplier != 0.2F
+    }
+
 }
