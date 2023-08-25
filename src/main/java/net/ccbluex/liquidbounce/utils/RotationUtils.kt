@@ -412,7 +412,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     /**
-     * Returns smallest angle difference possible with a specific sensitivity ("gcd")
+     * Returns the smallest angle difference possible with a specific sensitivity ("gcd")
      */
     fun getFixedAngleDelta(sensitivity: Float = mc.gameSettings.mouseSensitivity) =
         (sensitivity * 0.6f + 0.2f).pow(3) * 1.2f

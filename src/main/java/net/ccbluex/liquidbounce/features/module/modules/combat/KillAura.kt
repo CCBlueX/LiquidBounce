@@ -20,12 +20,12 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
-import net.ccbluex.liquidbounce.utils.item.ItemUtils.isConsumingItem
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.item.ItemUtils.isConsumingItem
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
@@ -64,9 +65,7 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import kotlin.math.cos
 import kotlin.math.max
-import kotlin.math.sin
 
 object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     /**
@@ -137,7 +136,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val keepSprint by BoolValue("KeepSprint", true)
 
     // AutoBlock
-    private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick", "Fake"), "Packet")
+    private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
     private val interactAutoBlock by BoolValue("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake") }
 
     // AutoBlock conditions
@@ -298,18 +297,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
             target ?: return
             currentTarget ?: return
-
-            // Update hitable
-            updateHitable()
-
-            // AutoBlock
-            if (canBlock) {
-                when (autoBlock) {
-                    "AfterTick" -> startBlocking(currentTarget!!, hitable)
-                    "Fake" -> startBlocking(currentTarget!!, hitable, fake = true)
-                }
-            }
-
             return
         }
     }
@@ -603,7 +590,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Stop blocking
         val thePlayer = mc.thePlayer
 
-        if (thePlayer.isBlocking || renderBlocking) stopBlocking()
+        if (thePlayer.isBlocking || renderBlocking) {
+            stopBlocking()
+            return
+        }
 
         // Call attack event
         callEvent(AttackEvent(entity))
@@ -646,24 +636,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             ) thePlayer.onEnchantmentCritical(target)
         }
 
-        //TODO: SHOULD THIS BE THIS? https://github.com/CCBlueX/LiquidBounce/blob/bb112eb53fdee22a974695a1dcaec3c6d9ec10eb/1.8.9-Forge/src/main/java/net/ccbluex/liquidbounce/features/module/modules/combat/KillAura.kt#L547
-        /*
-
-            // Start blocking after attack
-        if (thePlayer.isBlocking || (autoBlock && canBlock)) {
-            if (!(blockRate > 0 && Random().nextInt(100) <= blockRate))
-                return
-
-            if (delayedBlock)
-                return
-
-            startBlocking(entity, interactAutoBlock)
-        }
-         */
         // Start blocking after attack
-        if (autoBlock == "Packet" && (thePlayer.isBlocking || canBlock)) startBlocking(
-            entity, interactAutoBlock
-        )
+        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock)) {
+            startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
+        }
 
         resetLastAttackedTicks()
     }
@@ -780,16 +756,11 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
                 val boundingBox = interactEntity.hitBox
 
-                val (yaw, pitch) = targetRotation ?: Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
-                val yawRad = -yaw.toRadians() - Math.PI
-                val pitchRad = -pitch.toRadians()
-                val yawCos = cos(yawRad)
-                val yawSin = sin(yawRad)
-                val pitchCos = -cos(pitchRad)
-                val pitchSin = sin(pitchRad)
-                val range = maxRange.toDouble()
-                val lookAt =
-                    positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
+                val (yaw, pitch) = targetRotation ?: mc.thePlayer.rotation
+
+                val vec = RotationUtils.getVectorForRotation(Rotation(yaw, pitch))
+
+                val lookAt = positionEye.add(vec * maxRange.toDouble())
 
                 val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
                 val hitVec = movingObject.hitVec
@@ -798,9 +769,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     C02PacketUseEntity(interactEntity, hitVec - interactEntity.positionVector),
                     C02PacketUseEntity(interactEntity, INTERACT)
                 )
+
             }
 
-            sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f))
+            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem()))
             blockStatus = true
         }
 
