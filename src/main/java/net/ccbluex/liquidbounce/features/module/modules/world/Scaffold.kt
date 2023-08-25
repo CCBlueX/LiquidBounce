@@ -111,9 +111,17 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val down by BoolValue("Down", true) { mode != "GodBridge" }
 
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
-    private val preFallChanceBlocksJump by IntegerValue(
-        "PreFallChanceBlocksJump", 4, 1..8
-    ) { mode == "GodBridge" && !jumpAutomatically }
+    private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
+        override fun isSupported() = mode == "GodBridge" && !jumpAutomatically
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minBlocksToJump.get())
+    }
+
+    private val minBlocksToJump: IntegerValue = object : IntegerValue("MinBlocksToJump", 4, 1..8) {
+        override fun isSupported() = mode == "GodBridge" && !jumpAutomatically && !maxBlocksToJump.isMinimal()
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxBlocksToJump.get())
+    }
 
     // Eagle
     private val eagleValue: ListValue = object : ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") {
@@ -155,7 +163,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotationMode != "Off"
     }
 
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotationMode != "Off" }
+    private val angleThresholdUntilReset by FloatValue(
+        "AngleThresholdUntilReset",
+        5f,
+        0.1f..180f
+    ) { rotationMode != "Off" }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -235,6 +247,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private var blocksPlacedUntilJump = 0
     private val isManualJumpOptionActive
         get() = mode == "GodBridge" && !jumpAutomatically
+    private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
 
     // Enabling module
     override fun onEnable() {
@@ -385,7 +398,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (rotationMode == "Off" || (it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing))) {
+            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
                 val result = if (raycastProperly && it != null) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
                 } else {
@@ -749,9 +762,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         var considerStablePitch: PlaceRotation? = null
 
         val isLookingDiagonally = run {
-            val yaw = abs(MathHelper.wrapAngleTo180_float(player.rotationYaw))
+            // Round the rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
+            val yaw = round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f
 
-            arrayOf(45f, 135f).any { yaw in it - 10f..it + 10f } && player.movementInput.moveStrafe == 0f
+            arrayOf(45f, 135f).any { yaw == it } && player.movementInput.moveStrafe == 0f
         }
 
         for (side in EnumFacing.values()) {
@@ -828,7 +842,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             val info = placeRotation.placeInfo
 
             if (mode == "GodBridge") {
-                val shouldJumpForcefully = isManualJumpOptionActive && blocksPlacedUntilJump >= preFallChanceBlocksJump
+                val shouldJumpForcefully = isManualJumpOptionActive && blocksPlacedUntilJump >= blocksToJump
 
                 performBlockRaytrace(currRotation, maxReach)?.let {
                     if (it.blockPos == info.blockPos && (it.sideHit != info.enumFacing || shouldJumpForcefully) && isMoving && currRotation.yaw.roundToInt() % 45f == 0f) {
@@ -838,6 +852,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
                         if (shouldJumpForcefully) {
                             blocksPlacedUntilJump = 0
+                            blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
                         }
 
                         targetRotation = currRotation
