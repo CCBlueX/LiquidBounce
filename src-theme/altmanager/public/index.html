@@ -60,17 +60,87 @@
             margin-right: auto;
             width: 30%;
             height: 70%;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .auth {
+            padding-top: 5%;
+            padding-left: 15%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            position: absolute;
+            top: 15%;
+            left: 5%;
+            width: 90%;
+            height: 20%;
             background-color: rgba(0, 0, 0, 0.5);
         }
 
+        .theAlteningGrid {
+            display: grid;
+            grid-auto-raw: 2fr;
+            position: absolute;
+            top: 40%;
+            left: 17.5%;
+            width: 80%;
+            height: 20%;
+        }
+
+        .theAlteningButton {
+            z-index: 0;
+            opacity: 0;
+        }
+
+        .microsoftButton {
+            display: grid;
+            grid-auto-raw: 2fr;
+            position: absolute;
+            top: 40%;
+            left: 17.5%;
+            width: 80%;
+            height: 20%;
+            z-index: 0;
+            opacity: 0;
+        }
+
+        .theAlteningText {
+            position: relative;
+            height: 80%;
+            width: 80%;
+            text-align: center;
+            font-size: 30px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .theAlteningButton1 {
+            position: relative;
+            height: 80%;
+            width: 80%;
+            text-align: center;
+            font-size: 30px;
+            background-color: rgba(90, 90, 255, 0.5);
+        }
+
+        .minecraftButton {
+            display: grid;
+            grid-auto-raw: 2fr;
+            position: absolute;
+            top: 40%;
+            left: 17.5%;
+            width: 80%;
+            height: 20%;
+            z-index: 20;
+            opacity: 1;
+        }
+
         .addScreen {
+            z-index: 0;
             opacity: 0;
             position: absolute;
             top: 0%;
             left: 0%;
             width: 100%;
             height: 100%;
-            z-index: 0;
         }
 
         .button {
@@ -80,7 +150,7 @@
             will-change: background-position;
             transition: background-position .2s ease-out;
             margin-top: 10px;
-            width: 23%;
+            width: 25%;
             padding: 25px 35px;
             border-radius: 6px;
             align-items: center;
@@ -224,6 +294,46 @@
             top: 20px;
             right: 20px;
         }
+
+        .authButton {
+            z-index: 30;
+            height: 70%;
+            width: 10%;
+            background-color: rgba(0, 0, 0, 255);
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .addButton {
+            position: absolute;
+            z-index: 30;
+            width: 70%;
+            height: 10%;
+            top: 70%;
+            left: 15%;
+            font-size: 30px;
+            background-color: rgba(90, 90, 255, 255);
+        }
+
+        .generateButto {
+            position: absolute;
+            width: 10%;
+            height: 10%;
+            left: 85%;
+            top: 50%;
+            background-color: rgba(90, 90, 255, 255);
+        }
+
+        .clipboardButton {
+            position: absolute;
+            width: 70%;
+            height: 10%;
+            left: 15%;
+            top: 85%;
+            font-size: 30px;
+            background-color: rgba(0, 0, 0, 255);
+        }
+
         #face {
             width: 32px;
             height: 32px;
@@ -257,6 +367,45 @@
                 addScreen.style.opacity = 1;
                 removeButtons.style.zIndex = 0;
                 removeButtons.style.filter = "blur(20px)";
+            }
+        }
+
+        function addDynamically() {
+            newCrackedAccount()
+        }
+
+        function switchAuth(num) {
+            let theAlteningScreen = document.querySelector(".theAlteningButton");
+            let microsoftButton = document.querySelector(".microsoftButton");
+            let minecraftButton = document.querySelector(".minecraftButton");
+            switch (num) {
+                case 0: {
+                    minecraftButton.style.opacity = 1;
+                    minecraftButton.style.zIndex = 20;
+                    microsoftButton.style.opacity = 0;
+                    microsoftButton.style.zIndex = 0
+                    theAlteningScreen.style.opacity = 0;
+                    theAlteningScreen.style.zIndex = 0;
+                    break;
+                }
+                case 1: {
+                    minecraftButton.style.opacity = 0;
+                    minecraftButton.style.zIndex = 0;
+                    microsoftButton.style.opacity = 1;
+                    microsoftButton.style.zIndex = 20
+                    theAlteningScreen.style.opacity = 0;
+                    theAlteningScreen.style.zIndex = 0;
+                    break;
+                }
+                case 2: {
+                    minecraftButton.style.opacity = 0;
+                    minecraftButton.style.zIndex = 0;
+                    microsoftButton.style.opacity = 0;
+                    microsoftButton.style.zIndex = 0
+                    theAlteningScreen.style.opacity = 1;
+                    theAlteningScreen.style.zIndex = 20;
+                    break;
+                }
             }
         }
 
@@ -404,49 +553,6 @@
                     <div id="location" class="location"></div>
                 </div>
 
-                <div class="button">
-                    <h2>Cracked Login</h2>
-                    <div>
-                        <label for="username"></label>
-                        <input type="text" id="username" name="username" placeholder="Username">
-                        <button onclick="setRandomUsername()">Random</button>
-                        <br>
-                        <button onclick="newCrackedAccount()">
-                            Add
-                        </button>
-
-
-                    </div>
-                </div>
-
-                <div class="button">
-                    <h2>Microsoft Login</h2>
-
-                    This will open your browser to sign in to your Microsoft account.<br>
-                    <br>
-
-                    <button onclick="newMicrosoftAccount(successMicrosoft, errorMicrosoft)">
-                        Add
-                    </button>
-                </div>
-                <div class="button">
-                    <h2>Altening Login</h2>
-
-                    <div>
-                        <label for="token"></label><input type="text" id="token" name="token"
-                                                          placeholder="Account Token">
-                        <button onclick="newAlteningAccount()">
-                            Add
-                        </button>
-                        <br>
-                        <label for="apitoken"></label>
-                        <input type="password" id="apitoken" name="apitoken" placeholder="API Token">
-                        <button onclick="generateAlteningAccount()">
-                            Add
-                        </button>
-                    </div>
-                </div>
-
                 <div class="accounts" id="accounts"></div>
                 <div id="response"></div>
             </div>
@@ -509,38 +615,86 @@
     </div>
     <div class="addScreen">
         <div class="loginScreen" id="loginScreen">
-            <h1 id="title1">Add</h1>
+            <h1 id="title1">Login</h1>
             <div class="auth">
-            <button class="butto" onclick="toggleOverlay()">
-                <picture>
-                    <source srcset="img/minecraft.svg"
-                            media="(orientation: portrait)">
-                    <img src="img/minecraft.svg" alt="">
-                </picture>
-            </button>
-            <button class="butto" onclick="toggleOverlay()">
-                <picture>
-                    <source srcset="img/microsoft.svg"
-                            media="(orientation: portrait)">
-                    <img src="img/microsoft.svg" alt="">
-                </picture>
-            </button>
-            <button class="butto" onclick="toggleOverlay()">
-                <picture>
-                    <source srcset="img/thealtening.svg"
-                            media="(orientation: portrait)">
-                    <img src="img/thealtening.svg" alt="">
-                </picture>
-            </button>
+                <button class="authButton" onclick="switchAuth(0)">
+                    <picture>
+                        <source srcset="img/minecraft.svg"
+                                media="(orientation: portrait)">
+                        <img src="img/minecraft.svg" alt="">
+                    </picture>
+                    Minecraft
+                </button>
+                <button class="authButton" onclick="switchAuth(1)">
+                    <picture>
+                        <source srcset="img/microsoft.svg"
+                                media="(orientation: portrait)">
+                        <img src="img/microsoft.svg" alt="">
+                    </picture>
+                    Microsoft
+                </button>
+                <button class="authButton" onclick="switchAuth(2)">
+                    <picture>
+                        <source srcset="img/thealtening.svg"
+                                media="(orientation: portrait)">
+                        <img src="img/thealtening.svg" alt="">
+                    </picture>
+                    TheAltening
+                </button>
             </div>
+
+            <div class="minecraftButton">
+                <input type="text" id="username" placeholder="Name" class="theAlteningText">
+                <button class="theAlteningButton1" onclick="setRandomUsername()">
+                    <picture>
+                        <source srcset="img/generate.svg"
+                                media="(orientation: portrait)">
+                        <img src="img/generate.svg" alt="">
+                    </picture>
+                    Random
+                </button>
+            </div>
+
+            <div class="microsoftButton">
+                <button class="theAlteningButton1" onclick="toggleOverlay()">
+                    <picture>
+                        <source srcset="img/login.svg"
+                                media="(orientation: portrait)">
+                        <img src="img/login.svg" alt="">
+                    </picture>
+                    Login using browser
+                </button>
+            </div>
+
+            <div class="theAlteningButton">
+                <div class="theAlteningGrid">
+                    <input type="text" placeholder="Account Token" class="theAlteningText">
+                    <input type="text" placeholder="API Token" class="theAlteningText">
+                </div>
+
+                <button class="generateButto" onclick="toggleOverlay()">
+                    <picture>
+                        <source srcset="img/generate.svg"
+                                media="(orientation: portrait)">
+                        <img src="img/generate.svg" alt="">
+                    </picture>
+                </button>
+            </div>
+
+            <button class="addButton" onclick="addDynamically()">
+                Add
+            </button>
+            <button class="clipboardButton" onclick="toggleOverlay()">
+                Clipboard
+            </button>
         </div>
         <div class="closeButton" id="closeButton">
             <button class="closeButto" onclick="toggleOverlay()">
-            <picture>
-                <source srcset="img/close.svg"
-                        media="(orientation: portrait)">
-                <img src="img/close.svg" alt="">
-            </picture>
+                <picture>
+                    <source srcset="img/close.svg"
+                            media="(orientation: portrait)">
+                    <img src="img/close.svg" alt="">
+                </picture>
             </button>
         </div>
     </div>
