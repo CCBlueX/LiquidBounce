@@ -319,6 +319,22 @@
         
         "module.xRay.description": "允许你透过墙壁看到矿石。",
         
-        "module.zoot.description": "移除所有负面药水效果/火焰。"
+        "module.zoot.description": "移除所有负面药水效果/火焰。",
+
+        "module.aimbot.range": "范围",
+
+        "module.aimbot.turnSpeed": "旋转速度",
+
+        "module.aimbot.inViewTurnSpeed": "视野内旋转速度",
+
+        "module.aimbot.fov": "视场角",
+
+        "module.aimbot.center": "中心",
+
+        "module.aimbot.lock": "锁定",
+
+        "module.aimbot.onClick": "在点击",
+
+        "module.aimbot.jitter": "抖动"
     }
 }
