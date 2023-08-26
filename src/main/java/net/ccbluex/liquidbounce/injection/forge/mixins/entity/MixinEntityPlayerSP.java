@@ -381,6 +381,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             setSprinting(false);
         }
 
+        EventManager.INSTANCE.callEvent(new PostSprintUpdateEvent());
+
         if (capabilities.allowFlying) {
             if (mc.playerController.isSpectatorMode()) {
                 if (!capabilities.isFlying) {

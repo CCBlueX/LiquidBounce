@@ -87,6 +87,11 @@ class SlowDownEvent(var strafe: Float, var forward: Float) : Event()
 class SneakSlowDownEvent(var strafe: Float, var forward: Float) : Event()
 
 /**
+ * Called in "onLivingUpdate" after when the player's sprint states are updated
+ */
+class PostSprintUpdateEvent : Event()
+
+/**
  * Called in "moveFlying"
  */
 class StrafeEvent(val strafe: Float, val forward: Float, val friction: Float) : CancellableEvent()
@@ -171,7 +176,8 @@ class WorldEvent(val worldClient: WorldClient?) : Event()
 /**
  * Called when window clicked
  */
-class ClickWindowEvent(val windowId: Int, val slotId: Int, val mouseButtonClicked: Int, val mode: Int) : CancellableEvent()
+class ClickWindowEvent(val windowId: Int, val slotId: Int, val mouseButtonClicked: Int, val mode: Int) :
+    CancellableEvent()
 
 /**
  * Called when LiquidBounce finishes starting up
