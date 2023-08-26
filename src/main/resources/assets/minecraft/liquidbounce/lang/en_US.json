@@ -321,6 +321,22 @@
         
         "module.xRay.description": "Allows you to see ores through walls.",
         
-        "module.zoot.description": "Removes all bad potion effects/fire."
+        "module.zoot.description": "Removes all bad potion effects/fire.",
+
+        "module.aimbot.range": "Range",
+
+        "module.aimbot.turnSpeed": "TurnSpeed",
+
+        "module.aimbot.inViewTurnSpeed": "InViewTurnSpeed",
+
+        "module.aimbot.fov": "FOV",
+
+        "module.aimbot.center": "Center",
+
+        "module.aimbot.lock": "Lock",
+
+        "module.aimbot.onClick": "OnClick",
+
+        "module.aimbot.jitter": "Jitter"
     }
 }
