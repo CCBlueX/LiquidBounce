@@ -27,9 +27,16 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
 
-    private val allDirectionsLimitSpeed by FloatValue("AllDirectionsLimitSpeed", 1f, 0.75f..1f) { mode == "Vanilla" && allDirections }
+    private val allDirectionsLimitSpeed by FloatValue(
+        "AllDirectionsLimitSpeed",
+        1f,
+        0.75f..1f
+    ) { mode == "Vanilla" && allDirections }
 
-    private val allDirectionsLimitSpeedGround by BoolValue("AllDirectionsLimitSpeedOnlyGround", true) { mode == "Vanilla" && allDirections }
+    private val allDirectionsLimitSpeedGround by BoolValue(
+        "AllDirectionsLimitSpeedOnlyGround",
+        true
+    ) { mode == "Vanilla" && allDirections }
 
     private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
 
@@ -75,8 +82,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
             if (mc.thePlayer.movementInput.moveForward >= 0.8f) {
                 mc.thePlayer.isSprinting = true
-            }
-            else if (allDirections) {
+            } else if (allDirections) {
                 mc.thePlayer.isSprinting = true
                 if (!allDirectionsLimitSpeedGround || mc.thePlayer.onGround) {
                     mc.thePlayer.motionX *= allDirectionsLimitSpeed
