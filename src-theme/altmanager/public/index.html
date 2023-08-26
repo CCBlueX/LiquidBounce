@@ -149,12 +149,14 @@
             background-position: right bottom;
             will-change: background-position;
             transition: background-position .2s ease-out;
-            margin-top: 10px;
             width: 25%;
-            padding: 25px 35px;
+            height: 15%;
             border-radius: 6px;
             align-items: center;
+            padding: 25px 35px;
             column-gap: 30px;
+            position: absolute;
+            left: 75%;
         }
 
         .scale {
@@ -208,7 +210,7 @@
             border-radius: 6px;
             margin-right: 10px;
             padding: 5px;
-            background-color: rgba(0, 0, 0, 0.68);
+            background-color: rgba(0, 0, 0, 0);
             min-width: 80px;
             height: 30px;
             color: white;
@@ -269,10 +271,10 @@
 
         .accounts {
             position: absolute;
-            top: 0;
+            top: 25%;
             right: 0;
-            width: 75%;
-            height: 80%;
+            width: 100%;
+            height: 55%;
             background-color: rgba(0, 0, 0, 0.68);
             border-radius: 6px;
             padding: 20px;
@@ -446,7 +448,25 @@
 
                 type.innerText = account.getType();
                 name.innerText = account.getName();
-                button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
+                button.innerHTML = "" +
+                    "<button onclick='loginAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/check.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='deleteAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/delete.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='copyAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/copy.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='favoriteAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/star.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='editAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/edit.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='idk(\"" + i + "\")'>" +
+                    "<img src=\"img/account/play.svg\" alt=\"\">" +
+                    "</button>";
 
                 row.appendChild(type);
                 row.appendChild(name);
@@ -457,6 +477,7 @@
         }
 
         function updateAccountData() {
+            console.log(client.uuid);
             const username = client.getSessionService().getUsername();
             const faceUrl = client.getSessionService().getFaceUrl();
             const accountType = client.getSessionService().getAccountType();
@@ -537,19 +558,16 @@
 <div class="scale">
     <div class="removeButtons">
         <div class="wrapper">
-            <h1 id="title">Alt Manager</h1>
-            <b>This is a prototype design for testing purposes <br>and is NOT the final design.</b>
-
             <div id="buttongrid">
+                <picture>
+                    <source srcset="img/lb-logo.svg"
+                            media="(orientation: portrait)">
+                    <img src="img/lb-logo.svg" alt="">
+                </picture>
                 <div class="button">
                     <img id="face" alt="head" class="head"/>
-                    <br>
-
-                    <label><b>Username:</b></label>
                     <div id="sessionUsername" class="username"></div>
-                    <label><b>Account Type:</b></label>
                     <div id="accountType" class="accountType"></div>
-                    <label><b>Location:</b></label>
                     <div id="location" class="location"></div>
                 </div>
 
