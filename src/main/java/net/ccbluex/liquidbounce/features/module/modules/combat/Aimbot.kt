@@ -25,14 +25,14 @@ import java.util.*
 
 object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
-    private val range by FloatValue("Range", 4.4F, 1F..8F)
-    private val turnSpeed by FloatValue("TurnSpeed", 10f, 1F..180F)
-    private val inViewTurnSpeed by FloatValue("InViewTurnSpeed", 35f, 1f..180f)
-    private val fov by FloatValue("FOV", 180F, 1F..180F)
-    private val center by BoolValue("Center", false)
-    private val lock by BoolValue("Lock", true)
-    private val onClick by BoolValue("OnClick", false)
-    private val jitter by BoolValue("Jitter", false)
+    private val range by FloatValue(translation("module.${name.toLowerCamelCase()}.range"), 4.4F, 1F..8F)
+    private val turnSpeed by FloatValue(translation("module.${name.toLowerCamelCase()}.turnSpeed"), 10f, 1F..180F)
+    private val inViewTurnSpeed by FloatValue(translation("module.${name.toLowerCamelCase()}.inViewTurnSpeed"), 35f, 1f..180f)
+    private val fov by FloatValue(translation("module.${name.toLowerCamelCase()}.fov"), 180F, 1F..180F)
+    private val center by BoolValue(translation("module.${name.toLowerCamelCase()}.center"), false)
+    private val lock by BoolValue(translation("module.${name.toLowerCamelCase()}.lock"), true)
+    private val onClick by BoolValue(translation("module.${name.toLowerCamelCase()}.onClick"), false)
+    private val jitter by BoolValue(translation("module.${name.toLowerCamelCase()}.jitter"), false)
 
     private val clickTimer = MSTimer()
 
