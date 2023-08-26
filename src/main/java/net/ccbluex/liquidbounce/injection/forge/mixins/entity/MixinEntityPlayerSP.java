@@ -347,7 +347,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final boolean legitSprint = sprint.getMode().equals("Legit");
 
-        boolean flag3 = !(sprint.getState() && !legitSprint && sprint.getFood()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
+        // TODO: Simplify this
+        boolean flag3 = !sprint.getState() ? (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying : sprint.getState() && (legitSprint || sprint.getFood()) ? (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying : sprint.getState() && (!legitSprint && !sprint.getFood()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
 
         if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
             if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown()) {
@@ -367,13 +368,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean shouldStop = targetRotation != null && movementInput.moveForward * MathHelper.cos(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) + movementInput.moveStrafe * MathHelper.sin(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) < 0.8;
 
-        if (scaffold.getState() && !scaffold.getSprint() || (sprint.getState() && sprint.getCheckServerSide() || sprint.getState() && legitSprint) && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections() && shouldStop || legitSprint && shouldStop)
+        if (scaffold.getState() && !scaffold.getSprint() || sprint.getState() && (legitSprint || sprint.getCheckServerSide() && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections()) && shouldStop)
             setSprinting(false);
 
-        if (scaffold.getState() && scaffold.getSprint() && scaffold.getEagleSprint() && scaffold.getEagle().equals("Normal") && MovementUtils.INSTANCE.isMoving() && scaffold.getEagleSneaking())
-            setSprinting(true);
+        if (scaffold.getState() && scaffold.getSprint() && scaffold.getEagle().equals("Normal") && MovementUtils.INSTANCE.isMoving() && scaffold.getEagleSneaking())
+            setSprinting(scaffold.getEagleSprint());
 
-        if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirections()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
+        // TODO: Simplify this
+        boolean flag6 = !sprint.getState() ? movementInput.moveForward < f : sprint.getState() && (legitSprint || !sprint.getAllDirections()) ? movementInput.moveForward < f : (!sprint.getState() || (legitSprint || !sprint.getAllDirections())) && movementInput.moveForward < f;
+
+        if (isSprinting() && flag6 || isCollidedHorizontally || !flag3) {
             setSprinting(false);
         }
 
