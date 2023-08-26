@@ -5,17 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -117,7 +113,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
+    fun onPostSprintUpdate(event: PostSprintUpdateEvent) {
         if (mode == "SprintTap") {
             if (ticks == 2) {
                 mc.thePlayer.isSprinting = false
@@ -126,7 +122,12 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
                 mc.thePlayer.isSprinting = true
                 ticks--
             }
-        } else if (mode == "WTap" && blockInput) {
+        }
+    }
+
+    @EventTarget
+    fun onUpdate(event: UpdateEvent) {
+        if (mode == "WTap" && blockInput) {
             if (ticksElapsed >= allowInputTicks) {
                 blockInput = false
                 ticksElapsed = 0
