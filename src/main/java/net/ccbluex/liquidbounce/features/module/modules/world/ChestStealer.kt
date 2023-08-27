@@ -89,7 +89,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     private var nextDelay = randomDelay(minDelay, maxDelay)
 
     private val autoCloseTimer = MSTimer()
-    private var nextCloseDelay = if (!maxDelayValue.isMinimal()) randomDelay(autoCloseMinDelay, autoCloseMaxDelay) else 0
+    private var nextCloseDelay = randomDelay(autoCloseMinDelay, autoCloseMaxDelay)
 
     private var contentReceived = 0
 
