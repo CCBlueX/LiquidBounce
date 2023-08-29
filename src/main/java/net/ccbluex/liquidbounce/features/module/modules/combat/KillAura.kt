@@ -137,6 +137,13 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
     // AutoBlock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
+    private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true) {
+        autoBlock !in arrayOf(
+            "Off",
+            "Fake"
+        )
+    }
+    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock != "Off" && releaseAutoBlock }
     private val interactAutoBlock by BoolValue("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake") }
 
     // AutoBlock conditions
@@ -331,10 +338,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     }
 
     /**
-     * Update event
+     * Tick Event
      */
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
+    fun onTick(event: TickEvent) {
         if (clickOnly && !mc.gameSettings.keyBindAttack.isKeyDown) return
 
         if (cancelRun) {
@@ -359,8 +366,14 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         if (target != null && currentTarget != null) {
             while (clicks > 0) {
+                val wasBlocking = blockStatus
+
                 runAttack()
                 clicks--
+
+                if (wasBlocking && !blockStatus && (releaseAutoBlock && !ignoreTickRule || autoBlock == "Off")) {
+                    return
+                }
             }
         }
     }
@@ -590,9 +603,12 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Stop blocking
         val thePlayer = mc.thePlayer
 
-        if (thePlayer.isBlocking || renderBlocking) {
+        if ((thePlayer.isBlocking || renderBlocking) && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
             stopBlocking()
-            return
+
+            if (!ignoreTickRule || autoBlock == "Off") {
+                return
+            }
         }
 
         // Call attack event
@@ -748,6 +764,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Start blocking
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
+        if (blockStatus)
+            return
+
         if (!fake) {
             if (!(blockRate > 0 && nextInt(endExclusive = 100) <= blockRate)) return
 
@@ -772,7 +791,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
             }
 
-            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem()))
+            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
             blockStatus = true
         }
 
