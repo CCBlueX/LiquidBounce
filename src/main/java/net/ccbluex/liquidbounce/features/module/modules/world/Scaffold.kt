@@ -139,12 +139,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Rotation Options
     private val rotationMode by ListValue("RotationMode", arrayOf("Off", "Normal", "Stabilized"), "Normal")
-    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation && !maxDelayValue.isMinimal() }
+    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation && !maxTurnSpeedValue.isMinimal() }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
-    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && !maxDelayValue.isMinimal() }
+    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && !maxTurnSpeedValue.isMinimal() }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotationMode != "Off" && !maxDelayValue.isMinimal()
+        override fun isSupported() = rotationMode != "Off" && !maxTurnSpeedValue.isMinimal()
     }
 
     // Search options
