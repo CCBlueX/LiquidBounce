@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 
 object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
 
-    private val mode by ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi", "MineBlaze"), "None")
+    private val mode by ListValue("Mode", arrayOf("None", "AAC", "LAAC", "MineBlaze", "Rewi"), "None")
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
