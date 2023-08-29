@@ -9,45 +9,41 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac.AAC
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac.LAAC
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.None
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.Rewi
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.MineBlaze
 import net.ccbluex.liquidbounce.value.ListValue
 
 object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
 
-    private val mode by ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
+    private val noWebModes = arrayOf(
+        // Vanilla
+        None,
+
+        // AAC
+        AAC, LAAC,
+        
+        // Other
+        Rewi,
+        MineBlaze
+    )
+
+    private val modes = noWebModes.map { it.modeName }.toTypedArray()
+
+    val mode by ListValue(
+        "Mode", modes, "None"
+    )
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
-
-        if (!thePlayer.isInWeb)
-            return
-
-        when (mode.lowercase()) {
-            "none" -> thePlayer.isInWeb = false
-            "aac" -> {
-                thePlayer.jumpMovementFactor = 0.59f
-
-                if (!mc.gameSettings.keyBindSneak.isKeyDown)
-                    thePlayer.motionY = 0.0
-            }
-            "laac" -> {
-                thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1f else 1.21f
-
-                if (!mc.gameSettings.keyBindSneak.isKeyDown)
-                    thePlayer.motionY = 0.0
-
-                if (thePlayer.onGround)
-                    thePlayer.jump()
-            }
-            "rewi" -> {
-                thePlayer.jumpMovementFactor = 0.42f
-
-                if (thePlayer.onGround)
-                    thePlayer.jump()
-            }
-        }
+        modeModule.onUpdate()
     }
 
     override val tag
         get() = mode
+
+    private val modeModule
+        get() = noWebModes.find { it.modeName == mode }!!
 }
