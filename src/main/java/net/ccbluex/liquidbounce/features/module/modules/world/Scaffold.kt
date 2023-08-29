@@ -139,12 +139,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Rotation Options
     private val rotationMode by ListValue("RotationMode", arrayOf("Off", "Normal", "Stabilized"), "Normal")
-    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation && !maxTurnSpeedValue.isMinimal() }
+    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
-    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && !maxTurnSpeedValue.isMinimal() }
+    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotationMode != "Off" && !maxTurnSpeedValue.isMinimal()
+        override fun isSupported() = rotationMode != "Off"
     }
 
     // Search options
@@ -158,7 +158,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     }
     private val maxTurnSpeed by maxTurnSpeedValue
     private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxTurnSpeed)
 
         override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotationMode != "Off"
     }
@@ -167,7 +167,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         "AngleThresholdUntilReset",
         5f,
         0.1f..180f
-    ) { rotationMode != "Off" && !maxDelayValue.isMinimal() }
+    ) { rotationMode != "Off" }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -398,7 +398,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing) || maxDelayValue.isMinimal()) {
+            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
                 val result = if (raycastProperly && it != null) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
                 } else {
@@ -836,7 +836,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         placeRotation ?: return false
 
-        if (rotationMode != "Off" || !maxDelayValue.isMinimal()) {
+        if (rotationMode != "Off") {
             var targetRotation = placeRotation.rotation
 
             val info = placeRotation.placeInfo
