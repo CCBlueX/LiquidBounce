@@ -82,7 +82,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
                 mc.thePlayer.serverSprintState = true
             }
 
-            "SprintTap", "Silent" -> ticks = 2
+            "SprintTap", "Silent" -> if (player.isSprinting && player.serverSprintState) ticks = 2
 
             "Packet" -> {
                 sendPackets(
@@ -117,11 +117,11 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
         if (mode == "SprintTap") {
             if (ticks == 2) {
                 mc.thePlayer.isSprinting = false
-                ticks--
             } else if (ticks == 1) {
                 mc.thePlayer.isSprinting = true
-                ticks--
             }
+
+            ticks--
         }
     }
 

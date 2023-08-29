@@ -170,7 +170,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
     // Don't block if target is swinging an item and therefore cannot attack
     private val maxSwingProgress by IntegerValue("MaxOpponentSwingProgress", 1, 0..5) { smartAutoBlock }
-    private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock != "Off" }
+    private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock != "Off" && releaseAutoBlock }
 
     // Turn Speed
     private val maxTurnSpeedValue = object : FloatValue("MaxTurnSpeed", 180f, 0f..180f) {
@@ -314,18 +314,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Update target
         updateTarget()
 
-        if (target == null && !blockStopInDead) {
-            blockStopInDead = true
-            stopBlocking()
-            return
-        }
-
-        target?.let {
-            if (mc.thePlayer.getDistanceToEntityBox(it) > range) {
-                stopBlocking()
-            }
-        }
-
         // Target
         currentTarget = target
 
@@ -338,10 +326,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     }
 
     /**
-     * Tick Event
+     * Update event
      */
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onUpdate(event: UpdateEvent) {
         if (clickOnly && !mc.gameSettings.keyBindAttack.isKeyDown) return
 
         if (cancelRun) {
@@ -364,7 +352,18 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             return
         }
 
+        if (target == null && !blockStopInDead) {
+            blockStopInDead = true
+            stopBlocking()
+            return
+        }
+
         if (target != null && currentTarget != null) {
+            if (mc.thePlayer.getDistanceToEntityBox(target ?: return) > range) {
+                stopBlocking()
+                return
+            }
+
             while (clicks > 0) {
                 val wasBlocking = blockStatus
 
@@ -387,7 +386,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             target = null
             currentTarget = null
             hitable = false
-            stopBlocking()
             return
         }
 
