@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 
 object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
 
-    private val mode by ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
+    private val mode by ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi", "MineBlaze"), "None")
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -38,6 +38,14 @@ object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
 
                 if (thePlayer.onGround)
                     thePlayer.jump()
+            }
+             "mineblaze" -> {
+                if (mc.thePlayer.movementInput.moveStrafe == 0.0F && mc.gameSettings.keyBindForward.isKeyDown && mc.thePlayer.isCollidedVertically) {
+                    mc.thePlayer.jumpMovementFactor = 0.74F
+                } else {
+                    mc.thePlayer.jumpMovementFactor = 0.2F
+                    mc.thePlayer.onGround = true
+                }
             }
             "rewi" -> {
                 thePlayer.jumpMovementFactor = 0.42f
