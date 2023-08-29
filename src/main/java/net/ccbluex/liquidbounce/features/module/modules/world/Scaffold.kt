@@ -139,12 +139,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Rotation Options
     private val rotationMode by ListValue("RotationMode", arrayOf("Off", "Normal", "Stabilized"), "Normal")
-    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
+    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation && !maxDelayValue.isMinimal() }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
-    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" }
+    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && !maxDelayValue.isMinimal() }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotationMode != "Off"
+        override fun isSupported() = rotationMode != "Off" && !maxDelayValue.isMinimal()
     }
 
     // Search options
@@ -167,7 +167,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         "AngleThresholdUntilReset",
         5f,
         0.1f..180f
-    ) { rotationMode != "Off" }
+    ) { rotationMode != "Off" && !maxDelayValue.isMinimal() }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -398,7 +398,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
+            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing) || maxDelayValue.isMinimal()) {
                 val result = if (raycastProperly && it != null) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
                 } else {
@@ -836,7 +836,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         placeRotation ?: return false
 
-        if (rotationMode != "Off") {
+        if (rotationMode != "Off" || !maxDelayValue.isMinimal()) {
             var targetRotation = placeRotation.rotation
 
             val info = placeRotation.placeInfo
