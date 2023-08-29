@@ -13,12 +13,12 @@ object LAAC : NoWebMode("LAAC") {
             return
         }
 
-        thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1f else 1.21f
+        mc.thePlayer.jumpMovementFactor = if (mc.thePlayer.movementInput.moveStrafe != 0f) 1f else 1.21f
 
         if (!mc.gameSettings.keyBindSneak.isKeyDown)
-            thePlayer.motionY = 0.0
+            mc.thePlayer.motionY = 0.0
 
-        if (thePlayer.onGround)
-            thePlayer.jump()    
+        if (mc.thePlayer.onGround)
+            mc.thePlayer.jump()    
     }
 }
