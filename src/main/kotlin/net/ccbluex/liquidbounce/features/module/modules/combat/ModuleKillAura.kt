@@ -185,7 +185,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
+        if (failedHits.isEmpty() || !NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive) {
             failedHits.clear()
             return@handler
         }
