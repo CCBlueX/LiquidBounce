@@ -103,7 +103,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
         val items = mutableListOf<WeightedItem>()
 
-        (0..40).forEach {
+        for (i in 0..40) {
             categoriteItem(items, inventory.getStack(it), it)
         }
 
@@ -187,7 +187,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
         val items = mutableListOf<WeightedItem>()
 
-        (0..40).forEach {
+        for (i in 0..40) {
             categoriteItem(items, inventory.getStack(it), it)
         }
 
@@ -431,7 +431,7 @@ class WeightedBowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack,
         )
         private val COMPARATOR = ComparatorChain<WeightedBowItem>(
             { o1, o2 ->
-                (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
+                VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(
                     VALUE_ESTIMATOR.estimateValue(o2.itemStack)
                 )
             }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
@@ -458,7 +458,7 @@ class WeightedCrossbowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemS
         )
         private val COMPARATOR = ComparatorChain<WeightedCrossbowItem>(
             { o1, o2 ->
-                (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
+                VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(
                     VALUE_ESTIMATOR.estimateValue(o2.itemStack)
                 )
             }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
