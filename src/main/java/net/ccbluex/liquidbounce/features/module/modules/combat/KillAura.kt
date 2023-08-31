@@ -309,7 +309,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     }
 
     fun update() {
-        if (cancelRun || (noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay))) return
+        if (cancelRun || noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay)) return
 
         // Update target
         updateTarget()
@@ -477,7 +477,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (target == currentTarget) this.target = null
         }
 
-        if (targetMode.equals("Switch", ignoreCase = true) && attackTimer.hasTimePassed((switchDelay).toLong())) {
+        if (targetMode.equals("Switch", ignoreCase = true) && attackTimer.hasTimePassed(switchDelay.toLong())) {
             if (switchDelay != 0) {
                 prevTargetEntities += if (aac) target.entityId else currentTarget.entityId
                 attackTimer.reset()
@@ -506,7 +506,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         val thePlayer = mc.thePlayer
 
         for (entity in theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
+            if (entity !is EntityLivingBase || !isEnemy(entity) || switchMode && entity.entityId in prevTargetEntities) continue
 
             var distance = thePlayer.getDistanceToEntityBox(entity)
             if (Backtrack.state) {
@@ -740,7 +740,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (raycast) {
             val raycastedEntity =
                 raycastEntity(range.toDouble(), currentRotation.yaw, currentRotation.pitch) { entity ->
-                    (!livingRaycast || (entity is EntityLivingBase && entity !is EntityArmorStand)) && (isEnemy(
+                    (!livingRaycast || entity is EntityLivingBase && entity !is EntityArmorStand) && (isEnemy(
                         entity
                     ) || raycastIgnored || aac && mc.theWorld.getEntitiesWithinAABBExcludingEntity(
                         entity, entity.entityBoundingBox
@@ -813,7 +813,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Check if run should be cancelled
      */
     private val cancelRun
-        inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer) || Blink.state || FreeCam.state || (noConsumeAttack == "NoRotation" && isConsumingItem())
+        inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer) || Blink.state || FreeCam.state || noConsumeAttack == "NoRotation" && isConsumingItem()
 
     /**
      * Check if [entity] is alive
@@ -830,7 +830,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 if (smartAutoBlock) {
                     if (!isMoving && forceBlock) return true
 
-                    if (checkWeapon && (currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe)) return false
+                    if (checkWeapon && currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe) return false
 
                     if (mc.thePlayer.hurtTime > maxOwnHurtTime) return false
 
