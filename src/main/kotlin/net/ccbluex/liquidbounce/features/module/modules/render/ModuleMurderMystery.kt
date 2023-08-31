@@ -141,7 +141,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             val j = mapData.colors[i].toInt() and 0xFF
 
             if (j / 4 == 0) {
-                rgb[i] = (i + ((i / 128) and 1)) * 8 + (16 shl 24)
+                rgb[i] = (i + (i / 128 and 1)) * 8 + (16 shl 24)
             } else {
                 rgb[i] = MapColor.get(j / 4).getRenderColor(MapColor.Brightness.validateAndGet(j and 3))
             }
@@ -150,8 +150,8 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
         val contractLine = IntArray(128 * 7)
 
-        (0 until 7).forEach { y ->
-            (0..128).forEach { x ->
+        for (i in 0..7) { y ->
+            for (i in 0..128) { x ->
                 var newRGB = rgb[128 * 105 + y * 128 + x]
 
                 newRGB = if (newRGB == Color(123, 102, 62).getRGB() || newRGB == Color(143, 119, 72).getRGB()) {
@@ -169,7 +169,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         var lastNonEmptyScanline = -1
         var emptyScanlines = 0
 
-        (0 until 128).forEach { x ->
+        for (i in 0..128) { x ->
             var isEmpty = true
 
             for (y in 0 until 7) {
