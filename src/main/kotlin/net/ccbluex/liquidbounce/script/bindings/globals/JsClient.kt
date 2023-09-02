@@ -6,7 +6,6 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
 
 object JsClient {
 
@@ -15,7 +14,7 @@ object JsClient {
 
     val moduleManager = ModuleManager
     val commandManager = CommandManager
-    val themeManager = ThemeManager
+    // val themeManager = ThemeManager
     val scriptManager = ScriptManager
 
     /**

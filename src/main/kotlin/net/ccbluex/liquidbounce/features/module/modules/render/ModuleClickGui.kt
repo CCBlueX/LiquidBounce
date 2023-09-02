@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -36,7 +35,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
     val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
 
     override fun enable() {
-        val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
+        // val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
 
     }
 

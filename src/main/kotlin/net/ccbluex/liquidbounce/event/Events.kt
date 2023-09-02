@@ -69,7 +69,7 @@ class EngineRenderEvent(val tickDelta: Float) : Event()
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
 
 @Nameable("screenRender")
-class ScreenRenderEvent(val screen: Screen, val context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) : Event()
+class ScreenRenderEvent(val screen: Screen, val context: DrawContext, val mouseX: Int, val mouseY: Int, val delta: Float) : Event()
 
 @Nameable("windowMove")
 class WindowMoveEvent(val window: Long, val x: Int, val y: Int) : Event()
