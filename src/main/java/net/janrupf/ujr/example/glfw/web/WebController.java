@@ -30,7 +30,7 @@ public class WebController implements AutoCloseable {
     private final UltralightJavaReborn ujr;
 
     public WebController() {
-        this.windows = new HashSet<WebWindow>();
+        this.windows = new HashSet<>();
 
         // Load the platform and create the Ultralight Java Reborn instance
         PlatformEnvironment environment = PlatformEnvironment.load();
@@ -101,5 +101,9 @@ public class WebController implements AutoCloseable {
     @Override
     public void close() {
         terminate();
+    }
+
+    public Set<WebWindow> getWindows() {
+        return windows;
     }
 }
