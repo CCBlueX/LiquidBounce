@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -135,38 +136,6 @@ public abstract class MixinEntity {
     @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
     private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
         cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
-    }
-
-    /**
-     * @reason fix the wrong crosshairTarget value when having modified rotations
-     */
-    @Overwrite
-    public final Vec3d getRotationVec(float tickDelta) {
-        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
-        Rotation prevRotation = RotationManager.INSTANCE.getPrevRotation();
-        if (rotation != null && prevRotation != null && isPlayer()) {
-            return getRotationVector(getYaw1(tickDelta, rotation, prevRotation), getPitch1(tickDelta, rotation, prevRotation));
-        } else {
-            return getRotationVector(this.getPitch(tickDelta), this.getPitch(tickDelta));
-        }
-    }
-
-    public float getPitch1(float tickDelta, Rotation rotation, Rotation prevRotation) {
-        if (tickDelta == 1.0f) {
-            return rotation.getPitch();
-        }
-        float prevPitch = prevRotation.getPitch();
-        float currPitch = rotation.getPitch();
-        return MathHelper.lerp(tickDelta, prevPitch, currPitch);
-    }
-
-    public float getYaw1(float tickDelta, Rotation rotation, Rotation prevRotation) {
-        if (tickDelta == 1.0f) {
-            return rotation.getYaw();
-        }
-        float prevYaw = prevRotation.getYaw();
-        float currYaw = rotation.getYaw();
-        return MathHelper.lerp(tickDelta, prevYaw, currYaw);
     }
 
     /**

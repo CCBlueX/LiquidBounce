@@ -29,7 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
-import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
+import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -39,9 +40,11 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.objectweb.asm.Opcodes;
@@ -50,8 +53,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.logging.Logger;
 
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer implements IMixinGameRenderer {
@@ -85,9 +86,32 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         EventManager.INSTANCE.callEvent(new GameRenderEvent());
     }
 
+    @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
+    private HitResult hookTargetedEntityUpdate(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
+        if (instance != this.client.player)
+            return instance.raycast(maxDistance, tickDelta, includeFluids);
+
+        return raycast(maxDistance, tickDelta, includeFluids);
+    }
+
     @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d easyInjectionFix(Entity instance, float tickDelta) {
-        return instance.getRotationVector();
+    private Vec3d hook1(Entity instance, float tickDelta) {
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+
+        return rotation != null ? rotation.getRotationVec() : instance.getRotationVec(tickDelta);
+    }
+
+    private HitResult raycast(double maxDistance, float tickDelta, boolean includeFluids) {
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+
+        if (rotation == null) {
+            rotation = new Rotation(client.player.getYaw(tickDelta), client.player.getPitch(tickDelta));
+        }
+
+        Vec3d vec3d = client.player.getCameraPosVec(tickDelta);
+        Vec3d vec3d2 = rotation.getRotationVec();
+        Vec3d vec3d3 = vec3d.add(vec3d2.x * maxDistance, vec3d2.y * maxDistance, vec3d2.z * maxDistance);
+        return this.client.world.raycast(new RaycastContext(vec3d, vec3d3, RaycastContext.ShapeType.OUTLINE, includeFluids ? RaycastContext.FluidHandling.ANY : RaycastContext.FluidHandling.NONE, this.client.player));
     }
 
     /**
