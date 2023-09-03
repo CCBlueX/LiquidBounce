@@ -71,10 +71,7 @@ import kotlin.random.Random
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     enum class AimMode(override val choiceName: String) : NamedChoice {
-        CENTER("Center"),
-        RANDOM("Random"),
-        STABILIZED("Stabilized"),
-        CLOSE_ROTATION("CloseRotation");
+        CENTER("Center"), RANDOM("Random"), STABILIZED("Stabilized"), CLOSE_ROTATION("CloseRotation");
     }
 
     private val silent by boolean("Silent", true)
@@ -104,11 +101,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val zitterModes = choices(
-        "ZitterMode",
-        Off, arrayOf(
-            Off,
-            Teleport,
-            Smooth
+        "ZitterMode", Off, arrayOf(
+            Off, Teleport, Smooth
         )
     )
     private val timer by float("Timer", 1f, 0.01f..10f)
@@ -131,48 +125,34 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     var randomization = Random.nextDouble(-0.01, 0.01)
     private var startY = 0
     private var placedBlocks = 0
-    private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
-        { o1, o2 ->
-            compareByCondition(
-                o1,
-                o2
-            ) { (it.item as BlockItem).block.defaultState.isSolid }
-        },
-        { o1, o2 ->
-            compareByCondition(
-                o1,
-                o2
-            ) {
-                (it.item as BlockItem).block.defaultState.isFullCube(
-                    world,
-                    BlockPos(
-                        0,
-                        0,
-                        0
-                    )
+    private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>({ o1, o2 ->
+        compareByCondition(
+            o1, o2
+        ) { (it.item as BlockItem).block.defaultState.isSolid }
+    }, { o1, o2 ->
+        compareByCondition(
+            o1, o2
+        ) {
+            (it.item as BlockItem).block.defaultState.isFullCube(
+                world, BlockPos(
+                    0, 0, 0
                 )
-            }
-        },
-        { o1, o2 ->
-            (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness)
-        },
-        Comparator.comparingDouble {
-            (
-                    1.5 - (it.item as BlockItem).block.defaultState.getHardness(
-                        world,
-                        BlockPos(0, 0, 0)
-                    )
-                    ).absoluteValue
-        },
-        { o1, o2 -> o2.count.compareTo(o1.count) }
-    )
+            )
+        }
+    }, { o1, o2 ->
+        (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness)
+    }, Comparator.comparingDouble {
+        (1.5 - (it.item as BlockItem).block.defaultState.getHardness(
+            world, BlockPos(0, 0, 0)
+        )).absoluteValue
+    }, { o1, o2 -> o2.count.compareTo(o1.count) })
 
     private val shouldGoDown: Boolean
         get() = this.down && mc.options.sneakKey.isPressed
 
     override fun enable() {
         // Chooses a new randomization value
-        randomization = Random.nextDouble(-0.01, 0.01)
+        randomization = Random.nextDouble(-0.001, 0.001)
         startY = player.blockPos.y
         super.enable()
     }
@@ -187,9 +167,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val target = currentTarget ?: return@handler
 
         RotationManager.aimAt(
-            target.rotation,
-            openInventory = ignoreOpenInventory,
-            configurable = rotationsConfigurable
+            target.rotation, openInventory = ignoreOpenInventory, configurable = rotationsConfigurable
         )
     }
 
@@ -251,14 +229,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         // no need for additional checks
         val handToTry = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         val result = interaction.interactBlock(
-            player,
-            handToTry,
-            rayTraceResult
+            player, handToTry, rayTraceResult
         )
 
         if (result.isAccepted) {
-            if (Eagle.enabled)
-                placedBlocks = ++placedBlocks % blocksToEagle
+            if (Eagle.enabled) placedBlocks = ++placedBlocks % blocksToEagle
             if (player.isOnGround) {
                 player.velocity.x *= speedModifier
                 player.velocity.z *= speedModifier
@@ -404,10 +379,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val block = item.block
 
         return block.defaultState.isSideSolid(
-            world,
-            target.blockPos,
-            target.direction,
-            SideShapeType.CENTER
+            world, target.blockPos, target.direction, SideShapeType.CENTER
         ) && !notABlock.contains(block)
     }
 
@@ -415,10 +387,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         if (shouldGoDown) {
             return player.blockPos.add(0, -2, 0)
         }
-        if (sameY)
-            return BlockPos(player.blockPos.x, startY - 1, player.blockPos.z)
-        else
-            return player.blockPos.add(0, -1, 0)
+        if (sameY) return BlockPos(player.blockPos.x, startY - 1, player.blockPos.z)
+        else return player.blockPos.add(0, -1, 0)
     }
 
     fun updateTarget(pos: BlockPos, lavaBucket: Boolean = false): Target? {
@@ -457,14 +427,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             val first = if (!blockStateToInvestigate.isAir && blockStateToInvestigate.canReplace(
                     ItemPlacementContext(
-                        player,
-                        Hand.MAIN_HAND,
-                        player.inventory.getStack(SilentHotbar.serversideSlot),
-                        BlockHitResult(
-                            Vec3d.of(posToInvestigate),
-                            Direction.UP,
-                            posToInvestigate,
-                            false
+                        player, Hand.MAIN_HAND, player.inventory.getStack(SilentHotbar.serversideSlot), BlockHitResult(
+                            Vec3d.of(posToInvestigate), Direction.UP, posToInvestigate, false
                         )
                     )
                 )
@@ -512,9 +476,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
 
                 val face = currState.getOutlineShape(
-                    mc.world,
-                    currPos,
-                    ShapeContext.of(player)
+                    mc.world, currPos, ShapeContext.of(player)
                 ).boundingBoxes.mapNotNull {
                     var face = it.getFace(first.first)
 
@@ -540,28 +502,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         }
                     }
                     Pair(
-                        face,
-                        rotation
+                        face, rotation
                     )
-                }.maxWithOrNull(
-                    Comparator.comparingDouble<Pair<Face, Vec3d>> {
-                        it.second.subtract(
-                            Vec3d(
-                                0.5,
-                                0.5,
-                                0.5
-                            )
-                        ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
-                    }.thenComparingDouble { it.second.y }
-                ) ?: continue
+                }.maxWithOrNull(Comparator.comparingDouble<Pair<Face, Vec3d>> {
+                    it.second.subtract(
+                        Vec3d(
+                            0.5, 0.5, 0.5
+                        )
+                    ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
+                }.thenComparingDouble { it.second.y }) ?: continue
 
                 val rotation = RotationManager.makeRotation(face.second.add(Vec3d.of(currPos)), player.eyes)
 
                 return Target(
-                    currPos,
-                    first.first,
-                    face.first.from.y + currPos.y,
-                    rotation
+                    currPos, first.first, face.first.from.y + currPos.y, rotation
                 )
             }
         }
@@ -570,8 +524,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
-        if (safeWalk)
-            event.isSafeWalk = !shouldDisableSafeWalk()
+        if (safeWalk) event.isSafeWalk = !shouldDisableSafeWalk()
     }
 
     private fun shouldDisableSafeWalk() = shouldGoDown && player.blockPos.add(0, -2, 0).canStandOn()
@@ -594,9 +547,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val center: Vec3d
             get() = Vec3d(
-                (to.x + from.x) * 0.5,
-                (to.y + from.y) * 0.5,
-                (to.z + from.z) * 0.5
+                (to.x + from.x) * 0.5, (to.y + from.y) * 0.5, (to.z + from.z) * 0.5
             )
 
         fun stabilized(pos: BlockPos, eyes: Vec3d = player.eyes): Vec3d {
@@ -611,8 +562,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                             it.add(
                                 Vec3d.of(pos)
                             ), eyes
-                        ).pitch,
-                        pitchToCompare
+                        ).pitch, pitchToCompare
                     )
                 )
             }
@@ -622,16 +572,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             get() {
                 return Vec3d(
                     if (from.x != to.x) Random.nextDouble(
-                        xRange.start,
-                        (xRange.endInclusive - step).coerceAtLeast(xRange.start)
-                    ) else from.x,
-                    if (from.y != to.y) Random.nextDouble(
-                        yRange.start,
-                        (yRange.endInclusive - step).coerceAtLeast(yRange.start)
-                    ) else from.y,
-                    if (from.z != to.z) Random.nextDouble(
-                        zRange.start,
-                        (zRange.endInclusive - step).coerceAtLeast(zRange.start)
+                        xRange.start, (xRange.endInclusive - step).coerceAtLeast(xRange.start)
+                    ) else from.x, if (from.y != to.y) Random.nextDouble(
+                        yRange.start, (yRange.endInclusive - step).coerceAtLeast(yRange.start)
+                    ) else from.y, if (from.z != to.z) Random.nextDouble(
+                        zRange.start, (zRange.endInclusive - step).coerceAtLeast(zRange.start)
                     ) else from.z
                 )
             }
@@ -672,8 +617,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                             it.add(
                                 Vec3d.of(pos)
                             ), eyes
-                        ).yaw,
-                        yawToCompare
+                        ).yaw, yawToCompare
                     )
                 )
             }

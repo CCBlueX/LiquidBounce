@@ -25,11 +25,14 @@ import net.ccbluex.liquidbounce.event.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -75,12 +78,27 @@ public abstract class MixinEntity {
     @Shadow
     public abstract boolean hasVehicle();
 
+    @Shadow
+    protected abstract Vec3d getRotationVector(float pitch, float yaw);
+
+    @Shadow
+    private float pitch;
+
+    @Shadow
+    public abstract float getPitch(float tickDelta);
+
+    @Shadow
+    public abstract float getPitch();
+
+    @Shadow
+    public abstract boolean isPlayer();
+
     /**
      * Hook entity margin modification event
      */
     @Inject(method = "getTargetingMargin", at = @At("RETURN"), cancellable = true)
     private void hookMargin(CallbackInfoReturnable<Float> callback) {
-        final EntityMarginEvent marginEvent = new EntityMarginEvent((Entity) (Object) this, callback.getReturnValue());
+        EntityMarginEvent marginEvent = new EntityMarginEvent((Entity) (Object) this, callback.getReturnValue());
         EventManager.INSTANCE.callEvent(marginEvent);
         callback.setReturnValue(marginEvent.getMargin());
     }
@@ -90,7 +108,7 @@ public abstract class MixinEntity {
      */
     @Redirect(method = "changeLookDirection", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(FFF)F"))
     public float hookNoPitchLimit(float value, float min, float max) {
-        final boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
+        boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
 
         if (noLimit) return value;
         return MathHelper.clamp(value, min, max);
@@ -99,7 +117,7 @@ public abstract class MixinEntity {
     @Redirect(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"))
     public Vec3d hookVelocity(Vec3d movementInput, float speed, float yaw) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            final PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, movementInputToVelocity(movementInput, speed, yaw));
+            PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, movementInputToVelocity(movementInput, speed, yaw));
             EventManager.INSTANCE.callEvent(event);
             return event.getVelocity();
         }
@@ -109,7 +127,7 @@ public abstract class MixinEntity {
 
     @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getStepHeight()F"))
     private float hookStepHeight(Entity instance) {
-        final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
+        PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
         EventManager.INSTANCE.callEvent(stepEvent);
         return stepEvent.getHeight();
     }
@@ -117,6 +135,38 @@ public abstract class MixinEntity {
     @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
     private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
         cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
+    }
+
+    /**
+     * @reason fix the wrong crosshairTarget value when having modified rotations
+     */
+    @Overwrite
+    public final Vec3d getRotationVec(float tickDelta) {
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+        Rotation prevRotation = RotationManager.INSTANCE.getPrevRotation();
+        if (rotation != null && prevRotation != null && isPlayer()) {
+            return getRotationVector(getYaw1(tickDelta, rotation, prevRotation), getPitch1(tickDelta, rotation, prevRotation));
+        } else {
+            return getRotationVector(this.getPitch(tickDelta), this.getPitch(tickDelta));
+        }
+    }
+
+    public float getPitch1(float tickDelta, Rotation rotation, Rotation prevRotation) {
+        if (tickDelta == 1.0f) {
+            return rotation.getPitch();
+        }
+        float prevPitch = prevRotation.getPitch();
+        float currPitch = rotation.getPitch();
+        return MathHelper.lerp(tickDelta, prevPitch, currPitch);
+    }
+
+    public float getYaw1(float tickDelta, Rotation rotation, Rotation prevRotation) {
+        if (tickDelta == 1.0f) {
+            return rotation.getYaw();
+        }
+        float prevYaw = prevRotation.getYaw();
+        float currYaw = rotation.getYaw();
+        return MathHelper.lerp(tickDelta, prevYaw, currYaw);
     }
 
     /**
@@ -130,7 +180,7 @@ public abstract class MixinEntity {
             return;
         }
 
-        if (this.hasVehicle()) {
+        if (hasVehicle()) {
             ci.cancel();
         }
     }

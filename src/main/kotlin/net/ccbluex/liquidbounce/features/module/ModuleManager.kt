@@ -165,7 +165,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleRegen,
             ModuleZoot,
 
-            //Render
+            // Render
             ModuleAnimation,
             ModuleAntiBlind,
             ModuleBlockESP,
@@ -209,6 +209,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlowBreak,
             ModuleProjectilePuncher,
             ModuleScaffold,
+            ModuleTest,
             ModuleTimer
         )
 

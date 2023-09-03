@@ -59,6 +59,7 @@ object UltralightJsClient {
 
 
         fun getFaceUrlByUUID(uuid: String) = "https://crafatar.com/avatars/$uuid}?size=100"
+
         /**
          * Get if an account is premium or cracked
          */

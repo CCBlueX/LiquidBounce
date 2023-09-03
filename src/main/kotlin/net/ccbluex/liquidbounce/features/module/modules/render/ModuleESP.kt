@@ -37,7 +37,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Box
 import java.awt.Color
 
-
 /**
  * ESP module
  *
@@ -108,17 +107,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     }
                 }
             }
-
-
         }
-
     }
 
     object GlowMode : Choice("Glow") {
-        
+
         override val parent: ChoiceConfigurable
             get() = modes
-        
+
     }
 
     object OutlineMode : Choice("Outline") {

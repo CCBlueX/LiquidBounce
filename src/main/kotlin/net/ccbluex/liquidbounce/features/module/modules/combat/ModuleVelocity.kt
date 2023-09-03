@@ -42,7 +42,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Strafe, AAC442
+            Modify, Strafe, AAC442, Intave
         )
     }
 
@@ -90,7 +90,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
 
         val repeatable = repeatable {
-            if (player.hurtTime > 0 && !player.isOnGround){
+            if (player.hurtTime > 0 && !player.isOnGround) {
                 val reduce = aac442MotionReducer
                 player.velocity.x *= reduce
                 player.velocity.z *= reduce
@@ -141,6 +141,23 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             }
         }
 
+    }
+
+    private object Intave : Choice("Intave") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val reduce by float("Reduce", 0.5f, 0f..1f)
+        val times by int("Times", 2, 1..10)
+
+        var count = 0
+        val attackHandler = handler<AttackEvent> {
+            if (player.hurtTime > 0 && ++count % times == 0) {
+                player.velocity.x *= reduce
+                player.velocity.z *= reduce
+            }
+        }
     }
 
     /**

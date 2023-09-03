@@ -24,8 +24,7 @@ infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     require(start.isFinite())
     require(endInclusive.isFinite())
     require(step >= 0.0) { "Step must be positive, was: $step." }
-    if (step == 0.0)
-        return listOf(start)
+    if (step == 0.0) return listOf(start)
     else {
         val sequence = generateSequence(start) { previous ->
             if (previous == Double.POSITIVE_INFINITY) return@generateSequence null

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -138,6 +139,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         input.movementForward /= 0.2f;
         input.movementSideways /= 0.2f;
 
+        //ClientUtilsKt.chat("slowdown");
         // then
         final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
         EventManager.INSTANCE.callEvent(playerUseMultiplier);

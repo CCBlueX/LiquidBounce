@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming
 
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager.currentRotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.block.BlockState
@@ -25,6 +26,7 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -45,6 +47,48 @@ fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolea
     )
 
     return entityHitResult?.entity
+}
+
+fun legitRaytraceEntity(range: Double): EntityHitResult? {
+    val rotation = currentRotation ?: Rotation(mc.player!!.yaw, mc.player!!.pitch)
+    val cameraVec = mc.player!!.eyes
+    val rotationVec = rotation.rotationVec
+
+    val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
+    val box = mc.player!!.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
+
+    return ProjectileUtil.raycast(
+        mc.player!!, cameraVec, vec3d3, box, { !it.isSpectator && it.canHit() }, range * range
+    )
+}
+
+fun legitRaycast(range: Double): BlockHitResult? {
+    val entity = mc.cameraEntity ?: return null
+
+    val rotation = currentRotation ?: Rotation(mc.player!!.yaw, mc.player!!.pitch)
+    val start = entity.eyes
+    val rotationVec = rotation.rotationVec
+
+    val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
+
+    return mc.world?.raycast(
+        RaycastContext(
+            start, end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, entity
+        )
+    )
+}
+
+fun legitRaycastResult(): HitResult? {
+    val attack = legitRaytraceEntity(3.0)
+    val other = legitRaycast(3.0)
+    attack?.let {
+        if (attack.type == HitResult.Type.ENTITY) {
+            return attack
+        } else {
+            return other
+        }
+    }
+    return other
 }
 
 fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: BlockState): BlockHitResult? {

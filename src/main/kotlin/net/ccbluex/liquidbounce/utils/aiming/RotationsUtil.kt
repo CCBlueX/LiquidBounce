@@ -63,6 +63,7 @@ object RotationManager : Listenable {
         get() = Rotation(mc.player?.lastYaw ?: 0f, mc.player?.lastPitch ?: 0f)
 
     // Current rotation
+    var prevRotation: Rotation? = null
     var currentRotation: Rotation? = null
     var ticksUntilReset: Int = 0
     var ignoreOpenInventory = false
@@ -95,7 +96,7 @@ object RotationManager : Listenable {
         range: Double,
         wallsRange: Double,
         expectedTarget: BlockPos? = null,
-        pattern: Pattern = GaussianPattern,
+        pattern: Pattern = GaussianPattern
     ): VecRotation? {
         val rangeSquared = range * range
         val wallsRangeSquared = wallsRange * wallsRange
@@ -337,6 +338,7 @@ object RotationManager : Listenable {
                         player.lastRenderYaw = player.yaw
                     }
                 }
+                prevRotation = null
                 currentRotation = null
                 return
             }
@@ -424,11 +426,12 @@ object RotationManager : Listenable {
     }
 
     val tickHandler = handler<GameTickEvent> {
-        if (targetRotation == null || mc.isPaused) {
+        if (mc.isPaused) {
             return@handler
         }
 
-        update()
+        if (currentRotation != null) prevRotation = currentRotation
+        if (targetRotation != null) update()
     }
 
     /**

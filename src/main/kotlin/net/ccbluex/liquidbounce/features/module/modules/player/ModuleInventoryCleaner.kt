@@ -268,9 +268,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     }
 
     private fun categoriteItem(
-        items: MutableList<WeightedItem>,
-        stack: ItemStack,
-        slotId: Int,
+        items: MutableList<WeightedItem>, stack: ItemStack, slotId: Int
     ) {
         if (stack.isNothing()) {
             return
@@ -352,8 +350,7 @@ open class WeightedItem(val itemStack: ItemStack, val slot: Int) : Comparable<We
 class WeightedPrimitiveItem(itemStack: ItemStack, slot: Int, override val category: ItemCategory, val worth: Int = 0) :
     WeightedItem(itemStack, slot) {
     companion object {
-        private val COMPARATOR = ComparatorChain<WeightedPrimitiveItem>(
-            { o1, o2 -> o1.worth.compareTo(o2.worth) },
+        private val COMPARATOR = ComparatorChain<WeightedPrimitiveItem>({ o1, o2 -> o1.worth.compareTo(o2.worth) },
             { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
             HOTBAR_PREDICATE,
             IDENTITY_PREDICATE
@@ -387,18 +384,17 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f)
         )
-        private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
-            { o1, o2 ->
-                (
+        private val COMPARATOR = ComparatorChain<WeightedSwordItem>({ o1, o2 ->
+            (
                     // TODO: Attack Speed
                     o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
                         Enchantments.FIRE_ASPECT
                     ) * 4.0f * 0.625f * 0.9f).compareTo(
-                    o2.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(
-                        o2.itemStack
-                    ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f)
-                )
-            },
+                o2.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(
+                    o2.itemStack
+                ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f)
+            )
+        },
             { o1, o2 ->
                 SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
                     .compareTo(SECONDARY_VALUE_ESTIMATOR.estimateValue(o2.itemStack))
@@ -555,12 +551,11 @@ class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemSta
 
 class WeightedFoodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        private val COMPARATOR = ComparatorChain<WeightedFoodItem>(
-            { o1, o2 ->
-                compareByCondition(
-                    o1, o2
-                ) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE }
-            },
+        private val COMPARATOR = ComparatorChain<WeightedFoodItem>({ o1, o2 ->
+            compareByCondition(
+                o1, o2
+            ) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE }
+        },
             { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.GOLDEN_APPLE } },
             { o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) },
             { o1, o2 -> o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier) },

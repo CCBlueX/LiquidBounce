@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import kotlin.math.min
@@ -52,8 +51,7 @@ object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     }
 
     val packetHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag)
-            tickBalance = 0f
+        if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) tickBalance = 0f
         // Stops when you got flagged
     }
 

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -54,6 +55,13 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
+        chat(player.prevYaw.toString())
+        chat(player.prevPitch.toString())
+        RotationManager.prevRotation?.let {
+            chat("prevrot")
+            chat(it.yaw.toString())
+            chat(it.pitch.toString())
+        }
         targetRotation?.let { RotationManager.aimAt(it, false, turnSpeed) }
 
         for (target in targetTracker.enemies()) {

@@ -129,6 +129,9 @@ class ChatReceiveEvent(val message: String, val textData: Text) : Event()
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()
 
+@Nameable("itemUseEvent")
+class ItemUseEvent() : CancellableEvent()
+
 // World events
 
 @Nameable("blockShape")

@@ -99,7 +99,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             }
         ),
         INDEX("Index", List<Int>::sorted),
-        RANDOM("Random", List<Int>::shuffled),
+        RANDOM("Random", List<Int>::shuffled)
     }
 
 }

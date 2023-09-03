@@ -342,6 +342,7 @@
         }
     </style>
     <script>
+        let authService = 0;
         const random = (length = 8) => {
             // Declare all characters
             let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -373,7 +374,19 @@
         }
 
         function addDynamically() {
-            newCrackedAccount()
+            switch (authService) {
+                case 0: {
+                    newCrackedAccount();
+                    break;
+                }
+                case 1: {
+                    break;
+                }
+                case 2: {
+                    newAlteningAccount()
+                    break;
+                }
+            }
         }
 
         function switchAuth(num) {
@@ -382,28 +395,31 @@
             let minecraftButton = document.querySelector(".minecraftButton");
             switch (num) {
                 case 0: {
+                    authService = 0;
                     minecraftButton.style.opacity = 1;
                     minecraftButton.style.zIndex = 20;
                     microsoftButton.style.opacity = 0;
-                    microsoftButton.style.zIndex = 0
+                    microsoftButton.style.zIndex = 0;
                     theAlteningScreen.style.opacity = 0;
                     theAlteningScreen.style.zIndex = 0;
                     break;
                 }
                 case 1: {
+                    authService = 1;
                     minecraftButton.style.opacity = 0;
                     minecraftButton.style.zIndex = 0;
                     microsoftButton.style.opacity = 1;
-                    microsoftButton.style.zIndex = 20
+                    microsoftButton.style.zIndex = 20;
                     theAlteningScreen.style.opacity = 0;
                     theAlteningScreen.style.zIndex = 0;
                     break;
                 }
                 case 2: {
+                    authService = 2;
                     minecraftButton.style.opacity = 0;
                     minecraftButton.style.zIndex = 0;
                     microsoftButton.style.opacity = 0;
-                    microsoftButton.style.zIndex = 0
+                    microsoftButton.style.zIndex = 0;
                     theAlteningScreen.style.opacity = 1;
                     theAlteningScreen.style.zIndex = 20;
                     break;
@@ -674,7 +690,7 @@
             </div>
 
             <div class="microsoftButton">
-                <button class="theAlteningButton1" onclick="toggleOverlay()">
+                <button class="theAlteningButton1" onclick="newMicrosoftAccount()">
                     <picture>
                         <source srcset="img/login.svg"
                                 media="(orientation: portrait)">
@@ -686,11 +702,11 @@
 
             <div class="theAlteningButton">
                 <div class="theAlteningGrid">
-                    <input type="text" placeholder="Account Token" class="theAlteningText">
+                    <input type="text" placeholder="Account Token" id="token" class="theAlteningText">
                     <input type="text" placeholder="API Token" class="theAlteningText">
                 </div>
 
-                <button class="generateButto" onclick="toggleOverlay()">
+                <button class="generateButto" onclick="generateAlteningAccount()">
                     <picture>
                         <source srcset="img/generate.svg"
                                 media="(orientation: portrait)">
