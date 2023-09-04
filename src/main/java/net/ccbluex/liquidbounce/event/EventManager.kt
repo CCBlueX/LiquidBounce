@@ -47,7 +47,7 @@ object EventManager {
     fun callEvent(event: Event) {
         val targets = registry[event.javaClass] ?: return
 
-        for (invokableEventTarget in targets) {
+        for (invokableEventTarget in targets.sortedByDescending { it.priority }) {
             try {
                 if (!invokableEventTarget.eventClass.handleEvents() && !invokableEventTarget.isIgnoreCondition)
                     continue

@@ -11,14 +11,11 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.PlaceRotation
-import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
@@ -44,6 +41,7 @@ import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
@@ -500,10 +498,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        var itemStack = player.heldItem
+        var itemStack = player.inventoryContainer.getSlot(serverSlot + 36).stack
 
         //TODO: blacklist more blocks than only bushes
-        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || player.heldItem.stackSize <= 0) {
+        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || itemStack.stackSize <= 0) {
             val blockSlot = InventoryUtils.findBlockInHotbar() ?: return
 
             when (autoBlock.lowercase()) {
@@ -555,6 +553,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
             }
         }
+
+        // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
+        switchBlockNextTickIfPossible(itemStack)
 
         if (trackCPS) {
             CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
@@ -615,6 +616,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
             }
         }
+
+        // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
+        switchBlockNextTickIfPossible(stack)
 
         if (trackCPS) {
             CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
@@ -971,6 +975,25 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         return old
+    }
+
+    private fun switchBlockNextTickIfPossible(stack: ItemStack) {
+        val player = mc.thePlayer ?: return
+
+        if (autoBlock !in arrayOf("Off", "Switch") && stack.stackSize <= 0) {
+            InventoryUtils.findBlockInHotbar()?.let {
+                ClientUtils.displayChatMessage("${autoBlock}, ${stack.stackSize}")
+
+                TickedActions.add({
+                    if (autoBlock == "Pick") {
+                        player.inventory.currentItem = it - 36
+                        mc.playerController.updateController()
+                    } else {
+                        sendPacket(C09PacketHeldItemChange(it - 36))
+                    }
+                }, 1, this)
+            }
+        }
     }
 
     /**

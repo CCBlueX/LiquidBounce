@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.TickedActions
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import kotlin.concurrent.thread
 
@@ -100,6 +101,7 @@ object LiquidBounce {
         registerListener(CapeService)
         registerListener(InventoryUtils)
         registerListener(MiniMapRegister)
+        registerListener(TickedActions)
 
         // Load client fonts
         loadFonts()
