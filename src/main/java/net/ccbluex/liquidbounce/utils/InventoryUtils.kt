@@ -100,10 +100,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         val packet = event.packet
 
         when (packet) {
-            is C08PacketPlayerBlockPlacement -> {
-                CLICK_TIMER.reset()
-                ClientUtils.displayChatMessage("PLACEMENT ${System.currentTimeMillis()}")
-            }
+            is C08PacketPlayerBlockPlacement -> CLICK_TIMER.reset()
 
             is C16PacketClientStatus ->
                 if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
@@ -119,10 +116,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 if (event.eventType == EventState.RECEIVE) return
 
                 if (packet.slotId == serverSlot) event.cancelEvent()
-                else {
-                    ClientUtils.displayChatMessage("SLOT ${System.currentTimeMillis()}")
-                    serverSlot = packet.slotId
-                }
+                else serverSlot = packet.slotId
             }
         }
     }

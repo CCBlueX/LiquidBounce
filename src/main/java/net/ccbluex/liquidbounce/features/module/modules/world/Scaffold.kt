@@ -649,6 +649,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (serverSlot != player.inventory.currentItem) {
             sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
         }
+
+        TickedActions.clear(this)
     }
 
     // Entity movement event
@@ -982,8 +984,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (autoBlock !in arrayOf("Off", "Switch") && stack.stackSize <= 0) {
             InventoryUtils.findBlockInHotbar()?.let {
-                ClientUtils.displayChatMessage("${autoBlock}, ${stack.stackSize}")
-
                 TickedActions.add({
                     if (autoBlock == "Pick") {
                         player.inventory.currentItem = it - 36
