@@ -84,7 +84,6 @@ dependencies {
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-
     modRuntimeOnly "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
 
     // fix nullable imports
