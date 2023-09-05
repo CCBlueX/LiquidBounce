@@ -27,7 +27,11 @@ import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPac
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.block.Blocks
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
+import net.minecraft.screen.slot.SlotActionType
 
 fun convertClientSlotToServerSlot(slot: Int): Int {
     return when (slot) {
@@ -64,6 +68,31 @@ fun openInventorySilently() {
                 runCatching {
                     clientStatus.sendToServer(Protocol1_12To1_11_1::class.java)
                 }
+            }
+        }
+    }
+}
+
+fun utilizeInventory(
+    item: Int,
+    button: Int,
+    slotActionType: SlotActionType,
+    inventoryConstraints: InventoryConstraintsConfigurable,
+    close: Boolean = true
+) {
+    val slot = convertClientSlotToServerSlot(item)
+    val isInInventoryScreen = mc.currentScreen is InventoryScreen
+
+    if (!isInInventoryScreen) {
+        openInventorySilently()
+    }
+
+    if (!(inventoryConstraints.noMove && mc.player!!.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
+        mc.interactionManager!!.clickSlot(0, slot, button, slotActionType, mc.player!!)
+
+        if (close) {
+            if (!isInInventoryScreen) {
+                mc.networkHandler!!.sendPacket(CloseHandledScreenC2SPacket(0))
             }
         }
     }

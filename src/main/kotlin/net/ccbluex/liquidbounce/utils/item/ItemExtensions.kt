@@ -49,6 +49,14 @@ fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
 
 fun findInventorySlot(item: Item): Int? = findInventorySlot { it.item == item }
 
+fun findNotInHotbar(item: Item): Int? = findNotInHotbar { it.item == item }
+
+fun findNotInHotbar(predicate: (ItemStack) -> Boolean): Int? {
+    val player = MinecraftClient.getInstance().player ?: return null
+
+    return (9..40).firstOrNull { predicate(player.inventory.getStack(it)) }
+}
+
 fun findInventorySlot(predicate: (ItemStack) -> Boolean): Int? {
     val player = MinecraftClient.getInstance().player ?: return null
 
@@ -107,10 +115,9 @@ val ToolItem.type: Int
     }
 
 val Item.attackDamage: Float
-    get() =
-        when (this) {
-            is SwordItem -> this.attackDamage
-            is MiningToolItem -> this.attackDamage
-            is ToolItem -> this.material.attackDamage
-            else -> 1.0f
-        }
+    get() = when (this) {
+        is SwordItem -> this.attackDamage
+        is MiningToolItem -> this.attackDamage
+        is ToolItem -> this.material.attackDamage
+        else -> 1.0f
+    }

@@ -55,13 +55,6 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
-        chat(player.prevYaw.toString())
-        chat(player.prevPitch.toString())
-        RotationManager.prevRotation?.let {
-            chat("prevrot")
-            chat(it.yaw.toString())
-            chat(it.pitch.toString())
-        }
         targetRotation?.let { RotationManager.aimAt(it, false, turnSpeed) }
 
         for (target in targetTracker.enemies()) {

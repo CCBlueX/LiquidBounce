@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
+import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
@@ -44,7 +45,6 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.objectweb.asm.Opcodes;
@@ -78,6 +78,9 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     @Shadow
     protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
 
+    @Shadow
+    public abstract MinecraftClient getClient();
+
     /**
      * Hook game render event
      */
@@ -86,43 +89,30 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         EventManager.INSTANCE.callEvent(new GameRenderEvent());
     }
 
+    /**
+     * We change crossHairTarget according to server side rotations
+     */
     @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
-    private HitResult hookTargetedEntityUpdate(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
-        if (instance != this.client.player)
-            return instance.raycast(maxDistance, tickDelta, includeFluids);
+    private HitResult hookRaycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
+        if (instance != client.player) return instance.raycast(maxDistance, tickDelta, includeFluids);
 
-        return raycast(maxDistance, tickDelta, includeFluids);
+        Rotation rotation = (RotationManager.INSTANCE.getCurrentRotation() == null) ? RotationManager.INSTANCE.getCurrentRotation() : new Rotation(client.player.getYaw(tickDelta), client.player.getPitch(tickDelta));
+
+        return RaytracingExtensionsKt.raycast(maxDistance, rotation, includeFluids);
     }
 
     @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d hook1(Entity instance, float tickDelta) {
+    private Vec3d hookRotationVector(Entity instance, float tickDelta) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
 
         return rotation != null ? rotation.getRotationVec() : instance.getRotationVec(tickDelta);
     }
 
-    private HitResult raycast(double maxDistance, float tickDelta, boolean includeFluids) {
-        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        if (rotation == null) {
-            rotation = new Rotation(client.player.getYaw(tickDelta), client.player.getPitch(tickDelta));
-        }
-
-        Vec3d vec3d = client.player.getCameraPosVec(tickDelta);
-        Vec3d vec3d2 = rotation.getRotationVec();
-        Vec3d vec3d3 = vec3d.add(vec3d2.x * maxDistance, vec3d2.y * maxDistance, vec3d2.z * maxDistance);
-        return this.client.world.raycast(new RaycastContext(vec3d, vec3d3, RaycastContext.ShapeType.OUTLINE, includeFluids ? RaycastContext.FluidHandling.ANY : RaycastContext.FluidHandling.NONE, this.client.player));
-    }
-
     /**
      * Hook world render event
      */
-    @Inject(method = "renderWorld", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z",
-            opcode = Opcodes.GETFIELD,
-            ordinal = 0))
-    public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack,
-                                CallbackInfo callbackInfo) {
+    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
+    public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, partialTicks));
     }
 

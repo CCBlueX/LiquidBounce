@@ -25,15 +25,11 @@ import net.ccbluex.liquidbounce.event.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -43,6 +39,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity {
+
+    @Shadow
+    public boolean noClip;
+    @Shadow
+    protected boolean submergedInWater;
 
     @Shadow
     public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
@@ -68,25 +69,10 @@ public abstract class MixinEntity {
     public abstract float getYaw();
 
     @Shadow
-    public boolean noClip;
-
-    @Shadow
     public abstract boolean isOnGround();
 
     @Shadow
-    protected boolean submergedInWater;
-
-    @Shadow
     public abstract boolean hasVehicle();
-
-    @Shadow
-    protected abstract Vec3d getRotationVector(float pitch, float yaw);
-
-    @Shadow
-    private float pitch;
-
-    @Shadow
-    public abstract float getPitch(float tickDelta);
 
     @Shadow
     public abstract float getPitch();
@@ -118,12 +104,12 @@ public abstract class MixinEntity {
     @Redirect(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"))
     public Vec3d hookVelocity(Vec3d movementInput, float speed, float yaw) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, movementInputToVelocity(movementInput, speed, yaw));
+            PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, MixinEntity.movementInputToVelocity(movementInput, speed, yaw));
             EventManager.INSTANCE.callEvent(event);
             return event.getVelocity();
         }
 
-        return movementInputToVelocity(movementInput, speed, yaw);
+        return MixinEntity.movementInputToVelocity(movementInput, speed, yaw);
     }
 
     @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getStepHeight()F"))

@@ -22,18 +22,18 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.utilizeInventory
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.combat.pauseCombat
 import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.ccbluex.liquidbounce.utils.item.findNotInHotbar
+import net.ccbluex.liquidbounce.utils.item.utilizeInventory
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
 
 /**
  * AutoSoup module
@@ -45,34 +45,25 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
     private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())
     private val health by int("Health", 15, 1..20)
+    private val delay by int("Delay", 0, 0..15)
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    private val swapPreviousDelay by int("SwapPreviousDelay", 5, 1..100)
 
     val repeatable = repeatable {
         val mushroomStewSlot = findHotbarSlot(Items.MUSHROOM_STEW)
         val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
-        val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
 
-        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null || interaction.hasRidingInventory()) {
+        if (interaction.hasRidingInventory()) {
             return@repeatable
         }
-
-        if (bowlHotbarSlot != null) {
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    BlockPos.ORIGIN,
-                    Direction.DOWN
-                )
-            )
-
-            if (bowlHotbarSlot != player.inventory.selectedSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-            }
-
+        if (player.health > health && bowlHotbarSlot != null && canAct()) {
+            pauseCombat = true
+            wait { inventoryConstraints.delay.random() }
             when (bowl) {
                 BowlMode.DROP -> {
                     utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, inventoryConstraints)
                 }
+
                 BowlMode.MOVE -> {
                     // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
                     if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {
@@ -85,33 +76,43 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                     }
                 }
             }
-            return@repeatable
+            wait { inventoryConstraints.delay.random() }
+            pauseCombat = false
         }
-
-        if (player.health < health) {
-            if (mushroomStewSlot != null) {
-                wait { inventoryConstraints.delay.random() }
-
-                if (mushroomStewSlot != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(mushroomStewSlot))
-                }
-
-                if (player.isBlocking) {
-                    waitUntil { !player.isBlocking }
-                }
-
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
-                }
-                return@repeatable
-            } else {
-                // Search for the specific item in inventory and quick move it to hotbar
-                if (bowlInvSlot != null) {
-                    utilizeInventory(bowlInvSlot, 0, SlotActionType.QUICK_MOVE, inventoryConstraints)
-                }
-                return@repeatable
+        if (player.health < health && mushroomStewSlot != null) {
+            // we need to take some actions
+            pauseCombat = true
+            if (player.isBlocking) {
+                waitUntil { !player.isBlocking }
             }
+            wait { inventoryConstraints.delay.random() }
+
+            if (mushroomStewSlot != player.inventory.selectedSlot) {
+                SilentHotbar.selectSlotSilently(this, mushroomStewSlot, swapPreviousDelay)
+            }
+
+            // uses soup
+            interaction.sendSequencedPacket(world) { sequence ->
+                PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+            }
+
+            // drop empty bowl
+            utilizeInventory(mushroomStewSlot, 1, SlotActionType.THROW, inventoryConstraints)
+            return@repeatable
+        } else {
+            wait { delay }
+            pauseCombat = false
         }
+    }
+
+    override fun disable() {
+        pauseCombat = false
+    }
+
+    fun canAct(): Boolean {
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
+
+        return isInInventoryScreen || !inventoryConstraints.invOpen
     }
 
     enum class BowlMode(override val choiceName: String) : NamedChoice {

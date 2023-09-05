@@ -243,7 +243,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     val repeatable = repeatable {
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
 
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
