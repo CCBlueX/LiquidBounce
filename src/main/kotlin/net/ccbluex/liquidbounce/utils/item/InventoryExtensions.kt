@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.block.Blocks
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
@@ -81,9 +82,11 @@ fun utilizeInventory(
     close: Boolean = true
 ) {
     val slot = convertClientSlotToServerSlot(item)
-    val isInInventoryScreen = mc.currentScreen is InventoryScreen
+    val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
+    // checks if opened inventory is needed
+    val isInHitBar = item in 0..8
 
-    if (!isInInventoryScreen) {
+    if (!isInInventoryScreen && !isInHitBar) {
         openInventorySilently()
     }
 
@@ -91,7 +94,7 @@ fun utilizeInventory(
         mc.interactionManager!!.clickSlot(0, slot, button, slotActionType, mc.player!!)
 
         if (close) {
-            if (!isInInventoryScreen) {
+            if (!isInInventoryScreen && !isInHitBar) {
                 mc.networkHandler!!.sendPacket(CloseHandledScreenC2SPacket(0))
             }
         }

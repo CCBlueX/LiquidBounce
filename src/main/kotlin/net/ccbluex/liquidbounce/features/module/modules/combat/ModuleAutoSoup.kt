@@ -97,7 +97,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
             }
 
             // drop empty bowl
-            utilizeInventory(mushroomStewSlot, 1, SlotActionType.THROW, inventoryConstraints)
+            mc.interactionManager!!.clickSlot(0, mushroomStewSlot, 1, SlotActionType.THROW, player)
             return@repeatable
         } else {
             wait { delay }
