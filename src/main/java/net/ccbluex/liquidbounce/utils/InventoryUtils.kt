@@ -16,6 +16,7 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
+import net.minecraft.network.play.server.S09PacketHeldItemChange
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 object InventoryUtils : MinecraftInstance(), Listenable {
@@ -97,9 +98,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     fun onPacket(event: PacketEvent) {
         if (event.isCancelled) return
 
-        val packet = event.packet
-
-        when (packet) {
+        when (val packet = event.packet) {
             is C08PacketPlayerBlockPlacement -> CLICK_TIMER.reset()
 
             is C16PacketClientStatus ->
@@ -118,13 +117,14 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 if (packet.slotId == serverSlot) event.cancelEvent()
                 else serverSlot = packet.slotId
             }
+
+            is S09PacketHeldItemChange -> serverSlot = packet.heldItemHotbarIndex
         }
     }
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
         // Prevent desync
-        serverSlot = -1
         serverOpenInventory = false
     }
 
