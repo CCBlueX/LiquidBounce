@@ -199,7 +199,7 @@ public abstract class MixinMinecraftClient {
     }
 
     /**
-     * Hook item use cooldown
+     * Hook item use
      */
     @Inject(method = "doItemUse", cancellable = true, at = @At("HEAD"))
     private void hookItemUse(CallbackInfo ci) {

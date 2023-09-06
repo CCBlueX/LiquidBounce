@@ -138,7 +138,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         input.movementForward /= 0.2f;
         input.movementSideways /= 0.2f;
 
-        //ClientUtilsKt.chat("slowdown");
         // then
         final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
         EventManager.INSTANCE.callEvent(playerUseMultiplier);

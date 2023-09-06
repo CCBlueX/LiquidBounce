@@ -57,7 +57,6 @@ object UltralightJsClient {
          */
         fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuid}?size=100"
 
-
         fun getFaceUrlByUUID(uuid: String) = "https://crafatar.com/avatars/$uuid}?size=100"
 
         /**

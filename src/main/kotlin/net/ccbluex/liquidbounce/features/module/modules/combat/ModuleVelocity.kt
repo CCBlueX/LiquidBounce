@@ -42,7 +42,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Strafe, AAC442, Intave
+            Modify, Strafe, AAC442, Dexland
         )
     }
 
@@ -143,7 +143,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     }
 
-    private object Intave : Choice("Intave") {
+    private object Dexland : Choice("Intave") {
 
         override val parent: ChoiceConfigurable
             get() = modes
