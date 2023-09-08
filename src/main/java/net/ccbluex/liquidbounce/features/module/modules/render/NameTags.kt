@@ -275,11 +275,11 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val name = objective?.objective?.displayName
 
         val shouldPredictHealth =
-            predictHealth && entity is EntityPlayer && (name.equals("§c❤") || name == null)
+            predictHealth && entity is EntityPlayer && name.equals("§c❤")
 
         var scoreboardHealth = objective?.scorePoints?.toFloat()
 
-        if ((scoreboardHealth ?: 0f) <= 0f || name == null) {
+        if ((scoreboardHealth ?: 0f) <= 0f) {
             scoreboardHealth = 20f
         }
 
