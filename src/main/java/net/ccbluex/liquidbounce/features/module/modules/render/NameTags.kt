@@ -38,6 +38,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
 
     private val health by BoolValue("Health", true)
+    private val predictHealth by BoolValue("PredictHealth", false) { health }
     private val absorption by BoolValue("Absorption", false) { health || healthBar }
     private val healthInInt by BoolValue("HealthInIntegers", true) { health }
     private val healthPrefix by BoolValue("HealthPrefix", false) { health }
@@ -208,11 +209,12 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         )
 
         var foundPotion = false
+
         if (potion && entity is EntityPlayer) {
             val potions =
-                (entity.getActivePotionEffects() as Collection<PotionEffect>).map { Potion.potionTypes[it.getPotionID()] }
+                (entity.getActivePotionEffects() as Collection<PotionEffect>).map { Potion.potionTypes[it.potionID] }
                     .filter { it.hasStatusIcon() }
-            if (!potions.isEmpty()) {
+            if (potions.isNotEmpty()) {
                 foundPotion = true
 
                 color(1.0F, 1.0F, 1.0F, 1.0F)
@@ -221,16 +223,13 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
                 val minX = (potions.size * -20) / 2
 
-                var index = 0
-
                 glPushMatrix()
                 enableRescaleNormal()
-                for (potion in potions) {
+                for ((index, potion) in potions.withIndex()) {
                     color(1.0F, 1.0F, 1.0F, 1.0F)
-                    mc.getTextureManager().bindTexture(inventoryBackground)
-                    val i1 = potion.getStatusIconIndex()
+                    mc.textureManager.bindTexture(inventoryBackground)
+                    val i1 = potion.statusIconIndex
                     drawTexturedModalRect(minX + index * 20, -22, 0 + i1 % 8 * 18, 198 + i1 / 8 * 18, 18, 18, 0F)
-                    index++
                 }
                 disableRescaleNormal()
                 glPopMatrix()
@@ -270,9 +269,38 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     }
 
     private fun getHealthString(entity: EntityLivingBase): String {
-        val result = entity.health + if (absorption) entity.absorptionAmount else 0f
+        val scoreboard = if (entity is EntityPlayer) entity.worldScoreboard else null
+        val objective = scoreboard?.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))
+
+        val name = objective?.objective?.displayName
+
+        val shouldPredictHealth =
+            predictHealth && entity is EntityPlayer && (name.equals("§c❤") || name == null)
+
+        var scoreboardHealth = objective?.scorePoints?.toFloat()
+
+        if ((scoreboardHealth ?: 0f) <= 0f || name == null) {
+            scoreboardHealth = 20f
+        }
+
+        val health = if (shouldPredictHealth) scoreboardHealth?.coerceAtMost(20f) ?: entity.health else entity.health
+        val absorption = if (this.absorption) {
+            val hp = scoreboardHealth ?: 0f
+
+            if (shouldPredictHealth && hp > 20) {
+                hp - 20
+            } else {
+                entity.absorptionAmount
+            }
+        } else {
+            0f
+        }
+
+        val result = health + absorption
+
         val prefix = if (healthPrefix) healthPrefixText else ""
         val suffix = if (healthSuffix) healthSuffixText else ""
+
         return prefix + "§c " + (if (healthInInt) result.toInt() else decimalFormat.format(result)) + suffix
     }
 }
