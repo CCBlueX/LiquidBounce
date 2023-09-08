@@ -55,9 +55,7 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
             if (entity != thePlayer && isSelected(entity, false)) {
-                var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
-
-                if (dist > 255) dist = 255
+                val dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
 
                 val colorMode = colorMode.lowercase()
                 val color = when {
@@ -93,12 +91,12 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
                 - mc.renderManager.renderPosZ)
 
         val eyeVector = Vec3(0.0, 0.0, 1.0)
-                .rotatePitch(-thePlayer.rotationPitch.toRadians())
-                .rotateYaw(-thePlayer.rotationYaw.toRadians())
+            .rotatePitch(-thePlayer.rotationPitch.toRadians())
+            .rotateYaw(-thePlayer.rotationYaw.toRadians())
 
         glColor(color)
 
-        glVertex3d(eyeVector.xCoord, thePlayer.eyeHeight.toDouble() + eyeVector.yCoord, eyeVector.zCoord)
+        glVertex3d(eyeVector.xCoord, thePlayer.getEyeHeight() + eyeVector.yCoord, eyeVector.zCoord)
         glVertex3d(x, y, z)
         glVertex3d(x, y, z)
         glVertex3d(x, y + entity.height, z)
