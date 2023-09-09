@@ -359,7 +359,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         }
 
         if (target != null && currentTarget != null) {
-            if (mc.thePlayer.getDistanceToEntityBox(target ?: return) > range) {
+            if (mc.thePlayer.getDistanceToEntityBox(target ?: return) > range && blockStatus) {
                 stopBlocking()
                 return
             }
@@ -437,8 +437,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         }
 
         // Settings
-        val failRate = failRate
-        val swing = swing
         val multi = targetMode == "Multi"
         val openInventory = aac && mc.currentScreen is GuiInventory
         val failHit = failRate > 0 && nextInt(endExclusive = 100) <= failRate
