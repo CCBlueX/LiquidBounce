@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.utils.client.timer
-import net.ccbluex.liquidbounce.utils.entity.downwards
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.entity.upwards
+import net.ccbluex.liquidbounce.utils.entity.*
+import net.minecraft.entity.MovementType
 
 /**
  * Speed module
@@ -39,14 +39,53 @@ import net.ccbluex.liquidbounce.utils.entity.upwards
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices(
-        "Mode",
-        SpeedYPort,
-        arrayOf(
+        "Mode", SpeedYPort, arrayOf(
+            Verus,
             SpeedYPort,
             LegitHop,
-            Custom
+            Custom,
         )
     )
+
+    /**
+     * @anticheat Verus
+     * @anticheatVersion b3882
+     * @testedOn eu.anticheat-test.com
+     */
+
+    private object Verus : Choice("Verus") {
+
+        //b3882
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            if (player.isOnGround && player.moving) {
+                player.jump()
+                player.velocity.x *= 1.1
+                player.velocity.z *= 1.1
+            }
+        }
+
+        val moveHandler = handler<PlayerMoveEvent> { event ->
+            // Might just strafe when player controls itself
+            if (event.type == MovementType.SELF && player.moving) {
+                val movement = event.movement
+                movement.strafe(player.directionYaw, strength = 1.0)
+            }
+        }
+
+        val timerRepeatable = repeatable {
+            mc.timer.timerSpeed = 2f
+            wait { 1 }
+            mc.timer.timerSpeed = 1f
+            wait { 100 }
+        }
+
+        override fun disable() {
+            mc.timer.timerSpeed = 1f
+        }
+    }
 
     private object SpeedYPort : Choice("YPort") {
 
@@ -104,9 +143,12 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
                         player.strafe(speed = horizontalSpeed.toDouble())
                         player.velocity.y = verticalSpeed.toDouble()
                     }
+
                     customStrafe -> player.strafe(speed = strafe.toDouble())
                     else -> player.strafe()
                 }
+            } else {
+                mc.timer.timerSpeed - 1f
             }
         }
 

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
  * Timer module
- * 
+ *
  * Changes the speed of the entire game.
  */
 object ModuleTimer : Module("Timer", Category.WORLD) {
@@ -40,7 +40,7 @@ object ModuleTimer : Module("Timer", Category.WORLD) {
     private val onMove by boolean("OnMove", false)
     private var currentTimerState: TimerState = TimerState.NormalSpeed
 
-    val repeatable: Unit = repeatable {
+    val repeatable = repeatable {
         if (!onMove || player.moving) {
             when (currentTimerState) {
                 TimerState.NormalSpeed -> {
@@ -65,12 +65,11 @@ object ModuleTimer : Module("Timer", Category.WORLD) {
         currentTimerState = TimerState.NormalSpeed
     }
 
-    val disconnectHandler: Unit = handler<WorldDisconnectEvent> {
+    val disconnectHandler = handler<WorldDisconnectEvent> {
         enabled = false
     }
 
     enum class TimerState {
-        NormalSpeed,
-        BoostSpeed
+        NormalSpeed, BoostSpeed
     }
 }

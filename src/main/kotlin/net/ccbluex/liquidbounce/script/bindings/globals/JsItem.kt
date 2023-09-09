@@ -29,13 +29,11 @@ object JsItem {
     /**
      * Create [ItemStack] from [arguments]
      */
-    @Suppress("unused")
-    fun create(arguments: String): ItemStack = createItem(arguments, 1)
+    fun create(arguments: String): ItemStack = createItem(arguments)
 
     /**
      * Create [amount]x [ItemStack] from [arguments]
      */
-    @Suppress("unused")
     fun create(arguments: String, amount: Int): ItemStack = createItem(arguments, amount)
 
 }

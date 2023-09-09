@@ -1,5 +1,5 @@
 <script>
-    import { onMount } from "svelte";
+    import {onMount} from "svelte";
 
     export let instance;
 
@@ -19,6 +19,7 @@
     }
 
     let valueString;
+
     function updateValueString() {
         if (multi) {
             valueString = `${value[0]} - ${value[1]}`
@@ -26,6 +27,7 @@
             valueString = value[0].toString();
         }
     }
+
     updateValueString();
 
     let slider = null;
@@ -73,7 +75,7 @@
 <div class="setting animation-fix">
     <div class="name">{name}</div>
     <div class="value">{valueString}</div>
-    <div bind:this={slider} class="slider" />
+    <div bind:this={slider} class="slider"/>
 </div>
 
 <style>

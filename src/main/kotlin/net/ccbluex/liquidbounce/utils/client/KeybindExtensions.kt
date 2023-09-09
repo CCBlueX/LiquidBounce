@@ -82,4 +82,4 @@ val KeyBinding.opposite
         }
 
 val moveKeys =
-    mutableListOf<KeyBinding>(mc.options.leftKey, mc.options.forwardKey, mc.options.rightKey, mc.options.backKey)
+    mutableListOf<KeyBinding>(mc.options.forwardKey, mc.options.rightKey, mc.options.backKey, mc.options.leftKey)

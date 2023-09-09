@@ -18,21 +18,21 @@
  */
 
 plugins {
-    id "fabric-loom"
-    id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "7.1.2"
-    id "org.jlleitschuh.gradle.ktlint" version "11.5.0"
-    id "com.gorylenko.gradle-git-properties" version "2.4.1"
+    id 'fabric-loom'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'org.jlleitschuh.gradle.ktlint' version '11.5.1'
+    id 'com.gorylenko.gradle-git-properties' version '2.4.1'
 }
 
 ktlint {
     enableExperimentalRules = true
     ignoreFailures = true
-    disabledRules = ["no-wildcard-imports", "no-blank-line-before-rbrace"]
+    disabledRules = ['no-wildcard-imports', 'no-blank-line-before-rbrace']
 
     reporters {
-        reporter "plain"
-        reporter "checkstyle"
+        reporter 'plain'
+        reporter 'checkstyle'
     }
 
 }
@@ -45,19 +45,27 @@ version = project.mod_version
 group = project.maven_group
 
 loom {
-    accessWidenerPath = file("src/main/resources/liquidbounce.accesswidener")
+    accessWidenerPath = file('src/main/resources/liquidbounce.accesswidener')
 }
 
 repositories {
     mavenCentral()
     mavenLocal()
-    maven { url = "https://maven.fabricmc.net/" }
-    maven { url = "https://jitpack.io" }
+    maven { url = 'https://maven.fabricmc.net/' }
+    maven { url = 'https://jitpack.io' }
     maven {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
-    maven { url = "https://repo.viaversion.com/" }
+    maven {
+        name = "modrinth"
+        url = "https://api.modrinth.com/maven"
+
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+    maven { url = 'https://repo.viaversion.com/' }
 }
 
 dependencies {
@@ -71,37 +79,34 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    modImplementation "com.viaversion:viaversion:4.7.1-SNAPSHOT"
-    modImplementation "com.github.FlorianMichael:ViaLoadingBase:4.4.8"
+    modImplementation 'com.viaversion:viaversion:4.7.1-SNAPSHOT'
+    modImplementation 'com.github.FlorianMichael:ViaLoadingBase:4.4.8'
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-
-    modRuntimeOnly "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
-    // modRuntimeOnly "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
+    // modCompileOnly("maven.modrinth:sodium:${project.sodium_version}") { transitive = false }
 
     // fix nullable imports
-    implementation "com.google.code.findbugs:jsr305:3.0.2"
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation ('com.thealtening.api:api:4.1.0') {
+    implementation('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.github.CCBlueX:Elixir:1.2.6"
+    implementation 'com.github.CCBlueX:Elixir:1.2.6'
 
-    implementation "com.labymedia:ultralight-java-base:0.4.12"
-    implementation "com.labymedia:ultralight-java-databind:0.4.12"
-    implementation "com.labymedia:ultralight-java-gpu:0.4.12"
-    implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
+    implementation 'com.labymedia:ultralight-java-base:0.4.12'
+    implementation 'com.labymedia:ultralight-java-databind:0.4.12'
+    implementation 'com.labymedia:ultralight-java-gpu:0.4.12'
+    implementation 'com.labymedia:ultralight-java-glfw-opengl-util:0.4.12'
 
-    implementation "org.graalvm.sdk:graal-sdk:23.0.1"
-    implementation "org.graalvm.truffle:truffle-api:23.0.1"
-    implementation "org.graalvm.js:js:23.0.1"
+    implementation 'org.graalvm.sdk:graal-sdk:23.0.1'
+    implementation 'org.graalvm.truffle:truffle-api:23.0.1'
+    implementation 'org.graalvm.js:js:23.0.1'
 
-    runtimeOnly "org.graalvm.tools:profiler:23.0.1"
-    runtimeOnly "org.graalvm.tools:chromeinspector:23.0.1"
+    runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
+    runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
 
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
@@ -112,23 +117,23 @@ dependencies {
 
     // Test libraries
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.10.0"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
 processResources {
-    inputs.property "version", project.version
+    inputs.property 'version', project.version
 
-    inputs.property "minecraft_version", minecraft_version
-    inputs.property "fabric_version", fabric_version
-    inputs.property "loader_version", loader_version
-    inputs.property "fabric_kotlin_version", fabric_kotlin_version
+    inputs.property 'minecraft_version', minecraft_version
+    inputs.property 'fabric_version', fabric_version
+    inputs.property 'loader_version', loader_version
+    inputs.property 'fabric_kotlin_version', fabric_kotlin_version
 
-    filesMatching("fabric.mod.json") {
+    filesMatching('fabric.mod.json') {
         expand([
-                version: project.version,
-                minecraft_version: minecraft_version,
-                fabric_version: fabric_version,
-                loader_version: loader_version,
+                version              : project.version,
+                minecraft_version    : minecraft_version,
+                fabric_version       : fabric_version,
+                loader_version       : loader_version,
                 fabric_kotlin_version: fabric_kotlin_version
         ])
     }
@@ -137,17 +142,17 @@ processResources {
 // The following code will include the theme into the build
 
 tasks.register('makeTheme', Exec) {
-    workingDir file("src-theme")
-    commandLine "python", "build.py"
+    workingDir file('src-theme')
+    commandLine 'python', 'build.py'
     doLast {
-        println "Successfully exported theme.zip"
+        println 'Successfully exported theme.zip'
     }
 }
 
 sourceSets {
     main {
         resources {
-            srcDirs "src-theme/resources"
+            srcDirs 'src-theme/resources'
         }
     }
 }
@@ -162,7 +167,7 @@ tasks.withType(JavaCompile).configureEach {
     // this fixes some edge cases with special characters not displaying correctly
     // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
     // If Javadoc is generated, this must be specified in that task too.
-    it.options.encoding = "UTF-8"
+    it.options.encoding = 'UTF-8'
 
     // Minecraft 1.18 upwards uses Java 17.
     it.options.release = 17
@@ -190,7 +195,7 @@ shadowJar {
     archiveClassifier.set('shadow')
 
     // Natives are going to be downloaded from our cloud
-    exclude "native-binaries/*"
+    exclude 'native-binaries/*'
 
     dependencies {
         include(dependency('com.labymedia:ultralight-java-base'))
@@ -199,9 +204,9 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
-        include(dependency("org.graalvm.sdk:graal-sdk:23.0.1"))
-        include(dependency("org.graalvm.truffle:truffle-api:23.0.1"))
-        include(dependency("org.graalvm.js:js:23.0.1"))
+        include(dependency('org.graalvm.sdk:graal-sdk:23.0.1'))
+        include(dependency('org.graalvm.truffle:truffle-api:23.0.1'))
+        include(dependency('org.graalvm.js:js:23.0.1'))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
         include(dependency('com.vdurmont:semver4j:3.1.0'))
@@ -209,7 +214,7 @@ shadowJar {
 }
 
 jar {
-    from "LICENSE"
+    from 'LICENSE'
 }
 
 remapJar {

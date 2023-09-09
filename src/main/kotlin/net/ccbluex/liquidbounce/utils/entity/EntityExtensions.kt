@@ -21,10 +21,8 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.canStandOn
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.block.SideShapeType
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -88,7 +86,7 @@ val PlayerEntity.sqrtSpeed: Double
 fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
     // Might be a jump
     if (isOnGround && increment) {
-        // Allows to bypass modern anti cheat techniques
+        // Allows to bypass modern anti-cheat techniques
         incrementStat(Stats.JUMP)
     }
 

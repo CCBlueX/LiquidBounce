@@ -36,9 +36,13 @@ import java.util.Map;
 @Mixin(PlayerListEntry.class)
 public abstract class MixinPlayerListEntry {
 
-    @Shadow @Final private GameProfile profile;
+    @Shadow
+    @Final
+    private GameProfile profile;
 
-    @Shadow @Final private Map<MinecraftProfileTexture.Type, Identifier> textures;
+    @Shadow
+    @Final
+    private Map<MinecraftProfileTexture.Type, Identifier> textures;
     private boolean loadedCapeTexture = false;
 
     @Inject(method = "getCapeTexture", at = @At("HEAD"))

@@ -59,7 +59,7 @@ object McMappings {
             var current = clazz
             while (current.name != "java.lang.Object") {
                 current = current.superclass
-                classNames.add(current.name.replace('.','/'))
+                classNames.add(current.name.replace('.', '/'))
             }
         }
 
@@ -78,7 +78,7 @@ object McMappings {
             var current = clazz
             while (current.name != "java.lang.Object") {
                 current = current.superclass
-                classNames.add(current.name.replace('.','/'))
+                classNames.add(current.name.replace('.', '/'))
             }
         }
 

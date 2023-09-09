@@ -15,11 +15,11 @@ if (global.PLUGIN_LIVERELOAD?.server) {
     console.log("Closing old live reload server");
     global.PLUGIN_LIVERELOAD.server.close();
     global.PLUGIN_LIVERELOAD.server = null;
-} 
+}
 
 const port = 10004;
 let server = null;
-let retryInterval = null; 
+let retryInterval = null;
 if (!production) {
     server = http.createServer(serve);
     server.on("error", (err) => {
@@ -53,7 +53,7 @@ function closeWatcher() {
             server = null;
         });
     }
-} 
+}
 
 function constructConfig(partname) {
     return {
@@ -79,7 +79,7 @@ function constructConfig(partname) {
                 },
                 preprocess: preprocess()
             }),
-            css({ output: "bundle.css" }),
+            css({output: "bundle.css"}),
             resolve({
                 browser: true,
                 dedupe: ["svelte"]
@@ -97,9 +97,9 @@ function constructConfig(partname) {
             // browser on changes when not in production
             !production && livereload(`${partname}/public`),
             // Close live reload server when done
-            { closeWatcher },
+            {closeWatcher},
 
-            // If we"re building for production (npm run build
+            // If we're building for production (npm run build
             // instead of npm run dev), minify
             production && terser()
         ],

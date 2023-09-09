@@ -47,9 +47,11 @@ public interface MixinBlockView {
     @Shadow
     BlockState getBlockState(BlockPos pos);
 
-    @Shadow @Nullable BlockHitResult raycastBlock(Vec3d start, Vec3d end, BlockPos pos, VoxelShape shape, BlockState state);
+    @Shadow
+    @Nullable BlockHitResult raycastBlock(Vec3d start, Vec3d end, BlockPos pos, VoxelShape shape, BlockState state);
 
-    @Shadow FluidState getFluidState(BlockPos pos);
+    @Shadow
+    FluidState getFluidState(BlockPos pos);
 
     /**
      * @author superblaubeere27

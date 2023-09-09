@@ -56,9 +56,6 @@
   "liquidbounce.command.client.subcommand.reload.description": "Перезагружает Ваш клиент",
   "liquidbounce.command.config.subcommand.load.description": "Загружает конфигурационный файл.",
   "liquidbounce.command.config.subcommand.load.parameter.name.description": "Имя конфигурационного файлы.",
-  "liquidbounce.command.config.subcommand.load.result.notFound": "Конфигурационный файл с названием %s не существует.",
-  "liquidbounce.command.config.subcommand.load.result.failedToLoad": "Не удалось загрузить конфигурационного файл с названием %s.",
-  "liquidbounce.command.config.subcommand.load.result.loaded": "Конфигурационного файл с названием %s был успешно загружен.",
   "liquidbounce.command.config.subcommand.create.parameter.name.description": "Название конфигурационного файла.",
   "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Перезаписать существующий конфигурационного файл.",
   "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Не удалось создать конфигурационный файл с названием %s.",
@@ -358,5 +355,12 @@
   "liquidbounce.module.antiVanish.messages.staffDetected": "Мы засекли человека из персонала в невидимке.",
   "liquidbounce.module.antiVanish.messages.allClear": "Ни одного невидимого игрока не было найдено.",
   "liquidbounce.module.autoWeapon.description": "Автоматически выбирает лучшее оружие в вашем арсенале.",
-  "liquidbounce.module.derp.description": "Заставляет все выглядеть так, как если бы вы вращали головой во все стороны"
+  "liquidbounce.module.derp.description": "Заставляет все выглядеть так, как если бы вы вращали головой во все стороны",
+  "liquidbounce.command.config.subcommand.load.result.notFoundLocal": "Локальный конфигурационный файл с названием %s не существует.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadLocal": "Не удалось загрузить локальный конфигурационный файл с названием %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedLocal": "Конфигурационного локальный файл с названием %s был успешно загружен.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadOnline": "Не удалось загрузить онлайн файл с названием %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedOnline": "Загружена онлайн конфигурация с названием %s.",
+  "liquidbounce.module.clickRecorder.description": "Records your clicks which then can be used by cps-utilizing modules.",
+  "liquidbounce.command.config.subcommand.load.result.unresolvedName": "Unresolved info %s, expected \"local\" or \"online\"."
 }

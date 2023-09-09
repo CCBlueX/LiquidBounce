@@ -13,14 +13,14 @@
 </main>
 
 <style>
-	main {
+    main {
         height: 100vh;
         width: 100vw;
         background-image: url("../img/background.png");
         background-size: cover;
         -webkit-user-select: none;
         cursor: default !important;
-	}
+    }
 
     button {
         height: 75px;
@@ -35,7 +35,7 @@
     }
 
     button:hover {
-        background-position: left bottom
+        background-position: left bottom;
     }
 
     .wrapper {

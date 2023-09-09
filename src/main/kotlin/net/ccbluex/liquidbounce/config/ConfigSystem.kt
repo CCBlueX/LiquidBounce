@@ -81,7 +81,7 @@ object ConfigSystem {
         .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer).create()
 
     /**
-     * Create a new root configurable
+     * Create new root configurable
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()): Configurable {
         @Suppress("UNCHECKED_CAST") return root(Configurable(name, tree as MutableList<Value<*>>))

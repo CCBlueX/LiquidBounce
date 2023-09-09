@@ -1,6 +1,6 @@
 <script>
-    import { fade, fly } from "svelte/transition";
-    import { afterUpdate } from "svelte";
+    import {fade, fly} from "svelte/transition";
+    import {afterUpdate} from "svelte";
 
     export let text;
 
@@ -25,29 +25,29 @@
 </div>
 
 <style lang="scss">
-    .tooltip {
-        background-color: black;
-        color: white;
-        padding: 10px 15px;
-        border-radius: 20px;
-        font-size: 16px;
-        font-weight: bold;
-        position: absolute;
-        white-space: nowrap;
-        left: 50%;
-        top: 0;
-        transform: translate(-50%, -45px);
-        z-index: 1000;
+  .tooltip {
+    background-color: black;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    position: absolute;
+    white-space: nowrap;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, -45px);
+    z-index: 1000;
 
-        &::after {
-            content: "";
-            display: block;
-            height: 12px;
-            width: 12px;
-            background-color: black;
-            position: absolute;
-            left: 50%;
-            transform: translate(-50%, 2px) rotate(45deg);
-        }
+    &::after {
+      content: "";
+      display: block;
+      height: 12px;
+      width: 12px;
+      background-color: black;
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, 2px) rotate(45deg);
     }
+  }
 </style>

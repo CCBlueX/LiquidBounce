@@ -128,7 +128,7 @@ data class MessageOfTheDay(val message: String)
 /**
  * Settings
  *
- * Settings only stores the setting id, name, type, description, date, contributors and status
+ * Settings only store the setting id, name, type, description, date, contributors and status
  * The setting id will later be used to actually request the setting and load it
  */
 data class AutoSettings(
