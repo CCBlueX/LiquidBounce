@@ -170,6 +170,17 @@ fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
     return xDist * xDist + yDist * yDist + zDist * zDist
 }
 
+fun Box.squaredBoxedDistanceTo(entity: Entity): Double {
+    val eyes = entity.eyes
+    val pos = getNearestPoint(eyes, this)
+
+    val xDist = pos.x - eyes.x
+    val yDist = pos.y - eyes.y
+    val zDist = pos.z - eyes.z
+
+    return xDist * xDist + yDist * yDist + zDist * zDist
+}
+
 fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
     return Vec3(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
