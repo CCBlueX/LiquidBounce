@@ -83,7 +83,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             )
         }, cps)
 
-        if (clicks > 0) {
+        repeat(clicks) {
             attackEntity(target)
         }
     }
