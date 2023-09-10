@@ -60,7 +60,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "canRenderName(Lnet/minecraft/entity/EntityLivingBase;)Z", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (!ESP.INSTANCE.getRenderNameTags() || (NameTags.INSTANCE.getState() && EntityUtils.INSTANCE.isSelected(entity, false))) {
+        if (NameTags.INSTANCE.shouldRenderNameTags(entity)) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
