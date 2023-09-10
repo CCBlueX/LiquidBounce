@@ -46,7 +46,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val healthSuffix by BoolValue("HealthSuffix", true) { health }
     private val healthSuffixText by TextValue("HealthSuffifText", " HP") { health && healthSuffix }
     private val ping by BoolValue("Ping", false)
-    private val healthBar by BoolValue("Bar", false)
+    private val healthBar by BoolValue("Bar", true)
     private val distance by BoolValue("Distance", false)
     private val armor by BoolValue("Armor", true)
     private val bot by BoolValue("Bots", true)
@@ -57,15 +57,15 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val fontShadow by BoolValue("Shadow", true)
 
     private val background by BoolValue("Background", true)
-    private val backgroundColorRed by IntegerValue("Background-R", 255, 0..255) { background }
-    private val backgroundColorGreen by IntegerValue("Background-G", 179, 0..255) { background }
-    private val backgroundColorBlue by IntegerValue("Background-B", 72, 0..255) { background }
-    private val backgroundColorAlpha by IntegerValue("Background-Alpha", 100, 0..255) { background }
+    private val backgroundColorRed by IntegerValue("Background-R", 0, 0..255) { background }
+    private val backgroundColorGreen by IntegerValue("Background-G", 0, 0..255) { background }
+    private val backgroundColorBlue by IntegerValue("Background-B", 0, 0..255) { background }
+    private val backgroundColorAlpha by IntegerValue("Background-Alpha", 70, 0..255) { background }
 
     private val border by BoolValue("Border", true)
-    private val borderColorRed by IntegerValue("Border-R", 255, 0..255) { border }
-    private val borderColorGreen by IntegerValue("Border-G", 179, 0..255) { border }
-    private val borderColorBlue by IntegerValue("Border-B", 72, 0..255) { border }
+    private val borderColorRed by IntegerValue("Border-R", 0, 0..255) { border }
+    private val borderColorGreen by IntegerValue("Border-G", 0, 0..255) { border }
+    private val borderColorBlue by IntegerValue("Border-B", 0, 0..255) { border }
     private val borderColorAlpha by IntegerValue("Border-Alpha", 100, 0..255) { border }
 
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
