@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager.*
+import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
@@ -303,4 +304,9 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         return prefix + "§c " + (if (healthInInt) result.toInt() else decimalFormat.format(result)) + suffix
     }
+
+    fun shouldRenderNameTags(entity: Entity) =
+        state && entity is EntityLivingBase && (ESP.state && ESP.renderNameTags || isSelected(entity, false) && (!isBot(
+            entity
+        ) || bot))
 }
