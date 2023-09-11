@@ -51,13 +51,13 @@ object Tabs {
      * Since 1.20 we need to set this up at a more precise timing than just when the client starts.
      */
     fun setup() {
-//        if (!setup) {
+        if (!setup) {
 //            setupSpecial()
 //            setupExploits()
 //            setupHeads()
-//
-//            setup = true
-//        }
+
+            setup = true
+        }
     }
 
     /**

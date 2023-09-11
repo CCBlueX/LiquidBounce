@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 

@@ -3,11 +3,6 @@ package net.ccbluex.liquidbounce.utils.math
 import net.minecraft.util.math.Vec3d
 
 data class Line(val position: Vec3d, val direction: Vec3d) {
-    companion object {
-        fun fromPoints(a: Vec3d, b: Vec3d): Line {
-            return Line(a, b - a)
-        }
-    }
 
     fun getNearestPointTo(point: Vec3d): Vec3d {
         val plane = Plane(point, direction)
