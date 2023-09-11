@@ -326,9 +326,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         wait(WhileBlocking.blockingTicks)
                     }
 
-                    interaction.sendSequencedPacket(world) { sequence ->
-                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
-                    }
+//                    interaction.sendSequencedPacket(world) { sequence ->
+//                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
+//                    }
 
                     mc.options.useKey.isPressed = true
                 }

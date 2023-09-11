@@ -116,8 +116,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         fun getHypotheticalHit(): AbstractClientPlayerEntity? {
-            val yaw = player.yaw
-            val pitch = player.pitch
+            val yaw = RotationManager.serverRotation.yaw
+            val pitch = RotationManager.serverRotation.pitch
 
             val velocity = getHypotheticalArrowVelocity(player, false)
 
@@ -184,6 +184,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val rotationConfigurable = RotationsConfigurable()
 
         val predictSize by float("PredictionCofactor", 1.0f, 0.0f..1.5f)
+        val minExpedtedPull by int("MinExpedtedPull", 5, 0..20)
 
         init {
             tree(targetTracker)
@@ -218,8 +219,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 return@handler
             }
 
-            player.yaw = rotation.yaw
-            player.pitch = rotation.pitch
+//            player.yaw = rotation.yaw
+//            player.pitch = rotation.pitch
 
             RotationManager.aimAt(rotation, configurable = rotationConfigurable)
         }
@@ -355,7 +356,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         player: ClientPlayerEntity,
         assumeElongated: Boolean
     ): Float {
-        var velocity: Float = if (assumeElongated) 1f else player.itemUseTime / 20f
+        var velocity: Float = if (assumeElongated) 1f else player.itemUseTime.coerceAtLeast(BowAimbotOptions.minExpedtedPull) / 20f
 
         velocity = (velocity * velocity + velocity * 2.0f) / 3.0f
 
