@@ -47,7 +47,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val healthSuffix by BoolValue("HealthSuffix", true) { health }
     private val healthSuffixText by TextValue("HealthSuffifText", " HP") { health && healthSuffix }
     private val ping by BoolValue("Ping", false)
-    private val healthBar by BoolValue("Bar", true)
+    private val healthBar by BoolValue("Bar", false)
     private val distance by BoolValue("Distance", false)
     private val armor by BoolValue("Armor", true)
     private val bot by BoolValue("Bots", true)
