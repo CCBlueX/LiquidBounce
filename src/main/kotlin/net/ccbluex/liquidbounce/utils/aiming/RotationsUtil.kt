@@ -220,56 +220,6 @@ object RotationManager : Listenable {
         return false
     }
 
-//    /**
-//     * Find the best spot of the upper side of the block
-//     */
-//    fun canSeeBlockTop(
-//        eyes: Vec3d,
-//        pos: BlockPos,
-//        range: Double,
-//        wallsRange: Double
-//    ): VecRotation? {
-//        val rangeSquared = range * range
-//        val wallsRangeSquared = wallsRange * wallsRange
-//
-//        var visibleRot: VecRotation? = null
-//        val notVisibleRot: VecRotation? = null
-//
-//        val minX = pos.x.toDouble()
-//        val y = pos.y.toDouble()
-//        val minZ = pos.z.toDouble()
-//
-//        for (x in 0.1..0.9 step 0.1) {
-//            for (z in 0.1..0.9 step 0.1) {
-//                val vec3 = Vec3d(
-//                    minX + x,
-//                    y,
-//                    minZ + z
-//                )
-//
-//                // skip because of out of range
-//                val distance = eyes.squaredDistanceTo(vec3)
-//
-//                if (distance > rangeSquared) {
-//                    continue
-//                }
-//
-//                // check if target is visible to eyes
-//                val visible = facingBlock(eyes, vec3, pos)
-//
-//                // skip because not visible in range
-//                if (!visible && distance > wallsRangeSquared) {
-//                    continue
-//                }
-//
-//                visibleRot = VecRotation(makeRotation(vec3, eyes), vec3)
-//            }
-//
-//        }
-//
-//        return visibleRot ?: notVisibleRot
-//    }
-
     fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
         aimAt(makeRotation(vec, eyes), openInventory, configurable)
 

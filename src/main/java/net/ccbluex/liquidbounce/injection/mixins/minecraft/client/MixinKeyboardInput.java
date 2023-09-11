@@ -72,7 +72,7 @@ public class MixinKeyboardInput extends MixinInput {
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER))
     private void injectMovementInputEvent(boolean slowDown, float f, CallbackInfo ci) {
-        var event = new MovementInputEvent(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight);
+        var event = new MovementInputEvent(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight, this.jumping);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -80,6 +80,7 @@ public class MixinKeyboardInput extends MixinInput {
         this.pressingBack = event.getBackwards();
         this.pressingLeft = event.getLeft();
         this.pressingRight = event.getRight();
+        this.jumping = event.getJumping();
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.BEFORE))

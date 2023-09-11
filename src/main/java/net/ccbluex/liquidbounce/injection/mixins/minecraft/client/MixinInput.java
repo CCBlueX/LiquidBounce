@@ -41,6 +41,8 @@ public class MixinInput {
     public float movementForward;
     @Shadow
     public float movementSideways;
+    @Shadow
+    public boolean jumping;
 
     @Inject(method = "hasForwardMovement", cancellable = true, at = @At("RETURN"))
     private void hookOmnidirectionalSprintA(final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {

@@ -98,7 +98,7 @@ class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 class InputHandleEvent : Event()
 
 @Nameable("movementInputEvent")
-class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean) : Event()
+class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean, var jumping: Boolean) : Event()
 
 @Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
