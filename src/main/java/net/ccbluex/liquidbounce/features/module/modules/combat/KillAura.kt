@@ -332,6 +332,11 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     fun onUpdate(event: UpdateEvent) {
         if (clickOnly && !mc.gameSettings.keyBindAttack.isKeyDown) return
 
+        if (blockStatus && autoBlock == "Packet" && releaseAutoBlock && !ignoreTickRule) {
+            stopBlocking()
+            return
+        }
+
         if (cancelRun) {
             target = null
             currentTarget = null
