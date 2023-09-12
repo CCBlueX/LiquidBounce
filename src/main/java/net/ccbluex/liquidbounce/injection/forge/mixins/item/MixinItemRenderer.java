@@ -45,6 +45,8 @@ public abstract class MixinItemRenderer {
     @Shadow
     @Final
     private Minecraft mc;
+    @Shadow
+    private ItemStack itemToRender;
 
     @Shadow
     protected abstract void rotateArroundXAndY(float angle, float angleY);
@@ -54,9 +56,6 @@ public abstract class MixinItemRenderer {
 
     @Shadow
     protected abstract void rotateWithPlayerRotations(EntityPlayerSP entityplayerspIn, float partialTicks);
-
-    @Shadow
-    private ItemStack itemToRender;
 
     @Shadow
     protected abstract void renderItemMap(AbstractClientPlayer clientPlayer, float pitch, float equipmentProgress, float swingProgress);
@@ -95,15 +94,15 @@ public abstract class MixinItemRenderer {
         enableRescaleNormal();
         pushMatrix();
 
-        if(itemToRender != null) {
-            final KillAura killAura = KillAura.INSTANCE;
+        if (itemToRender != null) {
+            boolean isAutoBlocking = itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking();
 
-            if(itemToRender.getItem() instanceof ItemMap) {
+            if (itemToRender.getItem() instanceof ItemMap) {
                 renderItemMap(abstractclientplayer, f2, f, f1);
-            } else if (abstractclientplayer.getItemInUseCount() > 0 || (itemToRender.getItem() instanceof ItemSword && killAura.getRenderBlocking())) {
-                EnumAction enumaction = killAura.getRenderBlocking() ? EnumAction.BLOCK : itemToRender.getItemUseAction();
+            } else if (abstractclientplayer.getItemInUseCount() > 0 || isAutoBlocking) {
+                EnumAction enumaction = isAutoBlocking ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 
-                switch(enumaction) {
+                switch (enumaction) {
                     case NONE:
                         transformFirstPersonItem(f, 0f);
                         break;
@@ -130,7 +129,7 @@ public abstract class MixinItemRenderer {
                         transformFirstPersonItem(f, f1);
                         doBowTransformations(partialTicks, abstractclientplayer);
                 }
-            }else{
+            } else {
                 final Animations animations = Animations.INSTANCE;
 
                 if (!animations.getState() || !animations.getOddSwing()) {
@@ -141,7 +140,7 @@ public abstract class MixinItemRenderer {
             }
 
             renderItem(abstractclientplayer, itemToRender, ItemCameraTransforms.TransformType.FIRST_PERSON);
-        }else if(!abstractclientplayer.isInvisible()) {
+        } else if (!abstractclientplayer.isInvisible()) {
             renderPlayerArm(abstractclientplayer, f, f1);
         }
 
@@ -151,12 +150,12 @@ public abstract class MixinItemRenderer {
     }
 
 
-    @Redirect(method="renderFireInFirstPerson", at=@At(value="INVOKE", target="Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"))
+    @Redirect(method = "renderFireInFirstPerson", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"))
     private void renderFireInFirstPerson(float p_color_0_, float p_color_1_, float p_color_2_, float p_color_3_) {
         final AntiBlind antiBlind = AntiBlind.INSTANCE;
-        if(p_color_3_ != 1F && antiBlind.getState()){
+        if (p_color_3_ != 1F && antiBlind.getState()) {
             GlStateManager.color(p_color_0_, p_color_1_, p_color_2_, antiBlind.getFireEffect());
-        }else{
+        } else {
             GlStateManager.color(p_color_0_, p_color_1_, p_color_2_, p_color_3_);
         }
     }
