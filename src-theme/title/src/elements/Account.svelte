@@ -21,8 +21,9 @@
 <div class="account">
     <div class="icon">
         <div class="location-wrapper">
-            <ToolTip text="Change location" />
-            <img on:click={handleLocationClick} class="location" src="img/flags/{location}.svg" alt={location}>
+            <ToolTip text="Change location"/>
+            <img on:click={handleLocationClick} class="location" src="img/flags/{location}.svg"
+                 onerror="this.src='img/flags/none.svg'" alt={location}>
         </div>
         <object data={faceUrl} type="image/png" class="head">
             <img src="img/steve.png" alt="head" class="head"/>
@@ -62,6 +63,8 @@
         position: relative;
         top: 0;
         right: 0;
+        width: 21px;
+        height: 21px;
     }
 
     .icon {

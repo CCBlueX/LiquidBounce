@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.*
-import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
-import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.shaders.SmoothLineShader
+import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 
 /**
@@ -59,40 +60,27 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         }
     }
 
-    val renderHandler = handler<EngineRenderEvent> {
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
         val color = if (colorRainbow) rainbow() else color
 
         synchronized(positions) {
-            RenderEngine.enqueueForRendering(
-                RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
-                createBreadcrumbsRenderTask(
-                    color,
-                    positions,
-                    it.tickDelta
-                )
-            )
+            renderEnvironment(matrixStack) {
+                withColor(color) {
+                    drawLineStrip(*makeLines(color, positions, event.partialTicks))
+                }
+            }
         }
     }
 
     @JvmStatic
-    internal fun createBreadcrumbsRenderTask(color: Color4b, positions: List<Double>, tickDelta: Float): RenderTask {
-        val vertexFormat = PositionColorVertexFormat()
-
-        vertexFormat.initBuffer(positions.size + 2)
-
+    internal fun makeLines(color: Color4b, positions: List<Double>, tickDelta: Float): Array<Vec3> {
+        val mutableList = mutableListOf<Vec3>()
         for (i in 0 until positions.size / 3) {
-            vertexFormat.putVertex {
-                this.position = Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
-                this.color = color
-            }
+            mutableList += Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
         }
-
-        vertexFormat.putVertex {
-            this.position = player.interpolateCurrentPosition(tickDelta)
-            this.color = color
-        }
-
-        return VertexFormatRenderTask(vertexFormat, PrimitiveType.LineStrip, SmoothLineShader, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true), shaderData = SmoothLineShader.SmoothLineShaderUniforms(2.0f))
+        mutableList += player.interpolateCurrentPosition(tickDelta)
+        return mutableList.toTypedArray()
     }
 
     val updateHandler = handler<PlayerTickEvent> {

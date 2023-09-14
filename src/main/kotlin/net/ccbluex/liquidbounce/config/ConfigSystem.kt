@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,16 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
+import me.liuli.elixir.account.MinecraftAccount
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import java.io.File
@@ -44,8 +47,7 @@ object ConfigSystem {
 
     // Config directory folder
     val rootFolder = File(
-        mc.runDirectory,
-        LiquidBounce.CLIENT_NAME
+        mc.runDirectory, LiquidBounce.CLIENT_NAME
     ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
@@ -54,8 +56,7 @@ object ConfigSystem {
 
     // User config directory folder
     val userConfigsFolder = File(
-        rootFolder,
-        "configs"
+        rootFolder, "configs"
     ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
@@ -76,10 +77,11 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
+        .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountSerializer)
         .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer).create()
 
     /**
-     * Create a new root configurable
+     * Create new root configurable
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()): Configurable {
         @Suppress("UNCHECKED_CAST") return root(Configurable(name, tree as MutableList<Value<*>>))
@@ -169,6 +171,19 @@ object ConfigSystem {
         runCatching {
             val jsonObject = jsonElement.asJsonObject
 
+            val chatMessages = jsonObject.getAsJsonArray("chat")
+            if (chatMessages != null) {
+                for (messages in chatMessages) {
+                    chat(messages.asString)
+                }
+            }
+
+            val date = jsonObject.getAsJsonPrimitive("date").let { if (it == null) "" else it.asString }
+            val time = jsonObject.getAsJsonPrimitive("time").let { if (it == null) "" else it.asString }
+            val author = jsonObject.getAsJsonPrimitive("author").let { if (it == null) "" else "by $it" }
+            if (date != "" || time != "" || author != "") {
+                chat(regular("Config was created ${if (date != "" || time != "") "on $date $time" else ""} $author"))
+            }
             if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
                 throw IllegalStateException()
             }
@@ -212,5 +227,4 @@ object ConfigSystem {
             }
         }.onFailure { it.printStackTrace() }
     }
-
 }

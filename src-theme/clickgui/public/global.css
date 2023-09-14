@@ -11,8 +11,8 @@
 }
 
 body {
-/*     background-image: url("img/back.png");
-    background-size: cover; */
+    /*     background-image: url("img/back.png");
+        background-size: cover; */
     font-family: "Montserrat", sans-serif;
     user-select: none;
 }
@@ -59,5 +59,5 @@ body {
 /* NOTE: Border radius disabled because of slight render bug */
 .pcr-palette::before,
 .pcr-palette {
-    border-radius: 0px !important;
+    border-radius: 0 !important;
 }

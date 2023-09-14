@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
+import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
@@ -25,6 +27,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -54,10 +57,18 @@ object LiquidBounce : Listenable {
      * WARNING: Please read the GNU General Public License
      */
     const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_VERSION = "1.0.0"
     const val CLIENT_AUTHOR = "CCBlueX"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
+    val clientVersion = gitInfo["git.build.version"]?.toString() ?: "unknown"
+    val clientCommit = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
+    val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
+
+    /**
+     * Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning.
+     *
+     * TODO: Replace this approach with full semantic versioning.
+     */
     const val IN_DEVELOPMENT = true
 
     /**
@@ -66,11 +77,16 @@ object LiquidBounce : Listenable {
     val logger = LogManager.getLogger(CLIENT_NAME)!!
 
     /**
+     * Client update information
+     */
+    val updateAvailable by lazy { hasUpdate() }
+
+    /**
      * Should be executed to start the client.
      */
     val startHandler = handler<ClientStartEvent> {
         runCatching {
-            logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
+            logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
             // Load mappings
@@ -99,18 +115,14 @@ object LiquidBounce : Listenable {
             RotationManager
             FriendManager
             ProxyManager
-            runCatching {
-                Class.forName("net.fabricmc.fabric.impl.itemgroup.ItemGroupHelper")
-                Tabs
-            }.onFailure {
-                logger.warn("Unable to load tabs. Are you using Fabric API?")
-            }
+            AccountManager
+            Tabs
             Chat
 
             // Initialize the render engine
             RenderEngine.init()
 
-            // Load up web platform
+            // Load up a web platform
             UltralightEngine.init()
 
             // Register commands and modules
@@ -122,6 +134,10 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
+
+            if (updateAvailable) {
+                logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
+            }
 
             // Connect to chat server
             Chat.connectAsync()

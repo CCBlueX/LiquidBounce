@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
-import net.fabricmc.fabric.impl.itemgroup.ItemGroupHelper
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -34,7 +33,9 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.potion.PotionUtil
 import net.minecraft.registry.Registries
+import net.minecraft.registry.Registry
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 import java.util.*
 
 /**
@@ -44,11 +45,19 @@ import java.util.*
  * @depends FabricAPI (for page buttons)
  */
 object Tabs {
+    private var setup = false
 
-    init {
-        setupSpecial()
-        setupExploits()
-        setupHeads()
+    /**
+     * Since 1.20 we need to set this up at a more precise timing than just when the client starts.
+     */
+    fun setup() {
+        if (!setup) {
+//            setupSpecial()
+//            setupExploits()
+//            setupHeads()
+
+            setup = true
+        }
     }
 
     /**
@@ -199,8 +208,8 @@ open class LiquidsItemGroup(
             }
             .build()
 
-        // Uses FabricAPI to add tab to creative inventory
-        ItemGroupHelper.appendItemGroup(itemGroup)
+        // Add tab to creative inventory
+        Registry.register(Registries.ITEM_GROUP, Identifier("liquidbounce", plainName.lowercase()), itemGroup)
 
         return itemGroup
     }

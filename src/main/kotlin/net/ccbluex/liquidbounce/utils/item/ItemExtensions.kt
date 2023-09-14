@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,9 +34,10 @@ import net.minecraft.util.Identifier
  *
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
-fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
-    ItemStackArgument(it.item, it.nbt).createStack(amount, false)
-}
+fun createItem(stack: String, amount: Int = 1): ItemStack =
+    ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
+        ItemStackArgument(it.item, it.nbt).createStack(amount, false)
+    }
 
 fun findHotbarSlot(item: Item): Int? = findHotbarSlot { it.item == item }
 

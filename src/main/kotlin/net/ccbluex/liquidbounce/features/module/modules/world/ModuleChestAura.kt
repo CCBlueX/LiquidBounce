@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,6 +64,8 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
+
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private object CloseInstantlyOptions :
         ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
@@ -190,7 +192,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             ) ?: continue
 
             // aim on target
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             nextBlock = pos
             break
         }

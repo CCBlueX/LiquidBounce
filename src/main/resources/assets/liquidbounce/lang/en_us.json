@@ -5,9 +5,7 @@
   "liquidbounce.generic.error": "Error",
   "liquidbounce.generic.enabled": "Enabled",
   "liquidbounce.generic.disabled": "Disabled",
-
   "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
-
   "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s",
   "liquidbounce.commandManager.unknownCommand": "Command \"%s\" was not found.",
   "liquidbounce.commandManager.invalidUsage": "Invalid usage of command \"%s\".",
@@ -16,507 +14,353 @@
   "liquidbounce.commandManager.unknownParameter": "Unknown parameter \"%s\".",
   "liquidbounce.commandManager.commandNotExecutable": "Command \"%s\" is not executable.",
   "liquidbounce.commandManager.invalidParameterValue": "Invalid argument \"%s\" for parameter \"%s\". %s",
-
   "liquidbounce.command.bind.description": "Binds a module to a key.",
   "liquidbounce.command.bind.parameter.name.description": "Name of the module.",
   "liquidbounce.command.bind.parameter.key.description": "Key to which the module should be bound.",
   "liquidbounce.command.bind.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.bind.result.moduleBound": "Bound module \"%s\" to key \"%s\".",
-
   "liquidbounce.command.binds.description": "Binds a module to a key.",
-
   "liquidbounce.command.binds.subcommand.add.description": "Adds a new bind.",
   "liquidbounce.command.binds.subcommand.add.parameter.name.description": "Name of the module.",
   "liquidbounce.command.binds.subcommand.add.parameter.key.description": "Key to which the module should be bound.",
   "liquidbounce.command.binds.subcommand.add.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.binds.subcommand.add.result.unknownKey": "Unknown key.",
   "liquidbounce.command.binds.subcommand.add.result.moduleBound": "Bound module \"%s\" to key \"%s\".",
-
   "liquidbounce.command.binds.subcommand.remove.description": "Removes an existing bind.",
   "liquidbounce.command.binds.subcommand.remove.parameter.name.description": "Name of the module.",
   "liquidbounce.command.binds.subcommand.remove.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.binds.subcommand.remove.result.moduleNotBound": "Module is not bound to any key.",
   "liquidbounce.command.binds.subcommand.remove.result.bindRemoved": "Removed bind of module \"%s\".",
-
   "liquidbounce.command.binds.subcommand.list.description": "Lists all binds.",
   "liquidbounce.command.binds.subcommand.list.parameter.page.description": "Page to show.",
   "liquidbounce.command.binds.subcommand.list.result.noBindings": "No binds found.",
   "liquidbounce.command.binds.subcommand.list.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %d.",
   "liquidbounce.command.binds.subcommand.list.result.bindings": "Binds",
   "liquidbounce.command.binds.subcommand.list.result.page": "Page: %s",
-
   "liquidbounce.command.binds.subcommand.clear.description": "Clears all binds.",
   "liquidbounce.command.binds.subcommand.clear.result.bindsCleared": "Cleared all binds.",
-
   "liquidbounce.command.clear.description": "Clears the chat.",
-
   "liquidbounce.command.client.description": "Allows you to manage the client.",
-
   "liquidbounce.command.client.subcommand.info.description": "Shows information about the client.",
   "liquidbounce.command.client.subcommand.info.result.clientName": "Client Name: %s",
   "liquidbounce.command.client.subcommand.info.result.clientVersion": "Client Version: %s",
   "liquidbounce.command.client.subcommand.info.result.clientAuthor": "Client Author: %s",
-
   "liquidbounce.command.client.subcommand.reload.description": "Reloads your client.",
-
   "liquidbounce.command.friend.description": "Allows you to manage your friends list.",
-
   "liquidbounce.command.friend.subcommand.add.description": "Adds a name to the friend list.",
   "liquidbounce.command.friend.subcommand.add.parameter.name.description": "Name of the friend.",
   "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "Optional alias for the friend.",
   "liquidbounce.command.friend.subcommand.add.result.alreadyFriends": "%s is already on the friend list.",
   "liquidbounce.command.friend.subcommand.add.result.success": "%s was successfully added to the friend list.",
   "liquidbounce.command.friend.subcommand.add.result.successAlias": "%s was successfully added to the friend list as %s.",
-
   "liquidbounce.command.friend.subcommand.remove.description": "Removes a friend from the friends list.",
   "liquidbounce.command.friend.subcommand.remove.parameter.name.description": "Name of the friend.",
   "liquidbounce.command.friend.subcommand.remove.result.notFriends": "%s was not on the friend list.",
   "liquidbounce.command.friend.subcommand.remove.result.success": "%s was successfully removed from the friend list.",
-
   "liquidbounce.command.friend.subcommand.alias.description": "Changes the alias of friend.",
   "liquidbounce.command.friend.subcommand.alias.parameter.name.description": "Name of the friend.",
   "liquidbounce.command.friend.subcommand.alias.parameter.alias.description": "New alias.",
   "liquidbounce.command.friend.subcommand.alias.result.notFriends": "%s is not on your friend list.",
   "liquidbounce.command.friend.subcommand.alias.result.success": "%s's alias was changed to %s",
-
   "liquidbounce.command.friend.subcommand.list.description": "Lists all friends.",
   "liquidbounce.command.friend.subcommand.list.result.noFriends": "Friends list is empty.",
-
   "liquidbounce.command.friend.subcommand.clear.description": "Clears the friends list.",
   "liquidbounce.command.friend.subcommand.clear.result.noFriends": "Friend list is empty.",
   "liquidbounce.command.friend.subcommand.clear.result.success": "Friend list cleared.",
-
   "liquidbounce.command.help.description": "Lists all available commands.",
   "liquidbounce.command.help.parameter.page.description": "Page to show.",
   "liquidbounce.command.help.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %d.",
   "liquidbounce.command.help.result.help": "Help",
   "liquidbounce.command.help.result.pageCount": "Page: %s",
   "liquidbounce.command.help.result.page": "page",
-
+  "liquidbounce.command.items.subcommand.add.description": "Adds a block to list of ignored blocks.",
+  "liquidbounce.command.items.subcommand.add.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
+  "liquidbounce.command.items.subcommand.add.result.blockNotExists": "Block named %s does not exist.",
+  "liquidbounce.command.items.subcommand.add.result.blockIsPresent": "Block named %s is already in the not a block list.",
+  "liquidbounce.command.items.subcommand.add.result.blockAdded": "Block named %s has been added to not a block list.",
+  "liquidbounce.command.items.subcommand.remove.description": "Removes a block from not a block list.",
+  "liquidbounce.command.items.subcommand.remove.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
+  "liquidbounce.command.items.subcommand.remove.result.blockNotExists": "Block named %s does not exist.",
+  "liquidbounce.command.items.subcommand.remove.result.blockNotFound": "Block named %s is not in the not a block list.",
+  "liquidbounce.command.items.subcommand.remove.result.blockRemoved": "Block named %s has been removed from not a block list.",
+  "liquidbounce.command.items.subcommand.list.description": "Shows a list of rendered blocks.",
+  "liquidbounce.command.items.subcommand.list.parameter.page.description": "Page to show.",
+  "liquidbounce.command.items.subcommand.list.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %d",
+  "liquidbounce.command.items.subcommand.list.result.list": "List",
+  "liquidbounce.command.items.subcommand.list.result.pageCount": "Page: %s",
+  "liquidbounce.command.items.subcommand.list.result.page": "page",
+  "liquidbounce.command.items.subcommand.clear.description": "Clears the list of rendered blocks.",
+  "liquidbounce.command.items.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared.",
   "liquidbounce.command.hide.description": "Hides a module.",
-
   "liquidbounce.command.hide.subcommand.hide.description": "Hides a module.",
   "liquidbounce.command.hide.subcommand.hide.parameter.name.description": "Name of the module.",
   "liquidbounce.command.hide.subcommand.hide.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.hide.subcommand.hide.result.moduleHidden": "Module \"%s\" is now hidden.",
-
   "liquidbounce.command.hide.subcommand.unhide.description": "Unhides a module.",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Name of the module.",
   "liquidbounce.command.hide.subcommand.unhide.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.hide.subcommand.unhide.result.moduleUnhidden": "Module \"%s\" is no longer hidden.",
-
   "liquidbounce.command.hide.subcommand.list.description": "Lists all hidden modules.",
   "liquidbounce.command.hide.subcommand.list.parameter.page.description": "Page to show",
   "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "There are no hidden modules.",
   "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %d",
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Hidden",
   "liquidbounce.command.hide.subcommand.list.result.page": "Page",
-
   "liquidbounce.command.hide.subcommand.clear.description": "Makes every module visible again.",
   "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Successfully unhidden all modules.",
-
   "liquidbounce.command.panic.description": "Turns off all modules.",
   "liquidbounce.command.panic.parameter.category.description": "Only disables modules in a specific category.",
   "liquidbounce.command.panic.result.categoryNotFound": "Category \"%s\" was not found.",
   "liquidbounce.command.panic.result.disabledAllModules": "Disabled all modules.",
   "liquidbounce.command.panic.result.disabledAllCategoryModules": "Disabled all %s modules.",
   "liquidbounce.command.panic.result.nonRender": "non-render",
-
   "liquidbounce.command.prefix.description": "Changes the command prefix.",
   "liquidbounce.command.prefix.parameter.prefix.description": "New command prefix.",
   "liquidbounce.command.prefix.result.prefixChanged": "Successfully changed command prefix to \"%s\".",
-
   "liquidbounce.command.toggle.description": "Toggles a module.",
   "liquidbounce.command.toggle.parameter.name.description": "Name of the module.",
   "liquidbounce.command.toggle.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.toggle.result.moduleToggled": "%s has been %s.",
   "liquidbounce.command.toggle.result.enabled": "enabled",
   "liquidbounce.command.toggle.result.disabled": "disabled",
-
   "liquidbounce.command.give.description": "Gives yourself an item.",
   "liquidbounce.command.give.parameter.item.description": "Name of the item.",
   "liquidbounce.command.give.parameter.amount.description": "Optional amount.",
   "liquidbounce.command.give.result.mustBeCreative": "Creative mode required!",
   "liquidbounce.command.give.result.noEmptySlot": "There are no empty slots in your inventory.",
   "liquidbounce.command.give.result.itemGiven": "Gave you %s * %d.",
-
   "liquidbounce.command.rename.description": "Renames the currently selected item.",
   "liquidbounce.command.rename.parameter.name.description": "New name for the item.",
   "liquidbounce.command.rename.result.mustBeCreative": "Creative mode required!",
   "liquidbounce.command.rename.result.mustHoldItem": "You are not holding an item!",
   "liquidbounce.command.rename.result.renamedItem": "Renamed item from \"%s\" to \"%s\".",
-
   "liquidbounce.command.skull.description": "Gives yourself the skull of a specific player.",
   "liquidbounce.command.skull.parameter.name.description": "Name of the player.",
   "liquidbounce.command.skull.result.mustBeCreative": "Creative mode required!",
   "liquidbounce.command.skull.result.noEmptySlot": "There are no empty slots in your inventory.",
   "liquidbounce.command.skull.result.skullGiven": "Gave you the skull of %s.",
-
   "liquidbounce.command.enchant.description": "Enchants the currently selected item.",
   "liquidbounce.command.enchant.parameter.enchantment.description": "Enchantment name.",
   "liquidbounce.command.enchant.parameter.level.description": "Enchantment level.",
   "liquidbounce.command.enchant.result.mustBeCreative": "Creative mode required!",
   "liquidbounce.command.enchant.result.enchantmentNotExists": "Enchantment \"%s\" do not exists.",
   "liquidbounce.command.enchant.result.enchantedItem": "Item has been enchanted with %s enchantment on the %s level.",
-
   "liquidbounce.command.position.description": "Copies your current coordinates to the clipboard.",
   "liquidbounce.command.position.result.position": "Position: %s",
-
   "liquidbounce.command.username.description": "Copies your username to the clipboard.",
   "liquidbounce.command.username.result.username": "Username: %s",
-
   "liquidbounce.command.chat.description": "Sends a message on LiquidChat.",
   "liquidbounce.command.chat.parameter.message.description": "Message to send.",
-
   "liquidbounce.command.value.description": "Allows you to change a value",
   "liquidbounce.command.value.result.success": "Successfully changed value.",
   "liquidbounce.command.value.result.valueNotFound": "Unable to find value %s!",
-
   "liquidbounce.command.ping.description": "Checks your ping.",
   "liquidbounce.command.ping.result.pingCheck": "Your ping is %sms.",
-
   "liquidbounce.command.remoteview.description": "Allows you to view the perspective of another player.",
   "liquidbounce.command.remoteview.subcommand.view.result.viewPlayer": "You are now viewing the perspective of %s.",
   "liquidbounce.command.remoteview.subcommand.view.result.caseOff": "To stop remote viewing %s, execute the command \".rv off\"",
   "liquidbounce.command.remoteview.subcommand.view.result.alreadyViewing": "You are already viewing %s.",
   "liquidbounce.command.remoteview.subcommand.off.result.off": "Successfully stopped remote viewing %s.",
   "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "You are not remote viewing anyone.",
-
   "liquidbounce.command.xray.description": "Allows you to see ores through walls.",
-
   "liquidbounce.command.xray.subcommand.add.description": "Adds a block to render from the list.",
   "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
   "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "Block named %s does not exist.",
   "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "Block named %s is already in the render list.",
   "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Block named %s has been added to render list.",
-
   "liquidbounce.command.xray.subcommand.remove.description": "Removes a block to render from the list.",
   "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
   "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "Block named %s does not exist.",
   "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Block named %s is not in the render list.",
   "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Block named %s has been removed from render list.",
-
   "liquidbounce.command.xray.subcommand.list.description": "Shows a list of rendered blocks.",
   "liquidbounce.command.xray.subcommand.list.parameter.page.description": "Page to show.",
   "liquidbounce.command.xray.subcommand.list.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %d",
   "liquidbounce.command.xray.subcommand.list.result.list": "List",
   "liquidbounce.command.xray.subcommand.list.result.pageCount": "Page: %s",
   "liquidbounce.command.xray.subcommand.list.result.page": "page",
-
   "liquidbounce.command.xray.subcommand.clear.description": "Clears the list of rendered blocks.",
   "liquidbounce.command.xray.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared.",
-
   "liquidbounce.command.enemy.description": "Allows you to manage which entities are considered to be your enemy.",
-
   "liquidbounce.command.enemy.subcommand.players.description": "Allows you to toggle if players are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.players.result.enabled": "Players are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.players.result.disabled": "Players are no longer considered to be your enemy.",
-
   "liquidbounce.command.enemy.subcommand.mobs.description": "Allows you to toggle if mobs are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.mobs.result.enabled": "Mobs are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.mobs.result.disabled": "Mobs are no longer considered to be your enemy.",
-
   "liquidbounce.command.enemy.subcommand.animals.description": "Allows you to toggle if animals are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.animals.result.enabled": "Animals are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.animals.result.disabled": "Animals are no longer considered to be your enemy.",
-
   "liquidbounce.command.enemy.subcommand.dead.description": "Allows you to toggle if dead entities are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.dead.result.enabled": "Dead entity are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.dead.result.disabled": "Dead entity are no longer considered to be your enemy.",
-
   "liquidbounce.command.enemy.subcommand.invisible.description": "Allows you to toggle if invisible entities are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.invisible.result.enabled": "Invisible entity are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.invisible.result.disabled": "Invisible entity are no longer considered to be your enemy.",
-
   "liquidbounce.command.enemy.subcommand.friends.description": "Allows you to toggle if client friends are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.friends.result.enabled": "Client friends are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.friends.result.disabled": "Client friends are no longer considered to be your enemy.",
-
   "liquidbounce.command.enemy.subcommand.teammates.description": "Allows you to toggle if teammates are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.teammates.result.enabled": "Teammates are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.teammates.result.disabled": "Teammates are no longer considered to be your enemy.",
-
   "liquidbounce.command.config.subcommand.load.description": "Loads a configuration file.",
   "liquidbounce.command.config.subcommand.load.parameter.name.description": "Name of the configuration file.",
-  "liquidbounce.command.config.subcommand.load.result.notFound": "Configuration file named %s does not exist.",
-  "liquidbounce.command.config.subcommand.load.result.failedToLoad": "Failed to load configuration file named %s.",
-  "liquidbounce.command.config.subcommand.load.result.loaded": "Configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.load.result.notFoundLocal": "Local configuration file named %s does not exist.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadLocal": "Failed to load local configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedLocal": "Local configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoadOnline": "Failed to load online configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loadedOnline": "Online configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.load.result.unresolvedName": "Unresolved info %s, expected \"local\" or \"online\".",
   "liquidbounce.command.config.subcommand.create.parameter.name.description": "Name of the configuration file.",
   "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Overwrite existing configuration file.",
   "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Failed to create configuration file named %s.",
   "liquidbounce.command.config.subcommand.create.result.created": "Configuration file named %s has been created.",
   "liquidbounce.command.config.subcommand.create.result.alreadyExists": "Configuration file named %s already exists.",
-
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",
   "liquidbounce.liquidchat.states.loggingIn": "Authenticating...",
   "liquidbounce.liquidchat.states.loggedIn": "Authenticated!",
-
   "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
-
   "liquidbounce.liquidchat.writeMessage": "To send a message: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "To send a private message: %s",
-
   "liquidbounce.module.autoArmor.description": "Automatically equips the best armor.",
   "liquidbounce.module.autoArmor.value.delay.description": "Time to wait between equipping multiple items.",
   "liquidbounce.module.autoArmor.value.inv_open.description": "Whether the an opened inventory is required.",
   "liquidbounce.module.autoArmor.value.simulate_inventory.description": "Whether opening the inventory should be simulated server-side.",
   "liquidbounce.module.autoArmor.value.no_move.description": "Whether item dragging should be simulated.",
   "liquidbounce.module.autoArmor.value.hotbar.description": "Whether items should be equipped from the hotbar.",
-
   "liquidbounce.module.autoBow.description": "Automatically shoots an arrow when the bow is fully charged and allows faster shooting.",
-
   "liquidbounce.module.autoLeave.description": "Automatically leaves the server whenever your health goes below the specified threshold.",
-
   "liquidbounce.module.criticals.description": "Automatically deals critical damage everytime an entity is hit.",
-
   "liquidbounce.module.hitbox.description": "Enlarges the hitbox of other entities.",
-
   "liquidbounce.module.killAura.description": "Automatically attacks enemies.",
-
   "liquidbounce.module.superKnockback.description": "Increases knockback dealt to other entities.",
-
   "liquidbounce.module.trigger.description": "Automatically attacks when facing an enemy.",
-
   "liquidbounce.module.velocity.description": "Modifies the amount of velocity you take.",
-
   "liquidbounce.module.abortBreaking.description": "Allows you to abort breaking without losing progress.",
-
   "liquidbounce.module.bedWalk.description": "Allows you to walk out of beds while sleeping.",
-
   "liquidbounce.module.clip.description": "Allows you to clip through blocks.",
-
   "liquidbounce.module.damage.description": "Deals the specified amount of damage to yourself.",
-
   "liquidbounce.module.disabler.description": "Disables either a specific AntiCheat or server.",
-
   "liquidbounce.module.forceUnicodeChat.description": "Translates all chat messages you send to Unicode.",
-
   "liquidbounce.module.godMode.description": "Allows you to be invulnerable.",
-
   "liquidbounce.module.kick.description": "Kicks yourself from the server.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Cannot enable %s in singleplayer.",
-
   "liquidbounce.module.moreCarry.description": "Allows you to store additional items in your crafting slots (only works in multiplayer).",
-
   "liquidbounce.module.noPitchLimit.description": "Allows you to rotate your head beyond the regular pitch limit.",
-
   "liquidbounce.module.pingSpoof.description": "Spoofs your ping to a specified value.",
-  "liquidbounce.module.pingSpoof.messages.noSingleplayer": "Cannot enable %s in singleplayer.",
-
+  "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "Cannot enable %s in singleplayer.",
   "liquidbounce.module.plugins.description": "Allows you to see a server's plugins.",
   "liquidbounce.module.plugins.messages.timeOut": "Plugins check timed out.",
   "liquidbounce.module.plugins.messages.noPluginsFound": "No plugins were found.",
-
   "liquidbounce.module.portalMenu.description": "Allows you to open menus while standing inside a portal.",
-
   "liquidbounce.module.vehicleOneHit.description": "Allows you to break any vehicle with a single hit.",
-
   "liquidbounce.module.skinDerp.description": "Makes your skin blink (requires a multi-layer skin).",
-
   "liquidbounce.module.spammer.description": "Spams the chat with specified messages.",
-
   "liquidbounce.module.fly.description": "Allows you to fly in survival mode.",
-
   "liquidbounce.module.freeze.description": "Allows you to freeze yourself in your current position without the server knowing.",
-
   "liquidbounce.module.noClip.description": "Allows you to fly through blocks.",
   "liquidbounce.module.noClip.messages.setbackDetected": "You have been set back by the server! Make sure you are already standing inside of a block.",
-
   "liquidbounce.module.parkour.description": "Automatically jumps at the very edge of a block.",
-
   "liquidbounce.module.speed.description": "Allows you to move faster.",
-
   "liquidbounce.module.strafe.description": "Allows you to strafe while being in mid-air.",
-
   "liquidbounce.module.vehicleFly.description": "Allows you to fly while riding an entity (eg. boat, horse).",
-
   "liquidbounce.module.antiCactus.description": "Protects taking damage from cacti.",
-
   "liquidbounce.module.antiLevitation.description": "Prevents levitation and slow falling effects from affecting you.",
-
   "liquidbounce.module.autoBreak.description": "Automatically breaks the block you are looking at.",
-
   "liquidbounce.module.autoRespawn.description": "Automatically respawns you after dying.",
-
   "liquidbounce.module.autoWalk.description": "Automatically makes you walk in the direction you are facing.",
-
   "liquidbounce.module.blink.description": "Makes it look as if you were teleporting to other players.",
-
   "liquidbounce.module.eagle.description": "Automatically sneaks at the edge of a block (aka. FastBridge).",
-
   "liquidbounce.module.noFall.description": "Protects you from taking fall damage.",
-
   "liquidbounce.module.antiBlind.description": "Protects you from potentially annoying screen effects that block your view.",
-
   "liquidbounce.module.breadcrumbs.description": "Leaves a trace behind you.",
-
   "liquidbounce.module.clickGUI.description": "Shows you an easy-to-use menu to toggle and configure modules.",
-
   "liquidbounce.module.fullBright.description": "Makes the world a brighter place.",
-
   "liquidbounce.module.hud.description": "Shows an in-game overlay with various useful tools.",
-
   "liquidbounce.module.itemEsp.description": "Allows you to see dropped items through walls.",
-
   "liquidbounce.module.nametags.description": "Makes player name tags more visible and adds useful information.",
-
-  "liquidbounce.module.traces.description": "Draws a line to every entity a certain radius.",
-
+  "liquidbounce.module.tracers.description": "Draws a line to every entity a certain radius.",
   "liquidbounce.module.chestAura.description": "Automatically opens chests around you.",
-
   "liquidbounce.module.fastBreak.description": "Allows you to break blocks faster.",
-
   "liquidbounce.module.fastPlace.description": "Allows you to place blocks faster.",
-
   "liquidbounce.module.timer.description": "Changes the speed the game is running at.",
-
   "liquidbounce.module.noWeb.description": "Disables web slowdown.",
-
   "liquidbounce.module.friendClicker.description": "Allows you to make friends by clicking on them.",
   "liquidbounce.module.friendClicker.addedFriend": "%s was successfully added to the friend list.",
   "liquidbounce.module.friendClicker.removedFriend": "%s was successfully removed from the friend list.",
-
   "liquidbounce.module.autoGapple.description": "Automatically eats apples whenever your health is low.",
-
   "liquidbounce.module.autoSoup.description": "Automatically eats soup whenever your health is low.",
-
   "liquidbounce.module.badWifi.description": "Holds back packets so as to prevent you from being hit by an enemy.",
-
   "liquidbounce.module.aimbot.description": "Automatically faces selected entities around you.",
-
   "liquidbounce.module.antiReducedDebugInfo.description": "Allows you to see extended debug information.",
-
   "liquidbounce.module.ghostHand.description": "Allows you to interact with selected blocks through walls.",
-
   "liquidbounce.module.notifier.description": "Notifies you about all kinds of events.",
-
   "liquidbounce.module.nameProtect.description": "Changes players names clientside.",
-
   "liquidbounce.module.teams.description": "Prevents KillAura from attacking teammates.",
-
   "liquidbounce.module.avoidHazards.description": "Prevents you from walking into blocks that might be malicious.",
-
   "liquidbounce.module.blockBounce.description": "Allows you to bounce higher on bouncy blocks.",
-
   "liquidbounce.module.blockWalk.description": "Allows you to walk on non-fullblock blocks.",
-
   "liquidbounce.module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
-
   "liquidbounce.module.elytraFly.description": "Makes you fly faster on Elytra.",
-
   "liquidbounce.module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
-
   "liquidbounce.module.liquidWalk.description": "Allows you to walk on water.",
-
   "liquidbounce.module.noJumpDelay.description": "Removes the delay between jumps.",
-
   "liquidbounce.module.noPush.description": "Prevents you from being pushed by other players.",
-
   "liquidbounce.module.perfectHorseJump.description": "Automatically jumps when the jump bar of a horse is fully filled up.",
-
   "liquidbounce.module.safeWalk.description": "Prevents you from falling down as if you were sneaking.",
-
   "liquidbounce.module.sneak.description": "Automatically sneaks all the time.",
-
   "liquidbounce.module.step.description": "Allows you to step up blocks.",
-
   "liquidbounce.module.terrainSpeed.description": "Allows you to move faster on specific surfaces.",
-
   "liquidbounce.module.antiAfk.description": "Prevents you from being kicked for AFK.",
-
   "liquidbounce.module.autoFish.description": "Automatically catches fish when using a rod.",
-
   "liquidbounce.module.autoTotem.description": "Automatically places a totem in off-hand.",
-
   "liquidbounce.module.chestStealer.description": "Automatically steals all items from a chest.",
-
   "liquidbounce.module.regen.description": "Regenerates your health much faster.",
-
   "liquidbounce.module.zoot.description": "Removes all bad effects/fire.",
-
   "liquidbounce.module.inventoryCleaner.description": "Automatically throws away useless items and sorts them.",
-
   "liquidbounce.module.blockEsp.description": "Allows you to see selected blocks through walls.",
-
   "liquidbounce.module.ESP.description": "Allows you to see targets through walls.",
-
   "liquidbounce.module.freeCam.description": "Allows you to move out of your body.",
-
   "liquidbounce.module.holeEsp.description": "Detects and displays safe spots for Crystal PvP.",
-
   "liquidbounce.module.mobOwners.description": "Shows you from which player a tamable entity or projectile belongs to.",
-
   "liquidbounce.module.noBob.description": "Disables the view bobbing effect.",
-
   "liquidbounce.module.noHurtCam.description": "Disables the hurt cam effect when getting hurt.",
-
   "liquidbounce.module.noSignRender.description": "Prevents the sign text from being rendered.",
-
   "liquidbounce.module.noSwing.description": "Disables the swing effect.",
-
   "liquidbounce.module.noWeather.description": "Disables the rain effect.",
-
   "liquidbounce.module.rotations.description": "Allows you to see server-sided rotations.",
-
   "liquidbounce.module.storageEsp.description": "Allows you to see chests, dispensers, etc. through walls.",
-
   "liquidbounce.module.trajectories.description": "Allows you to see where projectile items will land.",
-
   "liquidbounce.module.autoFarm.description": "Automatically farms stuff.",
-
   "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
-
   "liquidbounce.module.crystalAura.description": "Automatically places and destroys End Crystals.",
-
   "liquidbounce.module.fucker.description": "Destroys/Uses selected blocks around you.",
-
   "liquidbounce.module.ignite.description": "Automatically sets targets around you on fire.",
-
   "liquidbounce.module.scaffold.description": "Automatically places blocks underneath you.",
-
   "liquidbounce.module.fastUse.description": "Allows you to use items faster.",
-
   "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by blocks and using items.",
-
   "liquidbounce.module.highJump.description": "Allows you to jump higher.",
-
   "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small.",
-
   "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect.",
-
   "liquidbounce.module.projectilePuncher.description": "Shoots back incoming projectiles around you.",
-
   "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low.",
-
   "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
-
   "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
-
   "liquidbounce.module.xray.description": "Allows you to see ores through walls.",
-
   "liquidbounce.module.noRotateSet.description": "Prevents the server from rotating your head.",
-
   "liquidbounce.module.sprint.description": "Sprints automatically.",
-
   "liquidbounce.module.cameraClip.description": "Allows you to see through walls in third person view.",
-
   "liquidbounce.module.reach.description": "Increases your reach.",
-
   "liquidbounce.module.disabler.vulcan.message": "You need to have a trident enchanted with Riptide in your offhand in order to bypass Vulcan movement checks.",
-
-  "liquidbounce.module.perfectHit.description": "Allows attacks when attack cooldown is fully restored.",
-
+  "liquidbounce.module.perfectHit.description": "Allows attacks only when attack cooldown is fully restored.",
   "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations.",
-
   "liquidbounce.module.autoClicker.description": "Clicks automatically when holding down a mouse button.",
-
   "liquidbounce.module.antiVanish.description": "Allows you to see which players are in vanish on some servers.",
   "liquidbounce.module.antiVanish.messages.staffDetected": "We have detect a vanished staff member.",
   "liquidbounce.module.antiVanish.messages.allClear": "No vanished player was found.",
-
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
-
-  "liquidbounce.module.derp.description": "Makes it look as if you were derping around."
+  "liquidbounce.module.derp.description": "Makes it look as if you were derping around.",
+  "liquidbounce.module.clickRecorder.description": "Records your clicks which then can be used by cps-utilizing modules."
 }

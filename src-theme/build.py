@@ -1,6 +1,6 @@
 #  This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
 #
-#  Copyright (c) 2016 - 2023 CCBlueX
+#  Copyright (c) 2015 - 2023 CCBlueX
 #
 #  LiquidBounce is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
 
-# Go through every folder and copy public folder to tmp folder with name of folder
+# Go through every folder and copy public folder to tmp folder with the name of folder
 
 import os
 import shutil
@@ -35,7 +35,7 @@ if os.path.exists("resources"):
 print("Building theme")
 os.system("npm i && npm run build")
 
-# Go through every folder and copy public folder to tmp folder with name of folder
+# Go through every folder and copy public folder to tmp folder with the name of folder
 for folder in os.listdir("."):
     if os.path.isdir(folder):
         # Check if theme has public folder to copy
@@ -45,14 +45,14 @@ for folder in os.listdir("."):
         else:
             print("Folder " + folder + " has no public folder")
 
-# Zip into theme bundle
+# Zip into a theme bundle
 shutil.make_archive("theme", "zip", "tmp")
 
 # Delete tmp folder
 if os.path.exists("tmp"):
     shutil.rmtree("tmp")
 
-# Copy theme bundle to jar structure
+# Copy a theme bundle to jar structure
 if os.path.exists("resources"):
     shutil.rmtree("resources")
 

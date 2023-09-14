@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.item.isNothing
 
 /**
  * AutoTool module
@@ -32,23 +34,43 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
+    // Ignore items with low durability
+    private val ignoreDurability by boolean("IgnoreDurability", false)
+
+    // Automatic search for the best weapon
+    private val search by boolean("Search", true)
+
+    /* Slot with the best tool
+     * Useful if the tool has special effects
+     * cannot be determined
+     *
+     * NOTE: option [search] must be disabled
+     */
+    private val slot by int("Slot", 0, 0..8)
+
+    private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100)
+
     val handler = handler<BlockBreakingProgressEvent> { event ->
         val blockState = world.getBlockState(event.pos)
-        var bestSlot: Int? = null
-        var bestSpeed = 1f
+        val inventory = player.inventory
+        val index = if (search) {
+            val (hotbarSlot, stack) = (0..8).map { Pair(it, inventory.getStack(it)) }.filter {
+                val stack = it.second
+                (stack.isNothing() || (!player.isCreative && (stack.damage < (stack.maxDamage - 2) || ignoreDurability)))
+            }.maxByOrNull {
+                val stack = it.second
+                stack.getMiningSpeedMultiplier(blockState)
+            } ?: return@handler
+            if (stack.getMiningSpeedMultiplier(blockState) == player.inventory.mainHandStack.getMiningSpeedMultiplier(
+                    blockState
+                )
+            ) return@handler
+            // no point in switching slots
 
-        for (i in 0..8) {
-            val item = player.inventory.getStack(i)
-            val speed = item.getMiningSpeedMultiplier(blockState)
-
-            if (speed > bestSpeed) {
-                bestSpeed = speed
-                bestSlot = i
-            }
+            hotbarSlot
+        } else {
+            slot
         }
-
-        if (bestSlot != null) {
-            player.inventory.selectedSlot = bestSlot
-        }
+        SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
     }
 }

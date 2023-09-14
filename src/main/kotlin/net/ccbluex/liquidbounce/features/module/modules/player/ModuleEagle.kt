@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,24 +21,25 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.Direction
 
 /**
- * A eagle module
+ * An eagle module
  *
  * Legit trick to build faster.
  */
 object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
+    val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
+
     val repeatable = handler<StateUpdateEvent> {
         // Check if player is on the edge and is NOT flying
-        val pos = player.blockPos.down()
-        val isAir = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && !player.abilities.flying
-
-        if (isAir) {
+        if (player.isCloseToEdge(edgeDistance.toDouble()) && !player.abilities.flying) {
             it.state.enforceEagle = true
         }
     }

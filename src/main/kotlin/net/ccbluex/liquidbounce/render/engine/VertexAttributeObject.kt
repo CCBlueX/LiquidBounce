@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,14 @@ class VertexAttributeObject(private vararg val attribs: VertexAttribute) {
             attrib.vertexFormat.components.forEach {
                 GL20.glEnableVertexAttribArray(attribIndex)
 
-                GL20.glVertexAttribPointer(attribIndex, it.count, it.type.openGlEnum, it.normalized, attrib.vertexFormat.length, it.offset.toLong())
+                GL20.glVertexAttribPointer(
+                    attribIndex,
+                    it.count,
+                    it.type.openGlEnum,
+                    it.normalized,
+                    attrib.vertexFormat.length,
+                    it.offset.toLong()
+                )
 
                 if (attrib.isPerInstance) {
                     GL33.glVertexAttribDivisor(attribIndex, 1)

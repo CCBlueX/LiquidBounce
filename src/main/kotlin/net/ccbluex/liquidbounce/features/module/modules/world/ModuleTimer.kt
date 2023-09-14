@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.event.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -28,29 +27,31 @@ import net.ccbluex.liquidbounce.utils.client.timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
+ * Timer module
+ *
  * Changes the speed of the entire game.
  */
 object ModuleTimer : Module("Timer", Category.WORLD) {
 
     private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
-    private val normalSpeedTicks by int("NormalSpeedTicks", 200, 1..5000)
+    private val normalSpeedTicks by int("NormalSpeedTicks", 20, 1..500)
     private val boostSpeed by float("BoostSpeed", 2f, 0.1f..10f)
-    private val boostSpeedTicks by int("BoostSpeedTicks", 200, 1..5000)
+    private val boostSpeedTicks by int("BoostSpeedTicks", 20, 1..500)
     private val onMove by boolean("OnMove", false)
     private var currentTimerState: TimerState = TimerState.NormalSpeed
 
-    val repeatable: Unit = repeatable {
+    val repeatable = repeatable {
         if (!onMove || player.moving) {
             when (currentTimerState) {
                 TimerState.NormalSpeed -> {
                     mc.timer.timerSpeed = normalSpeed
-                    delay(normalSpeedTicks.toLong())
+                    wait(normalSpeedTicks)
                     currentTimerState = TimerState.BoostSpeed
                 }
 
                 TimerState.BoostSpeed -> {
                     mc.timer.timerSpeed = boostSpeed
-                    delay(boostSpeedTicks.toLong())
+                    wait(boostSpeedTicks)
                     currentTimerState = TimerState.NormalSpeed
                 }
             }
@@ -64,13 +65,11 @@ object ModuleTimer : Module("Timer", Category.WORLD) {
         currentTimerState = TimerState.NormalSpeed
     }
 
-    @Suppress("unused")
-    val disconnectHandler: Unit = handler<WorldDisconnectEvent> {
+    val disconnectHandler = handler<WorldDisconnectEvent> {
         enabled = false
     }
 
     enum class TimerState {
-        NormalSpeed,
-        BoostSpeed
+        NormalSpeed, BoostSpeed
     }
 }

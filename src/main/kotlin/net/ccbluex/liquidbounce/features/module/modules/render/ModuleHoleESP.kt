@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
-import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.utils.drawBoxNew
-import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -48,42 +44,51 @@ import net.minecraft.util.math.Vec3i
 
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
+    private val modes = choices("Mode", Box, arrayOf(Box))
+
     var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
     var verticalDistance by int("VerticalScanDistance", 16, 4..100)
 
     val flattenMovement by boolean("FlattenMovement", true)
 
-    val box = drawBoxNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
-
-    val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
-
     val holes = HashMap<BlockPos, HoleQuality>()
     val movableRegionScanner = MovableRegionScanner()
 
-    val renderHandler = handler<EngineRenderEvent> { event ->
-        val markedBlocks = holes.entries
+    private object Box : Choice("Box") {
 
-        val instanceBuffer = PositionColorVertexFormat()
-        val instanceBufferOutline = PositionColorVertexFormat()
+        override val parent: ChoiceConfigurable
+            get() = modes
 
-        instanceBuffer.initBuffer(markedBlocks.size)
-        instanceBufferOutline.initBuffer(markedBlocks.size)
+        private val outline by boolean("Outline", true)
 
-        for ((pos, quality) in markedBlocks) {
-            val pos3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
-            instanceBuffer.putVertex { this.position = pos3; this.color = quality.baseColor }
-            instanceBufferOutline.putVertex { this.position = pos3; this.color = quality.outlineColor }
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
+            val markedBlocks = holes.entries
+
+            renderEnvironment(matrixStack) {
+                for ((pos, quality) in markedBlocks) {
+                    val vec3 = Vec3(pos)
+
+                    val baseColor = quality.baseColor
+                    val outlineColor = quality.outlineColor
+
+                    withPosition(vec3) {
+                        withColor(baseColor) {
+                            drawSolidBox(box)
+                        }
+
+                        if (outline) {
+                            withColor(outlineColor) {
+                                drawOutlinedBox(box)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        RenderEngine.enqueueForRendering(
-            RenderEngine.CAMERA_VIEW_LAYER,
-            espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
-        )
-        RenderEngine.enqueueForRendering(
-            RenderEngine.CAMERA_VIEW_LAYER,
-            espBoxInstancedOutlineRenderTask(instanceBufferOutline, boxOutline.first, boxOutline.second)
-        )
     }
 
     val movementHandler = handler<PlayerTickEvent> { event ->

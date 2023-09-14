@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,11 +36,11 @@ class BrowserFileSystem : UltralightFileSystem {
     // unless you have 9,223,372,036,854,775,807 files open. Please reconsider your application then!
     private var nextFileHandle: Long = 0
 
-    // Map from handle to file channel, see class description for more details.
+    // Map from handle to a file channel, see class description for more details.
     private val openFiles = mutableMapOf<Long, FileChannel>()
 
     /**
-     * This is called by Ultralight to check if a given file exists.
+     * Ultralight calls this to check if a given file exists.
      *
      * Note that Ultralight might pass invalid paths, so check for them!
      *
@@ -82,7 +82,7 @@ class BrowserFileSystem : UltralightFileSystem {
     }
 
     /**
-     * Retrieves the mime type of a given file. Ultralight needs this in order to determine how to load content.
+     * Retrieves the mime type of given file. Ultralight needs this in order to determine how to load content.
      *
      * @param path The path to check the mime type for
      * @return The mime type of the file at the given path, or `null`, if the mime type could not be determined
@@ -112,7 +112,7 @@ class BrowserFileSystem : UltralightFileSystem {
     }
 
     /**
-     * Opens a file at the given location. Ultralight calls this when it needs to read files. Currently the parameter
+     * Opens a file at the given location. Ultralight calls this when it needs to read files. Currently, the parameter
      * `openForWriting` is always `false`, and a `write` method is missing from Ultralight as well.
      *
      * @param path           The path of the file to open
@@ -148,7 +148,7 @@ class BrowserFileSystem : UltralightFileSystem {
     }
 
     /**
-     * Closes the given handle. This is called by Ultralight when a file is no longer needed and its resources can be
+     * Closes the given handle. Ultralight calls this when a file is no longer needed and its resources can be
      * disposed.
      *
      * @param handle The handle of the file to close
@@ -215,7 +215,7 @@ class BrowserFileSystem : UltralightFileSystem {
     /**
      * Helper method to scratch malformed paths
      *
-     * @param path The path to convert to an NIO path
+     * @param strPath The path to convert to an NIO path
      * @return The converted path, or `null`, if the path failed to convert
      */
     private fun getPath(strPath: String): Path? {

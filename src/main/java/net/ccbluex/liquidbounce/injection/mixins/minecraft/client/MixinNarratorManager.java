@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * The minecraft narrator is so annoying and always enable it accidentally by pressing the keys.
+ * The minecraft narrator is so annoying and always gets enabled it accidentally by pressing the keys.
  */
 @Mixin(NarratorManager.class)
 public class MixinNarratorManager {
@@ -43,7 +43,7 @@ public class MixinNarratorManager {
     /**
      * This removes the narrator notifications
      */
-    @Inject(method = { "narrate(Lnet/minecraft/text/Text;)V", "narrate(Lnet/minecraft/text/Text;)V", "narrate(Lnet/minecraft/text/Text;)V", "narrateChatMessage" }, at = @At("HEAD"), cancellable = true)
+    @Inject(method = {"narrate(Lnet/minecraft/text/Text;)V", "narrate(Lnet/minecraft/text/Text;)V", "narrate(Lnet/minecraft/text/Text;)V", "narrateChatMessage"}, at = @At("HEAD"), cancellable = true)
     private void cancelToast(CallbackInfo callback) {
         callback.cancel();
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -62,7 +61,10 @@ class Command(
 
     private fun getParentKeys(currentCommand: Command?, current: String): String {
         val parentName = currentCommand?.parentCommand?.name
-        return if (parentName != null) getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current") else current
+        return if (parentName != null) getParentKeys(
+            currentCommand.parentCommand,
+            "$parentName.subcommand.$current"
+        ) else current
     }
 
     fun result(key: String, vararg args: Any): MutableText {
@@ -70,7 +72,7 @@ class Command(
     }
 
     /**
-     * Returns the name of the command with the name of it's parent classes
+     * Returns the name of the command with the name of its parent classes
      */
     fun getFullName(): String {
         val parent = this.parentCommand

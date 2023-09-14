@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,12 +32,12 @@ object UltralightIntegrationHook : Listenable {
     }
 
     val screenRenderHandler = handler<ScreenRenderEvent> {
-        UltralightEngine.render(RenderLayer.SCREEN_LAYER, it.matrices)
-        UltralightEngine.render(RenderLayer.SPLASH_LAYER, it.matrices)
+        UltralightEngine.render(RenderLayer.SCREEN_LAYER, it.context)
+        UltralightEngine.render(RenderLayer.SPLASH_LAYER, it.context)
     }
 
     val overlayRenderHandler = handler<OverlayRenderEvent> {
-        UltralightEngine.render(RenderLayer.OVERLAY_LAYER, it.matrices)
+        UltralightEngine.render(RenderLayer.OVERLAY_LAYER, it.context)
     }
 
     val windowResizeWHandler = handler<WindowResizeEvent> {

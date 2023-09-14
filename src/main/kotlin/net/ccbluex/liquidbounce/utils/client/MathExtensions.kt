@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,22 +33,27 @@ fun Box.getFace(direction: Direction): ModuleScaffold.Face {
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.maxX, this.minY, this.maxZ)
         )
+
         Direction.UP -> ModuleScaffold.Face(
             Vec3d(this.minX, this.maxY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
+
         Direction.SOUTH -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.maxZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
+
         Direction.NORTH -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.minZ)
         )
+
         Direction.EAST -> ModuleScaffold.Face(
             Vec3d(this.maxX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
+
         Direction.WEST -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.minX, this.maxY, this.maxZ)

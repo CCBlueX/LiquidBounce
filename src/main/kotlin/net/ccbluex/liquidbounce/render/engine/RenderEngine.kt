@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,31 +95,31 @@ object RenderEngine : Listenable {
 
     val RENDERED_OUTLINES = AtomicInteger(0)
 
-    val renderHandler = handler<OverlayRenderEvent> {
-        this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
-            it.tickDelta,
-            true
-        ).toMat4()
-
-        val outlines = RENDERED_OUTLINES.getAndSet(0)
-
-        if (outlines > 0) {
-            println(outlines)
-        }
-
-        EventManager.callEvent(EngineRenderEvent(it.tickDelta))
-
-        GL11.glLineWidth(1.0f)
-
-        render(it.tickDelta)
-
-        // Run the deferred tasks
-        while (true) {
-            val currentTask = deferredForRenderThread.poll() ?: break
-
-            currentTask.run()
-        }
-    }
+//    val renderHandler = handler<OverlayRenderEvent> {
+//        this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
+//            it.tickDelta,
+//            true
+//        ).toMat4()
+//
+//        val outlines = RENDERED_OUTLINES.getAndSet(0)
+//
+//        if (outlines > 0) {
+//            println(outlines)
+//        }
+//
+//        EventManager.callEvent(EngineRenderEvent(it.tickDelta))
+//
+//        GL11.glLineWidth(1.0f)
+//
+//        render(it.tickDelta)
+//
+//        // Run the deferred tasks
+//        while (true) {
+//            val currentTask = deferredForRenderThread.poll() ?: break
+//
+//            currentTask.run()
+//        }
+//    }
 
     /**
      * Initialization
@@ -156,14 +156,14 @@ object RenderEngine : Listenable {
      * @param layer The layer it is supposed to be rendered on (See this class's description)
      */
     fun enqueueForRendering(layer: Int, task: RenderTask) {
-        this.renderTaskTable[layer].renderTasks.add(task)
+        // this.renderTaskTable[layer].renderTasks.add(task)
     }
 
     /**
      * @see enqueueForRendering
      */
     fun enqueueForRendering(layer: Int, task: Array<RenderTask>) {
-        this.renderTaskTable[layer].renderTasks.addAll(task)
+        // this.renderTaskTable[layer].renderTasks.addAll(task)
     }
 
     /**
@@ -250,6 +250,7 @@ object RenderEngine : Listenable {
                 ).toMat4(),
                 true
             )
+
             CAMERA_VIEW_LAYER_WITHOUT_BOBBING -> LayerSettings(
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
                     tickDelta,
@@ -257,6 +258,7 @@ object RenderEngine : Listenable {
                 ).toMat4(),
                 true
             )
+
             SCREEN_SPACE_LAYER -> {
                 val aspectRatio = mc.window.width.toFloat() / mc.window.height.toFloat()
 
@@ -266,6 +268,7 @@ object RenderEngine : Listenable {
                     depthTest = true
                 )
             }
+
             HUD_LAYER -> LayerSettings(
                 Mat4.orthograpicProjectionMatrix(
                     0.0f,
@@ -277,6 +280,7 @@ object RenderEngine : Listenable {
                 ),
                 true
             )
+
             MINECRAFT_INTERNAL_RENDER_TASK -> LayerSettings(
                 Mat4.orthograpicProjectionMatrix(
                     0.0f,
@@ -288,6 +292,7 @@ object RenderEngine : Listenable {
                 ),
                 false
             )
+
             else -> throw UnsupportedOperationException("Unknown layer")
         }
     }

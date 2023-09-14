@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,27 @@ package net.ccbluex.liquidbounce.utils.kotlin
 infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     require(start.isFinite())
     require(endInclusive.isFinite())
-    require(step > 0.0) { "Step must be positive, was: $step." }
-    val sequence = generateSequence(start) { previous ->
-        if (previous == Double.POSITIVE_INFINITY) return@generateSequence null
-        val next = previous + step
-        if (next > endInclusive) null else next
+    require(step >= 0.0) { "Step must be positive, was: $step." }
+    if (step == 0.0)
+        return listOf(start)
+    else {
+        val sequence = generateSequence(start) { previous ->
+            if (previous == Double.POSITIVE_INFINITY) return@generateSequence null
+            val next = previous + step
+            if (next > endInclusive) null else next
+        }
+        return sequence.asIterable()
     }
-    return sequence.asIterable()
+}
+
+fun ClosedFloatingPointRange<Float>.random(): Double {
+    require(start.isFinite())
+    require(endInclusive.isFinite())
+    return start + (endInclusive - start) * Math.random()
+}
+
+fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {
+    require(start.isFinite())
+    require(endInclusive.isFinite())
+    return start.toDouble()..endInclusive.toDouble()
 }

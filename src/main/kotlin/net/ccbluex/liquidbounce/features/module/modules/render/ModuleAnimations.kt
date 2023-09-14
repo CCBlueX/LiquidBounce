@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,19 +39,21 @@ object ModuleAnimation : Module("Animations", Category.RENDER) {
         tree(OffHand)
     }
 
-    val itemScale by float("ItemScale",  1f, -5f..5f)
     object MainHand : ToggleableConfigurable(this, "MainHand", false) {
-        val mainHandX by float("MainHandX", 1f, -5f..5f)
-        val mainHandY by float("MainHandY", 1f, -5f..5f)
-        val mainHandPositiveX by float("MainHandPositiveRotationX", 1f, -50f..50f)
-        val mainHandPositiveY by float("MainHandPositiveRotationY", 1f, -50f..50f)
-        val mainHandPositiveZ by float("MainHandPositiveRotationZ", 1f, -50f..50f)
+        val mainHandItemScale by float("ItemScale", 0f, -5f..5f)
+        val mainHandX by float("X", 0f, -5f..5f)
+        val mainHandY by float("Y", 0f, -5f..5f)
+        val mainHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
+        val mainHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
+        val mainHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
+
     object OffHand : ToggleableConfigurable(this, "OffHand", false) {
-        val offHandX by float("offHandX", 1f, -1f..1f)
-        val offHandY by float("offHandY", 1f, -1f..1f)
-        val OffHandPositiveX by float("OffHandPositiveRotationX", 1f, -50f..50f)
-        val OffHandPositiveY by float("OffHandPositiveRotationY", 1f, -50f..50f)
-        val OffHandPositiveZ by float("OffHandPositiveRotationZ", 1f, -50f..50f)
+        val offHandItemScale by float("ItemScale", 0f, -5f..5f)
+        val offHandX by float("X", 0f, -1f..1f)
+        val offHandY by float("Y", 0f, -1f..1f)
+        val OffHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
+        val OffHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
+        val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,6 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
-
         if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
             return@repeatable
         }
@@ -83,7 +82,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 )
             ) {
                 locked = true
-                wait(inventoryConstraints.delay.random())
+                wait { inventoryConstraints.delay.random() }
 
                 return@repeatable
             }

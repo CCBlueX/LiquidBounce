@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 
 /**
  * ChestStealer module
@@ -44,7 +43,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private var lastSlot = 0
     private val timer = Chronometer()
 
-    val repeatable = handler<GameRenderEvent> {
+    val repeatable = handler<WorldRenderEvent> {
         if (!timer.hasElapsed()) {
             return@handler
         }

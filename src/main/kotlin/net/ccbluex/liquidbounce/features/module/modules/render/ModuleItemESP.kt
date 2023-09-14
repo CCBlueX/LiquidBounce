@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,20 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
-import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
-import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.utils.drawBoxNew
-import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
@@ -59,38 +53,33 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val box = drawBoxNew(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
+        private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
 
-        val boxOutline = drawBoxOutlineNew(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
 
-        val renderHandler = handler<EngineRenderEvent> { event ->
             val base = if (colorRainbow) rainbow() else color
-            val baseColor = Color4b(base.r, base.g, base.b, 50)
-            val outlineColor = Color4b(base.r, base.g, base.b, 100)
+            val baseColor = base.alpha(50)
+            val outlineColor = base.alpha(100)
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            val instanceBuffer = PositionColorVertexFormat()
-            val instanceBufferOutline = PositionColorVertexFormat()
+            renderEnvironment(matrixStack) {
+                for (entity in filtered) {
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
-            instanceBuffer.initBuffer(filtered.size)
-            instanceBufferOutline.initBuffer(filtered.size)
+                    withPosition(pos) {
+                        withColor(baseColor) {
+                            drawSolidBox(box)
+                        }
 
-            for (entity in filtered) {
-                val pos = entity.interpolateCurrentPosition(event.tickDelta)
+                        withColor(outlineColor) {
+                            drawOutlinedBox(box)
+                        }
+                    }
+                }
 
-                instanceBuffer.putVertex { this.position = pos; this.color = baseColor }
-                instanceBufferOutline.putVertex { this.position = pos; this.color = outlineColor }
             }
-
-            RenderEngine.enqueueForRendering(
-                RenderEngine.CAMERA_VIEW_LAYER,
-                espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
-            )
-            RenderEngine.enqueueForRendering(
-                RenderEngine.CAMERA_VIEW_LAYER,
-                espBoxInstancedOutlineRenderTask(instanceBufferOutline, boxOutline.first, boxOutline.second)
-            )
         }
 
     }

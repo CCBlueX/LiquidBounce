@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,17 @@ object ProxyManager : Configurable("Proxies") {
 
     init {
         ConfigSystem.root(this)
+    }
+
+    fun setProxy(host: String, port: Int, username: String, password: String): String {
+        ProxyManager.currentProxy = ProxyManager.Proxy(InetSocketAddress(host, port), if (username.isNotBlank()) ProxyManager.ProxyCredentials(username, password) else null)
+
+        return "Successfully set proxy"
+    }
+
+    fun unsetProxy(): String {
+        ProxyManager.currentProxy = null
+        return "Successfully unset proxy"
     }
 
     // todo: hook into ChannelInitializer

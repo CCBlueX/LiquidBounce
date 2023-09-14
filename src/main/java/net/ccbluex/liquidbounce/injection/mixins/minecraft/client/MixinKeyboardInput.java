@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventory
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -59,19 +59,20 @@ public class MixinKeyboardInput extends MixinInput {
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
-        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), keyBinding.boundKey.getCode()) : keyBinding.isPressed();
+        Boolean enforced = KeybindExtensionsKt.getEnforced(keyBinding);
+        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? (enforced != null ? enforced : KeybindExtensionsKt.getPressedOnKeyboard(keyBinding)) : (enforced != null ? enforced : keyBinding.isPressed());
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingBack:Z", ordinal = 0))
     private void hookInventoryMoveSprint(boolean slowDown, float f, CallbackInfo ci) {
         if (ModuleInventoryMove.INSTANCE.shouldHandleInputs(this.settings.sprintKey)) {
-            this.settings.sprintKey.setPressed(InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), this.settings.sprintKey.boundKey.getCode()));
+            this.settings.sprintKey.setPressed(KeybindExtensionsKt.getPressedOnKeyboard(this.settings.sprintKey));
         }
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER))
     private void injectMovementInputEvent(boolean slowDown, float f, CallbackInfo ci) {
-        var event = new MovementInputEvent(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight);
+        var event = new MovementInputEvent(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight, this.jumping);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -79,6 +80,7 @@ public class MixinKeyboardInput extends MixinInput {
         this.pressingBack = event.getBackwards();
         this.pressingLeft = event.getLeft();
         this.pressingRight = event.getRight();
+        this.jumping = event.getJumping();
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.BEFORE))
@@ -112,7 +114,7 @@ public class MixinKeyboardInput extends MixinInput {
     @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
     private void injectForcedState(KeyboardInput instance, boolean value) {
         Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
-        instance.sneaking = enforceEagle != null || value;
+        instance.sneaking = enforceEagle != null ? enforceEagle : value;
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,32 +19,22 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
-class Plane(val base: Vec3d, val v1: Vec3d, val v2: Vec3d) {
+class Plane(val pos: Vec3d, val normalVec: Vec3d) {
+    fun intersection(line: Line): Vec3d? {
+        val d = this.pos.dotProduct(this.normalVec)
+        val e = line.direction.dotProduct(this.normalVec)
 
-    companion object {
+        // If the line is in the plane or parallel to it, there is no intersection point
+        if (MathHelper.approximatelyEquals(e, 0.0))
+            return null
 
-        fun fromFaceAndNormal(face: ModuleScaffold.Face, normal: Vec3d): Plane {
-            val center = face.center
+        val phi = (d - line.position.dotProduct(this.normalVec)) / e
 
-            val v1 = face.to.subtract(center)
-
-            val v2 = v1.crossProduct(normal).normalize()
-
-            val distVec = v2.multiply(v1.length())
-
-            val b = center.add(distVec)
-            val c = center.subtract(distVec)
-
-            return Plane(face.from, b - face.from, c - face.from)
-        }
-
+        return line.getPosition(phi)
     }
 
-    fun getPoint(phi: Double, lambda: Double): Vec3d {
-        return this.base + this.v1 * phi + this.v2 * lambda
-    }
 
 }

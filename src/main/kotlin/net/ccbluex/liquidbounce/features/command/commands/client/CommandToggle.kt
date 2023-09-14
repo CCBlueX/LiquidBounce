@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,15 @@ object CommandToggle {
 
                 val newState = !module.enabled
                 module.enabled = newState
-                chat(regular(command.result("moduleToggled", variable(module.name), variable(if (newState) command.result("enabled") else command.result("disabled")))))
+                chat(
+                    regular(
+                        command.result(
+                            "moduleToggled",
+                            variable(module.name),
+                            variable(if (newState) command.result("enabled") else command.result("disabled"))
+                        )
+                    )
+                )
             }
             .build()
     }

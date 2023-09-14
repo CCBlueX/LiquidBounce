@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.base.ultralight.impl.renderer
 
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.config.UltralightViewConfig
-import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.client.gui.DrawContext
 
 /**
  * Render Views
@@ -35,7 +35,7 @@ interface ViewRenderer {
     /**
      * Render view
      */
-    fun render(view: UltralightView, matrices: MatrixStack)
+    fun render(view: UltralightView, context: DrawContext)
 
     /**
      * Delete

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ object EventManager {
         ChunkUnloadEvent::class,
         WorldDisconnectEvent::class,
         GameRenderEvent::class,
+        WorldRenderEvent::class,
         EngineRenderEvent::class,
         OverlayRenderEvent::class,
         ScreenRenderEvent::class,

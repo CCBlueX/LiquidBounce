@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -175,6 +175,29 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         buffer.put(idx + 3, a.toByte())
     }
 
+    fun toHex(): String {
+        val hex = StringBuilder("#")
+
+        hex.append(componentToHex(r))
+        hex.append(componentToHex(g))
+        hex.append(componentToHex(b))
+
+        return hex.toString().uppercase()
+    }
+
+    private fun componentToHex(c: Int): String {
+        val hexString = Integer.toHexString(c)
+        return if (hexString.length == 1) "0$hexString" else hexString
+    }
+
+    fun red(red: Int) = Color4b(red, this.g, this.b, this.a)
+
+    fun green(green: Int) = Color4b(this.r, green, this.b, this.a)
+
+    fun blue(blue: Int) = Color4b(this.r, this.g, blue, this.a)
+
+    fun alpha(alpha: Int) = Color4b(this.r, this.g, this.b, alpha)
+
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 }
 
@@ -224,7 +247,5 @@ enum class PrimitiveType(val verticesPerPrimitive: Int, val mode: Int) {
     /**
      * Line loop; 1 vertices per primitive
      */
-    LineLoop(1, GL11.GL_LINE_LOOP),
-    LineStrip(1, GL11.GL_LINE_STRIP),
-    Points(1, GL11.GL_POINTS)
+    LineLoop(1, GL11.GL_LINE_LOOP), LineStrip(1, GL11.GL_LINE_STRIP), Points(1, GL11.GL_POINTS)
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,13 +29,11 @@ object JsItem {
     /**
      * Create [ItemStack] from [arguments]
      */
-    @Suppress("unused")
-    fun create(arguments: String): ItemStack = createItem(arguments, 1)
+    fun create(arguments: String): ItemStack = createItem(arguments)
 
     /**
      * Create [amount]x [ItemStack] from [arguments]
      */
-    @Suppress("unused")
     fun create(arguments: String, amount: Int): ItemStack = createItem(arguments, amount)
 
 }

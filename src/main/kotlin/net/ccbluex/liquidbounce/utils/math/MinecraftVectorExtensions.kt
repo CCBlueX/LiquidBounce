@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,25 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
+import kotlin.math.floor
 
 inline operator fun Vec3d.plus(other: Vec3d): Vec3d {
     return this.add(other)
 }
+
 inline operator fun Vec3d.minus(other: Vec3d): Vec3d {
     return this.subtract(other)
 }
 
 inline operator fun Vec3d.times(scalar: Double): Vec3d {
     return this.multiply(scalar)
+}
+
+fun Vec3d.toBlockPos(): BlockPos {
+    val d = floor(this.x).toInt()
+    val e = floor(this.y).toInt()
+    val f = floor(this.z).toInt()
+    return BlockPos(d, e, f)
 }

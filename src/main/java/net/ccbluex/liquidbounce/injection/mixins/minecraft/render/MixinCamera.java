@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,15 +38,20 @@ public abstract class MixinCamera {
     @Shadow
     private boolean thirdPerson;
 
-    @Shadow protected abstract void setRotation(float yaw, float pitch);
+    @Shadow
+    protected abstract void setRotation(float yaw, float pitch);
 
-    @Shadow private float yaw;
+    @Shadow
+    private float yaw;
 
-    @Shadow private float pitch;
+    @Shadow
+    private float pitch;
 
-    @Shadow protected abstract void moveBy(double x, double y, double z);
+    @Shadow
+    protected abstract void moveBy(double x, double y, double z);
 
-    @Shadow protected abstract double clipToSpace(double desiredCameraDistance);
+    @Shadow
+    protected abstract double clipToSpace(double desiredCameraDistance);
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
     private void injectQuickPerspectiveSwap(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {

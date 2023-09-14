@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,35 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 
 /**
  * NoRotateSet module.
  *
  * Prevents the server from rotating your head.
  */
-object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER)
+object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
+    val mode = choices(
+        "Mode",
+        SilentAccept, arrayOf(
+            SilentAccept,
+            ResetRotation
+        )
+    )
+
+    object ResetRotation : Choice("ResetRotation") {
+        override val parent: ChoiceConfigurable
+            get() = mode
+
+        val rotationsConfigurable = tree(RotationsConfigurable())
+    }
+    object SilentAccept : Choice("SilentAccept") {
+        override val parent: ChoiceConfigurable
+            get() = mode
+    }
+}

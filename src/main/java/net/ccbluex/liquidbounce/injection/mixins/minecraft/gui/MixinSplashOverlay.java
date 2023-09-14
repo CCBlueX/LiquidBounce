@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay;
 import net.ccbluex.liquidbounce.base.ultralight.theme.Page;
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceReload;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,28 +44,33 @@ import java.util.function.Consumer;
 @Mixin(SplashOverlay.class)
 public class MixinSplashOverlay {
 
-    @Shadow @Final private MinecraftClient client;
-    @Shadow @Final private ResourceReload reload;
-    @Shadow @Final private Consumer<Optional<Throwable>> exceptionHandler;
+    @Shadow
+    @Final
+    private MinecraftClient client;
+    @Shadow
+    @Final
+    private ResourceReload reload;
+    @Shadow
+    @Final
+    private Consumer<Optional<Throwable>> exceptionHandler;
     private ViewOverlay viewOverlay = null;
     private boolean closing = false;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void hookSplashInit(CallbackInfo callbackInfo) {
         final Page page = ThemeManager.INSTANCE.page("splashscreen");
-        if (page == null)
-            return;
+        if (page == null) return;
 
         viewOverlay = UltralightEngine.INSTANCE.newSplashView();
         viewOverlay.loadPage(page);
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void hookSplashRender(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo callbackInfo) {
+    private void hookSplashRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (viewOverlay != null) {
             if (this.reload.isComplete()) {
                 if (this.client.currentScreen != null) {
-                    this.client.currentScreen.render(matrices, 0, 0, delta);
+                    this.client.currentScreen.render(context, 0, 0, delta);
                 }
 
                 if (!closing) {
@@ -83,8 +88,8 @@ public class MixinSplashOverlay {
                 }
             }
 
-            UltralightEngine.INSTANCE.render(RenderLayer.SPLASH_LAYER, matrices);
-            callbackInfo.cancel();
+            UltralightEngine.INSTANCE.render(RenderLayer.SPLASH_LAYER, context);
+            ci.cancel();
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,19 @@ import java.util.concurrent.CompletableFuture;
 @Mixin(ChatInputSuggestor.class)
 public class MixinChatInputSuggestor {
 
-    @Shadow @Final private boolean slashOptional;
+    @Shadow
+    @Final
+    private boolean slashOptional;
 
-    @Shadow @Final private TextFieldWidget textField;
+    @Shadow
+    @Final
+    private TextFieldWidget textField;
 
-    @Shadow private CompletableFuture<Suggestions> pendingSuggestions;
+    @Shadow
+    private CompletableFuture<Suggestions> pendingSuggestions;
 
-    @Shadow private ParseResults<CommandSource> parse;
+    @Shadow
+    private ParseResults<CommandSource> parse;
 
     @Redirect(method = "refresh", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screen/ChatInputSuggestor;slashOptional:Z"))
     private boolean injectAutoCompletionA(ChatInputSuggestor suggestor) {

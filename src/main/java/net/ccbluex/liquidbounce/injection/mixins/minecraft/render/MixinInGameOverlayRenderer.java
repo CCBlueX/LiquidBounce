@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ public abstract class MixinInGameOverlayRenderer implements IMixinGameRenderer {
     @Redirect(method = "renderFireOverlay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexConsumer;color(FFFF)Lnet/minecraft/client/render/VertexConsumer;"))
     private static VertexConsumer injectFireOpacity(VertexConsumer vertexConsumer, float red, float green, float blue, float alpha) {
         return vertexConsumer.color(red,
-                                    green,
-                                    blue,
-                                    ModuleAntiBlind.INSTANCE.getEnabled() ? ModuleAntiBlind.INSTANCE.getFireOpacity() * alpha : alpha);
+                green,
+                blue,
+                ModuleAntiBlind.INSTANCE.getEnabled() ? ModuleAntiBlind.INSTANCE.getFireOpacity() * alpha : alpha);
     }
 }

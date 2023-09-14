@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.event.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -40,6 +42,7 @@ import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -67,7 +70,8 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     @Shadow
     protected abstract double getFov(Camera camera, float tickDelta, boolean changingFov);
 
-    @Shadow protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
+    @Shadow
+    protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
 
     /**
      * Hook game render event
@@ -78,12 +82,24 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     }
 
     /**
+     * Hook world render event
+     */
+    @Inject(method = "renderWorld", at = @At(value = "FIELD",
+            target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z",
+            opcode = Opcodes.GETFIELD,
+            ordinal = 0))
+    public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack,
+                                final CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, partialTicks));
+    }
+
+    /**
      * Hook screen render event
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
-    public void hookScreenRender(Screen screen, MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        screen.render(matrices, mouseX, mouseY, delta);
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(screen, matrices, mouseX, mouseY, delta));
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
+    public void hookScreenRender(Screen screen, DrawContext context, int mouseX, int mouseY, float delta) {
+        screen.render(context, mouseX, mouseY, delta);
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(screen, context, mouseX, mouseY, delta));
     }
 
     @Override
@@ -100,7 +116,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
                 this.bobView(matrices, tickDelta);
             }
 
-            float f = MathHelper.lerp(tickDelta, this.client.player.lastNauseaStrength, this.client.player.nextNauseaStrength) * this.client.options.getDistortionEffectScale().getValue().floatValue() * this.client.options.getDistortionEffectScale().getValue().floatValue();
+            float f = MathHelper.lerp(tickDelta, this.client.player.prevNauseaIntensity, this.client.player.nauseaIntensity) * this.client.options.getDistortionEffectScale().getValue().floatValue() * this.client.options.getDistortionEffectScale().getValue().floatValue();
             if (f > 0.0F) {
                 int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
                 float g = 5.0F / (f * f + 5.0F) - f * 0.04F;

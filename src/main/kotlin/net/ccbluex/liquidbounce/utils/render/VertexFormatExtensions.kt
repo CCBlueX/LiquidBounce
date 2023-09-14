@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,13 @@ import net.ccbluex.liquidbounce.render.engine.memory.putVertex
 
 typealias VertexInfoRetriever<T> = T.() -> Unit
 
-inline fun <T : VertexFormat> T.quadOutline(indexBuffer: IndexBuffer, p1: VertexInfoRetriever<T>, p2: VertexInfoRetriever<T>, p3: VertexInfoRetriever<T>, p4: VertexInfoRetriever<T>) {
+inline fun <T : VertexFormat> T.quadOutline(
+    indexBuffer: IndexBuffer,
+    p1: VertexInfoRetriever<T>,
+    p2: VertexInfoRetriever<T>,
+    p3: VertexInfoRetriever<T>,
+    p4: VertexInfoRetriever<T>
+) {
     val v1 = this.putVertex(p1)
     val v2 = this.putVertex(p2)
     val v3 = this.putVertex(p3)
@@ -44,7 +50,13 @@ inline fun <T : VertexFormat> T.quadOutline(indexBuffer: IndexBuffer, p1: Vertex
     indexBuffer.index(v1)
 }
 
-inline fun <T : VertexFormat> T.quad(indexBuffer: IndexBuffer, p1: VertexInfoRetriever<T>, p2: VertexInfoRetriever<T>, p3: VertexInfoRetriever<T>, p4: VertexInfoRetriever<T>) {
+inline fun <T : VertexFormat> T.quad(
+    indexBuffer: IndexBuffer,
+    p1: VertexInfoRetriever<T>,
+    p2: VertexInfoRetriever<T>,
+    p3: VertexInfoRetriever<T>,
+    p4: VertexInfoRetriever<T>
+) {
     val v1 = this.putVertex(p1)
     val v2 = this.putVertex(p2)
     val v3 = this.putVertex(p3)
@@ -58,7 +70,13 @@ inline fun <T : VertexFormat> T.quad(indexBuffer: IndexBuffer, p1: VertexInfoRet
     indexBuffer.index(v3)
 }
 
-fun PositionColorVertexFormat.rect(indexBuffer: IndexBuffer, p1: Vec3, p2: Vec3, color: Color4b, outline: Boolean = false) {
+fun PositionColorVertexFormat.rect(
+    indexBuffer: IndexBuffer,
+    p1: Vec3,
+    p2: Vec3,
+    color: Color4b,
+    outline: Boolean = false
+) {
     if (outline) {
         this.quadOutline(
             indexBuffer,

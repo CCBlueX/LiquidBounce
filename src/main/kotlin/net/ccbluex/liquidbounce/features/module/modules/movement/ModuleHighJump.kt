@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
@@ -31,10 +33,38 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
-    private val motion by float("Motion", 0.8f, 0.2f..1f)
+    private val modes = choices(
+        "Mode", Vanilla, arrayOf(
+            Vanilla, Vulcan
+        )
+    )
+    private val motion by float("Motion", 0.8f, 0.2f..10f)
 
-    val jumpEvent = handler<PlayerJumpEvent> {
-        it.motion = motion
+    private object Vanilla : Choice("Vanilla") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val jumpEvent = sequenceHandler<PlayerJumpEvent> {
+            it.motion = motion
+        }
     }
 
+    /**
+     * @anticheat Vulcan
+     * @anticheatVersion 2.7.5
+     * @testedOn eu.loyisa.cn; eu.anticheat-test.com
+     * @note this still flags a bit
+     */
+    private object Vulcan : Choice("Vulcan") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val jumpEvent = sequenceHandler<PlayerJumpEvent> {
+            it.motion = motion
+            wait { 100 }
+            player.velocity.y = 0.0
+        }
+    }
 }

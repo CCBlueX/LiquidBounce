@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,7 @@ import com.labymedia.ultralight.config.UltralightViewConfig
 import com.labymedia.ultralight.gpu.UltralightOpenGLGPUDriverNative
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.DrawableHelper
-import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.client.gui.DrawContext
 
 /**
  * A gpu view renderer
@@ -39,7 +38,7 @@ class GpuViewRenderer(val driver: UltralightOpenGLGPUDriverNative) : ViewRendere
         window = mc.window.handle
     }
 
-    override fun render(view: UltralightView, matrices: MatrixStack) {
+    override fun render(view: UltralightView, context: DrawContext) {
         driver.setActiveWindow(window)
 
         // DrawableHelper.fill(matrices, 0, 0, mc.window.scaledWidth, mc.window.scaledHeight, Color(1, 1, 1, 1).rgb)
@@ -56,7 +55,8 @@ class GpuViewRenderer(val driver: UltralightOpenGLGPUDriverNative) : ViewRendere
         val textureId = renderTarget.textureId
 
         driver.bindTexture(0, textureId)
-        DrawableHelper.drawTexture(matrices, 0, 0, 1, 0.0f, 0.0f, mc.window.scaledWidth, mc.window.scaledHeight, mc.window.scaledWidth, mc.window.scaledHeight)
+
+        // context.drawTexture(matrices, 0, 0, 1, 0.0f, 0.0f, mc.window.scaledWidth, mc.window.scaledHeight, mc.window.scaledWidth, mc.window.scaledHeight)
     }
 
     override fun delete() {

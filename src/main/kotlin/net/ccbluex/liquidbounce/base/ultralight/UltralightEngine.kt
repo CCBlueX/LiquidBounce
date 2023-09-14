@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ import net.ccbluex.liquidbounce.base.ultralight.js.bindings.UltralightStorage
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.util.math.MatrixStack
 
 object UltralightEngine {
 
@@ -160,13 +160,13 @@ object UltralightEngine {
         renderer.get().update()
     }
 
-    fun render(layer: RenderLayer, matrices: MatrixStack) {
+    fun render(layer: RenderLayer, context: DrawContext) {
         frameLimitedRender()
 
         viewOverlays
             .filter { it.layer == layer && it.state != ViewOverlayState.HIDDEN }
             .forEach {
-                it.render(matrices)
+                it.render(context)
             }
     }
 

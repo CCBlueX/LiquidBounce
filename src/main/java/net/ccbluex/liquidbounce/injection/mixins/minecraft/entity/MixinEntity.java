@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Entity.class)
@@ -68,7 +69,11 @@ public abstract class MixinEntity {
     @Shadow
     public abstract boolean isOnGround();
 
-    @Shadow protected boolean submergedInWater;
+    @Shadow
+    protected boolean submergedInWater;
+
+    @Shadow
+    public abstract boolean hasVehicle();
 
     /**
      * Hook entity margin modification event
@@ -93,7 +98,6 @@ public abstract class MixinEntity {
 
     @Redirect(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"))
     public Vec3d hookVelocity(Vec3d movementInput, float speed, float yaw) {
-        //noinspection ConstantConditions
         if ((Object) this == MinecraftClient.getInstance().player) {
             final PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, movementInputToVelocity(movementInput, speed, yaw));
             EventManager.INSTANCE.callEvent(event);
@@ -113,5 +117,21 @@ public abstract class MixinEntity {
     @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
     private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
         cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
+    }
+
+    /**
+     * When modules that modify player's velocity are enabled while on a vehicle, the game essentially gets screwed up, making the player unable to move.
+     * <p>
+     * With this injection, the issue is solved.
+     */
+    @Inject(method = "setVelocity(Lnet/minecraft/util/math/Vec3d;)V", at = @At("HEAD"), cancellable = true)
+    private void hookVelocityDuringRidingPrevention(Vec3d velocity, CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        if (this.hasVehicle()) {
+            ci.cancel();
+        }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.GameRenderEvent
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.math.Levenshtein
+import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.block.Blocks
 import net.minecraft.block.MapColor
 import net.minecraft.client.network.AbstractClientPlayerEntity
@@ -39,11 +39,13 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.*
 import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
 import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 import java.awt.Color
 import java.util.*
+import kotlin.math.absoluteValue
 
 object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     private val bowSkins = HashSet<String>()
@@ -52,6 +54,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     private var playHurt = false
     private var playBow = false
     private var currentAssasinationTarget: UUID? = null
+    private var currentAssasin: UUID? = null
 
     private var lastMap: String? = null
 
@@ -77,7 +80,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         this.murdererSkins.clear()
     }
 
-    private val gameRenderEvent = handler<GameRenderEvent> {
+    private val gameRenderEvent = handler<WorldRenderEvent> {
         if (playHurt) {
             mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("entity.villager.hurt")), 1F))
 
@@ -131,30 +134,42 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         val mapName = FilledMapItem.getMapId(equippedItem)?.let { FilledMapItem.getMapName(it) }
         val mapData = mapName?.let { world.getMapState(it) } ?: return@handler
 
-        if (equippedItem.name.string != "§cKill Contract" || mapName == this.lastMap) {
+
+        if (
+//            equippedItem.name.string != "§cKill Contract"
+            mapName == this.lastMap
+            ) {
             return@handler
         }
+
+        println(mapName + "/" + equippedItem.name.string)
+        lastMap = mapName
 
         val rgb = IntArray(128 * 128)
 
         (0 until rgb.size).forEach { i ->
-            val j = mapData.colors[i].toInt() and 0xFF
 
-            if (j / 4 == 0) {
-                rgb[i] = (i + ((i / 128) and 1)) * 8 + (16 shl 24)
-            } else {
-                rgb[i] = MapColor.get(j / 4).getRenderColor(MapColor.Brightness.validateAndGet(j and 3))
-            }
+//            if (j / 4 == 0) {
+//                rgb[i] = (i + ((i / 128) and 1)) * 8 + (16 shl 24)
+//            } else {
+            val color = MapColor.getRenderColor(mapData.colors[i].toInt())
+
+            val r = color and 0xFF
+            val g = (color ushr 8) and 0xFF
+            val b = (color ushr 16) and 0xFF
+
+                rgb[i] = Color(r, g, b).getRGB()
+//            }
 
         }
 
         val contractLine = IntArray(128 * 7)
 
         (0 until 7).forEach { y ->
-            (0..128).forEach { x ->
+            (0 until 128).forEach { x ->
                 var newRGB = rgb[128 * 105 + y * 128 + x]
 
-                newRGB = if (newRGB == Color(123, 102, 62).getRGB() || newRGB == Color(143, 119, 72).getRGB()) {
+                newRGB = if (newRGB == Color(123, 102, 62).rgb || newRGB == Color(143, 119, 72).rgb) {
                     0
                 } else {
                     -1
@@ -210,7 +225,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
                 var letter: String? = null
 
-                for ((key, value1) in FontRecognition.LETTER_MAP.entries) {
+                for ((key, value1) in ModuleMurderMystery.FontRecognition.LETTER_MAP.entries) {
                     if (value1.contentEquals(fingerPrint)) {
                         letter = key
                         break
@@ -218,25 +233,6 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
                 }
 
                 output.append(letter ?: "?")
-
-//                        BufferedImage bufferedImage = new BufferedImage(x - lastNonEmptyScanline, 7, BufferedImage.TYPE_INT_RGB);
-//
-//                        bufferedImage.setRGB(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), contractLine, lastNonEmptyScanline, 128);
-// //                        bufferedImage.setRGB(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), letter, 0, 0);
-//
-//                        int hash = 1;
-//
-//                        for (int x1 = 0; x1 < bufferedImage.getWidth(); x1++) {
-//                            for (int y2 = 0; y2 < bufferedImage.getHeight(); y2++) {
-//                                hash = 31 * hash + bufferedImage.getRGB(x1, y2);
-//                            }
-//                        }
-//
-//                        try {
-//                            ImageIO.write(bufferedImage, "PNG", new File("A:/letters/" + Integer.toHexString(hash) + ".png"));
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
 
                 lastNonEmptyScanline = -1
             }
@@ -252,27 +248,46 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         println(s.contentToString())
 
         if (s.isNotEmpty() && s[0].startsWith("NAME:")) {
-            val target = s[0].substring("NAME:".length).lowercase(Locale.getDefault())
+            val target = s[0].substring("NAME:".length).lowercase(Locale.getDefault()).trim()
 
             val targetPlayer = player.networkHandler.playerList.minByOrNull { netInfo ->
-                Levenshtein.distance(
-                    target,
-                    netInfo.profile.name.lowercase()
-                )
+                levenshtein(target, netInfo.profile.name.lowercase().trim())
             }
 
             if (targetPlayer != null) {
                 currentAssasinationTarget = targetPlayer.profile.id
 
                 chat("Target: " + targetPlayer.profile.name)
+            } else {
+                chat("Failed to find target, but the name is: $target")
             }
         }
-
-        lastMap = mapName
     }
 
     private val packetHandler = handler<PacketEvent> { packetEvent ->
         val world = mc.world ?: return@handler
+
+        if (packetEvent.packet is PlaySoundS2CPacket) {
+            val packet = packetEvent.packet
+
+            if (packet.sound.value().id.toString() == "minecraft:block.note_block.basedrum") {
+//                println("${packet.sound.value().id}/${packet.volume}")
+
+                // Fitted by observed values
+                val expectedDistance = ((1/ packet.volume) - 0.98272992) / 0.04342088
+
+                val probablyAssassin = world.players.minByOrNull {
+                    (it.distanceTo(player) - expectedDistance).absoluteValue
+                } ?: return@handler
+
+                val newAssasin = probablyAssassin.gameProfile.id
+
+                if (currentAssasin != newAssasin)
+                    chat("Your Assassin: " + probablyAssassin.gameProfile.name)
+
+                currentAssasin = newAssasin
+            }
+        }
 
         if (packetEvent.packet is EntityEquipmentUpdateS2CPacket) {
             val packet = packetEvent.packet
@@ -321,7 +336,19 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
                         Items.COOKIE,
                         Items.SHEARS,
                         Items.COOKED_SALMON,
-                        Items.STICK
+                        Items.STICK,
+                        Items.QUARTZ,
+                        Items.ROSE_BUSH,
+                        Items.ICE,
+                        Items.COOKED_BEEF,
+                        Items.NETHER_BRICK,
+                        Items.COOKED_CHICKEN,
+                        Items.MUSIC_DISC_BLOCKS,
+                        Items.RED_DYE,
+                        Items.OAK_BOAT,
+                        Items.BOOK,
+                        Items.GLISTERING_MELON_SLICE
+
                     )
 
                 val isBow = item is BowItem
@@ -335,6 +362,9 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
                 if (entity !is AbstractClientPlayerEntity) {
                     return@forEach
                 }
+//                if (ModuleAntiBot.isBot(entity)) {
+//                    return@forEach
+//                }
 
                 val locationSkin = entity.skinTexture
 
@@ -365,6 +395,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             bowSkins.clear()
 
             currentAssasinationTarget = null
+            currentAssasin = null
         }
     }
 
@@ -374,7 +405,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
 
         if (modes.activeChoice === AssassinationMode) {
-            if (currentAssasinationTarget != null && entityPlayer.gameProfile.id.equals(currentAssasinationTarget)) {
+            if (entityPlayer.gameProfile.id == currentAssasinationTarget || entityPlayer.gameProfile.id == currentAssasin) {
                 return Color4b(203, 9, 9)
             }
         } else {

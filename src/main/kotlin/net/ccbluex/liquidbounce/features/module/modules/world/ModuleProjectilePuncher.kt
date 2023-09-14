@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
+import net.minecraft.util.math.Vec3d
 
 /**
  * ProjectilePuncher module
@@ -50,6 +51,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private val cps by intRange("CPS", 5..8, 1..20)
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
     private val targetTracker = tree(TargetTracker())
@@ -57,7 +59,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     // Rotation
     private val rotations = RotationsConfigurable()
 
-    private val cpsTimer = CpsScheduler()
+    private val cpsTimer = tree(CpsScheduler())
 
     override fun disable() {
         targetTracker.cleanup()
@@ -81,7 +83,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             )
         }, cps)
 
-        if (clicks > 0) {
+        repeat(clicks) {
             attackEntity(target)
         }
     }
@@ -99,7 +101,18 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                 continue
             }
 
-            if (entity.squaredBoxedDistanceTo(player) > rangeSquared) {
+            val distance = entity.squaredBoxedDistanceTo(player)
+
+            val entityPrediction = Vec3d(
+                entity.x - entity.prevX, entity.y - entity.prevY, entity.z - entity.prevZ
+            )
+
+            // Avoid fireball if its speed-predicted next position goes further than the normal distance.
+            // Useful in preventing the user from changing their own thrown fireball's direction
+            if (distance > rangeSquared || entity is FireballEntity && (entity.age <= 1 && entityPrediction == Vec3d.ZERO || entity.box.offset(
+                    entityPrediction
+                ).squaredBoxedDistanceTo(player) > distance)
+            ) {
                 continue
             }
 
@@ -112,7 +125,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             targetTracker.lock(entity)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break
         }
     }

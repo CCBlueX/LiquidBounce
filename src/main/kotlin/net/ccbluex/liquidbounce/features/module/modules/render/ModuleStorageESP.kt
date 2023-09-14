@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,21 +20,15 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
-import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.utils.drawBoxNew
-import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
-import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.block.entity.*
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -71,39 +65,35 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
         private val outline by boolean("Outline", true)
 
-        val box = drawBoxNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
+        // todo: use box of block, not hardcoded
+        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
-        val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
-
-        val tickHandler = handler<EngineRenderEvent> { event ->
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
             val blocksToRender = locations.entries.filter { it.value.shouldRender(it.key) }
 
-            val instanceBuffer = PositionColorVertexFormat()
-            val instanceBufferOutline = PositionColorVertexFormat()
+            renderEnvironment(matrixStack) {
+                for ((pos, type) in blocksToRender) {
+                    val color = type.color
 
-            instanceBuffer.initBuffer(blocksToRender.size)
-            instanceBufferOutline.initBuffer(blocksToRender.size)
+                    val vec3 = Vec3(pos)
 
-            for ((pos, type) in blocksToRender) {
-                val base = type.color
+                    val baseColor = color.alpha(50)
+                    val outlineColor = color.alpha(100)
 
-                val baseColor = Color4b(base.r, base.g, base.b, 50)
-                val outlineColor = Color4b(base.r, base.g, base.b, 100)
+                    withPosition(vec3) {
+                        withColor(baseColor) {
+                            drawSolidBox(box)
+                        }
 
-                val vec3 = Vec3(pos)
-
-                instanceBuffer.putVertex { this.position = vec3; this.color = baseColor }
-                instanceBufferOutline.putVertex { this.position = vec3; this.color = outlineColor }
+                        if (outline) {
+                            withColor(outlineColor) {
+                                drawOutlinedBox(box)
+                            }
+                        }
+                    }
+                }
             }
-
-            RenderEngine.enqueueForRendering(
-                RenderEngine.CAMERA_VIEW_LAYER,
-                espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
-            )
-            RenderEngine.enqueueForRendering(
-                RenderEngine.CAMERA_VIEW_LAYER,
-                espBoxInstancedOutlineRenderTask(instanceBufferOutline, boxOutline.first, boxOutline.second)
-            )
         }
 
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ open class Module(
             notification(
                 if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
                 this.name,
-                NotificationEvent.Severity.INFO
+                if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
             )
 
             // Ignore handleEvents condition to prevent enabled modules from freezing post game load
@@ -89,7 +89,7 @@ open class Module(
         }.onFailure {
             // Log error
             logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
-            // In case of an error module should stay disabled
+            // In case of an error, module should stay disabled
             throw it
         }
 

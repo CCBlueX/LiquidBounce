@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     * Hook move function at HEAD and call out move event, which is able to stop the cancel the execution.
      */
     @Inject(method = "move", at = @At("HEAD"))
     private void hookMove(MovementType type, Vec3d movement, CallbackInfo callbackInfo) {
@@ -146,7 +146,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook sprint affect from NoSlow module
+     * Hook sprint effect from NoSlow module
      */
     @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
     private boolean hookSprintAffectStart(ClientPlayerEntity playerEntity) {

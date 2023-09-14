@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.render.engine.utils
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
 
 /**
- * Provides a guard for IDs provided by OpenGL which handles freeing of it
+ * Provides a guard for IDs provided by OpenGL, which handles freeing of it
  *
  * @param deletionFunction A function that is called when the object should be deallocated
  */

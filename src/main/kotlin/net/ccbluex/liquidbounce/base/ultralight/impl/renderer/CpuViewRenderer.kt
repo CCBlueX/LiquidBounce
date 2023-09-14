@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.UltralightViewConfig
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.util.math.MatrixStack
 import org.lwjgl.opengl.GL12.*
 import java.nio.ByteBuffer
 
@@ -36,7 +36,7 @@ import java.nio.ByteBuffer
  */
 class CpuViewRenderer : ViewRenderer {
 
-    private var glTexture = -1
+    private val glTexture by lazy { createGlTexture() }
 
     override fun setupConfig(viewConfig: UltralightViewConfig) {
         // CPU rendering is not accelerated
@@ -44,18 +44,14 @@ class CpuViewRenderer : ViewRenderer {
     }
 
     override fun delete() {
-        glDeleteTextures(glTexture)
-        glTexture = -1
+        // Delete texture
+        RenderSystem.deleteTexture(glTexture)
     }
 
     /**
      * Render the current view
      */
-    override fun render(view: UltralightView, matrices: MatrixStack) {
-        if (glTexture == -1) {
-            createGlTexture()
-        }
-
+    override fun render(view: UltralightView, context: DrawContext) {
         // As we are using the CPU renderer, draw with a bitmap (we did not set a custom surface)
         val surface = view.surface() as UltralightBitmapSurface
         val bitmap = surface.bitmap()
@@ -149,14 +145,17 @@ class CpuViewRenderer : ViewRenderer {
     /**
      * Sets up the OpenGL texture for rendering
      */
-    private fun createGlTexture() {
-        glTexture = glGenTextures()
+    private fun createGlTexture(): Int {
+        val glTexture = glGenTextures()
+
         glBindTexture(GL_TEXTURE_2D, glTexture)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glBindTexture(GL_TEXTURE_2D, 0)
+
+        return glTexture
     }
 
 }

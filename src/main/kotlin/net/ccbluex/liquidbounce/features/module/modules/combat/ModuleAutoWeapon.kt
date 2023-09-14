@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,22 +20,18 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.PreferredWeapon.*
 import net.ccbluex.liquidbounce.features.module.modules.player.WeightedSwordItem.Companion.DAMAGE_ESTIMATOR
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.enchantment.Enchantments.FIRE_ASPECT
 import net.minecraft.enchantment.Enchantments.KNOCKBACK
-import net.minecraft.item.AxeItem
-import net.minecraft.item.PickaxeItem
-import net.minecraft.item.ShovelItem
-import net.minecraft.item.SwordItem
-import net.minecraft.item.TridentItem
+import net.minecraft.item.*
 
 /**
  * AutoWeapon module
@@ -45,12 +41,7 @@ import net.minecraft.item.TridentItem
 object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
 
     enum class PreferredWeapon(override val choiceName: String) : NamedChoice {
-        ANY("Any"),
-        AXE("Axe"),
-        PICKAXE("Pickaxe"),
-        SHOVEL("Shovel"),
-        SWORD("Sword"),
-        TRIDENT("Trident");
+        ANY("Any"), AXE("Axe"), PICKAXE("Pickaxe"), SHOVEL("Shovel"), SWORD("Sword"), TRIDENT("Trident");
     }
 
     // Preferred type of weapon e.g. a shovel (ANY)
@@ -75,71 +66,44 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
      */
     private val slot by int("Slot", 0, 0..8)
 
-    // Swap the slot of the previous item
-    private val swapPrevious by boolean("SwapPrevious", false)
-
-    // Time (in ticks) to swap to the previous slot (0.5s - 2.5s)
-    private val time by int("Time", 25, 10..50)
-
-    // Time left to swap
-    private var leftTime = 0
-
-    // Previous slot
-    private var prev = 0
+    private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100)
 
     val attackHandler = handler<AttackEvent> {
         val inventory = player.inventory
-        if (swapPrevious) {
-            leftTime = time
-        }
         val index = if (search) {
-            val (hotbarSlot, _) = (0..8)
-                .map { Pair(it, inventory.getStack(it)) }
-                .filter {
-                    val stack = it.second
-                    if (stack.isNothing()
-                        || (!player.isCreative && stack.damage >= (stack.maxDamage - 2) && ignoreDurability)
-                        || (stack.getEnchantment(KNOCKBACK) != 0 && ignoreKnockback)
-                    ) {
-                        return@filter false
-                    }
-                    val item = stack.item
-                    when (preferredWeapon) {
-                        ANY -> true
-                        AXE -> item is AxeItem
-                        PICKAXE -> item is PickaxeItem
-                        SHOVEL -> item is ShovelItem
-                        SWORD -> item is SwordItem
-                        TRIDENT -> item is TridentItem
-                    }
+            val (hotbarSlot, stack) = (0..8).map { Pair(it, inventory.getStack(it)) }.filter {
+                val stack = it.second
+                if (stack.isNothing() || (!player.isCreative && stack.damage >= (stack.maxDamage - 2) && ignoreDurability) || (stack.getEnchantment(
+                        KNOCKBACK
+                    ) != 0 && ignoreKnockback)
+                ) {
+                    return@filter false
                 }
-                .maxByOrNull {
-                    val stack = it.second
-                    stack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(stack)
-                        + stack.getEnchantment(FIRE_ASPECT)) * 4.0f * 0.625f * 0.9f
-                } ?: return@handler
+                val item = stack.item
+                when (preferredWeapon) {
+                    ANY -> true
+                    AXE -> item is AxeItem
+                    PICKAXE -> item is PickaxeItem
+                    SHOVEL -> item is ShovelItem
+                    SWORD -> item is SwordItem
+                    TRIDENT -> item is TridentItem
+                }
+            }.maxByOrNull {
+                val stack = it.second
+                stack.getAttackDamage()
+            } ?: return@handler
+            // no need to switch
+            if (stack.getAttackDamage() == player.inventory.mainHandStack.getAttackDamage()) return@handler
             hotbarSlot
         } else {
             slot
         }
-        if (inventory.selectedSlot == index) {
-            return@handler
-        }
-        prev = inventory.selectedSlot
-        inventory.selectedSlot = index
-        inventory.updateItems()
+        SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
     }
 
-    val playerTickHandler = handler<PlayerTickEvent> {
-        if (prev == -1) {
-            return@handler
-        }
-        if (leftTime > 0) {
-            if (leftTime == 1) {
-                player.inventory.selectedSlot = prev
-                prev = -1
-            }
-            leftTime--
-        }
+    private fun ItemStack.getAttackDamage(): Float {
+        return this.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(this) + this.getEnchantment(
+            FIRE_ASPECT
+        )) * 4.0f * 0.625f * 0.9f
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,9 +47,11 @@ public interface MixinBlockView {
     @Shadow
     BlockState getBlockState(BlockPos pos);
 
-    @Shadow @Nullable BlockHitResult raycastBlock(Vec3d start, Vec3d end, BlockPos pos, VoxelShape shape, BlockState state);
+    @Shadow
+    @Nullable BlockHitResult raycastBlock(Vec3d start, Vec3d end, BlockPos pos, VoxelShape shape, BlockState state);
 
-    @Shadow FluidState getFluidState(BlockPos pos);
+    @Shadow
+    FluidState getFluidState(BlockPos pos);
 
     /**
      * @author superblaubeere27

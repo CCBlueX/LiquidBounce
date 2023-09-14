@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,11 +35,10 @@ class VertexBufferObject(val target: VBOTarget, val storageType: VBOStorageType)
     /**
      * OpenGL's id for the buffer
      */
-    val id: Int
+    val id: Int = GL20.glGenBuffers()
 
     init {
         // Get an id for our VBO
-        id = GL20.glGenBuffers()
     }
 
     /**

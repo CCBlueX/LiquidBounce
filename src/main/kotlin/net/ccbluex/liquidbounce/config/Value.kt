@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import com.mojang.brigadier.StringReader
+import me.liuli.elixir.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.ValueChangedEvent
@@ -240,7 +241,11 @@ enum class ValueType {
 
 enum class ListValueType(val type: Class<*>?) {
     Block(net.minecraft.block.Block::class.java),
-    Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java),
-    Friend(FriendManager.Friend::class.java), Proxy(ProxyManager.Proxy::class.java),
-    FontDetail(Fonts.FontDetail::class.java), None(null)
+    Item(net.minecraft.item.Item::class.java),
+    String(kotlin.String::class.java),
+    Friend(FriendManager.Friend::class.java),
+    Proxy(ProxyManager.Proxy::class.java),
+    Account(MinecraftAccount::class.java),
+    FontDetail(Fonts.FontDetail::class.java),
+    None(null)
 }

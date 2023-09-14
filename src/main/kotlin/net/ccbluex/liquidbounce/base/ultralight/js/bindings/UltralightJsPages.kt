@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,15 @@ object UltralightJsPages {
         JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.setScreen(SelectWorldScreen(it)) },
         JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.setScreen(MultiplayerScreen(it)) },
         JsScreen("options", OptionsScreen::class.java) { mc.setScreen(OptionsScreen(it, mc.options)) },
-        JsScreen("language_options", LanguageOptionsScreen::class.java) { mc.setScreen(LanguageOptionsScreen(it, mc.options, mc.languageManager)) },
+        JsScreen("language_options", LanguageOptionsScreen::class.java) {
+            mc.setScreen(
+                LanguageOptionsScreen(
+                    it,
+                    mc.options,
+                    mc.languageManager
+                )
+            )
+        },
         JsScreen("multiplayer_realms", RealmsMainScreen::class.java) { mc.setScreen(RealmsMainScreen(it)) }
     )
 

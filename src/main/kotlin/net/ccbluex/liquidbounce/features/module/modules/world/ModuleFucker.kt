@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,6 +64,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
     private val delay by int("SwitchDelay", 0, 0..20)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Rotation
     private val rotations = RotationsConfigurable()
@@ -108,9 +109,17 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 val direction = rayTraceResult.side
 
                 if (forceImmediateBreak) {
-                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction))
+                    network.sendPacket(
+                        PlayerActionC2SPacket(
+                            PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction
+                        )
+                    )
                     swingHand()
-                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction))
+                    network.sendPacket(
+                        PlayerActionC2SPacket(
+                            PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction
+                        )
+                    )
                 } else {
                     if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                         swingHand()
@@ -154,7 +163,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // We got a free angle at the block? Cool.
         if (rt != null) {
             val (rotation, _) = rt
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
 
             this.currentTarget = DestroyerTarget(pos, this.action)
             return
@@ -179,7 +188,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
 
     enum class DestroyAction(override val choiceName: String) : NamedChoice {
-        DESTROY("Destroy"),
-        USE("Use")
+        DESTROY("Destroy"), USE("Use")
     }
 }

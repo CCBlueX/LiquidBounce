@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(RealmsMainScreen.class)
 public class MixinRealmsMainScreen {
 
-    @Shadow private static Screen realmsGenericErrorScreen;
+    @Shadow
+    private static Screen realmsGenericErrorScreen;
 
     @Inject(method = "init", at = @At("HEAD"))
     private void hookGenericErrorScreenReset(final CallbackInfo callbackInfo) {

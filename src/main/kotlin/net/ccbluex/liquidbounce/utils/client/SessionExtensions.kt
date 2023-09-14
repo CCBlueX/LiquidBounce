@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,70 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
-import me.liuli.elixir.account.MicrosoftAccount
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.SessionEvent
 import net.minecraft.client.util.Session
 import java.net.Proxy
 import java.util.*
 
+/**
+ * Login to a Minecraft account
+ *
+ * @param username Username of the account
+ * @param password Password of the account
+ * @param environment Environment of the account
+ * @return Pair of the session and the session service
+ *
+ * @throws AuthenticationUnavailableException If the authentication service is unavailable
+ * @throws AuthenticationException If the account data is invalid
+ * @throws Exception If an unknown issue occurs
+ */
+private fun MinecraftSessionService.login(username: String, password: String = "", environment: Environment): Pair<Session, MinecraftSessionService?> {
+    // If the password is blank, we assume that the account is cracked
+    if (password.isBlank()) {
+        return loginCracked(username) to null
+    }
+
+    // Create a new authentication service
+    // We could use mc.sessionService, but we want to use our own environment.
+    val authenticationService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", environment)
+
+    // Create a new user authentication
+    val userAuthentication = authenticationService.createUserAuthentication(Agent.MINECRAFT)
+    userAuthentication.setUsername(username)
+    userAuthentication.setPassword(password)
+
+    // Logging in
+    userAuthentication.logIn()
+
+    // Create a new session
+    return Session(
+        userAuthentication.selectedProfile.name,
+        userAuthentication.selectedProfile.id.toString(),
+        userAuthentication.authenticatedToken,
+        Optional.empty(),
+        Optional.empty(),
+        Session.AccountType.MOJANG
+    ) to authenticationService.createMinecraftSessionService()
+}
+
+fun MinecraftSessionService.loginMojang(email: String, password: String) =
+    login(email, password, YggdrasilEnvironment.PROD.environment)
+
+fun MinecraftSessionService.loginAltening(account: String) =
+    login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
+
+fun MinecraftSessionService.loginCracked(username: String) = Session(
+    username,
+    MojangApi.getUUID(username),
+    "-",
+    Optional.empty(),
+    Optional.empty(),
+    Session.AccountType.LEGACY
+)
+
+/**
+ * Account Generator environments
+ */
 enum class GenEnvironments(
     private val authHost: String,
     private val accountsHost: String,
@@ -62,103 +118,4 @@ enum class GenEnvironments(
         .add("name='" + getName() + "'")
         .toString()
 
-}
-
-private fun MinecraftSessionService.login(username: String, password: String = "", environment: Environment): LoginResult {
-    if (password.isBlank()) {
-        return loginCracked(username)
-    }
-
-    val authenticationService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", environment)
-    val userAuthentication = authenticationService.createUserAuthentication(Agent.MINECRAFT)
-    userAuthentication.setUsername(username)
-    userAuthentication.setPassword(password)
-
-    return try {
-        userAuthentication.logIn()
-        mc.session = Session(
-            userAuthentication.selectedProfile.name,
-            userAuthentication.selectedProfile.id.toString(),
-            userAuthentication.authenticatedToken,
-            Optional.empty(),
-            Optional.empty(),
-            Session.AccountType.MOJANG
-        )
-        mc.sessionService = authenticationService.createMinecraftSessionService()
-        EventManager.callEvent(SessionEvent())
-        LoginResult.LOGGED_IN
-    } catch (exception: AuthenticationUnavailableException) {
-        LoginResult.UNAVAILABLE_SERVICE
-    } catch (exception: AuthenticationException) {
-        val message = exception.message ?: return LoginResult.UNKNOWN_ISSUE
-
-        when {
-            message.contains("The provided token is invalid", ignoreCase = true) -> LoginResult.INVALID_GENERATOR_TOKEN
-            message.contains("invalid username or password.", ignoreCase = true) -> LoginResult.INVALID_ACCOUNT_DATA
-            message.contains("account migrated", ignoreCase = true) -> LoginResult.MIGRATED
-            else -> LoginResult.UNAVAILABLE_SERVICE
-        }
-    }
-}
-
-fun MinecraftSessionService.loginMojang(email: String, password: String) =
-    login(email, password, YggdrasilEnvironment.PROD.environment)
-
-fun MinecraftSessionService.loginAltening(account: String) =
-    login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
-
-fun MinecraftSessionService.loginCracked(username: String): LoginResult {
-    mc.session = Session(
-        username,
-        MojangApi.getUUID(username),
-        "-",
-        Optional.empty(),
-        Optional.empty(),
-        Session.AccountType.LEGACY
-    )
-    EventManager.callEvent(SessionEvent())
-    return LoginResult.LOGGED_IN
-}
-
-fun MinecraftSessionService.loginMicrosoft() {
-    MicrosoftAccount.buildFromOpenBrowser(object : MicrosoftAccount.OAuthHandler {
-
-        /**
-         * Called when the user has cancelled the authentication process or the thread has been interrupted
-         */
-        override fun authError(error: String) {
-            logger.error("auth error", error)
-        }
-
-        /**
-         * Called when the user has completed authentication
-         */
-        override fun authResult(account: MicrosoftAccount) {
-            mc.session = Session(
-                account.name,
-                account.session.uuid,
-                account.session.token,
-                Optional.empty(),
-                Optional.empty(),
-                Session.AccountType.MSA
-            )
-        }
-
-        /**
-         * Called when the server has prepared the user for authentication
-         */
-        override fun openUrl(url: String) {
-            browseUrl(url)
-        }
-
-    })
-}
-
-enum class LoginResult(val readable: String) {
-    LOGGED_IN("Successfully logged in"),
-    UNAVAILABLE_SERVICE("Authentication service unavailable"),
-    INVALID_ACCOUNT_DATA("Invalid username or password"),
-    MIGRATED("Account migrated"),
-    UNKNOWN_ISSUE("Unknown issue"),
-    INVALID_GENERATOR_TOKEN("Invalid account token")
 }

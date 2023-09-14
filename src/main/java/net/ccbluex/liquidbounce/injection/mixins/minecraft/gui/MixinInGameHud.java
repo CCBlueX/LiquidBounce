@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.OverlayRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -48,13 +48,13 @@ public class MixinInGameHud {
     /**
      * Hook render hud event at the top layer
      */
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/util/math/MatrixStack;)V", shift = At.Shift.AFTER))
-    private void hookRenderEvent(MatrixStack matrices, float tickDelta, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new OverlayRenderEvent(matrices, tickDelta));
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
+    private void hookRenderEvent(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickDelta));
     }
 
     @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
-    private void injectPumpkinBlur(MatrixStack matrices, Identifier texture, float opacity, CallbackInfo callback) {
+    private void injectPumpkinBlur(DrawContext context, Identifier texture, float opacity, CallbackInfo callback) {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
         if (!module.getEnabled()) {
             return;

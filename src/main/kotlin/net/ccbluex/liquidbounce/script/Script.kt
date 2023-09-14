@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ class Script(val scriptFile: File) {
     private val registeredModules = mutableListOf<Module>()
 
     /**
-     * Initialization of script
+     * Initialization of scripts
      */
     fun initScript() {
         // Evaluate script
@@ -142,7 +142,8 @@ class Script(val scriptFile: File) {
     fun registerCommand(commandObject: Map<String, Any>, callback: (CommandBuilder) -> Unit) {
         val command = CommandBuilder
             .begin(commandObject["name"] as String)
-            .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }.toTypedArray())
+            .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }
+                .toTypedArray())
             .apply { callback(this) }
             .build()
 

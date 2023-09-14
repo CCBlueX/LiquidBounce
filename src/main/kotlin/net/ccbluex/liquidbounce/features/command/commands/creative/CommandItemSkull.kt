@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,12 @@ object CommandItemSkull {
                 }
 
                 mc.player!!.inventory!!.setStack(emptySlot, itemStack)
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack))
+                mc.networkHandler!!.sendPacket(
+                    CreativeInventoryActionC2SPacket(
+                        if (emptySlot < 9) emptySlot + 36 else emptySlot,
+                        itemStack
+                    )
+                )
                 chat(regular(command.result("skullGiven", variable(name))))
             }
             .build()

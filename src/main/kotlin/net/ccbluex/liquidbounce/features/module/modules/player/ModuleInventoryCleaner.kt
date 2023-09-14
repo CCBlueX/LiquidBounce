@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -150,7 +150,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         ) != true) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
-                            wait(inventoryConstraints.delay.random())
+                            wait { inventoryConstraints.delay.random() }
 
                             return@repeatable
                         }
@@ -171,7 +171,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             }
 
             if (executeAction(i, 1, SlotActionType.THROW)) {
-                wait(inventoryConstraints.delay.random())
+                wait { inventoryConstraints.delay.random() }
 
                 return@repeatable
             }
@@ -592,7 +592,7 @@ class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         private val COMPARATOR = ComparatorChain<WeightedBlockItem>({ o1, o2 ->
             compareByCondition(
                 o1, o2
-            ) { (it.itemStack.item as BlockItem).block.defaultState.material.isSolid }
+            ) { (it.itemStack.item as BlockItem).block.defaultState.isSolid && !notABlock.contains((it.itemStack.item as BlockItem).block) }
         }, { o1, o2 ->
             compareByCondition(
                 o1, o2

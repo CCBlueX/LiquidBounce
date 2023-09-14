@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,10 @@ inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -> Boolea
 /**
  * Search blocks around the player in a specific [radius]
  */
-inline fun searchBlocksInRadius(radius: Float, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+inline fun searchBlocksInRadius(
+    radius: Float,
+    filter: (BlockPos, BlockState) -> Boolean
+): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
     val thePlayer = mc.player ?: return blocks

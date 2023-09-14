@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.Util
 import java.util.*
 
@@ -78,6 +77,10 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         }
     }
 
+    private val sessionChange = handler<SessionEvent> {
+        reconnect()
+    }
+
     fun connectAsync() {
         if (!enabled) {
             return
@@ -97,7 +100,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         client.channel = null
     }
 
-    fun reconnect(async: Boolean = false) {
+    fun reconnect() {
         disconnect()
         connectAsync()
     }
@@ -210,7 +213,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         jwtToken = jwt
 
         // Reconnect to chat server
-        reconnect(async = true)
+        reconnect()
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,16 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
-import net.ccbluex.liquidbounce.render.engine.*
-import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
-import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
+import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.math.times
@@ -45,35 +46,25 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
     var rotationPitch: Pair<Float, Float> = Pair(0f, 0f)
 
-    val renderHandler = handler<EngineRenderEvent> {
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+
         if (!showRotationVector) {
             return@handler
         }
 
         val serverRotation = RotationManager.serverRotation
-
-        val vertexFormat = PositionColorVertexFormat()
-
-        vertexFormat.initBuffer(2)
-
         val camera = mc.gameRenderer.camera
 
-        val eyeVector = Vec3(0.0, 0.0, 1.0).rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos) + Vec3(0.0, 0.0, -1.0)
+        val eyeVector = Vec3(0.0, 0.0, 1.0)
+            .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
+            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)
 
-        vertexFormat.putVertex { this.position = eyeVector; this.color = Color4b.WHITE }
-        vertexFormat.putVertex {
-            this.position = eyeVector + Vec3(serverRotation.rotationVec * 2.0); this.color = Color4b.WHITE
+        renderEnvironment(matrixStack) {
+            withColor(Color4b.WHITE) {
+                drawLineStrip(eyeVector, eyeVector + Vec3(serverRotation.rotationVec * 2.0))
+            }
         }
-
-        RenderEngine.enqueueForRendering(
-            RenderEngine.CAMERA_VIEW_LAYER, VertexFormatRenderTask(
-                vertexFormat,
-                PrimitiveType.LineStrip,
-                ColoredPrimitiveShader,
-                state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)
-            )
-        )
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.*
 import org.apache.commons.lang3.RandomUtils
@@ -46,7 +48,9 @@ import kotlin.math.sqrt
 class RotationsConfigurable : Configurable("Rotations") {
     val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
     val fixVelocity by boolean("FixVelocity", true)
-    val threshold by float("Threshold", 2f, 0f..50f)
+    val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
+    val ticksUntilReset by int("TicksUntilReset", 5, 1..30)
+    val silent by boolean("Silent", true)
 }
 
 /**
@@ -61,6 +65,7 @@ object RotationManager : Listenable {
     // Current rotation
     var currentRotation: Rotation? = null
     var ticksUntilReset: Int = 0
+    var ignoreOpenInventory = false
 
     // Active configurable
     var activeConfigurable: RotationsConfigurable? = null
@@ -215,67 +220,18 @@ object RotationManager : Listenable {
         return false
     }
 
-//    /**
-//     * Find the best spot of the upper side of the block
-//     */
-//    fun canSeeBlockTop(
-//        eyes: Vec3d,
-//        pos: BlockPos,
-//        range: Double,
-//        wallsRange: Double
-//    ): VecRotation? {
-//        val rangeSquared = range * range
-//        val wallsRangeSquared = wallsRange * wallsRange
-//
-//        var visibleRot: VecRotation? = null
-//        val notVisibleRot: VecRotation? = null
-//
-//        val minX = pos.x.toDouble()
-//        val y = pos.y.toDouble()
-//        val minZ = pos.z.toDouble()
-//
-//        for (x in 0.1..0.9 step 0.1) {
-//            for (z in 0.1..0.9 step 0.1) {
-//                val vec3 = Vec3d(
-//                    minX + x,
-//                    y,
-//                    minZ + z
-//                )
-//
-//                // skip because of out of range
-//                val distance = eyes.squaredDistanceTo(vec3)
-//
-//                if (distance > rangeSquared) {
-//                    continue
-//                }
-//
-//                // check if target is visible to eyes
-//                val visible = facingBlock(eyes, vec3, pos)
-//
-//                // skip because not visible in range
-//                if (!visible && distance > wallsRangeSquared) {
-//                    continue
-//                }
-//
-//                visibleRot = VecRotation(makeRotation(vec3, eyes), vec3)
-//            }
-//
-//        }
-//
-//        return visibleRot ?: notVisibleRot
-//    }
+    fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
+        aimAt(makeRotation(vec, eyes), openInventory, configurable)
 
-    fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable) =
-        aimAt(makeRotation(vec, eyes), ticks, configurable)
-
-    fun aimAt(rotation: Rotation, ticks: Int = 5, configurable: RotationsConfigurable) {
+    fun aimAt(rotation: Rotation, openInventory: Boolean = false, configurable: RotationsConfigurable) {
         if (!shouldUpdate()) {
             return
         }
 
         activeConfigurable = configurable
         targetRotation = rotation
-        ticksUntilReset = ticks
+        ticksUntilReset = configurable.ticksUntilReset
+        ignoreOpenInventory = openInventory
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -289,14 +245,19 @@ object RotationManager : Listenable {
         )
     }
 
+    val gcd: Double
+        get() {
+            val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
+            return f * f * f * 8.0 * 0.15F
+        }
+
     /**
      * Update current rotation to new rotation step
      */
     fun update() {
-        // Update reset ticks
-        if (ticksUntilReset > 0) {
-            ticksUntilReset--
-        }
+        // Prevents any rotation changes, when inventory is opened
+        val canRotate =
+            (mc.currentScreen !is InventoryScreen && mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
 
         // Update patterns
         for (pattern in AIMING_PATTERNS) {
@@ -304,13 +265,18 @@ object RotationManager : Listenable {
         }
 
         // Update rotations
-        val turnSpeed = RandomUtils.nextFloat(activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive)
+        val speed = RandomUtils.nextFloat(
+            activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive
+        )
 
         val playerRotation = mc.player?.rotation ?: return
 
         if (ticksUntilReset == 0 || !shouldUpdate()) {
 
-            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) < activeConfigurable!!.threshold) {
+            if (rotationDifference(
+                    currentRotation ?: serverRotation, playerRotation
+                ) < activeConfigurable!!.resetThreshold || !activeConfigurable!!.silent
+            ) {
                 ticksUntilReset = -1
 
                 targetRotation = null
@@ -325,13 +291,28 @@ object RotationManager : Listenable {
                 return
             }
 
-            currentRotation =
-                limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity()
+            if (canRotate) {
+                limitAngleChange(currentRotation ?: serverRotation, playerRotation, speed).fixedSensitivity().let {
+                    currentRotation = it
+                    if (!activeConfigurable!!.silent) mc.player!!.applyRotation(it)
+                }
+            }
             return
         }
-        targetRotation?.let { targetRotation ->
-            currentRotation =
-                limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed).fixedSensitivity()
+        if (canRotate) {
+            targetRotation?.let { targetRotation ->
+                limitAngleChange(
+                    currentRotation ?: playerRotation, targetRotation, speed
+                ).fixedSensitivity().let {
+                    currentRotation = it
+                    if (!activeConfigurable!!.silent) mc.player!!.applyRotation(it)
+                }
+            }
+        }
+
+        // Update reset ticks
+        if (ticksUntilReset > 0) {
+            ticksUntilReset--
         }
     }
 
@@ -366,14 +347,14 @@ object RotationManager : Listenable {
     /**
      * Limit your rotations
      */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, speed: Float): Rotation {
         val yawDifference = angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
 
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * turnSpeed
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * turnSpeed
+        val straightLineYaw = abs(yawDifference / rotationDifference) * speed
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * speed
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
@@ -384,7 +365,7 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two angle points
      */
-    private fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
+    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (activeConfigurable?.fixVelocity == true) {
