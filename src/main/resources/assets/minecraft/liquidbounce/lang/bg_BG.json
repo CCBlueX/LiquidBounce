@@ -1,0 +1,324 @@
+{
+    "locale": "bg_BG",
+    "contributors": [
+        "pepeshki"
+    ],
+    "translations": {
+        "menu.altManager": "Alt Мениджър",
+        "menu.mods": "Модове",
+        "menu.serverStatus": "Статус на сървъра",
+        "menu.configuration": "Конфигурация",
+        "menu.contributors": "Сътрудници",
+
+        "notification.moduleEnabled": "%s се активира",
+        "notification.moduleDisabled": "%s се деактивира",
+
+        "module.aimbot.description": "Автоматично се обръща към избрани обекти около вас.",
+
+        "module.autoArmor.description": "Автоматично оборудва най-добрата броня в инвентара ви.",
+
+        "module.autoBow.description": "Автоматично изстрелва стрела, когато лъкът ви е напълно зареден.",
+
+        "module.autoClicker.description": "Постоянно щрака при задържане на бутон на мишката.",
+
+        "module.autoLeave.description": "Автоматично напуска сървъра, когато здравето ви е ниско.",
+
+        "module.autoPot.description": "Автоматично хвърля лечебни отвари. (pot-ове)",
+
+        "module.autoRod.description": "Автоматично използва въдицата в PvP",
+
+        "module.autoSoup.description": "Автоматично яде супа, когато здравето ви е ниско.",
+
+        "module.autoWeapon.description": "Автоматично избира най-доброто оръжие от hotbar-а.",
+
+        "module.backtrack.description": "Позволява ви да удряте играчи, като ги атакувате на техните предишни кеширани позиции.",
+
+        "module.bowAimbot.description": "Автоматично се прицелва в играчите, когато се използва лък.",
+
+        "module.criticals.description": "Автоматично нанася критични удари.",
+
+        "module.fastBow.description": "Превръща лъка ви в картечница.",
+
+        "module.hitBox.description": "Прави хитбоксовете на цели по-големи.",
+
+        "module.ignite.description": "Автоматично подпалва цели около вас.",
+
+        "module.killAura.description": "Автоматично атакува цели около вас.",
+
+        "module.noFriends.description": "Позволява ви да атакувате приятели.",
+
+        "module.superKnockback.description": "Увеличава отхвърлянето, раздадено на други субекти.",
+
+        "module.teleportHit.description": "Позволява да се удрят обекти от далеч.",
+
+        "module.tNTBlock.description": "Автоматично блокира с меча ви, когато TNT експлодира около вас.",
+
+        "module.trigger.description": "Автоматично атакува обекта, който гледате.",
+
+        "module.velocity.description": "Позволява ви да промените количеството отхвърляне, което приемате.",
+
+        "module.abortBreaking.description": "Позволява ви да прекъснете прекъсването, без да губите напредъка си при прекъсване.",
+
+        "module.ambience.description": "Променете вашето световно време и времето от страна на клиента.",
+
+        "module.antiHunger.description": "Предпазва от огладняване.",
+
+        "module.bedGodMode.description": "Позволява ви да се разхождате легнали в леглото. (За 1.9)",
+
+        "module.clip.description": "Позволява ви да 'клипвате' пред блокове.",
+         
+        "module.airJump.description": "Позволява ви да скачате във въздуха",
+        
+        "module.airLadder.description": "Позволява ви да се изкачвате по стълби/лиани, без да ги докосвате.",
+        
+        "module.animations.description": "Персонализира вашата блокираща анимация.",
+        
+        "module.antiAFK.description": "Предотвратява да бъдете кикнати, защото сте AFK.",
+        
+        "module.antiBlind.description": "Отменя ефекта на слепотата (blindness) .",
+        
+        "module.antiBot.description": "Предотвратява KillAura да атакува AntiCheat ботове.",
+        
+        "module.antiCactus.description": "Предотвратява кактусите да ви навредят.",
+        
+        "module.antiFireball.description": "Автоматично отблъсква огнени топки от вас.",
+        
+        "module.atAllProvider.description": "Автоматично споменава всички на сървъра, когато използвате '@a' във вашето съобщение.",
+        
+        "module.attackEffects.description": "Покажете ефект, когато атакувате",
+        
+        "module.autoAccount.description": "Позволява за автоматично сменяне на акаунти.",
+        
+        "module.autoBreak.description": "Автоматично чупи блока, който гледате.",
+        
+        "module.autoFish.description": "Автоматично улавя риба при използване на въдица.",
+        
+        "module.autoRespawn.description": "Автоматично ви преражда, след като умрете.",
+        
+        "module.autoTool.description": "Автоматично избира най-добрия инструмент във вашия инвентар, за да изкопае блок.",
+        
+        "module.autoWalk.description": "Автоматично ви кара да ходите.",
+
+        "module.avoidHazards.description": "Не позволява да ходите в блокове, които може да са вредни за вас.",
+        
+        "module.blink.description": "Спира всички пакети за движение.",
+        
+        "module.blockESP.description": "Позволява ви да видите избран блок през стени.",
+        
+        "module.blockOverlay.description": "Позволява ви да промените дизайна на блоковото наслагване.",
+        
+        "module.blockWalk.description": "Позволява ви да ходите по непълни блокове.",
+
+        "module.breadcrumbs.description": "Оставя пътека зад теб.",
+        
+        "module.bufferSpeed.description": "Позволява ви да ходите по-бързо по плочи и стълби.",
+        
+        "module.bugUp.description": "Автоматично ви телепортира след падане на определено разстояние.",
+        
+        "module.cameraClip.description": "Позволява ви да виждате през стени в изглед от трето лице.",
+        
+        "module.chams.description": "Позволява ви да виждате цели през блокове.",
+        
+        "module.chestAura.description": "Автоматично отваря сандъци около вас.",
+        
+        "module.chestStealer.description": "Автоматично краде всички елементи от сандък.",
+        
+        "module.civBreak.description": "Позволява ви да прекъсвате блокове незабавно.",
+        
+        "module.clickGUI.description": "Отваря ClickGui.",
+        
+        "module.componentOnHover.description": "Позволява ви да виждате действието и стойността на компонентите на съобщението за чат, когато се въртите.",
+        
+        "module.consoleSpammer.description": "Спами конзолата на сървъра с грешки.",
+        
+        "module.damage.description": "Нанася щети на себе си.",
+        
+        "module.derp.description": "Прави го да изглежда така, сякаш сте се изричали наоколо.",
+        
+        "module.eSP.description": "Позволява ви да виждате цели през стени.",
+        
+        "module.eagle.description": "Прави те орел (известен още като FastBridge).",
+        
+        "module.fastBreak.description": "Позволява ви да нарушавате блокове по-бързо.",
+        
+        "module.fastClimb.description": "Позволява ви да се изкачвате по стълбите и лозите по-бързо.",
+        
+        "module.fastPlace.description": "Позволява ви да поставяте блокове по-бързо.",
+        
+        "module.fastStairs.description": "Позволява ви да се изкачвате по стълби по-бързо.",
+        
+        "module.fastUse.description": "Позволява ви да използвате артикули по-бързо.",
+        
+        "module.fly.description": "Позволява ви да летите в режим на оцеляване.",
+        
+        "module.forceUnicodeChat.description": "Позволява ви да изпращате съобщения на Unicode в чата.",
+        
+        "module.freeCam.description": "Позволява ви да се преместите от тялото си.",
+        
+        "module.freeze.description": "Позволява ви да останете заседнали в средния въздух.",
+        
+        "module.fucker.description": "Унищожава избрани блокове около вас. (иввестен още като IDNuker)",
+        
+        "module.fullbright.description": "Озарява света около вас.",
+        
+        "module.ghost.description": "Позволява ви да се разхождате с вашата среда, след като умрете.",
+        
+        "module.ghostHand.description": "Позволява ви да взаимодействате с избрани блокове през стени.",
+        
+        "module.godMode.description": "Прави ви на бог (за AAC)",
+        
+        "module.hUD.description": "Превключва видимост на HUD.",
+        
+        "module.highJump.description": "Ви позволява да скочите по-високо.",
+        
+        "module.iceSpeed.description": "Позволява ви да ходите по-бързо на лед.",
+    
+        "module.inventoryCleaner.description": "Автоматично изхвърля безполезни елементи.",
+        
+        "module.inventoryMove.description": "Позволява ви да ходите, докато е отворен инвентар.",
+        
+        "module.itemESP.description": "Позволява ви да виждате предмети през стени.",
+        
+        "module.itemTeleport.description": "Позволява ви да взимате предмети от далеч.",
+        
+        "module.keepAlive.description": "Опитва се да ви попречи да умрете.",
+        
+        "module.keepContainer.description": "Позволява ви да отворите бивш затворен контейнер за инвентаризация навсякъде. (Натиснете клавиша INSERT, за да отворите)",
+
+        "module.keyPearl.description": "Позволява ви да хвърлите Ender перла от вашия Hotbar, като използвате определен бутон.",
+
+        "module.kick.description": "Позволява ви да се кик-нете от сървър.",
+        
+        "module.ladderJump.description": "Прави ви по-бърз, когато докосвате стълба. (AAC)",
+        
+        "module.liquidChat.description": "Позволява ви да разговаряте с други потребители на Liquidbounce.",
+        
+        "module.liquidWalk.description": "Позволява ви да ходите по вода.",
+        
+        "module.liquids.description": "Ви позволява да общувате с течности.",
+        
+        "module.longJump.description": "Позволява ви да скочите по-нататък.",
+        
+        "module.midClick.description": "Позволява ви да добавите играч като приятел, като щракнете с средния бутон на мишката върху него.",
+        
+        "module.moreCarry.description": "Позволява ви да съхранявате артикули във вашите слотове слотове за крафтване.",
+        
+        "module.multiActions.description": "Позволява ви да използвате артикули, докато разбивате блокове.",
+        
+        "module.nameProtect.description": "Променя имената на играчите.",
+        
+        "module.nameTags.description": "Променя мащаба на имената, за да можете винаги да ги прочетете.",
+        
+        "module.noBob.description": "Деактивира ефекта на клатене при ходене.",
+        
+        "module.noBooks.description": "Блокира сървъра от отваряне на книги (принудителни реклами, ...)",
+        
+        "module.noClip.description": "Позволява ви свободно да се движите през стени (пясък трябва да пада на главата ви).",
+        
+        "module.noFOV.description": "Деактивира промените в FOV, причинени от скоростния ефект и т.н.",
+        
+        "module.noFall.description": "Предотвратява ви да нанасяте щети от падане.",
+        
+        "module.noFluid.description": "Игнорира течности като вода и лава.",
+        
+        "module.noHurtCam.description": "Деактивира нараняването на ефекта на камерата при нараняване.",
+        
+        "module.noJumpDelay.description": "Премахва забавянето между скоковете.",
+        
+        "module.noPitchLimit.description": "Позволява ви да завъртите главата си за неопределено време във всяка посока ..",
+        
+        "module.noRotateSet.description": "Предотвратява сървъра да върти главата ви.",
+        
+        "module.noScoreboard.description": "Деактивира таблото.",
+        
+        "module.noSlow.description": "Отменя ефектите на бавността, причинени от пясък на душите и използване на предмети.",
+        
+        "module.noSlowBreak.description": "Автоматично регулира скоростта на счупване при използване на модули, които влияят върху нея.",
+        
+        "module.noSwing.description": "Ефектът на люлеенето с деактивиране при удряне на образувание/добив на блок.",
+        
+        "module.noWeb.description": "Предотвратява ви да се забавите в паяжини.",
+        
+        "module.nuker.description": "Чупи всички блокове около вас.",
+        
+        "module.parkour.description": "Автоматично скача, когато достигате ръба на блок.",
+        
+        "module.perfectHorseJump.description": "Автоматично скача, когато скокът на кон се запълни напълно.",
+        
+        "module.phase.description": "Позволява ви да преминете през блокове.",
+        
+        "module.pingSpoof.description": "Прави вашия пинг до дадена стойност.",
+        
+        "module.plugins.description": "Ви позволява да видите кои приставки използва сървърът.",
+        
+        "module.portalMenu.description": "Позволява ви да отворите меню, докато сте в портал.",
+        
+        "module.potionSaver.description": "Замръзва всички ефекти на отвара, докато стоите неподвижно.",
+
+        "module.potionSpoof.description": "Позволява на играча да има ефекти на отвара, без всъщност да има отварата.",
+        
+        "module.projectiles.description": "Позволява ви да видите къде ще кацне стрелите.",
+        
+        "module.prophuntESP.description": "Позволява ви да видите прикрити играчи в пророка.",
+
+        "module.reach.description": "Увеличава обхвата ви.",
+        
+        "module.refill.description": "Попълва предмети като блокове и храна от инвентар до Hotbar.",
+        
+        "module.regen.description": "Регенерира здравето ви много по-бързо.",
+        
+        "module.resourcePackSpoof.description": "Пречи на сървърите да ви принудят да изтеглите техния пакет с ресурси.",
+        
+        "module.reverseStep.description": "Позволява ви да отстъпвате по-бързо блокове.",
+        
+        "module.rotations.description": "Позволява ви да виждате ротации на сървъра и тялото.",
+        
+        "module.safeWalk.description": "Предотвратява ви да падате, сякаш се промъквате.",
+        
+        "module.scaffold.description": "Автоматично поставя блокове под краката ви.",
+        
+        "module.serverCrasher.description": "Позволява ви да сринете определени сървъри.",
+        
+        "module.skinDerp.description": "Прави кожата ви мига (изисква многослойна кожа).",
+
+        "module.slimeJump.description": "Позволява ви да скочите по-високо на слузните блокове.",
+        
+        "module.sneak.description": "Автоматично се промъква през цялото време.",
+        
+        "module.spammer.description": "Спами чата с дадено съобщение.",
+        
+        "module.speed.description": "Ви позволява да се движите по -бързо.",
+        
+        "module.sprint.description": "Automatically sprints all the time.",
+
+        "module.step.description": "Позволява ви да засилвате блокове.",
+        
+        "module.storageESP.description": "Позволява ви да виждате сандъци и т.н. през стени.",
+        
+        "module.strafe.description": "Позволява ви свободно да се движите във въздуха.",
+        
+        "module.tNTESP.description": "Позволява ви да виждате запалени TNT блокове през стени.",
+        
+        "module.teams.description": "Предотвратява Killaura да атакува съотборници от екипа.",
+        
+        "module.teleport.description": "Ви позволява да се телепортирате наоколо.",
+
+        "module.timer.description": "Променя скоростта на цялата игра.",
+        
+        "module.tower.description": "Автоматично изгражда кула под вас.",
+        
+        "module.tracers.description": "Рисува линия към целите около вас.",
+        
+        "module.trueSight.description": "Ви позволява да виждате невидими образувания и бариери.",
+        
+        "module.vehicleOneHit.description": "Позволява ви да разбивате превозни средства с един удар.",
+        
+        "module.wallClimb.description": "Позволява ви да се изкачвате по стени като паяк.",
+
+        "module.waterSpeed.description": "Позволява ви да плувате по-бързо.",
+        
+        "module.xRay.description": "Позволява ви да виждате руди през стени.",
+        
+        "module.zoot.description": "Премахва всички лоши ефекти на отвара/огън."
+    }
+}
