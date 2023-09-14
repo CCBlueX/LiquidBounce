@@ -94,6 +94,29 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         return null
     }
 
+    fun findLargestBlockStackInHotbar(): Int? {
+        var bestSlot = -1
+        var bestStackSize = -1
+
+        for (i in 36..44) {
+            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+
+            if (itemStack.item is ItemBlock && itemStack.stackSize > 0) {
+                val itemBlock = itemStack.item as ItemBlock
+                val block = itemBlock.block
+
+                if (block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush) {
+                    if (bestSlot == -1 || itemStack.stackSize > bestStackSize) {
+                        bestSlot = i
+                        bestStackSize = itemStack.stackSize
+                    }
+                }
+            }
+        }
+
+        return if (bestSlot != -1) bestSlot else null
+    }
+
     @EventTarget
     fun onPacket(event: PacketEvent) {
         if (event.isCancelled) return

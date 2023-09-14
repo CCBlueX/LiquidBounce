@@ -55,7 +55,7 @@ import kotlin.math.*
 
 object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
-    private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand", "GodBridge"), "Normal")
+    private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand", "GodBridge", "Telly"), "Normal")
 
     // Expand
     private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false) { mode == "Expand" }
@@ -101,12 +101,15 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
+    private val alternateSlot by BoolValue("Alternate", false)
 
     // Basic stuff
     val sprint by BoolValue("Sprint", false)
     private val swing by BoolValue("Swing", true)
     private val search by BoolValue("Search", true)
-    private val down by BoolValue("Down", true) { mode != "GodBridge" }
+    private val down by BoolValue("Down", true) { mode != "GodBridge" && mode != "Telly" }
+    
+    private val offGroundValue by IntegerValue("Off Ground Ticks", 3, 1..3) { mode == "Telly" }
 
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
@@ -232,7 +235,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Downwards
     private val shouldGoDown
-        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && mode != "GodBridge" && blocksAmount > 1
+        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && mode != "Telly" && mode != "GodBridge" && blocksAmount > 1
 
     // Current rotation
     private val currRotation
@@ -247,10 +250,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         get() = mode == "GodBridge" && !jumpAutomatically
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
 
+    // Telly
+    private var offGroundTicks = 0
+
     // Enabling module
     override fun onEnable() {
         val player = mc.thePlayer ?: return
-
         launchY = player.posY.roundToInt()
     }
 
@@ -260,6 +265,14 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
 
         mc.timer.timerSpeed = timer
+        
+
+        // TELLY
+        if (mc.thePlayer.onGround) {
+            offGroundTicks = 0
+        } else offGroundTicks++
+
+               
 
         if (shouldGoDown) {
             mc.gameSettings.keyBindSneak.pressed = false
@@ -314,6 +327,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (player.onGround) {
             // Still a thing?
+
             if (mode == "Rewinside") {
                 strafe(0.2F)
                 player.motionY = 0.0
@@ -359,6 +373,15 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 }
             }
         }
+    }
+
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        val player = mc.thePlayer
+
+        if ( mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation) {
+            player.jump()
+        }   
     }
 
     @EventTarget
@@ -433,6 +456,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
 
         if (silentRotation) {
+            if ( mode == "Telly") {
+                if ( offGroundTicks < offGroundValue ) {
+                    return
+                }
+            }         
+
             setTargetRotation(
                 rotation,
                 ticks,
@@ -440,6 +469,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 resetSpeed = minTurnSpeed to maxTurnSpeed,
                 angleThresholdForReset = angleThresholdUntilReset
             )
+            
         } else {
             rotation.toPlayer(player)
         }
@@ -501,8 +531,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         var itemStack = player.inventoryContainer.getSlot(serverSlot + 36).stack
 
         //TODO: blacklist more blocks than only bushes
-        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || itemStack.stackSize <= 0) {
-            val blockSlot = InventoryUtils.findBlockInHotbar() ?: return
+        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || itemStack.stackSize <= 0 || alternateSlot) {
+            
+            val blockSlot: Int = if (alternateSlot) {
+                InventoryUtils.findLargestBlockStackInHotbar() ?: return
+            } else {
+                InventoryUtils.findBlockInHotbar() ?: return
+            }
 
             when (autoBlock.lowercase()) {
                 "off" -> return
@@ -670,6 +705,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Scaffold visuals
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
+
         if (counterDisplay) {
             glPushMatrix()
 
@@ -701,6 +737,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val player = mc.thePlayer ?: return
+        update()
 
         val shouldBother = !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks && isMoving
 
