@@ -218,9 +218,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             if (rotation == null) {
                 return@handler
             }
-
-//            player.yaw = rotation.yaw
-//            player.pitch = rotation.pitch
+            
 
             RotationManager.aimAt(rotation, configurable = rotationConfigurable)
         }
