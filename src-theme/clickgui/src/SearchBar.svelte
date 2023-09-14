@@ -68,6 +68,17 @@
         }
     });
 
+    
+    function onInput() {
+        filterModules();
+
+        if (0 < filteredModules.length) {
+            selectedModule = filteredModules[0];
+        } else {
+            selectedModule = null;
+        }
+    }
+
     window.addEventListener("keydown", event => {
         const key = event.which;
 
@@ -99,13 +110,7 @@
                 handleToggleClick(selectedModule);
             }
         } else {
-            filterModules();
 
-            if (0 < filteredModules.length) {
-                selectedModule = filteredModules[0];
-            } else {
-                selectedModule = null;
-            }
         }
 
         // Scroll to selected module
@@ -120,7 +125,7 @@
 {#if visible}
     <div class="search-bar">
         <div class="search-bar-input-container">
-            <input bind:value type="text" placeholder="Search" autofocus>
+            <input bind:value type="text" placeholder="Search" on:input={onInput} autofocus>
         </div>
         {#if 0 < filteredModules.length}
             <div class="search-bar-list">
