@@ -87,7 +87,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
     val aacPortLength by FloatValue("AAC-PortLength", 1f, 1f..20f) { mode == "AACPort" }
     val aacGroundTimer by FloatValue("AACGround-Timer", 3f, 1.1f..10f) { mode in arrayOf("AACGround", "AACGround2") }
     val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { mode == "TeleportCubeCraft" }
-    val mineplexGroundSpeed by FloatValue("MineplexGround-Speed", 0.5f, 0.1f..1f) { mode == "Mineplex" }
+    val mineplexGroundSpeed by FloatValue("MineplexGround-Speed", 0.5f, 0.1f..1f) { mode == "MineplexGround" }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
