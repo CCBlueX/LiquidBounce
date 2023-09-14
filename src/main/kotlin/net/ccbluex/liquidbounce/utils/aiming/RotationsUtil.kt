@@ -63,7 +63,6 @@ object RotationManager : Listenable {
         get() = Rotation(mc.player?.lastYaw ?: 0f, mc.player?.lastPitch ?: 0f)
 
     // Current rotation
-    var prevRotation: Rotation? = null
     var currentRotation: Rotation? = null
     var ticksUntilReset: Int = 0
     var ignoreOpenInventory = false
@@ -338,7 +337,6 @@ object RotationManager : Listenable {
                         player.lastRenderYaw = player.yaw
                     }
                 }
-                prevRotation = null
                 currentRotation = null
                 return
             }
@@ -426,12 +424,11 @@ object RotationManager : Listenable {
     }
 
     val tickHandler = handler<GameTickEvent> {
-        if (mc.isPaused) {
+        if (targetRotation == null || mc.isPaused) {
             return@handler
         }
 
-        if (currentRotation != null) prevRotation = currentRotation
-        if (targetRotation != null) update()
+        update()
     }
 
     /**

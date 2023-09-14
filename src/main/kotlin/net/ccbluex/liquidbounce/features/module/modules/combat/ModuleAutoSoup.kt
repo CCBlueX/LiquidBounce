@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.pauseCombat
 import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.utilizeInventory
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Items
@@ -42,7 +41,7 @@ import net.minecraft.util.Hand
 
 object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
-    private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())
+    private val bowl by boolean("DropAfterUse", true)
     private val health by int("Health", 15, 1..20)
     private val delay by int("Delay", 0, 0..15)
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
@@ -54,29 +53,6 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
         if (interaction.hasRidingInventory()) {
             return@repeatable
-        }
-        if (player.health > health && bowlHotbarSlot != null && canAct()) {
-            pauseCombat = true
-            wait { inventoryConstraints.delay.random() }
-            when (bowl) {
-                BowlMode.DROP -> {
-                    utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, inventoryConstraints)
-                }
-
-                BowlMode.MOVE -> {
-                    // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
-                    if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, inventoryConstraints, false)
-                        utilizeInventory(9, 0, SlotActionType.PICKUP, inventoryConstraints, false)
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, inventoryConstraints)
-                    } else {
-                        // If there is, simply shift + left-click the empty bowl from hotbar
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.QUICK_MOVE, inventoryConstraints)
-                    }
-                }
-            }
-            wait { inventoryConstraints.delay.random() }
-            pauseCombat = false
         }
         if (player.health < health && mushroomStewSlot != null) {
             // we need to take some actions
@@ -95,8 +71,9 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                 PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
             }
 
-            // drop empty bowl
-            mc.interactionManager!!.clickSlot(0, mushroomStewSlot, 1, SlotActionType.THROW, player)
+            // checks if using it, succeeded, if so - drop an empty bowl
+            if (bowl && player.inventory.getStack(mushroomStewSlot).item == Items.BOWL)
+                mc.interactionManager!!.clickSlot(0, mushroomStewSlot, 1, SlotActionType.THROW, player)
             return@repeatable
         } else {
             wait { delay }
@@ -106,12 +83,6 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
     override fun disable() {
         pauseCombat = false
-    }
-
-    fun canAct(): Boolean {
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
-
-        return isInInventoryScreen || !inventoryConstraints.invOpen
     }
 
     enum class BowlMode(override val choiceName: String) : NamedChoice {
