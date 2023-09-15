@@ -69,29 +69,27 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     }
 
     fun findBlockInHotbar(): Int? {
-        for (i in 36..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+        val player = mc.thePlayer ?: return null
+        val inventory = player.inventoryContainer
 
-            if (itemStack.item is ItemBlock && itemStack.stackSize > 0) {
-                val itemBlock = itemStack.item as ItemBlock
-                val block = itemBlock.block
+        return (36..44).filter {
+            val stack = inventory.getSlot(it).stack ?: return@filter false
+            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
 
-                if (block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush) return i
-            }
-        }
+            stack.item is ItemBlock && stack.stackSize > 0 && block !in BLOCK_BLACKLIST && block !is BlockBush
+        }.minByOrNull { (inventory.getSlot(it).stack.item as ItemBlock).block.isFullCube }
+    }
 
-        for (i in 36..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+    fun findLargestBlockStackInHotbar(): Int? {
+        val player = mc.thePlayer ?: return null
+        val inventory = player.inventoryContainer
 
-            if (itemStack.item is ItemBlock && itemStack.stackSize > 0) {
-                val itemBlock = itemStack.item as ItemBlock
-                val block = itemBlock.block
+        return (36..44).filter {
+            val stack = inventory.getSlot(it).stack ?: return@filter false
+            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
 
-                if (block !in BLOCK_BLACKLIST && block !is BlockBush) return i
-            }
-        }
-
-        return null
+            stack.item is ItemBlock && stack.stackSize > 0 && block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush
+        }.maxByOrNull { inventory.getSlot(it).stack.stackSize }
     }
 
     @EventTarget
