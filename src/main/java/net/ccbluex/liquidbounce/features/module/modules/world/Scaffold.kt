@@ -145,7 +145,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotationMode != "Off"
+        override fun isSupported() = rotationMode != "Off" && mode != "Telly"
     }
 
     // Search options
@@ -817,7 +817,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (!canBeClicked(neighbor)) {
                 continue
             }
-
+            
             if (mode == "GodBridge") {
                 // Selection of these values only. Mostly used by Godbridgers.
                 val list = arrayOf(-135f, -45f, 45f, 135f)
@@ -907,7 +907,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 currRotation, targetRotation, nextFloat(minTurnSpeed, maxTurnSpeed)
             )
 
-            setRotation(limitedRotation, keepTicks)
+            setRotation(limitedRotation, if (mode == "Telly") 1 else keepTicks)
         }
         targetPlace = placeRotation.placeInfo
         return true
