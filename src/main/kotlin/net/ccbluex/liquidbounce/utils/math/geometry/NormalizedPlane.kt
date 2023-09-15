@@ -17,13 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.math
+package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
-class Plane(val pos: Vec3d, val normalVec: Vec3d) {
-    fun intersection(line: Line): Vec3d? {
+class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
+
+    fun intersectionPhi(line: Line): Double? {
         val d = this.pos.dotProduct(this.normalVec)
         val e = line.direction.dotProduct(this.normalVec)
 
@@ -33,7 +34,29 @@ class Plane(val pos: Vec3d, val normalVec: Vec3d) {
 
         val phi = (d - line.position.dotProduct(this.normalVec)) / e
 
-        return line.getPosition(phi)
+        return phi
+    }
+
+    fun intersection(line: Line): Vec3d? {
+        return intersectionPhi(line)?.let(line::getPosition)
+    }
+
+    companion object {
+        fun fromPoints(a: Vec3d, b: Vec3d, c: Vec3d): NormalizedPlane {
+            val ab = b.subtract(a)
+            val ac = c.subtract(a)
+
+            return fromParams(a, ab, ac)
+        }
+
+        fun fromParams(base: Vec3d, directionA: Vec3d, directionB: Vec3d): NormalizedPlane {
+            val normalVec = directionA.crossProduct(directionB).normalize()
+
+            if (MathHelper.approximatelyEquals(normalVec.lengthSquared(), 0.0))
+                throw IllegalArgumentException("Points must not be on the same line")
+
+            return NormalizedPlane(base, normalVec)
+        }
     }
 
 

@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.ccbluex.liquidbounce.utils.math.Line
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box

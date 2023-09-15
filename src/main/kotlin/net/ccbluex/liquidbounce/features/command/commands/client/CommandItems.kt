@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.item.notABlock
+import net.ccbluex.liquidbounce.utils.item.DISALLOWED_BLOCKS_TO_PLACE
 import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
@@ -59,7 +59,7 @@ object CommandItems {
                             throw CommandException(command.result("blockNotExists", displayName))
                         }
 
-                        if (!notABlock.add(block)) {
+                        if (!DISALLOWED_BLOCKS_TO_PLACE.add(block)) {
                             throw CommandException(command.result("blockIsPresent", displayName))
                         }
 
@@ -86,7 +86,7 @@ object CommandItems {
                             throw CommandException(command.result("blockNotExists", displayName))
                         }
 
-                        if (!notABlock.remove(block)) {
+                        if (!DISALLOWED_BLOCKS_TO_PLACE.remove(block)) {
                             throw CommandException(command.result("blockNotFound", displayName))
                         }
 
@@ -111,7 +111,7 @@ object CommandItems {
                             1
                         }.coerceAtLeast(1)
 
-                        val blocks = notABlock.sortedBy { it.translationKey }
+                        val blocks = DISALLOWED_BLOCKS_TO_PLACE.sortedBy { it.translationKey }
 
                         // Max page
                         val maxPage = ceil(blocks.size / 8.0).roundToInt()
@@ -152,7 +152,7 @@ object CommandItems {
                 CommandBuilder
                     .begin("clear")
                     .handler { command, _ ->
-                        notABlock.clear()
+                        DISALLOWED_BLOCKS_TO_PLACE.clear()
                         chat(regular(command.result("blocksCleared")))
                     }
                     .build()

@@ -72,7 +72,7 @@ fun openInventorySilently() {
 /**
  * A list of blocks, which are useless, so inv cleaner and scaffold won't count them as blocks
  */
-var notABlock = hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND, Blocks.CACTUS, Blocks.ANVIL)
+var DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND, Blocks.CACTUS, Blocks.ANVIL)
 
 /**
  * Configurable to configure the dynamic rotation engine

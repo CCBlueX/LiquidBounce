@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
@@ -27,36 +27,37 @@ import net.minecraft.util.math.Vec3d
 fun Float.toRadians() = this / 180.0F * Math.PI.toFloat()
 fun Float.toDegrees() = this / Math.PI.toFloat() * 180.0F
 
-fun Box.getFace(direction: Direction): ModuleScaffold.Face {
+fun Box.getFace(direction: Direction): Face {
     return when (direction) {
-        Direction.DOWN -> ModuleScaffold.Face(
+        Direction.DOWN -> Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.maxX, this.minY, this.maxZ)
         )
 
-        Direction.UP -> ModuleScaffold.Face(
+        Direction.UP -> Face(
             Vec3d(this.minX, this.maxY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
 
-        Direction.SOUTH -> ModuleScaffold.Face(
+        Direction.SOUTH -> Face(
             Vec3d(this.minX, this.minY, this.maxZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
 
-        Direction.NORTH -> ModuleScaffold.Face(
+        Direction.NORTH -> Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.minZ)
         )
 
-        Direction.EAST -> ModuleScaffold.Face(
+        Direction.EAST -> Face(
             Vec3d(this.maxX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
 
-        Direction.WEST -> ModuleScaffold.Face(
+        Direction.WEST -> Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.minX, this.maxY, this.maxZ)
         )
     }
 }
+

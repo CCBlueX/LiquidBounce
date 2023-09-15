@@ -22,6 +22,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
+import net.minecraft.util.Hand
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
 
@@ -156,4 +160,18 @@ fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
             }
         }
     }
+}
+
+
+fun BlockState.canBeReplacedWith(pos: BlockPos, usedStack: ItemStack): Boolean {
+    val placementContext = ItemPlacementContext(
+        mc.player,
+        Hand.MAIN_HAND,
+        usedStack,
+        BlockHitResult(Vec3d.of(pos), Direction.UP, pos, false)
+    )
+
+    return canReplace(
+        placementContext
+    )
 }
