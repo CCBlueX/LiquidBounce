@@ -116,8 +116,10 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         fun getHypotheticalHit(): AbstractClientPlayerEntity? {
-            val yaw = RotationManager.serverRotation.yaw
-            val pitch = RotationManager.serverRotation.pitch
+            val rotation = RotationManager.currentRotation ?: player.rotation
+            val yaw = rotation.yaw
+            val pitch = rotation.pitch
+
 
             val velocity = getHypotheticalArrowVelocity(player, false)
 
