@@ -184,7 +184,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val rotationConfigurable = RotationsConfigurable()
 
         val predictSize by float("PredictionCofactor", 1.0f, 0.0f..1.5f)
-        val minExpedtedPull by int("MinExpedtedPull", 5, 0..20)
+        val minExpectedPull by int("MinExpectedPull", 5, 0..20)
 
         init {
             tree(targetTracker)
@@ -218,7 +218,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             if (rotation == null) {
                 return@handler
             }
-            
+
 
             RotationManager.aimAt(rotation, configurable = rotationConfigurable)
         }
@@ -354,7 +354,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         player: ClientPlayerEntity,
         assumeElongated: Boolean
     ): Float {
-        var velocity: Float = if (assumeElongated) 1f else player.itemUseTime.coerceAtLeast(BowAimbotOptions.minExpedtedPull) / 20f
+        var velocity: Float = if (assumeElongated) 1f else player.itemUseTime.coerceAtLeast(BowAimbotOptions.minExpectedPull) / 20f
 
         velocity = (velocity * velocity + velocity * 2.0f) / 3.0f
 
