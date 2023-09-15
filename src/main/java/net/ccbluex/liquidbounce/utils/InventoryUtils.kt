@@ -69,52 +69,27 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     }
 
     fun findBlockInHotbar(): Int? {
-        for (i in 36..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+        val player = mc.thePlayer ?: return null
+        val inventory = player.inventoryContainer
 
-            if (itemStack.item is ItemBlock && itemStack.stackSize > 0) {
-                val itemBlock = itemStack.item as ItemBlock
-                val block = itemBlock.block
+        return (36..44).filter {
+            val stack = inventory.getSlot(it).stack ?: return@filter false
+            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
 
-                if (block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush) return i
-            }
-        }
-
-        for (i in 36..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
-
-            if (itemStack.item is ItemBlock && itemStack.stackSize > 0) {
-                val itemBlock = itemStack.item as ItemBlock
-                val block = itemBlock.block
-
-                if (block !in BLOCK_BLACKLIST && block !is BlockBush) return i
-            }
-        }
-
-        return null
+            stack.item is ItemBlock && stack.stackSize > 0 && block !in BLOCK_BLACKLIST && block !is BlockBush
+        }.minByOrNull { (inventory.getSlot(it).stack.item as ItemBlock).block.isFullCube }
     }
 
     fun findLargestBlockStackInHotbar(): Int? {
-        var bestSlot = -1
-        var bestStackSize = -1
+        val player = mc.thePlayer ?: return null
+        val inventory = player.inventoryContainer
 
-        for (i in 36..44) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+        return (36..44).filter {
+            val stack = inventory.getSlot(it).stack ?: return@filter false
+            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
 
-            if (itemStack.item is ItemBlock && itemStack.stackSize > 0) {
-                val itemBlock = itemStack.item as ItemBlock
-                val block = itemBlock.block
-
-                if (block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush) {
-                    if (bestSlot == -1 || itemStack.stackSize > bestStackSize) {
-                        bestSlot = i
-                        bestStackSize = itemStack.stackSize
-                    }
-                }
-            }
-        }
-
-        return if (bestSlot != -1) bestSlot else null
+            stack.item is ItemBlock && stack.stackSize > 0 && block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush
+        }.maxByOrNull { inventory.getSlot(it).stack.stackSize }
     }
 
     @EventTarget
