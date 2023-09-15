@@ -150,26 +150,26 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val smartAutoBlock by BoolValue("SmartAutoBlock", false) { autoBlock != "Off" }
 
     // Ignore all blocking conditions, except for block rate, when standing still
-    private val forceBlock by BoolValue("ForceBlockWhenStill", true) { smartAutoBlock }
+    private val forceBlock by BoolValue("ForceBlockWhenStill", true) { autoBlock != "Off" && smartAutoBlock }
 
     // Don't block if target isn't holding a sword or an axe
-    private val checkWeapon by BoolValue("CheckEnemyWeapon", true) { smartAutoBlock }
+    private val checkWeapon by BoolValue("CheckEnemyWeapon", true) { autoBlock != "Off" && smartAutoBlock }
 
     // TODO: Make block range independent from attack range
     private var blockRange by object : FloatValue("BlockRange", range, 1f..8f) {
-        override fun isSupported() = smartAutoBlock
+        override fun isSupported() = autoBlock != "Off" && smartAutoBlock
 
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(this@KillAura.range)
     }
 
     // Don't block when you can't get damaged
-    private val maxOwnHurtTime by IntegerValue("MaxOwnHurtTime", 3, 0..10) { smartAutoBlock }
+    private val maxOwnHurtTime by IntegerValue("MaxOwnHurtTime", 3, 0..10) { autoBlock != "Off" && smartAutoBlock }
 
     // Don't block if target isn't looking at you
-    private val maxDirectionDiff by FloatValue("MaxOpponentDirectionDiff", 60f, 30f..180f) { smartAutoBlock }
+    private val maxDirectionDiff by FloatValue("MaxOpponentDirectionDiff", 60f, 30f..180f) { autoBlock != "Off" && smartAutoBlock }
 
     // Don't block if target is swinging an item and therefore cannot attack
-    private val maxSwingProgress by IntegerValue("MaxOpponentSwingProgress", 1, 0..5) { smartAutoBlock }
+    private val maxSwingProgress by IntegerValue("MaxOpponentSwingProgress", 1, 0..5) { autoBlock != "Off" && smartAutoBlock }
     private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock != "Off" && releaseAutoBlock }
 
     // Turn Speed
