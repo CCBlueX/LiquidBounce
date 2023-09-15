@@ -142,7 +142,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val rotationMode by ListValue("RotationMode", arrayOf("Off", "Normal", "Stabilized"), "Normal")
     private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
-    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" }
+    private val keepRotation by object : BoolValue("KeepRotation", true) { 
+        override fun onChange(oldValue: Boolean, newValue: Boolean) = if ( mode == "Telly" ) true else newValue
+        override fun isSupported() = rotationMode != "Off"
+    }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
         override fun isSupported() = rotationMode != "Off" && mode != "Telly"
@@ -388,6 +391,39 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onMotion(event: MotionEvent) {
         val rotation = targetRotation
 
+        if (event.eventState == EventState.PRE) {
+            val target = targetPlace
+
+            if (extraClicks) {
+                while (extraClick.clicks > 0) {
+                    extraClick.clicks--
+
+                    doPlaceAttempt()
+                }
+            }
+
+            if (target == null) {
+                if (placeDelay.isActive()) {
+                    delayTimer.reset()
+                }
+                return
+            }
+
+            val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
+
+            performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
+                if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
+                    val result = if (raycastProperly && it != null) {
+                        PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
+                    } else {
+                        target
+                    }
+
+                    place(result)
+                }
+            }
+        }
+
         if (rotationMode != "Off" && keepRotation && rotation != null) {
             setRotation(rotation, 1)
         }
@@ -399,36 +435,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        val target = targetPlace
-
-        if (extraClicks) {
-            while (extraClick.clicks > 0) {
-                extraClick.clicks--
-
-                doPlaceAttempt()
-            }
-        }
-
-        if (target == null) {
-            if (placeDelay.isActive()) {
-                delayTimer.reset()
-            }
-            return
-        }
-
-        val raycastProperly = !(mode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
-
-        performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
-                val result = if (raycastProperly && it != null) {
-                    PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
-                } else {
-                    target
-                }
-
-                place(result)
-            }
-        }
+        
     }
 
     @EventTarget
