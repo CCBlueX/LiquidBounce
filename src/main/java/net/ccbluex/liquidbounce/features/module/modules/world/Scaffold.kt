@@ -378,7 +378,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
         val player = mc.thePlayer
-
+        // Jump needs to be here to not flag for simulation on grim.
         if ( mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation) {
             player.jump()
         }   
@@ -392,7 +392,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             setRotation(rotation, 1)
         }
 
-        if (event.eventState == EventState.POST) {
+        if (event.eventState == EventState.POST && mode != "Telly" ) {
             update()
         }
     }
@@ -737,7 +737,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val player = mc.thePlayer ?: return
-        update()
+        if ( mode == "Telly" ) update()
 
         val shouldBother = !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks && isMoving
 
