@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -23,6 +24,9 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.block.BlockAir
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -32,7 +36,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
      * OPTIONS
      */
     private val mode by ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-        "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
+        "Karhu", "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
 
     private val horizontal by FloatValue("Horizontal", 0F, 0F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by FloatValue("Vertical", 0F, 0F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -47,6 +51,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     // AAC v4
     private val aacv4MotionReducer by FloatValue("AACv4MotionReducer", 0.62F, 0F..1F) { mode == "AACv4" }
+
+    // Karhu
+    private var velocityTicks = 0
 
     // Legit
     private val legitDisableInAir by BoolValue("DisableInAir", true) { mode == "Legit" }
@@ -74,6 +81,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
+
+        velocityTicks++
 
         if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
             return
@@ -201,6 +210,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
         if (packet is S12PacketEntityVelocity && (mc.theWorld?.getEntityByID(packet.entityID) ?: return) == thePlayer) {
             velocityTimer.reset()
+            velocityTicks = 0
 
             when (mode.lowercase()) {
                 "simple" -> {
@@ -273,6 +283,19 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             "aaczero" ->
                 if (thePlayer.hurtTime > 0)
                     event.cancelEvent()
+        }
+    }
+
+    @EventTarget
+    fun onBB(event: BlockBBEvent) {
+        when (mode.lowercase()) {
+            "karhu" -> {
+                if (event.block is BlockAir && velocityTicks <= 9 && mc.thePlayer.hurtTime > 0) {
+                    if (event.y.toDouble() == Math.floor(mc.thePlayer.posY) + 1.0) {
+                        event.boundingBox = AxisAlignedBB.fromBounds(0.0, 0.0, 0.0, 1.0, 0.0, 1.0).offset(event.x.toDouble(), event.y.toDouble(), event.z.toDouble())
+                    }
+                }
+            }
         }
     }
 }
