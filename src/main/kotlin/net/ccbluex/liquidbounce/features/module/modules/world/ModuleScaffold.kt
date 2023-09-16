@@ -62,6 +62,7 @@ import kotlin.random.Random
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private val silent by boolean("Silent", true)
+    private val slotResetDelay by int("SlotResetDelay", 5, 0..40)
     private var delay by intRange("Delay", 3..5, 0..40)
 
     private val swing by boolean("Swing", true)
@@ -216,10 +217,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
         val currentRotation = RotationManager.currentRotation ?: return@repeatable
-        val currentCrosshairdTarget = raycast(4.5, currentRotation) ?: return@repeatable
+        val currentCrosshairTarget = raycast(4.5, currentRotation) ?: return@repeatable
 
         // Is the target the crosshair points to well-adjusted to our target?
-        if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairdTarget) || !isValidCrosshairTarget(currentCrosshairdTarget)) {
+        if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) || !isValidCrosshairTarget(currentCrosshairTarget)) {
             return@repeatable
         }
 
@@ -231,7 +232,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val bestMainHandSlot = findBestValidHotbarSlotForTarget()
 
             if (bestMainHandSlot != null) {
-                SilentHotbar.selectSlotSilently(this, bestMainHandSlot)
+                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, slotResetDelay)
 
                 hasBlockInMainHand = true
             } else {
@@ -250,7 +251,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val result = interaction.interactBlock(
             player,
             handToInteractWith,
-            currentCrosshairdTarget
+            currentCrosshairTarget
         )
 
         if (!result.isAccepted)
@@ -272,7 +273,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         currentTarget = null
 
-        wait(delay.random())
+        delay.random().let {
+            if (it > 0) {
+                wait(it)
+            }
+        }
     }
 
     private fun findBestValidHotbarSlotForTarget(): Int? {
