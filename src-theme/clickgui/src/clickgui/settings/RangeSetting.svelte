@@ -77,9 +77,9 @@
     {#if multi}
         <!-- <div class="value grid-area-b ">{valueString}</div> -->
         <div class="grid-area-b multiValues">
-            <input size="" on:change={slider.noUiSlider.set([this.value, null])} class="value text-align-center" value={value[0]}>
+            <input size="" on:change={slider.noUiSlider.set([this.value, null])} class="value multi text-align-center" value={value[0]}>
             <div class="value">-</div>
-            <input size="" on:change={slider.noUiSlider.set([null, this.value])} class="value text-align-center" value={value[1]}>
+            <input size="" on:change={slider.noUiSlider.set([null, this.value])} class="value multi text-align-center" value={value[1]}>
         </div>
     {:else}
         <input size="" class="value grid-area-b single" value={valueString}>
@@ -132,7 +132,19 @@
     .single {
         width: 100%;
     }
+    
+    .multi {
+        width: 30px;
+    }
     .value:focus {
             outline: none;
+    }
+
+    .grid-area-b {
+        grid-area: b;
+    }
+
+    .multiValues {
+        display: flex;
     }
 </style>
