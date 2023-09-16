@@ -75,9 +75,14 @@
 <div class="setting animation-fix">
     <div class="name">{name}</div>
     {#if multi}
-        <div class="value">{valueString}</div>
+        <!-- <div class="value grid-area-b ">{valueString}</div> -->
+        <div class="grid-area-b multiValues">
+            <input size="" on:change={slider.noUiSlider.set([this.value, null])} class="value text-align-center" value={value[0]}>
+            <div class="value">-</div>
+            <input size="" on:change={slider.noUiSlider.set([null, this.value])} class="value text-align-center" value={value[1]}>
+        </div>
     {:else}
-        <input size="" on:change={slider.noUiSlider.set([this.value])} class="value" id="inputElem" value={valueString}>
+        <input size="" class="value grid-area-b single" value={valueString}>
     {/if}
     <div bind:this={slider} class="slider"/>
 </div>
@@ -117,8 +122,15 @@
         background-color: transparent;
         outline: none;
         border: none;
-        width: 100%;
         
+    }
+
+    .text-align-center {
+        text-align: center;
+    }
+
+    .single {
+        width: 100%;
     }
     .value:focus {
             outline: none;
