@@ -82,7 +82,7 @@
             <input size="" on:change={slider.noUiSlider.set([null, this.value])} class="value multi text-align-center" value={value[1]}>
         </div>
     {:else}
-        <input size="" class="value grid-area-b single" value={valueString}>
+    <input size="" on:change={slider.noUiSlider.set([this.value])} class="value grid-area-b single" id="inputElem" value={valueString}>
     {/if}
     <div bind:this={slider} class="slider"/>
 </div>
