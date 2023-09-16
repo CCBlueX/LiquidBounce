@@ -29,7 +29,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 
-    val packetMode by ListValue("Packet Mode", arrayOf("None", "NCP", "AAC5", "Spoof", "OldIntave"), "None")
+    val packetMode by ListValue("Packet-Mode", arrayOf("None", "NCP", "AAC5", "Spoof", "OldIntave"), "None")
     
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
