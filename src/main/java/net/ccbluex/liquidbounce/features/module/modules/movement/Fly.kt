@@ -62,7 +62,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         Spartan, Spartan2, BugSpartan,
 
         // Other anti-cheats
-        MineSecure, HawkEye, HAC, WatchCat,
+        MineSecure, HawkEye, HAC, WatchCat, Vulcan,
 
         // Other
         Jetpack, KeepAlive, Collide, Jump, Flag
