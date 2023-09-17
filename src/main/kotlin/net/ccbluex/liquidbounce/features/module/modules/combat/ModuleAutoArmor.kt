@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
@@ -93,7 +94,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
      */
     private fun move(item: Int, isObsolete: Boolean): Boolean {
         val slot = convertClientSlotToServerSlot(item)
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
 
         if (!isObsolete && hotbar && !isInInventoryScreen) {
             if (slot in 36..44) {

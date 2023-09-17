@@ -33,10 +33,7 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.combat.findEnemy
-import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -269,6 +266,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 targetTracker.lock(raycastedEntity)
             }
 
+            if (CombatManager.pauseCombat != -1)
+                return@repeatable
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
                 (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
@@ -276,20 +275,19 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 ))
             }, cps)
 
-            if (player.isBlocking && !whileBlocking && clicks > 0) {
-                interaction.stopUsingItem(player)
-                allowedBlocking = false
-                // Unblocking and skipping one tick, as legit player does (you can't unblock and attack at the same tick, if you are legit)
-                if (AutoBlock.skipOneTick) {
-                    wait { 1 }
-                }
-            }
-
             repeat(clicks) {
                 if (simulateInventoryClosing && isInInventoryScreen) {
                     network.sendPacket(CloseHandledScreenC2SPacket(0))
                 }
 
+                if (player.isBlocking && !whileBlocking && clicks > 0) {
+                    interaction.stopUsingItem(player)
+                    allowedBlocking = false
+                    // Unblocking and skipping one tick, as legit player does (you can't unblock and attack at the same tick, if you are legit)
+                    if (AutoBlock.skipOneTick) {
+                        wait { 1 }
+                    }
+                }
                 if (player.isUsingItem && !whileUsingItem && !player.isBlocking) {
                     return@repeat // return if it's not allowed to attack while the player is using another item that's not a shield
                 }
@@ -319,7 +317,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@repeatable
         }
 
-        if (!FailSwing.enabled) {
+        if (!FailSwing.enabled || CombatManager.pauseCombat != -1) {
             return@repeatable
         }
 
@@ -339,16 +337,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             ) { true } == null
         }, chosenCPS)
 
-        if (player.isBlocking && !whileBlocking && clicks > 0) {
-            interaction.stopUsingItem(player)
-            allowedBlocking = false
-            // Unblocking and skipping one tick, as legit player does (you can't unblock and attack at the same tick, if you are legit)
-            if (AutoBlock.skipOneTick) {
-                wait { 1 }
-            }
-        }
-
         repeat(clicks) {
+            if (player.isBlocking && !whileBlocking && clicks > 0) {
+                interaction.stopUsingItem(player)
+                allowedBlocking = false
+                // Unblocking and skipping one tick, as legit player does (you can't unblock and attack at the same tick, if you are legit)
+                if (AutoBlock.skipOneTick) {
+                    wait { 1 }
+                }
+            }
             if (swing) {
                 player.swingHand(Hand.MAIN_HAND)
             } else {

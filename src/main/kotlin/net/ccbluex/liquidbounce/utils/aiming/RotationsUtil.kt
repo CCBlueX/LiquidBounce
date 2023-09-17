@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.combat.CombatManager.pauseRotation
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -69,9 +70,6 @@ object RotationManager : Listenable {
 
     // Active configurable
     var activeConfigurable: RotationsConfigurable? = null
-
-    // useful for something like autopot
-    var deactivateManipulation = false
 
     fun raytraceBlock(
         eyes: Vec3d, pos: BlockPos, state: BlockState, range: Double, wallsRange: Double
@@ -369,7 +367,7 @@ object RotationManager : Listenable {
     /**
      * Checks if it should update the server-side rotations
      */
-    fun shouldUpdate() = !deactivateManipulation
+    fun shouldUpdate() = pauseRotation == -1
 
     /**
      * Calculate difference between the server rotation and your rotation

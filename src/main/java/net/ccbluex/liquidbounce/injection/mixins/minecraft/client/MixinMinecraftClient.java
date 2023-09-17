@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
-import net.ccbluex.liquidbounce.utils.combat.CombatUtilsKt;
+import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
@@ -210,6 +210,18 @@ public abstract class MixinMinecraftClient {
         }
     }
 
+    /**
+     * Hook start of the attack
+     */
+    @Inject(method = "doAttack", cancellable = true, at = @At("HEAD"))
+    private void doAttackHook(CallbackInfoReturnable<Boolean> cir) {
+        AttackKeyEvent itemUseEvent = new AttackKeyEvent();
+        EventManager.INSTANCE.callEvent(itemUseEvent);
+        if (itemUseEvent.isCancelled()) {
+            cir.cancel();
+        }
+    }
+
     @Inject(method = "hasOutline", cancellable = true, at = @At("HEAD"))
     private void injectOutlineESPFix(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (RenderingFlags.isCurrentlyRenderingEntityOutline().get()) {
@@ -223,7 +235,7 @@ public abstract class MixinMinecraftClient {
             return;
         }
 
-        if (CombatUtilsKt.getPauseCombat()) {
+        if (CombatManager.INSTANCE.getPauseCombat() != -1) {
             cir.setReturnValue(false);
         }
         if (!ModulePerfectHit.INSTANCE.getEnabled()) {
