@@ -22,9 +22,7 @@ class GuiWelcome : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        val font = Fonts.font35
-
-        font.run {
+        Fonts.font35.run {
             drawCenteredString("Thank you for downloading and installing our client!", width / 2F, height / 8F + 70, 0xffffff, true)
             drawCenteredString("Here is some information you might find useful if you are using LiquidBounce for the first time.", width / 2F, height / 8F + 70 + fontHeight, 0xffffff, true)
 
