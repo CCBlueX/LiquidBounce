@@ -41,6 +41,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
+    private val maxLength by int("MaxLength", 500, 10..1000)
 
     private val positions = mutableListOf<Double>()
     private var lastPosX = 0.0
@@ -76,7 +77,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
     @JvmStatic
     internal fun makeLines(color: Color4b, positions: List<Double>, tickDelta: Float): Array<Vec3> {
         val mutableList = mutableListOf<Vec3>()
-        for (i in 0 until positions.size / 3) {
+        for (i in 0 until positions.size / 3 - 1) {
             mutableList += Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
         }
         mutableList += player.interpolateCurrentPosition(tickDelta)
@@ -93,6 +94,9 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         lastPosZ = player.z
 
         synchronized(positions) {
+            if(positions.size > maxLength * 3){
+                positions.subList(0, positions.size - maxLength * 3).clear()
+            }
             positions.addAll(listOf(player.x, player.y, player.z))
         }
     }
