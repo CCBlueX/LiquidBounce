@@ -67,7 +67,7 @@ object UltralightJsClient {
          *
          * This depends on the current Geo IP of the user. This might be affected by the proxy service.
          */
-        fun getLocation() = IpInfoApi?.localIpInfo?.country?.lowercase()
+        fun getLocation(): String = IpInfoApi.localIpInfo?.country?.lowercase() ?: "unknown"
 
     }
 
