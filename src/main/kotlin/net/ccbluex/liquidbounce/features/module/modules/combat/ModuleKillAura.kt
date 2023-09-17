@@ -46,13 +46,12 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 import org.apache.commons.lang3.RandomUtils
@@ -96,16 +95,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val swing by boolean("Swing", true)
     private val keepSprint by boolean("KeepSprint", true)
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
-    private val attackShielding by boolean("AttackWhenEnemyShielding", false)
-    private val whileUsingItem by boolean("WhileUsingItem", true)
-    val whileBlocking by boolean("WhileBlocking", false)
+    private val attackShielding by boolean("AttackShielding", false)
 
-    object AutoBlock : ToggleableConfigurable(this, "AutoBlock", true) {
-        val skipOneTick by boolean("SkipOneClick", true)
+    private val whileUsingItem by boolean("WhileUsingItem", true)
+
+    object WhileBlocking : ToggleableConfigurable(this, "WhileBlocking", true) {
+        val blockingTicks by int("BlockingTicks", 0, 0..20)
     }
 
     init {
-        tree(AutoBlock)
+        tree(WhileBlocking)
     }
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
@@ -169,7 +168,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private val cpsTimer = tree(CpsScheduler())
-    private var allowedBlocking = true
 
     private val boxFadeSeconds
         get() = 50 * NotifyWhenFail.Box.fadeSeconds
@@ -247,6 +245,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Did you ever send a rotation before?
         val rotation = RotationManager.currentRotation
 
+        if (CombatManager.pauseCombat != -1)
+            return@repeatable
         if (rotation != null && target != null && target.boxedDistanceTo(player) <= range && facingEnemy(
                 target, rotation, range.toDouble(), wallRange.toDouble()
             )
@@ -266,8 +266,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 targetTracker.lock(raycastedEntity)
             }
 
-            if (CombatManager.pauseCombat != -1)
-                return@repeatable
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
                 (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
@@ -280,18 +278,30 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     network.sendPacket(CloseHandledScreenC2SPacket(0))
                 }
 
-                if (player.isBlocking && !whileBlocking && clicks > 0) {
-                    interaction.stopUsingItem(player)
-                    allowedBlocking = false
-                    // Unblocking and skipping one tick, as legit player does (you can't unblock and attack at the same tick, if you are legit)
-                    if (AutoBlock.skipOneTick) {
-                        wait { 1 }
+                val blocking = player.isBlocking
+
+                if (blocking) {
+                    if (!WhileBlocking.enabled) {
+                        return@repeat // return if it's not allowed to attack while using blocking with a shield
                     }
-                }
-                if (player.isUsingItem && !whileUsingItem && !player.isBlocking) {
+                } else if (player.isUsingItem && !whileUsingItem) {
                     return@repeat // return if it's not allowed to attack while the player is using another item that's not a shield
                 }
 
+                // Make sure to unblock now
+                if (blocking) {
+                    network.sendPacket(
+                        PlayerActionC2SPacket(
+                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
+                        )
+                    )
+
+                    // Wait until the un-blocking delay time is up
+                    if (WhileBlocking.blockingTicks > 0) {
+                        mc.options.useKey.isPressed = false
+                        wait(WhileBlocking.blockingTicks)
+                    }
+                }
                 // Fail rate
                 if (failRate > 0 && failRate > Random.nextInt(100)) {
                     // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
@@ -308,16 +318,29 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     attackEntity(raycastedEntity)
                 }
 
+                // Make sure to block again
+                if (blocking) {
+                    // Wait until the blocking delay time is up
+                    if (WhileBlocking.blockingTicks > 0) {
+                        wait(WhileBlocking.blockingTicks)
+                    }
+
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                    }
+
+                    mc.options.useKey.isPressed = true
+                }
+
                 if (simulateInventoryClosing && isInInventoryScreen) {
                     openInventorySilently()
                 }
             }
 
-            allowedBlocking = true
             return@repeatable
         }
 
-        if (!FailSwing.enabled || CombatManager.pauseCombat != -1) {
+        if (!FailSwing.enabled) {
             return@repeatable
         }
 
@@ -338,26 +361,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }, chosenCPS)
 
         repeat(clicks) {
-            if (player.isBlocking && !whileBlocking && clicks > 0) {
-                interaction.stopUsingItem(player)
-                allowedBlocking = false
-                // Unblocking and skipping one tick, as legit player does (you can't unblock and attack at the same tick, if you are legit)
-                if (AutoBlock.skipOneTick) {
-                    wait { 1 }
-                }
-            }
             if (swing) {
                 player.swingHand(Hand.MAIN_HAND)
             } else {
                 network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
             }
-        }
-        allowedBlocking = true
-    }
-
-    val blockHitHandler = handler<ItemUseEvent> {
-        if (!allowedBlocking) {
-            it.cancelEvent()
         }
     }
 
