@@ -111,7 +111,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Basic stuff
     val sprint by BoolValue("Sprint", false)
     private val swing by BoolValue("Swing", true)
-    private val search by BoolValue("Search", true)
     private val down by BoolValue("Down", true) { mode !in arrayOf("GodBridge", "TellyBridge") }
 
     private val offGroundValue by IntegerValue("Off Ground Ticks", 3, 1..3) { mode == "TellyBridge" }
@@ -464,7 +463,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
 
         if (silentRotation) {
-            if (mode == "TellyBridge") {
+            if (mode == "TellyBridge" && isMoving) {
                 if (offGroundTicks < offGroundValue) {
                     return
                 }
@@ -514,29 +513,30 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                     return
                 }
             }
-        } else if (search) {
-            if (mode == "TellyBridge") {
-                val (x, z) = player.horizontalFacing.directionVec.x to player.horizontalFacing.directionVec.z
+            return
+        }
 
-                for (i in (-3..3).sortedBy { getCenterDistance(blockPosition.add(x * it, 0, z * it)) }) {
-                    if (search(blockPosition.add(x * i, 0, z * i), !shouldGoDown, area)) {
-                        return
-                    }
+        if (mode == "TellyBridge") {
+            val (x, z) = player.horizontalFacing.directionVec.x to player.horizontalFacing.directionVec.z
+
+            for (i in (-3..3).sortedBy { getCenterDistance(blockPosition.add(x * it, 0, z * it)) }) {
+                if (search(blockPosition.add(x * i, 0, z * i), !shouldGoDown, area)) {
+                    return
                 }
+            }
 
+            return
+        }
+
+        for (x in -1..1 step 2) {
+            if (search(blockPosition.add(x, 0, 0), !shouldGoDown, area)) {
                 return
             }
+        }
 
-            for (x in -1..1 step 2) {
-                if (search(blockPosition.add(x, 0, 0), !shouldGoDown, area)) {
-                    return
-                }
-            }
-
-            for (z in -1..1 step 2) {
-                if (search(blockPosition.add(0, 0, z), !shouldGoDown, area)) {
-                    return
-                }
+        for (z in -1..1 step 2) {
+            if (search(blockPosition.add(0, 0, z), !shouldGoDown, area)) {
+                return
             }
         }
     }
@@ -1070,6 +1070,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             }
             return amount
         }
+
     override val tag
         get() = mode
 
