@@ -24,6 +24,10 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.attribute.EntityAttribute
+import net.minecraft.entity.attribute.EntityAttributeInstance
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
@@ -107,10 +111,23 @@ val ToolItem.type: Int
     }
 
 val Item.attackDamage: Float
-    get() =
-        when (this) {
-            is SwordItem -> this.attackDamage
-            is MiningToolItem -> this.attackDamage
-            is ToolItem -> this.material.attackDamage
-            else -> 1.0f
-        }
+    get() = when (this) {
+        is SwordItem -> this.attackDamage
+        is MiningToolItem -> this.attackDamage + 1.0f
+        is ToolItem -> this.material.attackDamage
+        else -> 1.0f
+    }
+
+val Item.attackSpeed: Float
+    get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
+
+private fun Item.getAttributeValue(attribute: EntityAttribute): Float {
+    val attribInstance = EntityAttributeInstance(attribute) {}
+
+    for (entityAttributeModifier in this.getAttributeModifiers(EquipmentSlot.MAINHAND)
+        .get(attribute)) {
+        attribInstance.addTemporaryModifier(entityAttributeModifier)
+    }
+
+    return attribInstance.value.toFloat()
+}

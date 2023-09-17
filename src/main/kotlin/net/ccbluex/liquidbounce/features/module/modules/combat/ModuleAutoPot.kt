@@ -99,7 +99,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
                 return@repeatable
             } else if (potInvSlot != null) {
-                val serverSlot = convertClientSlotToServerSlot(potInvSlot)
+                val serverSlot = convertClientSlotToServerSlot(potInvSlot, null)
                 val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
                 if (!isInInventoryScreen) {

@@ -92,7 +92,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
      * @return True if it is unable to move the item
      */
     private fun move(item: Int, isObsolete: Boolean): Boolean {
-        val slot = convertClientSlotToServerSlot(item)
+        val slot = convertClientSlotToServerSlot(item, null)
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         if (!isObsolete && hotbar && !isInInventoryScreen) {

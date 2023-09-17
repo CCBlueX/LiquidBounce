@@ -28,14 +28,26 @@ import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Blocks
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.item.ItemStack
 
-fun convertClientSlotToServerSlot(slot: Int): Int {
-    return when (slot) {
-        in 0..8 -> 36 + slot
-        in 9..35 -> slot
-        in 36..39 -> 39 - slot + 5
-        40 -> 45
-        else -> throw IllegalArgumentException()
+fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = null): Int {
+    if (screen == null) {
+        return when (slot) {
+            in 0..8 -> 36 + slot
+            in 9..35 -> slot
+            in 36..39 -> 39 - slot + 5
+            40 -> 45
+            else -> throw IllegalArgumentException()
+        }
+    } else {
+        val stacks = screen.screenHandler.rows * 9
+
+        return when (slot) {
+            in 0..8 -> stacks + 27 + slot
+            in 9..35 -> stacks + slot - 9
+            else -> throw IllegalArgumentException()
+        }
     }
 }
 
@@ -82,3 +94,5 @@ class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal val invOpen by boolean("InvOpen", false)
     internal val noMove by boolean("NoMove", false)
 }
+
+data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

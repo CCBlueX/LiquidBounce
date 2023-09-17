@@ -80,7 +80,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
         val DEFAULT_XZ_RANGE = 0.1f..0.9f
-        val DEFAULT_Y_RANGE = 0.33f..0.95f
+        val DEFAULT_Y_RANGE = 0.33f..0.85f
 
         val xRange by floatRange("XRange", DEFAULT_XZ_RANGE, 0.0f..1.0f)
         val yRange by floatRange("YRange", DEFAULT_Y_RANGE, 0.0f..1.0f)
@@ -130,12 +130,19 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
      * The chain will prefer the block that is solid. If both are solid, it goes to the next criteria
      * (in this case full cube) and so on
      */
-    private val BLOCK_COMPARATOR = ComparatorChain(
+    private val BLOCK_COMPARATOR_FOR_HOTBAR = ComparatorChain(
         PreferSolidBlocks,
         PreferFullCubeBlocks,
         PreferLessSlipperyBlocks,
         PreferAverageHardBlocks,
-        PreferHigherStackSize
+        PreferStackSize(higher = false)
+    )
+    val BLOCK_COMPARATOR_FOR_INVENTORY = ComparatorChain(
+        PreferSolidBlocks,
+        PreferFullCubeBlocks,
+        PreferLessSlipperyBlocks,
+        PreferAverageHardBlocks,
+        PreferStackSize(higher = true)
     )
 
     private val shouldGoDown: Boolean
@@ -289,7 +296,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 if (stack.item is BlockItem) Pair(it, stack)
                 else null
             }
-            .maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR.compare(o1.second, o2.second) }?.first
+            .maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }?.first
 
         return bestSlot
     }
