@@ -41,7 +41,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
-    private val maxLength by int("MaxLength", 500, 10..1000)
+    private val maxLength by int("MaxLength", 500, 10..5000)
 
     private val positions = mutableListOf<Double>()
     private var lastPosX = 0.0
