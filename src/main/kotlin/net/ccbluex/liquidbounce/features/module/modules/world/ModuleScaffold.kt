@@ -33,11 +33,14 @@ import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToPlayerView
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.client.option.KeyBinding
@@ -46,12 +49,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3i
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
+import net.minecraft.util.math.*
+import kotlin.math.*
 import kotlin.random.Random
 
 /**
@@ -68,7 +67,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val swing by boolean("Swing", true)
 
     object Eagle : ToggleableConfigurable(this, "Eagle", false) {
-        val blocksToEagle by int("BlocksToEagle", 1, 1..10)
+        val blocksToEagle by int("BlocksToEagle", 1, 0..10)
         val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
     }
 
@@ -118,6 +117,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(Eagle)
         tree(Slow)
         tree(AdvancedRotation)
+        tree(StabilizeMovement)
     }
 
     var randomization = Random.nextDouble(-0.02, 0.02)
@@ -152,6 +152,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         // Chooses a new randomization value
         randomization = Random.nextDouble(-0.01, 0.01)
         startY = player.blockPos.y
+
+        StabilizeMovement.reset()
+
         super.enable()
     }
 
@@ -209,7 +212,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return when (this.aimMode.get()) {
             AimMode.CENTER -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
-            AimMode.STABILIZED -> StabilizedTargetPositionFactory(config)
+            AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, StabilizeMovement.getOptimalMovementLine(DirectionalInput(player.input)))
+            AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
         }
     }
 
@@ -351,6 +355,92 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.velocity.z += cos(yaw) * strength
                 zitterDirection = !zitterDirection
             }
+        }
+    }
+
+    private object StabilizeMovement : ToggleableConfigurable(this, "StabilizeMovement", true) {
+        const val MIN_VELOCITY: Double = 0.05
+        const val MAX_CENTER_DEVIATION: Double = 0.1
+
+        var lastPosition: BlockPos? = null
+
+        val moveEvent = handler<MovementInputEvent> { event ->
+            val currentVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
+
+            if (RotationManager.angleDifference(player.yaw, RotationManager.currentRotation?.yaw ?: player.yaw) < 10.0)
+                return@handler
+
+            if (currentVelocity.lengthSquared() < MIN_VELOCITY * MIN_VELOCITY)
+                return@handler
+
+            val optimalLine = getOptimalMovementLine(event.directionalInput) ?: return@handler
+
+            val nearestPointOnLine = optimalLine.getNearestPointTo(player.pos)
+
+            if (nearestPointOnLine.squaredDistanceTo(player.pos) < MAX_CENTER_DEVIATION * MAX_CENTER_DEVIATION)
+                return@handler
+
+            val dgs = getDegreesRelativeToPlayerView(nearestPointOnLine.subtract(player.pos.x, 0.0, player.pos.z))
+
+            val newDirectionalInput = getDirectionalInputForDegrees(event.directionalInput, dgs, deadAngle = 0.0F)
+
+            event.directionalInput = DirectionalInput(
+                newDirectionalInput.forwards,
+                newDirectionalInput.backwards,
+                newDirectionalInput.right,
+                newDirectionalInput.left
+            )
+        }
+
+        fun getOptimalMovementLine(directionalInput: DirectionalInput): Line? {
+            val direction = chooseDirection(getMovementDirectionOfInput(player.yaw, directionalInput))
+
+            // Is this a good way to find the block center?
+            val blockUnderPlayer = findBlockPlayerStandsOn() ?: return null
+
+            val centerOfBlock = Vec3d.of(blockUnderPlayer).add(0.5, 0.0, 0.5)
+            // We try to make the player run on this line
+            return Line(Vec3d(centerOfBlock.x, player.pos.y, centerOfBlock.z), direction)
+        }
+
+        fun findBlockPlayerStandsOn(): BlockPos? {
+            val offsetsToTry = arrayOf(0.301, 0.0, -0.301)
+            val candidates = mutableListOf<BlockPos>()
+
+            for (xOffset in offsetsToTry) {
+                for (zOffset in offsetsToTry) {
+                    val playerPos = player.pos.add(xOffset, -1.0, zOffset).toBlockPos()
+
+                    if (playerPos.canStandOn()) {
+                        candidates.add(playerPos)
+                    }
+                }
+            }
+
+            if (this.lastPosition in candidates) {
+                return this.lastPosition
+            }
+
+            val currPosition = candidates.firstOrNull()
+
+            this.lastPosition = currPosition
+
+            return currPosition
+        }
+
+        fun reset() {
+            this.lastPosition = null
+        }
+
+        private fun chooseDirection(currentAngle: Float): Vec3d {
+            val currentDirection = currentAngle / 180.0 * 4 + 4
+
+            val newDirectionNumber = round(currentDirection)
+            val newDirectionAngle = MathHelper.wrapDegrees((newDirectionNumber - 4) / 4.0 * 180.0 + 90.0) / 180.0 * PI
+
+            val newDirection = Vec3d(cos(newDirectionAngle), 0.0, sin(newDirectionAngle))
+
+            return newDirection
         }
     }
 

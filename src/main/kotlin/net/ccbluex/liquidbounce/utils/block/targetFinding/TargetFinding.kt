@@ -23,6 +23,7 @@ enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
+    NEAREST_ROTATION("NearestRotation"),
 }
 
 class BlockPlacementTargetFindingOptions(

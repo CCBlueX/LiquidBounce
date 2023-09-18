@@ -218,7 +218,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {
-            createCleanupPlan(screen)
+            net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.createCleanupPlan(screen)
         }
         return cleanupPlan
     }

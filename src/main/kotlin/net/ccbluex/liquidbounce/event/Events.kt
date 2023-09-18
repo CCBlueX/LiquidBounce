@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.DrawContext
@@ -98,7 +99,7 @@ class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 class InputHandleEvent : Event()
 
 @Nameable("movementInputEvent")
-class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean, var jumping: Boolean) : Event()
+class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean) : Event()
 
 @Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()

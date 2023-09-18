@@ -196,6 +196,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrajectories,
             ModuleTrueSight,
             ModuleXRay,
+            ModuleDebug,
 
             // World
             ModuleAutoDisable,

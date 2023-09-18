@@ -106,7 +106,7 @@ class Face(from: Vec3d, to: Vec3d) {
         )
     }
 
-    fun getPlane(): NormalizedPlane {
+    fun toPlane(): NormalizedPlane {
         val dims = this.dimensions
 
         val xy = Vec3d(

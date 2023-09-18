@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -70,16 +71,18 @@ public class MixinKeyboardInput extends MixinInput {
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER))
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER, ordinal = 0), allow = 1)
     private void injectMovementInputEvent(boolean slowDown, float f, CallbackInfo ci) {
-        var event = new MovementInputEvent(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight, this.jumping);
+        var event = new MovementInputEvent(new DirectionalInput(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight), this.jumping);
 
         EventManager.INSTANCE.callEvent(event);
 
-        this.pressingForward = event.getForwards();
-        this.pressingBack = event.getBackwards();
-        this.pressingLeft = event.getLeft();
-        this.pressingRight = event.getRight();
+        var directionalInput = event.getDirectionalInput();
+
+        this.pressingForward = directionalInput.getForwards();
+        this.pressingBack = directionalInput.getBackwards();
+        this.pressingLeft = directionalInput.getLeft();
+        this.pressingRight = directionalInput.getRight();
         this.jumping = event.getJumping();
     }
 

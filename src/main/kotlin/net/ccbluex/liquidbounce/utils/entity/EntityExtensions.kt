@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -57,28 +58,30 @@ val PlayerEntity.ping: Int
     get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
 
 val ClientPlayerEntity.directionYaw: Float
-    get() {
-        var rotationYaw = yaw
-        var forward = 1f
+    get() = getMovementDirectionOfInput(this.yaw, DirectionalInput(this.input))
 
-        // Check if client-user tries to walk backwards (+180 to turn around)
-        if (input.pressingBack) {
-            rotationYaw += 180f
-            forward = -0.5f
-        } else if (input.pressingForward) {
-            forward = 0.5f
-        }
+fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
+    var actualYaw = facingYaw
+    var forward = 1f
 
-        // Check which direction the client-user tries to walk sideways
-        if (input.pressingLeft) {
-            rotationYaw -= 90f * forward
-        }
-        if (input.pressingRight) {
-            rotationYaw += 90f * forward
-        }
-
-        return rotationYaw
+    // Check if client-user tries to walk backwards (+180 to turn around)
+    if (input.backwards) {
+        actualYaw += 180f
+        forward = -0.5f
+    } else if (input.forwards) {
+        forward = 0.5f
     }
+
+    // Check which direction the client-user tries to walk sideways
+    if (input.left) {
+        actualYaw -= 90f * forward
+    }
+    if (input.right) {
+        actualYaw += 90f * forward
+    }
+
+    return actualYaw
+}
 
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
