@@ -3,7 +3,6 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
@@ -114,7 +113,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val search by BoolValue("Search", true)
     private val down by BoolValue("Down", true) { mode !in arrayOf("GodBridge", "Telly") }
 
-    private val groundTicksValue by IntegerValue("GroundTicks", 3, 1..3) { mode == "Telly" }
+    private val offGroundValue by IntegerValue("OffGroundTicks", 3, 1..3) { mode == "Telly" }
 
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
@@ -258,7 +257,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         get() = mode == "GodBridge" && !jumpAutomatically
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
 
-    // TellyBridge
+    // Telly
     private var offGroundTicks = 0
 
     // Enabling module
@@ -465,7 +464,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (silentRotation) {
             if (mode == "Telly") {
-                if (offGroundTicks < groundTicks) {
+                if (offGroundTicks < offGroundValue) {
                     return
                 }
             }
