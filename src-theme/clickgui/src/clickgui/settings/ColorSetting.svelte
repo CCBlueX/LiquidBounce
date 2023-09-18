@@ -40,7 +40,6 @@
         pickr.on("change", v => {
             const rgba = v.toRGBA()
             value = v.toHEXA();
-            kotlin.log(String(v.toRGBA()))
             instance.set(kotlin.color(rgba[0] | 0, rgba[1] | 0, rgba[2] | 0, rgba[3]))
         });
     });
@@ -51,6 +50,8 @@
                 if (v.length === 6) {
                     pickr.setColor(`#${v}`);
                 } */
+
+        pickr.setColor(e.target.value)
     }
 
     let hidden = true
@@ -66,7 +67,7 @@
         <input class="value" {value} on:input={handleValueChange}>
         <button class="color-pickr-button" on:click={togglePickr} style="background-color: {value};"></button>
     </div>
-    <div class="animation-fix color-picker" class:hidden={hidden}>;
+    <div class="animation-fix color-picker" class:hidden={hidden}>
         <button bind:this={colorPicker}/>
     </div>
 </div>
