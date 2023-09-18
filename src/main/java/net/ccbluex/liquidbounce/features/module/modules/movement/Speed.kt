@@ -132,6 +132,15 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         modeModule.onTick()
     }
 
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        if (mc.thePlayer.isSneaking)
+            return
+        
+        modeModule.onStrafe()
+
+    }
+
     override fun onEnable() {
         if (mc.thePlayer == null)
             return
