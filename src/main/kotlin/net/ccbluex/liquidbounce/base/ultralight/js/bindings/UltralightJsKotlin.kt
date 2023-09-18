@@ -31,12 +31,7 @@ object UltralightJsKotlin {
 
     fun floatRange(from: Float, to: Float) = from..to
 
-    fun color(r:Int, g: Int, b: Int, a: Float): Color4b{
-        chat(Color4b(r, g, b, (a * 255).roundToInt()).toString())
-        return Color4b(r, g, b, (a * 255).roundToInt())
-
-    }
-
+    fun color(r:Int, g: Int, b: Int, a: Float) = Color4b(r, g, b, (a * 255).roundToInt())
     fun log(message: String){
         chat(message)
     }
