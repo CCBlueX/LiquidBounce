@@ -32,6 +32,18 @@ object UltralightJsKotlin {
     fun floatRange(from: Float, to: Float) = from..to
 
     fun color(r:Int, g: Int, b: Int, a: Float) = Color4b(r, g, b, (a * 255).roundToInt())
+
+    fun colorToHex(color4b: Color4b) =
+        color4b.toHex() +
+            if(color4b.a != 255) // if the alpha is full there is no need for the extra "FF"s
+                componentToHex(color4b.a)
+            else
+                ""
+
+    private fun componentToHex(c: Int): String {
+        val hexString = Integer.toHexString(c)
+        return if (hexString.length == 1) "0$hexString" else hexString
+    }
     fun log(message: String){
         chat(message)
     }

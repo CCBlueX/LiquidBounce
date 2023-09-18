@@ -4,7 +4,7 @@
     export let instance;
 
     let name = instance.getName();
-    let value = instance.get().toHex();
+    let value = kotlin.colorToHex(instance.get());
 
     let colorPicker = null;
     let pickr = null;
@@ -20,7 +20,7 @@
           
 
             components: {
-                preview: true,
+                preview: false,
                 opacity: true,
                 hue: true,
 
@@ -52,6 +52,7 @@
                 } */
 
         pickr.setColor(e.target.value)
+
     }
 
     let hidden = true
@@ -111,7 +112,7 @@
         margin: 0;
         margin-right: 15px;
         margin-left: auto;
-        width: 50px;
+        width: 70px;
     }
 
     .value-spot {
