@@ -12,7 +12,7 @@ object Legit : SpeedMode("Legit") {
     override fun onStrafe() {
         val player = mc.thePlayer ?: return
 
-        if (mc.thePlayer.onGround && isMoving) {
+        if (mc.thePlayer.onGround && isMoving && !mc.gameSettings.keyBindJump.isKeyDown) {
             player.jump()
         }
 
