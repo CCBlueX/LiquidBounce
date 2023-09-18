@@ -1,8 +1,10 @@
 <script>
     import {onMount} from "svelte";
 
-    export let name;
-    export let value;
+    export let instance;
+
+    let name = instance.getName();
+    let value = instance.get();
 
     let colorPicker = null;
     let pickr = null;
@@ -13,11 +15,12 @@
             theme: "classic",
             showAlways: true,
             inline: true,
-            default: value,
+            // default: value,
+          
 
             components: {
-                preview: false,
-                opacity: false,
+                preview: true,
+                opacity: true,
                 hue: true,
 
                 interaction: {
@@ -34,7 +37,10 @@
         });
 
         pickr.on("change", v => {
-            value = `RGBA(${v.toRGBA().map(val => val | 0).join(", ")})`;
+            const rgba = v.toRGBA().map(val => val | 0)
+            value = `RGBA(${rgba.join(", ")})`;
+            kotlin.log(String(rgba))
+            instance.set(kotlin.color(rgba[0], rgba[1], rgba[2], rgba[3]))
         });
     });
 

@@ -18,7 +18,8 @@
  */
 
 package net.ccbluex.liquidbounce.base.ultralight.js.bindings
-
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.chat
 /**
  * An easy way to create kotlin things in JS
  */
@@ -27,5 +28,15 @@ object UltralightJsKotlin {
     fun intRange(from: Int, to: Int) = from..to
 
     fun floatRange(from: Float, to: Float) = from..to
+
+    fun color(r:Int, g: Int, b: Int, a: Int): Color4b{
+        chat(Color4b(r, g, b, 255).toString())
+        return Color4b(r, g, b, 255)
+
+    }
+
+    fun log(message: String){
+        chat(message)
+    }
 
 }
