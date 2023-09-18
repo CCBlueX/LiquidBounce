@@ -3,7 +3,6 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
@@ -58,7 +57,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     private val mode by ListValue(
         "Mode",
-        arrayOf("Normal", "Rewinside", "Expand", "GodBridge", "TellyBridge"),
+        arrayOf("Normal", "Rewinside", "Expand", "Telly", "GodBridge"),
         "Normal"
     )
 
@@ -111,9 +110,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Basic stuff
     val sprint by BoolValue("Sprint", false)
     private val swing by BoolValue("Swing", true)
-    private val down by BoolValue("Down", true) { mode !in arrayOf("GodBridge", "TellyBridge") }
+    private val down by BoolValue("Down", true) { mode !in arrayOf("GodBridge", "Telly") }
 
-    private val offGroundValue by IntegerValue("Off Ground Ticks", 3, 1..3) { mode == "TellyBridge" }
+    private val offGroundValue by IntegerValue("OffGroundTicks", 3, 1..3) { mode == "Telly" }
 
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
@@ -143,21 +142,20 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     ) { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
-    private val rotationMode by ListValue("RotationMode", arrayOf("Off", "Normal", "Stabilized"), "Normal")
+    private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized"), "Normal")
     private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
     private val keepRotation by object : BoolValue("KeepRotation", true) {
-        override fun onChange(oldValue: Boolean, newValue: Boolean) = if (mode == "TellyBridge") true else newValue
         override fun isSupported() = rotationMode != "Off"
     }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotationMode != "Off" && mode != "TellyBridge"
+        override fun isSupported() = rotationMode != "Off" && mode != "Telly"
     }
 
     // Search options
     private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { mode != "GodBridge" }
-    private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { mode !in arrayOf("GodBridge", "TellyBridge") }
+    private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { mode !in arrayOf("GodBridge", "Telly") }
 
     // Turn Speed
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f..180f) {
@@ -257,7 +255,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         get() = mode == "GodBridge" && !jumpAutomatically
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
 
-    // TellyBridge
+    // Telly
     private var offGroundTicks = 0
 
     // Enabling module
@@ -386,7 +384,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer
 
         // Jump needs to be here to not flag for simulation on Grim.
-        if (mode == "TellyBridge" && player.onGround && isMoving && currRotation == player.rotation) {
+        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation) {
             player.jump()
         }
     }
@@ -463,7 +461,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
 
         if (silentRotation) {
-            if (mode == "TellyBridge" && isMoving) {
+            if (mode == "Telly" && isMoving) {
                 if (offGroundTicks < offGroundValue) {
                     return
                 }
@@ -516,7 +514,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        if (mode == "TellyBridge") {
+        if (mode == "Telly") {
             val (x, z) = player.horizontalFacing.directionVec.x to player.horizontalFacing.directionVec.z
 
             for (i in (-3..3).sortedBy { getCenterDistance(blockPosition.add(x * it, 0, z * it)) }) {
@@ -925,7 +923,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 currRotation, targetRotation, nextFloat(minTurnSpeed, maxTurnSpeed)
             )
 
-            setRotation(limitedRotation, if (mode == "TellyBridge") 1 else keepTicks)
+            setRotation(limitedRotation, if (mode == "Telly") 1 else keepTicks)
         }
         targetPlace = placeRotation.placeInfo
         return true
@@ -973,7 +971,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (side.axis != EnumFacing.Axis.Y) {
             val dist = abs(if (side.axis == EnumFacing.Axis.Z) diff.zCoord else diff.xCoord)
 
-            if (dist < minDist && mode != "TellyBridge") {
+            if (dist < minDist && mode != "Telly") {
                 return null
             }
         }
