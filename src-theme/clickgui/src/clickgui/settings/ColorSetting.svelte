@@ -38,10 +38,10 @@
         });
 
         pickr.on("change", v => {
-            const rgba = v.toRGBA().map(val => val | 0)
+            const rgba = v.toRGBA()
             value = v.toHEXA();
-            kotlin.log(String(rgba))
-            instance.set(kotlin.color(rgba[0], rgba[1], rgba[2], rgba[3]))
+            kotlin.log(String(v.toRGBA()))
+            instance.set(kotlin.color(rgba[0] | 0, rgba[1] | 0, rgba[2] | 0, rgba[3]))
         });
     });
 
