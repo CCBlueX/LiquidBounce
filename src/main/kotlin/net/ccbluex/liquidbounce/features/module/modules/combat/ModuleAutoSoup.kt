@@ -39,11 +39,11 @@ import net.minecraft.util.Hand
 
 object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
+    private val health by int("Health", 15, 1..40)
     private val bowl by boolean("DropAfterUse", true)
-    private val health by int("Health", 15, 1..20)
-    private val delay by int("Delay", 0, 0..40)
-    val itemDropDelay by int("ItemDropDelay", 0, 0..40)
-    private val swapPreviousDelay by int("SwapPreviousDelay", 5, 1..100)
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
+    private val itemDropDelay by intRange("ItemDropDelay", 1..2, 0..40)
+    private val swapPreviousDelay by int("SwapPreviousAdditionalDelay", 5, 1..100)
 
     val repeatable = repeatable {
         val mushroomStewSlot = findHotbarSlot(Items.MUSHROOM_STEW)
@@ -54,25 +54,24 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
         if (player.health < health && mushroomStewSlot != null && !isInInventoryScreen) {
             // we need to take some actions
-            chat("working")
-            CombatManager.pauseCombat = delay
+            CombatManager.pauseCombat = combatPauseTime
             if (player.isBlocking) {
                 interaction.stopUsingItem(player)
                 wait { 1 }
             }
+            val itemDrop = itemDropDelay.random()
             if (mushroomStewSlot != player.inventory.selectedSlot) {
-                SilentHotbar.selectSlotSilently(this, mushroomStewSlot, swapPreviousDelay)
+                SilentHotbar.selectSlotSilently(this, mushroomStewSlot, swapPreviousDelay + itemDrop)
             }
 
             // uses soup
-            chat("attempt to eat")
             interaction.sendSequencedPacket(world) { sequence ->
                 PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
             }
 
             // checks if using it, succeeded, if so - drop an empty bowl
             if (bowl && player.inventory.getStack(mushroomStewSlot).item == Items.BOWL) {
-                wait { itemDropDelay }
+                wait { itemDrop }
                 player.dropSelectedItem(true)
             }
             return@repeatable

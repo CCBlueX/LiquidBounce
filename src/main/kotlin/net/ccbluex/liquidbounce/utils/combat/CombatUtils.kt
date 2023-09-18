@@ -56,6 +56,7 @@ object CombatManager : Listenable {
     fun update() {
         updatePauseRotation()
         updatePauseCombat()
+        // TODO: implement this for killaura autoblocka and other
         updatePauseBlocking()
     }
 
