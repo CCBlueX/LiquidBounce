@@ -126,8 +126,8 @@
     }
 
     .color-pickr-button {
-        margin-top: -4px;
-        margin-bottom: -4px;
+        margin-top: -2px;
+        margin-bottom: -2px;
         width: 30px;
         border-radius: 3px;
         background-color: blue;
