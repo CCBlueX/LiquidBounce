@@ -10,11 +10,12 @@ import net.minecraft.item.ItemStack
 
 class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        private val COMPARATOR = ComparatorChain<WeightedBlockItem>(
-            { o1, o2 -> ModuleScaffold.BLOCK_COMPARATOR_FOR_INVENTORY.compare(o1.itemStack, o2.itemStack) },
-            PREFER_ITEMS_IN_HOTBAR,
-            STABILIZE_COMPARISON
-        )
+        private val COMPARATOR =
+            ComparatorChain<WeightedBlockItem>(
+                { o1, o2 -> ModuleScaffold.BLOCK_COMPARATOR_FOR_INVENTORY.compare(o1.itemStack, o2.itemStack) },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
     override val category: ItemCategory

@@ -9,12 +9,13 @@ import net.minecraft.item.ItemStack
 class WeightedPrimitiveItem(itemStack: ItemStack, slot: Int, override val category: ItemCategory, val worth: Int = 0) :
     WeightedItem(itemStack, slot) {
     companion object {
-        private val COMPARATOR = ComparatorChain<WeightedPrimitiveItem>(
-            { o1, o2 -> o1.worth.compareTo(o2.worth) },
-            { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
-            PREFER_ITEMS_IN_HOTBAR,
-            STABILIZE_COMPARISON
-        )
+        private val COMPARATOR =
+            ComparatorChain<WeightedPrimitiveItem>(
+                { o1, o2 -> o1.worth.compareTo(o2.worth) },
+                { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
     override fun compareTo(other: WeightedItem): Int = COMPARATOR.compare(this, other as WeightedPrimitiveItem)

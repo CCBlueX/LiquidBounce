@@ -2,8 +2,8 @@ package net.ccbluex.liquidbounce.utils.movement
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.extensions.toDegrees
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.client.toDegrees
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.minecraft.client.input.Input
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d

@@ -11,21 +11,28 @@ import net.minecraft.item.Items
 
 class WeightedFoodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        private val COMPARATOR = ComparatorChain<WeightedFoodItem>(
-            { o1, o2 ->
-                compareByCondition(
-                    o1, o2
-                ) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE }
-            },
-            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.GOLDEN_APPLE } },
-            { o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) },
-            { o1, o2 -> o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier) },
-            { o1, o2 ->
-                o1.itemStack.count.compareTo(o2.itemStack.count)
-            },
-            PREFER_ITEMS_IN_HOTBAR,
-            STABILIZE_COMPARISON
-        )
+        private val COMPARATOR =
+            ComparatorChain<WeightedFoodItem>(
+                { o1, o2 ->
+                    compareByCondition(
+                        o1,
+                        o2,
+                    ) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE }
+                },
+                { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.GOLDEN_APPLE } },
+                { o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) },
+                {
+                        o1,
+                        o2,
+                    ->
+                    o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier)
+                },
+                { o1, o2 ->
+                    o1.itemStack.count.compareTo(o2.itemStack.count)
+                },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
     override val category: ItemCategory

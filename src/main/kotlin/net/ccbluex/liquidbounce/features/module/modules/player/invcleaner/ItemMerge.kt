@@ -27,7 +27,11 @@ object ItemMerge {
 
     class MergeableStack(val slot: Int, var count: Int)
 
-    private fun mergeStacks(itemsToDoubleclick: MutableList<Int>, stacks: MutableList<MergeableStack>, maxStackSize: Int) {
+    private fun mergeStacks(
+        itemsToDoubleclick: MutableList<Int>,
+        stacks: MutableList<MergeableStack>,
+        maxStackSize: Int,
+    ) {
         if (stacks.size <= 1) {
             return
         }
@@ -64,7 +68,10 @@ object ItemMerge {
         mergeStacks(itemsToDoubleclick, stacks, maxStackSize)
     }
 
-    private fun canMerge(items: List<ItemStackWithSlot>, maxStackSize: Int): Boolean {
+    private fun canMerge(
+        items: List<ItemStackWithSlot>,
+        maxStackSize: Int,
+    ): Boolean {
         val totalCount = items.sumOf { it.itemStack.count }
 
         val mergedStackCount = ceil(totalCount.toDouble() / maxStackSize).toInt()

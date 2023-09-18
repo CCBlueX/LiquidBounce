@@ -26,17 +26,17 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.item.clickHotbarOrOffhand
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
-import net.ccbluex.liquidbounce.utils.item.openInventorySilently
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.ccbluex.liquidbounce.utils.item.isHotbarSlot
+import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.item.ItemStack
 import net.minecraft.item.SplashPotionItem
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.potion.PotionUtil
 import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
 
 /**
@@ -46,88 +46,78 @@ import org.apache.commons.lang3.RandomUtils
  */
 
 object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
-
     private val delay by int("Delay", 10, 10..20)
     private val health by int("Health", 18, 1..20)
     private val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
 
     val rotations = tree(RotationsConfigurable())
 
-    val repeatable = repeatable {
-        if (player.isDead) {
-            return@repeatable
-        }
+    val repeatable =
+        repeatable {
+            if (player.isDead) {
+                return@repeatable
+            }
+            if (player.health >= health) {
+                return@repeatable
+            }
 
-        val potHotBar = findPotion(0, 8)
-        val potInvSlot = findPotion(9, 40)
+            val potionSlot = findInventorySlot { isPotion(it) } ?: return@repeatable
 
-        if (potHotBar == null && potInvSlot == null) {
-            return@repeatable
-        }
-
-        if (player.health < health) {
-            if (potHotBar != null) {
-                val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
-
-                if (player.y - (collisionBlock?.y ?: 0) > tillGroundDistance) {
+            if (isHotbarSlot(potionSlot)) {
+                if (!tryPot(potionSlot)) {
                     return@repeatable
                 }
 
-                if (potHotBar != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(potHotBar))
-                }
-
-                if (player.pitch <= 80) {
-                    RotationManager.aimAt(
-                        Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)), configurable = rotations
-                    )
-                }
-
-                if (player.isBlocking) {
-                    waitUntil { !player.isBlocking }
-                }
-
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
-                }
-
-                if (potHotBar != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-                }
-
                 wait(delay)
-
-                return@repeatable
-            } else if (potInvSlot != null) {
-                val serverSlot = convertClientSlotToServerSlot(potInvSlot, null)
-                val isInInventoryScreen = mc.currentScreen is InventoryScreen
-
-                if (!isInInventoryScreen) {
-                    openInventorySilently()
-                }
-
-                interaction.clickSlot(0, serverSlot, 0, SlotActionType.QUICK_MOVE, player)
-
-                if (!isInInventoryScreen) {
-                    network.sendPacket(CloseHandledScreenC2SPacket(0))
-                }
-
-                return@repeatable
+            } else {
+                tryToMoveSlotInHotbar(potionSlot)
             }
+
+            return@repeatable
+        }
+
+    private fun tryPot(foundPotSlot: Int): Boolean {
+        val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
+
+        val isCloseGround = player.y - (collisionBlock?.y ?: 0) <= tillGroundDistance
+
+        if (isCloseGround || player.isBlocking) {
+            return false
+        }
+
+        if (RotationManager.serverRotation.pitch <= 80) {
+            RotationManager.aimAt(
+                Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
+                configurable = rotations,
+            )
+
+            return false
+        }
+
+        clickHotbarOrOffhand(foundPotSlot)
+
+        return true
+    }
+
+    private fun tryToMoveSlotInHotbar(foundPotSlot: Int) {
+        val isSpaceInHotbar = (0..8).any { player.inventory.getStack(it).isNothing() }
+
+        if (!isSpaceInHotbar) {
+            return
+        }
+
+        val serverSlot = convertClientSlotToServerSlot(foundPotSlot, null)
+
+        runWithOpenedInventory {
+            interaction.clickSlot(0, serverSlot, 0, SlotActionType.QUICK_MOVE, player)
         }
     }
 
-    private fun findPotion(startSlot: Int, endSlot: Int): Int? {
-        for (slot in startSlot..endSlot) {
-            val stack = player.inventory.getStack(slot)
-            if (stack.item is SplashPotionItem) {
-                for (effect in PotionUtil.getPotionEffects(stack)) {
-                    if (effect.effectType == StatusEffects.INSTANT_HEALTH) {
-                        return slot
-                    }
-                }
-            }
+    private fun isPotion(stack: ItemStack): Boolean {
+        if (stack.item !is SplashPotionItem) {
+            return false
         }
-        return null
+
+        return PotionUtil.getPotionEffects(stack).any { it.effectType == StatusEffects.INSTANT_HEALTH }
     }
 }
