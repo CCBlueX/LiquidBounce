@@ -76,7 +76,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
             
         if (heldItem.item is ItemSword && thePlayer.isBlocking()) {
 
-            when (packetMode.lowercase()) {
+            when (swordMode.lowercase()) {
                 "none" -> {
                     null
                 }
