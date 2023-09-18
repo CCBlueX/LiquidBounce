@@ -29,12 +29,13 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 
-    val packetMode by ListValue("Packet-Mode", arrayOf("None", "NCP", "AAC5", "Spoof", "OldIntave"), "None")
+    val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "AAC5"), "None")
     
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    val consumePacket by ListValue("ConsumePacket", arrayOf("None", "AAC5", "SpoofNoSwitch", "SpamPlace", "SpamEmptyPlace", "Spoof", "Glitch"), "None")
+    val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5"), "None")
+
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
 
@@ -62,31 +63,8 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
                     null
                 }
 
-                "glitch" -> {
-                    mc.netHandler.addToSendQueue(C09PacketHeldItemChange((mc.thePlayer.inventory.currentItem + 1) % 9))
-                    mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
-                }
-
                 "aac5" -> {
                     mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f))
-                }
-
-                "spoofnoswitch" -> {
-                    mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
-                }
-
-                "spamplace" -> {
-                    mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(mc.thePlayer.inventory.getCurrentItem()))
-                }
-
-                "spamemptyplace" -> {
-                    mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement())
-                }
-
-                "spoof" -> {
-                    sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem  % 8 + 1))
-                    sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
-                    
                 }
 
                 else -> {
@@ -117,27 +95,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
                         mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f))
                     }
                 }
-
-                "spoof" -> {
-                    sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem  % 8 + 1))
-                    sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
-                    
-                }
-
-                "oldintave" -> {
-                    if(mc.thePlayer.isUsingItem){
-                        if (event.eventState == EventState.PRE){
-                            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem % 8 + 1))
-                            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
-                        }
-                        if(event.eventState == EventState.POST){
-                                mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(mc.thePlayer.inventory.currentItem + 36).stack))
-                        }
-                    }
-                }
-
             }
-        
         }
     }
 
