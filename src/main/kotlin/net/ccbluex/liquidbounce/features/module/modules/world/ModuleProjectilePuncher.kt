@@ -38,6 +38,7 @@ import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
+import net.minecraft.util.math.Vec3d
 
 /**
  * ProjectilePuncher module
@@ -82,7 +83,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             )
         }, cps)
 
-        if (clicks > 0) {
+        repeat(clicks) {
             attackEntity(target)
         }
     }
@@ -100,7 +101,18 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                 continue
             }
 
-            if (entity.squaredBoxedDistanceTo(player) > rangeSquared) {
+            val distance = entity.squaredBoxedDistanceTo(player)
+
+            val entityPrediction = Vec3d(
+                entity.x - entity.prevX, entity.y - entity.prevY, entity.z - entity.prevZ
+            )
+
+            // Avoid fireball if its speed-predicted next position goes further than the normal distance.
+            // Useful in preventing the user from changing their own thrown fireball's direction
+            if (distance > rangeSquared || entity is FireballEntity && (entity.age <= 1 && entityPrediction == Vec3d.ZERO || entity.box.offset(
+                    entityPrediction
+                ).squaredBoxedDistanceTo(player) > distance)
+            ) {
                 continue
             }
 
