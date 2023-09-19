@@ -38,7 +38,7 @@ class GuiWelcome : GuiScreen() {
             drawCenteredString("§lNeed help? Feel free to contact us!", width / 2F, 80f + fontHeight * 12, 0xffffff, true)
             drawCenteredString("YouTube: https://youtube.com/ccbluex", width / 2F, 80f + fontHeight * 13, 0xffffff, true)
             drawCenteredString("Twitter: https://twitter.com/ccbluex", width / 2F, 80f + fontHeight * 14, 0xffffff, true)
-            drawCenteredString("Forum: https://forum.ccbluex.net/", width / 2F, 80f + fontHeight * 15, 0xffffff, true)
+            drawCenteredString("Forum: https://forums.ccbluex.net/", width / 2F, 80f + fontHeight * 15, 0xffffff, true)
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks)
