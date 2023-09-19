@@ -171,7 +171,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val rotation = Rotation(
             atan2(posZ, posX).toDegreesF() - 90f,
-            atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)).toDegreesF()
+            -atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)).toDegreesF()
         )
         if (silent) setTargetRotation(rotation)
         else limitAngleChange(
