@@ -112,7 +112,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val swing by BoolValue("Swing", true)
     private val down by BoolValue("Down", true) { mode !in arrayOf("GodBridge", "Telly") }
 
-    private val offGroundValue by IntegerValue("OffGroundTicks", 3, 1..3) { mode == "Telly" }
+    private val ticksUntilRotation: IntegerValue = object : IntegerValue("TicksUntilRotation", 3, 1..5) {
+        override fun isSupported() = mode == "Telly"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
+
+    }
 
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
@@ -331,7 +336,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (player.onGround) {
             // Still a thing?
-
             if (mode == "Rewinside") {
                 strafe(0.2F)
                 player.motionY = 0.0
@@ -383,8 +387,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onStrafe(event: StrafeEvent) {
         val player = mc.thePlayer
 
-        // Jump needs to be here to not flag for simulation on Grim.
-        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation) {
+        // Jumping needs to be done here, so it doesn't get detected by movement-sensitive anti-cheats.
+        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation && !mc.gameSettings.keyBindJump.isKeyDown) {
             player.jump()
         }
     }
@@ -462,7 +466,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (silentRotation) {
             if (mode == "Telly" && isMoving) {
-                if (offGroundTicks < offGroundValue) {
+                if (offGroundTicks < ticksUntilRotation.get()) {
                     return
                 }
             }
@@ -517,8 +521,16 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (mode == "Telly") {
             val (x, z) = player.horizontalFacing.directionVec.x to player.horizontalFacing.directionVec.z
 
-            for (i in (-3..3).sortedBy { getCenterDistance(blockPosition.add(x * it, 0, z * it)) }) {
-                if (search(blockPosition.add(x * i, 0, z * i), !shouldGoDown, area)) {
+            val offsets = arrayListOf<Vec3i>()
+
+            for (y in 0 downTo -3) {
+                for (i in (-3..3)) {
+                    offsets.add(Vec3i(x * i, y, z * i))
+                }
+            }
+
+            for (offset in offsets.sortedBy { getCenterDistance(blockPosition.add(it)) }) {
+                if (search(blockPosition.add(offset), !shouldGoDown, area)) {
                     return
                 }
             }
@@ -631,23 +643,21 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         val raytrace = performBlockRaytrace(currRotation, mc.playerController.blockReachDistance) ?: return
 
-        val isOnTheSamePos = raytrace.blockPos.x == player.posX.toInt() && raytrace.blockPos.z == player.posZ.toInt()
-
-        val isBlockBelowPlayer = if (shouldKeepLaunchPosition) {
-            raytrace.blockPos.y == launchY - 1 && !block.canPlaceBlockOnSide(
-                world, raytrace.blockPos, EnumFacing.UP, player, stack
-            )
-        } else {
-            raytrace.blockPos.y <= player.posY - 1 && (placementAttempt == "Independent" && isOnTheSamePos || !block.canPlaceBlockOnSide(
-                world, raytrace.blockPos, EnumFacing.UP, player, stack
-            ))
-        }
-
-        val shouldPlace = placementAttempt == "Independent" || !block.canPlaceBlockOnSide(
-            world, raytrace.blockPos, raytrace.sideHit, player, stack
+        val canPlaceOnUpperFace = block.canPlaceBlockOnSide(
+            world, raytrace.blockPos, EnumFacing.UP, player, stack
         )
 
-        if (raytrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || !isBlockBelowPlayer || !shouldPlace) {
+        val shouldPlace = if (placementAttempt == "Fail") {
+            !block.canPlaceBlockOnSide(world, raytrace.blockPos, raytrace.sideHit, player, stack)
+        } else {
+            if (shouldKeepLaunchPosition) {
+                raytrace.blockPos.y == launchY - 1 && !canPlaceOnUpperFace
+            } else {
+                raytrace.blockPos.y <= player.posY.toInt() - 1 && !(raytrace.blockPos.y == player.posY.toInt() - 1 && canPlaceOnUpperFace && raytrace.sideHit == EnumFacing.UP)
+            }
+        }
+
+        if (raytrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || !shouldPlace) {
             return
         }
 
