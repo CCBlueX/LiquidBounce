@@ -4,7 +4,7 @@
   <CurrentIssues>
     <ID>ComplexCondition:Command.kt$Command$offset == 0 &amp;&amp; isNewParameter || offset == 1 &amp;&amp; !isNewParameter</ID>
     <ID>ComplexCondition:GlfwInputAdapter.kt$GlfwInputAdapter$(action == GLFW_PRESS || action == GLFW_REPEAT) &amp;&amp; (key == GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_TAB)</ID>
-    <ID>ComplexCondition:ModuleAutoGapple.kt$ModuleAutoGapple$!(inventoryConstraints.noMove &amp;&amp; net.ccbluex.liquidbounce.utils.client.mc.player!!.moving) &amp;&amp; (!inventoryConstraints.invOpen || isInInventoryScreen)</ID>
+    <ID>ComplexCondition:ModuleAutoGapple.kt$ModuleAutoGapple$!(inventoryConstraints.noMove &amp;&amp; player.moving) &amp;&amp; (!inventoryConstraints.invOpen || isInInventoryScreen)</ID>
     <ID>ComplexCondition:ModuleAutoWeapon.kt$ModuleAutoWeapon$stack.isNothing() || (!player.isCreative &amp;&amp; stack.damage &gt;= (stack.maxDamage - 2) &amp;&amp; ignoreDurability) || (stack.getEnchantment( KNOCKBACK ) != 0 &amp;&amp; ignoreKnockback)</ID>
     <ID>ComplexCondition:ModuleBadWifi.kt$ModuleBadWifi$event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket || event.packet is HandSwingC2SPacket || event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket</ID>
     <ID>ComplexCondition:ModuleBadWifi.kt$ModuleBadWifi$mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND</ID>
@@ -174,8 +174,6 @@
     <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$// We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.</ID>
     <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$if</ID>
     <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
-    <ID>MaxLineLength:ModuleAutoGapple.kt$ModuleAutoGapple$if</ID>
-    <ID>MaxLineLength:ModuleAutoGapple.kt$ModuleAutoGapple$net.ccbluex.liquidbounce.utils.client.mc.currentScreen is InventoryScreen || net.ccbluex.liquidbounce.utils.client.mc.currentScreen is GenericContainerScreen</ID>
     <ID>MaxLineLength:ModuleAutoTool.kt$ModuleAutoTool$(stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)))</ID>
     <ID>MaxLineLength:ModuleAutoWeapon.kt$ModuleAutoWeapon$if</ID>
     <ID>MaxLineLength:ModuleBadWifi.kt$ModuleBadWifi$if</ID>
@@ -313,6 +311,7 @@
     <ID>NewLineAtEndOfFile:ModuleAutoArmor.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleAutoBow.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleAutoDodge.kt$net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAutoDodge.kt</ID>
+    <ID>NewLineAtEndOfFile:ModuleAutoGapple.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleAutoPot.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoPot.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleBlink.kt$net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleBreadcrumbs.kt$net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs.kt</ID>
