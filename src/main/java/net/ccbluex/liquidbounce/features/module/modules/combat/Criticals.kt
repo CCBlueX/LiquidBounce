@@ -24,7 +24,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
-    val mode by ListValue("Mode", arrayOf("Packet", "NcpPacket", "BlocksMC" "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
+    val mode by ListValue("Mode", arrayOf("Packet", "NcpPacket", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
     val delay by IntegerValue("Delay", 0, 0..500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
 
