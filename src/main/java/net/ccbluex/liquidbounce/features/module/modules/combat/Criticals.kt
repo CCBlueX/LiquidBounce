@@ -71,8 +71,6 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                         C04PacketPlayerPosition(x, y + 0.001091981, z, true),
                         C04PacketPlayerPosition(x, y + 0.000114514, z, false),
                         C04PacketPlayerPosition(x, y, z, false)
-                    )
-                    mc.thePlayer.onCriticalHit(entity)
                  } 
                 "hop" -> {
                     thePlayer.motionY = 0.1
