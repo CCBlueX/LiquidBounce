@@ -42,6 +42,7 @@ public abstract class MixinEntity {
 
     @Shadow
     public boolean noClip;
+
     @Shadow
     protected boolean submergedInWater;
 
@@ -51,31 +52,10 @@ public abstract class MixinEntity {
     }
 
     @Shadow
-    public abstract Vec3d getVelocity();
-
-    @Shadow
-    public abstract void setVelocity(Vec3d velocity);
-
-    @Shadow
-    public abstract double getX();
-
-    @Shadow
-    public abstract double getY();
-
-    @Shadow
-    public abstract double getZ();
-
-    @Shadow
-    public abstract float getYaw();
-
-    @Shadow
     public abstract boolean isOnGround();
 
     @Shadow
     public abstract boolean hasVehicle();
-
-    @Shadow
-    public abstract float getPitch();
 
     @Shadow
     public abstract boolean isPlayer();

@@ -74,33 +74,6 @@ fun openInventorySilently() {
     }
 }
 
-fun utilizeInventory(
-    item: Int,
-    button: Int,
-    slotActionType: SlotActionType,
-    inventoryConstraints: InventoryConstraintsConfigurable,
-    close: Boolean = true
-) {
-    val slot = convertClientSlotToServerSlot(item)
-    val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
-    // checks if opened inventory is needed
-    val isInHitBar = item in 0..8
-
-    if (!isInInventoryScreen && !isInHitBar) {
-        openInventorySilently()
-    }
-
-    if (!(inventoryConstraints.noMove && mc.player!!.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
-        mc.interactionManager!!.clickSlot(0, slot, button, slotActionType, mc.player!!)
-
-        if (close) {
-            if (!isInInventoryScreen && !isInHitBar) {
-                mc.networkHandler!!.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
-        }
-    }
-}
-
 /**
  * A list of blocks, which are useless, so inv cleaner and scaffold won't count them as blocks
  */

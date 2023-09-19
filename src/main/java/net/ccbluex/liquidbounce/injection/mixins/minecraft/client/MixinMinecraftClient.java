@@ -198,30 +198,6 @@ public abstract class MixinMinecraftClient {
         itemUseCooldown = useCooldownEvent.getCooldown();
     }
 
-    /**
-     * Hook item use
-     */
-    @Inject(method = "doItemUse", cancellable = true, at = @At("HEAD"))
-    private void hookItemUse(CallbackInfo ci) {
-        ItemUseEvent itemUseEvent = new ItemUseEvent();
-        EventManager.INSTANCE.callEvent(itemUseEvent);
-        if (itemUseEvent.isCancelled()) {
-            ci.cancel();
-        }
-    }
-
-    /**
-     * Hook start of the attack
-     */
-    @Inject(method = "doAttack", cancellable = true, at = @At("HEAD"))
-    private void doAttackHook(CallbackInfoReturnable<Boolean> cir) {
-        AttackKeyEvent itemUseEvent = new AttackKeyEvent();
-        EventManager.INSTANCE.callEvent(itemUseEvent);
-        if (itemUseEvent.isCancelled()) {
-            cir.cancel();
-        }
-    }
-
     @Inject(method = "hasOutline", cancellable = true, at = @At("HEAD"))
     private void injectOutlineESPFix(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (RenderingFlags.isCurrentlyRenderingEntityOutline().get()) {

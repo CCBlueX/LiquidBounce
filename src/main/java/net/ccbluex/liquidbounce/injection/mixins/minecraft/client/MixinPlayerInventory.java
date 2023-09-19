@@ -27,7 +27,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(PlayerInventory.class)
@@ -37,13 +36,21 @@ public class MixinPlayerInventory {
     @Final
     public PlayerEntity player;
 
+    /**
+     * Modify slot, to drop item from according to server side information.
+     *
+     * @param playerInventory inventory
+     */
     @Redirect(method = "dropSelectedItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
     private ItemStack hookItemDrop(PlayerInventory playerInventory) {
-        int slot = SilentHotbar.INSTANCE.getServersideSlot();
-
-        return player.getInventory().main.get(slot);
+        return player.getInventory().main.get(SilentHotbar.INSTANCE.getServersideSlot());
     }
 
+    /**
+     * Modify slot, to drop item from according to server side information.
+     *
+     * @param instance inventory
+     */
     @Redirect(method = "dropSelectedItem", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
     private int hookCustomSelectedSlot(PlayerInventory instance) {
         return SilentHotbar.INSTANCE.getServersideSlot();

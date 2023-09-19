@@ -23,11 +23,12 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
-import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
-import net.ccbluex.liquidbounce.utils.item.utilizeInventory
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.item.*
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
 /**
@@ -85,6 +86,41 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                 utilizeInventory(invSlot, 0, SlotActionType.QUICK_MOVE, inventoryConstraints)
 
                 return@repeatable
+            }
+        }
+    }
+
+
+    fun utilizeInventory(
+        item: Int,
+        button: Int,
+        slotActionType: SlotActionType,
+        inventoryConstraints: InventoryConstraintsConfigurable,
+        close: Boolean = true
+    ) {
+        val slot = convertClientSlotToServerSlot(item)
+        val isInInventoryScreen =
+            net.ccbluex.liquidbounce.utils.client.mc.currentScreen is InventoryScreen || net.ccbluex.liquidbounce.utils.client.mc.currentScreen is GenericContainerScreen
+        // checks if opened inventory is needed
+        val isInHitBar = item in 0..8
+
+        if (!isInInventoryScreen && !isInHitBar) {
+            openInventorySilently()
+        }
+
+        if (!(inventoryConstraints.noMove && net.ccbluex.liquidbounce.utils.client.mc.player!!.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
+            net.ccbluex.liquidbounce.utils.client.mc.interactionManager!!.clickSlot(
+                0,
+                slot,
+                button,
+                slotActionType,
+                net.ccbluex.liquidbounce.utils.client.mc.player!!
+            )
+
+            if (close) {
+                if (!isInInventoryScreen && !isInHitBar) {
+                    net.ccbluex.liquidbounce.utils.client.mc.networkHandler!!.sendPacket(CloseHandledScreenC2SPacket(0))
+                }
             }
         }
     }
