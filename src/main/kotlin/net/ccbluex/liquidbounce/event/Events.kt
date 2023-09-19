@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.DrawContext
