@@ -27,12 +27,7 @@ import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPac
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.block.Blocks
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.screen.slot.SlotActionType
 
 fun convertClientSlotToServerSlot(slot: Int): Int {
     return when (slot) {

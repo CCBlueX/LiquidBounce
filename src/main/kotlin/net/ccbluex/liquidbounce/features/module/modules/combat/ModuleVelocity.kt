@@ -148,11 +148,12 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val hReduce by float("HReduce", 0.5f, 0f..1f)
-        val times by int("Times", 2, 1..10)
+        val hReduce by float("HReduce", 0.3f, 0f..1f)
+        val times by int("AttacksToWork", 4, 1..10)
 
         var lastAttackTime = 0L
         var count = 0
+
         val attackHandler = handler<AttackEvent> {
             if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
                 player.velocity.x *= hReduce
