@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.ccbluex.liquidbounce.injection.mixins",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_17",
   "priority": 1337,
   "client": [
     "graaljs.MixinHostContext",

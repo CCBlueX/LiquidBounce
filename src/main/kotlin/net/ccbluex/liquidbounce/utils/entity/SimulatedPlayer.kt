@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.input.Input
 import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffect
@@ -39,8 +40,8 @@ import kotlin.math.sqrt
 class SimulatedPlayer(
     private val player: PlayerEntity,
     var input: SimulatedPlayerInput,
-    var pos: Vec3d,
-    private var velocity: Vec3d,
+    override var pos: Vec3d,
+    var velocity: Vec3d,
     private val yaw: Float,
     private val pitch: Float,
     private var sprinting: Boolean,
@@ -51,7 +52,7 @@ class SimulatedPlayer(
     private var onGround: Boolean,
     private var horizontalCollision: Boolean,
     private var verticalCollision: Boolean
-) {
+) : PlayerSimulation {
     companion object {
         fun fromPlayer(player: PlayerEntity, input: SimulatedPlayerInput): SimulatedPlayer {
             return SimulatedPlayer(
@@ -76,7 +77,7 @@ class SimulatedPlayer(
 
     private var simulatedTicks: Int = 0
 
-    fun tick() {
+    override fun tick() {
         // LivingEntity.tickMovement()
         if (this.jumpingCooldown > 0) {
             this.jumpingCooldown--
@@ -410,20 +411,17 @@ class SimulatedPlayer(
     }
 
     class SimulatedPlayerInput(
-        forwards: Boolean,
-        backwards: Boolean,
-        left: Boolean,
-        right: Boolean,
+        directionalInput: DirectionalInput,
         jumping: Boolean,
         var sprinting: Boolean
     ) : Input() {
         var slowDown: Boolean = false
 
         init {
-            this.pressingForward = forwards
-            this.pressingBack = backwards
-            this.pressingLeft = left
-            this.pressingRight = right
+            this.pressingForward = directionalInput.forwards
+            this.pressingBack = directionalInput.backwards
+            this.pressingLeft = directionalInput.left
+            this.pressingRight = directionalInput.right
             this.jumping = jumping
         }
 
@@ -487,10 +485,12 @@ class SimulatedPlayer(
                 val jumping = !entity.isOnGround
 
                 return SimulatedPlayerInput(
-                    forwards,
-                    backwards,
-                    left,
-                    right,
+                    DirectionalInput(
+                        forwards,
+                        backwards,
+                        left,
+                        right
+                    ),
                     jumping,
                     sprinting
                 ).apply { this.slowDown = entity.isSneaking }

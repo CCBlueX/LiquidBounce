@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
  * Automatically faces selected entities around you.
  */
 object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
-
     private val range by float("Range", 4.2f, 1f..8f)
 
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
@@ -49,13 +48,18 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         targetRotation = null
     }
 
-    val tickHandler = handler<PlayerNetworkMovementTickEvent> {
-        if (it.state != EventState.PRE) {
-            return@handler
+    val tickHandler =
+        handler<PlayerNetworkMovementTickEvent> { event ->
+            if (event.state != EventState.PRE) {
+                return@handler
+            }
+
+            targetRotation?.let { RotationManager.aimAt(it, false, turnSpeed) }
+
+            targetRotation = findNextTargetRotation()
         }
 
-        targetRotation?.let { RotationManager.aimAt(it, false, turnSpeed) }
-
+    private fun findNextTargetRotation(): Rotation? {
         for (target in targetTracker.enemies()) {
             if (target.boxedDistanceTo(player) > range) {
                 continue
@@ -64,11 +68,10 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
                 val spot = RotationManager.raytraceBox(player.eyes, target.box, range.toDouble(), 0.0) ?: break
 
-                targetRotation = spot.rotation
-                return@handler
+                return spot.rotation
             }
         }
 
-        targetRotation = null
+        return null
     }
 }

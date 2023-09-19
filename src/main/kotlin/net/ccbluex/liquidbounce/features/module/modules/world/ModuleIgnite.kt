@@ -21,9 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.updateTarget
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
@@ -36,6 +39,7 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
+import net.minecraft.util.math.Vec3i
 
 /**
  * Ignite module
@@ -67,7 +71,13 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
                 continue
             }
 
-            val currentTarget = updateTarget(pos, true) ?: continue
+            val options = BlockPlacementTargetFindingOptions(
+                listOf(Vec3i(0, 0, 0)),
+                player.inventory.getStack(slot),
+                CenterTargetPositionFactory
+            )
+
+            val currentTarget = findBestBlockPlacementTarget(pos, options) ?: continue
 
             val rotation = currentTarget.rotation.fixedSensitivity()
             val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable

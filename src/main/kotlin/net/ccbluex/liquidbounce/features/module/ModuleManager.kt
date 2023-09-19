@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.player.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import org.lwjgl.glfw.GLFW
@@ -195,6 +196,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrajectories,
             ModuleTrueSight,
             ModuleXRay,
+            ModuleDebug,
 
             // World
             ModuleAutoDisable,

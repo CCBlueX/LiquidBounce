@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import de.florianmichael.vialoadingbase.ViaLoadingBase
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.NotificationEvent
@@ -35,10 +34,47 @@ import org.lwjgl.glfw.GLFW
 /**
  * Get minecraft instance
  */
-val mc = MinecraftClient.getInstance()!!
+val mc: MinecraftClient
+    inline get() = MinecraftClient.getInstance()!!
 
 val logger: Logger
     get() = LiquidBounce.logger
+
+val protocolVersionGetter: () -> Int = run {
+    val viaLoadingBaseClass: Class<*>
+
+    try {
+        try {
+            viaLoadingBaseClass = Class.forName("de.florianmichael.vialoadingbase.ViaLoadingBase")
+        } catch (e: ClassNotFoundException) {
+            // ViaVersion does not seem to be loaded
+            return@run { MC_1_20_1 }
+        }
+
+        val comparableProtocolVersion = Class.forName("de.florianmichael.vialoadingbase.model.ComparableProtocolVersion")
+
+        val getInstanceMethod = viaLoadingBaseClass.getMethod("getInstance")
+        val getTargetVersion = viaLoadingBaseClass.getMethod("getTargetVersion")
+        val getIndexMethod = comparableProtocolVersion.getMethod("getIndex")
+
+        return@run {
+            try {
+                val instance: Any? = getInstanceMethod.invoke(null)
+
+                if (instance == null) {
+                    MC_1_20_1
+                } else {
+                    getIndexMethod.invoke(getTargetVersion.invoke(instance)) as Int
+                }
+
+            } catch (e: Exception) {
+                throw Error("Failed to retrieve protocol version from ViaVersion", e)
+            }
+        }
+    } catch (e: Exception) {
+        throw Error("Failed to setup protocol version loading from ViaVersion", e)
+    }
+}
 
 /**
  * Get current protocol version
@@ -46,9 +82,7 @@ val logger: Logger
  * @return protocol version
  */
 val protocolVersion: Int
-    get() = runCatching {
-        ViaLoadingBase.getInstance().targetVersion.index
-    }.getOrElse { MC_1_20_1 }
+    get() = protocolVersionGetter()
 
 const val MC_1_20_1: Int = 763
 const val MC_1_8: Int = 47

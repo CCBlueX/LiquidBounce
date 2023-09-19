@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity

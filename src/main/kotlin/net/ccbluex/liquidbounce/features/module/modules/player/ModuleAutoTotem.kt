@@ -50,7 +50,7 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
             isItemValid(inventory.getStack(it))
         } ?: return@repeatable
 
-        val serverSlot = convertClientSlotToServerSlot(slot)
+        val serverSlot = convertClientSlotToServerSlot(slot, null)
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         if (!isInInventoryScreen) {

@@ -29,5 +29,5 @@ class ArmorPiece(val itemStack: ItemStack, val slot: Int) {
     val isAlreadyEquipped: Boolean
         get() = slot in 36..39
     val isReachableByHand: Boolean
-        get() = isInHotbar(slot)
+        get() = isHotbarSlot(slot)
 }

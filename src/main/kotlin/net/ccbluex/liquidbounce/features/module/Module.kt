@@ -113,15 +113,15 @@ open class Module(
      * Quick access
      */
     protected val mc: MinecraftClient
-        get() = net.ccbluex.liquidbounce.utils.client.mc
+        inline get() = net.ccbluex.liquidbounce.utils.client.mc
     protected val player: ClientPlayerEntity
-        get() = mc.player!!
+        inline get() = mc.player!!
     protected val world: ClientWorld
-        get() = mc.world!!
+        inline get() = mc.world!!
     protected val network: ClientPlayNetworkHandler
-        get() = mc.networkHandler!!
+        inline get() = mc.networkHandler!!
     protected val interaction: ClientPlayerInteractionManager
-        get() = mc.interactionManager!!
+        inline get() = mc.interactionManager!!
 
     /**
      * Called when module is turned on
