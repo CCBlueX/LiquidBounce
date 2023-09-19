@@ -138,7 +138,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         if (
 //            equippedItem.name.string != "§cKill Contract"
             mapName == this.lastMap
-            ) {
+        ) {
             return@handler
         }
 
@@ -158,7 +158,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             val g = (color ushr 8) and 0xFF
             val b = (color ushr 16) and 0xFF
 
-                rgb[i] = Color(r, g, b).getRGB()
+            rgb[i] = Color(r, g, b).getRGB()
 //            }
 
         }
@@ -303,24 +303,24 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
                 val isSword =
                     item is SwordItem ||
-                        item is PickaxeItem ||
-                        item is ShovelItem && item != Items.WOODEN_SHOVEL && item != Items.GOLDEN_SHOVEL ||
-                        item is AxeItem ||
-                        item is HoeItem ||
-                        item is BoatItem ||
-                        run {
-                            if (item !is BlockItem) {
-                                return@run false
-                            }
+                            item is PickaxeItem ||
+                            item is ShovelItem && item != Items.WOODEN_SHOVEL && item != Items.GOLDEN_SHOVEL ||
+                            item is AxeItem ||
+                            item is HoeItem ||
+                            item is BoatItem ||
+                            run {
+                                if (item !is BlockItem) {
+                                    return@run false
+                                }
 
-                            val block = item.block
+                                val block = item.block
 
-                            return@run block == Blocks.SPONGE ||
-                                block == Blocks.DEAD_BUSH ||
-                                block == Blocks.REDSTONE_TORCH ||
-                                block == Blocks.CHORUS_PLANT
-                        } ||
-                        item in arrayOf(
+                                return@run block == Blocks.SPONGE ||
+                                        block == Blocks.DEAD_BUSH ||
+                                        block == Blocks.REDSTONE_TORCH ||
+                                        block == Blocks.CHORUS_PLANT
+                            } ||
+                            item in arrayOf(
                         Items.GOLDEN_CARROT,
                         Items.CARROT,
                         Items.CARROT_ON_A_STICK,

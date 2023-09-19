@@ -47,7 +47,10 @@ class InventoryCleanupPlan(
 
         mergeableItems.values.forEach { mergeableItems ->
             mergeableItems.forEachIndexed { index, itemStackWithSlot ->
-                val newStack = ItemStackWithSlot(slotMap[itemStackWithSlot.slot] ?: itemStackWithSlot.slot, itemStackWithSlot.itemStack)
+                val newStack = ItemStackWithSlot(
+                    slotMap[itemStackWithSlot.slot] ?: itemStackWithSlot.slot,
+                    itemStackWithSlot.itemStack
+                )
 
                 mergeableItems[index] = newStack
             }

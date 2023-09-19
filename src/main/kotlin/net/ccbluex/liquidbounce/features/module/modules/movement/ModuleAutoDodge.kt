@@ -60,11 +60,15 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
         val arrows = findFlyingArrows(world)
 
-        val simulatedPlayer = SimulatedPlayer.fromPlayer(player, SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting))
+        val simulatedPlayer = SimulatedPlayer.fromPlayer(
+            player,
+            SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
+        )
 
         val inflictedHit = getInflictedHits(simulatedPlayer, arrows) {} ?: return@handler
 
-        val optimalDodgePosition = findOptimalDodgePosition(inflictedHit.prevArrowPos, inflictedHit.arrowVelocity) ?: return@handler
+        val optimalDodgePosition =
+            findOptimalDodgePosition(inflictedHit.prevArrowPos, inflictedHit.arrowVelocity) ?: return@handler
 
         if (inflictedHit.tickDelta == 0) {
             notification("Blink", "Evasion failed!", NotificationEvent.Severity.INFO)
@@ -140,8 +144,12 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
     }
 
 
-
-    fun <T: PlayerSimulation> getInflictedHits(simulatedPlayer: T, arrows: List<ArrowEntity>, maxTicks: Int = 80, behaviour: (T) -> Unit): HitInfo? {
+    fun <T : PlayerSimulation> getInflictedHits(
+        simulatedPlayer: T,
+        arrows: List<ArrowEntity>,
+        maxTicks: Int = 80,
+        behaviour: (T) -> Unit
+    ): HitInfo? {
         val simulatedArrows = arrows.map { SimulatedArrow(world, it.pos, it.velocity, false) }
 
         positions.clear()
@@ -173,7 +181,13 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         return null
     }
 
-    data class HitInfo(val tickDelta: Int, val arrowEntity: ArrowEntity, val hitPos: Vec3d, val prevArrowPos: Vec3d, val arrowVelocity: Vec3d)
+    data class HitInfo(
+        val tickDelta: Int,
+        val arrowEntity: ArrowEntity,
+        val hitPos: Vec3d,
+        val prevArrowPos: Vec3d,
+        val arrowVelocity: Vec3d
+    )
 
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack

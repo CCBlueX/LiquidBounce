@@ -23,17 +23,11 @@ import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.util.Pair
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 
 /**
  * Rotations module
@@ -65,7 +59,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         abstract fun render(env: RenderEnvironment)
     }
 
-    class DebuggedLine(line: Line, color: Color4b): DebuggedGeometry(color) {
+    class DebuggedLine(line: Line, color: Color4b) : DebuggedGeometry(color) {
         val from: Vec3
         val to: Vec3
 
@@ -83,7 +77,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedBox(val box: Box, color: Color4b): DebuggedGeometry(color) {
+    class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
         override fun render(env: RenderEnvironment) {
             env.withColor(color) {
                 this.drawSolidBox(box)

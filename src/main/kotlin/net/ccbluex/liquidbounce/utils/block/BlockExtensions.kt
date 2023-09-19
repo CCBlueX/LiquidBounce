@@ -162,7 +162,6 @@ fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
     }
 }
 
-
 fun BlockState.canBeReplacedWith(pos: BlockPos, usedStack: ItemStack): Boolean {
     val placementContext = ItemPlacementContext(
         mc.player,

@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import org.apache.logging.log4j.LogManager
@@ -99,8 +100,6 @@ object LiquidBounce : Listenable {
             ConfigSystem
             globalEnemyConfigurable
 
-            RotationManager
-
             ChunkScanner
             WorldChangeNotifier
 
@@ -113,6 +112,7 @@ object LiquidBounce : Listenable {
             ThemeManager
             ScriptManager
             RotationManager
+            CombatManager
             FriendManager
             ProxyManager
             AccountManager

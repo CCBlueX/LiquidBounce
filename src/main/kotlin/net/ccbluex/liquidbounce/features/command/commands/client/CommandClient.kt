@@ -37,82 +37,53 @@ import java.net.URL
 object CommandClient {
 
     fun createCommand(): Command {
-        return CommandBuilder
-            .begin("client")
-            .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("info")
-                    .handler { command, _ ->
-                        chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
-                        chat(
-                            regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))),
-                            prefix = false
-                        )
-                        chat(
-                            regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))),
-                            prefix = false
-                        )
-                    }
-                    .build()
+        return CommandBuilder.begin("client").hub().subcommand(CommandBuilder.begin("info").handler { command, _ ->
+            chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
+            chat(
+                regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))), prefix = false
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("reload")
-                    .handler { _, _ ->
-                        // todo: reload client
-                    }
-                    .build()
+            chat(
+                regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("ultralight")
-                    .hub()
-                    .subcommand(
-                        CommandBuilder
-                            .begin("show")
-                            .parameter(
-                                ParameterBuilder
-                                    .begin<String>("name")
-                                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                                    .required()
-                                    .build()
+        }.build()).subcommand(CommandBuilder.begin("reload").handler { _, _ ->
+            // TODO: reload client
+        }.build()).subcommand(
+            CommandBuilder.begin("ultralight").hub().subcommand(
+                CommandBuilder.begin("show").parameter(
+                    ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val open: (ScreenViewOverlay) -> Unit = try {
+                        val url = URL(args[0] as String)
+
+                        ({
+                            it.loadUrl(url.toString())
+                        })
+                    } catch (_: MalformedURLException) {
+                        val name = args[0] as String
+                        val page = ThemeManager.page(name) ?: throw CommandException(
+                            command.result(
+                                "pageNotFound", name
                             )
-                            .handler { command, args ->
-                                val open: (ScreenViewOverlay) -> Unit = try {
-                                    val url = URL(args[0] as String)
+                        )
 
-                                    (
-                                            {
-                                                it.loadUrl(url.toString())
-                                            }
-                                            )
-                                } catch (_: MalformedURLException) {
-                                    val name = args[0] as String
-                                    val page = ThemeManager.page(name)
-                                        ?: throw CommandException(command.result("pageNotFound", name))
+                        ({
+                            it.loadPage(page)
+                        })
+                    }
 
-                                    (
-                                            {
-                                                it.loadPage(page)
-                                            }
-                                            )
-                                }
-
-                                val emptyScreen = EmptyScreen()
-                                open(UltralightEngine.newScreenView(emptyScreen))
-                                mc.setScreen(emptyScreen)
-                            }
-                            .build()
-                    )
-                    .build()
-            )
-            // todo: contributors
-            // todo: links
-            // todo: instructions
-            // todo: reset
-            // todo: script manager
-            // todo: theme manager
+                    val emptyScreen = EmptyScreen()
+                    open(UltralightEngine.newScreenView(emptyScreen))
+                    mc.setScreen(emptyScreen)
+                }.build()
+            ).build()
+        )
+            // TODO: contributors
+            // TODO: links
+            // TODO: instructions
+            // TODO: reset
+            // TODO: script manager
+            // TODO: theme manager
             // .. other client base commands
             .build()
     }

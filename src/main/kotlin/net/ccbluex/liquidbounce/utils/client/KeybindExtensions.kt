@@ -24,7 +24,6 @@ var KeyBinding.enforced: Boolean?
             mc.options.rightKey -> {
                 TickStateManager.enforcedState.enforceRight
             }
-
             else -> {
                 null
             }

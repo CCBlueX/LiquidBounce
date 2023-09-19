@@ -58,15 +58,12 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
+    maven { url = 'https://repo.viaversion.com/' }
+
     maven {
         name = "modrinth"
         url = "https://api.modrinth.com/maven"
-
-        content {
-            includeGroup "maven.modrinth"
-        }
     }
-    maven { url = 'https://repo.viaversion.com/' }
 }
 
 dependencies {
@@ -85,7 +82,7 @@ dependencies {
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    // modCompileOnly("maven.modrinth:sodium:${project.sodium_version}") { transitive = false }
+    modImplementation "maven.modrinth:sodium:${project.sodium_version}"
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'

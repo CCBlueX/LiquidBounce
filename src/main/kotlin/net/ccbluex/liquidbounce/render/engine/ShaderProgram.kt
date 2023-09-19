@@ -82,7 +82,7 @@ private class Shader(shaderType: ShaderType, source: String) {
 
     enum class ShaderType(val typeConstant: Int) {
         VertexShader(GL20.GL_VERTEX_SHADER),
-        FragmentShader(GL20.GL_FRAGMENT_SHADER),
+        FragmentShader(GL20.GL_FRAGMENT_SHADER)
     }
 }
 

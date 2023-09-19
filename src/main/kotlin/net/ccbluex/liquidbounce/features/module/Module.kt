@@ -119,9 +119,9 @@ open class Module(
     protected val world: ClientWorld
         inline get() = mc.world!!
     protected val network: ClientPlayNetworkHandler
-        get() = mc.networkHandler!!
+        inline get() = mc.networkHandler!!
     protected val interaction: ClientPlayerInteractionManager
-        get() = mc.interactionManager!!
+        inline get() = mc.interactionManager!!
 
     /**
      * Called when module is turned on

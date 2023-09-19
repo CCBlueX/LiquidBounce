@@ -94,7 +94,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         lastPosZ = player.z
 
         synchronized(positions) {
-            if(positions.size > maxLength * 3){
+            if (positions.size > maxLength * 3) {
                 positions.subList(0, positions.size - maxLength * 3).clear()
             }
             positions.addAll(listOf(player.x, player.y, player.z))

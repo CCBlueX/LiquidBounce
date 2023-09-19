@@ -72,7 +72,10 @@ enum class ItemSortChoice(
     LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
     MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
     PEARL("Pearl", ItemCategory(ItemType.PEARL, 0), { it.item == Items.ENDER_PEARL }),
-    GAPPLE("Gapple", ItemCategory(ItemType.GAPPLE, 0), { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+    GAPPLE(
+        "Gapple",
+        ItemCategory(ItemType.GAPPLE, 0),
+        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
     IGNORE("Ignore", null),

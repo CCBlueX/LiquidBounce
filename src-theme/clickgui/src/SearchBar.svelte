@@ -68,7 +68,7 @@
         }
     });
 
-    
+
     function onInput() {
         filterModules();
 
