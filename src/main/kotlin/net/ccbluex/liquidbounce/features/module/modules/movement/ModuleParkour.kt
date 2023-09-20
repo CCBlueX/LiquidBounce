@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -32,18 +33,12 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
-    val repeatable = repeatable {
-        if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.keySneak.isPressed && !mc.options.keyJump.isPressed) {
-            if (world.getBlockCollisions(
-                    player,
-                    player.boundingBox.offset(0.0, -0.5, 0.0)
-                        .expand(-0.001, 0.0, -0.001)
-                ).count() > 0
-            ) {
-                return@repeatable
-            }
+    val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
 
-            player.jump()
+    val repeatable = repeatable {
+        if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.sneakKey.isPressed && !mc.options.jumpKey.isPressed) {
+            if (player.isCloseToEdge(edgeDistance.toDouble()))
+                player.jump()
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,11 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
     }
 
     val repeatable = repeatable {
+
+        if (player.vehicle != null) {
+            return@repeatable
+        }
+
         // Find the chest slot
         val chestSlot = player.getEquippedStack(EquipmentSlot.CHEST)
 
@@ -67,8 +72,8 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
                     player.strafe(speed = horizontal.toDouble())
                 }
                 player.velocity.y = when {
-                    mc.options.keyJump.isPressed -> vertical.toDouble()
-                    mc.options.keySneak.isPressed -> -vertical.toDouble()
+                    mc.options.jumpKey.isPressed -> vertical.toDouble()
+                    mc.options.sneakKey.isPressed -> -vertical.toDouble()
                     else -> return@repeatable
                 }
             }

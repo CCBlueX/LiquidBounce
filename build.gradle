@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,41 +18,52 @@
  */
 
 plugins {
-    id "fabric-loom"
-    id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "7.0.0"
-    id "org.jlleitschuh.gradle.ktlint" version "10.1.0"
+    id 'fabric-loom'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'org.jlleitschuh.gradle.ktlint' version '11.5.1'
+    id 'com.gorylenko.gradle-git-properties' version '2.4.1'
+    id "io.gitlab.arturbosch.detekt" version "1.23.1"
 }
-
-import net.fabricmc.loom.task.RemapJarTask
 
 ktlint {
     enableExperimentalRules = true
     ignoreFailures = true
-    disabledRules = ["no-wildcard-imports", "no-blank-line-before-rbrace"]
+    disabledRules = ['no-wildcard-imports', 'no-blank-line-before-rbrace']
 
     reporters {
-        reporter "plain"
-        reporter "checkstyle"
+        reporter 'plain'
+        reporter 'checkstyle'
     }
 
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
 loom {
-    accessWidenerPath = file("src/main/resources/liquidbounce.accesswidener")
+    accessWidenerPath = file('src/main/resources/liquidbounce.accesswidener')
 }
 
 repositories {
     mavenCentral()
-    maven { url = "https://maven.fabricmc.net/" }
-    maven { url = "https://jitpack.io" }
+    mavenLocal()
+    maven { url = 'https://maven.fabricmc.net/' }
+    maven { url = 'https://jitpack.io' }
+    maven {
+        name = 'TerraformersMC'
+        url = 'https://maven.terraformersmc.com/'
+    }
+    maven { url = 'https://repo.viaversion.com/' }
+
+    maven {
+        name = "modrinth"
+        url = "https://api.modrinth.com/maven"
+    }
 }
 
 dependencies {
@@ -66,57 +77,85 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    // MultiConnect API
-    modImplementation "net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}"
+    modImplementation 'com.viaversion:viaversion:4.7.1-SNAPSHOT'
+    modImplementation 'com.github.FlorianMichael:ViaLoadingBase:4.4.8'
 
     // Recommended mods (on IDE)
-    modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
-//    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    modImplementation "maven.modrinth:sodium:${project.sodium_version}"
 
-//    modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-//    modRuntime "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
-//    modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
-//    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
-//        exclude group: "org.ow2.asm", module: "asm-debug-all"
-//
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-//
-//        exclude group: "net.java.jinput", module: "jinput"
-//        exclude group: "net.java.jinput", module: "jinput-platform"
-//
-//        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
-//    }
-
-    // Ignore in export
-    implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
+    // fix nullable imports
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-
-    implementation ('com.thealtening.api:api:4.1.0') {
+    implementation('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.labymedia:ultralight-java-base:0.4.6"
-    implementation "com.labymedia:ultralight-java-databind:0.4.6"
-    implementation "com.labymedia:ultralight-java-gpu:0.4.6"
+    implementation 'com.github.CCBlueX:Elixir:1.2.6'
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.labymedia:ultralight-java-base:0.4.12'
+    implementation 'com.labymedia:ultralight-java-databind:0.4.12'
+    implementation 'com.labymedia:ultralight-java-gpu:0.4.12'
+    implementation 'com.labymedia:ultralight-java-glfw-opengl-util:0.4.12'
 
-    implementation project(":theme")
+    implementation 'org.graalvm.sdk:graal-sdk:23.0.1'
+    implementation 'org.graalvm.truffle:truffle-api:23.0.1'
+    implementation 'org.graalvm.js:js:23.0.1'
+
+    runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
+    runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
+
+    // https://mvnrepository.com/artifact/io.netty/netty-codec-http
+    implementation 'io.netty:netty-codec-http:4.1.82.Final'
+    // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
+    implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
+
+    implementation 'com.vdurmont:semver4j:3.1.0'
 
     // Test libraries
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.7.2"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
 processResources {
-    inputs.property "version", project.version
+    inputs.property 'version', project.version
 
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
+    inputs.property 'minecraft_version', minecraft_version
+    inputs.property 'fabric_version', fabric_version
+    inputs.property 'loader_version', loader_version
+    inputs.property 'fabric_kotlin_version', fabric_kotlin_version
+
+    filesMatching('fabric.mod.json') {
+        expand([
+                version              : project.version,
+                minecraft_version    : minecraft_version,
+                fabric_version       : fabric_version,
+                loader_version       : loader_version,
+                fabric_kotlin_version: fabric_kotlin_version
+        ])
     }
 }
+
+// The following code will include the theme into the build
+
+tasks.register('makeTheme', Exec) {
+    workingDir file('src-theme')
+    commandLine 'python', 'build.py'
+    doLast {
+        println 'Successfully exported theme.zip'
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs 'src-theme/resources'
+        }
+    }
+}
+
+processResources.dependsOn makeTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
@@ -126,53 +165,84 @@ tasks.withType(JavaCompile).configureEach {
     // this fixes some edge cases with special characters not displaying correctly
     // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
     // If Javadoc is generated, this must be specified in that task too.
-    it.options.encoding = "UTF-8"
+    it.options.encoding = 'UTF-8'
 
-    // Minecraft 1.17 (21w19a) upwards uses Java 16.
-    it.options.release = 16
+    // Minecraft 1.18 upwards uses Java 17.
+    it.options.release = 17
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
-compileKotlin {
-    kotlinOptions.suppressWarnings = true
-    kotlinOptions.useIR = true
+detekt {
+    toolVersion = "1.23.1"
+    config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
 }
 
-// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-// if it is present.
-// If you remove this task, sources will not be generated.
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
+task detektProjectBaseline(type: io.gitlab.arturbosch.detekt.DetektCreateBaselineTask) {
+    description = "Overrides current baseline."
+    ignoreFailures.set(true)
+    parallel.set(true)
+    buildUponDefaultConfig.set(true)
+    setSource(files(rootDir))
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline.set(file("$rootDir/config/detekt/baseline.xml"))
+    include("**/*.kt")
+    include("**/*.kts")
+    exclude("**/resources/**")
+    exclude("**/build/**")
+}
+
+java {
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
+}
+
+compileKotlin {
+    kotlinOptions {
+        suppressWarnings = true
+        jvmTarget = 17
+    }
 }
 
 shadowJar {
     archiveClassifier.set('shadow')
 
     // Natives are going to be downloaded from our cloud
-    exclude "native-binaries/*"
+    exclude 'native-binaries/*'
 
     dependencies {
         include(dependency('com.labymedia:ultralight-java-base'))
         include(dependency('com.labymedia:ultralight-java-databind'))
         include(dependency('com.labymedia:ultralight-java-gpu'))
+        include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
-        include(project(":theme"))
+        include(dependency('com.github.CCBlueX:Elixir'))
+        include(dependency('org.graalvm.sdk:graal-sdk:23.0.1'))
+        include(dependency('org.graalvm.truffle:truffle-api:23.0.1'))
+        include(dependency('org.graalvm.js:js:23.0.1'))
+        include(dependency('io.netty:netty-codec-http'))
+        include(dependency('io.netty:netty-handler-proxy'))
+        include(dependency('com.vdurmont:semver4j:3.1.0'))
     }
 }
 
 jar {
-    from "LICENSE"
+    from 'LICENSE'
 }
 
-task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
-    setInput(shadowJar.archiveFile)
-    remapAccessWidener.set(true)
-    addNestedDependencies.set(remapJar.addNestedDependencies)
+remapJar {
+    inputFile = shadowJar.archiveFile
 }
 
-build.dependsOn remapShadow
+tasks.register('copyZipInclude', Copy) {
+    from 'zip_include/'
+    into 'build/libs/zip'
+}
 
+build.dependsOn copyZipInclude

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,12 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.TranslatableText
-import net.minecraft.util.hit.EntityHitResult
+import net.minecraft.text.Text
 
 /**
  * FriendClicker module
@@ -37,20 +39,28 @@ import net.minecraft.util.hit.EntityHitResult
 
 object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
+    private val pickUpRange by float("PickUpRange", 3.0f, 1f..100f)
+
     private var clicked = false
 
     val repeatable = repeatable {
-        val crosshair = mc.crosshairTarget
-        val pickup = mc.options.keyPickItem.isPressed
+        val rotation = player.rotation
 
-        if (crosshair is EntityHitResult && crosshair.entity is PlayerEntity && pickup && !clicked) {
-            val name = (crosshair.entity as PlayerEntity).gameProfile.name
+        val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is PlayerEntity }
+            ?: return@repeatable) as PlayerEntity
+
+        val facesEnemy = facingEnemy(entity, rotation, pickUpRange.toDouble(), wallsRange = 0.0)
+
+        val pickup = mc.options.pickItemKey.isPressed
+
+        if (facesEnemy && pickup && !clicked) {
+            val name = entity.entityName
 
             if (FriendManager.isFriend(name)) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))
                 notification(
                     "Friend Clicker",
-                    TranslatableText("$translationBaseKey.removedFriend", name),
+                    Text.translatable("$translationBaseKey.removedFriend", name),
                     NotificationEvent.Severity.INFO
                 )
             } else {
@@ -58,7 +68,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
                 notification(
                     "Friend Clicker",
-                    TranslatableText("$translationBaseKey.addedFriend", name),
+                    Text.translatable("$translationBaseKey.addedFriend", name),
                     NotificationEvent.Severity.INFO
                 )
             }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,42 +18,18 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.event.ChatSendEvent;
-import net.ccbluex.liquidbounce.event.EventManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 
 @Mixin(Screen.class)
 public abstract class MixinScreen {
 
-    @Shadow @Nullable
+    @Shadow
+    @Nullable
     protected MinecraftClient client;
-
-    @Shadow public abstract void sendMessage(String message);
-
-    /**
-     * Handle user chat messages
-     *
-     * @param message chat message by client user
-     * @param callbackInfo callback
-     */
-    @Inject(method = "sendMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)
-    private void handleChatMessage(String message, CallbackInfo callbackInfo) {
-        ChatSendEvent chatSendEvent = new ChatSendEvent(message);
-
-        EventManager.INSTANCE.callEvent(chatSendEvent);
-
-        if (chatSendEvent.isCancelled()) {
-            client.inGameHud.getChatHud().addToMessageHistory(message);
-            callbackInfo.cancel();
-        }
-    }
 
 }

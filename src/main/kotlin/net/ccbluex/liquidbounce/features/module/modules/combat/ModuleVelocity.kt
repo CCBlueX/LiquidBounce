@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.minecraft.network.listener.ClientPlayPacketListener
+import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
@@ -42,10 +42,60 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify,
-            Push,
-            Strafe
+            Modify, Strafe, AAC442, Dexland
         )
+    }
+
+    object Delayed : ToggleableConfigurable(this, "Delayed", false) {
+        val ticks by intRange("Ticks", 3..6, 0..40)
+    }
+
+    init {
+        tree(Delayed)
+    }
+
+    val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
+        val packet = it.packet
+
+        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.original && Delayed.enabled) {
+            it.cancelEvent()
+
+            Delayed.ticks.random().let { ticks ->
+                if (ticks > 0) {
+                    val timeToWait = System.currentTimeMillis() + (ticks * 50L)
+
+                    waitUntil { System.currentTimeMillis() >= timeToWait }
+                }
+            }
+
+            val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+            EventManager.callEvent(packetEvent)
+
+            if (!packetEvent.isCancelled) {
+                (packet as Packet<ClientPlayPacketListener>).apply(network)
+            }
+        }
+    }
+
+    /**
+     *
+     * Velocity for AAC4.4.2, pretty sure, it works on other versions
+     */
+
+    private object AAC442 : Choice("AAC4.4.2") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
+
+        val repeatable = repeatable {
+            if (player.hurtTime > 0 && !player.isOnGround) {
+                val reduce = aac442MotionReducer
+                player.velocity.x *= reduce
+                player.velocity.z *= reduce
+            }
+        }
     }
 
     /**
@@ -85,35 +135,32 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 }
 
                 //  Modify packet according to the specified values
-                packet.playerVelocityX = packet.playerVelocityX * horizontal
-                packet.playerVelocityY = packet.playerVelocityY * vertical
-                packet.playerVelocityZ = packet.playerVelocityZ * horizontal
+                packet.playerVelocityX *= horizontal
+                packet.playerVelocityY *= vertical
+                packet.playerVelocityZ *= horizontal
             }
         }
 
     }
 
-    /**
-     * Push velocity
-     *
-     * todo: finish it what ever
-     */
-    private object Push : Choice("Push") {
+    private object Dexland : Choice("Dexland") {
 
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val packetHandler = sequenceHandler<PacketEvent> { event ->
-            val packet = event.packet
+        val hReduce by float("HReduce", 0.3f, 0f..1f)
+        val times by int("AttacksToWork", 4, 1..10)
 
-            // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+        var lastAttackTime = 0L
+        var count = 0
 
-            } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
-
+        val attackHandler = handler<AttackEvent> {
+            if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
+                player.velocity.x *= hReduce
+                player.velocity.z *= hReduce
             }
+            lastAttackTime = System.currentTimeMillis()
         }
-
     }
 
     /**
@@ -156,5 +203,4 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
 
     }
-
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.*
-import net.ccbluex.liquidbounce.render.engine.memory.IndexBuffer
-import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
-import net.ccbluex.liquidbounce.render.engine.memory.VertexFormatComponentDataType
-import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
-import net.ccbluex.liquidbounce.render.utils.drawBoxNew
-import net.ccbluex.liquidbounce.render.utils.drawBoxSide
+import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.ccbluex.liquidbounce.utils.render.espBoxRenderTask
-import net.ccbluex.liquidbounce.utils.render.rect
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.minecraft.block.ShapeContext
-import net.minecraft.client.world.ClientWorld
+import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.ProjectileUtil
@@ -55,7 +51,7 @@ import kotlin.math.sqrt
 /**
  * Trajectories module
  *
- * Allows you to see where arrows, pearls, etc. will land.
+ * Allows you to see where projectile items will land.
  */
 
 object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
@@ -65,82 +61,101 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         return item is BowItem && player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem
     }
 
-    val renderHandler = handler<EngineRenderEvent> { event ->
-        val player = mc.player ?: return@handler
-        val theWorld = mc.world ?: return@handler
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
 
-        theWorld.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
-            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0), Color4b(255, 0, 0, 200))
+        world.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
+            val landingPosition = drawTrajectoryForProjectile(
+                it.velocity,
+                TrajectoryInfo(0.05F, 0.3F),
+                it.pos,
+                it,
+                Vec3(0.0, 0.0, 0.0),
+                Color4b(255, 0, 0, 200),
+                matrixStack
+            )
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player) {
                     return@forEach
                 }
 
-                val vertexFormat = PositionColorVertexFormat()
-
-                vertexFormat.initBuffer(4)
-
-                val indexBuffer = IndexBuffer(8, VertexFormatComponentDataType.GlUnsignedShort)
-
-                vertexFormat.rect(indexBuffer, Vec3(-2.0, -1.0, 0.0), Vec3(2.0, 1.0, 0.0), Color4b(255, 0, 0, 120))
-
-                RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader))
+                // todo: add rect support
+//                val vertexFormat = PositionColorVertexFormat()
+//
+//                vertexFormat.initBuffer(4)
+//
+//                val indexBuffer = IndexBuffer(8, VertexFormatComponentDataType.GlUnsignedShort)
+//
+//                vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))
+//
+//                RenderEngine.enqueueForRendering(
+//                    RenderEngine.SCREEN_SPACE_LAYER,
+//                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
+//                )
             }
         }
 
-        for (otherPlayer in theWorld.players) {
-            val landingPosition = drawTrajectory(otherPlayer, event)
+        for (otherPlayer in world.players) {
+            val landingPosition = drawTrajectory(otherPlayer, matrixStack, event.partialTicks)
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player) {
                     continue
                 }
 
-                val vertexFormat = PositionColorVertexFormat()
-
-                vertexFormat.initBuffer(4)
-
-                val indexBuffer = IndexBuffer(8, VertexFormatComponentDataType.GlUnsignedShort)
-
-                vertexFormat.rect(indexBuffer, Vec3(-2.0, -1.0, 0.0), Vec3(2.0, 1.0, 0.0), Color4b(255, 0, 0, 50))
-
-                RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader))
+                // todo: add rect support
+//                val vertexFormat = PositionColorVertexFormat()
+//
+//                vertexFormat.initBuffer(4)
+//
+//                val indexBuffer = IndexBuffer(8, VertexFormatComponentDataType.GlUnsignedShort)
+//
+//                vertexFormat.rect(indexBuffer, Vec3(-2.0, -1.0, 0.0), Vec3(2.0, 1.0, 0.0), Color4b(255, 0, 0, 50))
+//
+//                RenderEngine.enqueueForRendering(
+//                    RenderEngine.SCREEN_SPACE_LAYER,
+//                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
+//                )
             }
         }
 
-        val landingPosition = drawTrajectory(player, event)
+        val landingPosition = drawTrajectory(player, matrixStack, event.partialTicks)
 
         if (landingPosition != null) {
             if (landingPosition is BlockHitResult) {
                 val currPos = landingPosition.blockPos
                 val currState = currPos.getState()!!
 
-                val bestBB = currState.getOutlineShape(mc.world, currPos, ShapeContext.of(player)).boundingBoxes
+                val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
                     .map { it.offset(currPos) }
                     .filter { landingPosition.pos in it.expand(0.01, 0.01, 0.01) }
                     .minByOrNull { it.center.squaredDistanceTo(landingPosition.pos) }
 
-                if (bestBB != null) {
-                    RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, espBoxRenderTask(drawBoxSide(bestBB, landingPosition.side, Color4b(0, 160, 255, 150))))
+                if (bestBox != null) {
+                    renderEnvironment(matrixStack) {
+                        withColor(Color4b(0, 160, 255, 150)) {
+                            drawSideBox(bestBox, landingPosition.side)
+                        }
+                    }
                 }
             } else if (landingPosition is EntityHitResult) {
+                renderEnvironment(matrixStack) {
+                    val vec = landingPosition.entity
+                        .interpolateCurrentPosition(event.partialTicks)
 
-                RenderEngine.enqueueForRendering(
-                    RenderEngine.CAMERA_VIEW_LAYER,
-                    espBoxRenderTask(
-                        drawBoxNew(
-                            landingPosition.entity.boundingBox,
-                            Color4b(255, 0, 0, 100)
-                        )
-                    )
-                )
+                    withPosition(vec) {
+                        withColor(Color4b(255, 0, 0, 100)) {
+                            drawSolidBox(landingPosition.entity.box)
+                        }
+                    }
+                }
             }
         }
     }
 
-    private fun drawTrajectory(otherPlayer: PlayerEntity, event: EngineRenderEvent): HitResult? {
-        val heldItem = otherPlayer.itemsHand.find { shouldDrawTrajectory(otherPlayer, it.item) } ?: return null
+    private fun drawTrajectory(otherPlayer: PlayerEntity, matrixStack: MatrixStack, partialTicks: Float): HitResult? {
+        val heldItem = otherPlayer.handItems.find { shouldDrawTrajectory(otherPlayer, it.item) } ?: return null
 
         val item = heldItem.item
 
@@ -163,9 +178,9 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val pitchRadians = pitch / 180f * Math.PI.toFloat()
 
         val interpolatedOffset = Vec3(
-            otherPlayer.lastRenderX + (otherPlayer.x - otherPlayer.lastRenderX) * event.tickDelta - otherPlayer.x,
-            otherPlayer.lastRenderY + (otherPlayer.y - otherPlayer.lastRenderY) * event.tickDelta - otherPlayer.y,
-            otherPlayer.lastRenderZ + (otherPlayer.z - otherPlayer.lastRenderZ) * event.tickDelta - otherPlayer.z,
+            otherPlayer.lastRenderX + (otherPlayer.x - otherPlayer.lastRenderX) * partialTicks - otherPlayer.x,
+            otherPlayer.lastRenderY + (otherPlayer.y - otherPlayer.lastRenderY) * partialTicks - otherPlayer.y,
+            otherPlayer.lastRenderZ + (otherPlayer.z - otherPlayer.lastRenderZ) * partialTicks - otherPlayer.z
         )
 
         // Positions
@@ -192,10 +207,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             Vec3d(motionX, motionY, motionZ),
             trajectoryInfo,
             Vec3d(posX, posY, posZ),
-            world,
             otherPlayer,
             interpolatedOffset,
-            Color4b.WHITE
+            Color4b.WHITE,
+            matrixStack
         )
     }
 
@@ -203,10 +218,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         motion: Vec3d,
         trajectoryInfo: TrajectoryInfo,
         pos: Vec3d,
-        theWorld: ClientWorld,
-        player: PlayerEntity,
+        player: Entity,
         interpolatedOffset: Vec3,
-        color: Color4b
+        color: Color4b,
+        matrixStack: MatrixStack
     ): HitResult? { // Normalize the motion vector
         var motionX = motion.x
         var motionY = motion.y
@@ -220,19 +235,16 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         var hasLanded = false
 
         // Start drawing of path
-
-        val vertexFormat = PositionColorVertexFormat()
-
-        vertexFormat.initBuffer(MAX_SIMULATED_TICKS + 2)
+        val lines = mutableListOf<Vec3>()
 
         var currTicks = 0
 
-        while (!hasLanded && posY > 0.0 && currTicks < MAX_SIMULATED_TICKS) { // Set pos before and after
+        while (!hasLanded && posY > world.bottomY && currTicks < MAX_SIMULATED_TICKS) { // Set pos before and after
             val posBefore = Vec3d(posX, posY, posZ)
             var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
 
             // Get landing position
-            val blockHitResult = theWorld.raycast(
+            val blockHitResult = world.raycast(
                 RaycastContext(
                     posBefore,
                     posAfter,
@@ -256,7 +268,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     +trajectoryInfo.size.toDouble()
                 ).offset(posX, posY, posZ).stretch(Vec3d(motionX, motionY, motionZ)).expand(1.0)
             ) {
-                if (!it.isSpectator && it.isAlive && (it.collides() || player != mc.player && it == mc.player)) {
+                if (!it.isSpectator && it.isAlive && (it.canHit() || player != mc.player && it == mc.player)) {
                     if (player.isConnectedThroughVehicle(it)) return@getEntityCollision false
                 } else {
                     return@getEntityCollision false
@@ -280,7 +292,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             posY += motionY
             posZ += motionZ
 
-            val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
+            val blockState = world.getBlockState(BlockPos.ofFloored(posX, posY, posZ))
 
             // Check is next position water
             if (!blockState.fluidState.isEmpty) { // Update motion
@@ -296,16 +308,16 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             motionY -= trajectoryInfo.gravity.toDouble()
 
             // Draw path
-
-            vertexFormat.putVertex {
-                this.position = Vec3(posAfter) + interpolatedOffset
-                this.color = color
-            }
+            lines += Vec3(posAfter) + interpolatedOffset
 
             currTicks++
         }
 
-        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.LineStrip, ColoredPrimitiveShader, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)))
+        renderEnvironment(matrixStack) {
+            withColor(color) {
+                drawLineStrip(*lines.toTypedArray())
+            }
+        }
 
         return landingPosition
     }
@@ -327,6 +339,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     motionFactor = power.coerceAtMost(1.0F) * 3.0F
                 )
             }
+
             is FishingRodItem -> {
                 return TrajectoryInfo(
                     0.04F,
@@ -334,6 +347,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     motionSlowdown = 0.92F
                 )
             }
+
             is PotionItem -> {
                 return TrajectoryInfo(
                     0.05F,
@@ -342,6 +356,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     pitchSubtrahend = 20.0F
                 )
             }
+
             else -> return TrajectoryInfo(0.03F, 0.25F)
         }
     }
@@ -353,6 +368,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         var motionSlowdown: Float = 0.99F,
         var pitchSubtrahend: Float = 0.0F,
         var angle: Float = 0.99F,
-        val isBow: Boolean = false,
+        val isBow: Boolean = false
     )
 }

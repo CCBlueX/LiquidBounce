@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
@@ -50,17 +50,16 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
             isItemValid(inventory.getStack(it))
         } ?: return@repeatable
 
-        val serverSlot = convertClientSlotToServerSlot(slot)
+        val serverSlot = convertClientSlotToServerSlot(slot, null)
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
-        val openInventory = mc.currentScreen !is InventoryScreen
-
-        if (openInventory) {
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+        if (!isInInventoryScreen) {
+            openInventorySilently()
         }
 
         interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
 
-        if (openInventory) {
+        if (!isInInventoryScreen) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
     }

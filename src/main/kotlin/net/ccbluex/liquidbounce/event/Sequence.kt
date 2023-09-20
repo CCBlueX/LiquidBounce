@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
 package net.ccbluex.liquidbounce.event
 
 import com.google.common.collect.Lists
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -43,7 +45,7 @@ object SequenceManager : Listenable {
 
 }
 
-open class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T) {
+open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val event: T) {
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         SequenceManager.sequences += this@Sequence
@@ -82,7 +84,7 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T)
         elapsedTicks = 0
         totalTicks = ticksToWait
 
-        suspendCoroutine<Unit> { continuation = it }
+        suspendCoroutine { continuation = it }
     }
 
     internal suspend fun sync() = wait(0)

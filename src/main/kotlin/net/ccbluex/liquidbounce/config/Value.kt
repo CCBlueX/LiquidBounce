@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import com.mojang.brigadier.StringReader
+import me.liuli.elixir.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.ValueChangedEvent
@@ -32,8 +33,8 @@ import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.minecraft.block.Block
 import net.minecraft.item.Item
+import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
@@ -49,6 +50,9 @@ open class Value<T : Any>(
     @Exclude val valueType: ValueType,
     @Exclude val listType: ListValueType = ListValueType.None
 ) {
+
+    internal val loweredName
+        get() = name.lowercase()
 
     @Exclude
     private val listeners = mutableListOf<ValueListener<T>>()
@@ -74,6 +78,9 @@ open class Value<T : Any>(
     fun get() = value
 
     fun set(t: T) { // temporary set value
+        // Do nothing if value is the same
+        if (t == value) return
+
         value = t
 
         // check if value is really accepted
@@ -101,28 +108,29 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.value
 
-        set(
-            when (currValue) {
-                is List<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                        mutableListOf()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-                is HashSet<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                        HashSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-                is Set<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                        TreeSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-                else -> {
-                    gson.fromJson(element, currValue.javaClass)
-                }
+        set(when (currValue) {
+            is List<*> -> {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    mutableListOf()
+                ) { gson.fromJson(it, this.listType.type!!) } as T
             }
-        )
+
+            is HashSet<*> -> {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    HashSet()
+                ) { gson.fromJson(it, this.listType.type!!) } as T
+            }
+
+            is Set<*> -> {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    TreeSet()
+                ) { gson.fromJson(it, this.listType.type!!) } as T
+            }
+
+            else -> {
+                gson.fromJson(element, currValue.javaClass)
+            }
+        })
     }
 
     open fun setByString(string: String) {
@@ -138,9 +146,9 @@ open class Value<T : Any>(
             if (string.startsWith("#")) set(Color4b(Color(string.substring(1).toInt(16))) as T)
             else set(Color4b(Color(string.toInt())) as T)
         } else if (this.value is Block) {
-            set(Registry.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
+            set(Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
         } else if (this.value is Item) {
-            set(Registry.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
+            set(Registries.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
         } else {
             throw IllegalStateException()
         }
@@ -152,10 +160,7 @@ open class Value<T : Any>(
  * Ranged value adds support for closed ranges
  */
 class RangedValue<T : Any>(
-    name: String,
-    value: T,
-    @Exclude val range: ClosedRange<*>,
-    type: ValueType
+    name: String, value: T, @Exclude val range: ClosedRange<*>, type: ValueType
 ) : Value<T>(name, value, valueType = type) {
 
     fun getFrom(): Double {
@@ -199,9 +204,7 @@ class RangedValue<T : Any>(
 }
 
 class ChooseListValue<T : NamedChoice>(
-    name: String,
-    value: T,
-    @Exclude val choices: Array<T>
+    name: String, value: T, @Exclude val choices: Array<T>
 ) : Value<T>(name, value, ValueType.CHOOSE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
@@ -228,13 +231,14 @@ interface NamedChoice {
 }
 
 enum class ValueType {
-    BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM,
-    ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
+    BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM, ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {
-    Block(net.minecraft.block.Block::class.java),
-    Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java),
-    Friend(FriendManager.Friend::class.java), Proxy(ProxyManager.Proxy::class.java),
-    FontDetail(Fonts.FontDetail::class.java), None(null)
+    Block(net.minecraft.block.Block::class.java), Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java), Friend(
+        FriendManager.Friend::class.java
+    ),
+    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontDetail::class.java), None(
+        null
+    )
 }

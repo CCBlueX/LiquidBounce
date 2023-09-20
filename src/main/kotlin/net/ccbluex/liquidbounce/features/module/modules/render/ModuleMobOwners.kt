@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.minecraft.entity.Entity
-import net.minecraft.entity.passive.HorseBaseEntity
+import net.minecraft.entity.passive.HorseEntity
 import net.minecraft.entity.passive.TameableEntity
 import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.text.OrderedText
@@ -49,12 +49,13 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
     var asyncRequestExecutor = Executors.newSingleThreadExecutor()
 
     fun getOwnerInfoText(entity: Entity): OrderedText? {
-        if (!this.enabled)
+        if (!this.enabled) {
             return null
+        }
 
         val ownerId = when {
             entity is TameableEntity -> entity.ownerUuid
-            entity is HorseBaseEntity -> entity.ownerUuid
+            entity is HorseEntity -> entity.ownerUuid
             entity is ProjectileEntity && projectiles -> entity.ownerUuid
             else -> null
         } ?: return null
@@ -76,7 +77,6 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
                     uuidNameCache[it] = OrderedText.styledForwardsVisitedString(entityName, Style.EMPTY)
                 } catch (e: InterruptedException) {
-
                 } catch (e: Exception) {
                     uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))
                 }

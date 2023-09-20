@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,12 +61,12 @@ class Region(from: BlockPos, to: BlockPos) {
         val fixedFrom = BlockPos(
             min(from.x, to.x),
             min(from.y, to.y),
-            min(from.z, to.z),
+            min(from.z, to.z)
         )
         val fixedTo = BlockPos(
             max(from.x, to.x),
             max(from.y, to.y),
-            max(from.z, to.z),
+            max(from.z, to.z)
         )
 
         this.from = fixedFrom
@@ -131,12 +131,12 @@ class Region(from: BlockPos, to: BlockPos) {
             BlockPos(
                 max(this.from.x, currentRegion.from.x),
                 max(this.from.y, currentRegion.from.y),
-                max(this.from.z, currentRegion.from.z),
+                max(this.from.z, currentRegion.from.z)
             ),
             BlockPos(
                 min(this.to.x, currentRegion.to.x),
                 min(this.to.y, currentRegion.to.y),
-                min(this.to.z, currentRegion.to.z),
+                min(this.to.z, currentRegion.to.z)
             )
         )
     }

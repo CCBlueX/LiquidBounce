@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,53 +19,79 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
+import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.resource.ClientBuiltinResourcePackProvider;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.util.Window;
 import net.minecraft.entity.Entity;
-import net.minecraft.resource.ResourceType;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.hit.HitResult;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
 
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient {
 
     @Shadow
     @Nullable
-    public abstract ClientPlayNetworkHandler getNetworkHandler();
-
+    public ClientPlayerEntity player;
+    @Shadow
+    @Nullable
+    public HitResult crosshairTarget;
+    @Shadow
+    @Final
+    public GameOptions options;
     @Shadow
     @Nullable
     private IntegratedServer server;
+    @Shadow
+    private int itemUseCooldown;
+
+    @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
+    private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
+        ModuleXRay module = ModuleXRay.INSTANCE;
+        if (!module.getEnabled() || !module.getFullBright()) {
+            return;
+        }
+
+        callback.setReturnValue(false);
+        callback.cancel();
+    }
+
+    @Shadow
+    @Nullable
+    public abstract ClientPlayNetworkHandler getNetworkHandler();
 
     @Shadow
     public abstract boolean isConnectedToRealms();
 
     @Shadow
-    @Nullable
-    private ServerInfo currentServerEntry;
+    public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
-    @Shadow private int itemUseCooldown;
+    @Shadow
+    public abstract Window getWindow();
 
-    @Shadow public abstract ClientBuiltinResourcePackProvider getResourcePackProvider();
+    @Shadow
+    public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
 
     /**
      * Entry point of our hacked client
@@ -97,21 +123,28 @@ public abstract class MixinMinecraftClient {
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
         LiquidBounce.INSTANCE.getLogger().debug("Modifying window title");
 
-        final StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
+        StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
         titleBuilder.append(" v");
-        titleBuilder.append(LiquidBounce.CLIENT_VERSION);
+        titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
+
+        if (LiquidBounce.IN_DEVELOPMENT) {
+            titleBuilder.append(" (dev) ");
+        }
+
+        titleBuilder.append(LiquidBounce.INSTANCE.getClientCommit());
+
         titleBuilder.append(" | ");
         titleBuilder.append(SharedConstants.getGameVersion().getName());
 
-        final ClientPlayNetworkHandler clientPlayNetworkHandler = getNetworkHandler();
+        ClientPlayNetworkHandler clientPlayNetworkHandler = getNetworkHandler();
         if (clientPlayNetworkHandler != null && clientPlayNetworkHandler.getConnection().isOpen()) {
             titleBuilder.append(" | ");
 
-            if (this.server != null && !this.server.isRemote()) {
+            if (server != null && !server.isRemote()) {
                 titleBuilder.append(I18n.translate("title.singleplayer"));
             } else if (this.isConnectedToRealms()) {
                 titleBuilder.append(I18n.translate("title.multiplayer.realms"));
-            } else if (this.server == null && (this.currentServerEntry == null || !this.currentServerEntry.isLocal())) {
+            } else if (server == null && (this.getCurrentServerEntry() == null || !this.getCurrentServerEntry().isLocal())) {
                 titleBuilder.append(I18n.translate("title.multiplayer.other"));
             } else {
                 titleBuilder.append(I18n.translate("title.multiplayer.lan"));
@@ -122,41 +155,21 @@ public abstract class MixinMinecraftClient {
     }
 
     /**
-     * Set window icon to our client icon.
-     *
-     * @param args arguments of target method
-     */
-    @ModifyArgs(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Ljava/io/InputStream;Ljava/io/InputStream;)V"))
-    private void setupIcon(final Args args) {
-        try {
-            LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
-
-            // Load client icons
-            final InputStream stream32 = getResourcePackProvider().getPack().open(ResourceType.CLIENT_RESOURCES,
-                    new Identifier("liquidbounce:icon_16x16.png"));
-            final InputStream stream64 = getResourcePackProvider().getPack().open(ResourceType.CLIENT_RESOURCES,
-                    new Identifier("liquidbounce:icon_32x32.png"));
-
-            args.setAll(stream32, stream64);
-        } catch (final IOException e) {
-            LiquidBounce.INSTANCE.getLogger().error("Unable to load client icons.", e);
-
-            // => Fallback to minecraft icons
-        }
-    }
-
-    /**
      * Handle opening screens
      *
-     * @param screen to be opened (null = no screen at all)
-     * @param callbackInfo          callback
+     * @param screen       to be opened (null = no screen at all)
+     * @param callbackInfo callback
      */
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
-        final ScreenEvent event = new ScreenEvent(screen);
+        ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
-        if (event.isCancelled())
+        if (event.isCancelled()) callbackInfo.cancel();
+        // Who need this GUI?
+        if (screen instanceof AccessibilityOnboardingScreen) {
             callbackInfo.cancel();
+            this.setScreen(new TitleScreen(true));
+        }
     }
 
     /**
@@ -180,7 +193,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "doItemUse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;itemUseCooldown:I", shift = At.Shift.AFTER))
     private void hookItemUseCooldown(CallbackInfo callbackInfo) {
-        final UseCooldownEvent useCooldownEvent = new UseCooldownEvent(itemUseCooldown);
+        UseCooldownEvent useCooldownEvent = new UseCooldownEvent(itemUseCooldown);
         EventManager.INSTANCE.callEvent(useCooldownEvent);
         itemUseCooldown = useCooldownEvent.getCooldown();
     }
@@ -192,4 +205,22 @@ public abstract class MixinMinecraftClient {
         }
     }
 
+    @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
+    private void injectPerfectHit(CallbackInfoReturnable<Boolean> cir) {
+        if (player == null || crosshairTarget == null) {
+            return;
+        }
+
+        if (CombatManager.INSTANCE.getPauseCombat() != -1) {
+            cir.setReturnValue(false);
+        }
+        if (!ModulePerfectHit.INSTANCE.getEnabled()) {
+            return;
+        }
+        float h = player.getAttackCooldownProgress(0.5F);
+
+        if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {
+            cir.setReturnValue(false);
+        }
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,24 +19,23 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import com.viaversion.viaversion.api.connection.UserConnection
+import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
+import com.viaversion.viaversion.api.type.Type
+import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
+import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
+import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.block.Blocks
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.util.Hand
 
-fun convertClientSlotToServerSlot(slot: Int): Int {
-    return when (slot) {
-        in 0..8 -> 36 + slot
-        in 9..35 -> slot
-        in 36..39 -> 39 - slot + 5
-        40 -> 45
-        else -> throw IllegalArgumentException()
-    }
-}
-
-/**
- * Configurable to configure the dynamic rotation engine
- */
-class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
-    internal var delay by intRange("Delay", 2..4, 0..20)
-    internal val invOpen by boolean("InvOpen", false)
-    internal val simulateInventory by boolean("SimulateInventory", true)
-    internal val noMove by boolean("NoMove", false)
-}
+val ScreenHandler.isPlayerInventory: Boolean
+    get() = this.syncId == 0

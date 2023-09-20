@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
@@ -32,46 +34,38 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity {
 
-    @Shadow public abstract Vec3d getVelocity();
-
-    @Shadow public abstract void setVelocity(Vec3d velocity);
-
-    @Shadow public abstract boolean isSprinting();
-
-    @Shadow public float yaw;
-
-    @Shadow public boolean velocityDirty;
-
-    @Shadow public abstract void setVelocity(double x, double y, double z);
+    @Shadow
+    public boolean noClip;
 
     @Shadow
-    protected static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
+    protected boolean submergedInWater;
+
+    @Shadow
+    public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         return null;
     }
 
-    @Shadow public float pitch;
+    @Shadow
+    public abstract boolean isOnGround();
 
-    @Shadow protected boolean onGround;
+    @Shadow
+    public abstract boolean hasVehicle();
 
-    @Shadow public abstract boolean hasVehicle();
-
-    @Shadow public abstract double getX();
-
-    @Shadow public abstract double getY();
-
-    @Shadow public abstract double getZ();
+    @Shadow
+    public abstract boolean isPlayer();
 
     /**
      * Hook entity margin modification event
      */
     @Inject(method = "getTargetingMargin", at = @At("RETURN"), cancellable = true)
     private void hookMargin(CallbackInfoReturnable<Float> callback) {
-        final EntityMarginEvent marginEvent = new EntityMarginEvent((Entity) (Object) this, callback.getReturnValue());
+        EntityMarginEvent marginEvent = new EntityMarginEvent((Entity) (Object) this, callback.getReturnValue());
         EventManager.INSTANCE.callEvent(marginEvent);
         callback.setReturnValue(marginEvent.getMargin());
     }
@@ -81,22 +75,48 @@ public abstract class MixinEntity {
      */
     @Redirect(method = "changeLookDirection", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;clamp(FFF)F"))
     public float hookNoPitchLimit(float value, float min, float max) {
-        final boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
+        boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
 
-        if (noLimit)
-            return value;
+        if (noLimit) return value;
         return MathHelper.clamp(value, min, max);
     }
 
     @Redirect(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"))
     public Vec3d hookVelocity(Vec3d movementInput, float speed, float yaw) {
-        //noinspection ConstantConditions
         if ((Object) this == MinecraftClient.getInstance().player) {
-            final PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, movementInputToVelocity(movementInput, speed, yaw));
+            PlayerVelocityStrafe event = new PlayerVelocityStrafe(movementInput, speed, yaw, MixinEntity.movementInputToVelocity(movementInput, speed, yaw));
             EventManager.INSTANCE.callEvent(event);
             return event.getVelocity();
         }
 
-        return movementInputToVelocity(movementInput, speed, yaw);
+        return MixinEntity.movementInputToVelocity(movementInput, speed, yaw);
+    }
+
+    @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getStepHeight()F"))
+    private float hookStepHeight(Entity instance) {
+        PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
+        EventManager.INSTANCE.callEvent(stepEvent);
+        return stepEvent.getHeight();
+    }
+
+    @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
+    private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
+        cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
+    }
+
+    /**
+     * When modules that modify player's velocity are enabled while on a vehicle, the game essentially gets screwed up, making the player unable to move.
+     * <p>
+     * With this injection, the issue is solved.
+     */
+    @Inject(method = "setVelocity(Lnet/minecraft/util/math/Vec3d;)V", at = @At("HEAD"), cancellable = true)
+    private void hookVelocityDuringRidingPrevention(Vec3d velocity, CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        if (hasVehicle()) {
+            ci.cancel();
+        }
     }
 }

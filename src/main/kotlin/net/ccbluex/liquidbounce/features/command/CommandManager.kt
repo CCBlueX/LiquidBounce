@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
+import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemEnchant
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemGive
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRename
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSkull
@@ -34,11 +35,12 @@ import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPositio
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.outputString
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.MutableText
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
 
-class CommandException(val text: TranslatableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
+class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.outputString(), cause)
 
 /**
@@ -73,7 +75,7 @@ object CommandExecutor : Listenable {
                 }
             } catch (e: Exception) {
                 chat(
-                    TranslatableText("liquidbounce.commandManager.exceptionOccurred", e).styled {
+                    Text.translatable("liquidbounce.commandManager.exceptionOccurred", e).styled {
                         it.withColor(
                             Formatting.RED
                         )
@@ -97,7 +99,7 @@ object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
 
-    object Options : Configurable("commands") {
+    object Options : Configurable("Commands") {
         /**
          * The prefix of the commands.
          *
@@ -130,15 +132,21 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandPrefix.createCommand())
         addCommand(CommandClear.createCommand())
         addCommand(CommandHide.createCommand())
+        addCommand(CommandItems.createCommand())
         addCommand(CommandPanic.createCommand())
         addCommand(CommandValue.createCommand())
         addCommand(CommandPing.createCommand())
         addCommand(CommandRemoteView.createCommand())
+        addCommand(CommandXRay.createCommand())
+        addCommand(CommandEnemy.createCommand())
+        addCommand(CommandConfig.createCommand())
+        addCommand(CommandAutoDisable.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
         addCommand(CommandItemGive.createCommand())
         addCommand(CommandItemSkull.createCommand())
+        addCommand(CommandItemEnchant.createCommand())
 
         // utility commands
         addCommand(CommandUsername.createCommand())
@@ -215,7 +223,7 @@ object CommandManager : Iterable<Command> {
         // since the first index must contain a valid command, it is reported as
         // unknown
         val pair = getSubCommand(args) ?: throw CommandException(
-            TranslatableText(
+            Text.translatable(
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
             )
@@ -225,7 +233,7 @@ object CommandManager : Iterable<Command> {
         // If the command is not executable, don't allow it to be executed
         if (!command.executable) {
             throw CommandException(
-                TranslatableText("liquidbounce.commandManager.invalidUsage", args[0]),
+                Text.translatable("liquidbounce.commandManager.invalidUsage", args[0]),
                 usageInfo = command.usage()
             )
         }
@@ -236,7 +244,7 @@ object CommandManager : Iterable<Command> {
         // If there are more arguments for a command that takes no parameters
         if (command.parameters.isEmpty() && idx != args.size - 1) {
             throw CommandException(
-                TranslatableText("liquidbounce.commandManager.commandTakesNoParameters"),
+                Text.translatable("liquidbounce.commandManager.commandTakesNoParameters"),
                 usageInfo = command.usage()
             )
         }
@@ -244,7 +252,7 @@ object CommandManager : Iterable<Command> {
         // If there is a required parameter after the supply of arguments ends, it is absent
         if (args.size - idx - 1 < command.parameters.size && command.parameters[args.size - idx - 1].required) {
             throw CommandException(
-                TranslatableText(
+                Text.translatable(
                     "liquidbounce.commandManager.parameterRequired",
                     command.parameters[args.size - idx - 1].name
                 ),
@@ -268,7 +276,7 @@ object CommandManager : Iterable<Command> {
             // Check if there is a parameter for this index
             if (paramIndex >= command.parameters.size) {
                 throw CommandException(
-                    TranslatableText("liquidbounce.commandManager.unknownParameter", args[i]),
+                    Text.translatable("liquidbounce.commandManager.unknownParameter", args[i]),
                     usageInfo = command.usage()
                 )
             }
@@ -300,7 +308,7 @@ object CommandManager : Iterable<Command> {
 
         if (!command.executable) {
             throw CommandException(
-                TranslatableText("liquidbounce.commandManager.commandNotExecutable", command.name),
+                Text.translatable("liquidbounce.commandManager.commandNotExecutable", command.name),
                 usageInfo = command.usage()
             )
         }
@@ -320,7 +328,7 @@ object CommandManager : Iterable<Command> {
 
             if (validationResult.errorMessage != null) {
                 throw CommandException(
-                    TranslatableText(
+                    Text.translatable(
                         "liquidbounce.commandManager.invalidParameterValue",
                         parameter.name,
                         argument,

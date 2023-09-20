@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,36 +28,6 @@ import java.nio.ByteBuffer
 import kotlin.math.cos
 import kotlin.math.sin
 
-enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
-    OPENGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
-    OPENGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
-
-    // TODO: OPENGL 1.2 is broken right now on Minecraft 1.17+ and should be removed.
-    OPENGL1_2(999, 999, "OpenGL 1.2+ (Immediate mode, Display Lists)");
-
-    /**
-     * Determines if an OpenGL level is supported
-     */
-    fun isSupported(major: Int, minor: Int): Boolean {
-        if (major > this.major) {
-            return true
-        }
-
-        return major >= this.major && minor >= this.minor
-    }
-
-    fun supportsShaders(): Boolean = isSupported(3, 3)
-
-    companion object {
-        /**
-         * Determines the best backend level for the given arguments
-         */
-        fun getBestLevelFor(major: Int, minor: Int): OpenGLLevel? {
-            return enumValues<OpenGLLevel>().firstOrNull { it.isSupported(major, minor) }
-        }
-    }
-}
-
 /**
  * Used to draw multiple render tasks at once
  */
@@ -83,20 +53,20 @@ abstract class RenderTask {
     /**
      * Sets up everything needed for rendering
      */
-    abstract fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4)
+    abstract fun initRendering(mvpMatrix: Mat4)
 
     /**
      * Executes the current render task. Always called after [initRendering] was called. Since some render tasks
      * can share their initialization methods, it is possible that not this instance's [initRendering] is called.
      */
-    abstract fun draw(level: OpenGLLevel)
+    abstract fun draw()
 
     /**
      * Calls [upload] if this function hasn't been called yet
      */
-    fun uploadIfNotUploaded(level: OpenGLLevel) {
+    fun uploadIfNotUploaded() {
         if (!this.uploaded) {
-            this.upload(level)
+            this.upload()
 
             this.uploaded = true
         }
@@ -105,12 +75,12 @@ abstract class RenderTask {
     /**
      * Uploads the current state to VRAM
      */
-    open fun upload(level: OpenGLLevel) {}
+    open fun upload() {}
 
     /**
      * Sets up everything needed for rendering.
      */
-    abstract fun cleanupRendering(level: OpenGLLevel)
+    abstract fun cleanupRendering()
 
 }
 
@@ -192,6 +162,9 @@ data class UV2s(val u: Short, val v: Short) {
 data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     companion object {
         val WHITE = Color4b(255, 255, 255, 255)
+        val RED = Color4b(255, 0, 0, 255)
+        val GREEN = Color4b(0, 255, 0, 255)
+        val BLUE = Color4b(0, 0, 255, 255)
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
@@ -204,6 +177,29 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         buffer.put(idx + 2, b.toByte())
         buffer.put(idx + 3, a.toByte())
     }
+
+    fun toHex(): String {
+        val hex = StringBuilder("#")
+
+        hex.append(componentToHex(r))
+        hex.append(componentToHex(g))
+        hex.append(componentToHex(b))
+
+        return hex.toString().uppercase()
+    }
+
+    private fun componentToHex(c: Int): String {
+        val hexString = Integer.toHexString(c)
+        return if (hexString.length == 1) "0$hexString" else hexString
+    }
+
+    fun red(red: Int) = Color4b(red, this.g, this.b, this.a)
+
+    fun green(green: Int) = Color4b(this.r, green, this.b, this.a)
+
+    fun blue(blue: Int) = Color4b(this.r, this.g, blue, this.a)
+
+    fun alpha(alpha: Int) = Color4b(this.r, this.g, this.b, alpha)
 
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 }
@@ -254,7 +250,5 @@ enum class PrimitiveType(val verticesPerPrimitive: Int, val mode: Int) {
     /**
      * Line loop; 1 vertices per primitive
      */
-    LineLoop(1, GL11.GL_LINE_LOOP),
-    LineStrip(1, GL11.GL_LINE_STRIP),
-    Points(1, GL11.GL_POINTS)
+    LineLoop(1, GL11.GL_LINE_LOOP), LineStrip(1, GL11.GL_LINE_STRIP), Points(1, GL11.GL_POINTS)
 }

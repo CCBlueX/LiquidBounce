@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.render.engine
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.ShaderEffect
+import net.minecraft.client.gl.PostEffectProcessor
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.util.Identifier
 
@@ -33,10 +33,10 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     var isDirty = false
         private set
 
-    private var shaderEffect: ShaderEffect? = null
+    private var postEffectProcessor: PostEffectProcessor? = null
 
     fun load() {
-        val outlinesShader = ShaderEffect(
+        val outlinesShader = PostEffectProcessor(
             mc.textureManager,
             mc.resourceManager,
             mc.framebuffer,
@@ -48,13 +48,12 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
         framebuffer = outlinesShader.getSecondaryTarget("final")
         vertexConsumerProvider = OutlineVertexConsumerProvider(mc.bufferBuilders.entityVertexConsumers)
 
-        this.shaderEffect = outlinesShader
+        this.postEffectProcessor = outlinesShader
     }
 
     fun close() {
-        shaderEffect?.close()
-
-        this.shaderEffect = null
+        postEffectProcessor?.close()
+        this.postEffectProcessor = null
     }
 
     protected fun beginInternal() {
@@ -72,16 +71,12 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
         // Render the framebuffer if something was rendered to it
         if (this.isDirty) {
             val framebuffer = assureLoaded(framebuffer)
-
             val originalFramebuffer = mc.worldRenderer.entityOutlinesFramebuffer
 
             mc.worldRenderer.entityOutlinesFramebuffer = framebuffer
-
-            vertexConsumerProvider!!.draw()
-
+            vertexConsumerProvider?.draw()
             mc.worldRenderer.entityOutlinesFramebuffer = originalFramebuffer
-
-            shaderEffect!!.render(tickDelta)
+            postEffectProcessor?.render(tickDelta)
         }
 
         mc.framebuffer.beginWrite(false)
@@ -96,11 +91,11 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     }
 
     fun onResized(width: Int, height: Int) {
-        this.shaderEffect?.setupDimensions(width, height)
+        this.postEffectProcessor?.setupDimensions(width, height)
     }
 
     protected fun setUniform1f(name: String, value: Float) {
-        assureLoaded(this.shaderEffect).passes[0].program.getUniformByName(name)?.set(value)
+        assureLoaded(this.postEffectProcessor).passes[0].program.getUniformByName(name)?.set(value)
             ?: throw IllegalArgumentException("There is no uniform with the name $name")
     }
 

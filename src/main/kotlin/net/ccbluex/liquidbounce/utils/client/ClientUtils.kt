@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,9 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.NotificationEvent
-import net.earthcomputer.multiconnect.api.MultiConnectAPI
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
-import net.minecraft.text.BaseText
-import net.minecraft.text.LiteralText
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
@@ -36,36 +34,74 @@ import org.lwjgl.glfw.GLFW
 /**
  * Get minecraft instance
  */
-val mc = MinecraftClient.getInstance()!!
+val mc: MinecraftClient
+    inline get() = MinecraftClient.getInstance()!!
 
 val logger: Logger
     get() = LiquidBounce.logger
 
+val protocolVersionGetter: () -> Int = run {
+    val viaLoadingBaseClass: Class<*>
+
+    try {
+        try {
+            viaLoadingBaseClass = Class.forName("de.florianmichael.vialoadingbase.ViaLoadingBase")
+        } catch (e: ClassNotFoundException) {
+            // ViaVersion does not seem to be loaded
+            return@run { MC_1_20_1 }
+        }
+
+        val comparableProtocolVersion = Class.forName("de.florianmichael.vialoadingbase.model.ComparableProtocolVersion")
+
+        val getInstanceMethod = viaLoadingBaseClass.getMethod("getInstance")
+        val getTargetVersion = viaLoadingBaseClass.getMethod("getTargetVersion")
+        val getIndexMethod = comparableProtocolVersion.getMethod("getIndex")
+
+        return@run {
+            try {
+                val instance: Any? = getInstanceMethod.invoke(null)
+
+                if (instance == null) {
+                    MC_1_20_1
+                } else {
+                    getIndexMethod.invoke(getTargetVersion.invoke(instance)) as Int
+                }
+
+            } catch (e: Exception) {
+                throw Error("Failed to retrieve protocol version from ViaVersion", e)
+            }
+        }
+    } catch (e: Exception) {
+        throw Error("Failed to setup protocol version loading from ViaVersion", e)
+    }
+}
+
 /**
- * Get current protocol version depending on Multi Connect
+ * Get current protocol version
+ *
+ * @return protocol version
  */
 val protocolVersion: Int
-    get() = runCatching {
-        MultiConnectAPI.instance().protocolVersion
-    }.getOrElse { 754 }
+    get() = protocolVersionGetter()
 
+const val MC_1_20_1: Int = 763
 const val MC_1_8: Int = 47
 
 // Chat formatting
-private val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] ".asText()
+private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
 
 fun dot() = regular(".")
 
-fun regular(text: BaseText) = text.styled { it.withColor(Formatting.GRAY) }
+fun regular(text: MutableText) = text.styled { it.withColor(Formatting.GRAY) }
 
 fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
 
-fun variable(text: BaseText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: MutableText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
 
 fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
 
 fun chat(vararg texts: Text, prefix: Boolean = true) {
-    val literalText = if (prefix) clientPrefix.copy() else LiteralText("")
+    val literalText = if (prefix) clientPrefix.copy() else Text.literal("")
     texts.forEach { literalText.append(it) }
 
     if (mc.player == null) {
@@ -107,7 +143,7 @@ fun keyName(keyCode: Int) = when (keyCode) {
         .split(".")
         .drop(2)
         .joinToString(separator = "_")
-        .toUpperCase()
+        .uppercase()
 }
 
 /**

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +26,16 @@ import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.util.collection.DefaultedList
+import net.minecraft.potion.PotionUtil
+import net.minecraft.registry.Registries
+import net.minecraft.registry.Registry
+import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 import java.util.*
 
 /**
@@ -39,11 +45,25 @@ import java.util.*
  * @depends FabricAPI (for page buttons)
  */
 object Tabs {
+    private var setup = false
+
+    /**
+     * Since 1.20 we need to set this up at a more precise timing than just when the client starts.
+     */
+    fun setup() {
+        if (!setup) {
+//            setupSpecial()
+//            setupExploits()
+//            setupHeads()
+
+            setup = true
+        }
+    }
 
     /**
      * Special item group is useful to get blocks or items which you are not able to get without give command
      */
-    val special = LiquidsItemGroup(
+    private fun setupSpecial() =  LiquidsItemGroup(
         "Special",
         icon = {
             ItemStack(Blocks.COMMAND_BLOCK).apply {
@@ -52,25 +72,72 @@ object Tabs {
         },
         items = {
             it.add(ItemStack(Blocks.COMMAND_BLOCK))
+            it.add(ItemStack(Blocks.CHAIN_COMMAND_BLOCK))
+            it.add(ItemStack(Blocks.REPEATING_COMMAND_BLOCK))
             it.add(ItemStack(Items.COMMAND_BLOCK_MINECART))
-            it.add(ItemStack(Blocks.BARRIER))
+            it.add(ItemStack(Blocks.END_PORTAL_FRAME))
             it.add(ItemStack(Blocks.DRAGON_EGG))
-            it.add(ItemStack(Blocks.BROWN_MUSHROOM_BLOCK))
-            it.add(ItemStack(Blocks.RED_MUSHROOM_BLOCK))
-            it.add(ItemStack(Blocks.FARMLAND))
+            it.add(ItemStack(Blocks.BARRIER))
+            it.add(ItemStack(Blocks.JIGSAW))
+            it.add(ItemStack(Blocks.STRUCTURE_BLOCK))
+            it.add(ItemStack(Blocks.STRUCTURE_VOID))
             it.add(ItemStack(Blocks.SPAWNER))
+            it.add(ItemStack(Items.DEBUG_STICK))
         }
     ).create()
 
     /**
      * Exploits item group allows you to get items which are able to exploit bugs (like crash exploits or render issues)
      */
-    val exploits = LiquidsItemGroup(
+    private fun setupExploits() = LiquidsItemGroup(
         "Exploits",
         icon = { ItemStack(Items.LINGERING_POTION) },
         items = {
             // TODO: Add exploits
             // it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))
+
+            it.add(
+                PotionUtil.setCustomPotionEffects(
+                    ItemStack(Items.SPLASH_POTION)
+                        .setCustomName(
+                            "".asText()
+                                .styled { s -> s.withBold(true) }
+                                .append(
+                                    "Troll".asText()
+                                        .styled { s -> s.withColor(Formatting.RED) }
+                                )
+                                .append(
+                                    "Potion".asText()
+                                        .styled { s -> s.withColor(Formatting.GOLD) }
+                                )
+                        ),
+                    Registries.STATUS_EFFECT.map { e ->
+                        StatusEffectInstance(e, Int.MAX_VALUE, 127)
+                    }
+                )
+            )
+
+            it.add(
+                PotionUtil.setCustomPotionEffects(
+                    ItemStack(Items.SPLASH_POTION)
+                        .setCustomName(
+                            "".asText()
+                                .styled { s -> s.withBold(true) }
+                                .append(
+                                    "Kill".asText()
+                                        .styled { s -> s.withColor(Formatting.RED) }
+                                )
+                                .append(
+                                    "Potion".asText()
+                                        .styled { s -> s.withColor(Formatting.GOLD) }
+                                )
+                        ),
+                    listOf(
+                        StatusEffectInstance(StatusEffects.INSTANT_HEALTH, 0, 125),
+                        StatusEffectInstance(StatusEffects.INSTANT_DAMAGE, 0, 125)
+                    )
+                )
+            )
         }
     ).create()
 
@@ -79,7 +146,8 @@ object Tabs {
      */
     private class Head(val name: String, val uuid: UUID, val value: String)
     private class HeadsService(val enabled: Boolean, val url: String)
-    private var headsCollection: Array<Head> = runCatching {
+
+    private var headsDb = runCatching {
         logger.info("Loading heads...")
         // Load head service from cloud
         //  Makes it possible to disable service or change domain in case of an emergency
@@ -102,13 +170,15 @@ object Tabs {
         logger.error("Unable to load heads database", it)
     }.getOrElse { emptyArray() }
 
-    val heads = LiquidsItemGroup(
+    private fun setupHeads() = LiquidsItemGroup(
         "Heads",
         icon = { ItemStack(Items.SKELETON_SKULL) },
         items = {
-            it += headsCollection.map { head ->
-                createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")
-            }
+            it.addAll(headsDb
+                .distinctBy { it.name }
+                .map { head ->
+                    createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")
+                })
         }
     ).create()
 
@@ -120,30 +190,28 @@ object Tabs {
 open class LiquidsItemGroup(
     val plainName: String,
     val icon: () -> ItemStack,
-    val items: (items: MutableList<ItemStack>) -> Unit
+    val items: (items: ItemGroup.Entries) -> Unit
 ) {
 
     // Create item group and assign to minecraft groups
     fun create(): ItemGroup {
         // Expand array
-        ItemGroup.GROUPS = ItemGroup.GROUPS.copyOf(ItemGroup.GROUPS.size + 1)
-
-        // Build item group
-        return object : ItemGroup(GROUPS.size - 1, plainName) {
-
-            override fun getName() = plainName
-
-            override fun getTranslationKey() = plainName.asText()
-
-            override fun shouldRenderName() = true
-
-            override fun createIcon() = icon()
-
-            override fun appendStacks(stacks: DefaultedList<ItemStack>) {
-                items(stacks)
+        val itemGroup = ItemGroup.create(ItemGroup.Row.TOP, -1)
+            .displayName(plainName.asText())
+            .icon(icon)
+            .entries { displayContext, entries ->
+                runCatching {
+                    items(entries)
+                }.onFailure {
+                    logger.error("Unable to create item group $plainName", it)
+                }
             }
+            .build()
 
-        }
+        // Add tab to creative inventory
+        Registry.register(Registries.ITEM_GROUP, Identifier("liquidbounce", plainName.lowercase()), itemGroup)
+
+        return itemGroup
     }
 
 }

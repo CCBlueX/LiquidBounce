@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.Item
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
 
 /**
  * AutoSoup module
@@ -45,113 +39,42 @@ import net.minecraft.util.math.Direction
 
 object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
-    private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())
-    private val health by int("Health", 18, 1..20)
-
-    private var lastSlot = -1
-    private var saveSlot = false
+    private val health by int("Health", 15, 1..40)
+    private val bowl by boolean("DropAfterUse", true)
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
+    private val itemDropDelay by intRange("ItemDropDelay", 1..2, 0..40)
+    private val swapPreviousDelay by int("SwapPreviousAdditionalDelay", 5, 1..100)
 
     val repeatable = repeatable {
         val mushroomStewSlot = findHotbarSlot(Items.MUSHROOM_STEW)
 
-        val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
-
-        val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
-
-        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null) {
+        if (interaction.hasRidingInventory()) {
             return@repeatable
         }
-
-        if (player.isDead) {
-            return@repeatable
-        }
-
-        if (bowlHotbarSlot != null) {
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    BlockPos.ORIGIN,
-                    Direction.DOWN
-                )
-            )
-            if (saveSlot) {
-                player.inventory.selectedSlot = lastSlot
-                saveSlot = false
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
+        if (player.health < health && mushroomStewSlot != null && !isInInventoryScreen) {
+            // we need to take some actions
+            CombatManager.pauseCombat = combatPauseTime
+            if (player.isBlocking) {
+                interaction.stopUsingItem(player)
+                wait { 1 }
             }
-            when (bowl) {
-                BowlMode.DROP -> {
-                    utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, false)
-                }
-                BowlMode.MOVE -> {
-                    val openInventory = mc.currentScreen !is InventoryScreen
+            val itemDrop = itemDropDelay.random()
+            if (mushroomStewSlot != player.inventory.selectedSlot) {
+                SilentHotbar.selectSlotSilently(this, mushroomStewSlot, swapPreviousDelay + itemDrop)
+            }
 
-                    if (openInventory) {
-                        network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
-                    }
+            // uses soup
+            interaction.sendSequencedPacket(world) { sequence ->
+                PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+            }
 
-                    // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
-                    if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, true)
-                        utilizeInventory(9, 0, SlotActionType.PICKUP, true)
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, true)
-                    } else {
-                        // If there is, simply shift + click the empty bowl from hotbar
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.QUICK_MOVE, true)
-                    }
-
-                    if (openInventory) {
-                        network.sendPacket(CloseHandledScreenC2SPacket(0))
-                    }
-                }
+            // checks if using it, succeeded, if so - drop an empty bowl
+            if (bowl && player.inventory.getStack(mushroomStewSlot).item == Items.BOWL) {
+                wait { itemDrop }
+                player.dropSelectedItem(true)
             }
             return@repeatable
         }
-
-        if (player.health < health) {
-            if (mushroomStewSlot != null) {
-                if (!saveSlot) {
-                    lastSlot = player.inventory.selectedSlot
-                    saveSlot = true
-                }
-                player.inventory.selectedSlot = mushroomStewSlot
-                // Using timer so as to avoid sword shield
-                wait(2)
-                network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
-                return@repeatable
-            } else {
-                // Search for the specific item in inventory and quick move it to hotbar
-                if (bowlInvSlot != null) {
-                    utilizeInventory(bowlInvSlot, 0, SlotActionType.QUICK_MOVE, false)
-                }
-                return@repeatable
-            }
-        }
-    }
-
-    private fun utilizeInventory(slot: Int, button: Int, slotActionType: SlotActionType, onlyActions: Boolean) {
-        val serverSlot = convertClientSlotToServerSlot(slot)
-        val openInventory = mc.currentScreen !is InventoryScreen
-
-        if (!onlyActions) {
-            if (openInventory) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
-            }
-        }
-
-        interaction.clickSlot(0, serverSlot, button, slotActionType, player)
-
-        if (!onlyActions) {
-            if (openInventory) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
-        }
-    }
-
-    private fun hasItem(slot: Int, item: Item): Boolean {
-        return player.inventory.getStack(slot).item == item
-    }
-
-    enum class BowlMode(override val choiceName: String) : NamedChoice {
-        DROP("Drop"), MOVE("Move")
     }
 }

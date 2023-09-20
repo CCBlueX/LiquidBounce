@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,9 +50,15 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
             event.shape = VoxelShapes.fullCube()
         } else if (cobWebs && event.state.block is CobwebBlock) {
             event.shape = VoxelShapes.fullCube()
-        } else if (pressurePlates && event.state.block is PressurePlateBlock) {
+        } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
-        } else if (magmaBlocks && !event.state.isSideSolid(world, event.pos, Direction.UP, SideShapeType.CENTER) && event.pos.down().getBlock() is MagmaBlock) {
+        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock && !event.state.isSideSolid(
+                world,
+                event.pos,
+                Direction.UP,
+                SideShapeType.CENTER
+            )
+        ) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
         }
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,33 +44,50 @@ object McMappings {
         }
     }
 
-    fun mapClass(clazz: Class<*>): String {
-        val className = clazz.name.replace('.', '/')
+    fun remapClass(clazz: String): String {
+        val className = clazz.replace('.', '/')
 
         return mappings?.classEntries?.find {
-            it?.get("intermediary") == className
-        }?.get("named") ?: className
+            it?.get("named") == className
+        }?.get("intermediary") ?: className
     }
 
-    fun mapField(clazz: Class<*>, name: String): String {
-        val className = clazz.name.replace('.', '/')
+    fun remapField(clazz: Class<*>, name: String, superClasses: Boolean): String {
+        val classNames = mutableSetOf(clazz.name.replace('.', '/'))
+
+        if (superClasses) {
+            var current = clazz
+            while (current.name != "java.lang.Object") {
+                current = current.superclass
+                classNames.add(current.name.replace('.', '/'))
+            }
+        }
 
         return mappings?.fieldEntries?.find {
             val intern = it?.get("intermediary") ?: return@find false
+            val named = it.get("named") ?: return@find false
 
-            // todo: check desc
-            intern.owner == className && intern.name == name
-        }?.get("named")?.name ?: name
+            classNames.contains(intern.owner) && named.name == name
+        }?.get("intermediary")?.name ?: name
     }
 
-    fun mapMethod(clazz: Class<*>, name: String, desc: String): String {
-        val className = clazz.name.replace('.', '/')
+    fun remapMethod(clazz: Class<*>, name: String, superClasses: Boolean): String {
+        val classNames = mutableSetOf(clazz.name.replace('.', '/'))
+
+        if (superClasses) {
+            var current = clazz
+            while (current.name != "java.lang.Object") {
+                current = current.superclass
+                classNames.add(current.name.replace('.', '/'))
+            }
+        }
 
         return mappings?.methodEntries?.find {
             val intern = it?.get("intermediary") ?: return@find false
+            val named = it.get("named") ?: return@find false
 
-            intern.owner == className && intern.name == name && intern.desc == desc
-        }?.get("named")?.name ?: name
+            classNames.contains(intern.owner) && named.name == name
+        }?.get("intermediary")?.name ?: name
     }
 
 }

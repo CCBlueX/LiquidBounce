@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ object ArmorComparator : Comparator<ArmorPiece> {
                 val o2a = o2.itemStack.item as ArmorItem
 
                 val durabilityCmp =
-                    o1a.material.getDurability(o1a.slotType).compareTo(o2a.material.getDurability(o2a.slotType))
+                    o1a.material.getDurability(o1a.type).compareTo(o2a.material.getDurability(o2a.type))
 
                 if (durabilityCmp != 0) {
                     return durabilityCmp
@@ -105,7 +105,7 @@ object ArmorComparator : Comparator<ArmorPiece> {
         val item = itemStack.item as ArmorItem
 
         return getDamageReduction(
-            item.material.getProtectionAmount(item.slotType),
+            item.material.getProtection(item.type),
             0
         ) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
     }

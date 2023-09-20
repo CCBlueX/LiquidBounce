@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,18 +21,18 @@ package net.ccbluex.liquidbounce.config.adapter
 
 import com.google.gson.*
 import net.minecraft.block.Block
+import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import java.lang.reflect.Type
 
 object BlockValueSerializer : JsonSerializer<Block>, JsonDeserializer<Block> {
 
     override fun serialize(src: Block, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(Registry.BLOCK.getId(src).toString())
+        return JsonPrimitive(Registries.BLOCK.getId(src).toString())
     }
 
     override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Block {
-        return Registry.BLOCK.get(Identifier.tryParse(json.asString))
+        return Registries.BLOCK.get(Identifier.tryParse(json.asString))
     }
 
 }

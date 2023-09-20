@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ private class Shader(shaderType: ShaderType, source: String) {
 
     enum class ShaderType(val typeConstant: Int) {
         VertexShader(GL20.GL_VERTEX_SHADER),
-        FragmentShader(GL20.GL_FRAGMENT_SHADER),
+        FragmentShader(GL20.GL_FRAGMENT_SHADER)
     }
 }
 

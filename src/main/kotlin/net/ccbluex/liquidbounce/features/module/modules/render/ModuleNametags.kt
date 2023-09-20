@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.memory.VertexFormatComponentDataTy
 import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.ccbluex.liquidbounce.utils.render.rect
@@ -125,7 +126,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             val width = fontRenderer.getStringWidth(text) / 2
             val height = fontRenderer.height + 2F
 
-            val boundingBox = entity.boundingBox
+            val boundingBox = entity.box
             val boundingBoxCenter = boundingBox.center
 
             val offset = Vec3(
@@ -152,10 +153,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             val screenSpaceVec = Vec3(xWithoutAspectRatio * aspectRatio, -vec.y * factor, currZ)
 
             vertexFormat.rect(
-                indexBuffer,
-                screenSpaceVec + p1 * scale,
-                screenSpaceVec + p2 * scale,
-                Color4b(0, 0, 0, 127)
+                indexBuffer, screenSpaceVec + p1 * scale, screenSpaceVec + p2 * scale, Color4b(0, 0, 0, 127)
             )
             borderVertexFormat?.rect(
                 borderIndexBuffer!!,
@@ -181,7 +179,14 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 val pixelX = (xWithoutAspectRatio + 1.0f) / 2.0f * mc.window.scaledWidth
                 val pixelY = (screenSpaceVec.y + 1.0f) / 2.0f * mc.window.scaledHeight
 
-                val slotTypes = arrayOf(EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+                val slotTypes = arrayOf(
+                    EquipmentSlot.MAINHAND,
+                    EquipmentSlot.OFFHAND,
+                    EquipmentSlot.HEAD,
+                    EquipmentSlot.CHEST,
+                    EquipmentSlot.LEGS,
+                    EquipmentSlot.FEET
+                )
 
                 val renderTasks = slotTypes.withIndex().mapNotNull { (index, slot) ->
                     val equipmentInSlot = entity.getEquippedStack(slot) ?: return@mapNotNull null
@@ -194,16 +199,33 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 mvpMatrix.multiply(Mat4.scale(armorScale, armorScale, armorScale))
 
                 RenderEngine.enqueueForRendering(
-                    RenderEngine.MINECRAFT_INTERNAL_RENDER_TASK,
-                    MVPRenderTask(renderTasks.toTypedArray(), mvpMatrix)
+                    RenderEngine.MINECRAFT_INTERNAL_RENDER_TASK, MVPRenderTask(renderTasks.toTypedArray(), mvpMatrix)
                 )
             }
 
             currIdx++
         }
 
-        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader, indexBuffer = indexBuffer, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true, depthTest = true)))
-        borderVertexFormat?.let { RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(it, PrimitiveType.Lines, ColoredPrimitiveShader, indexBuffer = borderIndexBuffer!!, state = GlRenderState(lineWidth = 1.0f, lineSmooth = true, depthTest = true))) }
+        RenderEngine.enqueueForRendering(
+            RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(
+                vertexFormat,
+                PrimitiveType.Triangles,
+                ColoredPrimitiveShader,
+                indexBuffer = indexBuffer,
+                state = GlRenderState(lineWidth = 2.0f, lineSmooth = true, depthTest = true)
+            )
+        )
+        borderVertexFormat?.let {
+            RenderEngine.enqueueForRendering(
+                RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(
+                    it,
+                    PrimitiveType.Lines,
+                    ColoredPrimitiveShader,
+                    indexBuffer = borderIndexBuffer!!,
+                    state = GlRenderState(lineWidth = 1.0f, lineSmooth = true, depthTest = true)
+                )
+            )
+        }
         RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, fontRenderer.commit())
     }
 

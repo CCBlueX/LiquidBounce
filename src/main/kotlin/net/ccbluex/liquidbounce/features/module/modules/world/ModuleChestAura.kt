@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -60,12 +60,15 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private val visualSwing by boolean("VisualSwing", true)
     private val chest by blocks("Chest", hashSetOf(Blocks.CHEST))
 
-
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
-    private object CloseInstantlyOptions : ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
+
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+
+    private object CloseInstantlyOptions :
+        ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
         val timeout by int("Timeout", 2500, 100..10000)
     }
 
@@ -104,11 +107,11 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         updateTarget()
 
         val curr = currentBlock ?: return@repeatable
-        val serverRotation = RotationManager.serverRotation ?: return@repeatable
+        val currentRotation = RotationManager.currentRotation ?: return@repeatable
 
         val rayTraceResult = raytraceBlock(
             range.toDouble(),
-            serverRotation,
+            currentRotation,
             curr,
             curr.getState() ?: return@repeatable
         )
@@ -119,7 +122,6 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
         if (interaction.interactBlock(
                 player,
-                mc.world!!,
                 Hand.MAIN_HAND,
                 rayTraceResult
             ) == ActionResult.SUCCESS
@@ -169,7 +171,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
         val radius = range + 1
         val radiusSquared = radius * radius
-        val eyesPos = mc.player!!.eyesPos
+        val eyesPos = mc.player!!.eyes
 
         val blocksToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targetedBlocks.contains(state.block) && pos !in clickedBlocks && getNearestPoint(
@@ -182,7 +184,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
         for ((pos, state) in blocksToProcess) {
             val (rotation, _) = RotationManager.raytraceBlock(
-                player.eyesPos,
+                player.eyes,
                 pos,
                 state,
                 range = range.toDouble(),
@@ -190,7 +192,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             ) ?: continue
 
             // aim on target
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             nextBlock = pos
             break
         }

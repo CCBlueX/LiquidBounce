@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,12 +24,11 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.client.Client
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
-
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
 import net.minecraft.util.Util
 import java.util.*
 
@@ -78,6 +77,10 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         }
     }
 
+    private val sessionChange = handler<SessionEvent> {
+        reconnect()
+    }
+
     fun connectAsync() {
         if (!enabled) {
             return
@@ -97,20 +100,28 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         client.channel = null
     }
 
-    fun reconnect(async: Boolean = false) {
+    fun reconnect() {
         disconnect()
         connectAsync()
     }
 
     internal fun onConnect() {
         logger.info("Connecting to LiquidChat...")
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.connecting"), NotificationEvent.Severity.INFO)
+        notification(
+            "LiquidChat",
+            Text.translatable("liquidbounce.liquidchat.states.connecting"),
+            NotificationEvent.Severity.INFO
+        )
     }
 
     internal fun onConnected() {
         logger.info("Successfully connected to LiquidChat!")
 
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.connected"), NotificationEvent.Severity.INFO)
+        notification(
+            "LiquidChat",
+            Text.translatable("liquidbounce.liquidchat.states.connected"),
+            NotificationEvent.Severity.INFO
+        )
 
         if (jwtLogin) {
             logger.info("Logging in via JWT...")
@@ -123,15 +134,27 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
     internal fun onDisconnect() {
         client.channel = null
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.disconnected"), NotificationEvent.Severity.INFO)
+        notification(
+            "LiquidChat",
+            Text.translatable("liquidbounce.liquidchat.states.disconnected"),
+            NotificationEvent.Severity.INFO
+        )
     }
 
     internal fun onLogon() {
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.loggingIn"), NotificationEvent.Severity.INFO)
+        notification(
+            "LiquidChat",
+            Text.translatable("liquidbounce.liquidchat.states.loggingIn"),
+            NotificationEvent.Severity.INFO
+        )
     }
 
     internal fun onLoggedIn() {
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.loggedIn"), NotificationEvent.Severity.SUCCESS)
+        notification(
+            "LiquidChat",
+            Text.translatable("liquidbounce.liquidchat.states.loggedIn"),
+            NotificationEvent.Severity.SUCCESS
+        )
     }
 
     internal fun onClientError(packet: ClientErrorPacket) {
@@ -165,7 +188,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9$message".asText(), false)
+        player.sendMessage("§9§lLiquidChat §8▸ §7$message".asText(), false)
     }
 
     internal fun onMessage(user: User, message: String) {
@@ -179,7 +202,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9${user.name}: §r$message".asText(), false)
+        player.sendMessage("§9§lLiquidChat §8▸ §9${user.name} §8▸§7 $message".asText(), false)
     }
 
     internal fun onPrivateMessage(user: User, message: String) {
@@ -193,26 +216,32 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9${user.name}: §r$message".asText(), false)
+        player.sendMessage("§9§lLiquidChat §8▸ §9${user.name} §8▸§7 $message".asText(), false)
     }
 
     internal fun onError(cause: Throwable) {
-        notification("LiquidChat", TranslatableText("liquidbounce.generic.notifyDeveloper"), NotificationEvent.Severity.ERROR)
+        notification(
+            "LiquidChat",
+            Text.translatable("liquidbounce.generic.notifyDeveloper"),
+            NotificationEvent.Severity.ERROR
+        )
         logger.error("LiquidChat error", cause)
     }
 
     internal fun onReceivedJwtToken(jwt: String) {
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.jwtTokenReceived"), NotificationEvent.Severity.SUCCESS)
+        notification(
+            "LiquidChat",
+            Text.translatable("liquidbounce.liquidchat.jwtTokenReceived"),
+            NotificationEvent.Severity.SUCCESS
+        )
 
         // Set jwt token
         jwtLogin = true
         jwtToken = jwt
 
         // Reconnect to chat server
-        reconnect(async = true)
+        reconnect()
     }
-
-
 
     /**
      * Request Mojang authentication details for login
@@ -239,12 +268,19 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
                     val sessionHash = packet.sessionHash
 
                     mc.sessionService.joinServer(mc.session.profile, mc.session.accessToken, sessionHash)
-                    client.sendPacket(ServerLoginMojangPacket(mc.session.username, mc.session.profile.id, allowMessages = true))
+                    client.sendPacket(
+                        ServerLoginMojangPacket(
+                            mc.session.username,
+                            mc.session.profile.id,
+                            allowMessages = true
+                        )
+                    )
                 } catch (throwable: Throwable) {
                     onError(throwable)
                 }
                 return
             }
+
             is ClientMessagePacket -> onMessage(packet.user, packet.content)
             is ClientPrivateMessagePacket -> onPrivateMessage(packet.user, packet.content)
             is ClientErrorPacket -> onClientError(packet)
@@ -254,15 +290,15 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
                         onLoggedIn()
                         loggedIn = true
                     }
+
                     "Ban" -> chat("§7[§a§lChat§7] §9Successfully banned user!")
                     "Unban" -> chat("§7[§a§lChat§7] §9Successfully unbanned user!")
                 }
             }
+
             is ClientNewJWTPacket -> onReceivedJwtToken(packet.token)
         }
     }
-
-
 
     /**
      * Send chat message to server
@@ -272,7 +308,8 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     /**
      * Send private chat message to server
      */
-    fun sendPrivateMessage(username: String, message: String) = client.sendPacket(ServerPrivateMessagePacket(username, message))
+    fun sendPrivateMessage(username: String, message: String) =
+        client.sendPacket(ServerPrivateMessagePacket(username, message))
 
     /**
      * Ban user from server

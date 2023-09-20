@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,47 +18,84 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.MovementInputEvent;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
+import net.ccbluex.liquidbounce.utils.client.TickStateManager;
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.math.MathHelper;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(KeyboardInput.class)
 public class MixinKeyboardInput extends MixinInput {
+
+    @Shadow
+    @Final
+    private GameOptions settings;
+
+    @Inject(method = "getMovementMultiplier", at = @At("RETURN"), cancellable = true)
+    private static void hookFreeCamCanceledMovementInput(boolean positive, boolean negative, CallbackInfoReturnable<Float> cir) {
+        cir.setReturnValue(ModuleFreeCam.INSTANCE.cancelMovementInput(cir.getReturnValue()));
+    }
 
     /**
      * Hook inventory move module
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
-        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ?
-                InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(),
-                                       keyBinding.boundKey.getCode()) :
-                keyBinding.isPressed();
+        Boolean enforced = KeybindExtensionsKt.getEnforced(keyBinding);
+        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? (enforced != null ? enforced : KeybindExtensionsKt.getPressedOnKeyboard(keyBinding)) : (enforced != null ? enforced : keyBinding.isPressed());
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
-    private void injectStrafing(boolean slowDown, CallbackInfo ci) {
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingBack:Z", ordinal = 0))
+    private void hookInventoryMoveSprint(boolean slowDown, float f, CallbackInfo ci) {
+        if (ModuleInventoryMove.INSTANCE.shouldHandleInputs(this.settings.sprintKey)) {
+            this.settings.sprintKey.setPressed(KeybindExtensionsKt.getPressedOnKeyboard(this.settings.sprintKey));
+        }
+    }
+
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER, ordinal = 0), allow = 1)
+    private void injectMovementInputEvent(boolean slowDown, float f, CallbackInfo ci) {
+        var event = new MovementInputEvent(new DirectionalInput(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight), this.jumping);
+
+        EventManager.INSTANCE.callEvent(event);
+
+        var directionalInput = event.getDirectionalInput();
+
+        this.pressingForward = directionalInput.getForwards();
+        this.pressingBack = directionalInput.getBackwards();
+        this.pressingLeft = directionalInput.getLeft();
+        this.pressingRight = directionalInput.getRight();
+        this.jumping = event.getJumping();
+    }
+
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.BEFORE))
+    private void injectStrafing(boolean slowDown, float f, CallbackInfo ci) {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null || player == null) {
             return;
+        }
 
-        Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        if (currentRotation == null)
-            return;
-
-        currentRotation = currentRotation.fixedSensitivity();
-
-        float deltaYaw = MinecraftClient.getInstance().player.getYaw() - currentRotation.getYaw();
+        float deltaYaw = player.getYaw() - rotation.getYaw();
 
         float x = this.movementSideways;
         float z = this.movementForward;
@@ -68,11 +105,19 @@ public class MixinKeyboardInput extends MixinInput {
 
         this.movementSideways = Math.round(newX);
         this.movementForward = Math.round(newZ);
+    }
 
-        if (slowDown) {
-            this.movementSideways *= 0.3F;
-            this.movementForward *= 0.3F;
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;sneakKey:Lnet/minecraft/client/option/KeyBinding;", shift = At.Shift.AFTER))
+    private void hookSuperKnockbackStopMoving(boolean slowDown, float f, CallbackInfo ci) {
+        if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
+            this.movementForward = 0.0f;
         }
+    }
+
+    @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
+    private void injectForcedState(KeyboardInput instance, boolean value) {
+        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
+        instance.sneaking = enforceEagle != null ? enforceEagle : value;
     }
 
 }

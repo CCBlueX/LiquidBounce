@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,23 +20,29 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.attribute.EntityAttribute
+import net.minecraft.entity.attribute.EntityAttributeInstance
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 
 /**
  * Create item with NBT tags
  *
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
-fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader(StringReader(stack), true).consume().let {
-    ItemStackArgument(it.item, it.nbt).createStack(amount, false)
-}
+fun createItem(stack: String, amount: Int = 1): ItemStack =
+    ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
+        ItemStackArgument(it.item, it.nbt).createStack(amount, false)
+    }
 
 fun findHotbarSlot(item: Item): Int? = findHotbarSlot { it.item == item }
 
@@ -49,7 +55,7 @@ fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
 fun findInventorySlot(item: Item): Int? = findInventorySlot { it.item == item }
 
 fun findInventorySlot(predicate: (ItemStack) -> Boolean): Int? {
-    val player = MinecraftClient.getInstance().player ?: return null
+    val player = mc.player ?: return null
 
     return (0..40).firstOrNull { predicate(player.inventory.getStack(it)) }
 }
@@ -79,7 +85,7 @@ fun ItemStack?.getEnchantmentCount(): Int {
 
 fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     val enchantments = this?.enchantments ?: return 0
-    val enchId = Registry.ENCHANTMENT.getId(enchantment)
+    val enchId = Registries.ENCHANTMENT.getId(enchantment)
 
     for (enchantmentEntry in enchantments) {
         if (enchantmentEntry !is NbtCompound) {
@@ -94,7 +100,7 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     return 0
 }
 
-fun isInHotbar(slot: Int) = slot == 40 || slot in 0..8
+fun isHotbarSlot(slot: Int) = slot == 40 || slot in 0..8
 
 val ToolItem.type: Int
     get() = when (this) {
@@ -102,13 +108,27 @@ val ToolItem.type: Int
         is PickaxeItem -> 1
         is ShovelItem -> 2
         is HoeItem -> 3
-        else -> throw IllegalStateException()
+        else -> error("Unknown tool item $this (WTF?)")
     }
 
 val Item.attackDamage: Float
-    get() =
-        when (this) {
-            is SwordItem -> this.attackDamage
-            is ToolItem -> this.material.attackDamage
-            else -> throw IllegalArgumentException()
-        }
+    get() = when (this) {
+        is SwordItem -> this.attackDamage
+        is MiningToolItem -> this.attackDamage + 1.0f
+        is ToolItem -> this.material.attackDamage
+        else -> 1.0f
+    }
+
+val Item.attackSpeed: Float
+    get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
+
+private fun Item.getAttributeValue(attribute: EntityAttribute): Float {
+    val attribInstance = EntityAttributeInstance(attribute) {}
+
+    for (entityAttributeModifier in this.getAttributeModifiers(EquipmentSlot.MAINHAND)
+        .get(attribute)) {
+        attribInstance.addTemporaryModifier(entityAttributeModifier)
+    }
+
+    return attribInstance.value.toFloat()
+}

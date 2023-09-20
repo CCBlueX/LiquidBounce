@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,23 +19,84 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.render.BackgroundRenderer;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.render.BackgroundRenderer.FogType;
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
+import java.util.stream.Stream;
+
+import static org.spongepowered.asm.mixin.injection.At.Shift.AFTER;
 
 @Mixin(BackgroundRenderer.class)
 public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
 
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 1))
-    private static boolean injectAntiBlind(LivingEntity livingEntity, StatusEffect effect) {
-        if (ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getAntiBlind())
-            return false;
+    @Redirect(method = "getFogModifier", at = @At(value = "INVOKE", target = "Ljava/util/List;stream()Ljava/util/stream/Stream;"))
+    private static Stream<BackgroundRenderer.StatusEffectFogModifier> injectAntiBlind(List<BackgroundRenderer.StatusEffectFogModifier> list) {
+        return list.stream().filter(modifier -> {
+            final StatusEffect effect = modifier.getStatusEffect();
 
-        return livingEntity.hasStatusEffect(effect);
+            final var module = ModuleAntiBlind.INSTANCE;
+            if (!module.getEnabled()) {
+                return true;
+            }
+
+            return !((StatusEffects.BLINDNESS == effect && module.getAntiBlind()) ||
+                    (StatusEffects.DARKNESS == effect && module.getAntiDarkness()));
+        });
+    }
+
+    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
+    private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo callback) {
+        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
+        if (!module.getEnabled()) {
+            return;
+        }
+
+        CameraSubmersionType type = camera.getSubmersionType();
+        if (module.getPowerSnowFog() && type == CameraSubmersionType.POWDER_SNOW) {
+            RenderSystem.setShaderFogStart(-8.0F);
+            return;
+        }
+
+        if (module.getLiquidsFog()) {
+            // Renders fog same as spectator.
+            switch (type) {
+                case LAVA, WATER -> RenderSystem.setShaderFogStart(-8.0F);
+            }
+        }
+    }
+
+    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V", remap = false))
+    private static void injectLiquidsFogEnd(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
+        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
+        if (!module.getEnabled()) {
+            return;
+        }
+
+        CameraSubmersionType type = camera.getSubmersionType();
+        if (module.getPowerSnowFog() && type == CameraSubmersionType.POWDER_SNOW) {
+            RenderSystem.setShaderFogEnd(viewDistance * 0.5F);
+            return;
+        }
+
+        if (module.getLiquidsFog()) {
+            // Renders fog same as spectator.
+            switch (type) {
+                case LAVA -> RenderSystem.setShaderFogEnd(viewDistance * 0.5F);
+                case WATER -> RenderSystem.setShaderFogEnd(viewDistance);
+            }
+        }
     }
 }

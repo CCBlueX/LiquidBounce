@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,14 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.client.network.ClientPlayerEntity
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -40,66 +42,52 @@ import net.minecraft.util.Hand
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
+/**
+ * Global enemy configurable
+ *
+ * Modules can have their own enemy configurable if required. If not, they should use this as default.
+ * Global enemy configurable can be used to configure which entities should be considered as an enemy.
+ *
+ * This can be adjusted by the .enemy command and the panel inside the ClickGUI.
+ */
 val globalEnemyConfigurable = EnemyConfigurable()
 
 /**
- * Configurable to configure which entities and their state (like being dead) should be considered as enemy
+ * Configurable to configure which entities and their state (like being dead) should be considered as an enemy
  */
-class EnemyConfigurable : Configurable("enemies") {
+class EnemyConfigurable : Configurable("Enemies") {
 
-    // Players should be considered as a enemy
-    val players by boolean("Players", true)
+    // Players should be considered as an enemy
+    var players by boolean("Players", true)
 
-    // Hostile mobs (like skeletons and zombies) should be considered as a enemy
-    val mobs by boolean("Mobs", true)
+    // Hostile mobs (like skeletons and zombies) should be considered as an enemy
+    var mobs by boolean("Mobs", true)
 
-    // Animals (like cows, pigs and so on) should be considered as a enemy
-    val animals by boolean("Animals", false)
+    // Animals (like cows, pigs and so on) should be considered as an enemy
+    var animals by boolean("Animals", false)
 
-    // Invisible entities should be also considered as a enemy
+    // Invisible entities should be also considered as an enemy
     var invisible by boolean("Invisible", true)
 
-    // Dead entities should be also considered as a enemy to bypass modern anti cheat techniques
+    // Dead entities should be also considered as an enemy to bypass modern anti cheat techniques
     var dead by boolean("Dead", false)
 
-    // Friends (client friends - other players) should be also considered as enemy
-    val friends by boolean("Friends", false)
+    // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
+    var friends by boolean("Friends", false)
 
-    // Friends (client friends - other players) should be also considered as enemy
-    val teamMates by boolean("TeamMates", false)
-
-    // Should bots be blocked to bypass anti cheat techniques
-    val antibot = tree(AntiBotConfigurable())
-
-    class AntiBotConfigurable : Configurable("AntiBot") {
-
-        /**
-         * Should always be enabled. A good antibot should never detect a real player as a bot (on default settings).
-         */
-        val enabled by boolean("Enabled", true)
-
-        /**
-         * Check if player might be a bot
-         */
-        fun isBot(player: ClientPlayerEntity): Boolean {
-            if (!enabled) {
-                return false
-            }
-
-            return false
-        }
-
-    }
+    // Teammates should be also considered as enemy - same thing like Teams module -> might be replaced by this
+    // Todo: this is currently handled using the Teams module
+    var teamMates by boolean("TeamMates", false)
 
     init {
         ConfigSystem.root(this)
     }
 
     /**
-     * Check if entity is considered a enemy
+     * Check if an entity is considered an enemy
      */
     fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
-        // Check if enemy is living and not dead (or ignore being dead)
+        // Check if the enemy is living and not dead (or ignore being dead)
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
@@ -107,14 +95,14 @@ class EnemyConfigurable : Configurable("enemies") {
                     return false
                 }
 
-                // Check if enemy is a player and should be considered as enemy
+                // Check if enemy is a player and should be considered as an enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
                     if (attackable && !friends && FriendManager.isFriend(suspect)) {
                         return false
                     }
 
                     // Check if player might be a bot
-                    if (suspect is ClientPlayerEntity && antibot.isBot(suspect)) {
+                    if (ModuleAntiBot.isBot(suspect)) {
                         return false
                     }
 
@@ -143,10 +131,10 @@ fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurab
 )
 
 /**
- * Find the best enemy in current world in a specific range.
+ * Find the best enemy in the current world in a specific range.
  */
 fun ClientWorld.findEnemy(
-    range: Float,
+    range: ClosedFloatingPointRange<Float>,
     player: Entity = mc.player!!,
     enemyConf: EnemyConfigurable = globalEnemyConfigurable
 ): Entity? {

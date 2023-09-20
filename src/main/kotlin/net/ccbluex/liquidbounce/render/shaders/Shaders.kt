@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.render.shaders
 
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.engine.ShaderProgram
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorUVVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
@@ -40,11 +39,6 @@ object Shaders {
      * @throws IllegalStateException When one of the program fails to initialize
      */
     fun init() {
-        // Don't try to load shaders if they are not supported
-        if (!RenderEngine.openglLevel.supportsShaders()) {
-            return
-        }
-
         try {
             InstancedColoredPrimitiveShader
             ColoredPrimitiveShader

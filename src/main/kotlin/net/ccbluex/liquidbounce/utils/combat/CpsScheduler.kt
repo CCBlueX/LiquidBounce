@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,46 +19,54 @@
 
 package net.ccbluex.liquidbounce.utils.combat
 
+import kotlin.math.roundToInt
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleClickRecorder
+
 /**
  * A CPS scheduler
  *
- * Minecraft is counting every click until it they handle all inputs.
+ * Minecraft is counting every click until it handles all inputs.
  * code:
  * while(this.options.keyAttack.wasPressed()) {
  *     this.doAttack();
  * }
  */
-class CpsScheduler {
+class CpsScheduler : Configurable("CpsScheduler") {
 
-    var lastClick = 0L
-    var clickTime = -1L
+    private val useClickRecorder by boolean("UseClickRecorder", false)
 
-    fun tick(click: () -> Unit, condition: () -> Boolean, cps: IntRange) {
-        val currTime = System.currentTimeMillis()
+    private var lastClick = 0L
+    private var clickTime = -1L
 
-        var timeLeft = currTime - lastClick
-        if (timeLeft > 1000) {
-            lastClick = System.currentTimeMillis()
-            return
-        }
-        if (clickTime < 0) {
-            clickTime = clickTime(cps)
-        }
-
+    fun clicks(condition: () -> Boolean, cps: IntRange): Int {
+        var timeLeft = System.currentTimeMillis() - lastClick
         var clicks = 0
 
-        while (timeLeft - clickTime > 0 && condition()) {
-            click()
+        if (useClickRecorder) {
+            return ModuleClickRecorder.doClicks(condition)
+        }
+
+        // Does the clickTime need a forced update or are we a tick late?
+        if (clickTime == -1L || ((timeLeft - clickTime) / 50.0).roundToInt() * 50 > 50) {
+            clickTime = clickTime(cps)
+            lastClick = System.currentTimeMillis()
+
+            return if (condition()) 1 else 0
+        }
+
+        while (timeLeft >= clickTime && condition()) {
             timeLeft -= clickTime
             clicks++
 
             clickTime = clickTime(cps)
             lastClick = System.currentTimeMillis()
         }
+
+        return clicks
     }
 
     // TODO: Make more stamina like
-    private fun clickTime(cps: IntRange) =
-        ((Math.random() * (1000 / cps.first - 1000 / cps.last + 1)) + 1000 / cps.last).toLong()
+    private fun clickTime(cps: IntRange) = 1000L / cps.random()
 
 }

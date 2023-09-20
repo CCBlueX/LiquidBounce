@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
-import net.ccbluex.liquidbounce.render.ultralight.ScreenView
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -37,77 +37,53 @@ import java.net.URL
 object CommandClient {
 
     fun createCommand(): Command {
-        return CommandBuilder
-            .begin("client")
-            .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("info")
-                    .handler { command, _ ->
-                        chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
-                        chat(regular(command.result("clientVersion", variable(LiquidBounce.CLIENT_VERSION))), prefix = false)
-                        chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false)
-                    }
-                    .build()
+        return CommandBuilder.begin("client").hub().subcommand(CommandBuilder.begin("info").handler { command, _ ->
+            chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
+            chat(
+                regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))), prefix = false
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("reload")
-                    .handler { _, _ ->
-                        // todo: reload client
-                    }
-                    .build()
+            chat(
+                regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("ultralight")
-                    .hub()
-                    .subcommand(
-                        CommandBuilder
-                            .begin("show")
-                            .parameter(
-                                ParameterBuilder
-                                    .begin<String>("name")
-                                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                                    .required()
-                                    .build()
+        }.build()).subcommand(CommandBuilder.begin("reload").handler { _, _ ->
+            // TODO: reload client
+        }.build()).subcommand(
+            CommandBuilder.begin("ultralight").hub().subcommand(
+                CommandBuilder.begin("show").parameter(
+                    ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val open: (ScreenViewOverlay) -> Unit = try {
+                        val url = URL(args[0] as String)
+
+                        ({
+                            it.loadUrl(url.toString())
+                        })
+                    } catch (_: MalformedURLException) {
+                        val name = args[0] as String
+                        val page = ThemeManager.page(name) ?: throw CommandException(
+                            command.result(
+                                "pageNotFound", name
                             )
-                            .handler { command, args ->
-                                val open: (ScreenView) -> Unit = try {
-                                    val url = URL(args[0] as String)
+                        )
 
-                                    (
-                                        {
-                                            it.loadUrl(url.toString())
-                                        }
-                                        )
-                                } catch (_: MalformedURLException) {
-                                    val name = args[0] as String
-                                    val page = ThemeManager.page(name)
-                                        ?: throw CommandException(command.result("pageNotFound", name))
+                        ({
+                            it.loadPage(page)
+                        })
+                    }
 
-                                    (
-                                        {
-                                            it.loadPage(page)
-                                        }
-                                        )
-                                }
-
-                                val emptyScreen = EmptyScreen()
-                                open(UltralightEngine.newScreenView(emptyScreen))
-                                mc.setScreen(emptyScreen)
-                            }
-                            .build()
-                    )
-                    .build()
-            )
-
-            // todo: contributors
-            // todo: links
-            // todo: instructions
-            // todo: reset
-            // todo: script manager
-            // todo: theme manager
+                    val emptyScreen = EmptyScreen()
+                    open(UltralightEngine.newScreenView(emptyScreen))
+                    mc.setScreen(emptyScreen)
+                }.build()
+            ).build()
+        )
+            // TODO: contributors
+            // TODO: links
+            // TODO: instructions
+            // TODO: reset
+            // TODO: script manager
+            // TODO: theme manager
             // .. other client base commands
             .build()
     }

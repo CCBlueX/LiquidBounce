@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,14 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
+import net.minecraft.util.Hand
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
 
-fun Vec3d.toBlockPos() = BlockPos(this)
+fun Vec3i.toBlockPos() = BlockPos(this)
 
 fun BlockPos.getState() = mc.world?.getBlockState(this)
 
@@ -62,7 +66,10 @@ inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -> Boolea
 /**
  * Search blocks around the player in a specific [radius]
  */
-inline fun searchBlocksInRadius(radius: Float, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+inline fun searchBlocksInRadius(
+    radius: Float,
+    filter: (BlockPos, BlockState) -> Boolean
+): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
     val thePlayer = mc.player ?: return blocks
@@ -80,8 +87,9 @@ inline fun searchBlocksInRadius(radius: Float, filter: (BlockPos, BlockState) ->
                 if (!filter(blockPos, state)) {
                     continue
                 }
-                if (Vec3d.of(blockPos).squaredDistanceTo(playerPos) > radiusSquared)
+                if (Vec3d.of(blockPos).squaredDistanceTo(playerPos) > radiusSquared) {
                     continue
+                }
 
                 blocks.add(Pair(blockPos, state))
             }
@@ -101,7 +109,7 @@ fun BlockPos.canStandOn(): Boolean {
 fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val block = BlockPos(x.toDouble(), box.minY, z.toDouble()).getBlock()
+            val block = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble()).getBlock()
 
             if (isCorrectBlock(block)) {
                 return true
@@ -118,7 +126,7 @@ fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
 fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos(x.toDouble(), box.minY, z.toDouble())
+            val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
             val blockState = blockPos.getState() ?: continue
             val block = blockPos.getBlock() ?: continue
 
@@ -131,8 +139,9 @@ fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boole
 
                 val boundingBox = shape.boundingBox
 
-                if (box.intersects(boundingBox))
+                if (box.intersects(boundingBox)) {
                     return true
+                }
             }
         }
     }
@@ -151,4 +160,17 @@ fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
             }
         }
     }
+}
+
+fun BlockState.canBeReplacedWith(pos: BlockPos, usedStack: ItemStack): Boolean {
+    val placementContext = ItemPlacementContext(
+        mc.player,
+        Hand.MAIN_HAND,
+        usedStack,
+        BlockHitResult(Vec3d.of(pos), Direction.UP, pos, false)
+    )
+
+    return canReplace(
+        placementContext
+    )
 }

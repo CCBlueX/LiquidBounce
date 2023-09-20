@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,37 +98,37 @@ fun drawBoxSide(box: Box, side: Direction, color: Color4b): Pair<VertexFormat, I
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color },
-        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color }
     )
     if (side == Direction.WEST) indexBuffer.indexQuad(
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color },
-        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color }
     )
     if (side == Direction.NORTH) indexBuffer.indexQuad(
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color },
-        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color }
     )
     if (side == Direction.EAST) indexBuffer.indexQuad(
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color },
-        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color }
     )
     if (side == Direction.UP) indexBuffer.indexQuad(
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color },
-        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color }
     )
     if (side == Direction.DOWN) indexBuffer.indexQuad(
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color },
         vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color },
-        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color }
     )
 
     return Pair(vertexFormat, indexBuffer)

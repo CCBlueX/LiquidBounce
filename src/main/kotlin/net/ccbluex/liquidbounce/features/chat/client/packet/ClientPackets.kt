@@ -1,7 +1,20 @@
 /*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2023 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 package net.ccbluex.liquidbounce.features.chat.client.packet
 
@@ -12,7 +25,7 @@ import com.google.gson.annotations.SerializedName
  *
  * https://github.com/CCBlueX/axochat_server/blob/master/PROTOCOL.md
  *
- * Client Packets are received by the client.
+ * The client receives client Packets.
  */
 
 /**
@@ -43,10 +56,10 @@ data class ClientNewJWTPacket(
 ) : Packet
 
 /**
- * This packet will be sent to every authenticated client,
+ * This packet will be sent to every authenticated client
  * if another client successfully sent a message to the server.
  *
- * @param id author_id is an Id.
+ * @param id author_id is an ID.
  * @param user author_info is optional and described in detail in UserInfo.
  * @param content content is any message fitting the validation scheme of the server.
  */
@@ -64,10 +77,10 @@ data class ClientMessagePacket(
 ) : Packet
 
 /**
- * This packet will be sent to a authenticated client with allow_messages turned on,
+ * This packet will be sent to an authenticated client with allow_messages turned on,
  * if another client successfully sent a private message to the server with the id.
  *
- * @param id author_id is an Id.
+ * @param id author_id is an ID.
  * @param user author_info is optional and described in detail in UserInfo.
  * @param content content is any message fitting the validation scheme of the server.
  */

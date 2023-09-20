@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.MutableText
+import net.minecraft.text.Text
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -37,8 +38,8 @@ class Command(
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
+    val description: MutableText
+        get() = Text.translatable("$translationBaseKey.description")
 
     init {
         subcommands.forEach {
@@ -60,15 +61,17 @@ class Command(
 
     private fun getParentKeys(currentCommand: Command?, current: String): String {
         val parentName = currentCommand?.parentCommand?.name
-        return if (parentName != null) getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current") else current
+        return if (parentName != null) getParentKeys(
+            currentCommand.parentCommand, "$parentName.subcommand.$current"
+        ) else current
     }
 
-    fun result(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.result.$key", *args)
+    fun result(key: String, vararg args: Any): MutableText {
+        return Text.translatable("$translationBaseKey.result.$key", *args)
     }
 
     /**
-     * Returns the name of the command with the name of it's parent classes
+     * Returns the name of the command with the name of its parent classes
      */
     fun getFullName(): String {
         val parent = this.parentCommand

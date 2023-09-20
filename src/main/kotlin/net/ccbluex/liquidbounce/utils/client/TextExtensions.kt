@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import java.util.regex.Pattern
 
@@ -28,11 +27,11 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
-fun text() = LiteralText("")
+fun text() = Text.literal("")
 
-fun String.asText() = LiteralText(this)
+fun String.asText() = Text.literal(this)
 
-fun Text.outputString(): String = "${asString()}${siblings.joinToString(separator = "") { it.outputString() }}"
+fun Text.outputString(): String = "${string}${siblings.joinToString(separator = "") { it.outputString() }}"
 
 /**
  * Translate alt color codes to minecraft color codes

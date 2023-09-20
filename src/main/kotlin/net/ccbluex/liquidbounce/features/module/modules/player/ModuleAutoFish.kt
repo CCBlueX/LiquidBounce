@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.EquipmentSlot
@@ -37,24 +39,59 @@ import net.minecraft.util.Hand
 
 object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
-    val recastRod by boolean("RecastRod", true)
+    private val reelDelay by intRange("ReelDelay", 5..8, 0..20)
 
-    val packetHandler = handler<PacketEvent> { event ->
-        if (player.fishHook == null)
-            return@handler
+    private object RecastRod : ToggleableConfigurable(this, "RecastRod", true) {
+        val delay by intRange("Delay", 15..20, 10..30)
+    }
 
-        if (event.packet !is PlaySoundS2CPacket || event.packet.sound != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH)
-            return@handler
+    init {
+        tree(RecastRod)
+    }
 
-        for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
-            if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem)
-                continue
+    private var caughtFish = false
 
-            repeat(1 + if (recastRod) 1 else 0) {
-                network.sendPacket(PlayerInteractItemC2SPacket(hand))
+    override fun disable() {
+        caughtFish = false
+    }
+
+    val repeatable = repeatable {
+        if (caughtFish) {
+            for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
+                if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem) {
+                    continue
+                }
+
+                wait(reelDelay.random())
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(hand, sequence)
+                }
+
                 player.swingHand(hand)
+
+                if (RecastRod.enabled) {
+                    wait(RecastRod.delay.random())
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(hand, sequence)
+                    }
+                    player.swingHand(hand)
+                }
+
+                caughtFish = false
             }
         }
+    }
+
+    val packetHandler = handler<PacketEvent> { event ->
+        if (player.fishHook == null) {
+            return@handler
+        }
+
+        if (event.packet !is PlaySoundS2CPacket || event.packet.sound.value() != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
+            return@handler
+        }
+
+        caughtFish = true
     }
 
     private val Hand.equipmentSlot: EquipmentSlot

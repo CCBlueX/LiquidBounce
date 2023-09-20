@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
-
 import java.net.URI
 
 class Client {
@@ -117,7 +116,7 @@ class Client {
 
             })
 
-        channel = bootstrap.connect(uri.host, uri.port).sync().channel()
+        channel = bootstrap.connect(uri.host, uri.port).sync()!!.channel()!!
         handler.handshakeFuture.sync()
 
         if (connected) {
@@ -135,7 +134,6 @@ class Client {
 
         channel?.writeAndFlush(TextWebSocketFrame(gson.toJson(packet, Packet::class.java)))
     }
-
 
     /**
      * Handle incoming message of websocket

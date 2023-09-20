@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,13 @@ import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
 
 object OutlineShader : MinecraftFramebufferShader("outline_shader") {
 
-    fun begin(width: Float, color: Color4b) {
+    fun begin(width: Float) {
         this.setUniform1f("radius", width)
-        this.vertexConsumerProvider!!.setColor(color.r, color.g, color.b, color.a)
         this.beginInternal()
+    }
+
+    fun setColor(color: Color4b) {
+        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
     }
 
 }

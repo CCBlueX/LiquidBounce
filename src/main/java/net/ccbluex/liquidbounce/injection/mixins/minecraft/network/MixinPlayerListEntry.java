@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.ccbluex.liquidbounce.features.cosmetic.Cosmetics;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.util.Identifier;
@@ -28,54 +29,42 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Map;
 
 @Mixin(PlayerListEntry.class)
 public abstract class MixinPlayerListEntry {
 
-    @Shadow @Final private GameProfile profile;
-    private boolean cosmeticTexturesLoaded = false;
+    @Shadow
+    @Final
+    private GameProfile profile;
 
-    private Identifier capeTexture = null;
-    private Identifier elytraTexture = null;
+    @Shadow
+    @Final
+    private Map<MinecraftProfileTexture.Type, Identifier> textures;
+    private boolean loadedCapeTexture = false;
 
-    @Inject(method = "loadTextures", at = @At("RETURN"))
-    private void injectTextureLoading(CallbackInfo callbackInfo) {
-        synchronized(this) {
-            if (!this.cosmeticTexturesLoaded) {
-                this.cosmeticTexturesLoaded = true;
-
-                Cosmetics.INSTANCE.loadCosmeticTexture(profile.getId(), (type, id, texture) -> {
-                    switch (type) {
-                        case SKIN -> {
-                            // there is no skin cosmetic
-                        }
-                        case CAPE -> capeTexture = id;
-                        case ELYTRA -> elytraTexture = id;
-                    }
-                });
-            }
-
-        }
-    }
-
-    @Inject(method = "getCapeTexture", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getCapeTexture", at = @At("HEAD"))
     private void injectCapeCosmetic(CallbackInfoReturnable<Identifier> callbackInfo) {
-        if (capeTexture == null) {
-            return;
-        }
-
-        callbackInfo.setReturnValue(capeTexture);
+        fetchCapeTexture();
     }
 
-    @Inject(method = "getElytraTexture", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getElytraTexture", at = @At("HEAD"))
     private void injectElytraCosmetic(CallbackInfoReturnable<Identifier> callbackInfo) {
-        if (elytraTexture == null) {
-            return;
-        }
+        fetchCapeTexture();
+    }
 
-        callbackInfo.setReturnValue(elytraTexture);
+    private void fetchCapeTexture() {
+        if (loadedCapeTexture)
+            return;
+
+        loadedCapeTexture = true;
+
+        final Map<MinecraftProfileTexture.Type, Identifier> textures = this.textures;
+        Cosmetics.INSTANCE.loadPlayerCape(this.profile, id -> {
+            textures.put(MinecraftProfileTexture.Type.CAPE, id);
+        });
     }
 
 }
