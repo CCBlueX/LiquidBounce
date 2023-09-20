@@ -2,7 +2,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
@@ -53,6 +53,9 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 	private suspend fun shouldExecute(onlyHotbar: Boolean = false): Boolean {
 		while (true) {
+			if (!state)
+				return false
+
 			if (mc.thePlayer.openContainer?.windowId != 0 && (!hotbar || onlyWhenNoScreen))
 				return false
 

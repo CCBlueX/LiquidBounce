@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render2DEvent
@@ -77,6 +77,9 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
     private suspend fun shouldExecute(): Boolean {
         while (true) {
+            if (!state)
+                return false
+
             if (mc.currentScreen !is GuiChest)
                 return false
 
