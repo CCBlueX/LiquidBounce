@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
 import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
@@ -108,7 +109,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            val (_, _) = world.findEnemy(0f..range) ?: return@handler
+            world.findEnemy(0f..range) ?: return@handler
 
             if (player.isOnGround) {
                 // Simulate player jumping and send jump stat increment

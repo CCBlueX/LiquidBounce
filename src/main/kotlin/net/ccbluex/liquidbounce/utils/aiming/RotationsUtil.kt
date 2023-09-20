@@ -85,6 +85,84 @@ object RotationManager : Listenable {
     }
 
     /**
+     * Find the best spot of the upper side of the block
+     */
+    fun canSeeUpperBlockSide(
+        eyes: Vec3d,
+        pos: BlockPos,
+        range: Double,
+        wallsRange: Double
+    ): Boolean {
+        val rangeSquared = range * range
+        val wallsRangeSquared = wallsRange * wallsRange
+
+        val minX = pos.x.toDouble()
+        val y = pos.y + 0.99
+        val minZ = pos.z.toDouble()
+
+        for (x in 0.1..0.9 step 0.4) {
+            for (z in 0.1..0.9 step 0.4) {
+                val vec3 = Vec3d(
+                    minX + x,
+                    y,
+                    minZ + z
+                )
+
+                // skip because of out of range
+                val distance = eyes.squaredDistanceTo(vec3)
+
+                if (distance > rangeSquared) {
+                    continue
+                }
+
+                // check if target is visible to eyes
+                val visible = facingBlock(eyes, vec3, pos, Direction.UP)
+
+                // skip because not visible in range
+                if (!visible && distance > wallsRangeSquared) {
+                    continue
+                }
+
+                return true
+            }
+
+        }
+
+        return false
+    }
+
+    private class BestRotationTracker(val comparator: Comparator<Rotation>) {
+        var bestInvisible: VecRotation? = null
+            private set
+        var bestVisible: VecRotation? = null
+            private set
+
+        fun considerRotation(rotation: VecRotation, visible: Boolean = true) {
+            if (visible) {
+                val isRotationBetter = getIsRotationBetter(base = this.bestVisible, rotation)
+
+                if (isRotationBetter) {
+                    bestVisible = rotation
+                }
+            } else {
+                val isRotationBetter = getIsRotationBetter(base = this.bestInvisible, rotation)
+
+                if (isRotationBetter) {
+                    bestInvisible = rotation
+                }
+            }
+        }
+
+        private fun getIsRotationBetter(
+            base: VecRotation?, newRotation: VecRotation
+        ): Boolean {
+            return base?.let { currentlyBest ->
+                this.comparator.compare(currentlyBest.rotation, newRotation.rotation) < 0
+            } ?: true
+        }
+    }
+
+    /**
      * Find the best spot of a box to aim at.
      */
     fun raytraceBox(
@@ -114,13 +192,15 @@ object RotationManager : Listenable {
             return VecRotation(preferredRotation, preferredSpot)
         }
 
-        var visibleRot: VecRotation? = null
-        var notVisibleRot: VecRotation? = null
-
         // There are some spots that loops cannot detect, therefore this is used
         // since it finds the nearest spot within the requested range.
         val nearestSpot = getNearestPoint(eyes, box)
         val nearestDistance = eyes.squaredDistanceTo(nearestSpot)
+
+        val playerRotation = currentRotation ?: mc.player?.rotation ?: return null
+        val comparatorToPlayerRotation = RotationDifferenceComparator(playerRotation)
+
+        val bestRotationTracker = BestRotationTracker(comparatorToPlayerRotation)
 
         for (x in 0.0..1.0 step 0.1) {
             for (y in 0.0..1.0 step 0.1) {
@@ -134,7 +214,9 @@ object RotationManager : Listenable {
                     var distance = eyes.squaredDistanceTo(vec3)
 
                     // Start off with the nearest spot, then see which is better
-                    val useNearestSpot = visibleRot == null && notVisibleRot == null
+                    val useNearestSpot =
+                        bestRotationTracker.bestVisible == null
+                        && bestRotationTracker.bestInvisible == null
 
                     // If the distance is greater than range, use the nearest spot.
                     if (distance > rangeSquared && useNearestSpot) {
@@ -149,51 +231,103 @@ object RotationManager : Listenable {
                     }
 
                     // Is either spot visible or distance within wall range?
-                    if (visible || distance <= wallsRangeSquared) {
-                        val rotation = makeRotation(vec3, eyes)
-                        val currentRotation = currentRotation ?: mc.player?.rotation ?: return null
-
-                        if (visible) {
-                            if (visibleRot == null || rotationDifference(
-                                    rotation, currentRotation
-                                ) < rotationDifference(visibleRot.rotation, currentRotation)
-                            ) {
-                                visibleRot = VecRotation(rotation, vec3)
-                            }
-                        } else {
-                            if (notVisibleRot == null || rotationDifference(
-                                    rotation, currentRotation
-                                ) < rotationDifference(notVisibleRot.rotation, currentRotation)
-                            ) {
-                                notVisibleRot = VecRotation(rotation, vec3)
-                            }
-                        }
+                    if (!visible && distance > wallsRangeSquared) {
+                        continue
                     }
+
+                    val rotation = makeRotation(vec3, eyes)
+
+                    bestRotationTracker.considerRotation(VecRotation(rotation, vec3), visible)
                 }
             }
         }
 
-        return visibleRot ?: notVisibleRot
+        return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
     }
 
     /**
-     * Find the best spot of the upper side of the block
+     * Determines if the player is able to see a box
      */
-    fun canSeeBlockTop(
-        eyes: Vec3d, pos: BlockPos, range: Double, wallsRange: Double
+    fun canSeeBox(
+        eyes: Vec3d,
+        box: Box,
+        range: Double,
+        wallsRange: Double,
+        expectedTarget: BlockPos? = null
     ): Boolean {
         val rangeSquared = range * range
         val wallsRangeSquared = wallsRange * wallsRange
 
-        val minX = pos.x.toDouble()
-        val y = pos.y + 0.9
-        val minZ = pos.z.toDouble()
+        scanPositionsInBox(box) { posInBox ->
+            // skip because of out of range
+            val distance = eyes.squaredDistanceTo(posInBox)
 
-        for (x in 0.1..0.9 step 0.4) {
-            for (z in 0.1..0.9 step 0.4) {
-                val vec3 = Vec3d(
-                    minX + x, y, minZ + z
-                )
+            if (distance > rangeSquared) {
+                return@scanPositionsInBox
+            }
+
+            // check if target is visible to eyes
+            val visible = if (expectedTarget != null) {
+                facingBlock(eyes, posInBox, expectedTarget)
+            } else {
+                isVisible(eyes, posInBox)
+            }
+
+            // skip because not visible in range
+            if (!visible && distance > wallsRangeSquared) {
+                return@scanPositionsInBox
+            }
+
+            return true
+        }
+
+        return false
+    }
+
+    private inline fun scanPositionsInBox(box: Box, step: Double = 0.1, fn: (Vec3d) -> Unit) {
+        for (x in 0.1..0.9 step step) {
+            for (y in 0.1..0.9 step step) {
+                for (z in 0.1..0.9 step step) {
+                    val vec3 = Vec3d(
+                        box.minX + (box.maxX - box.minX) * x,
+                        box.minY + (box.maxY - box.minY) * y,
+                        box.minZ + (box.maxZ - box.minZ) * z
+                    )
+
+                    fn(vec3)
+                }
+            }
+        }
+
+    }
+
+    fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
+        aimAt(makeRotation(vec, eyes), openInventory, configurable)
+    /**
+     * Find the best spot of the upper block side
+     */
+    fun raytraceUpperBlockSide(
+        eyes: Vec3d,
+        range: Double,
+        wallsRange: Double,
+        expectedTarget: BlockPos,
+        pattern: Pattern = GaussianPattern
+    ): VecRotation? {
+        val preferredSpot = pattern.spot(Box(expectedTarget))
+        val preferredRotation = makeRotation(preferredSpot, eyes)
+
+        val rangeSquared = range * range
+        val wallsRangeSquared = wallsRange * wallsRange
+
+        val vec3d = Vec3d.of(expectedTarget).add(0.0, 0.9, 0.0)
+
+        val comparatorToPlayerRotation = RotationDifferenceComparator(preferredRotation)
+
+        val bestRotationTracker = BestRotationTracker(comparatorToPlayerRotation)
+
+        for (x in 0.1..0.9 step 0.1) {
+            for (z in 0.1..0.9 step 0.1) {
+                val vec3 = vec3d.add(x, 0.0, z)
 
                 // skip because of out of range
                 val distance = eyes.squaredDistanceTo(vec3)
@@ -203,23 +337,21 @@ object RotationManager : Listenable {
                 }
 
                 // check if target is visible to eyes
-                val visible = facingBlock(eyes, vec3, pos, Direction.UP)
+                val visible = facingBlock(eyes, vec3, expectedTarget, Direction.UP)
 
                 // skip because not visible in range
                 if (!visible && distance > wallsRangeSquared) {
                     continue
                 }
 
-                return true
-            }
+                val rotation = makeRotation(vec3, eyes)
 
+                bestRotationTracker.considerRotation(VecRotation(rotation, vec3), visible)
+            }
         }
 
-        return false
+        return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
     }
-
-    fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
-        aimAt(makeRotation(vec, eyes), openInventory, configurable)
 
     fun aimAt(rotation: Rotation, openInventory: Boolean = false, configurable: RotationsConfigurable) {
         if (!shouldUpdate()) {
@@ -404,6 +536,16 @@ object RotationManager : Listenable {
         }
 
         return currVelocity
+    }
+
+}
+
+class RotationDifferenceComparator(private val baseRotation: Rotation) : Comparator<Rotation> {
+    override fun compare(o1: Rotation, o2: Rotation): Int {
+        val rotationDifferenceO1 = RotationManager.rotationDifference(baseRotation, o1)
+        val rotationDifferenceO2 = RotationManager.rotationDifference(baseRotation, o2)
+
+        return rotationDifferenceO1.compareTo(rotationDifferenceO2)
     }
 
 }
