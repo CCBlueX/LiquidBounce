@@ -31,7 +31,7 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT,
         }
     var scale by FloatValue("Scale", 0.8f, 0.5f..1.5f)
     val maxElements by IntegerValue("MaxElements", 15, 1..30)
-    val fadeSpeed by FloatValue("FadeSpeed", 1f, 0.5f..2f)
+    val fadeSpeed by FloatValue("FadeSpeed", 1f, 0.5f..4f)
     val scrolls by BoolValue("Scrolls", false)
     val spacedModules by BoolValue("SpacedModules", false)
     val panelsForcedInBoundaries by BoolValue("PanelsForcedInBoundaries", true)

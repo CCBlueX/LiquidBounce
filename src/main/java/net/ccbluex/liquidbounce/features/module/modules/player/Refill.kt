@@ -1,14 +1,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.InventoryUtils.CLICK_TIMER
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.item.hasItemDelayPassed
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -33,11 +33,9 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
     private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
 
-    private val timer = MSTimer()
-
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        if (!timer.hasTimePassed(delay))
+    fun onTick(event: TickEvent) {
+        if (!CLICK_TIMER.hasTimePassed(delay))
             return
 
         if (invOpen && mc.currentScreen !is GuiInventory)
@@ -102,7 +100,5 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
             C0EPacketClickWindow(mc.thePlayer.openContainer.windowId, slot, button, mode, stack,
                 mc.thePlayer.openContainer.getNextTransactionID(mc.thePlayer.inventory))
         )
-
-        timer.reset()
     }
 }

@@ -108,7 +108,7 @@ object LiquidBounce {
 
         // Load settings
         loadSettings(false) {
-            LOGGER.info("Successfully loaded ${it.count()} settings.")
+            LOGGER.info("Successfully loaded ${it.size} settings.")
         }
 
         // Register commands
@@ -174,7 +174,7 @@ object LiquidBounce {
 
         // Refresh cape service
         CapeService.refreshCapeCarriers {
-            LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
+            LOGGER.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
         }
 
         // Load background

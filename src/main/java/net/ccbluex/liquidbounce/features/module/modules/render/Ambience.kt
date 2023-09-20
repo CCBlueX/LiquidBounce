@@ -27,7 +27,7 @@ object Ambience : Module("Ambience", ModuleCategory.RENDER) {
 
     private val weatherStrength by FloatValue("WeatherStrength", 1f, 0f..1f) { weatherMode == "Rain" || weatherMode == "Thunder" }
 
-    var i = 0L
+    private var i = 0L
 
     override fun onDisable() {
         i = 0

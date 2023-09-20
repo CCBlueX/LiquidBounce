@@ -92,7 +92,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
 
         val soupInInventory = InventoryUtils.findItem(9, 35, Items.mushroom_stew)
 
-        if (soupInInventory != null && InventoryUtils.hasSpaceHotbar()) {
+        if (soupInInventory != null && InventoryUtils.hasSpaceInHotbar()) {
             if (openInventory && mc.currentScreen !is GuiInventory)
                 return
 

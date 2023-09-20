@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.TickedActions
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.value.Value
@@ -67,6 +68,8 @@ open class Module @JvmOverloads constructor(
 
             // Call toggle
             onToggle(value)
+
+            TickScheduler.clear()
 
             // Play sound and add notification
             if (!isStarting) {
@@ -143,4 +146,37 @@ open class Module @JvmOverloads constructor(
      * Events should be handled when module is enabled
      */
     override fun handleEvents() = state
+
+    internal object TickScheduler {
+       lateinit var instance: Module
+
+        internal fun schedule(id: Int, allowDuplicates: Boolean = false, action: () -> Unit) =
+            TickedActions.schedule(id, instance, allowDuplicates, action)
+
+        internal fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: (() -> Unit)? = null) =
+            TickedActions.schedule(slot, instance, allowDuplicates) {
+                mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
+                action?.invoke()
+            }
+
+        operator fun plusAssign(action: () -> Unit) {
+            TickedActions.schedule(-1, instance, false, action)
+        }
+
+        internal fun isScheduled(id: Int) = TickedActions.isScheduled(id, instance)
+
+        // Checks if id click is scheduled: if (TickScheduler[id])
+        //internal operator fun get(id: Int) = isScheduled(id)
+
+        internal fun clear() = TickedActions.clear(instance)
+
+        internal fun isEmpty() = TickedActions.isEmpty(instance)
+
+        // Checks if id click is scheduled: if (id in TickScheduler)
+        operator fun contains(id: Int) = isScheduled(id)
+    }
+
+    init {
+        TickScheduler.instance = this
+    }
 }

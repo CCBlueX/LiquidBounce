@@ -5,9 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import com.google.common.collect.HashBasedTable
-import com.google.common.collect.Table
-import com.google.common.collect.Tables
+import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.TickEvent
@@ -16,31 +14,30 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object TickedActions : Listenable {
 
-    private val actions: Table<Module, () -> Unit, Int> = HashBasedTable.create()
+    private val actions = Lists.newCopyOnWriteArrayList<Triple<Module, Int, () -> Unit>>()
 
-    fun add(action: () -> Unit, id: Int, module: Module): Boolean {
-        val cell = Tables.immutableCell(module, action, id)
-
-        if (!actions.cellSet().contains(cell)) {
-            actions.put(cell.rowKey, cell.columnKey, cell.value)
+    fun schedule(id: Int, module: Module, allowDuplicates: Boolean = false, action: () -> Unit): Boolean {
+        if (allowDuplicates || !isScheduled(id, module)) {
+            actions += Triple(module, id, action)
             return true
         }
 
         return false
     }
 
-    fun containsId(id: Int, module: Module): Boolean =
-        actions.cellSet().count { it.value == id && it.rowKey == module } == 1
+    fun isScheduled(id: Int, module: Module) =
+        actions.any { it.first == module && it.second == id }
 
-    fun clear(module: Module) {
-        actions.cellSet().removeIf { it.rowKey == module }
-    }
+    fun clear(module: Module) =
+        actions.removeIf { it.first == module }
+
+    fun isEmpty(module: Module) =
+        actions.none { it.first == module }
 
     @EventTarget(priority = 1)
     fun onTick(event: TickEvent) {
-        for (action in actions.cellSet()) {
-            action.columnKey.invoke()
-        }
+        for (triple in actions)
+            triple.third()
 
         actions.clear()
     }

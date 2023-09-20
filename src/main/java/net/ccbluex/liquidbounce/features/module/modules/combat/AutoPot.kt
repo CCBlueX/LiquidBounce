@@ -86,7 +86,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
 
                 // Inventory Potion -> Hotbar Potion
                 val potionInInventory = findPotion(9, 36)
-                if (potionInInventory != -1 && InventoryUtils.hasSpaceHotbar()) {
+                if (potionInInventory != -1 && InventoryUtils.hasSpaceInHotbar()) {
                     if (openInventory && mc.currentScreen !is GuiInventory)
                         return
 

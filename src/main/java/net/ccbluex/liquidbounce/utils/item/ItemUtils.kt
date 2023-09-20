@@ -3,16 +3,13 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
+
 package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemFood
-import net.minecraft.item.ItemPotion
-import net.minecraft.item.ItemBucketMilk
+import net.minecraft.item.*
 import net.minecraft.nbt.JsonToNBT
 import net.minecraft.util.ResourceLocation
 
@@ -89,42 +86,43 @@ object ItemUtils : MinecraftInstance() {
  */
 
 val ItemStack.durability
-    get() = this.maxDamage - this.itemDamage
+    get() = maxDamage - itemDamage
 
-val ItemStack.enchantmentCount: Int
+val ItemStack.totalDurability
+    get() = durability * getEnchantmentLevel(Enchantment.unbreaking)
+
+val ItemStack.enchantments: Map<Enchantment, Int>
     get() {
-        if (this.enchantmentTagList == null || this.enchantmentTagList.hasNoTags())
-            return 0
+        val enchantments = mutableMapOf<Enchantment, Int>()
 
-        var count = 0
-        for (i in 0 until this.enchantmentTagList.tagCount()) {
-            val tagCompound = this.enchantmentTagList.getCompoundTagAt(i)
-            if (tagCompound.hasKey("ench") || tagCompound.hasKey("id")) count++
+        if (this.enchantmentTagList == null || enchantmentTagList.hasNoTags())
+            return enchantments
+
+        repeat(enchantmentTagList.tagCount()) {
+            val tagCompound = enchantmentTagList.getCompoundTagAt(it)
+            if (tagCompound.hasKey("ench") || tagCompound.hasKey("id"))
+                enchantments[Enchantment.getEnchantmentById(tagCompound.getInteger("id"))] = tagCompound.getInteger("lvl")
         }
 
-        return count
+        return enchantments
     }
 
-fun ItemStack.getEnchantmentLevel(enchantment: Enchantment): Int {
-    if (this.enchantmentTagList == null || this.enchantmentTagList.hasNoTags())
-        return 0
+val ItemStack.enchantmentCount: Int
+    get() = enchantments.size
 
-    for (i in 0 until this.enchantmentTagList.tagCount()) {
-        val tagCompound = this.enchantmentTagList.getCompoundTagAt(i)
-        if (tagCompound.hasKey("ench") && tagCompound.getInteger("ench") == enchantment.effectId
-            || tagCompound.hasKey("id") && tagCompound.getInteger("id") == enchantment.effectId
-        ) return tagCompound.getInteger("lvl")
-    }
+// Returns sum of levels of all enchantment levels
+val ItemStack.enchantmentSum
+    get() = enchantments.values.sum()
 
-    return 0
-}
+fun ItemStack.getEnchantmentLevel(enchantment: Enchantment) = enchantments.getOrDefault(enchantment, 0)
 
 val ItemStack?.isEmpty
-    get() = this == null || this.item == null
+    get() = this == null || item == null
 
-fun ItemStack.hasItemDelayPassed(delay: Int) =
-    System.currentTimeMillis() - (this as IMixinItemStack).itemDelay >= delay
+@Suppress("CAST_NEVER_SUCCEEDS")
+fun ItemStack?.hasItemDelayPassed(delay: Int) = this == null
+        || System.currentTimeMillis() - (this as IMixinItemStack).itemDelay >= delay
 
 val ItemStack.attackDamage
-    get() = (this.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) +
-            1.25 * this.getEnchantmentLevel(Enchantment.sharpness)
+    get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) +
+            1.25 * getEnchantmentLevel(Enchantment.sharpness)

@@ -66,6 +66,10 @@ dependencies {
 
     include 'org.apache.httpcomponents:httpmime:4.3.3'
 
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+    include 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+
+
     include fileTree(include: ["*.jar"], dir: "libs")
 }
 

@@ -11,10 +11,7 @@ import net.minecraft.block.BlockBush
 import net.minecraft.init.Blocks
 import net.minecraft.item.Item
 import net.minecraft.item.ItemBlock
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
+import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.network.play.server.S09PacketHeldItemChange
 import net.minecraft.network.play.server.S2EPacketCloseWindow
@@ -22,6 +19,7 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 object InventoryUtils : MinecraftInstance(), Listenable {
 
     // What slot is selected on server-side?
+    // TODO: Is this equal to mc.playerController.currentPlayerItem?
     var serverSlot = -1
         private set
 
@@ -61,12 +59,14 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         return null
     }
 
-    fun hasSpaceHotbar(): Boolean {
+    fun hasSpaceInHotbar(): Boolean {
         for (i in 36..44)
             mc.thePlayer.inventoryContainer.getSlot(i).stack ?: return true
 
         return false
     }
+
+    fun hasSpaceInInventory() = mc.thePlayer?.inventory?.firstEmptyStack != -1
 
     fun findBlockInHotbar(): Int? {
         val player = mc.thePlayer ?: return null
@@ -97,7 +97,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         if (event.isCancelled) return
 
         when (val packet = event.packet) {
-            is C08PacketPlayerBlockPlacement -> CLICK_TIMER.reset()
+            is C08PacketPlayerBlockPlacement, is C0EPacketClickWindow -> CLICK_TIMER.reset()
 
             is C16PacketClientStatus ->
                 if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
@@ -122,7 +122,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        // Prevent desync
+        // Prevents desync
         serverOpenInventory = false
     }
 
