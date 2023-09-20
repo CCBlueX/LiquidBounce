@@ -12,8 +12,6 @@ object CoroutineArmorComparator: MinecraftInstance() {
 
 		val armorMap = (
 			(
-				// TODO: Doesn't support Silent ChestStealer
-
 				// Consider currently equipped armor, when searching useful stuff in chests
 				// Index is null for equipped armor when searching through a chest to prevent any accidental impossible interactions
 				if (mc.thePlayer.openContainer.windowId != 0)
