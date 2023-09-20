@@ -53,11 +53,16 @@ object SubmoduleCrystalPlacer {
 
         val target = currentTarget ?: return
 
-        val rotation = raytraceUpperBlockSide(player.eyePos, ModuleCrystalAura.PlaceOptions.range.toDouble(), 0.0, target) ?: return
+        val rotation = raytraceUpperBlockSide(
+            player.eyePos,
+            ModuleCrystalAura.PlaceOptions.range.toDouble(),
+            wallsRange = 0.0,
+            target
+        ) ?: return
 
         RotationManager.aimAt(rotation.rotation, configurable = ModuleCrystalAura.rotations)
 
-        val serverRotation = RotationManager.serverRotation ?: return
+        val serverRotation = RotationManager.serverRotation
 
         val rayTraceResult = raytraceBlock(
             ModuleCrystalAura.PlaceOptions.range.toDouble(),
@@ -108,7 +113,8 @@ object SubmoduleCrystalPlacer {
             }
         }
 
-        // Search for blocks that are either obsidian or bedrock, not disallowed and which do not have other blocks on top
+        // Search for blocks that are either obsidian or bedrock,
+        // not disallowed and which do not have other blocks on top
         val possibleTargets = searchBlocksInRadius(ModuleCrystalAura.PlaceOptions.range) { pos, state ->
             return@searchBlocksInRadius (state.block == Blocks.OBSIDIAN || state.block == Blocks.BEDROCK)
                 && pos !in blockedPositions
@@ -117,7 +123,11 @@ object SubmoduleCrystalPlacer {
         }
 
         val bestTarget = possibleTargets
-            .map { Pair(it, ModuleCrystalAura.approximateExplosionDamage(world, Vec3d.of(it.first).add(0.5, 1.0, 0.5))) }
+            .map {
+                val damageSourceLoc = Vec3d.of(it.first).add(0.5, 1.0, 0.5)
+
+                Pair(it, ModuleCrystalAura.approximateExplosionDamage(world, damageSourceLoc))
+            }
             .maxByOrNull { it.second }
 
         // Is the target good enough?

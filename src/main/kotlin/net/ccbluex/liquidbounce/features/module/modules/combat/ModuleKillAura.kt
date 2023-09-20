@@ -348,7 +348,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@repeatable
         }
 
-        val entity = target ?: world.findEnemy(0f..FailSwing.LimitRange.range)?.first
+        val entity = target ?: world.findEnemy(0f..FailSwing.LimitRange.range)
 
         val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
 

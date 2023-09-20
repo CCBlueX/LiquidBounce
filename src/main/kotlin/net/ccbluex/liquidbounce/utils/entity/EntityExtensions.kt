@@ -29,6 +29,7 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
+import net.minecraft.entity.damage.DamageSources
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
@@ -171,11 +172,11 @@ fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
-    return this.boundingBox.squaredDistanceTo(otherPos)
+    return this.boundingBox.squaredBoxedDistanceTo(otherPos)
 }
 
 fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
-    val pos = getNearestPoint(otherPos, this.boundingBox)
+    val pos = getNearestPoint(otherPos, this)
 
     return pos.squaredDistanceTo(otherPos)
 }
@@ -223,6 +224,7 @@ fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
  * Applies armor, enchantments, effects, etc. to the damage and returns the damage
  * that is actually applied.
  */
+@Suppress("detekt:complexity")
 fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
     val world = this.world
 
@@ -236,7 +238,7 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     var amount = damage
 
     if (this is PlayerEntity) {
-        if (this.abilities.invulnerable && !source.isOutOfWorld)
+        if (this.abilities.invulnerable && source.type.msgId != mc.world!!.damageSources.outOfWorld().type.msgId)
             return 0.0F
 
         if (source.isScaledWithDifficulty) {
@@ -257,17 +259,17 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     if (amount == 0.0F)
         return 0.0F
 
-    if (source.isFire && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
+    if (source == mc.world!!.damageSources.onFire() && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
         return 0.0F
 
 
     if (!ignoreShield && blockedByShield(source))
         return 0.0F
 
-    // FIXME: Do we need to take the timeUntilRegen mechanic into account?
+    // Do we need to take the timeUntilRegen mechanic into account?
 
     amount = this.applyArmorToDamage(source, amount)
-    amount = this.applyEnchantmentsToDamage(source, amount)
+    amount = this.modifyAppliedDamage(source, amount)
 
     return amount
 }

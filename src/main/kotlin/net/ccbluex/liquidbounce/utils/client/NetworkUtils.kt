@@ -40,7 +40,10 @@ fun clickBlockWithSlot(
         player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))
     }
 
-    player.networkHandler.sendPacket(PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, rayTraceResult))
+    mc.interactionManager!!.sendSequencedPacket(mc.world!!) { sequence ->
+        PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, rayTraceResult, sequence)
+    }
+
     val itemUsageContext = ItemUsageContext(player, Hand.MAIN_HAND, rayTraceResult)
 
     val itemStack = player.inventory.getStack(slot)

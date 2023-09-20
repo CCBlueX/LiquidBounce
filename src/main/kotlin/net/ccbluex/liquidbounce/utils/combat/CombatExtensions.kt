@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.client.network.ClientPlayerEntity
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -138,16 +139,13 @@ fun ClientWorld.findEnemy(
     player: Entity = mc.player!!,
     enemyConf: EnemyConfigurable = globalEnemyConfigurable
 ): Entity? {
-    val squaredRange = (range * range).toDouble()
+    val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
-    val (bestTarget, bestDistance) = getEntitiesInCuboid(player.eyePos, range.toDouble())
+    val (bestTarget, _) = getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
         .filter { it.shouldBeAttacked(enemyConf) }
         .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
+        .filter { (_, distance) -> distance in squaredRange }
         .minByOrNull { (_, distance) -> distance } ?: return null
-
-    if (bestDistance > squaredRange) {
-        return null
-    }
 
     return bestTarget
 }

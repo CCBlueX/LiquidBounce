@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.decoration.EndCrystalEntity
@@ -44,7 +43,7 @@ object SubmoduleCrystalDestroyer {
 
         // find best spot (and skip if no spot was found)
         val (rotation, _) = RotationManager.raytraceBox(
-            player.eyesPos,
+            player.eyePos,
             target.boundingBox,
             range = range,
             wallsRange = 0.0
