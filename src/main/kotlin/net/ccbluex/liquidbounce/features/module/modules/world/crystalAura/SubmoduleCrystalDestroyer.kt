@@ -42,44 +42,53 @@ object SubmoduleCrystalDestroyer {
         val target = currentTarget ?: return
 
         // find best spot (and skip if no spot was found)
-        val (rotation, _) = RotationManager.raytraceBox(
-            player.eyePos,
-            target.boundingBox,
-            range = range,
-            wallsRange = 0.0
-        ) ?: return
+        val (rotation, _) =
+            RotationManager.raytraceBox(
+                player.eyePos,
+                target.boundingBox,
+                range = range,
+                wallsRange = 0.0,
+            ) ?: return
 
         // aim on target
         RotationManager.aimAt(rotation, configurable = ModuleCrystalAura.rotations)
 
         val serverRotation = RotationManager.serverRotation ?: return
 
-        if (!facingEnemy(target, range, serverRotation))
+        if (!facingEnemy(target, range, serverRotation)) {
             return
+        }
 
         target.attack(ModuleCrystalAura.swing)
     }
 
-    private fun updateTarget(player: ClientPlayerEntity, world: ClientWorld, range: Double) {
-        this.currentTarget = world.getEntitiesBoxInRange(player.getCameraPosVec(1.0F), range) { it is EndCrystalEntity }
-            .mapNotNull {
-                if (!RotationManager.canSeeBox(
-                        player.eyePos,
-                        it.boundingBox,
-                        range = range,
-                        wallsRange = 0.0
-                    )
-                )
-                    return@mapNotNull null
+    private fun updateTarget(
+        player: ClientPlayerEntity,
+        world: ClientWorld,
+        range: Double,
+    ) {
+        this.currentTarget =
+            world.getEntitiesBoxInRange(player.getCameraPosVec(1.0F), range) { it is EndCrystalEntity }
+                .mapNotNull {
+                    if (!RotationManager.canSeeBox(
+                            player.eyePos,
+                            it.boundingBox,
+                            range = range,
+                            wallsRange = 0.0,
+                        )
+                    ) {
+                        return@mapNotNull null
+                    }
 
-                val damage = ModuleCrystalAura.approximateExplosionDamage(world, it.pos)
+                    val damage = ModuleCrystalAura.approximateExplosionDamage(world, it.pos)
 
-                if (damage < ModuleCrystalAura.DestroyOptions.minEfficiency)
-                    return@mapNotNull null
+                    if (damage < ModuleCrystalAura.DestroyOptions.minEfficiency) {
+                        return@mapNotNull null
+                    }
 
-                return@mapNotNull Pair(it as EndCrystalEntity, damage)
-            }
-            .maxByOrNull { it.second }
-            ?.first
+                    return@mapNotNull Pair(it as EndCrystalEntity, damage)
+                }
+                .maxByOrNull { it.second }
+                ?.first
     }
 }

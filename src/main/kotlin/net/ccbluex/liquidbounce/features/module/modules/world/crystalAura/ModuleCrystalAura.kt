@@ -30,17 +30,13 @@ import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.entity.damage.DamageSources
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameRules
-import net.minecraft.world.World
 import net.minecraft.world.explosion.Explosion
 import kotlin.math.floor
 import kotlin.math.sqrt
 
 object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
-
     val swing by boolean("Swing", true)
 
     internal object PlaceOptions : ToggleableConfigurable(this, "Place", true) {
@@ -67,24 +63,25 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         tree(SelfPreservationOptions)
     }
 
-    val networkTickHandler = repeatable {
-        // Make the crystal placer run
-        SubmoduleCrystalPlacer.tick()
-        // Make the crystal destroyer run
-        SubmoduleCrystalDestroyer.tick()
-    }
-
+    val networkTickHandler =
+        repeatable {
+            // Make the crystal placer run
+            SubmoduleCrystalPlacer.tick()
+            // Make the crystal destroyer run
+            SubmoduleCrystalDestroyer.tick()
+        }
 
     /**
      * Approximates how favorable an explosion of a crystal at [pos] in a given [world] would be
      */
     internal fun approximateExplosionDamage(
         world: ClientWorld,
-        pos: Vec3d
+        pos: Vec3d,
     ): Double {
-        val possibleVictims = world
-            .getEntitiesBoxInRange(pos, 6.0) { shouldTakeIntoAccount(it) && it.boundingBox.maxY > pos.y }
-            .filterIsInstance<LivingEntity>()
+        val possibleVictims =
+            world
+                .getEntitiesBoxInRange(pos, 6.0) { shouldTakeIntoAccount(it) && it.boundingBox.maxY > pos.y }
+                .filterIsInstance<LivingEntity>()
 
         var totalGood = 0.0
         var totalHarm = 0.0
@@ -92,10 +89,11 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         for (possibleVictim in possibleVictims) {
             val dmg = getDamageFromExplosion(pos, possibleVictim) * entityDamageWeight(possibleVictim)
 
-            if (dmg > 0)
+            if (dmg > 0) {
                 totalGood += dmg
-            else
+            } else {
                 totalHarm += dmg
+            }
         }
 
         return totalGood + totalHarm
@@ -105,7 +103,11 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         return entity.shouldBeAttacked() || entity == player || FriendManager.isFriend(entity)
     }
 
-    private fun getDamageFromExplosion(pos: Vec3d, possibleVictim: LivingEntity, power: Float = 6.0F): Float {
+    private fun getDamageFromExplosion(
+        pos: Vec3d,
+        possibleVictim: LivingEntity,
+        power: Float = 6.0F,
+    ): Float {
         val explosionRange = power * 2.0F
 
         val distanceDecay = 1.0F - sqrt(possibleVictim.squaredDistanceTo(pos).toFloat()) / explosionRange
@@ -113,16 +115,17 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
         val preprocessedDamage = floor((pre1 * pre1 + pre1) / 2.0F * 7.0F * explosionRange + 1.0F)
 
-        val explosion = Explosion(
-            possibleVictim.world,
-            null,
-            pos.x,
-            pos.y,
-            pos.z,
-            power,
-            false,
-            mc.world!!.getDestructionType(GameRules.BLOCK_EXPLOSION_DROP_DECAY)
-        )
+        val explosion =
+            Explosion(
+                possibleVictim.world,
+                null,
+                pos.x,
+                pos.y,
+                pos.z,
+                power,
+                false,
+                mc.world!!.getDestructionType(GameRules.BLOCK_EXPLOSION_DROP_DECAY),
+            )
 
         return possibleVictim.getEffectiveDamage(mc.world!!.damageSources.explosion(explosion), preprocessedDamage)
     }
@@ -138,5 +141,4 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             else -> 1.0
         }
     }
-
 }

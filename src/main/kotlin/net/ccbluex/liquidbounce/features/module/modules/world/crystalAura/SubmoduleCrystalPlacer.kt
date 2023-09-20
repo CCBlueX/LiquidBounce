@@ -53,23 +53,25 @@ object SubmoduleCrystalPlacer {
 
         val target = currentTarget ?: return
 
-        val rotation = raytraceUpperBlockSide(
-            player.eyePos,
-            ModuleCrystalAura.PlaceOptions.range.toDouble(),
-            wallsRange = 0.0,
-            target
-        ) ?: return
+        val rotation =
+            raytraceUpperBlockSide(
+                player.eyePos,
+                ModuleCrystalAura.PlaceOptions.range.toDouble(),
+                wallsRange = 0.0,
+                target,
+            ) ?: return
 
         RotationManager.aimAt(rotation.rotation, configurable = ModuleCrystalAura.rotations)
 
         val serverRotation = RotationManager.serverRotation
 
-        val rayTraceResult = raytraceBlock(
-            ModuleCrystalAura.PlaceOptions.range.toDouble(),
-            serverRotation,
-            target,
-            target.getState() ?: return
-        )
+        val rayTraceResult =
+            raytraceBlock(
+                ModuleCrystalAura.PlaceOptions.range.toDouble(),
+                serverRotation,
+                target,
+                target.getState() ?: return,
+            )
 
         if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target) {
             return
@@ -78,7 +80,10 @@ object SubmoduleCrystalPlacer {
         clickBlockWithSlot(player, rayTraceResult, crystalSlot)
     }
 
-    private fun updateTarget(player: ClientPlayerEntity, world: ClientWorld) {
+    private fun updateTarget(
+        player: ClientPlayerEntity,
+        world: ClientWorld,
+    ) {
         // Reset current target
         currentTarget = null
 
@@ -89,24 +94,28 @@ object SubmoduleCrystalPlacer {
         val entitiesInRange = world.getEntitiesInCuboid(playerPos, range + 6.0)
 
         // No targets to consider? Why bother?
-        if (entitiesInRange.isEmpty())
+        if (entitiesInRange.isEmpty()) {
             return
+        }
 
-        if (entitiesInRange.any { it is EndCrystalEntity })
+        if (entitiesInRange.any { it is EndCrystalEntity }) {
             return
+        }
 
         // The bounding box where entities are in that might body block a crystal placement
-        val bodyBlockingBoundingBox = Box(
-            playerPos.subtract(range + 0.1, range + 0.1, range + 0.1),
-            playerPos.add(range + 0.1, range + 0.1, range + 0.1)
-        )
+        val bodyBlockingBoundingBox =
+            Box(
+                playerPos.subtract(range + 0.1, range + 0.1, range + 0.1),
+                playerPos.add(range + 0.1, range + 0.1, range + 0.1),
+            )
 
         val blockedPositions = HashSet<BlockPos>()
 
         // Disallow all positions where entities body-block them
         for (entity in entitiesInRange) {
-            if (!entity.boundingBox.intersects(bodyBlockingBoundingBox))
+            if (!entity.boundingBox.intersects(bodyBlockingBoundingBox)) {
                 continue
+            }
 
             entity.boundingBox.forEachCollidingBlock { x, y, z ->
                 blockedPositions.add(BlockPos(x, y - 1, z))
@@ -115,24 +124,27 @@ object SubmoduleCrystalPlacer {
 
         // Search for blocks that are either obsidian or bedrock,
         // not disallowed and which do not have other blocks on top
-        val possibleTargets = searchBlocksInRadius(ModuleCrystalAura.PlaceOptions.range) { pos, state ->
-            return@searchBlocksInRadius (state.block == Blocks.OBSIDIAN || state.block == Blocks.BEDROCK)
-                && pos !in blockedPositions
-                && pos.up().getState()?.isAir == true
-                && canSeeUpperBlockSide(playerEyePos, pos, range, 0.0)
-        }
-
-        val bestTarget = possibleTargets
-            .map {
-                val damageSourceLoc = Vec3d.of(it.first).add(0.5, 1.0, 0.5)
-
-                Pair(it, ModuleCrystalAura.approximateExplosionDamage(world, damageSourceLoc))
+        val possibleTargets =
+            searchBlocksInRadius(ModuleCrystalAura.PlaceOptions.range) { pos, state ->
+                return@searchBlocksInRadius (state.block == Blocks.OBSIDIAN || state.block == Blocks.BEDROCK) &&
+                    pos !in blockedPositions &&
+                    pos.up().getState()?.isAir == true &&
+                    canSeeUpperBlockSide(playerEyePos, pos, range, 0.0)
             }
-            .maxByOrNull { it.second }
+
+        val bestTarget =
+            possibleTargets
+                .map {
+                    val damageSourceLoc = Vec3d.of(it.first).add(0.5, 1.0, 0.5)
+
+                    Pair(it, ModuleCrystalAura.approximateExplosionDamage(world, damageSourceLoc))
+                }
+                .maxByOrNull { it.second }
 
         // Is the target good enough?
-        if (bestTarget == null || bestTarget.second < ModuleCrystalAura.PlaceOptions.minEfficiency)
+        if (bestTarget == null || bestTarget.second < ModuleCrystalAura.PlaceOptions.minEfficiency) {
             return
+        }
 
         currentTarget = bestTarget.first.first
     }
