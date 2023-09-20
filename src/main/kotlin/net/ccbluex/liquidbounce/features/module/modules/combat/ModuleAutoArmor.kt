@@ -53,10 +53,6 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         repeatable {
             val player = mc.player ?: return@repeatable
 
-            if (player.currentScreenHandler.isPlayerInventory || interaction.hasRidingInventory()) {
-                return@repeatable
-            }
-
             val bestArmor = findBestArmorPiecesInInventory(player)
 
             for (armorPiece in bestArmor) {
@@ -71,7 +67,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 }
 
                 val moveOccurred =
-                    if (stackInArmor.isNothing()) {
+                    if (!stackInArmor.isNothing()) {
                         // Clear current armor
                         move(armorPiece.inventorySlot, true)
                     } else {
@@ -125,6 +121,11 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
             return true
         }
+
+        val canDoConventionalMove = player.currentScreenHandler.isPlayerInventory && !interaction.hasRidingInventory()
+
+        if (!canDoConventionalMove)
+            return false
 
         return tryConventionalMove(isInInventoryScreen, isObsolete, serverSlot)
     }
