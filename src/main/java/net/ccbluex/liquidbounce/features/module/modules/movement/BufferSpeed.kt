@@ -199,7 +199,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
 
             if (buffer && speed > 0.2) {
                 speed /= 1.0199999809265137
-                strafe(speed.toFloat())
+                strafe()
             }
         } else {
             speed = 0.0

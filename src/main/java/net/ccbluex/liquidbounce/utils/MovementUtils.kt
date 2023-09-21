@@ -14,52 +14,53 @@ import kotlin.math.sqrt
 object MovementUtils : MinecraftInstance() {
 
     var speed
-        get() = sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ).toFloat()
-        set(value) = strafe(value)
+        get() = mc.thePlayer?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
+        set(value) { strafe(value) }
 
     val isMoving
-        get() = mc.thePlayer != null && (mc.thePlayer.movementInput.moveForward != 0f || mc.thePlayer.movementInput.moveStrafe != 0f)
-
-    val movingYaw: Float
-        get() = (direction * 180f / Math.PI).toFloat()
+        get() = mc.thePlayer?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
 
     val hasMotion
-        get() = mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && mc.thePlayer.motionY != 0.0
+        get() = mc.thePlayer?.run { motionX != .0 && motionY != .0 && motionZ != .0 } ?: false
 
-    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false) {
-        if (!isMoving) {
-            if (stopWhenNoInput)
-                mc.thePlayer.stopXZ()
+    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false) =
+        mc.thePlayer?.run {
+            if (!isMoving) {
+                if (stopWhenNoInput)
+                    stopXZ()
 
-            return
+                return@run
+            }
+
+            val yaw = direction
+            motionX = -sin(yaw) * speed
+            motionZ = cos(yaw) * speed
         }
 
-        val yaw = direction
-        mc.thePlayer.motionX = -sin(yaw) * speed
-        mc.thePlayer.motionZ = cos(yaw) * speed
-    }
-
-    fun forward(length: Double) {
-        val thePlayer = mc.thePlayer ?: return
-        val yaw = thePlayer.rotationYaw.toRadiansD()
-        thePlayer.setPosition(thePlayer.posX + -sin(yaw) * length, thePlayer.posY, thePlayer.posZ + cos(yaw) * length)
-    }
-
-    val direction: Double
-        get() {
-            val thePlayer = mc.thePlayer
-            var rotationYaw = thePlayer.rotationYaw
-            if (thePlayer.moveForward < 0f) rotationYaw += 180f
-            var forward = 1f
-            if (thePlayer.moveForward < 0f) forward = -0.5f else if (thePlayer.moveForward > 0f) forward = 0.5f
-            if (thePlayer.moveStrafing > 0f) rotationYaw -= 90f * forward
-            if (thePlayer.moveStrafing < 0f) rotationYaw += 90f * forward
-            return rotationYaw.toRadiansD()
+    fun forward(distance: Double) =
+        mc.thePlayer?.run {
+            val yaw = rotationYaw.toRadiansD()
+            setPosition(posX - sin(yaw) * distance, posY, posZ + cos(yaw) * distance)
         }
+
+    val direction
+        get() = mc.thePlayer?.run {
+                var yaw = rotationYaw
+                var forward = 1f
+
+                if (moveForward < 0f) {
+                    yaw += 180f
+                    forward = -0.5f
+                } else if (moveForward > 0f)
+                    forward = 0.5f
+
+                if (moveStrafing < 0f) yaw += 90f * forward
+                else if (moveStrafing > 0f) yaw -= 90f * forward
+
+                yaw.toRadiansD()
+            } ?: 0.0
 
     fun isOnGround(height: Double) =
-        mc.theWorld.getCollidingBoundingBoxes(
-                mc.thePlayer,
-                mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)
-            ).isNotEmpty()
+        mc.theWorld != null && mc.thePlayer != null &&
+        mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
 }
