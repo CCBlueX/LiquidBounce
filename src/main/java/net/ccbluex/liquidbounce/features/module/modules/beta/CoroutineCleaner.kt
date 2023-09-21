@@ -33,40 +33,19 @@ import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_IN
 import net.minecraft.potion.Potion
 
 object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
-	private val invOpen by BoolValue("InvOpen", false)
-	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
-	private val autoClose by BoolValue("AutoClose", false) { invOpen }
-
-	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
-	private val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || simulateInventory }
-
-	private val noMove by BoolValue("NoMoveClicks", false)
-	private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
-	private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
-
-	private val randomSlot by BoolValue("RandomSlot", false)
-
-	private val itemDelay by IntegerValue("ItemDelay", 0, 0..2000)
-
-	private val ignoreVehicles by BoolValue("IgnoreVehicles", false)
-
-	private val onlyGoodPotions by BoolValue("OnlyGoodPotions", false)
-
 	private val drop by BoolValue("Drop", true)
-
-	private val maxDropDelay: Int by object : IntegerValue("MaxDropDelay", 50, 0..500) {
-		override fun isSupported() = drop
-
-		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDropDelay)
-	}
-	private val minDropDelay by object : IntegerValue("MinDropDelay", 50, 0..500) {
-		override fun isSupported() = drop && maxDropDelay > 0
-
-		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDropDelay)
-	}
-
 	val sort by BoolValue("Sort", true)
 
+	private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
+		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
+	}
+	private val minDelay by object : IntegerValue("MinDelay", 50, 0..500) {
+		override fun isSupported() = maxDelay > 0
+
+		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
+	}
+
+	/* TODO: Is separate sorting delay really needed?
 	private val maxSortDelay: Int by object : IntegerValue("MaxSortDelay", 50, 0..500) {
 		override fun isSupported() = sort
 
@@ -77,6 +56,28 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxSortDelay)
 	}
+	*/
+
+	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
+
+	private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36)
+
+	private val invOpen by BoolValue("InvOpen", false)
+	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
+
+	private val autoClose by BoolValue("AutoClose", false) { invOpen }
+	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
+
+	private val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || simulateInventory }
+	private val noMove by BoolValue("NoMoveClicks", false)
+	private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
+
+	private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
+
+	private val randomSlot by BoolValue("RandomSlot", false)
+	private val ignoreVehicles by BoolValue("IgnoreVehicles", false)
+
+	private val onlyGoodPotions by BoolValue("OnlyGoodPotions", false)
 
 	private val slot1Value = SortValue("Slot1", "Sword")
 	private val slot2Value = SortValue("Slot2", "Bow")
@@ -127,7 +128,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 				// Stop if player violates invopen or nomove checks
 				if (!shouldExecute()) return
 
-				val stacks = thePlayer.inventoryContainer.inventory
+				val stacks = thePlayer.openContainer.inventory
 
 				val index = hotbarIndex + 36
 
@@ -143,7 +144,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 					if (otherIndex in TickScheduler)
 						continue
 
-					if (!otherStack.hasItemDelayPassed(itemDelay))
+					if (!otherStack.hasItemAgePassed(minItemAge))
 						continue
 
 					val otherItem = otherStack?.item
@@ -151,9 +152,6 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 					// Check if an item is the correct type, isn't bad and isn't already sorted
 					if (isRightType(otherItem) && isStackUseful(otherStack, stacks) && !canBeSortedTo(otherIndex, otherItem, stacks.size)) {
 						click(otherIndex, hotbarIndex, 2)
-
-						delay(randomDelay(minSortDelay, maxSortDelay).toLong())
-
 						break
 					}
 				}
@@ -162,23 +160,22 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		// Drop bad items
 		if (drop) {
-			for (index in thePlayer.inventoryContainer.inventorySlots.indices.shuffled(randomSlot)) {
+			for (index in thePlayer.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
 				// Stop if player violates invopen or nomove checks
 				if (!shouldExecute()) return
 
 				if (index in TickScheduler)
 					continue
 
-				val stacks = thePlayer.inventoryContainer.inventory
+				val stacks = thePlayer.openContainer.inventory
 				val stack = stacks.getOrNull(index) ?: continue
 
-				if (!stack.hasItemDelayPassed(itemDelay))
+				if (!stack.hasItemAgePassed(minItemAge))
 					continue
 
-				if (!isStackUseful(stack, stacks)) {
+				// If stack isn't useful, drop it
+				if (!isStackUseful(stack, stacks))
 					click(index, 1, 4)
-					delay(randomDelay(minDropDelay, maxDropDelay).toLong())
-				}
 			}
 		}
 
@@ -214,6 +211,8 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	}
 
 	fun canBeSortedTo(index: Int, item: Item?, stacksSize: Int? = null): Boolean {
+		if (!sort) return false
+
 		// If stacksSize argument is passed, check if index is a hotbar slot
 		val index =
 			if (stacksSize != null) index.toHotbarIndex(stacksSize) ?: return false
@@ -244,6 +243,8 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 
 		TickScheduler.scheduleClick(slot, button, mode)
+
+		delay(randomDelay(minDelay, maxDelay).toLong())
 	}
 
 	fun isStackUseful(stack: ItemStack?, stacks: List<ItemStack?>): Boolean {
@@ -256,7 +257,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 			is ItemBoat, is ItemMinecart -> !ignoreVehicles
 
-			is ItemBlock -> isUsefulBlock(stack)
+			is ItemBlock -> isUsefulBlock(stack, stacks)
 
 			is ItemPotion -> isUsefulPotion(stack)
 
@@ -312,8 +313,36 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 	}
 
+	fun isUsefulBlock(stack: ItemStack?, stacks: List<ItemStack?>): Boolean {
+		if (!isSuitableBlock(stack))
+			return false
+
+		val index = stacks.indexOf(stack)
+
+		val isSorted = canBeSortedTo(index, stack!!.item, stacks.size)
+
+		val betterCount = stacks.withIndex().count { (otherIndex, otherStack) ->
+			if (!isSuitableBlock(otherStack) || otherStack == stack)
+				return@count false
+
+			when (otherStack!!.stackSize.compareTo(stack.stackSize)) {
+				// Found a stack that has higher size
+				1 -> true
+				0 -> {
+					val isOtherSorted = canBeSortedTo(otherIndex, otherStack.item, stacks.size)
+
+					// Count as better alternative only when compared stack isn't sorted and the other is sorted, or has higher index
+					!isSorted && (isOtherSorted || otherIndex > index)
+				}
+				else -> false
+			}
+		}
+
+		return betterCount < maxBlockStacks
+	}
+
 	@Suppress("DEPRECATION")
-	fun isUsefulBlock(stack: ItemStack?): Boolean {
+	fun isSuitableBlock(stack: ItemStack?): Boolean {
 		val item = stack?.item ?: return false
 
 		if (item is ItemBlock) {
@@ -346,13 +375,18 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 			val isOtherSorted = canBeSortedTo(otherIndex, otherItem, stacks.size)
 
+			// Compare stats one by one
 			when (otherStats.compareTo(currentStats)) {
+				// Other item had better base stat, compared item isn't the best
 				1 -> return false
+				// Both have the same base stat, compare sum of their enchantment levels
 				0 -> when (otherStack.enchantmentSum.compareTo(stack.enchantmentSum)) {
 					1 -> return false
+					// Same base stat, sum of enchantment levels, compare durability * unbreaking
 					0 -> when (otherStack.totalDurability.compareTo(stack.totalDurability)) {
 						1 -> return false
-						0 -> if (!isSorted && index < otherIndex)
+						// Both items are pretty much equally good, sorted item wins over not sorted, otherwise the one with higher index
+						0 -> if (!isSorted && (isOtherSorted || otherIndex > index))
 							return false
 					}
 				}

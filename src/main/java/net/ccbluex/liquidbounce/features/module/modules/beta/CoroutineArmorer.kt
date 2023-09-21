@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.item.CoroutineArmorComparator.getBestArmorSet
-import net.ccbluex.liquidbounce.utils.item.hasItemDelayPassed
+import net.ccbluex.liquidbounce.utils.item.hasItemAgePassed
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -32,6 +32,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 		override fun isSupported() = maxDelay > 0
 	}
+	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
 
 	private val invOpen by BoolValue("InvOpen", false)
 	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
@@ -40,17 +41,17 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
 	private val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || simulateInventory }
 
+	// When swapping armor pieces, it grabs the better one, drags and swaps it with equipped one and drops the equipped one (no time of having no armor piece equipped)
+	// Has to make more clicks, works slower
+	private val smartSwap by BoolValue("SmartSwap", true)
+
 	private val noMove by BoolValue("NoMoveClicks", false)
 	private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
 	private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
 
-	private val itemDelay by IntegerValue("ItemDelay", 0, 0..2000)
-
 	private val hotbar by BoolValue("Hotbar", true)
-
 	// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan, Matrix
 	private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
-
 	// Prevents AutoArmor from hotbar equipping while any screen is open
 	private val onlyWhenNoScreen by BoolValue("OnlyWhenNoScreen", false) { hotbar }
 
@@ -169,7 +170,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 			if (index in TickScheduler || (armorType + 5) in TickScheduler)
 				continue
 
-			if (!stack.hasItemDelayPassed(itemDelay))
+			if (!stack.hasItemAgePassed(minItemAge))
 				continue
 
 			when (stacks[armorType + 5]) {
@@ -182,41 +183,33 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 					click(index, 0, 1)
 
 				else -> {
-					// TODO: Remove when stable
-					// Stable, less smart version
+					if (smartSwap) {
+						// Player has worse armor equipped, drag the best armor, swap it with currently equipped armor and drop the bad armor
+						// This way there is no time of having no armor (but more clicks)
 
-					/*
-					// Drop worse armor
-					click(armorType + 5, 0, 4)
+						// Grab better armor
+						click(index, 0, 0)
 
-					delay(randomDelay(minDelay, maxDelay).toLong())
+						// Swap it with currently equipped armor
+						click(armorType + 5, 0, 0)
 
-					// Equip better armor
-					click(index, 0, 1)
-					*/
+						// Drop worse item by dragging and dropping it
+						click(-999, 0, 0)
+					} else {
+						// Normal version
 
+						// Drop worse armor
+						click(armorType + 5, 0, 4)
 
-					// Player has worse armor equipped, drag the best armor, swap it with currently equipped armor and drop the bad armor
-					// This way there is no time of having no armor (but more clicks)
-					// TODO: Unstable at delays below 50, could coerce min delay of these to 50...
-					// TODO: Or is it stable?
+						// Equip better armor
+						click(index, 0, 1)
+					}
 
-					// Grab better armor
-					click(index, 0, 0)
-
-					delay(randomDelay(minDelay, maxDelay).toLong())
-
-					// Swap it with currently equipped armor
-					click(armorType + 5, 0, 0)
-
-					delay(randomDelay(minDelay, maxDelay).toLong())
-
-					// Drop worse item by dragging and dropping it
-					click(-999, 0, 0, allowDuplicates = true)
+					// TODO: Make stable without this, can't instantly equip whole armor set without this, keeps dropping useful pieces
+					// For stability, it is better to sync with tick loop
+					waitUntil { TickScheduler.isEmpty() }
 				}
 			}
-
-			delay(randomDelay(minDelay, maxDelay).toLong())
 		}
 
 		// Wait till all scheduled clicks were sent
@@ -243,5 +236,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 		}
 
 		TickScheduler.scheduleClick(slot, button, mode, allowDuplicates)
+
+		delay(randomDelay(minDelay, maxDelay).toLong())
 	}
 }

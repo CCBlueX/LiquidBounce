@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils.CLICK_TIMER
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.item.hasItemDelayPassed
+import net.ccbluex.liquidbounce.utils.item.hasItemAgePassed
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -22,7 +22,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_IN
 object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val delay by IntegerValue("Delay", 400, 10..1000)
 
-    private val itemDelay by IntegerValue("ItemDelay", 400, 0..1000)
+    private val minItemAge by IntegerValue("MinItemAge", 400, 0..1000)
 
     private val mode by ListValue("Mode", arrayOf("Swap", "Merge"), "Swap")
 
@@ -46,7 +46,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
 
         for (slot in 36..44) {
             val stack = mc.thePlayer.inventoryContainer.getSlot(slot).stack ?: continue
-            if (stack.stackSize == stack.maxStackSize || !stack.hasItemDelayPassed(itemDelay)) continue
+            if (stack.stackSize == stack.maxStackSize || !stack.hasItemAgePassed(minItemAge)) continue
 
             when (mode) {
                 "Swap" -> {

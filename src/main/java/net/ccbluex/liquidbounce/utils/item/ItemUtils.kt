@@ -55,7 +55,7 @@ object ItemUtils : MinecraftInstance() {
             if (itemStack.isEmpty)
                 continue
 
-            if (itemDelay != null && !itemStack.hasItemDelayPassed(itemDelay))
+            if (itemDelay != null && !itemStack.hasItemAgePassed(itemDelay))
                 continue
 
             if (filter?.invoke(itemStack, i) != false)
@@ -120,7 +120,7 @@ val ItemStack?.isEmpty
     get() = this == null || item == null
 
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ItemStack?.hasItemDelayPassed(delay: Int) = this == null
+fun ItemStack?.hasItemAgePassed(delay: Int) = this == null
         || System.currentTimeMillis() - (this as IMixinItemStack).itemDelay >= delay
 
 val ItemStack.attackDamage

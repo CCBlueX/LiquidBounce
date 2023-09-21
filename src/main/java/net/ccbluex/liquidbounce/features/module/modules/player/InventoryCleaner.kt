@@ -363,7 +363,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                 continue
             }
 
-            if (itemStack.hasItemDelayPassed(itemDelay)) {
+            if (itemStack.hasItemAgePassed(itemDelay)) {
                 items[i] = itemStack
             }
         }

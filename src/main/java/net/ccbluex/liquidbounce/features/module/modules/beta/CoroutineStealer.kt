@@ -48,7 +48,6 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
     }
 
     private val startDelay by IntegerValue("StartDelay", 50, 0..500)
-
     private val closeDelay by IntegerValue("CloseDelay", 50, 0..500)
 
     private val noMove by BoolValue("NoMoveClicks", false)
@@ -59,9 +58,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
     private val chestTitle by BoolValue("ChestTitle", true)
 
-    private val takeRandomized by BoolValue("TakeRandomized", true)
-
-    // private val silent by BoolValue("Silent", false)
+    private val randomSlot by BoolValue("RandomSlot", true)
 
     private val progressBar by BoolValue("ProgressBar", true)
 
@@ -153,7 +150,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                     }
 
                     Triple(index, stack, sortableTo)
-                }.shuffled(takeRandomized)
+                }.shuffled(randomSlot)
 
                 // Prioritize items that can be sorted (so that as many items could be instantly sorted)
                 // Explanation: If a non-sortable item goes before the sortable, it gets shift-clicked to some hotbar slot, which is then occupied with useful item that shouldn't get swapped by sorting...
