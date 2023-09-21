@@ -36,16 +36,18 @@ object TickedActions : Listenable {
 
     @EventTarget(priority = 1)
     fun onTick(event: TickEvent) {
-        for (triple in actions)
-            triple.third()
+        val scheduledActions = Array<Triple<Module, Int, () -> Unit>>(actions.size) { actions[it] }
 
+        // Clear actions before executing all scheduled tasks
+        // This way the tasks can schedule actions to the same slot for next tick without having to allow for duplicates
         actions.clear()
+
+        for (triple in scheduledActions)
+            triple.third()
     }
 
     @EventTarget
-    fun onWorld(event: WorldEvent) {
-        actions.clear()
-    }
+    fun onWorld(event: WorldEvent) = actions.clear()
 
     override fun handleEvents() = true
 }

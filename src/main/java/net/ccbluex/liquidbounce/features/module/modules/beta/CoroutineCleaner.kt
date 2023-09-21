@@ -1,12 +1,13 @@
 @file:Suppress("ControlFlowWithEmptyBody")
 
-package net.ccbluex.liquidbounce.features.module.modules.`fun`
+package net.ccbluex.liquidbounce.features.module.modules.beta
 
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
+import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -182,7 +183,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 
 		// Wait till all scheduled clicks were sent
-		while (!TickScheduler.isEmpty()) {}
+		waitUntil { TickScheduler.isEmpty() }
 
 		// Close inventory
 		if ((hasClicked && mc.currentScreen is GuiInventory && invOpen && autoClose) || (mc.currentScreen !is GuiInventory && simulateInventory && serverOpenInventory)) {

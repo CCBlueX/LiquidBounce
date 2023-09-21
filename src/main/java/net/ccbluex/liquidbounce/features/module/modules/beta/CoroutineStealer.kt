@@ -4,7 +4,7 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.`fun`
+package net.ccbluex.liquidbounce.features.module.modules.beta
 
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -12,9 +12,10 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.CoroutineCleaner.canBeSortedTo
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.CoroutineCleaner.isStackUseful
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner.canBeSortedTo
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner.isStackUseful
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
+import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.InventoryUtils.hasSpaceInInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.component1
@@ -141,7 +142,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                             if (!canBeSortedTo(hotbarIndex, stack.item))
                                 continue
 
-                            val hotbarStack = stacks[stacks.size - 9 + hotbarIndex]
+                            val hotbarStack = stacks.getOrNull(stacks.size - 9 + hotbarIndex)
 
                             if (!isStackUseful(hotbarStack, stacks)) {
                                 sortableTo = hotbarIndex
@@ -178,7 +179,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                 }
             }
 
-            // If no clicks were sent in the last loop
+            // If no clicks were sent in the last loop stop searching
             if (TickScheduler.isEmpty()) {
                 progress = 1f
                 delay(closeDelay.toLong())
@@ -187,7 +188,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
             }
 
             // Wait till all scheduled clicks were sent
-            while (!TickScheduler.isEmpty()) {}
+            waitUntil { TickScheduler.isEmpty() }
 
             // Before closing the chest, check all items once more, whether server hadn't cancelled some of the actions.
             stacks = thePlayer.openContainer.inventory
@@ -198,7 +199,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
         }
 
         // Wait before the chest gets closed (if it gets closed out of tick loop it could throw npe)
-        while (!TickScheduler.isEmpty()) {}
+        waitUntil { TickScheduler.isEmpty() }
     }
 
     // Progress bar

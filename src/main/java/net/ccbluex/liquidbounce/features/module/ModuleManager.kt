@@ -12,9 +12,13 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.command.CommandManager.registerCommand
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineArmorer
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineStealer
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.*
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.SkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.player.*

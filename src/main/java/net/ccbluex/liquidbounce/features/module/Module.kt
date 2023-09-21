@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.TickedActions
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
@@ -160,20 +161,26 @@ open class Module @JvmOverloads constructor(
             }
 
         operator fun plusAssign(action: () -> Unit) {
-            TickedActions.schedule(-1, instance, false, action)
+            schedule(-1, true, action)
         }
+
+        // Schedule actions to be executed in following ticks, one each tick
+        // Thread is frozen until all actions were executed (suitable for coroutines)
+        internal fun scheduleAndSuspend(vararg actions: () -> Unit) =
+            actions.forEach {
+                this += it
+                waitUntil { isEmpty() }
+            }
 
         internal fun isScheduled(id: Int) = TickedActions.isScheduled(id, instance)
 
-        // Checks if id click is scheduled: if (TickScheduler[id])
-        //internal operator fun get(id: Int) = isScheduled(id)
+        // Checks if id click is scheduled: if (id in TickScheduler)
+        operator fun contains(id: Int) = isScheduled(id)
 
         internal fun clear() = TickedActions.clear(instance)
 
         internal fun isEmpty() = TickedActions.isEmpty(instance)
 
-        // Checks if id click is scheduled: if (id in TickScheduler)
-        operator fun contains(id: Int) = isScheduled(id)
     }
 
     init {

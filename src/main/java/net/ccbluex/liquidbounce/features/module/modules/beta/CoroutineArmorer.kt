@@ -1,14 +1,16 @@
 @file:Suppress("ControlFlowWithEmptyBody")
 
-package net.ccbluex.liquidbounce.features.module.modules.`fun`
+package net.ccbluex.liquidbounce.features.module.modules.beta
 
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
+import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.item.CoroutineArmorComparator.getBestArmorSet
 import net.ccbluex.liquidbounce.utils.item.hasItemDelayPassed
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
@@ -45,9 +47,12 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	private val itemDelay by IntegerValue("ItemDelay", 0, 0..2000)
 
 	private val hotbar by BoolValue("Hotbar", true)
-	// Sacrifices 1 tick speed for complete undetectability
-	private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", false) { hotbar }
-	private val onlyWhenNoScreen by BoolValue("OnlyWhenNoScreen", true) { hotbar }
+
+	// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan, Matrix
+	private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
+
+	// Prevents AutoArmor from hotbar equipping while any screen is open
+	private val onlyWhenNoScreen by BoolValue("OnlyWhenNoScreen", false) { hotbar }
 
 	private var hasClicked = false
 
@@ -56,9 +61,11 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 			if (!state)
 				return false
 
-			if (mc.thePlayer.openContainer?.windowId != 0 && (!hotbar || onlyWhenNoScreen))
+			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if onlyWhenNoScreen is disabled)
+			if (mc.thePlayer?.openContainer?.windowId != 0 && (!onlyHotbar || onlyWhenNoScreen))
 				return false
 
+			// Player doesn't need to have inventory open or not to move, when equipping from hotbar
 			if (onlyHotbar)
 				return true
 
@@ -81,8 +88,6 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 		val thePlayer = mc.thePlayer ?: return
 
-
-
 		if (hotbar) {
 			if (!shouldExecute(onlyHotbar = true))
 				return
@@ -91,11 +96,17 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 			val bestArmorSet = getBestArmorSet(stacks) ?: return
 
+			var hasClickedHotbar = false
+
 			for (hotbarIndex in 0..8) {
 				if (!shouldExecute(onlyHotbar = true))
 					return
 
-				val stack = stacks[hotbarIndex + 36] ?: continue
+				// Don't right-click to equip items while inventory is open when value onlyWhenNoScreen is enabled
+				if (onlyWhenNoScreen && serverOpenInventory)
+					break
+
+				val stack = stacks.getOrNull(hotbarIndex + 36) ?: continue
 
 				if (stack !in bestArmorSet)
 					continue
@@ -104,21 +115,38 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 				// If armor slot isn't occupied, right click to equip
 				if (equippedStack == null) {
-					// TODO: Maybe delayed slot switch should be ticked with TickScheduler?
+					hasClickedHotbar = true
 
-					sendPacket(C09PacketHeldItemChange(hotbarIndex))
+					if (delayedSlotSwitch) {
+						// Schedule for the following tick and wait for them to be sent
+						TickScheduler.scheduleAndSuspend({
+							sendPackets(
+								C09PacketHeldItemChange(hotbarIndex),
+								C08PacketPlayerBlockPlacement(stack)
+							)
+						})
+					} else {
+						// Schedule all possible hotbar clicks for the following tick (doesn't suspend the loop)
+						TickScheduler += {
+							// Switch selected hotbar slot, right click to equip
+							sendPackets(
+								C09PacketHeldItemChange(hotbarIndex),
+								C08PacketPlayerBlockPlacement(stack)
+							)
 
-					if (delayedSlotSwitch)
-						delay(50)
-
-					sendPacket(C08PacketPlayerBlockPlacement(stack))
-
-					if (delayedSlotSwitch)
-						delay(50)
-
-					sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+							// Move the armor on the client-side to prevent repeated clicks (until server updates the inventory)
+							thePlayer.openContainer.putStackInSlot(36 + hotbarIndex, null)
+							thePlayer.openContainer.putStackInSlot((stack.item as ItemArmor).armorType + 5, stack)
+						}
+					}
 				}
 			}
+
+			waitUntil { TickScheduler.isEmpty() }
+
+			// Sync selected slot
+			if (hasClickedHotbar)
+				mc.playerController.updateController()
 		}
 
 		hasClicked = false
@@ -127,7 +155,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 			if (!shouldExecute())
 				return
 
-			val stacks = thePlayer.inventoryContainer.inventory
+			val stacks = thePlayer.openContainer.inventory
 
 			val armorSet = getBestArmorSet(stacks) ?: continue
 
@@ -192,7 +220,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 		}
 
 		// Wait till all scheduled clicks were sent
-		while (!TickScheduler.isEmpty()) {}
+		waitUntil { TickScheduler.isEmpty() }
 
 		// Close inventory, doesn't have to close simulated inventory because it will get closed after inventory cleaner finishes
 		if (hasClicked && mc.currentScreen is GuiInventory && invOpen && autoClose) {
