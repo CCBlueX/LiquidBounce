@@ -126,3 +126,5 @@ fun ItemStack?.hasItemDelayPassed(delay: Int) = this == null
 val ItemStack.attackDamage
     get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) +
             1.25 * getEnchantmentLevel(Enchantment.sharpness)
+
+fun ItemStack.isSplashPotion()= item is ItemPotion && ItemPotion.isSplash(this.metadata)

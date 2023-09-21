@@ -2,7 +2,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
@@ -18,7 +18,9 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.*
+import net.minecraft.block.BlockContainer
+import net.minecraft.block.BlockFalling
+import net.minecraft.block.BlockWorkbench
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.init.Blocks
@@ -267,7 +269,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		val item = stack?.item ?: return false
 
 		if (item is ItemPotion) {
-			val isSplash = ItemPotion.isSplash(stack.itemDamage)
+			val isSplash = stack.isSplashPotion()
 			val isHarmful = item.getEffects(stack).any { it.potionID in NEGATIVE_EFFECT_IDS }
 
 			// Only keep helpful potions and, if 'onlyGoodPotions' is disabled, also splash harmful potions
@@ -339,21 +341,6 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			if (stack == otherStack || item.javaClass != otherItem.javaClass)
 				return@forEachIndexed
 
-			/*
-			if (canBeSortedTo(otherIndex, otherItem)) {
-				// If both items are already sorted, avoid getting into swapping loop
-				if (alreadySorted) return@forEachIndexed
-
-				for (i in 36..44) {
-					val hotbarItem = stacks[i]?.item
-
-					// If there is a different sortable slot, avoid getting into swapping loop?
-					if (hotbarItem == null && canBeSortedTo(i, item))
-						return@forEachIndexed
-				}
-			}
-			*/
-
 			val otherStats = parameters(otherStack)
 
 			val isOtherSorted = canBeSortedTo(otherIndex, otherItem, stacks.size)
@@ -366,7 +353,6 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 						1 -> return false
 						0 -> if (!isSorted && index < otherIndex)
 							return false
-						//0 -> return index < otherIndex
 					}
 				}
 			}
@@ -397,6 +383,7 @@ private val SORTING_TARGETS: Map<String, ((Item?) -> Boolean)?> = mapOf(
 	"Fire" to { it == Items.flint_and_steel || it == Items.lava_bucket || it == Items.bucket },
 	"Gapple" to { it is ItemAppleGold },
 	"Pearl" to { it is ItemEnderPearl },
+	"Potion" to { it is ItemPotion },
 	"Ignore" to null
 )
 

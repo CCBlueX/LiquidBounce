@@ -71,7 +71,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
     private var easingProgress = 0f
 
-    private var receivedId = 0
+    private var receivedId: Int? = null
 
     private var stacks = emptyList<ItemStack?>()
 
@@ -160,20 +160,18 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                 .sortedBy { it.third == null }
 
             run scheduler@ {
-                usefulItems.forEachIndexed { index, (slot, stack, sortableTo) ->
-                    if (!shouldExecute()) {
-                        progress = 0f
-                        easingProgress = 0f
+                usefulItems.forEachIndexed { index, (slot, _, sortableTo) ->
+                    if (!shouldExecute())
                         return
-                    }
 
                     // TODO: might schedule clicks that exceed inventory space at low delays, it will notice that it doesn't have space in inventory next tick, when the scheduled click gets executed
                     // When stealing items by instantly sorting them, you don't need any space in inventory, yay
                     if (sortableTo == null && !hasSpaceInInventory())
                         return@scheduler
 
+                    // If target is sortable to a hotbar slot, steal it right there, else shift + left-click
                     TickScheduler.scheduleClick(slot, sortableTo ?: 0, if (sortableTo != null) 2 else 1) {
-                        progress = index / usefulItems.lastIndex.toFloat()
+                        progress = (index + 1) / usefulItems.size.toFloat()
                     }
 
                     delay(randomDelay(minDelay, maxDelay).toLong())
@@ -182,6 +180,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
             // If no clicks were sent in the last loop
             if (TickScheduler.isEmpty()) {
+                progress = 1f
                 delay(closeDelay.toLong())
 
                 break
@@ -194,13 +193,8 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
             stacks = thePlayer.openContainer.inventory
         }
 
-        progress = 1f
-
         TickScheduler += {
             mc.thePlayer.closeScreen()
-
-            progress = 0f
-            easingProgress = 0f
         }
 
         // Wait before the chest gets closed (if it gets closed out of tick loop it could throw npe)
@@ -210,7 +204,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
     // Progress bar
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (!progressBar || progress == 0f)
+        if (!progressBar || mc.currentScreen !is GuiChest)
             return
 
         val (scaledWidth, scaledHeight) = ScaledResolution(mc)
@@ -224,13 +218,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
         drawRect(minX - 2, minY - 2, maxX + 2, maxY + 2, Color(200, 200, 200).rgb)
         drawRect(minX, minY, maxX, maxY, Color(50, 50, 50).rgb)
-        drawRect(
-            minX,
-            minY,
-            minX + (maxX - minX) * easingProgress,
-            maxY,
-            Color.HSBtoRGB(easingProgress / 5, 1f, 1f) or 0xFF0000
-        )
+        drawRect(minX, minY, minX + (maxX - minX) * easingProgress, maxY, Color.HSBtoRGB(easingProgress / 5, 1f, 1f) or 0xFF0000)
     }
 
     @EventTarget
@@ -238,8 +226,15 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
         val packet = event.packet
 
         when (packet) {
-            is C0DPacketCloseWindow, is S2DPacketOpenWindow, is S2EPacketCloseWindow -> receivedId = 0
+            is C0DPacketCloseWindow, is S2DPacketOpenWindow, is S2EPacketCloseWindow -> receivedId = null
             is S30PacketWindowItems -> {
+                // Chests never have windowId 0
+                if (packet.func_148911_c() == 0)
+                    return
+
+                progress = 0f
+                easingProgress = 0f
+
                 receivedId = packet.func_148911_c()
 
                 stacks = packet.itemStacks.toList()

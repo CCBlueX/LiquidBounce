@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
+import net.ccbluex.liquidbounce.utils.item.isSplashPotion
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
@@ -50,9 +51,9 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
         val thePlayer = mc.thePlayer ?: return
         val theWorld = mc.theWorld ?: return
 
-        val heldItem = thePlayer.heldItem ?: return
+        val heldStack = thePlayer.heldItem ?: return
 
-        val item = heldItem.item
+        val item = heldStack.item
         val renderManager = mc.renderManager
         var isBow = false
         var motionFactor = 1.5F
@@ -83,7 +84,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
             gravity = 0.04F
             size = 0.25F
             motionSlowdown = 0.92F
-        } else if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) {
+        } else if (item is ItemPotion && heldStack.isSplashPotion()) {
             gravity = 0.05F
             size = 0.25F
             motionFactor = 0.5F
@@ -111,7 +112,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
         // Motions
         var motionX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
         var motionY = -sin(
-                (pitch + if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) -20 else 0).toRadians()
+                (pitch + if (item is ItemPotion && heldStack.isSplashPotion()) -20 else 0).toRadians()
             ) * if (isBow) 1.0 else 0.4
         var motionZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
         val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)

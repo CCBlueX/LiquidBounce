@@ -223,7 +223,7 @@ object ModuleManager : Listenable {
                     // TODO: Remove when stable
                     displayChatMessage("§cReworked coroutine inventory management has ran into an issue! Please report this: ${it.message}")
 
-                    LOGGER.error(it.stackTrace)
+                    it.printStackTrace()
                 }
             }
         }
