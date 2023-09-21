@@ -61,10 +61,21 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        var glide by boolean("Glide", false)
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
             wait { 100 }
             player.velocity.y = 0.0
+
+            if (glide) {
+                if (!player.isOnGround && player.fallDistance > 1) {
+                    if (player.age % 2 == 0) {
+                        player.velocity.y = -0.155
+                    } else {
+                        player.velocity.y = -0.1
+                    }
+                }
+            }
         }
     }
 }
