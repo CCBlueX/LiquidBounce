@@ -23,6 +23,8 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
+// TODO: What happens if you get an armor while spoofing selected slot while scaffolding?
+// hotbar option should check whether serverSlot == currentItem or smth like that
 object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
 		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
@@ -145,9 +147,9 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 			waitUntil { TickScheduler.isEmpty() }
 
-			// Sync selected slot
+			// Sync selected slot, if it is a duplicate, InventoryUtils will handle it
 			if (hasClickedHotbar)
-				mc.playerController.updateController()
+				sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
 		}
 
 		hasClicked = false
