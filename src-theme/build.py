@@ -35,6 +35,12 @@ if os.path.exists("resources"):
 print("Building theme")
 os.system("npm i && npm run build")
 
+# Create tmp folder
+os.makedirs("tmp")
+
+# Copy theme.json into tmp folder
+shutil.copy("theme.json", "tmp/theme.json")
+
 # Go through every folder and copy public folder to tmp folder with the name of folder
 for folder in os.listdir("."):
     if os.path.isdir(folder):

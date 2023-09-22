@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.web.WebView
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 
 import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
@@ -89,6 +90,9 @@ object LiquidBounce : Listenable {
         runCatching {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
+
+            // Load themes
+            ThemeManager.load()
 
             // Load mappings
             McMappings.load()
