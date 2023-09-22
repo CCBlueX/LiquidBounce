@@ -20,6 +20,7 @@ import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.item.ItemArmor
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
@@ -36,12 +37,12 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	}
 	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
 
-	private val invOpen by BoolValue("InvOpen", false)
+	val invOpen by BoolValue("InvOpen", false)
 	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
-	private val autoClose by BoolValue("AutoClose", false) { invOpen }
+	val autoClose by BoolValue("AutoClose", false) { invOpen }
 
 	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
-	private val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || simulateInventory }
+	val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || simulateInventory }
 
 	// When swapping armor pieces, it grabs the better one, drags and swaps it with equipped one and drops the equipped one (no time of having no armor piece equipped)
 	// Has to make more clicks, works slower
@@ -52,12 +53,15 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
 
 	private val hotbar by BoolValue("Hotbar", true)
-	// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan, Matrix
+	// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan
 	private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
 	// Prevents AutoArmor from hotbar equipping while any screen is open
 	private val onlyWhenNoScreen by BoolValue("OnlyWhenNoScreen", false) { hotbar }
 
-	private var hasClicked = false
+	var hasClicked = false
+		private set
+
+	var hasSearched = false
 
 	private suspend fun shouldExecute(onlyHotbar: Boolean = false): Boolean {
 		while (true) {
@@ -92,13 +96,6 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 		val thePlayer = mc.thePlayer ?: return
 
 		if (hotbar) {
-			if (!shouldExecute(onlyHotbar = true))
-				return
-
-			val stacks = thePlayer.openContainer.inventory
-
-			val bestArmorSet = getBestArmorSet(stacks) ?: return
-
 			var hasClickedHotbar = false
 
 			for (hotbarIndex in 0..8) {
@@ -108,6 +105,10 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 				// Don't right-click to equip items while inventory is open when value onlyWhenNoScreen is enabled
 				if (onlyWhenNoScreen && serverOpenInventory)
 					break
+
+				val stacks = thePlayer.openContainer.inventory
+
+				val bestArmorSet = getBestArmorSet(stacks) ?: return
 
 				val stack = stacks.getOrNull(hotbarIndex + 36) ?: continue
 
@@ -137,9 +138,11 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 								C08PacketPlayerBlockPlacement(stack)
 							)
 
+							/* TODO: Isn't really needed, maybe for high pingers?
 							// Move the armor on the client-side to prevent repeated clicks (until server updates the inventory)
 							thePlayer.openContainer.putStackInSlot(36 + hotbarIndex, null)
 							thePlayer.openContainer.putStackInSlot((stack.item as ItemArmor).armorType + 5, stack)
+							*/
 						}
 					}
 				}
@@ -149,12 +152,14 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 			// Sync selected slot, if it is a duplicate, InventoryUtils will handle it
 			if (hasClickedHotbar)
-				sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+				TickScheduler += {
+					sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+				}
 		}
 
 		hasClicked = false
 
-		for (armorType in 0..4) {
+		for (armorType in 0..3) {
 			if (!shouldExecute())
 				return
 
@@ -206,10 +211,6 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 						// Equip better armor
 						click(index, 0, 1)
 					}
-
-					// TODO: Make stable without this, can't instantly equip whole armor set without this, keeps dropping useful pieces
-					// For stability, it is better to sync with tick loop
-					waitUntil { TickScheduler.isEmpty() }
 				}
 			}
 		}
@@ -217,14 +218,34 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 		// Wait till all scheduled clicks were sent
 		waitUntil { TickScheduler.isEmpty() }
 
-		// Close inventory, doesn't have to close simulated inventory because it will get closed after inventory cleaner finishes
-		if (hasClicked && mc.currentScreen is GuiInventory && invOpen && autoClose) {
+		hasSearched = true
+
+		// Cleaner follows AutoArmor, don't close inventory
+		if (CoroutineCleaner.state)
+			return
+
+		// Close visually open inventory if AutoArmor has clicked and AutoClose is active
+		if (shouldCloseOpenInv()) {
 			delay(closeDelay.toLong())
 
-			if (mc.currentScreen is GuiInventory)
+			// Check if screen hasn't changed after the delay
+			if (shouldCloseOpenInv())
 				thePlayer.closeScreen()
 		}
+
+		// Close simulated inventory if player doesn't have it open visually
+		else if (shouldCloseSimulatedInv()) {
+			delay(closeDelay.toLong())
+
+			// Check if screen hasn't changed after the delay
+			if (shouldCloseSimulatedInv())
+				sendPacket(C0DPacketCloseWindow(thePlayer.openContainer.windowId))
+		}
 	}
+
+	private fun shouldCloseOpenInv() = hasClicked && mc.currentScreen is GuiInventory && invOpen && autoClose
+
+	private fun shouldCloseSimulatedInv() = simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory
 
 	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
 		if (simulateInventory && !serverOpenInventory) {

@@ -96,6 +96,10 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			if (!state)
 				return false
 
+			// Wait for AutoArmor to execute first, when opening inventory (for AutoClose compatibility)
+			if (CoroutineArmorer.state && !CoroutineArmorer.hasSearched)
+				return false
+
 			if (mc.thePlayer?.openContainer?.windowId != 0)
 				return false
 
@@ -182,13 +186,24 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		// Wait till all scheduled clicks were sent
 		waitUntil { TickScheduler.isEmpty() }
 
-		// Close inventory
-		if ((hasClicked && mc.currentScreen is GuiInventory && invOpen && autoClose) || (mc.currentScreen !is GuiInventory && simulateInventory && serverOpenInventory)) {
-			delay(closeDelay.toLong())
+		// If InventoryCleaner had clicked on items, use its CloseDelay, else use AutoArmor's
+		val sharedCloseDelay = if (hasClicked) closeDelay else CoroutineArmorer.closeDelay
 
-			if (mc.currentScreen is GuiInventory)
+		// Close visually open inventory (also for AutoArmor, that depends on InventoryCleaner to do this)
+		if (shouldCloseOpenInv()) {
+			delay(sharedCloseDelay.toLong())
+
+			// Check if screen hasn't changed after the delay
+			if (shouldCloseOpenInv())
 				thePlayer.closeScreen()
-			else if (serverOpenInventory)
+		}
+
+		// Close simulated inventory if player doesn't have it open visually
+		else if (shouldCloseSimulatedInv()) {
+			delay(sharedCloseDelay.toLong())
+
+			// Check if screen hasn't changed after the delay
+			if (shouldCloseSimulatedInv())
 				sendPacket(C0DPacketCloseWindow(thePlayer.openContainer.windowId))
 		}
 	}
@@ -196,6 +211,11 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val SORTING_VALUES = arrayOf(
 		slot1Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value
 	)
+
+	private fun shouldCloseOpenInv() = (hasClicked || CoroutineArmorer.hasClicked) && mc.currentScreen is GuiInventory
+			&& ((invOpen && autoClose) || (CoroutineArmorer.invOpen && CoroutineArmorer.autoClose))
+
+	private fun shouldCloseSimulatedInv() = simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory
 
 	private class SortValue(name: String, value: String) : ListValue(name, SORTING_KEYS, value) {
 		override fun isSupported() = sort

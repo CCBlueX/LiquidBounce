@@ -215,6 +215,8 @@ object ModuleManager : Listenable {
         inventoryWorker = CoroutineScope(Dispatchers.Default).launch {
             while (isActive) {
                 runCatching {
+                    CoroutineArmorer.hasSearched = false
+
                     // Try to steal stuff from chests
                     CoroutineStealer.execute()
 

@@ -36,6 +36,7 @@ object TickedActions : Listenable {
 
     @EventTarget(priority = 1)
     fun onTick(event: TickEvent) {
+        /* TODO: Find a way to do this without breaking .isEmpty()
         val scheduledActions = Array<Triple<Module, Int, () -> Unit>>(actions.size) { actions[it] }
 
         // Clear actions before executing all scheduled tasks
@@ -44,6 +45,12 @@ object TickedActions : Listenable {
 
         for (triple in scheduledActions)
             triple.third()
+        */
+
+        for (triple in actions)
+            triple.third()
+
+        actions.clear()
     }
 
     @EventTarget

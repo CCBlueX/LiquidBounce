@@ -191,12 +191,10 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
             stacks = thePlayer.openContainer.inventory
         }
 
-        TickScheduler += {
-            mc.thePlayer.closeScreen()
-        }
-
         // Wait before the chest gets closed (if it gets closed out of tick loop it could throw npe)
-        waitUntil { TickScheduler.isEmpty() }
+        TickScheduler.scheduleAndSuspend({
+            thePlayer.closeScreen()
+        })
     }
 
     // Progress bar
