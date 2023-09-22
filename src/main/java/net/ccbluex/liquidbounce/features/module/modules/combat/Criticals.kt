@@ -24,7 +24,12 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
-    val mode by ListValue("Mode", arrayOf("Packet", "NCPPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
+    val mode by ListValue(
+        "Mode",
+        arrayOf("Packet", "NCPPacket", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"),
+        "Packet"
+    )
+
     val delay by IntegerValue("Delay", 0, 0..500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
 
@@ -42,8 +47,9 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
             val entity = event.targetEntity
 
             if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
-                    thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
-                    Fly.state || !msTimer.hasTimePassed(delay))
+                thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
+                Fly.state || !msTimer.hasTimePassed(delay)
+            )
                 return
 
             val (x, y, z) = thePlayer
@@ -58,6 +64,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                     )
                     thePlayer.onCriticalHit(entity)
                 }
+
                 "ncppacket" -> {
                     sendPackets(
                         C04PacketPlayerPosition(x, y + 0.11, z, false),
@@ -66,11 +73,21 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                     )
                     mc.thePlayer.onCriticalHit(entity)
                 }
+
+                "blocksmc" -> {
+                    sendPackets(
+                        C04PacketPlayerPosition(x, y + 0.001091981, z, true),
+                        C04PacketPlayerPosition(x, y + 0.000114514, z, false),
+                        C04PacketPlayerPosition(x, y, z, false)
+                    )
+                }
+
                 "hop" -> {
                     thePlayer.motionY = 0.1
                     thePlayer.fallDistance = 0.1f
                     thePlayer.onGround = false
                 }
+
                 "tphop" -> {
                     sendPackets(
                         C04PacketPlayerPosition(x, y + 0.02, z, false),
@@ -78,6 +95,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                     )
                     thePlayer.setPosition(x, y + 0.01, z)
                 }
+
                 "jump" -> thePlayer.motionY = 0.42
                 "lowjump" -> thePlayer.motionY = 0.3425
                 "visual" -> thePlayer.onCriticalHit(entity)
