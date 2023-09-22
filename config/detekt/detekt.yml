@@ -18,5 +18,4 @@ style:
   MagicNumber:
     active: false
   ReturnCount:
-    active: true
-    max: 3
+    active: false
