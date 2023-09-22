@@ -44,17 +44,16 @@ import net.minecraft.util.shape.VoxelShape
 class GameTickEvent : Event()
 
 // Render events
-
-@Nameable("blockChangeEvent")
+@Nameable("blockChange")
 class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()
 
-@Nameable("chunkLoadEvent")
+@Nameable("chunkLoad")
 class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 
-@Nameable("chunkUnloadEvent")
+@Nameable("chunkUnload")
 class ChunkUnloadEvent(val x: Int, val z: Int) : Event()
 
-@Nameable("worldDisconnectEvent")
+@Nameable("worldDisconnect")
 class WorldDisconnectEvent : Event()
 
 @Nameable("gameRender")
@@ -94,11 +93,10 @@ class KeyboardKeyEvent(val window: Long, val keyCode: Int, val scancode: Int, va
 class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 
 // Input events
-
 @Nameable("inputHandle")
 class InputHandleEvent : Event()
 
-@Nameable("movementInputEvent")
+@Nameable("movementInput")
 class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean) : Event()
 
 @Nameable("key")
@@ -111,7 +109,6 @@ class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : C
 class KeyBindingEvent(var key: KeyBinding) : Event()
 
 // User action events
-
 @Nameable("attack")
 class AttackEvent(val enemy: Entity) : Event()
 
@@ -131,30 +128,27 @@ class ChatReceiveEvent(val message: String, val textData: Text) : Event()
 class UseCooldownEvent(var cooldown: Int) : Event()
 
 // World events
-
 @Nameable("blockShape")
 class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
 
-@Nameable("blockAttack")
+@Nameable("blockBreakingProgress")
 class BlockBreakingProgressEvent(val pos: BlockPos) : Event()
 
-@Nameable("blockMultiplier")
+@Nameable("blockVelocityMultiplier")
 class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
 
 @Nameable("blockSlipperinessMultiplier")
 class BlockSlipperinessMultiplierEvent(val block: Block, var slipperiness: Float) : Event()
 
 // Entity events
-
 @Nameable("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
 // Entity events bound to client-user entity
-
-@Nameable("HealthUpdate")
+@Nameable("healthUpdate")
 class HealthUpdateEvent(health: Float, food: Int, saturation: Float) : Event()
 
-@Nameable("Death")
+@Nameable("death")
 class DeathEvent : Event()
 
 @Nameable("playerTick")
@@ -178,7 +172,7 @@ class PlayerJumpEvent(var motion: Float) : CancellableEvent()
 @Nameable("playerUseMultiplier")
 class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 
-@Nameable("playerVelocity")
+@Nameable("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
 
 @Nameable("playerStride")
@@ -193,11 +187,10 @@ class CancelBlockBreakingEvent : CancellableEvent()
 @Nameable("playerStep")
 class PlayerStepEvent(var height: Float) : Event()
 
-@Nameable("FluidPushEvent")
+@Nameable("fluidPush")
 class FluidPushEvent : CancellableEvent()
 
 // Network events
-
 @Nameable("packet")
 class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 
@@ -206,7 +199,6 @@ enum class TransferOrigin {
 }
 
 // Client events
-
 @Nameable("clientStart")
 class ClientStartEvent : Event()
 
