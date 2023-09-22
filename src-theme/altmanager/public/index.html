@@ -8,6 +8,23 @@
             outline: none;
         }
 
+        .checkbox1 {
+            width: 5%;
+            height: 5%;
+            position: absolute;
+            left: 15.5%;
+            bottom: 32.5%
+        }
+
+        .checkbox2 {
+            font-size: 18px;
+            width: 5%;
+            height: 5%;
+            position: absolute;
+            left: 25%;
+            bottom: 32.5%
+        }
+
         * {
             cursor: default !important;
             font-family: "Montserrat", sans-serif;
@@ -16,51 +33,6 @@
             margin: 0;
             padding: 0;
             color: white;
-        }
-
-
-        .slider {
-            position: absolute;
-            top: 2px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #707070;
-            transition: ease 0.4s;
-            height: 8px;
-            border-radius: 4px;
-
-            &::before {
-                position: absolute;
-                content: "";
-                height: 12px;
-                width: 12px;
-                top: -2px;
-                left: 0;
-                background-color: white;
-                transition: ease 0.4s;
-                border-radius: 50%;
-            }
-        }
-
-        .switch2 {
-            position: relative;
-            display: inline-block;
-            width: 22px;
-            height: 12px;
-        }
-
-        .switch2 input {
-            display: none;
-        }
-
-        .switch2 input:checked + .slider {
-            background-color: #4860a7;
-        }
-
-        .switch2 input:checked + .slider:before {
-            transform: translateX(10px);
-            background-color: #4677ff;
         }
 
         body {
@@ -733,6 +705,7 @@
                     </picture>
                     Random
                 </button>
+
             </div>
 
             <div class="microsoftButton">
@@ -760,6 +733,8 @@
                     </picture>
                 </button>
             </div>
+            <input type="checkbox" class="checkbox1" name="" checked/>
+            <h1 class="checkbox2"> Favourite</h1>
 
             <button class="addButton" onclick="addDynamically()">
                 Add
