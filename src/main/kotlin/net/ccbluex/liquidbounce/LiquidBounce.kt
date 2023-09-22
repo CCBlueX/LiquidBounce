@@ -35,10 +35,9 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
-import net.ccbluex.liquidbounce.web.WebView
+import net.ccbluex.liquidbounce.web.GameWebView
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 
 import org.apache.logging.log4j.LogManager
@@ -149,7 +148,7 @@ object LiquidBounce : Listenable {
             exitProcess(1)
         }
 
-        WebView
+        GameWebView
     }
 
     /**

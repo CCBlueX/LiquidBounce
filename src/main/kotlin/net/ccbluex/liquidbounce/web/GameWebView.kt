@@ -15,10 +15,9 @@ import net.minecraft.client.gui.DrawContext
 import org.lwjgl.glfw.GLFW
 
 
-object WebView : Listenable {
+object GameWebView : Listenable {
 
     var webController = WebController()
-    private var hasSetup = false
 
     val windowResizeWHandler = handler<WindowResizeEvent> {
 
@@ -127,12 +126,6 @@ object WebView : Listenable {
     }
 
     fun render(context: DrawContext?, partialTicks: Float) {
-        if (!hasSetup) {
-            val window = webController.createWindow({ mc.window.framebufferWidth }) { mc.window.framebufferHeight }
-            window.view.loadURL("https://duckduckgo.com")
-            hasSetup = true
-        }
-
         webController.update()
         webController.render(context)
     }
