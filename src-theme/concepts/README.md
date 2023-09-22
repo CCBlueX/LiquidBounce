@@ -1,6 +1,7 @@
 # LiquidBounce Design Concepts
 
 ## Menus
+
 ![ClickGUI](click_gui/Canvas.png "ClickGUI")
 
 ![In-game](ingame/ingame.png "In-game")

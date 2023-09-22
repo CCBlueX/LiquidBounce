@@ -150,7 +150,7 @@
         }
 
         .butto:hover, .button:hover {
-            background-position: left bottom
+            background-position: left bottom;
         }
 
         .accounts {
@@ -184,7 +184,7 @@
             return str;
 
         };
-        
+
         function setRandomUsername() {
             document.getElementById('username').value = random();
         }
@@ -209,7 +209,7 @@
             // Add all accounts
             console.log(accounts);
             var i = 0;
-            while(accounts.hasNext()) {
+            while (accounts.hasNext()) {
                 let account = accounts.next();
                 console.log(JSON.stringify(account));
                 console.log(account.getType());
@@ -223,7 +223,7 @@
                 type.innerText = account.getType();
                 name.innerText = account.getName();
                 button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
-                
+
                 row.appendChild(type);
                 row.appendChild(name);
                 row.appendChild(button);
@@ -256,7 +256,7 @@
         function newCrackedAccount() {
             let username = document.getElementById('username').value;
 
-            if(username === "") {
+            if (username === "") {
                 document.getElementById('response').innerText = "Please enter a username";
                 return;
             }
@@ -268,7 +268,7 @@
         function newAlteningAccount() {
             let token = document.getElementById('token').value;
 
-            if(token === "") {
+            if (token === "") {
                 document.getElementById('response').innerText = "Please enter a token";
                 return;
             }
@@ -285,7 +285,7 @@
         function generateAlteningAccount() {
             let apiToken = document.getElementById('apitoken').value;
 
-            if(apiToken === "") {
+            if (apiToken === "") {
                 document.getElementById('response').innerText = "Please enter an API token";
                 return;
             }
@@ -295,7 +295,7 @@
             client.getAccountManager().generateNewAlteningAccount(apiToken);
             updateAccountList();
         }
-        
+
         function loginAccount(id) {
             client.getAccountManager().loginAccount(parseInt(id));
             updateAccountData();
@@ -339,7 +339,7 @@
                         Add
                     </button>
 
-                    
+
                 </div>
             </div>
 

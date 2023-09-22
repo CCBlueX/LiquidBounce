@@ -1,7 +1,20 @@
 /*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2023 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 package net.ccbluex.liquidbounce.features.chat.client.packet
 
@@ -11,7 +24,7 @@ import java.lang.reflect.Type
 /**
  * Packet Serializer
  *
- * Allows to serialize packets from class to json
+ * Allows serializing packets from class to json
  */
 class PacketSerializer : JsonSerializer<Packet> {
 
@@ -41,7 +54,8 @@ class PacketSerializer : JsonSerializer<Packet> {
      */
     override fun serialize(src: Packet, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val packetName = packetRegistry.getOrDefault(src.javaClass, "UNKNOWN")
-        val serializedPacket = SerializedPacket(packetName, if (src.javaClass.constructors.none { it.parameterCount != 0 }) null else src)
+        val serializedPacket =
+            SerializedPacket(packetName, if (src.javaClass.constructors.none { it.parameterCount != 0 }) null else src)
 
         return Gson().toJsonTree(serializedPacket)
     }
@@ -51,7 +65,7 @@ class PacketSerializer : JsonSerializer<Packet> {
 /**
  * Packet Deserializer
  *
- * Allows to deserialize packets from json to class
+ * Allows deserializing packets from json to class
  */
 class PacketDeserializer : JsonDeserializer<Packet> {
 
@@ -70,7 +84,7 @@ class PacketDeserializer : JsonDeserializer<Packet> {
      *
      * In the implementation of this call-back method, you should consider invoking
      * [JsonDeserializationContext.deserialize] method to create objects
-     * for any non-trivial field of the returned object. However, you should never invoke it on the
+     * for any non-trivial field of the returned object. However, you should never invoke it on
      * the same type passing `json` since that will cause an infinite loop (Gson will call your
      * call-back method again).
      *

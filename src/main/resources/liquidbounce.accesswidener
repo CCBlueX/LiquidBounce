@@ -113,3 +113,5 @@ accessible field net/minecraft/network/ClientConnection channel Lio/netty/channe
 accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier (ZZ)F
 
 accessible field net/minecraft/client/option/KeyBinding timesPressed I
+
+accessible field net/minecraft/client/font/TextHandler widthRetriever Lnet/minecraft/client/font/TextHandler$WidthRetriever;

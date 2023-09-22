@@ -84,7 +84,7 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
         elapsedTicks = 0
         totalTicks = ticksToWait
 
-        suspendCoroutine<Unit> { continuation = it }
+        suspendCoroutine { continuation = it }
     }
 
     internal suspend fun sync() = wait(0)

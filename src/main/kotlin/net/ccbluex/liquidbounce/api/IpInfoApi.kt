@@ -41,7 +41,9 @@ object IpInfoApi {
      *
      * todo: add support for proxy
      */
-    private fun requestIpInfo(): IpInfo? = endpointRequest(API_URL)
+    private fun requestIpInfo(): IpInfo? = runCatching {
+        endpointRequest<IpInfo>(API_URL)
+    }.getOrNull()
 
     /**
      * Request endpoint and parse JSON to data class

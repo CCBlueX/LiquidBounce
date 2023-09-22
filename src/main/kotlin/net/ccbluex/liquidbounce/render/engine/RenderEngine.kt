@@ -250,6 +250,7 @@ object RenderEngine : Listenable {
                 ).toMat4(),
                 true
             )
+
             CAMERA_VIEW_LAYER_WITHOUT_BOBBING -> LayerSettings(
                 (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
                     tickDelta,
@@ -257,6 +258,7 @@ object RenderEngine : Listenable {
                 ).toMat4(),
                 true
             )
+
             SCREEN_SPACE_LAYER -> {
                 val aspectRatio = mc.window.width.toFloat() / mc.window.height.toFloat()
 
@@ -266,6 +268,7 @@ object RenderEngine : Listenable {
                     depthTest = true
                 )
             }
+
             HUD_LAYER -> LayerSettings(
                 Mat4.orthograpicProjectionMatrix(
                     0.0f,
@@ -277,6 +280,7 @@ object RenderEngine : Listenable {
                 ),
                 true
             )
+
             MINECRAFT_INTERNAL_RENDER_TASK -> LayerSettings(
                 Mat4.orthograpicProjectionMatrix(
                     0.0f,
@@ -288,6 +292,7 @@ object RenderEngine : Listenable {
                 ),
                 false
             )
+
             else -> throw UnsupportedOperationException("Unknown layer")
         }
     }

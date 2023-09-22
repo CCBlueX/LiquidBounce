@@ -4,7 +4,7 @@
     export let instance;
 
     const hiddenSettings = ["Enabled", "Hidden", "Bind"];
-    
+
     function toJavaScriptArray(a) {
         const v = [];
         for (let i = 0; i < a.length; i++) {
@@ -25,7 +25,7 @@
 
     <div class="settings">
         {#each settings as s}
-            <GenericSetting instance={s} />
+            <GenericSetting instance={s}/>
         {/each}
     </div>
 </div>

@@ -24,9 +24,8 @@ import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.font.TextHandler;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.text.CharacterVisitor;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.StringVisitable;
+import net.minecraft.text.*;
+import org.apache.commons.lang3.mutable.MutableFloat;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -52,12 +51,17 @@ public abstract class MixinTextRenderer implements IMixinGameRenderer {
 
     @Redirect(method = "getWidth(Lnet/minecraft/text/StringVisitable;)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Lnet/minecraft/text/StringVisitable;)F"))
     private float injectNameProtectWidthB(TextHandler instance, StringVisitable text) {
-        StringBuilder stringBuilder = new StringBuilder();
-        text.visit((asString -> {
-            stringBuilder.append(asString);
+        MutableFloat mutableFloat = new MutableFloat();
+        text.visit((style, asString) -> {
+            TextVisitFactory.visitFormatted(ModuleNameProtect.INSTANCE.replace(asString), style, (unused, stylex, codePoint) -> {
+                mutableFloat.add(instance.widthRetriever.getWidth(codePoint, stylex));
+                return true;
+            });
+
             return Optional.empty();
-        }));
-        return instance.getWidth(ModuleNameProtect.INSTANCE.replace(stringBuilder.toString()));
+        }, Style.EMPTY);
+
+        return mutableFloat.floatValue();
     }
 
     @Redirect(method = "drawLayer(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/client/font/TextRenderer$TextLayerType;II)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z"))

@@ -39,7 +39,7 @@ object Cosmetics {
     /**
      * Cached capes
      *
-     * This is OK because the cape texture is only loaded for players that own a cape. This is very rare for most people and therefore the cache is not that big.
+     * This is OK because the cape texture is only loaded for players that own a cape. This is very rare for most people, and therefore the cache is not that big.
      * We also don't need to worry about memory leaks, because the cache is cleared when the player disconnects from the world.
      */
     private var cachedCapes = mutableMapOf<String, Identifier>()
@@ -64,7 +64,7 @@ object Cosmetics {
             runCatching {
                 val uuid = player.id.toString()
 
-                // Check if cape is cached
+                // Check if the cape is cached
                 if (cachedCapes.containsKey(uuid)) {
                     response.response(cachedCapes[uuid]!!)
                     return@execute
@@ -75,7 +75,8 @@ object Cosmetics {
                     ?: return@execute
 
                 // Register cape texture
-                val capeTexture = mc.textureManager.registerDynamicTexture("liquidbounce-$uuid", nativeImageBackedTexture)
+                val capeTexture =
+                    mc.textureManager.registerDynamicTexture("liquidbounce-$uuid", nativeImageBackedTexture)
 
                 // Cache cape texture
                 cachedCapes[uuid] = capeTexture
@@ -96,7 +97,10 @@ object Cosmetics {
 
         // Request cape from URL which should be our API. (https://api.liquidbounce.net/api/v1/cape/uuid/%s)
         val connection = capeURL.openConnection()
-        connection.addRequestProperty("User-Agent", "${LiquidBounce.CLIENT_NAME}_${LiquidBounce.clientVersion}_${mc.gameVersion}")
+        connection.addRequestProperty(
+            "User-Agent",
+            "${LiquidBounce.CLIENT_NAME}_${LiquidBounce.clientVersion}_${mc.gameVersion}"
+        )
         connection.readTimeout = 5000
         connection.connectTimeout = 2500
         connection.connect()

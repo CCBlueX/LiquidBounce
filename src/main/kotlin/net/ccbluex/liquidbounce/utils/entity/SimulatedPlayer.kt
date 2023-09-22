@@ -39,8 +39,8 @@ import kotlin.math.sqrt
 class SimulatedPlayer(
     private val player: PlayerEntity,
     var input: SimulatedPlayerInput,
-    var pos: Vec3d,
-    private var velocity: Vec3d,
+    override var pos: Vec3d,
+    var velocity: Vec3d,
     private val yaw: Float,
     private val pitch: Float,
     private var sprinting: Boolean,
@@ -51,7 +51,7 @@ class SimulatedPlayer(
     private var onGround: Boolean,
     private var horizontalCollision: Boolean,
     private var verticalCollision: Boolean
-) {
+) : PlayerSimulation {
     companion object {
         fun fromPlayer(player: PlayerEntity, input: SimulatedPlayerInput): SimulatedPlayer {
             return SimulatedPlayer(
@@ -76,7 +76,7 @@ class SimulatedPlayer(
 
     private var simulatedTicks: Int = 0
 
-    fun tick() {
+    override fun tick() {
         // LivingEntity.tickMovement()
         if (this.jumpingCooldown > 0) {
             this.jumpingCooldown--

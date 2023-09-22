@@ -51,10 +51,9 @@ fun straightLinePointDistanceSquared(s: Vec3d, r: Vec3d, p: Vec3d): Double {
     // f: x(v) -> p(v) + lambda(s) * u(v)
 
     // H: p(v) * n(v) = d(s)
-    val planeN = r
     val planeD = r.dotProduct(p)
 
-    val lambda = (planeD - planeN.dotProduct(s)) / planeN.dotProduct(r)
+    val lambda = (planeD - r.dotProduct(s)) / r.dotProduct(r)
 
     return (s + r * lambda).squaredDistanceTo(p)
 }
@@ -64,17 +63,15 @@ fun straightLinePointDistanceSquared(s: Vec3d, r: Vec3d, p: Vec3d): Double {
  */
 fun linePointDistanceSquared(l1: Vec3d, l2: Vec3d, p: Vec3d): Double {
     // f: x(v) -> p(v) + lambda(s) * u(v)
-    val lP = l1
     val lU = l2 - l1
 
     // H: p(v) * n(v) = d(s)
-    val planeN = lU
     val planeD = lU.dotProduct(p)
 
-    val lambda = (planeD - planeN.dotProduct(lP)) / planeN.dotProduct(lU)
+    val lambda = (planeD - lU.dotProduct(l1)) / lU.dotProduct(lU)
 
     // In this case, the line is limited
-    val clampedLambda = lambda.coerceIn(0.0, getLambda(lP, lU, l2))
+    val clampedLambda = lambda.coerceIn(0.0, getLambda(l1, lU, l2))
 
-    return (lP + lU * clampedLambda).squaredDistanceTo(p)
+    return (l1 + lU * clampedLambda).squaredDistanceTo(p)
 }

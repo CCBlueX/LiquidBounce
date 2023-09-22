@@ -101,7 +101,7 @@ class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 class InputHandleEvent : Event()
 
 @Nameable("movementInputEvent")
-class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean) : Event()
+class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean, var jumping: Boolean) : Event()
 
 @Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
@@ -154,10 +154,10 @@ class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 // Entity events bound to client-user entity
 
 @Nameable("HealthUpdate")
-class HealthUpdateEvent(Health: Float, Food: Int, Saturation: Float): Event()
+class HealthUpdateEvent(health: Float, food: Int, saturation: Float) : Event()
 
 @Nameable("Death")
-class DeathEvent: Event()
+class DeathEvent : Event()
 
 @Nameable("playerTick")
 class PlayerTickEvent : Event()

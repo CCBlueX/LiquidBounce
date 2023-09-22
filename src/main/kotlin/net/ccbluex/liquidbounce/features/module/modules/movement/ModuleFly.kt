@@ -169,8 +169,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                     if (player.pitch <= 80) {
                         RotationManager.aimAt(
-                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
-                            configurable = rotations
+                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)), configurable = rotations
                         )
                     }
 

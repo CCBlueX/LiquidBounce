@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.logger
 
-@Suppress("unused")
 class JsModule(moduleObject: Map<String, Any>) : Module(
     name = moduleObject["name"] as String,
     category = Category.fromReadableName(moduleObject["category"] as String)!!

@@ -41,24 +41,30 @@ object ClientApi {
      */
     private const val HARD_CODED_BRANCH = "nextgen"
 
-    fun requestNewestBuildEndpoint(branch: String = HARD_CODED_BRANCH, release: Boolean = false) = endpointRequest<Build>("version/newest/$branch${if (release) "/release" else "" }")
+    fun requestNewestBuildEndpoint(branch: String = HARD_CODED_BRANCH, release: Boolean = false) =
+        endpointRequest<Build>("version/newest/$branch${if (release) "/release" else ""}")
 
-    fun requestMessageOfTheDayEndpoint(branch: String = HARD_CODED_BRANCH) = endpointRequest<MessageOfTheDay>("client/$branch/motd")
+    fun requestMessageOfTheDayEndpoint(branch: String = HARD_CODED_BRANCH) =
+        endpointRequest<MessageOfTheDay>("client/$branch/motd")
 
 
-    fun requestSettingsList(branch: String = HARD_CODED_BRANCH) = endpointRequest<Array<AutoSettings>>("client/$branch/settings")
+    fun requestSettingsList(branch: String = HARD_CODED_BRANCH) =
+        endpointRequest<Array<AutoSettings>>("client/$branch/settings")
 
-    fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) = plainEndpointRequest("client/$branch/settings/$settingId")
+    fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) =
+        plainEndpointRequest("client/$branch/settings/$settingId")
 
     /**
      * todo: this was not implemented yet, might be added in future versions
      */
-    fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) = endpointRequest<EmptyResponse>("client/$branch/settings/report/$settingId")
+    fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) =
+        endpointRequest<EmptyResponse>("client/$branch/settings/report/$settingId")
 
     /**
      * todo: this was not implemented yet, might be added in future versions
      */
-    fun uploadSettings(settings: String, branch: String = HARD_CODED_BRANCH) = endpointRequest<EmptyResponse>("client/$branch/settings/upload")
+    fun uploadSettings(settings: String, branch: String = HARD_CODED_BRANCH) =
+        endpointRequest<EmptyResponse>("client/$branch/settings/upload")
 
     /**
      * Request endpoint and parse JSON to data class
@@ -69,7 +75,10 @@ object ClientApi {
      * User agent
      * LiquidBounce/<version> (<commit>, <branch>, <build-type>, <platform>)
      */
-    private val ENDPOINT_AGENT = "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, ${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
+    private val ENDPOINT_AGENT =
+        "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, ${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${
+            System.getProperty("os.name")
+        })"
 
     /**
      * Session token
@@ -93,19 +102,21 @@ object ClientApi {
  * Data classes for the API
  */
 
-data class Build(@SerializedName("build_id")
-                 val buildId: Int,
-                 @SerializedName("commit_id")
-                 val commitId: String,
-                 val branch: String,
-                 @SerializedName("lb_version")
-                 val lbVersion: String,
-                 @SerializedName("mc_version")
-                 val mcVersion: String,
-                 val release: Boolean,
-                 val date: String,
-                 val message: String,
-                 val url: String)
+data class Build(
+    @SerializedName("build_id")
+    val buildId: Int,
+    @SerializedName("commit_id")
+    val commitId: String,
+    val branch: String,
+    @SerializedName("lb_version")
+    val lbVersion: String,
+    @SerializedName("mc_version")
+    val mcVersion: String,
+    val release: Boolean,
+    val date: String,
+    val message: String,
+    val url: String
+)
 
 /**
  * Message of the day
@@ -117,7 +128,7 @@ data class MessageOfTheDay(val message: String)
 /**
  * Settings
  *
- * Settings only stores the setting id, name, type, description, date, contributors and status
+ * Settings only store the setting id, name, type, description, date, contributors and status
  * The setting id will later be used to actually request the setting and load it
  */
 data class AutoSettings(
@@ -144,6 +155,7 @@ data class AutoSettings(
 enum class AutoSettingsType(val displayName: String) {
     @SerializedName("Rage")
     RAGE("Rage"),
+
     @SerializedName("Legit")
     LEGIT("Legit")
 }
@@ -154,10 +166,13 @@ enum class AutoSettingsType(val displayName: String) {
 enum class AutoSettingsStatusType(val displayName: String) {
     @SerializedName("NotBypassing")
     NOT_BYPASSING("Not Bypassing"),
+
     @SerializedName("Bypassing")
     BYPASSING("Bypassing"),
+
     @SerializedName("Undetectable")
     UNDETECTABLE("Undetectable"),
+
     @SerializedName("Unknown")
     UNKNOWN("Unknown")
 }

@@ -45,11 +45,19 @@ import java.util.*
  * @depends FabricAPI (for page buttons)
  */
 object Tabs {
+    private var setup = false
 
-    init {
-        setupSpecial()
-        setupExploits()
-        setupHeads()
+    /**
+     * Since 1.20 we need to set this up at a more precise timing than just when the client starts.
+     */
+    fun setup() {
+        if (!setup) {
+//            setupSpecial()
+//            setupExploits()
+//            setupHeads()
+
+            setup = true
+        }
     }
 
     /**

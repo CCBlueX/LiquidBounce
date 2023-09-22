@@ -4,7 +4,7 @@
 
     // Initial state of search bar visibility.
     let visible = root.instance.getSearchAlwaysOnTop();
-
+    let autofocus = root.instance.getSearchAutoFocus();
     let value = "";
     let filteredModules = [];
     let selectedModule = null;
@@ -18,6 +18,7 @@
 
         filteredModules = modules.filter(module => module.name.toLowerCase().includes(value.toLowerCase()));
     };
+
     function isElementVisible(container, element) {
         const containerTop = container.scrollTop;
         const containerBottom = containerTop + container.clientHeight;
@@ -26,11 +27,13 @@
 
         return elementTop >= containerTop && elementBottom <= containerBottom;
     }
+
     function scrollToElement(container, element) {
         if (!isElementVisible(container, element)) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            element.scrollIntoView({behavior: 'smooth', block: 'nearest'});
         }
     }
+
     const handleToggleClick = (module) => {
         module.instance.setEnabled(!module.enabled);
     };
@@ -65,6 +68,17 @@
         }
     });
 
+    
+    function onInput() {
+        filterModules();
+
+        if (0 < filteredModules.length) {
+            selectedModule = filteredModules[0];
+        } else {
+            selectedModule = null;
+        }
+    }
+
     window.addEventListener("keydown", event => {
         const key = event.which;
 
@@ -96,13 +110,7 @@
                 handleToggleClick(selectedModule);
             }
         } else {
-            filterModules();
 
-            if (0 < filteredModules.length) {
-                selectedModule = filteredModules[0];
-            } else {
-                selectedModule = null;
-            }
         }
 
         // Scroll to selected module
@@ -117,12 +125,13 @@
 {#if visible}
     <div class="search-bar">
         <div class="search-bar-input-container">
-            <input bind:value type="text" placeholder="Search" autofocus>
+            <input bind:value type="text" placeholder="Search" on:input={onInput} autofocus={autofocus}>
         </div>
         {#if 0 < filteredModules.length}
             <div class="search-bar-list">
                 {#each filteredModules as module}
-                    <div class="search-bar-list-item" on:mousedown={(e) => (e.button === 0 ? handleToggleClick : handleHiglight)(module)}
+                    <div class="search-bar-list-item"
+                         on:mousedown={(e) => (e.button === 0 ? handleToggleClick : handleHiglight)(module)}
                          class:selected={selectedModule === module}>
                         <span class:active={module.enabled}>
                             {module.name}

@@ -89,7 +89,7 @@ open class Module(
         }.onFailure {
             // Log error
             logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
-            // In case of an error module should stay disabled
+            // In case of an error, module should stay disabled
             throw it
         }
 
@@ -113,11 +113,11 @@ open class Module(
      * Quick access
      */
     protected val mc: MinecraftClient
-        get() = net.ccbluex.liquidbounce.utils.client.mc
+        inline get() = net.ccbluex.liquidbounce.utils.client.mc
     protected val player: ClientPlayerEntity
-        get() = mc.player!!
+        inline get() = mc.player!!
     protected val world: ClientWorld
-        get() = mc.world!!
+        inline get() = mc.world!!
     protected val network: ClientPlayNetworkHandler
         get() = mc.networkHandler!!
     protected val interaction: ClientPlayerInteractionManager

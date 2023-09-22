@@ -50,34 +50,15 @@ public abstract class MixinMinecraftClient {
 
     @Shadow
     @Nullable
-    public abstract ClientPlayNetworkHandler getNetworkHandler();
-
-    @Shadow
-    @Nullable
-    private IntegratedServer server;
-
-    @Shadow
-    public abstract boolean isConnectedToRealms();
-
-    @Shadow
-    private int itemUseCooldown;
-
-    @Shadow
-    @Nullable
     public ClientPlayerEntity player;
-
     @Shadow
     @Nullable
     public HitResult crosshairTarget;
-
     @Shadow
-    public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
-
+    @Nullable
+    private IntegratedServer server;
     @Shadow
-    public abstract Window getWindow();
-
-    @Shadow
-    public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
+    private int itemUseCooldown;
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -89,6 +70,22 @@ public abstract class MixinMinecraftClient {
         callback.setReturnValue(false);
         callback.cancel();
     }
+
+    @Shadow
+    @Nullable
+    public abstract ClientPlayNetworkHandler getNetworkHandler();
+
+    @Shadow
+    public abstract boolean isConnectedToRealms();
+
+    @Shadow
+    public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
+
+    @Shadow
+    public abstract Window getWindow();
+
+    @Shadow
+    public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
 
     /**
      * Entry point of our hacked client

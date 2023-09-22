@@ -110,7 +110,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     * Hook move function at HEAD and call out move event, which is able to stop the cancel the execution.
      */
     @Inject(method = "move", at = @At("HEAD"))
     private void hookMove(MovementType type, Vec3d movement, CallbackInfo callbackInfo) {
@@ -146,7 +146,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook sprint affect from NoSlow module
+     * Hook sprint effect from NoSlow module
      */
     @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
     private boolean hookSprintAffectStart(ClientPlayerEntity playerEntity) {
