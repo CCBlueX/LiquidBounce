@@ -18,6 +18,51 @@
             color: white;
         }
 
+
+        .slider {
+            position: absolute;
+            top: 2px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #707070;
+            transition: ease 0.4s;
+            height: 8px;
+            border-radius: 4px;
+
+            &::before {
+                position: absolute;
+                content: "";
+                height: 12px;
+                width: 12px;
+                top: -2px;
+                left: 0;
+                background-color: white;
+                transition: ease 0.4s;
+                border-radius: 50%;
+            }
+        }
+
+        .switch2 {
+            position: relative;
+            display: inline-block;
+            width: 22px;
+            height: 12px;
+        }
+
+        .switch2 input {
+            display: none;
+        }
+
+        .switch2 input:checked + .slider {
+            background-color: #4860a7;
+        }
+
+        .switch2 input:checked + .slider:before {
+            transform: translateX(10px);
+            background-color: #4677ff;
+        }
+
         body {
             background-image: url("img/background.png");
             background-size: cover;
@@ -47,18 +92,116 @@
             margin: 60px;
         }
 
+        #title1 {
+            text-align: center;
+            font-size: 56px;
+        }
+
+        .loginScreen {
+            position: absolute;
+            top: 15%;
+            left: 35%;
+            margin-left: auto;
+            margin-right: auto;
+            width: 30%;
+            height: 70%;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .auth {
+            padding-top: 5%;
+            padding-left: 15%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            position: absolute;
+            top: 15%;
+            left: 5%;
+            width: 90%;
+            height: 20%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .theAlteningGrid {
+            display: grid;
+            grid-auto-raw: 2fr;
+            position: absolute;
+            top: 40%;
+            left: 17.5%;
+            width: 80%;
+            height: 20%;
+        }
+
+        .theAlteningButton {
+            z-index: 0;
+            opacity: 0;
+        }
+
+        .microsoftButton {
+            display: grid;
+            grid-auto-raw: 2fr;
+            position: absolute;
+            top: 40%;
+            left: 17.5%;
+            width: 80%;
+            height: 20%;
+            z-index: 0;
+            opacity: 0;
+        }
+
+        .theAlteningText {
+            position: relative;
+            height: 80%;
+            width: 80%;
+            text-align: center;
+            font-size: 30px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .theAlteningButton1 {
+            position: relative;
+            height: 80%;
+            width: 80%;
+            text-align: center;
+            font-size: 30px;
+            background-color: rgba(90, 90, 255, 0.5);
+        }
+
+        .minecraftButton {
+            display: grid;
+            grid-auto-raw: 2fr;
+            position: absolute;
+            top: 40%;
+            left: 17.5%;
+            width: 80%;
+            height: 20%;
+            z-index: 20;
+            opacity: 1;
+        }
+
+        .addScreen {
+            z-index: 0;
+            opacity: 0;
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            width: 100%;
+            height: 100%;
+        }
+
         .button {
             background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
             background-position: right bottom;
             will-change: background-position;
             transition: background-position .2s ease-out;
-            margin-top: 10px;
-            width: 23%;
-            padding: 25px 35px;
+            width: 25%;
+            height: 15%;
             border-radius: 6px;
             align-items: center;
+            padding: 25px 35px;
             column-gap: 30px;
+            position: absolute;
+            left: 75%;
         }
 
         .scale {
@@ -112,7 +255,7 @@
             border-radius: 6px;
             margin-right: 10px;
             padding: 5px;
-            background-color: rgba(0, 0, 0, 0.68);
+            background-color: rgba(0, 0, 0, 0);
             min-width: 80px;
             height: 30px;
             color: white;
@@ -135,9 +278,20 @@
             margin-bottom: 45px;
         }
 
+        .footinitMulti {
+            left: 20px;
+            display: block;
+            position: absolute;
+            bottom: 0;
+            width: 80%;
+            text-align: left;
+            height: 100px;
+            margin-bottom: 45px;
+        }
+
         .butto {
             height: 75px;
-            width: 150px;
+            width: 250px;
             font-size: 26px;
             background-color: rgba(0, 0, 0, 0.68);
             border-radius: 6px;
@@ -149,20 +303,82 @@
             transition: background-position .2s ease-out;
         }
 
+        .closeButto {
+            height: 75px;
+            width: 75px;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+
         .butto:hover, .button:hover {
             background-position: left bottom;
         }
 
         .accounts {
             position: absolute;
-            top: 0;
+            top: 25%;
             right: 0;
-            width: 75%;
-            height: 85%;
+            width: 100%;
+            height: 55%;
             background-color: rgba(0, 0, 0, 0.68);
             border-radius: 6px;
             padding: 20px;
             overflow-y: scroll;
+        }
+
+        .removeButtons {
+            filter: blur(0px);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        .closeButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .authButton {
+            z-index: 30;
+            height: 70%;
+            width: 10%;
+            background-color: rgba(0, 0, 0, 255);
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .addButton {
+            position: absolute;
+            z-index: 30;
+            width: 70%;
+            height: 10%;
+            top: 70%;
+            left: 15%;
+            font-size: 30px;
+            background-color: rgba(90, 90, 255, 255);
+        }
+
+        .generateButto {
+            position: absolute;
+            width: 10%;
+            height: 10%;
+            left: 85%;
+            top: 50%;
+            background-color: rgba(90, 90, 255, 255);
+        }
+
+        .clipboardButton {
+            position: absolute;
+            width: 70%;
+            height: 10%;
+            left: 15%;
+            top: 85%;
+            font-size: 30px;
+            background-color: rgba(0, 0, 0, 255);
         }
 
         #face {
@@ -171,6 +387,7 @@
         }
     </style>
     <script>
+        let authService = 0;
         const random = (length = 8) => {
             // Declare all characters
             let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -184,6 +401,76 @@
             return str;
 
         };
+
+        function toggleOverlay() {
+            let addScreen = document.querySelector(".addScreen");
+            let removeButtons = document.querySelector(".removeButtons");
+            if (addScreen.style.zIndex === '10') {
+                addScreen.style.zIndex = 0;
+                addScreen.style.opacity = 0;
+                removeButtons.style.zIndex = 10;
+                removeButtons.style.filter = "blur(0px)";
+            } else {
+                addScreen.style.zIndex = 10;
+                addScreen.style.opacity = 1;
+                removeButtons.style.zIndex = 0;
+                removeButtons.style.filter = "blur(20px)";
+            }
+        }
+
+        function addDynamically() {
+            switch (authService) {
+                case 0: {
+                    newCrackedAccount();
+                    break;
+                }
+                case 1: {
+                    break;
+                }
+                case 2: {
+                    newAlteningAccount()
+                    break;
+                }
+            }
+        }
+
+        function switchAuth(num) {
+            let theAlteningScreen = document.querySelector(".theAlteningButton");
+            let microsoftButton = document.querySelector(".microsoftButton");
+            let minecraftButton = document.querySelector(".minecraftButton");
+            switch (num) {
+                case 0: {
+                    authService = 0;
+                    minecraftButton.style.opacity = 1;
+                    minecraftButton.style.zIndex = 20;
+                    microsoftButton.style.opacity = 0;
+                    microsoftButton.style.zIndex = 0;
+                    theAlteningScreen.style.opacity = 0;
+                    theAlteningScreen.style.zIndex = 0;
+                    break;
+                }
+                case 1: {
+                    authService = 1;
+                    minecraftButton.style.opacity = 0;
+                    minecraftButton.style.zIndex = 0;
+                    microsoftButton.style.opacity = 1;
+                    microsoftButton.style.zIndex = 20;
+                    theAlteningScreen.style.opacity = 0;
+                    theAlteningScreen.style.zIndex = 0;
+                    break;
+                }
+                case 2: {
+                    authService = 2;
+                    minecraftButton.style.opacity = 0;
+                    minecraftButton.style.zIndex = 0;
+                    microsoftButton.style.opacity = 0;
+                    microsoftButton.style.zIndex = 0;
+                    theAlteningScreen.style.opacity = 1;
+                    theAlteningScreen.style.zIndex = 20;
+                    break;
+                }
+            }
+        }
 
         function setRandomUsername() {
             document.getElementById('username').value = random();
@@ -222,7 +509,25 @@
 
                 type.innerText = account.getType();
                 name.innerText = account.getName();
-                button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
+                button.innerHTML = "" +
+                    "<button onclick='loginAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/check.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='deleteAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/delete.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='copyAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/copy.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='favoriteAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/star.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='editAccount(\"" + i + "\")'>" +
+                    "<img src=\"img/account/edit.svg\" alt=\"\">" +
+                    "</button>" +
+                    "<button onclick='idk(\"" + i + "\")'>" +
+                    "<img src=\"img/account/play.svg\" alt=\"\">" +
+                    "</button>";
 
                 row.appendChild(type);
                 row.appendChild(name);
@@ -233,6 +538,7 @@
         }
 
         function updateAccountData() {
+            console.log(client.uuid);
             const username = client.getSessionService().getUsername();
             const faceUrl = client.getSessionService().getFaceUrl();
             const accountType = client.getSessionService().getAccountType();
@@ -311,74 +617,167 @@
 </head>
 <body>
 <div class="scale">
-    <div class="wrapper">
-        <h1 id="title">Alt Manager</h1>
-        <b>This is a prototype design for testing purposes <br>and is NOT the final design.</b>
-
-        <div id="buttongrid">
-            <div class="button">
-                <img id="face" alt="head" class="head"/>
-                <br>
-
-                <label><b>Username:</b></label>
-                <div id="sessionUsername" class="username"></div>
-                <label><b>Account Type:</b></label>
-                <div id="accountType" class="accountType"></div>
-                <label><b>Location:</b></label>
-                <div id="location" class="location"></div>
-            </div>
-
-            <div class="button">
-                <h2>Cracked Login</h2>
-                <div>
-                    <label for="username"></label>
-                    <input type="text" id="username" name="username" placeholder="Username">
-                    <button onclick="setRandomUsername()">Random</button>
-                    <br>
-                    <button onclick="newCrackedAccount()">
-                        Add
-                    </button>
-
-
+    <div class="removeButtons">
+        <div class="wrapper">
+            <div id="buttongrid">
+                <picture>
+                    <source media="(orientation: portrait)"
+                            srcset="img/lb-logo.svg">
+                    <img alt="" src="img/lb-logo.svg">
+                </picture>
+                <div class="button">
+                    <img alt="head" class="head" id="face"/>
+                    <div class="username" id="sessionUsername"></div>
+                    <div class="accountType" id="accountType"></div>
+                    <div class="location" id="location"></div>
                 </div>
+
+                <div class="accounts" id="accounts"></div>
+                <div id="response"></div>
             </div>
 
-            <div class="button">
-                <h2>Microsoft Login</h2>
-
-                This will open your browser to sign in to your Microsoft account.<br>
-                <br>
-
-                <button onclick="newMicrosoftAccount(successMicrosoft, errorMicrosoft)">
-                    Add
+        </div>
+        <footer>
+            <div class="footinit">
+                <button class="butto" onclick="pages.open('title', screen)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/back.svg">
+                        <img alt="" src="img/back.svg">
+                    </picture>
+                    Back
                 </button>
             </div>
-            <div class="button">
-                <h2>Altening Login</h2>
+            <div class="footinitMulti">
+                <button class="butto" onclick="toggleOverlay()">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/add.svg">
+                        <img alt="" src="img/add.svg">
+                    </picture>
+                    Add
+                </button>
+                <button class="butto" onclick="pages.open('title', screen)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/clipboard.svg">
+                        <img alt="" src="img/clipboard.svg">
+                    </picture>
+                    Clipboard
+                </button>
+                <button class="butto" onclick="pages.open('title', screen)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/import.svg">
+                        <img alt="" src="img/import.svg">
+                    </picture>
+                    Import
+                </button>
+                <button class="butto" onclick="pages.open('title', screen)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/random.svg">
+                        <img alt="" src="img/random.svg">
+                    </picture>
+                    Random
+                </button>
+                <button class="butto" onclick="pages.open('title', screen)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/check.svg">
+                        <img alt="" src="img/check.svg">
+                    </picture>
+                    Check
+                </button>
+            </div>
+        </footer>
+    </div>
 
-                <div>
-                    <label for="token"></label><input type="text" id="token" name="token" placeholder="Account Token">
-                    <button onclick="newAlteningAccount()">
-                        Add
-                    </button>
-                    <br>
-                    <label for="apitoken"></label>
-                    <input type="password" id="apitoken" name="apitoken" placeholder="API Token">
-                    <button onclick="generateAlteningAccount()">
-                        Add
-                    </button>
-                </div>
+    <div class="addScreen">
+        <div class="loginScreen" id="loginScreen">
+            <h1 id="title1">Login</h1>
+            <div class="auth">
+                <button class="authButton" onclick="switchAuth(0)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/minecraft.svg">
+                        <img alt="" src="img/minecraft.svg">
+                    </picture>
+                    Minecraft
+                </button>
+                <button class="authButton" onclick="switchAuth(1)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/microsoft.svg">
+                        <img alt="" src="img/microsoft.svg">
+                    </picture>
+                    Microsoft
+                </button>
+                <button class="authButton" onclick="switchAuth(2)">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/thealtening.svg">
+                        <img alt="" src="img/thealtening.svg">
+                    </picture>
+                    TheAltening
+                </button>
             </div>
 
-            <div class="accounts" id="accounts"></div>
-            <div id="response"></div>
+            <div class="minecraftButton">
+                <input class="theAlteningText" id="username" placeholder="Name" type="text">
+                <button class="theAlteningButton1" onclick="setRandomUsername()">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/generate.svg">
+                        <img alt="" src="img/generate.svg">
+                    </picture>
+                    Random
+                </button>
+            </div>
+
+            <div class="microsoftButton">
+                <button class="theAlteningButton1" onclick="newMicrosoftAccount()">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/login.svg">
+                        <img alt="" src="img/login.svg">
+                    </picture>
+                    Login using browser
+                </button>
+            </div>
+
+            <div class="theAlteningButton">
+                <div class="theAlteningGrid">
+                    <input class="theAlteningText" id="token" placeholder="Account Token" type="text">
+                    <input class="theAlteningText" placeholder="API Token" type="text">
+                </div>
+
+                <button class="generateButto" onclick="generateAlteningAccount()">
+                    <picture>
+                        <source media="(orientation: portrait)"
+                                srcset="img/generate.svg">
+                        <img alt="" src="img/generate.svg">
+                    </picture>
+                </button>
+            </div>
+
+            <button class="addButton" onclick="addDynamically()">
+                Add
+            </button>
+            <button class="clipboardButton" onclick="toggleOverlay()">
+                Clipboard
+            </button>
+        </div>
+        <div class="closeButton" id="closeButton">
+            <button class="closeButto" onclick="toggleOverlay()">
+                <picture>
+                    <source media="(orientation: portrait)"
+                            srcset="img/close.svg">
+                    <img alt="" src="img/close.svg">
+                </picture>
+            </button>
         </div>
     </div>
-    <footer>
-        <div class="footinit">
-            <button class="butto" onclick="pages.open('title', screen)">Back</button>
-        </div>
-    </footer>
 </div>
 </body>
 </html>
