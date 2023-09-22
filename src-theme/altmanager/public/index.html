@@ -9,12 +9,35 @@
         }
 
         .SearchBar {
+            font-size: 22px;
+            padding-left: 5%;
             position: absolute;
             width: 50%;
             height: 70%;
+            border: thick none rgb(70, 119, 255);
+            border-bottom-style: solid;
             left: 2%;
             top: 5%;
         }
+
+        .SearchBarImage {
+            position: absolute;
+            width: 1%;
+            height: 70%;
+            left: 3%;
+            z-index: 30;
+            top: 20.5%;
+        }
+
+        .SearchBarConfigureImage {
+            position: absolute;
+            width: 1%;
+            height: 70%;
+            right: 50%;
+            z-index: 30;
+            top: 19%;
+        }
+
         .checkbox1 {
             width: 5%;
             height: 5%;
@@ -32,6 +55,49 @@
             bottom: 32.5%
         }
 
+        .checkbox5 {
+            width: 20%;
+            height: 20%;
+            position: absolute;
+            top: 30%;
+            left: 45%;
+        }
+        .checkbox6 {
+            font-size: 18px;
+            width: 55%;
+            height: 95%;
+            position: absolute;
+            text-align: left;
+            top: 40%;
+            left: 57%;
+        }
+        .checkbox7 {
+            width: 20%;
+            height: 20%;
+            position: absolute;
+            top: 30%;
+            left: 57%;
+        }
+        .authType {
+            border-style: solid;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            width: 15%;
+            background-color: rgba(0, 0, 0, 0.8);
+            height: 50%;
+            position: absolute;
+            top: 30%;
+            right: 5%;
+        }
+        .checkbox8 {
+            font-size: 18px;
+            width: 55%;
+            height: 95%;
+            position: absolute;
+            text-align: left;
+            top: 40%;
+            left: 69%;
+        }
         * {
             cursor: default !important;
             font-family: "Montserrat", sans-serif;
@@ -607,8 +673,30 @@
 <div class="scale">
     <div class="removeButtons">
         <div class="wrapper">
+            <picture class="SearchBarImage">
+                <source media="(orientation: portrait)"
+                        srcset="img/search.svg">
+                <img alt="" src="img/search.svg">
+            </picture>
+            <picture class="SearchBarConfigureImage">
+                <source media="(orientation: portrait)"
+                        srcset="img/settings.svg">
+                <img alt="" src="img/settings.svg">
+            </picture>
             <div class="theAlteningText2">
-                <input class="SearchBar" id="" placeholder="Name" type="text">
+                <input class="SearchBar" src="img/search.svg" id="" placeholder="Name" type="text">
+
+                <input type="checkbox" class="checkbox5" name="" checked/>
+                <h1 class="checkbox6"> Favourite only</h1>
+
+                <input type="checkbox" class="checkbox7" name="" checked/>
+                <h1 class="checkbox8"> Premium only</h1>
+                <select class="authType">
+                    <option value="">Type</option>
+                    <option value="dog">Microsoft</option>
+                    <option value="cat">Altening</option>
+                    <option value="hamster">Cracked</option>
+                </select>
             </div>
             <div id="buttongrid">
                 <picture>
