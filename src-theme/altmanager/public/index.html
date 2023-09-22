@@ -8,6 +8,13 @@
             outline: none;
         }
 
+        .SearchBar {
+            position: absolute;
+            width: 50%;
+            height: 70%;
+            left: 2%;
+            top: 5%;
+        }
         .checkbox1 {
             width: 5%;
             height: 5%;
@@ -61,7 +68,8 @@
             position: relative;
             height: 100%;
             grid-gap: 30px;
-            margin: 60px;
+            margin-left: 60px;
+            margin-right: 60px;
         }
 
         #title1 {
@@ -124,6 +132,16 @@
             position: relative;
             height: 80%;
             width: 80%;
+            text-align: center;
+            font-size: 30px;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .theAlteningText2 {
+            position: absolute;
+            height: 10%;
+            top: 17%;
+            width: 100%;
             text-align: center;
             font-size: 30px;
             background-color: rgba(0, 0, 0, 0.5);
@@ -247,18 +265,16 @@
             width: 100%;
             text-align: right;
             height: 100px;
-            margin-bottom: 45px;
         }
 
         .footinitMulti {
-            left: 20px;
+            left: 3%;
             display: block;
             position: absolute;
             bottom: 0;
             width: 80%;
             text-align: left;
             height: 100px;
-            margin-bottom: 45px;
         }
 
         .butto {
@@ -288,7 +304,7 @@
 
         .accounts {
             position: absolute;
-            top: 25%;
+            top: 30%;
             right: 0;
             width: 100%;
             height: 55%;
@@ -591,6 +607,9 @@
 <div class="scale">
     <div class="removeButtons">
         <div class="wrapper">
+            <div class="theAlteningText2">
+                <input class="SearchBar" id="" placeholder="Name" type="text">
+            </div>
             <div id="buttongrid">
                 <picture>
                     <source media="(orientation: portrait)"
