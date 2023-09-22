@@ -134,8 +134,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 if (entity.hurtTime > 0) {
                     return Color4b(255, 0, 0)
                 }
-
-                if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
+                if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
                     return Color4b(0, 0, 255)
                 }
 

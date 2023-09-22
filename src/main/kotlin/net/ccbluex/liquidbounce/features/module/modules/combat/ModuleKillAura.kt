@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
@@ -46,6 +47,9 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
@@ -344,7 +348,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@repeatable
         }
 
-        val entity = target ?: world.findEnemy(0f..FailSwing.LimitRange.range)?.first
+        val entity = target ?: world.findEnemy(0f..FailSwing.LimitRange.range)
 
         val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
 
@@ -422,19 +426,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             player.isSprinting = false
         }
 
-        EventManager.callEvent(AttackEvent(entity))
-
-        // Swing before attacking (on 1.8)
-        if (swing && protocolVersion == MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
-
-        // Swing after attacking (on 1.9+)
-        if (swing && protocolVersion != MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
+        entity.attack(swing)
 
         if (keepSprint) {
             var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
