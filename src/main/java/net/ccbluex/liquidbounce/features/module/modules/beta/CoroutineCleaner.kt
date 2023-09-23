@@ -46,22 +46,10 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 	}
 
-	/* TODO: Is separate sorting delay really needed?
-	private val maxSortDelay: Int by object : IntegerValue("MaxSortDelay", 50, 0..500) {
-		override fun isSupported() = sort
-
-		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minSortDelay)
-	}
-	private val minSortDelay by object : IntegerValue("MinSortDelay", 50, 0..500) {
-		override fun isSupported() = sort && maxSortDelay > 0
-
-		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxSortDelay)
-	}
-	*/
-
 	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
 
 	private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36)
+	private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36)
 
 	private val invOpen by BoolValue("InvOpen", false)
 	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
@@ -276,15 +264,19 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		return when (item) {
 			in ITEMS_WHITELIST -> true
 
-			is ItemFood, is ItemEnderPearl, is ItemEnchantedBook, is ItemBucket, is ItemBed -> true
+			// TODO: Limit max bucket count, vehicle count
+			is ItemEnderPearl, is ItemEnchantedBook, is ItemBucket, is ItemBed -> true
+
+			// TODO: Simplify and maybe add support for stack merging when comparing max stack counts
+			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap)
+			is ItemBlock -> isUsefulBlock(stack, stacks, entityStacksMap)
+
+			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
 			is ItemBoat, is ItemMinecart -> !ignoreVehicles
 
-			is ItemBlock -> isUsefulBlock(stack, stacks)
-
 			is ItemPotion -> isUsefulPotion(stack)
 
-			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
 			else -> false
 		}
@@ -336,7 +328,65 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 	}
 
-	fun isUsefulBlock(stack: ItemStack?, stacks: List<ItemStack?>): Boolean {
+	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
+		val item = stack?.item ?: return false
+
+		if (item !is ItemFood) return false
+
+		val stackSaturation = item.getSaturationModifier(stack) * stack.stackSize
+
+		val index = stacks.indexOf(stack)
+
+		val isSorted = canBeSortedTo(index, item, stacks.size)
+
+		val iteratedStacks = stacks.toMutableList()
+
+		var distanceSqToItem = .0
+
+		if (!entityStacksMap.isNullOrEmpty()) {
+			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			iteratedStacks += entityStacksMap.keys
+		}
+
+		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
+			if (stack == otherStack)
+				return@count false
+
+			val otherItem = otherStack?.item ?: return@count false
+
+			if (otherItem !is ItemFood)
+				return@count false
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
+
+			val otherStackSaturation = otherItem.getSaturationModifier(otherStack) * otherStack.stackSize
+
+			when (otherStackSaturation.compareTo(stackSaturation)) {
+				// Other stack has bigger saturation sum
+				1 -> true
+				// Both stacks are equally good
+				0 -> {
+					// Only true when both items are dropped on ground
+					if (index == otherIndex) {
+						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
+
+						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+					} else {
+						val isOtherSorted = canBeSortedTo(otherIndex, otherItem, stacks.size)
+
+						// Count as better alternative only when compared stack isn't sorted and the other is sorted, or has higher index
+						!isSorted && (isOtherSorted || otherIndex > index)
+					}
+				}
+				else -> false
+			}
+		}
+
+		return betterCount < maxFoodStacks
+	}
+
+	private fun isUsefulBlock(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
 		if (!isSuitableBlock(stack))
 			return false
 
@@ -344,38 +394,44 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		val isSorted = canBeSortedTo(index, stack!!.item, stacks.size)
 
-		val betterCount = stacks.withIndex().count { (otherIndex, otherStack) ->
+		val iteratedStacks = stacks.toMutableList()
+
+		var distanceSqToItem = .0
+
+		if (!entityStacksMap.isNullOrEmpty()) {
+			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			iteratedStacks += entityStacksMap.keys
+		}
+
+		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
 			if (!isSuitableBlock(otherStack) || otherStack == stack)
 				return@count false
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
 
 			when (otherStack!!.stackSize.compareTo(stack.stackSize)) {
 				// Found a stack that has higher size
 				1 -> true
+				// Both stacks are equally good
 				0 -> {
-					val isOtherSorted = canBeSortedTo(otherIndex, otherStack.item, stacks.size)
+					// Only true when both items are dropped on ground
+					if (index == otherIndex) {
+						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
 
-					// Count as better alternative only when compared stack isn't sorted and the other is sorted, or has higher index
-					!isSorted && (isOtherSorted || otherIndex > index)
+						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+					} else {
+						val isOtherSorted = canBeSortedTo(otherIndex, otherStack.item, stacks.size)
+
+						// Count as better alternative only when compared stack isn't sorted and the other is sorted, or has higher index
+						!isSorted && (isOtherSorted || otherIndex > index)
+					}
 				}
 				else -> false
 			}
 		}
 
 		return betterCount < maxBlockStacks
-	}
-
-	@Suppress("DEPRECATION")
-	fun isSuitableBlock(stack: ItemStack?): Boolean {
-		val item = stack?.item ?: return false
-
-		if (item is ItemBlock) {
-			val block = item.block
-
-			return isFullBlock(block) && !block.hasTileEntity()
-					&& block !is BlockWorkbench && block !is BlockContainer && block !is BlockFalling
-		}
-
-		return false
 	}
 
 	private fun hasBestParameters(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null, parameters: (ItemStack) -> Float): Boolean {
@@ -389,22 +445,22 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		val iteratedStacks = stacks.toMutableList()
 
-		var entityItem: EntityItem? = null
+		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
-			entityItem = entityStacksMap[stack] ?: return false
+			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
 			iteratedStacks += entityStacksMap.keys
 		}
 
 		iteratedStacks.forEachIndexed { otherIndex, otherStack ->
 			val otherItem = otherStack?.item ?: return@forEachIndexed
 
-			// Items dropped on ground should have index -1
-			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
-
 			// Check if items aren't the same instance but are the same type
 			if (stack == otherStack || item.javaClass != otherItem.javaClass)
 				return@forEachIndexed
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
 
 			val otherStats = parameters(otherStack)
 
@@ -425,7 +481,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 							// Only true when both items are dropped on ground, if other item is closer, compared one isn't the best
 							if (index == otherIndex) {
 								val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@forEachIndexed
-								when (mc.thePlayer.getDistanceSqToEntity(entityItem).compareTo(mc.thePlayer.getDistanceSqToEntity(otherEntityItem))) {
+								when (distanceSqToItem.compareTo(mc.thePlayer.getDistanceSqToEntity(otherEntityItem))) {
 									1 -> return false
 									// Both items are exactly far, pretty much impossible
 									0 -> return true
@@ -439,6 +495,20 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 
 		return true
+	}
+
+	@Suppress("DEPRECATION")
+	fun isSuitableBlock(stack: ItemStack?): Boolean {
+		val item = stack?.item ?: return false
+
+		if (item is ItemBlock) {
+			val block = item.block
+
+			return isFullBlock(block) && !block.hasTileEntity()
+					&& block !is BlockWorkbench && block !is BlockContainer && block !is BlockFalling
+		}
+
+		return false
 	}
 }
 
