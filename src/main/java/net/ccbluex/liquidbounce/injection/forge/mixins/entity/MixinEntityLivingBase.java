@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
@@ -29,6 +30,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -65,6 +67,9 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Shadow
     protected abstract void updateAITick();
+
+    @Shadow
+    public float rotationYawHead;
 
     /**
      * @author CCBlueX
@@ -134,5 +139,36 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
         if ((p_isPotionActive_1_ == Potion.confusion || p_isPotionActive_1_ == Potion.blindness) && antiBlind.getState() && antiBlind.getConfusionEffect())
             callbackInfoReturnable.setReturnValue(false);
+    }
+
+    /**
+     * Inject head yaw rotation modification
+     */
+    @Inject(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;updateEntityActionState()V", shift = At.Shift.AFTER))
+    private void hookHeadRotations(CallbackInfo ci) {
+        Rotation rotation = Rotations.INSTANCE.getRotation();
+
+        //noinspection ConstantValue
+        this.rotationYawHead = ((EntityLivingBase) (Object) this) instanceof EntityPlayerSP && Rotations.INSTANCE.shouldUseRealisticMode() && rotation != null ? rotation.getYaw() : this.rotationYawHead;
+    }
+
+    /**
+     * Inject body rotation modification
+     */
+    @Redirect(method = "onUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;rotationYaw:F", ordinal = 0))
+    private float hookBodyRotationsA(EntityLivingBase instance) {
+        Rotation rotation = Rotations.INSTANCE.getRotation();
+
+        return instance instanceof EntityPlayerSP && Rotations.INSTANCE.shouldUseRealisticMode() && rotation != null ? rotation.getYaw() : instance.rotationYaw;
+    }
+
+    /**
+     * Inject body rotation modification
+     */
+    @Redirect(method = "updateDistance", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;rotationYaw:F"))
+    private float hookBodyRotationsB(EntityLivingBase instance) {
+        Rotation rotation = Rotations.INSTANCE.getRotation();
+
+        return instance instanceof EntityPlayerSP && Rotations.INSTANCE.shouldUseRealisticMode() && rotation != null ? rotation.getYaw() : instance.rotationYaw;
     }
 }

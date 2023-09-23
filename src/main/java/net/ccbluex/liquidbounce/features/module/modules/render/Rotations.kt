@@ -16,7 +16,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 
 object Rotations : Module("Rotations", ModuleCategory.RENDER) {
 
-    private val body by BoolValue("Body", true)
+    private val realistic by BoolValue("Realistic", true)
+
+    private val body by BoolValue("Body", true) { !realistic }
 
     var prevHeadPitch = 0f
     var headPitch = 0f
@@ -28,7 +30,7 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER) {
         prevHeadPitch = headPitch
         headPitch = serverRotation.pitch
 
-        if (!shouldRotate()) {
+        if (!shouldRotate() || realistic) {
             return
         }
 
@@ -47,4 +49,14 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER) {
      * Rotate when current rotation is not null or special modules which do not make use of RotationUtils like Derp are enabled.
      */
     fun shouldRotate() = state && (Derp.state || targetRotation != null)
+
+    /**
+     * Imitate the game's head and body rotation logic
+     */
+    fun shouldUseRealisticMode() = realistic && shouldRotate()
+
+    /**
+     * Which rotation should the module use?
+     */
+    fun getRotation() = if (Derp.state) serverRotation else targetRotation
 }
