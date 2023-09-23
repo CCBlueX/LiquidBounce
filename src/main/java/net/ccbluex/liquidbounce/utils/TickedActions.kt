@@ -5,16 +5,16 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import java.util.concurrent.CopyOnWriteArrayList
 
 object TickedActions : Listenable {
 
-    private val actions = Lists.newCopyOnWriteArrayList<Triple<Module, Int, () -> Unit>>()
+    private val actions = CopyOnWriteArrayList<Triple<Module, Int, () -> Unit>>()
 
     fun schedule(id: Int, module: Module, allowDuplicates: Boolean = false, action: () -> Unit): Boolean {
         if (allowDuplicates || !isScheduled(id, module)) {

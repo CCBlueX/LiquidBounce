@@ -89,7 +89,7 @@ val ItemStack.durability
     get() = maxDamage - itemDamage
 
 val ItemStack.totalDurability
-    get() = durability * getEnchantmentLevel(Enchantment.unbreaking)
+    get() = durability * (getEnchantmentLevel(Enchantment.unbreaking) + 1)
 
 val ItemStack.enchantments: Map<Enchantment, Int>
     get() {
@@ -107,7 +107,7 @@ val ItemStack.enchantments: Map<Enchantment, Int>
         return enchantments
     }
 
-val ItemStack.enchantmentCount: Int
+val ItemStack.enchantmentCount
     get() = enchantments.size
 
 // Returns sum of levels of all enchantment levels
@@ -127,4 +127,4 @@ val ItemStack.attackDamage
     get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) +
             1.25 * getEnchantmentLevel(Enchantment.sharpness)
 
-fun ItemStack.isSplashPotion()= item is ItemPotion && ItemPotion.isSplash(this.metadata)
+fun ItemStack.isSplashPotion() = item is ItemPotion && ItemPotion.isSplash(this.metadata)

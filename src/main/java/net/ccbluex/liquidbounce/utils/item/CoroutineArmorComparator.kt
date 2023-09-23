@@ -2,19 +2,28 @@ package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
 import kotlin.math.ceil
 
 object CoroutineArmorComparator: MinecraftInstance() {
-	fun getBestArmorSet(stacks: List<ItemStack?>): ArmorSet? {
+	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
 		val thePlayer = mc.thePlayer ?: return null
 
 		val armorMap = (
 			(
+				// Consider dropped armor pieces
+				if (!entityStacksMap.isNullOrEmpty())
+					entityStacksMap.keys.mapNotNull { stack ->
+						if (stack.item is ItemArmor) -1 to stack
+						else null
+					}
+				else emptyList()
+			) + (
 				// Consider currently equipped armor, when searching useful stuff in chests
 				// Index is null for equipped armor when searching through a chest to prevent any accidental impossible interactions
-				if (mc.thePlayer.openContainer.windowId != 0)
+				if (thePlayer.openContainer.windowId != 0)
 					thePlayer.inventory.armorInventory.mapNotNull { null to (it ?: return@mapNotNull null) }
 				else emptyList()
 			) + (
@@ -25,6 +34,12 @@ object CoroutineArmorComparator: MinecraftInstance() {
 					}
 				)
 			)
+			.sortedBy { (index, stack) ->
+				// Sort items by distance from player, equipped items are always preferred with distance -1
+				if (index == -1)
+					thePlayer.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
+				else -1.0
+			}
 			// Prioritise sets that are in lower parts of inventory (not in chest) or equipped, prevents stealing multiple armor duplicates.
 			.sortedByDescending { it.first ?: Int.MAX_VALUE }
 			// Prioritise sets with more durability, enchantments

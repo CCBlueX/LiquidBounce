@@ -24,6 +24,7 @@ import net.minecraft.block.BlockFalling
 import net.minecraft.block.BlockWorkbench
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
 import net.minecraft.item.*
@@ -78,6 +79,8 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val ignoreVehicles by BoolValue("IgnoreVehicles", false)
 
 	private val onlyGoodPotions by BoolValue("OnlyGoodPotions", false)
+
+	val highlightUseful by BoolValue("HighlightUseful", true)
 
 	private val slot1Value = SortValue("Slot1", "Sword")
 	private val slot2Value = SortValue("Slot2", "Bow")
@@ -267,7 +270,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		delay(randomDelay(minDelay, maxDelay).toLong())
 	}
 
-	fun isStackUseful(stack: ItemStack?, stacks: List<ItemStack?>): Boolean {
+	fun isStackUseful(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
 		val item = stack?.item ?: return false
 
 		return when (item) {
@@ -281,7 +284,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 			is ItemPotion -> isUsefulPotion(stack)
 
-			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks)
+			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
 			else -> false
 		}
@@ -301,11 +304,11 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		return false
 	}
 
-	private fun isUsefulEquipment(stack: ItemStack?, stacks: List<ItemStack?>): Boolean {
+	private fun isUsefulEquipment(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
 		val item = stack?.item ?: return false
 
 		return when (item) {
-			is ItemArmor -> getBestArmorSet(stacks)?.contains(stack) ?: true
+			is ItemArmor -> getBestArmorSet(stacks, entityStacksMap)?.contains(stack) ?: true
 
 			is ItemTool -> {
 				val blockType = when (item) {
@@ -314,22 +317,22 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 					else -> Blocks.dirt
 				}
 
-				return hasBestParameters(stack, stacks) {
+				return hasBestParameters(stack, stacks, entityStacksMap) {
 					it.item.getStrVsBlock(it, blockType) * it.durability
 				}
 			}
 
 			is ItemSword ->
-				hasBestParameters(stack, stacks) {
+				hasBestParameters(stack, stacks, entityStacksMap) {
 					it.attackDamage.toFloat()
 				}
 
 			is ItemBow ->
-				hasBestParameters(stack, stacks) {
+				hasBestParameters(stack, stacks, entityStacksMap) {
 					it.getEnchantmentLevel(Enchantment.power).toFloat()
 				}
 
-			else -> true
+			else -> false
 		}
 	}
 
@@ -375,7 +378,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		return false
 	}
 
-	private fun hasBestParameters(stack: ItemStack?, stacks: List<ItemStack?>, parameters: (ItemStack) -> Float): Boolean {
+	private fun hasBestParameters(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null, parameters: (ItemStack) -> Float): Boolean {
 		val item = stack?.item ?: return false
 
 		val index = stacks.indexOf(stack)
@@ -384,8 +387,20 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		val isSorted = canBeSortedTo(index, item, stacks.size)
 
-		stacks.forEachIndexed { otherIndex, otherStack ->
+		val iteratedStacks = stacks.toMutableList()
+
+		var entityItem: EntityItem? = null
+
+		if (!entityStacksMap.isNullOrEmpty()) {
+			entityItem = entityStacksMap[stack] ?: return false
+			iteratedStacks += entityStacksMap.keys
+		}
+
+		iteratedStacks.forEachIndexed { otherIndex, otherStack ->
 			val otherItem = otherStack?.item ?: return@forEachIndexed
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
 
 			// Check if items aren't the same instance but are the same type
 			if (stack == otherStack || item.javaClass != otherItem.javaClass)
@@ -406,8 +421,18 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 					0 -> when (otherStack.totalDurability.compareTo(stack.totalDurability)) {
 						1 -> return false
 						// Both items are pretty much equally good, sorted item wins over not sorted, otherwise the one with higher index
-						0 -> if (!isSorted && (isOtherSorted || otherIndex > index))
-							return false
+						0 ->  {
+							// Only true when both items are dropped on ground, if other item is closer, compared one isn't the best
+							if (index == otherIndex) {
+								val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@forEachIndexed
+								when (mc.thePlayer.getDistanceSqToEntity(entityItem).compareTo(mc.thePlayer.getDistanceSqToEntity(otherEntityItem))) {
+									1 -> return false
+									// Both items are exactly far, pretty much impossible
+									0 -> return true
+								}
+							} else if (!isSorted && (isOtherSorted || otherIndex > index))
+								return false
+						}
 					}
 				}
 			}

@@ -28,7 +28,7 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
 
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")
 
-    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
     private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
     private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
     private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
@@ -38,6 +38,8 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
     private val colorGreen by IntegerValue("G", 90, 0..255) { !colorRainbow }
     private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
+    private val color
+        get() = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
 
     override fun onDisable() {
         synchronized(blocks) { blocks.clear() }
@@ -45,13 +47,13 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val mode = mode
         for (entity in mc.theWorld.loadedEntityList) {
             if (mode != "Box" && mode != "OtherBox") break
             if (entity !is EntityFallingBlock) continue
 
-            drawEntityBox(entity, getColor(), mode == "Box")
+            drawEntityBox(entity, color, mode == "Box")
         }
+
         synchronized(blocks) {
             val iterator = blocks.entries.iterator()
 
@@ -63,31 +65,28 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
                     continue
                 }
 
-                drawBlockBox(entry.key, getColor(), mode == "Box")
+                drawBlockBox(entry.key, color, mode == "Box")
             }
         }
     }
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        val mode = mode.lowercase()
-        val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
-        val color = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
+        if (mc.theWorld == null || mode != "Glow")
+            return
 
-        if(mc.theWorld == null) return
 
-        shader.startDraw(event.partialTicks, glowRenderScale)
+        GlowShader.startDraw(event.partialTicks, glowRenderScale)
+
         try {
-            mc.theWorld.loadedEntityList.filterNot{ it !is EntityFallingBlock }.forEach { entity ->
-                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+            mc.theWorld.loadedEntityList.forEach { entity ->
+                if (entity is EntityFallingBlock)
+                    mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
             }
         } catch (ex: Exception) {
             LOGGER.error("An error occurred while rendering all entities for shader esp", ex)
         }
 
 
-        shader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
+        GlowShader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
     }
-
-    private fun getColor() = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
-
 }

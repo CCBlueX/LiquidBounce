@@ -48,7 +48,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
 
     val wireframeWidth by FloatValue("WireFrame-Width", 2f, 0.5f..5f) { mode == "WireFrame" }
 
-    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
     private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
     private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
     private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
@@ -65,7 +65,6 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val mode = mode
         val mvMatrix = WorldToScreen.getMatrix(GL_MODELVIEW_MATRIX)
         val projectionMatrix = WorldToScreen.getMatrix(GL_PROJECTION_MATRIX)
         val real2d = mode == "Real2D"
@@ -94,9 +93,9 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             if (entity != mc.thePlayer && isSelected(entity, false)) {
                 val color = getColor(entity)
 
-                when (mode.lowercase()) {
-                    "box", "otherbox" -> drawEntityBox(entity, color, mode != "OtherBox")
-                    "2d" -> {
+                when (mode) {
+                    "Box", "OtherBox" -> drawEntityBox(entity, color, mode != "OtherBox")
+                    "2D" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
                         val posX =
@@ -107,7 +106,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                             entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
                         draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
                     }
-                    "real2d" -> {
+                    "Real2D" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
                         val bb = entity.hitBox
@@ -173,59 +172,59 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        val mode = mode.lowercase()
-        val partialTicks = event.partialTicks
-        val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
-        shader.startDraw(event.partialTicks, glowRenderScale)
+        if (mc.theWorld == null || mode != "Glow")
+            return
+
+        GlowShader.startDraw(event.partialTicks, glowRenderScale)
+
         renderNameTags = false
 
-        if(mc.theWorld == null) return
-
         try {
-            val entityMap = mutableMapOf<Color, ArrayList<Entity>>()
             mc.theWorld.loadedEntityList
                 .filter { isSelected(it, false) }
                 .filterIsInstance<EntityLivingBase>()
-                .filterNot { isBot(it) && bot }.forEach { entity ->
-                val color = getColor(entity)
-                if (color !in entityMap) {
-                    entityMap[color] = ArrayList()
-                }
-                entityMap[color]!! += entity
-            }
+                .filterNot { isBot(it) && bot }
+                .groupBy { getColor(it) }
+                .forEach { (color, entities) ->
+                    GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
-            entityMap.forEach { (color, entities) ->
-                shader.startDraw(partialTicks, glowRenderScale)
-                for (entity in entities) {
-                    mc.renderManager.renderEntitySimple(entity, partialTicks)
+                    for (entity in entities) {
+                        mc.renderManager.renderEntitySimple(entity, event.partialTicks)
+                    }
+
+                    GlowShader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
                 }
-                shader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
-            }
         } catch (ex: Exception) {
             LOGGER.error("An error occurred while rendering all entities for shader esp", ex)
         }
+
         renderNameTags = true
-        shader.stopDraw(getColor(null), glowRadius, glowFade, glowTargetAlpha)
+
+        GlowShader.stopDraw(getColor(), glowRadius, glowFade, glowTargetAlpha)
     }
 
     override val tag
         get() = mode
 
-    fun getColor(entity: Entity?): Color {
+    fun getColor(entity: Entity? = null): Color {
         run {
             if (entity != null && entity is EntityLivingBase) {
                 if (entity.hurtTime > 0)
                     return Color.RED
+
                 if (entity is EntityPlayer && entity.isClientFriend())
                     return Color.BLUE
 
                 if (colorTeam) {
                     val chars = (entity.displayName ?: return@run).formattedText.toCharArray()
                     var color = Int.MAX_VALUE
+
                     for (i in chars.indices) {
                         if (chars[i] != '§' || i + 1 >= chars.size) continue
+
                         val index = getColorIndex(chars[i + 1])
                         if (index < 0 || index > 15) continue
+
                         color = ColorUtils.hexColors[index]
                         break
                     }
@@ -235,11 +234,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             }
         }
 
-        return if (colorRainbow) rainbow() else Color(
-            colorRed,
-            colorGreen,
-            colorBlue
-        )
+        return if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
     }
 
 }
