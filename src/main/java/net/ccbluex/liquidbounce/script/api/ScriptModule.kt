@@ -112,6 +112,9 @@ class ScriptModule(name: String, category: ModuleCategory, description: String, 
     @EventTarget
     fun onStartup(startupEvent: StartupEvent) = callEvent("startup")
 
+    @EventTarget
+    fun onBB(blockBBEvent: BlockBBEvent) = callEvent("blockBB", blockBBEvent)
+
     /**
      * Calls the handler of a registered event.
      * @param eventName Name of the event to be called.
