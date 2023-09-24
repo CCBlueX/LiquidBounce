@@ -59,7 +59,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
     private val visualSwing by boolean("VisualSwing", true)
-    //private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
+    private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
     private val switchDelay by int("SwitchDelay", 0, 0..20)
@@ -70,7 +70,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private var currentTarget: DestroyerTarget? = null
 
-    // todo: Remove when the blocks option actually works
+    // TODO: Remove when the blocks option actually works
     private val targetedBlocks = findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
 
     val moduleRepeatable = repeatable {
