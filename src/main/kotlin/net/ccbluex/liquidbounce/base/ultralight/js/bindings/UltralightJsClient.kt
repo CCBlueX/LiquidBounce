@@ -38,7 +38,6 @@ object UltralightJsClient {
 
     val sessionService = MinecraftSession
 
-    val uuid = mc.session.uuid
     fun exitClient() = mc.scheduleStop()
 
     fun isUpdateAvailable() = LiquidBounce.updateAvailable
@@ -47,6 +46,8 @@ object UltralightJsClient {
      * Access session service from Ultralight
      */
     object MinecraftSession {
+
+        fun uuid() = mc.session.uuid
 
         fun getUsername(): String = mc.session.username
 
@@ -57,7 +58,7 @@ object UltralightJsClient {
          */
         fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuid}?size=100"
 
-        fun getFaceUrlByUUID(uuid: String) = "https://crafatar.com/avatars/$uuid}?size=100"
+        fun getFaceUrlByUUID(uuid: String) = "https://crafatar.com/avatars/$uuid?size=100"
 
         /**
          * Get if an account is premium or cracked

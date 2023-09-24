@@ -62,15 +62,17 @@
             top: 30%;
             left: 45%;
         }
+
         .checkbox6 {
             font-size: 18px;
-            width: 55%;
-            height: 95%;
+            width: 10%;
+            height: 75%;
             position: absolute;
             text-align: left;
             top: 40%;
             left: 57%;
         }
+
         .checkbox7 {
             width: 20%;
             height: 20%;
@@ -78,33 +80,36 @@
             top: 30%;
             left: 57%;
         }
+
         .authType {
             border-style: solid;
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
-            width: 15%;
+            font-size: 25px;
+            text-align: center;
+            width: 10%;
             background-color: rgba(0, 0, 0, 0.8);
             height: 50%;
             position: absolute;
             top: 30%;
             right: 5%;
         }
+
         .checkbox8 {
             font-size: 18px;
-            width: 55%;
-            height: 95%;
+            width: 10%;
+            height: 75%;
             position: absolute;
             text-align: left;
             top: 40%;
             left: 69%;
         }
+
         * {
             cursor: default !important;
             font-family: "Montserrat", sans-serif;
             user-select: none;
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
             color: white;
         }
 
@@ -113,14 +118,7 @@
             background-size: cover;
             height: 100vh;
             width: 100vw;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
-
-        #title {
-            text-align: left;
-            font-size: 56px;
+            overflow: scroll;
         }
 
         #buttongrid {
@@ -254,7 +252,6 @@
             height: 15%;
             border-radius: 6px;
             align-items: center;
-            padding: 25px 35px;
             column-gap: 30px;
             position: absolute;
             left: 75%;
@@ -299,7 +296,6 @@
             border-radius: 6px;
             margin-top: 10px;
             margin-bottom: 10px;
-            padding: 5px;
             border-color: white;
             background-color: rgba(0, 0, 0, 0.68);
             color: white;
@@ -309,8 +305,6 @@
 
         button {
             border-radius: 6px;
-            margin-right: 10px;
-            padding: 5px;
             background-color: rgba(0, 0, 0, 0);
             min-width: 80px;
             height: 30px;
@@ -319,8 +313,6 @@
         }
 
         td {
-            justify-content: center;
-            text-align: center;
             padding: 10px;
         }
 
@@ -376,7 +368,6 @@
             height: 55%;
             background-color: rgba(0, 0, 0, 0.68);
             border-radius: 6px;
-            padding: 20px;
             overflow-y: scroll;
         }
 
@@ -435,8 +426,17 @@
             background-color: rgba(0, 0, 0, 255);
         }
 
+        .accountsButton {
+            position: relative;
+        }
+
         #face {
             width: 32px;
+            height: 32px;
+        }
+
+        .accountFace {
+            hidth: 32px;
             height: 32px;
         }
     </style>
@@ -552,18 +552,24 @@
             var i = 0;
             while (accounts.hasNext()) {
                 let account = accounts.next();
-                console.log(JSON.stringify(account));
                 console.log(account.getType());
                 console.log(account.getName());
 
                 let row = document.createElement('tr');
+                let head = document.createElement('td')
                 let type = document.createElement('td');
                 let name = document.createElement('td');
                 let button = document.createElement('td');
+                let uuid = client.getSessionService().uuid();
+                console.log(uuid);
+                let faceUrl = client.getSessionService().getFaceUrlByUUID(uuid);
+                console.log(faceUrl)
+                head.innerHTML =
+                    "<img src=\"" + faceUrl + "\" alt=\"\">"
 
                 type.innerText = account.getType();
                 name.innerText = account.getName();
-                button.innerHTML = "" +
+                button.innerHTML =
                     "<button onclick='loginAccount(\"" + i + "\")'>" +
                     "<img src=\"img/account/check.svg\" alt=\"\">" +
                     "</button>" +
@@ -582,7 +588,9 @@
                     "<button onclick='idk(\"" + i + "\")'>" +
                     "<img src=\"img/account/play.svg\" alt=\"\">" +
                     "</button>";
-
+                button.className = "accountsButton";
+                head.className = "accountFace"
+                row.append(head)
                 row.appendChild(type);
                 row.appendChild(name);
                 row.appendChild(button);
@@ -592,7 +600,6 @@
         }
 
         function updateAccountData() {
-            console.log(client.uuid);
             const username = client.getSessionService().getUsername();
             const faceUrl = client.getSessionService().getFaceUrl();
             const accountType = client.getSessionService().getAccountType();
@@ -684,18 +691,18 @@
                 <img alt="" src="img/settings.svg">
             </picture>
             <div class="theAlteningText2">
-                <input class="SearchBar" src="img/search.svg" id="" placeholder="Name" type="text">
+                <input class="SearchBar" id="" placeholder="Name" src="img/search.svg" type="text">
 
-                <input type="checkbox" class="checkbox5" name="" checked/>
+                <input checked class="checkbox5" name="" type="checkbox"/>
                 <h1 class="checkbox6"> Favourite only</h1>
 
-                <input type="checkbox" class="checkbox7" name="" checked/>
+                <input checked class="checkbox7" name="" type="checkbox"/>
                 <h1 class="checkbox8"> Premium only</h1>
                 <select class="authType">
                     <option value="">Type</option>
-                    <option value="dog">Microsoft</option>
-                    <option value="cat">Altening</option>
-                    <option value="hamster">Cracked</option>
+                    <option value="microsoft">Microsoft</option>
+                    <option value="altening">Altening</option>
+                    <option value="cracked">Cracked</option>
                 </select>
             </div>
             <div id="buttongrid">
@@ -840,7 +847,7 @@
                     </picture>
                 </button>
             </div>
-            <input type="checkbox" class="checkbox1" name="" checked/>
+            <input checked class="checkbox1" name="" type="checkbox"/>
             <h1 class="checkbox2"> Favourite</h1>
 
             <button class="addButton" onclick="addDynamically()">
