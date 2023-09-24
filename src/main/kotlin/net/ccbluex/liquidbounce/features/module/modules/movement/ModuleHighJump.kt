@@ -21,11 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import org.apache.commons.lang3.ObjectUtils.wait
 
 /**
  * HighJump module
@@ -62,24 +61,22 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        var shouldGlide by boolean("ShouldGlide", false)
-        val moveEvent = sequenceHandler<PlayerMoveEvent> {
-            if (shouldGlide) { // if the variable is true, then glide
+        var glide by boolean("Glide", false)
+
+        val repeatable = repeatable {
+            if (glide) { // if the variable is true, then glide
                 if (!player.isOnGround && player.fallDistance > 0) {
                     if (player.age % 2 == 0) {
                         player.velocity.y = -0.155
                     }
                 } else player.velocity.y = -0.1
-            } else { // otherwise, stop gliding and reset the variable
-                player.velocity.y = 0.0
-                shouldGlide = false
             }
         }
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
             wait { 100 }
             player.velocity.y = 0.0
-            shouldGlide = true
+            // glide = false
         }
     }
 }
