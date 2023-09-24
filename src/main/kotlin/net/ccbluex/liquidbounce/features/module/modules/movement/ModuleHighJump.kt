@@ -32,7 +32,6 @@ import org.apache.commons.lang3.ObjectUtils.wait
  *
  * Allows you to jump higher.
  */
-
 object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
     private val modes = choices(
@@ -63,24 +62,25 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        var glide by boolean("Glide", false)
+        var shouldGlide by boolean("ShouldGlide", false)
         val moveEvent = sequenceHandler<PlayerMoveEvent> {
-            if (glide) {
+            if (shouldGlide) { // if the variable is true, then glide
                 if (!player.isOnGround && player.fallDistance > 0) {
                     if (player.age % 2 == 0) {
                         player.velocity.y = -0.155
                     }
-                } else {
-                    player.velocity.y = -0.1
-                }
+                } else player.velocity.y = -0.1
+            } else { // otherwise, stop gliding and reset the variable
+                player.velocity.y = 0.0
+                shouldGlide = false
             }
         }
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
-                it.motion = motion
-                wait { 100 }
-                player.velocity.y = 0.0
-                }
-            }
+            it.motion = motion
+            wait { 100 }
+            player.velocity.y = 0.0
+            shouldGlide = true
         }
     }
 }
+
