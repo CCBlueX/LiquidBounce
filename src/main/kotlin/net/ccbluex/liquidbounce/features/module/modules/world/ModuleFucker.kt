@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
-import net.minecraft.block.Block
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
@@ -70,6 +69,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val rotations = RotationsConfigurable()
 
     private var currentTarget: DestroyerTarget? = null
+
+    // TODO: Remove when the blocks option actually works
+    private val targetedBlocks = findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
 
     val moduleRepeatable = repeatable {
         if (mc.currentScreen is HandledScreen<*>) {
@@ -139,10 +141,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private fun updateTarget() {
         this.currentTarget = null
-
-        val targetedBlocks = hashSetOf<Block>()
-
-        targetedBlocks.addAll(targets)
 
         val radius = range + 1
         val radiusSquared = radius * radius
