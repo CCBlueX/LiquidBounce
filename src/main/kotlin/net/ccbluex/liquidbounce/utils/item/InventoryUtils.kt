@@ -8,13 +8,13 @@ import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPac
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
 
 
@@ -119,13 +119,7 @@ fun clickOffHand() {
 }
 
 fun findBlocksEndingWith(vararg targets: String) =
-    Blocks::class.java.declaredFields
-        .filter { field ->
-            targets.any { target -> field.name.endsWith(target) }
-        }
-        .mapNotNull { field ->
-            runCatching { field.get(null) as Block }.getOrNull()
-        }
+    Registries.BLOCK.filter { block -> targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) } }
 
 /**
  * A list of blocks, which are useless, so inv cleaner and scaffold won't count them as blocks
