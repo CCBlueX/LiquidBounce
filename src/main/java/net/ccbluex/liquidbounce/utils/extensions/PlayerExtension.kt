@@ -46,16 +46,16 @@ fun EntityPlayer.getPing() = mc.netHandler.getPlayerInfo(uniqueID)?.responseTime
 
 fun Entity.isAnimal() =
     this is EntityAnimal
-        || this is EntitySquid
-        || this is EntityGolem
-        || this is EntityBat
+            || this is EntitySquid
+            || this is EntityGolem
+            || this is EntityBat
 
 fun Entity.isMob() =
     this is EntityMob
-        || this is EntityVillager
-        || this is EntitySlime
-        || this is EntityGhast
-        || this is EntityDragon
+            || this is EntityVillager
+            || this is EntitySlime
+            || this is EntityGhast
+            || this is EntityDragon
 
 fun EntityPlayer.isClientFriend(): Boolean {
     val entityName = name ?: return false
@@ -102,6 +102,12 @@ operator fun EntityPlayerSP.plusAssign(value: Float) {
     fixedSensitivityYaw += value
     fixedSensitivityPitch += value
 }
+
+fun Entity.interpolatedPosition() = Vec3(
+    prevPosX + (posX - prevPosX) * mc.timer.renderPartialTicks,
+    prevPosY + (posY - prevPosY) * mc.timer.renderPartialTicks,
+    prevPosZ + (posZ - prevPosZ) * mc.timer.renderPartialTicks
+)
 
 fun EntityPlayerSP.stopXZ() {
     motionX = 0.0
