@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import org.lwjgl.glfw.GLFW
 
@@ -37,6 +38,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
     // Specifies whether the search bar should always be visible or only after pressing Ctrl + F.
     val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
     val searchAutoFocus by boolean("SearchAutoFocus", true)
+    val moduleColor by color("ModuleColor", Color4b(0, 0, 0, 127))
 
     override fun enable() {
         val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")

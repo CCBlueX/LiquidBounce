@@ -41,11 +41,15 @@
     function getModulesOfCategory(category) {
         return modules.filter(m => m.category === category);
     }
+
+    
+
+    let modulesColor = kotlin.colorToHex(clickGuiModule.instance.getModuleColor())
 </script>
 
 <main>
     {#if clickGuiOpened}
-        <div class="clickgui-container">
+        <div class="clickgui-container" style="--modules: {modulesColor}">
             <SearchBar root="{clickGuiModule}" modules={modules}/>
             {#each panels as panel}
                 <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top}

@@ -125,7 +125,7 @@
   }
 
   .modules {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--modules);
     max-height: 545px;
     overflow: auto;
   }
