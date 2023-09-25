@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
 
 
@@ -116,6 +117,9 @@ fun clickOffHand() {
         mc.player!!.swingHand(Hand.OFF_HAND)
     }
 }
+
+fun findBlocksEndingWith(vararg targets: String) =
+    Registries.BLOCK.filter { block -> targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) } }
 
 /**
  * A list of blocks, which are useless, so inv cleaner and scaffold won't count them as blocks

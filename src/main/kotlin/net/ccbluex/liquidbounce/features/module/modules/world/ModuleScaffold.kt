@@ -29,13 +29,17 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.blocksToEagle
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.edgeDistance
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Slow.slowSpeed
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.isNeighborOfOrEquivalent
 import net.ccbluex.liquidbounce.utils.block.targetFinding.AimMode
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
@@ -67,6 +71,7 @@ import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToPlayerView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
@@ -79,6 +84,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
@@ -104,7 +110,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     object Eagle : ToggleableConfigurable(this, "Eagle", false) {
         val blocksToEagle by int("BlocksToEagle", 1, 0..10)
-        val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
+        val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..1.3f)
     }
 
     val down by boolean("Down", false)
@@ -160,6 +166,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     var randomization = Random.nextDouble(-0.02, 0.02)
     private var startY = 0
     private var placedBlocks = 0
+
+    private const val MAX_LAST_PLACE_BLOCKS: Int = 4
+
+    private val lastPlacedBlocks = ArrayDeque<BlockPos>(MAX_LAST_PLACE_BLOCKS)
 
     /**
      * This comparator will estimate the value of a block. If this comparator says that Block A > Block B, Scaffold will
@@ -222,16 +232,44 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     player.inventory.getStack(blockInHotbar)
                 }
 
+//            val optimalLine: Line? = null
+            val optimalLine = StabilizeMovement.getOptimalMovementLine(DirectionalInput(player.input))
+
+            val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
+                { vec ->
+                    -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
+                }
+            } else {
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            }
+
             val searchOptions =
                 BlockPlacementTargetFindingOptions(
                     if (shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
                     bestStick,
                     getFacePositionFactoryForConfig(),
+                    priorityGetter
                 )
 
             currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
 
             val target = currentTarget ?: return@handler
+
+            if (optimalLine != null) {
+                val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
+                val a = optimalLine.getNearestPointTo(b)
+
+                // Debug the line a-b
+                ModuleDebug.debugGeometry(
+                    ModuleScaffold,
+                    "lineToBlock",
+                    ModuleDebug.DebuggedLineSegment(
+                        from = Vec3(a),
+                        to = Vec3(b),
+                        Color4b(255, 0, 0, 255),
+                    ),
+                )
+            }
 
             RotationManager.aimAt(
                 target.rotation,
@@ -318,6 +356,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 return@repeatable
             }
 
+            trackPlacedBlock(target)
+
             if (Eagle.enabled) {
                 placedBlocks += 1
 
@@ -341,6 +381,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }
             }
         }
+
+    private fun trackPlacedBlock(target: BlockPlacementTarget) {
+        lastPlacedBlocks.add(target.placedBlock)
+
+        while (lastPlacedBlocks.size > MAX_LAST_PLACE_BLOCKS)
+            lastPlacedBlocks.removeFirst()
+    }
 
     private fun findBestValidHotbarSlotForTarget(): Int? {
         val bestSlot =
@@ -461,9 +508,64 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             // Is this a good way to find the block center?
             val blockUnderPlayer = findBlockPlayerStandsOn() ?: return null
 
-            val centerOfBlock = Vec3d.of(blockUnderPlayer).add(0.5, 0.0, 0.5)
+            val findLastPlacedBlocksAverage = findLastPlacedBlocksAverage(blockUnderPlayer)
+            val lineBaseBlock = findLastPlacedBlocksAverage ?: blockUnderPlayer.toVec3d()
+
+            if (findLastPlacedBlocksAverage == null) {
+                val line = Line(Vec3d(blockUnderPlayer.x + 0.5, player.pos.y, blockUnderPlayer.z + 0.5), direction)
+
+                ModuleDebug.debugGeometry(ModuleScaffold, "optimalLine", ModuleDebug.DebuggedLine(line, Color4b.RED))
+            } else {
+                val line = Line(
+                    position = Vec3d(
+                        findLastPlacedBlocksAverage.x + 0.5,
+                        player.pos.y,
+                        findLastPlacedBlocksAverage.z + 0.5
+                    ),
+                    direction = direction
+                )
+
+                ModuleDebug.debugGeometry(ModuleScaffold, "optimalLine", ModuleDebug.DebuggedLine(line, Color4b.GREEN))
+            }
+
             // We try to make the player run on this line
-            return Line(Vec3d(centerOfBlock.x, player.pos.y, centerOfBlock.z), direction)
+            return Line(Vec3d(lineBaseBlock.x + 0.5, player.pos.y, lineBaseBlock.z + 0.5), direction)
+        }
+
+        fun findLastPlacedBlocksAverage(blockUnderPlayer: BlockPos): Vec3d? {
+            val lastPlacedBlocksToConsider = lastPlacedBlocks.subList(
+                fromIndex = (lastPlacedBlocks.size - 2).coerceAtLeast(0),
+                toIndex = (lastPlacedBlocks.size ).coerceAtLeast(0),
+            )
+
+            if (lastPlacedBlocksToConsider.isEmpty()) {
+                return null
+            }
+
+            lastPlacedBlocksToConsider.forEachIndexed { idx, pos ->
+                val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 255.0).toInt()
+
+                ModuleDebug.debugGeometry(
+                    ModuleScaffold,
+                    "lastPlacedBlock$idx",
+                    ModuleDebug.DebuggedBox(Box.from(pos.toVec3d()), Color4b(alpha, alpha, 255, 127)),
+                )
+            }
+
+            var currentBlock = blockUnderPlayer
+
+            for (blockPos in lastPlacedBlocksToConsider.reversed()) {
+                if (!currentBlock.isNeighborOfOrEquivalent(blockPos)) {
+                    return null
+                }
+
+                currentBlock = blockPos
+            }
+
+            return lastPlacedBlocksToConsider
+                .fold(Vec3i.ZERO) { a, b -> a.add(b) }
+                .toVec3d()
+                .multiply(1.0 / lastPlacedBlocksToConsider.size.toDouble())
         }
 
         fun findBlockPlayerStandsOn(): BlockPos? {

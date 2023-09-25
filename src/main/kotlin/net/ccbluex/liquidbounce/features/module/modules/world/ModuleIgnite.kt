@@ -70,7 +70,8 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
             val options = BlockPlacementTargetFindingOptions(
                 listOf(Vec3i(0, 0, 0)),
                 player.inventory.getStack(slot),
-                CenterTargetPositionFactory
+                CenterTargetPositionFactory,
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
             )
 
             val currentTarget = findBestBlockPlacementTarget(pos, options) ?: continue

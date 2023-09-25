@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.math
 
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import kotlin.math.floor
 
 inline operator fun Vec3d.plus(other: Vec3d): Vec3d {
@@ -36,6 +37,8 @@ inline operator fun Vec3d.minus(other: Vec3d): Vec3d {
 inline operator fun Vec3d.times(scalar: Double): Vec3d {
     return this.multiply(scalar)
 }
+
+fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
 
 fun Vec3d.toBlockPos(): BlockPos {
     val d = floor(this.x).toInt()
