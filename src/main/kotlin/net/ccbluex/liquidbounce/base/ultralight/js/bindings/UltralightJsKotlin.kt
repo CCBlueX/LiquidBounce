@@ -34,8 +34,5 @@ object UltralightJsKotlin {
     fun color(r:Int, g: Int, b: Int, a: Float) = Color4b(r, g, b, (a * 255).roundToInt())
 
     fun colorToHex(color4b: Color4b) = color4b.toHex(color4b.a != 255)
-    fun log(message: String){
-        chat(message)
-    }
 
 }
