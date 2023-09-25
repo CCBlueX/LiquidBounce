@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationUtils.getAngleDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
@@ -51,6 +52,7 @@ import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import javax.vecmath.Color3f
 import kotlin.math.*
 
 object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
@@ -218,9 +220,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val counterDisplay by BoolValue("Counter", true)
     private val mark by BoolValue("Mark", false)
     private val trackCPS by BoolValue("TrackCPS", false)
+    private val safetyLines by BoolValue("SafetyLines", false) { mode == "GodBridge" }
 
     // Target placement
-    private var targetPlace: PlaceInfo? = null
+    private var placeRotation: PlaceRotation? = null
 
     // Launch position
     private var launchY = 0
@@ -408,7 +411,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        val target = targetPlace
+        val target = placeRotation?.placeInfo
 
         if (extraClicks) {
             while (extraClick.clicks > 0) {
@@ -626,7 +629,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
         }
 
-        targetPlace = null
+        placeRotation = null
     }
 
     private fun doPlaceAttempt() {
@@ -706,7 +709,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             mc.gameSettings.keyBindLeft.pressed = false
         }
 
-        targetPlace = null
+        placeRotation = null
         mc.timer.timerSpeed = 1f
 
         if (serverSlot != player.inventory.currentItem) {
@@ -782,6 +785,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 }
             }
         }
+
+        displaySafetyLinesIfEnabled()
 
         if (!mark) {
             return
@@ -935,7 +940,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
             setRotation(limitedRotation, if (mode == "Telly") 1 else keepTicks)
         }
-        targetPlace = placeRotation.placeInfo
+        this.placeRotation = placeRotation
         return true
     }
 
@@ -1057,6 +1062,100 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 }, 1, this)
             }
         }
+    }
+
+    private fun displaySafetyLinesIfEnabled() {
+        if (!safetyLines || mode != "GodBridge") {
+            return
+        }
+
+        val player = mc.thePlayer ?: return
+
+        // If player is not walking diagonally then continue
+        if (round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f !in arrayOf(
+                135f,
+                45f
+            ) || player.movementInput.moveForward == 0f || player.movementInput.moveStrafe != 0f
+        ) {
+            val (posX, posY, posZ) = player.interpolatedPosition()
+
+            glPushMatrix()
+            glTranslated(-posX, -posY, -posZ)
+            glLineWidth(5.5f)
+            glDisable(GL_TEXTURE_2D)
+
+            val (yawX, yawZ) = player.horizontalFacing.directionVec.x * 1.5 to player.horizontalFacing.directionVec.z * 1.5
+
+            // The target rotation will either be the module's placeRotation or a forced rotation (usually that's where the GodBridge mode aims)
+            val targetRotation = run {
+                val yaw = arrayOf(-135f, -45f, 45f, 135f).minByOrNull {
+                    abs(
+                        getAngleDifference(
+                            it,
+                            MathHelper.wrapAngleTo180_float(currRotation.yaw)
+                        )
+                    )
+                } ?: return
+
+                placeRotation?.rotation ?: Rotation(yaw, 73f)
+            }
+
+            // Calculate color based on rotation difference
+            val color = getColorForRotationDifference(getRotationDifference(targetRotation, currRotation))
+
+            val main = BlockPos(player).down()
+
+            val pos = if (canBeClicked(main)) {
+                main
+            } else {
+                (-1..1).flatMap { x ->
+                    (-1..1).map { z ->
+                        val neighbor = main.add(x, 0, z)
+
+                        neighbor to (neighbor.getVec() - player.eyes).lengthVector()
+                    }
+                }.filter { canBeClicked(it.first) }.minByOrNull { it.second }?.first ?: main
+            }.up().getVec()
+
+            for (offset in 0..1) {
+                for (i in -1..1 step 2) {
+                    for (x1 in 0.25..0.5 step 0.01) {
+                        val opposite = offset == 1
+
+                        val (offsetX, offsetZ) = if (opposite) 0.0 to x1 * i else x1 * i to 0.0
+                        val (lineX, lineZ) = if (opposite) yawX to 0.0 else 0.0 to yawZ
+
+                        val (x, y, z) = pos.add(Vec3(offsetX, -0.99, offsetZ))
+
+                        glBegin(GL_LINES)
+
+                        glColor3f(color.x, color.y, color.z)
+                        glVertex3d(x - lineX, y + 0.5, z - lineZ)
+                        glVertex3d(x + lineX, y + 0.5, z + lineZ)
+
+                        glEnd()
+                    }
+                }
+            }
+            glEnable(GL_TEXTURE_2D)
+            glPopMatrix()
+        }
+    }
+
+    private fun getColorForRotationDifference(rotationDifference: Float): Color3f {
+        val maxDifferenceForGreen = 10.0f
+        val maxDifferenceForYellow = 40.0f
+
+        val interpolationFactor = when {
+            rotationDifference <= maxDifferenceForGreen -> 0.0f
+            rotationDifference <= maxDifferenceForYellow -> (rotationDifference - maxDifferenceForGreen) / (maxDifferenceForYellow - maxDifferenceForGreen)
+            else -> 1.0f
+        }
+
+        val green = 1.0f - interpolationFactor
+        val blue = 0.0f
+
+        return Color3f(interpolationFactor, green, blue)
     }
 
     /**
