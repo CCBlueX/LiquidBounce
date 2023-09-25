@@ -48,8 +48,7 @@ object ModuleAutoDisable : Module("AutoDisable", Category.WORLD) {
     }
 
     val deathHandler = handler<DeathEvent> {
-        if (onDeath)
-            autoDisabled("your death")
+        if (onDeath) autoDisabled("your death")
     }
 
     fun autoDisabled(reason: String) {

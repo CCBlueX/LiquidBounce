@@ -17,29 +17,32 @@ import kotlin.math.pow
 
 class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val DAMAGE_ESTIMATOR = EnchantmentValueEstimator(
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SHARPNESS, 0.5f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.05f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.05f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f)
-        )
-        val SECONDARY_VALUE_ESTIMATOR = EnchantmentValueEstimator(
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f)
-        )
-        private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
-            { o1, o2 -> (estimateDamage(o1)).compareTo(estimateDamage(o2)) },
-            { o1, o2 ->
-                SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
-                    .compareTo(SECONDARY_VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-            },
-            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item is SwordItem } },
-            { o1, o2 -> o1.itemStack.item.enchantability.compareTo(o2.itemStack.item.enchantability) },
-            PREFER_ITEMS_IN_HOTBAR,
-            STABILIZE_COMPARISON
-        )
+        val DAMAGE_ESTIMATOR =
+            EnchantmentValueEstimator(
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SHARPNESS, 0.5f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.05f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.05f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f),
+            )
+        val SECONDARY_VALUE_ESTIMATOR =
+            EnchantmentValueEstimator(
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
+            )
+        private val COMPARATOR =
+            ComparatorChain<WeightedSwordItem>(
+                { o1, o2 -> (estimateDamage(o1)).compareTo(estimateDamage(o2)) },
+                { o1, o2 ->
+                    SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
+                        .compareTo(SECONDARY_VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+                },
+                { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item is SwordItem } },
+                { o1, o2 -> o1.itemStack.item.enchantability.compareTo(o2.itemStack.item.enchantability) },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
 
         private fun estimateDamage(o1: WeightedSwordItem): Float {
             val attackSpeed = o1.itemStack.item.attackSpeed
@@ -53,7 +56,7 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
             val speedAdjustedDamage = attackDamage * attackSpeed * probabilityAdjustmentFactor.toFloat()
 
             return speedAdjustedDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
-                Enchantments.FIRE_ASPECT
+                Enchantments.FIRE_ASPECT,
             ) * 4.0f * 0.625f * 0.9f
         }
     }

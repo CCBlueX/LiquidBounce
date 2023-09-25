@@ -7,22 +7,20 @@ import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.extensions.getFace
+import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.minecraft.block.*
 import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.*
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.random.Random
 
 
 enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
+    NEAREST_ROTATION("NearestRotation"),
 }
 
 class BlockPlacementTargetFindingOptions(

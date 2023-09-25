@@ -60,7 +60,7 @@ fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: Block
     )
 }
 
-fun raycast(range: Double, rotation: Rotation): BlockHitResult? {
+fun raycast(range: Double, rotation: Rotation, includeFluids: Boolean = false): BlockHitResult? {
     val entity = mc.cameraEntity ?: return null
 
     val start = entity.eyes
@@ -70,7 +70,8 @@ fun raycast(range: Double, rotation: Rotation): BlockHitResult? {
 
     return mc.world?.raycast(
         RaycastContext(
-            start, end, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, entity
+            start, end, RaycastContext.ShapeType.OUTLINE,
+            if (includeFluids) RaycastContext.FluidHandling.ANY else RaycastContext.FluidHandling.NONE, entity
         )
     )
 }

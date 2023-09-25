@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.extensions
+package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.minecraft.util.math.Box

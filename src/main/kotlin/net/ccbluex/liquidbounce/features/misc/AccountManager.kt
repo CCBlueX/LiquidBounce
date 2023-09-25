@@ -58,9 +58,11 @@ object AccountManager : Configurable("Accounts") {
         when (account) {
             is CrackedAccount -> {
                 mc.session = mc.sessionService.loginCracked(account.session.username)
-                mc.sessionService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment)
-                    .createMinecraftSessionService()
+                mc.sessionService = YggdrasilAuthenticationService(
+                    Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
+                ).createMinecraftSessionService()
             }
+
             is MicrosoftAccount -> {
                 mc.session = net.minecraft.client.util.Session(
                     account.name,
@@ -70,9 +72,11 @@ object AccountManager : Configurable("Accounts") {
                     Optional.empty(),
                     net.minecraft.client.util.Session.AccountType.MSA
                 )
-                mc.sessionService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment)
-                    .createMinecraftSessionService()
+                mc.sessionService = YggdrasilAuthenticationService(
+                    Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
+                ).createMinecraftSessionService()
             }
+
             is AlteningAccount -> {
                 val (session, sessionService) = mc.sessionService.loginAltening(account.token)
 
@@ -99,16 +103,13 @@ object AccountManager : Configurable("Accounts") {
 
     @RequiredByScript
     fun newMicrosoftAccount(success: JavascriptObject, error: JavascriptObject) {
-        newMicrosoftAccount(
-            success = { account ->
-               // todo: fix this
-               // success.callAsFunction(null, JavascriptValue(account))
-            },
-            error = { errorString ->
-                // todo: fix this
-                // error.callAsFunction(null, errorString)
-            }
-        )
+        newMicrosoftAccount(success = { account ->
+            // TODO: fix this
+            // success.callAsFunction(null, JavascriptValue(account))
+        }, error = { errorString ->
+            // TODO: fix this
+            // error.callAsFunction(null, errorString)
+        })
     }
 
     /**

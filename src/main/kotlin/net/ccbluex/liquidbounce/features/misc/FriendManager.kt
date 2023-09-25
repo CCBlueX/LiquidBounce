@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.features.misc
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.PlayerEntity
 import java.util.*
 
 object FriendManager : Configurable("Friends") {
@@ -53,6 +55,7 @@ object FriendManager : Configurable("Friends") {
 
     }
 
-    fun isFriend(entity: String): Boolean = friends.contains(Friend(entity, null))
+    fun isFriend(name: String): Boolean = friends.contains(Friend(name, null))
+    fun isFriend(entity: Entity): Boolean = entity is PlayerEntity && isFriend(entity.gameProfile.name)
 
 }

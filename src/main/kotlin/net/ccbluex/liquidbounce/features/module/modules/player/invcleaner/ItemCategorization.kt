@@ -1,19 +1,41 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedArmorItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedArrowItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedBlockItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedBowItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedCrossbowItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedFoodItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedPrimitiveItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedRodItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedShieldItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedSwordItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedToolItem
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
-import net.minecraft.item.*
-
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.ArrowItem
+import net.minecraft.item.BlockItem
+import net.minecraft.item.BowItem
+import net.minecraft.item.BucketItem
+import net.minecraft.item.CrossbowItem
+import net.minecraft.item.EnderPearlItem
+import net.minecraft.item.FishingRodItem
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.item.MilkBucketItem
+import net.minecraft.item.ShieldItem
+import net.minecraft.item.SwordItem
+import net.minecraft.item.ToolItem
 
 val PREFER_ITEMS_IN_HOTBAR: (o1: WeightedItem, o2: WeightedItem) -> Int =
     { o1, o2 -> compareByCondition(o1, o2, WeightedItem::isInHotbar) }
 val STABILIZE_COMPARISON: (o1: WeightedItem, o2: WeightedItem) -> Int =
     { o1, o2 -> o1.itemStack.hashCode().compareTo(o2.itemStack.hashCode()) }
-
 
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
@@ -31,7 +53,7 @@ enum class ItemType(val allowOnlyOne: Boolean) {
     PEARL(false),
     GAPPLE(false),
     BLOCK(false),
-    NONE(false)
+    NONE(false),
 }
 
 enum class ItemSortChoice(
@@ -50,12 +72,15 @@ enum class ItemSortChoice(
     LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
     MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
     PEARL("Pearl", ItemCategory(ItemType.PEARL, 0), { it.item == Items.ENDER_PEARL }),
-    GAPPLE("Gapple", ItemCategory(ItemType.GAPPLE, 0), { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+    GAPPLE(
+        "Gapple",
+        ItemCategory(ItemType.GAPPLE, 0),
+        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
-    IGNORE("Ignore", null), NONE("None", null)
+    IGNORE("Ignore", null),
+    NONE("None", null),
 }
-
 
 object ItemCategorization {
     fun categorizeItem(
@@ -105,7 +130,10 @@ object ItemCategorization {
                     items.add(WeightedFoodItem(stack, slotId))
 
                     WeightedPrimitiveItem(
-                        stack, slotId, ItemCategory(ItemType.GAPPLE, 0), 1
+                        stack,
+                        slotId,
+                        ItemCategory(ItemType.GAPPLE, 0),
+                        1,
                     )
                 }
 
@@ -116,8 +144,7 @@ object ItemCategorization {
                         WeightedItem(stack, slotId)
                     }
                 }
-            }
+            },
         )
     }
-
 }

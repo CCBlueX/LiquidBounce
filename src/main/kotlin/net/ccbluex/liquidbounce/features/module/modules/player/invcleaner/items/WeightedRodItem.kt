@@ -11,16 +11,18 @@ import net.minecraft.item.ItemStack
 
 class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        private val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f)
-        )
-        private val COMPARATOR = ComparatorChain<WeightedRodItem>(
-            { o1, o2 ->
-                VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-            },
-            PREFER_ITEMS_IN_HOTBAR,
-            STABILIZE_COMPARISON
-        )
+        private val VALUE_ESTIMATOR =
+            EnchantmentValueEstimator(
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
+            )
+        private val COMPARATOR =
+            ComparatorChain<WeightedRodItem>(
+                { o1, o2 ->
+                    VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+                },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
     override val category: ItemCategory

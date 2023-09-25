@@ -9,11 +9,14 @@ import net.minecraft.item.ItemStack
 
 class WeightedArrowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        private val COMPARATOR = ComparatorChain<WeightedArrowItem>(
-            { o1, o2 ->
-                o1.itemStack.count.compareTo(o2.itemStack.count)
-            }, PREFER_ITEMS_IN_HOTBAR, STABILIZE_COMPARISON
-        )
+        private val COMPARATOR =
+            ComparatorChain<WeightedArrowItem>(
+                { o1, o2 ->
+                    o1.itemStack.count.compareTo(o2.itemStack.count)
+                },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
     override val category: ItemCategory

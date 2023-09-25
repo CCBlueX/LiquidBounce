@@ -1,13 +1,18 @@
 package net.ccbluex.liquidbounce.utils.block.targetFinding
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
 
@@ -80,9 +85,19 @@ abstract class FaceTargetPositionFactory {
 /**
  * Always targets the point with the nearest rotation angle to the current rotation angle
  */
-class StabilizedTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
+class NearestRotationTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         val trimmedFace = super.trimFaceToConfigRanges(face, config)
+
+        return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
+    }
+
+    fun aimAtNearestPointToRotationLine(
+        targetPos: BlockPos,
+        face: Face
+    ): Vec3d {
+        if (MathHelper.approximatelyEquals(face.area, 0.0))
+            return face.from
 
         val player = mc.player!!
 
@@ -90,7 +105,63 @@ class StabilizedTargetPositionFactory(val config: PositionFactoryConfiguration) 
 
         val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
 
-        return trimmedFace.nearestPointTo(rotationLine) ?: return trimmedFace.center
+        return face.nearestPointTo(rotationLine) ?: face.center
+    }
+}
+
+/**
+ * Always targets the point with the nearest rotation angle to the current rotation angle
+ */
+class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfiguration, val optimalLine: Line?) : FaceTargetPositionFactory() {
+    override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
+        val trimmedFace = super.trimFaceToConfigRanges(face, config).offset(Vec3d.of(targetPos))
+
+        val player = mc.player!!
+
+        val targetFace = getTargetFace(player, trimmedFace, face) ?: trimmedFace
+
+        return NearestRotationTargetPositionFactory(this.config).producePositionOnFace(targetFace.offset(Vec3d.of(targetPos).negate()), targetPos)
+    }
+
+    private fun getTargetFace(
+        player: ClientPlayerEntity,
+        trimmedFace: Face,
+        face: Face
+    ): Face? {
+        val optimalLine = optimalLine ?: return null
+
+        val nearsetPointToOptimalLine = optimalLine.getNearestPointTo(player.pos)
+        val directionToOptimalLine = player.pos.subtract(nearsetPointToOptimalLine).normalize()
+
+        val optimalLineFromPlayer = Line(config.eyePos, optimalLine.direction)
+        val collisionWithFacePlane = trimmedFace.toPlane().intersection(optimalLineFromPlayer) ?: return null
+
+        val b = player.pos.add(directionToOptimalLine.multiply(2.0))
+
+        val cropBox = Box(
+            collisionWithFacePlane.x,
+            player.pos.y - 2.0,
+            collisionWithFacePlane.z,
+            b.x,
+            player.pos.y + 1.0,
+            b.z,
+        )
+
+        val clampedFace = trimmedFace.clamp(cropBox)
+        val targetFace = clampedFace
+
+        ModuleDebug.debugGeometry(ModuleScaffold, "optimalLine", ModuleDebug.DebuggedLine(optimalLine, Color4b.GREEN))
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "optimalLineFromPlayer",
+            ModuleDebug.DebuggedLine(optimalLineFromPlayer, Color4b.WHITE)
+        )
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "facePreCrop",
+            ModuleDebug.DebuggedBox(Box(targetFace.from, targetFace.to).offset(0.1, 0.1, 0.1), Color4b(0, 127, 127, 64))
+        )
+        return targetFace
     }
 }
 

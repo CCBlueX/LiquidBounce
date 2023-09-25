@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
 import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
@@ -54,9 +55,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val modes = choices("Mode", PacketCrit) {
             arrayOf(
-                NoneChoice(it),
-                PacketCrit,
-                JumpCrit
+                NoneChoice(it), PacketCrit, JumpCrit
             )
         }
     }
@@ -110,7 +109,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            val (_, _) = world.findEnemy(0f..range) ?: return@handler
+            world.findEnemy(0f..range) ?: return@handler
 
             if (player.isOnGround) {
                 // Simulate player jumping and send jump stat increment
@@ -238,10 +237,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
-        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() &&
-                !player.hasStatusEffect(StatusEffects.LEVITATION) && !player.hasStatusEffect(StatusEffects.BLINDNESS) &&
-                !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) &&
-                !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
+        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() && !player.hasStatusEffect(
+            StatusEffects.LEVITATION
+        ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) && !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
 
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)

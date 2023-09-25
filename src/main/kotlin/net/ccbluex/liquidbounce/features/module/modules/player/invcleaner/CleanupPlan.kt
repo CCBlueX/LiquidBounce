@@ -36,41 +36,44 @@ class InventoryCleanupPlan(
         this.usefulItems.addAll(usefulItemsToAdd)
 
         this.hotbarSwaps.forEachIndexed { index, hotbarSwap ->
-            val newSwap = InventorySwap(
-                slotMap[hotbarSwap.from] ?: hotbarSwap.from,
-                slotMap[hotbarSwap.to] ?: hotbarSwap.to
-            )
+            val newSwap =
+                InventorySwap(
+                    slotMap[hotbarSwap.from] ?: hotbarSwap.from,
+                    slotMap[hotbarSwap.to] ?: hotbarSwap.to,
+                )
 
             this.hotbarSwaps[index] = newSwap
         }
 
         mergeableItems.values.forEach { mergeableItems ->
             mergeableItems.forEachIndexed { index, itemStackWithSlot ->
-                val newStack = ItemStackWithSlot(slotMap[itemStackWithSlot.slot] ?: itemStackWithSlot.slot, itemStackWithSlot.itemStack)
+                val newStack = ItemStackWithSlot(
+                    slotMap[itemStackWithSlot.slot] ?: itemStackWithSlot.slot,
+                    itemStackWithSlot.itemStack
+                )
 
                 mergeableItems[index] = newStack
             }
         }
-
     }
 }
-
 
 /**
  * Contains the item categories and the corresponding item slots. e.g. BLOCK -> [Slot 8, Slot 9]
  */
-private fun getCategorySlotsMap() = arrayOf(
-    Pair(ModuleInventoryCleaner.offHandItem, 40),
-    Pair(ModuleInventoryCleaner.slotItem1, 0),
-    Pair(ModuleInventoryCleaner.slotItem2, 1),
-    Pair(ModuleInventoryCleaner.slotItem3, 2),
-    Pair(ModuleInventoryCleaner.slotItem4, 3),
-    Pair(ModuleInventoryCleaner.slotItem5, 4),
-    Pair(ModuleInventoryCleaner.slotItem6, 5),
-    Pair(ModuleInventoryCleaner.slotItem7, 6),
-    Pair(ModuleInventoryCleaner.slotItem8, 7),
-    Pair(ModuleInventoryCleaner.slotItem9, 8)
-).groupBy { it.first.category }
+private fun getCategorySlotsMap() =
+    arrayOf(
+        Pair(ModuleInventoryCleaner.offHandItem, 40),
+        Pair(ModuleInventoryCleaner.slotItem1, 0),
+        Pair(ModuleInventoryCleaner.slotItem2, 1),
+        Pair(ModuleInventoryCleaner.slotItem3, 2),
+        Pair(ModuleInventoryCleaner.slotItem4, 3),
+        Pair(ModuleInventoryCleaner.slotItem5, 4),
+        Pair(ModuleInventoryCleaner.slotItem6, 5),
+        Pair(ModuleInventoryCleaner.slotItem7, 6),
+        Pair(ModuleInventoryCleaner.slotItem8, 7),
+        Pair(ModuleInventoryCleaner.slotItem9, 8),
+    ).groupBy { it.first.category }
 
 const val PLAYER_INVENTORY_SIZE = 41
 
@@ -111,12 +114,13 @@ fun createCleanupPlan(otherScreen: GenericContainerScreen? = null): InventoryCle
     val groupedByItemCategory = items.groupBy { it.category }
 
     for ((key, value) in groupedByItemCategory) {
-        val maxCount = when {
-            key.type.allowOnlyOne -> 1
-            key.type == ItemType.BLOCK -> ModuleInventoryCleaner.maxBlocks
-            key.type == ItemType.ARROW -> ModuleInventoryCleaner.maxArrows
-            else -> Int.MAX_VALUE
-        }
+        val maxCount =
+            when {
+                key.type.allowOnlyOne -> 1
+                key.type == ItemType.BLOCK -> ModuleInventoryCleaner.maxBlocks
+                key.type == ItemType.ARROW -> ModuleInventoryCleaner.maxArrows
+                else -> Int.MAX_VALUE
+            }
 
         val hotbarSlotsToFill = hotbarSlotMap[key]
 
@@ -160,16 +164,17 @@ fun createCleanupPlan(otherScreen: GenericContainerScreen? = null): InventoryCle
     return InventoryCleanupPlan(usefulItems, hotbarSwaps, mergeableItems)
 }
 
-
 fun updateMergableItems(
     mergeableItems: HashMap<Item, MutableList<ItemStackWithSlot>>,
     stack: ItemStack,
-    slotId: Int
+    slotId: Int,
 ) {
-    if (stack.isNothing())
+    if (stack.isNothing()) {
         return
-    if (!stack.isStackable || stack.count >= stack.maxCount)
+    }
+    if (!stack.isStackable || stack.count >= stack.maxCount) {
         return
+    }
 
     val stacksOfType = mergeableItems.computeIfAbsent(stack.item) { mutableListOf() }
 

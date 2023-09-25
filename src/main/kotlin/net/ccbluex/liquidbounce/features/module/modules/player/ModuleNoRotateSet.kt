@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -32,10 +31,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
  */
 object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
     val mode = choices(
-        "Mode",
-        SilentAccept, arrayOf(
-            SilentAccept,
-            ResetRotation
+        "Mode", SilentAccept, arrayOf(
+            SilentAccept, ResetRotation
         )
     )
 
@@ -45,6 +42,7 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
 
         val rotationsConfigurable = tree(RotationsConfigurable())
     }
+
     object SilentAccept : Choice("SilentAccept") {
         override val parent: ChoiceConfigurable
             get() = mode

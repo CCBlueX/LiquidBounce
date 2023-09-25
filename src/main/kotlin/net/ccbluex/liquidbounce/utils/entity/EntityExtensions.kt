@@ -23,14 +23,20 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.damage.DamageSource
+import net.minecraft.entity.damage.DamageSources
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.Difficulty
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -57,28 +63,30 @@ val PlayerEntity.ping: Int
     get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
 
 val ClientPlayerEntity.directionYaw: Float
-    get() {
-        var rotationYaw = yaw
-        var forward = 1f
+    get() = getMovementDirectionOfInput(this.yaw, DirectionalInput(this.input))
 
-        // Check if client-user tries to walk backwards (+180 to turn around)
-        if (input.pressingBack) {
-            rotationYaw += 180f
-            forward = -0.5f
-        } else if (input.pressingForward) {
-            forward = 0.5f
-        }
+fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
+    var actualYaw = facingYaw
+    var forward = 1f
 
-        // Check which direction the client-user tries to walk sideways
-        if (input.pressingLeft) {
-            rotationYaw -= 90f * forward
-        }
-        if (input.pressingRight) {
-            rotationYaw += 90f * forward
-        }
-
-        return rotationYaw
+    // Check if client-user tries to walk backwards (+180 to turn around)
+    if (input.backwards) {
+        actualYaw += 180f
+        forward = -0.5f
+    } else if (input.forwards) {
+        forward = 0.5f
     }
+
+    // Check which direction the client-user tries to walk sideways
+    if (input.left) {
+        actualYaw -= 90f * forward
+    }
+    if (input.right) {
+        actualYaw += 90f * forward
+    }
+
+    return actualYaw
+}
 
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
@@ -160,25 +168,17 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    val eyes = entity.eyes
-    val pos = getNearestPoint(eyes, box)
-
-    val xDist = pos.x - eyes.x
-    val yDist = pos.y - eyes.y
-    val zDist = pos.z - eyes.z
-
-    return xDist * xDist + yDist * yDist + zDist * zDist
+    return this.squaredBoxedDistanceTo(entity.getCameraPosVec(1.0F))
 }
 
-fun Box.squaredBoxedDistanceTo(entity: Entity): Double {
-    val eyes = entity.eyes
-    val pos = getNearestPoint(eyes, this)
+fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
+    return this.boundingBox.squaredBoxedDistanceTo(otherPos)
+}
 
-    val xDist = pos.x - eyes.x
-    val yDist = pos.y - eyes.y
-    val zDist = pos.z - eyes.z
+fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
+    val pos = getNearestPoint(otherPos, this)
 
-    return xDist * xDist + yDist * yDist + zDist * zDist
+    return pos.squaredDistanceTo(otherPos)
 }
 
 fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
@@ -218,4 +218,58 @@ fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
     deltaPos = Vec3d(deltaPos.x, 0.0, deltaPos.z)
 
     return deltaPos.dotProduct(facingVec) < 0.0
+}
+
+/**
+ * Applies armor, enchantments, effects, etc. to the damage and returns the damage
+ * that is actually applied.
+ */
+@Suppress("detekt:complexity")
+fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
+    val world = this.world
+
+    if (this.isInvulnerableTo(source))
+        return 0.0F
+
+    // EDGE CASE!!! Might cause weird bugs
+    if (this.isDead)
+        return 0.0F
+
+    var amount = damage
+
+    if (this is PlayerEntity) {
+        if (this.abilities.invulnerable && source.type.msgId != mc.world!!.damageSources.outOfWorld().type.msgId)
+            return 0.0F
+
+        if (source.isScaledWithDifficulty) {
+            if (world.difficulty == Difficulty.PEACEFUL) {
+                amount = 0.0f
+            }
+
+            if (world.difficulty == Difficulty.EASY) {
+                amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
+            }
+
+            if (world.difficulty == Difficulty.HARD) {
+                amount = amount * 3.0f / 2.0f
+            }
+        }
+    }
+
+    if (amount == 0.0F)
+        return 0.0F
+
+    if (source == mc.world!!.damageSources.onFire() && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
+        return 0.0F
+
+
+    if (!ignoreShield && blockedByShield(source))
+        return 0.0F
+
+    // Do we need to take the timeUntilRegen mechanic into account?
+
+    amount = this.applyArmorToDamage(source, amount)
+    amount = this.modifyAppliedDamage(source, amount)
+
+    return amount
 }

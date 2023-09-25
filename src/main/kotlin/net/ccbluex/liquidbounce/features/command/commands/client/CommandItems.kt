@@ -38,7 +38,7 @@ object CommandItems {
 
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("notABlock")
+            .begin("DISALLOWED_BLOCKS_TO_PLACE")
             .hub()
             .subcommand(
                 CommandBuilder

@@ -37,7 +37,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Box
 import java.awt.Color
 
-
 /**
  * ESP module
  *
@@ -108,17 +107,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     }
                 }
             }
-
-
         }
-
     }
 
     object GlowMode : Choice("Glow") {
-        
+
         override val parent: ChoiceConfigurable
             get() = modes
-        
+
     }
 
     object OutlineMode : Choice("Outline") {
@@ -138,8 +134,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 if (entity.hurtTime > 0) {
                     return Color4b(255, 0, 0)
                 }
-
-                if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
+                if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
                     return Color4b(0, 0, 255)
                 }
 

@@ -35,16 +35,16 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.extensions.toDegrees
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToPlayerView
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.PI
-import kotlin.math.atan2
 
 object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
@@ -60,50 +60,29 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
         val arrows = findFlyingArrows(world)
 
-        val simulatedPlayer = SimulatedPlayer.fromPlayer(player, SimulatedPlayer.SimulatedPlayerInput(event.forwards, event.backwards, event.left, event.right, player.input.jumping, player.isSprinting))
+        val simulatedPlayer = SimulatedPlayer.fromPlayer(
+            player,
+            SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
+        )
 
         val inflictedHit = getInflictedHits(simulatedPlayer, arrows) {} ?: return@handler
 
-        val optimalDodgePosition = findOptimalDodgePosition(inflictedHit.prevArrowPos, inflictedHit.arrowVelocity) ?: return@handler
-
-        val playerToOptimalDodgeVector = optimalDodgePosition.subtract(player.pos.x, 0.0, player.pos.z)
-
-        val optimalYaw = atan2(playerToOptimalDodgeVector.z, playerToOptimalDodgeVector.x).toFloat() + PI.toFloat() / 2.0F
-        val currentYaw = player.yaw.toRadians()
-
-//        println(inflictedHit.prevArrowPos)
-//        println(optimalYaw.toDegrees())
-        println(inflictedHit.tickDelta)
+        val optimalDodgePosition =
+            findOptimalDodgePosition(inflictedHit.prevArrowPos, inflictedHit.arrowVelocity) ?: return@handler
 
         if (inflictedHit.tickDelta == 0) {
             notification("Blink", "Evasion failed!", NotificationEvent.Severity.INFO)
         }
 
-        val dgs = MathHelper.wrapDegrees((optimalYaw - currentYaw).toDegrees())
+        val positionRelativeToPlayer = optimalDodgePosition.subtract(player.pos.x, 0.0, player.pos.z)
 
-        var forwards = false
-        var backwards = false
-        var left = false
-        var right = false
+        val dgs = getDegreesRelativeToPlayerView(positionRelativeToPlayer)
 
-//        println(dgs)
+        val dgs1 = MathHelper.wrapDegrees(dgs + 90.0F)
 
-        if (dgs in -70.0F..70.0F) {
-            forwards = true
-        } else if (dgs < -120.0 || dgs > 120.0) {
-            backwards = true
-        }
+        val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs1, deadAngle = 20.0F)
 
-        if (dgs in 20.0F..160.0F) {
-            right = true
-        } else if (dgs in -160.0F..-20.0F) {
-            left = true
-        }
-
-        event.forwards = forwards
-        event.backwards = backwards
-        event.left = left
-        event.right = right
+        event.directionalInput = newDirectionalInput
         event.jumping = false
     }
 
@@ -165,8 +144,12 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
     }
 
 
-
-    fun <T: PlayerSimulation> getInflictedHits(simulatedPlayer: T, arrows: List<ArrowEntity>, maxTicks: Int = 80, behaviour: (T) -> Unit): HitInfo? {
+    fun <T : PlayerSimulation> getInflictedHits(
+        simulatedPlayer: T,
+        arrows: List<ArrowEntity>,
+        maxTicks: Int = 80,
+        behaviour: (T) -> Unit
+    ): HitInfo? {
         val simulatedArrows = arrows.map { SimulatedArrow(world, it.pos, it.velocity, false) }
 
         positions.clear()
@@ -198,7 +181,13 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         return null
     }
 
-    data class HitInfo(val tickDelta: Int, val arrowEntity: ArrowEntity, val hitPos: Vec3d, val prevArrowPos: Vec3d, val arrowVelocity: Vec3d)
+    data class HitInfo(
+        val tickDelta: Int,
+        val arrowEntity: ArrowEntity,
+        val hitPos: Vec3d,
+        val prevArrowPos: Vec3d,
+        val arrowVelocity: Vec3d
+    )
 
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack

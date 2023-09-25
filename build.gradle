@@ -23,6 +23,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'org.jlleitschuh.gradle.ktlint' version '11.5.1'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
+    id "io.gitlab.arturbosch.detekt" version "1.23.1"
 }
 
 ktlint {
@@ -57,15 +58,12 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
+    maven { url = 'https://repo.viaversion.com/' }
+
     maven {
         name = "modrinth"
         url = "https://api.modrinth.com/maven"
-
-        content {
-            includeGroup "maven.modrinth"
-        }
     }
-    maven { url = 'https://repo.viaversion.com/' }
 }
 
 dependencies {
@@ -84,7 +82,7 @@ dependencies {
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    // modCompileOnly("maven.modrinth:sodium:${project.sodium_version}") { transitive = false }
+    modImplementation "maven.modrinth:sodium:${project.sodium_version}"
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
@@ -175,6 +173,27 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+}
+
+detekt {
+    toolVersion = "1.23.1"
+    config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
+}
+
+task detektProjectBaseline(type: io.gitlab.arturbosch.detekt.DetektCreateBaselineTask) {
+    description = "Overrides current baseline."
+    ignoreFailures.set(true)
+    parallel.set(true)
+    buildUponDefaultConfig.set(true)
+    setSource(files(rootDir))
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline.set(file("$rootDir/config/detekt/baseline.xml"))
+    include("**/*.kt")
+    include("**/*.kts")
+    exclude("**/resources/**")
+    exclude("**/build/**")
 }
 
 java {

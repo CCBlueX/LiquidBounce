@@ -13,17 +13,23 @@ import net.minecraft.item.ToolItem
 
 class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f)
-        )
-        private val COMPARATOR = ComparatorChain<WeightedToolItem>({ o1, o2 ->
-            (o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)
-        }, { o1, o2 ->
-            VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-        }, PREFER_ITEMS_IN_HOTBAR, STABILIZE_COMPARISON
-        )
+        val VALUE_ESTIMATOR =
+            EnchantmentValueEstimator(
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
+            )
+        private val COMPARATOR =
+            ComparatorChain<WeightedToolItem>(
+                { o1, o2 ->
+                    (o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)
+                },
+                { o1, o2 ->
+                    VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+                },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
     override val category: ItemCategory

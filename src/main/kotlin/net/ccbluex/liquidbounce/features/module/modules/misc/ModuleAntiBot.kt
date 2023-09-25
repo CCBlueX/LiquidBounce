@@ -38,7 +38,6 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
 import java.util.*
 import kotlin.math.abs
-import kotlin.collections.ArrayList
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
@@ -65,6 +64,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         val illegalName by boolean("IllegalName", false)
         val needHit by boolean("NeedHit", false)
         val health by boolean("IllegalHealth", false)
+
         object AlwaysInRadius : ToggleableConfigurable(ModuleAntiBot, "AlwaysInRadius", false) {
             val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
         }

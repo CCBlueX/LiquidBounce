@@ -11,21 +11,25 @@ import net.minecraft.item.ItemStack
 
 class WeightedCrossbowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.QUICK_CHARGE, 0.2f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MULTISHOT, 1.5f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PIERCING, 1.0f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.2f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.25f)
-        )
-        private val COMPARATOR = ComparatorChain<WeightedCrossbowItem>(
-            { o1, o2 ->
-                (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
-                    VALUE_ESTIMATOR.estimateValue(o2.itemStack)
-                )
-            }, PREFER_ITEMS_IN_HOTBAR, STABILIZE_COMPARISON
-        )
+        val VALUE_ESTIMATOR =
+            EnchantmentValueEstimator(
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.QUICK_CHARGE, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MULTISHOT, 1.5f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PIERCING, 1.0f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.25f),
+            )
+        private val COMPARATOR =
+            ComparatorChain<WeightedCrossbowItem>(
+                { o1, o2 ->
+                    (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
+                        VALUE_ESTIMATOR.estimateValue(o2.itemStack),
+                    )
+                },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
     override val category: ItemCategory

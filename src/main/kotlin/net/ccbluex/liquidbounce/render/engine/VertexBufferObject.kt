@@ -124,5 +124,5 @@ enum class VBOTarget(val glId: Int) {
     /**
      * Vertex array indices
      */
-    ElementArrayBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER),
+    ElementArrayBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER)
 }

@@ -18,24 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.item.*
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
+import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.fluid.LavaFluid
-import net.minecraft.fluid.WaterFluid
-import net.minecraft.item.*
+import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
-import kotlin.collections.HashMap
-import kotlin.math.ceil
 
 /**
  * InventoryCleaner module
@@ -44,32 +39,33 @@ import kotlin.math.ceil
  */
 
 object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
-
-    val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
 
     val maxBlocks by int("MaxBlocks", 512, 0..3000)
     val maxArrows by int("MaxArrows", 256, 0..3000)
 
-    val usefulItems = items(
-        "UsefulItems", mutableListOf(
-            Items.WATER_BUCKET,
-            Items.LAVA_BUCKET,
-            Items.MILK_BUCKET,
-            Items.FLINT_AND_STEEL,
-            Items.ENDER_PEARL,
-            Items.GOLDEN_APPLE,
-            Items.ENCHANTED_GOLDEN_APPLE,
-            Items.ARROW,
-            Items.SPECTRAL_ARROW,
-            Items.TIPPED_ARROW,
-            Items.POTION,
-            Items.LINGERING_POTION,
-            Items.SPLASH_POTION,
-            Items.TRIDENT,
-            Items.TNT,
-            Items.ELYTRA
+    val usefulItems =
+        items(
+            "UsefulItems",
+            mutableListOf(
+                Items.WATER_BUCKET,
+                Items.LAVA_BUCKET,
+                Items.MILK_BUCKET,
+                Items.FLINT_AND_STEEL,
+                Items.ENDER_PEARL,
+                Items.GOLDEN_APPLE,
+                Items.ENCHANTED_GOLDEN_APPLE,
+                Items.ARROW,
+                Items.SPECTRAL_ARROW,
+                Items.TIPPED_ARROW,
+                Items.POTION,
+                Items.LINGERING_POTION,
+                Items.SPLASH_POTION,
+                Items.TRIDENT,
+                Items.TNT,
+                Items.ELYTRA,
+            ),
         )
-    )
 
     val isGreedy by boolean("Greedy", true)
 
@@ -84,51 +80,53 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.values())
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
-    val repeatable = repeatable {
-        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
-            return@repeatable
-        }
-
-        if (ModuleAutoArmor.locked) {
-            return@repeatable
-        }
-
-        val cleanupPlan = createCleanupPlan()
-
-        for (hotbarSwap in cleanupPlan.hotbarSwaps) {
-            if (tryRunActionInInventory { executeAction(hotbarSwap.from, hotbarSwap.to, SlotActionType.SWAP) }) {
-                wait { inventoryConstraints.delay.random() }
-
+    val repeatable =
+        repeatable {
+            if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
                 return@repeatable
             }
-        }
 
-        val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
-
-        for (i in stacksToMerge) {
-            val shouldReturn = tryRunActionInInventory {
-                executeAction(i, 0, SlotActionType.PICKUP)
-                executeAction(i, 0, SlotActionType.PICKUP_ALL)
-                executeAction(i, 0, SlotActionType.PICKUP)
-            }
-
-            if (shouldReturn) {
-                wait { inventoryConstraints.delay.random() }
-
+            if (ModuleAutoArmor.locked) {
                 return@repeatable
             }
-        }
 
-        val itemsToThrowOut = findItemsToThrowOut(cleanupPlan)
+            val cleanupPlan = createCleanupPlan()
 
-        for (i in itemsToThrowOut) {
-            if (tryRunActionInInventory { executeAction(i, 1, SlotActionType.THROW) }) {
-                wait { inventoryConstraints.delay.random() }
+            for (hotbarSwap in cleanupPlan.hotbarSwaps) {
+                if (tryRunActionInInventory { executeAction(hotbarSwap.from, hotbarSwap.to, SlotActionType.SWAP) }) {
+                    wait { inventoryConstraints.delay.random() }
 
-                return@repeatable
+                    return@repeatable
+                }
+            }
+
+            val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
+
+            for (i in stacksToMerge) {
+                val shouldReturn =
+                    tryRunActionInInventory {
+                        executeAction(i, 0, SlotActionType.PICKUP)
+                        executeAction(i, 0, SlotActionType.PICKUP_ALL)
+                        executeAction(i, 0, SlotActionType.PICKUP)
+                    }
+
+                if (shouldReturn) {
+                    wait { inventoryConstraints.delay.random() }
+
+                    return@repeatable
+                }
+            }
+
+            val itemsToThrowOut = findItemsToThrowOut(cleanupPlan)
+
+            for (i in itemsToThrowOut) {
+                if (tryRunActionInInventory { executeAction(i, 1, SlotActionType.THROW) }) {
+                    wait { inventoryConstraints.delay.random() }
+
+                    return@repeatable
+                }
             }
         }
-    }
 
     fun findItemsToThrowOut(cleanupPlan: InventoryCleanupPlan): List<Int> {
         val itemsToThrowOut = mutableListOf<Int>()
@@ -164,7 +162,11 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         return false
     }
 
-    private fun executeAction(slot: Int, clickData: Int, slotActionType: SlotActionType) {
+    private fun executeAction(
+        slot: Int,
+        clickData: Int,
+        slotActionType: SlotActionType,
+    ) {
         val remappedSlot = convertClientSlotToServerSlot(slot)
 
         interaction.clickSlot(0, remappedSlot, clickData, slotActionType, player)
