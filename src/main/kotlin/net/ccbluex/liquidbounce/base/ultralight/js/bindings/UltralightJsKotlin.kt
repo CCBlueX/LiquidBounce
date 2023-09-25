@@ -35,7 +35,7 @@ object UltralightJsKotlin {
 
     fun colorToHex(color4b: Color4b) =
         color4b.toHex() +
-            if(color4b.a != 255) // if the alpha is full there is no need for the extra "FF"s
+            if(color4b.a != 255) // if the alpha is full there is no need for the extra "FF"
                 componentToHex(color4b.a)
             else
                 ""
