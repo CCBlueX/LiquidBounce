@@ -138,7 +138,8 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             val options = BlockPlacementTargetFindingOptions(
                 listOf(Vec3i(0, 0, 0)),
                 player.inventory.getStack(itemForMLG!!),
-                CenterTargetPositionFactory
+                CenterTargetPositionFactory,
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
             )
 
             currentTarget = findBestBlockPlacementTarget(collision.up(), options)
@@ -154,7 +155,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
             val rayTraceResult = raycast(4.5, rotation) ?: return@handler
 
-            if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction) {
+            if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.interactedBlockPos || rayTraceResult.side != target.direction) {
                 return@handler
             }
 

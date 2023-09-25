@@ -18,12 +18,19 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.HORIZONTAL_DIRECTIONS
+import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -38,6 +45,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -45,12 +53,16 @@ val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
 
-fun Entity.isCloseToEdge(distance: Double = 0.1): Boolean {
-    Direction.values().drop(2).forEach { side ->
-        if (!this.pos.offset(side, distance).add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
-            return true
-    }
-    return false
+fun ClientPlayerEntity.isCloseToEdge(distance: Double = 0.1): Boolean {
+    if (!this.pos.add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
+        return true
+
+    val alpha = (this.directionYaw + 90.0F).toRadians()
+
+    val from = this.pos + Vec3d(0.0, -0.1, 0.0)
+    val to = from + Vec3d(cos(alpha) * distance, 0.0, sin(alpha) * distance)
+
+    return findEdgeCollision(from, to) != null
 }
 
 val ClientPlayerEntity.pressingMovementButton
@@ -147,6 +159,9 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, 
 val Entity.eyes: Vec3d
     get() = eyePos
 
+val Entity.prevPos: Vec3d
+    get() = Vec3d(this.prevX, this.prevY, this.prevZ)
+
 val Input.yAxisMovement: Float
     get() = when {
         jumping -> 1.0f
@@ -222,9 +237,9 @@ fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
 
 /**
  * Applies armor, enchantments, effects, etc. to the damage and returns the damage
- * that is actually applied.
+ * that is actually applied. This function is so damn ugly that I turned off code smell analysis for it.
  */
-@Suppress("detekt:complexity")
+@Suppress("detekt:all")
 fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
     val world = this.world
 

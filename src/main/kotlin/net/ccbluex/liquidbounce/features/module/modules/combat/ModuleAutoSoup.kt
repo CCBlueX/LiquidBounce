@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -54,7 +53,8 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
         if (player.health < health && mushroomStewSlot != null && !isInInventoryScreen) {
             // we need to take some actions
-            CombatManager.pauseCombat = combatPauseTime
+            CombatManager.pauseCombatForAtLeast(combatPauseTime)
+
             if (player.isBlocking) {
                 interaction.stopUsingItem(player)
                 wait { 1 }

@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.crystalAura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager.canSeeUpperBlockSide
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager.raytraceUpperBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.canSeeUpperBlockSide
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.forEachCollidingBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius

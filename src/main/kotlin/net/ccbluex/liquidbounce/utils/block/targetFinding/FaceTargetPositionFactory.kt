@@ -159,8 +159,18 @@ class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfigu
         ModuleDebug.debugGeometry(
             ModuleScaffold,
             "facePreCrop",
-            ModuleDebug.DebuggedBox(Box(targetFace.from, targetFace.to).offset(0.1, 0.1, 0.1), Color4b(0, 127, 127, 64))
+            ModuleDebug.DebuggedBox(Box(trimmedFace.from, trimmedFace.to), Color4b(255, 0, 0, 64))
         )
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "cropBox",
+            ModuleDebug.DebuggedBox(cropBox, Color4b(0, 127, 127, 64))
+        )
+
+        // Not much left of the area? Then don't try to sample a point on the face
+        if (targetFace.area < 0.0001)
+            return null
+
         return targetFace
     }
 }

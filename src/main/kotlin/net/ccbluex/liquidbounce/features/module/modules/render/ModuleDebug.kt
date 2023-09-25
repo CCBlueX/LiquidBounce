@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.minecraft.util.math.Box
 
 /**
@@ -70,6 +71,14 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
             this.to = Vec3(line.position.add(normalizedDirection.multiply(100.0)))
         }
 
+        override fun render(env: RenderEnvironment) {
+            env.withColor(color) {
+                this.drawLineStrip(from, to)
+            }
+        }
+    }
+
+    class DebuggedLineSegment(val from: Vec3, val to: Vec3, color: Color4b) : DebuggedGeometry(color) {
         override fun render(env: RenderEnvironment) {
             env.withColor(color) {
                 this.drawLineStrip(from, to)

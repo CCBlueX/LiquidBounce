@@ -183,7 +183,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         var nextBlock: BlockPos? = null
 
         for ((pos, state) in blocksToProcess) {
-            val (rotation, _) = RotationManager.raytraceBlock(
+            val (rotation, _) = raytraceBlock(
                 player.eyes,
                 pos,
                 state,

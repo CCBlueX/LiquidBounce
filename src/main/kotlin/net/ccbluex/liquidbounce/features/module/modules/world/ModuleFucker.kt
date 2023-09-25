@@ -154,7 +154,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val (pos, state) = blockToProcess
 
-        val rt = RotationManager.raytraceBlock(
+        val rt = raytraceBlock(
             player.eyes, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
         )
 

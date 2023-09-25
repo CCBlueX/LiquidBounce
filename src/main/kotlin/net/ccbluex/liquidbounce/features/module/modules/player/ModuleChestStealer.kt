@@ -187,8 +187,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             if (hotbarSwap.from < PLAYER_INVENTORY_SIZE) {
                 continue
             }
-            if (waitForTimer())
-                return true
 
             interaction.clickSlot(
                 screen.screenHandler.syncId,
@@ -202,6 +200,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 Pair(hotbarSwap.from, hotbarSwap.to),
                 Pair(hotbarSwap.to, hotbarSwap.from)
             ))
+
+            if (!waitForTimer())
+                return true
         }
 
         return false

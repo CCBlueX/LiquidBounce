@@ -106,6 +106,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             is DispenserBlockEntity -> ChestType.DISPENSER
             is HopperBlockEntity -> ChestType.HOPPER
             is ShulkerBoxBlockEntity -> ChestType.SHULKER_BOX
+            is BarrelBlockEntity -> ChestType.CHEST
             else -> null
         }
     }

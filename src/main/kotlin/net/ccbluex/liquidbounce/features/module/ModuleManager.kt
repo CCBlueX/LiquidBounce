@@ -116,6 +116,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNotifier,
             ModuleSpammer,
             ModuleTeams,
+            ModuleDebugRecorder,
 
             // Movement
             ModuleAirJump,

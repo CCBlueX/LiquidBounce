@@ -1,22 +1,8 @@
 package net.ccbluex.liquidbounce.utils.combat
 
-import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.*
-import org.apache.commons.lang3.RandomUtils
-import kotlin.math.abs
-import kotlin.math.hypot
 
 /**
  * A rotation manager
@@ -24,28 +10,28 @@ import kotlin.math.hypot
 object CombatManager : Listenable {
 
     // useful for something like autoSoup
-    var pauseCombat: Int = -1
+    private var pauseCombat: Int = -1
 
     // useful for something like autopot
-    var pauseRotation: Int = -1
+    private var pauseRotation: Int = -1
 
     // useful for autoblock
-    var pauseBlocking: Int = -1
+    private var pauseBlocking: Int = -1
 
     private fun updatePauseRotation() {
-        if (pauseRotation == -1) return
+        if (pauseRotation >= -1) return
 
         pauseRotation--
     }
 
     private fun updatePauseCombat() {
-        if (pauseCombat == -1) return
+        if (pauseCombat >= -1) return
 
         pauseCombat--
     }
 
     private fun updatePauseBlocking() {
-        if (pauseBlocking == -1) return
+        if (pauseBlocking >= -1) return
 
         pauseBlocking--
     }
@@ -62,5 +48,19 @@ object CombatManager : Listenable {
 
     val tickHandler = handler<GameTickEvent> {
         update()
+    }
+
+    fun shouldPauseCombat(): Boolean = this.pauseCombat > 0
+    fun shouldPauseRotation(): Boolean = this.pauseRotation > 0
+    fun shouldPauseBlocking(): Boolean = this.pauseBlocking > 0
+
+    fun pauseCombatForAtLeast(pauseTime: Int) {
+        this.pauseCombat = this.pauseCombat.coerceAtLeast(pauseTime)
+    }
+    fun pauseRotationForAtLeast(pauseTime: Int) {
+        this.pauseRotation = this.pauseRotation.coerceAtLeast(pauseTime)
+    }
+    fun pauseBlockingForAtLeast(pauseTime: Int) {
+        this.pauseBlocking = this.pauseBlocking.coerceAtLeast(pauseTime)
     }
 }
