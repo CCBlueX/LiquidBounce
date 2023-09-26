@@ -18,4 +18,9 @@ style:
   MagicNumber:
     active: false
   ReturnCount:
-    active: false
+    active: true
+    excludeGuardClauses: true
+    max: 5
+  LoopWithTooManyJumpStatements:
+    active: true
+    maxJumpCount: 3

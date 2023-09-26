@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
-import net.minecraft.block.Block
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
@@ -60,7 +59,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
     private val visualSwing by boolean("VisualSwing", true)
-    private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
+    //private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
     private val switchDelay by int("SwitchDelay", 0, 0..20)
@@ -70,6 +69,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val rotations = RotationsConfigurable()
 
     private var currentTarget: DestroyerTarget? = null
+
+    // todo: Remove when the blocks option actually works
+    private val targetedBlocks = findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
 
     val moduleRepeatable = repeatable {
         if (mc.currentScreen is HandledScreen<*>) {
@@ -140,10 +142,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private fun updateTarget() {
         this.currentTarget = null
 
-        val targetedBlocks = hashSetOf<Block>()
-
-        targetedBlocks.addAll(targets)
-
         val radius = range + 1
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
@@ -156,7 +154,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val (pos, state) = blockToProcess
 
-        val rt = RotationManager.raytraceBlock(
+        val rt = raytraceBlock(
             player.eyes, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
         )
 

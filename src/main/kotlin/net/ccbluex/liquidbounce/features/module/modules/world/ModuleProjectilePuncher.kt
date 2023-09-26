@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
@@ -110,7 +111,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             }
 
             // find best spot
-            val spot = RotationManager.raytraceBox(
+            val spot = raytraceBox(
                 player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 

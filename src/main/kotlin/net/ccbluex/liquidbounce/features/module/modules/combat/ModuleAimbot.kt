@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -66,7 +67,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             }
 
             if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
-                val spot = RotationManager.raytraceBox(player.eyes, target.box, range.toDouble(), 0.0) ?: break
+                val spot = raytraceBox(player.eyes, target.box, range.toDouble(), 0.0) ?: break
 
                 return spot.rotation
             }

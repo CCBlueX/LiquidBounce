@@ -26,8 +26,18 @@ enum class AimMode(override val choiceName: String) : NamedChoice {
 class BlockPlacementTargetFindingOptions(
     val offsetsToInvestigate: List<Vec3i>,
     val stackToPlaceWith: ItemStack,
-    val facePositionFactory: FaceTargetPositionFactory
-)
+    val facePositionFactory: FaceTargetPositionFactory,
+    /**
+     * Compares two offsets by their priority. The offset with the higher priority will be prioritized.
+     */
+    val offsetPriorityGetter: (Vec3i) -> Double
+) {
+    companion object {
+        val PRIORITIZE_LEAST_BLOCK_DISTANCE: (Vec3i) -> Double = { vec ->
+            -Vec3d.of(vec).add(0.5, 0.5, 0.5).squaredDistanceTo(mc.player!!.pos)
+        }
+    }
+}
 
 data class BlockTargetPlan(
     val blockPosToInteractWith: BlockPos,
@@ -55,17 +65,19 @@ enum class BlockTargetingMode {
 private fun findBestTargetPlanForTargetPosition(posToInvestigate: BlockPos, mode: BlockTargetingMode): BlockTargetPlan? {
     val directions = Direction.values()
 
-    return directions.mapNotNull { direction ->
+    val options = directions.mapNotNull { direction ->
         val targetPlan =
             getTargetPlanForPositionAndDirection(posToInvestigate, direction, mode)
-            ?: return@mapNotNull null
+                ?: return@mapNotNull null
 
         // Check if the target face is pointing away from the player
         if (targetPlan.angleToPlayerEyeCosine < 0)
             return@mapNotNull null
 
         return@mapNotNull targetPlan
-    }.maxByOrNull { it.angleToPlayerEyeCosine }
+    }
+
+    return options.maxByOrNull { it.angleToPlayerEyeCosine }
 }
 
 /**
@@ -99,7 +111,10 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
         return null
     }
 
-    val offsetsToInvestigate = options.offsetsToInvestigate
+    val offsetsToInvestigate =
+        options.offsetsToInvestigate.sortedByDescending {
+            options.offsetPriorityGetter(pos.add(it))
+        }
 
     for (offset in offsetsToInvestigate) {
         val posToInvestigate = pos.add(offset)
@@ -133,6 +148,7 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
         return BlockPlacementTarget(
             currPos,
+            posToInvestigate,
             targetPlan.interactionDirection,
             face.face.from.y + currPos.y,
             rotation
@@ -182,7 +198,14 @@ private fun findTargetPointOnFace(
 
 
 data class BlockPlacementTarget(
-    val blockPos: BlockPos,
+    /**
+     * BlockPos which is right-clicked
+     */
+    val interactedBlockPos: BlockPos,
+    /**
+     * Block pos at which a new block is placed
+     */
+    val placedBlock: BlockPos,
     val direction: Direction,
     /**
      * Some blocks must be placed above a certain height of the block. For example stairs and slabs must be placed
@@ -194,7 +217,7 @@ data class BlockPlacementTarget(
     fun doesCrosshairTargetFullfitRequirements(crosshairTarget: BlockHitResult): Boolean {
         if (crosshairTarget.type != HitResult.Type.BLOCK)
             return false
-        if (crosshairTarget.blockPos != this.blockPos)
+        if (crosshairTarget.blockPos != this.interactedBlockPos)
             return false
         if (crosshairTarget.side != this.direction)
             return false

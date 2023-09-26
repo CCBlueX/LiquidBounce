@@ -36,6 +36,7 @@ fun BlockPos.getState() = mc.world?.getBlockState(this)
 fun BlockPos.getBlock() = getState()?.block
 
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
 
 /**
  * Search blocks around the player in a cuboid

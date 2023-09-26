@@ -20,7 +20,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.crystalAura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.canSeeBox
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
@@ -43,7 +45,7 @@ object SubmoduleCrystalDestroyer {
 
         // find best spot (and skip if no spot was found)
         val (rotation, _) =
-            RotationManager.raytraceBox(
+            raytraceBox(
                 player.eyePos,
                 target.boundingBox,
                 range = range,
@@ -70,7 +72,7 @@ object SubmoduleCrystalDestroyer {
         this.currentTarget =
             world.getEntitiesBoxInRange(player.getCameraPosVec(1.0F), range) { it is EndCrystalEntity }
                 .mapNotNull {
-                    if (!RotationManager.canSeeBox(
+                    if (!canSeeBox(
                             player.eyePos,
                             it.boundingBox,
                             range = range,
