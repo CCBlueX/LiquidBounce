@@ -10,28 +10,28 @@ import net.ccbluex.liquidbounce.event.handler
 object CombatManager : Listenable {
 
     // useful for something like autoSoup
-    private var pauseCombat: Int = -1
+    private var pauseCombat: Int = 0
 
     // useful for something like autopot
-    private var pauseRotation: Int = -1
+    private var pauseRotation: Int = 0
 
     // useful for autoblock
-    private var pauseBlocking: Int = -1
+    private var pauseBlocking: Int = 0
 
     private fun updatePauseRotation() {
-        if (pauseRotation >= -1) return
+        if (pauseRotation <= 0) return
 
         pauseRotation--
     }
 
     private fun updatePauseCombat() {
-        if (pauseCombat >= -1) return
+        if (pauseCombat <= 0) return
 
         pauseCombat--
     }
 
     private fun updatePauseBlocking() {
-        if (pauseBlocking >= -1) return
+        if (pauseBlocking <= 0) return
 
         pauseBlocking--
     }
@@ -57,9 +57,11 @@ object CombatManager : Listenable {
     fun pauseCombatForAtLeast(pauseTime: Int) {
         this.pauseCombat = this.pauseCombat.coerceAtLeast(pauseTime)
     }
+
     fun pauseRotationForAtLeast(pauseTime: Int) {
         this.pauseRotation = this.pauseRotation.coerceAtLeast(pauseTime)
     }
+
     fun pauseBlockingForAtLeast(pauseTime: Int) {
         this.pauseBlocking = this.pauseBlocking.coerceAtLeast(pauseTime)
     }
