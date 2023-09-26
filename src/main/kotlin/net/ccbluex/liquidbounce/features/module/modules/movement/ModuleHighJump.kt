@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.Module
  *
  * Allows you to jump higher.
  */
-
 object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
     private val modes = choices(
@@ -61,10 +61,28 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        var glide by boolean("Glide", false)
+
+        var shouldGlide = false
+
+        val repeatable = repeatable {
+            if (glide && shouldGlide) { // if the variable is true, then glide
+                if (player.isOnGround) {
+                    shouldGlide = false
+                    return@repeatable
+                }
+                if (player.fallDistance > 0) {
+                    if (player.age % 2 == 0) {
+                        player.velocity.y = -0.155
+                    }
+                } else player.velocity.y = -0.1
+            }
+        }
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
             wait { 100 }
             player.velocity.y = 0.0
+            shouldGlide = true
         }
     }
 }
