@@ -521,34 +521,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        if (mode == "Telly") {
-            val (x, z) = player.horizontalFacing.directionVec.x to player.horizontalFacing.directionVec.z
+        val (f, g) = if (mode == "Telly") 5 to 3 else 1 to 1
 
-            val offsets = arrayListOf<Vec3i>()
-
-            for (y in 0 downTo -3) {
-                for (i in (-3..3)) {
-                    offsets.add(Vec3i(x * i, y, z * i))
+        (-f..f).flatMap { x ->
+            (0 downTo -g).flatMap { y ->
+                (-f..f).map { z ->
+                    Vec3i(x, y, z)
                 }
             }
-
-            for (offset in offsets.sortedBy { getCenterDistance(blockPosition.add(it)) }) {
-                if (search(blockPosition.add(offset), !shouldGoDown, area)) {
-                    return
-                }
-            }
-
-            return
-        }
-
-        for (x in -1..1 step 2) {
-            if (search(blockPosition.add(x, 0, 0), !shouldGoDown, area)) {
-                return
-            }
-        }
-
-        for (z in -1..1 step 2) {
-            if (search(blockPosition.add(0, 0, z), !shouldGoDown, area)) {
+        }.sortedBy {
+            getCenterDistance(blockPosition.add(it))
+        }.forEach {
+            if (canBeClicked(blockPosition.add(it)) || search(blockPosition.add(it), !shouldGoDown, area)) {
                 return
             }
         }
@@ -833,7 +817,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         var currPlaceRotation: PlaceRotation?
 
-        var considerStablePitch: PlaceRotation? = null
+        var considerStableRotation: PlaceRotation? = null
 
         val isLookingDiagonally = run {
             // Round the rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
@@ -874,7 +858,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
                             // The module should be looking to aim at (nearly) the upper face of the block. Provides stable bridging most of the time.
                             if (isInStablePitchRange) {
-                                considerStablePitch = compareDifferences(currPlaceRotation, considerStablePitch)
+                                considerStableRotation = compareDifferences(currPlaceRotation, considerStableRotation)
                             }
 
                             placeRotation = compareDifferences(currPlaceRotation, placeRotation)
@@ -906,7 +890,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             }
         }
 
-        placeRotation = considerStablePitch ?: placeRotation
+        placeRotation = considerStableRotation ?: placeRotation
 
         placeRotation ?: return false
 
@@ -996,7 +980,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         rotation = when (rotationMode) {
             "Stabilized" -> Rotation(round(rotation.yaw / 45f) * 45f, rotation.pitch)
             else -> rotation
-        }
+        }.fixedSensitivity()
 
         // If the current rotation already looks at the target block and side, then return right here
         performBlockRaytrace(currRotation, maxReach)?.let { raytrace ->
@@ -1112,7 +1096,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                     (-1..1).map { z ->
                         val neighbor = main.add(x, 0, z)
 
-                        neighbor to (neighbor.getVec() - player.eyes).lengthVector()
+                        neighbor to getCenterDistance(neighbor)
                     }
                 }.filter { canBeClicked(it.first) }.minByOrNull { it.second }?.first ?: main
             }.up().getVec()
