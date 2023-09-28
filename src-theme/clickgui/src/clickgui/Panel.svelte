@@ -113,7 +113,7 @@
     grid-template-columns: max-content auto max-content;
     align-items: center;
     column-gap: 12px;
-    background-color: rgba(0, 0, 0, 0.68);
+    background-color: var(--header);
     border-bottom: solid 2px #4677ff;
     padding: 10px 15px;
   }
