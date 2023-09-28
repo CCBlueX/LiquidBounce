@@ -38,7 +38,7 @@
   }
 
   .name {
-    background-color: #4677ff;
+    background-color: var(--accent);
     padding: 7px 10px;
     position: relative;
     font-weight: 500;
@@ -86,7 +86,7 @@
       transition: ease color .2s;
 
       &.enabled {
-        color: #4677ff;
+        color: var(--accent);
       }
     }
   }

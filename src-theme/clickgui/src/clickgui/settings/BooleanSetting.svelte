@@ -75,6 +75,6 @@
 
   .switch input:checked + .slider:before {
     transform: translateX(10px);
-    background-color: #4677ff;
+    background-color: var(--accent);
   }
 </style>

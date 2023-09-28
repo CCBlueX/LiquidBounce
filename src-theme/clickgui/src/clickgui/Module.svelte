@@ -103,7 +103,7 @@
 
   .settings {
     background-color: rgba(0, 0, 0, 0.36);
-    border-left: solid 4px #4677FF;
+    border-left: solid 4px var(--accent);
     overflow: hidden;
   }
 </style>

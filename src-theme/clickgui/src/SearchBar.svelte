@@ -181,7 +181,7 @@
     &-list {
       background-color: rgba(0, 0, 0, 0.60);
       border-radius: 0 0 10px 10px;
-      border-top: solid 2px #4677ff;
+      border-top: solid 2px var(--accent);
       max-height: 220px;
       overflow: auto;
       padding: 10px 0;
@@ -204,6 +204,6 @@
   }
 
   .active {
-    color: #4677ff;
+    color: var(--accent);
   }
 </style>

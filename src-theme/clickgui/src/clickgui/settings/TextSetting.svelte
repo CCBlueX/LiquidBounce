@@ -40,7 +40,7 @@
     border: solid 2px transparent;
 
     &:focus {
-      border: solid 2px #4677ff;
+      border: solid 2px var(--accent);
     }
   }
 </style>

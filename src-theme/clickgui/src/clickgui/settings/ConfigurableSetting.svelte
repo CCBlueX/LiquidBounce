@@ -41,7 +41,7 @@
 
     .setting {
         background-color: rgba(0, 0, 0, 0.36);
-        border-right: solid 4px #4677FF;
+        border-right: solid 4px var(--accent);
         padding: 7px 0;
     }
 </style>

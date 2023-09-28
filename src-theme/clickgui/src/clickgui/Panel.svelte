@@ -114,7 +114,7 @@
     align-items: center;
     column-gap: 12px;
     background-color: var(--header);
-    border-bottom: solid 2px #4677ff;
+    border-bottom: solid 2px var(--accent);
     padding: 10px 15px;
   }
 

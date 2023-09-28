@@ -40,7 +40,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
     val searchAutoFocus by boolean("SearchAutoFocus", true)
     val moduleColor by color("ModuleColor", Color4b(0, 0, 0, 127)) // rgba(0, 0, 0, 0.5)
     val headerColor by color("HeaderColor", Color4b(0, 0, 0, 173)) // rgba(0, 0, 0, 0.68)
-        // val headerColor by color("HeaderColor", Color4b(0, 0, 0, 127))
+    val accentColor by color("AccentColor", Color4b(70, 119, 255, 255)) // #4677ff
 
     override fun enable() {
         val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
