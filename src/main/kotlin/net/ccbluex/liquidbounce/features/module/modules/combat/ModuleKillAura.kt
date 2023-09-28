@@ -32,8 +32,6 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
@@ -107,8 +105,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val blockingTicks by int("BlockingTicks", 0, 0..20)
     }
 
+    private val legitAimingConfigurable = LegitAimpointTracker.LegitAimpointTrackerConfigurable(this)
+
     init {
         tree(WhileBlocking)
+        tree(legitAimingConfigurable)
     }
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
@@ -249,8 +250,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Did you ever send a rotation before?
         val rotation = RotationManager.currentRotation
 
-        if (CombatManager.pauseCombat != -1)
+        if (CombatManager.shouldPauseCombat())
             return@repeatable
+
         if (rotation != null && target != null && target.boxedDistanceTo(player) <= range && facingEnemy(
                 target, rotation, range.toDouble(), wallRange.toDouble()
             )
@@ -373,6 +375,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    private val legitAimpointTracker = LegitAimpointTracker(legitAimingConfigurable)
+
+    private var lastRotation: VecRotation? = null
+
     /**
      * Update enemy on target tracker
      */
@@ -396,26 +402,48 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             val predictedTicks = predict.random()
 
-            val targetPrediction = Vec3d(
-                target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ
-            ).multiply(predictedTicks)
-
-            val playerPrediction = Vec3d(
-                player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ
-            ).multiply(predictedTicks)
+            val targetPrediction = target.pos.subtract(target.prevPos).multiply(predictedTicks)
+            val playerPrediction = player.pos.subtract(player.prevPos).multiply(predictedTicks)
 
             val box = target.box.offset(targetPrediction)
 
+            val rotationPreference =
+                this.lastRotation
+                ?.let { LeastDifferencePreference(it.rotation, basePoint = it.vec) }
+                ?: LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
+
             // find best spot
-            val spot = RotationManager.raytraceBox(
-                eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble()
+            val spot = raytraceBox(
+                eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble(),
+                rotationPreference = rotationPreference
             ) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
 
+            val nextPoint = if (this.legitAimingConfigurable.enabled) {
+                val aimpointChange = target.pos.subtract(target.prevPos).subtract(player.pos.subtract(player.prevPos))
+
+                val nextPoint = this.legitAimpointTracker.nextPoint(box, spot.vec, aimpointChange)
+
+                lastRotation = VecRotation(
+                    RotationManager.makeRotation(nextPoint.aimSpotWithoutNoise, eyes),
+                    nextPoint.aimSpotWithoutNoise
+                )
+
+                nextPoint.aimSpot
+            } else {
+                lastRotation = null
+
+                spot.vec
+            }
+
             // aim at target
-            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                RotationManager.makeRotation(nextPoint, player.eyes),
+                openInventory = ignoreOpenInventory,
+                configurable = rotations
+            )
             break
         }
     }
