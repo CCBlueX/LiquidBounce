@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
+import net.ccbluex.liquidbounce.utils.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -42,7 +43,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	val autoClose by BoolValue("AutoClose", false) { invOpen }
 
 	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
-	val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || simulateInventory }
+	val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || (!invOpen && simulateInventory) }
 
 	// When swapping armor pieces, it grabs the better one, drags and swaps it with equipped one and drops the equipped one (no time of having no armor piece equipped)
 	// Has to make more clicks, works slower
@@ -248,13 +249,18 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	private fun shouldCloseSimulatedInv() = simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory
 
 	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
-		if (simulateInventory && !serverOpenInventory) {
+		if (simulateInventory && !serverOpenInventory)
 			sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
-		}
 
-		// Delay first click
 		if (!hasClicked) {
-			delay(startDelay.toLong())
+			// Delay first click
+			if (isFirstInventoryClick) {
+				// Have to set this manually, because it would delay all clicks until scheduled clicks were sent
+				isFirstInventoryClick = false
+
+				delay(startDelay.toLong())
+			}
+
 			hasClicked = true
 		}
 

@@ -70,7 +70,7 @@ class FallingPlayer(
     }
 
     fun findCollision(ticks: Int): CollisionResult? {
-        for (i in 0 until ticks) {
+        repeat(ticks) { i ->
             val start = Vec3(x, y, z)
             calculateForTick()
             val end = Vec3(x, y, z)

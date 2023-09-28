@@ -27,6 +27,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     var serverOpenInventory = false
         private set
 
+    var isFirstInventoryClick = true
+
     val CLICK_TIMER = MSTimer()
 
     val BLOCK_BLACKLIST = listOf(
@@ -97,15 +99,26 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         if (event.isCancelled) return
 
         when (val packet = event.packet) {
-            is C08PacketPlayerBlockPlacement, is C0EPacketClickWindow -> CLICK_TIMER.reset()
+            is C08PacketPlayerBlockPlacement, is C0EPacketClickWindow -> {
+                CLICK_TIMER.reset()
+
+                if (packet is C0EPacketClickWindow)
+                    isFirstInventoryClick = false
+            }
 
             is C16PacketClientStatus ->
                 if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
                     if (serverOpenInventory) event.cancelEvent()
-                    else serverOpenInventory = true
+                    else {
+                        isFirstInventoryClick = true
+                        serverOpenInventory = true
+                    }
                 }
 
-            is C0DPacketCloseWindow, is S2EPacketCloseWindow -> serverOpenInventory = false
+            is C0DPacketCloseWindow, is S2EPacketCloseWindow -> {
+                serverOpenInventory = false
+                isFirstInventoryClick = false
+            }
 
             is C09PacketHeldItemChange -> {
                 // Support for Singleplayer

@@ -157,6 +157,8 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                 // (sortable items would have to be normally shift-clicked afterward)
                 .sortedBy { it.third == null }
 
+            var hasTaken = false
+
             run scheduler@ {
                 usefulItems.forEachIndexed { index, (slot, _, sortableTo) ->
                     if (!shouldExecute())
@@ -166,6 +168,8 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                     // When stealing items by instantly sorting them, you don't need any space in inventory, yay
                     if (sortableTo == null && !hasSpaceInInventory())
                         return@scheduler
+
+                    hasTaken = true
 
                     // If target is sortable to a hotbar slot, steal it right there, else shift + left-click
                     TickScheduler.scheduleClick(slot, sortableTo ?: 0, if (sortableTo != null) 2 else 1) {
@@ -177,7 +181,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
             }
 
             // If no clicks were sent in the last loop stop searching
-            if (TickScheduler.isEmpty()) {
+            if (!hasTaken) {
                 progress = 1f
                 delay(closeDelay.toLong())
 

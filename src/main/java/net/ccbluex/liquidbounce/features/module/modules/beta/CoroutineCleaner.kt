@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
+import net.ccbluex.liquidbounce.utils.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -33,6 +34,8 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
 
+// TODO: diamond pickaxe slot 2, diamond pickaxe effi 1 slot 3, idk it works fine?
+
 object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val drop by BoolValue("Drop", true)
 	val sort by BoolValue("Sort", true)
@@ -51,13 +54,15 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36)
 	private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36)
 
+	private val compactStacks by BoolValue("CompactStacks", true)
+
 	private val invOpen by BoolValue("InvOpen", false)
 	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
 
 	private val autoClose by BoolValue("AutoClose", false) { invOpen }
 	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
 
-	private val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || simulateInventory }
+	private val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || (!invOpen && simulateInventory) }
 	private val noMove by BoolValue("NoMoveClicks", false)
 	private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
 
@@ -110,9 +115,63 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	suspend fun execute() {
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!shouldExecute()) return
+		if (!shouldExecute())
+			return
 
 		hasClicked = false
+
+		// Compact multiple small stacks into one
+		if (compactStacks) {
+			// Loop multiple times until no clicks were scheduled
+			while (true) {
+				if (!shouldExecute()) return
+
+				val stacks = thePlayer.openContainer.inventory
+
+				// List of stack indices with different types to be compacted by double-clicking
+				val indicesToDoubleClick = stacks.withIndex()
+					.groupBy { it.value?.item }
+					.mapNotNull { (item, groupedStacks) ->
+						item ?: return@mapNotNull null
+
+						val sortedStacks = groupedStacks
+							.filterNot { it.value.stackSize == it.value.maxStackSize }
+							// Prioritise stacks that are lower in inventory
+							.sortedByDescending { it.index }
+							// Prioritise stacks that are sorted
+							.sortedByDescending { canBeSortedTo(it.index, it.value?.item, stacks.size) }
+
+						// Return first stack that can be merged with a different stack of the same type else null
+						sortedStacks.firstOrNull { (_, clickedStack) ->
+							sortedStacks.any { (_, mergedStack) ->
+								clickedStack.stackSize + mergedStack.stackSize <= clickedStack.maxStackSize
+							}
+						}?.index
+					}
+
+				var hasMerged = false
+
+				for (index in indicesToDoubleClick) {
+					if (!shouldExecute()) return
+
+					if (index in TickScheduler) continue
+
+					hasMerged = true
+
+					click(index, 0, 0)
+
+					click(index, 0, 6, allowDuplicates = true)
+
+					click(index, 0, 0, allowDuplicates = true)
+				}
+
+				if (!hasMerged)
+					break
+
+				// This part can't be fully instant because of the complex vanilla merging behaviour, stack size changes and so on
+				waitUntil { TickScheduler.isEmpty() }
+			}
+		}
 
 		// Sort hotbar (with useful items without even dropping bad items first)
 		if (sort) {
@@ -238,22 +297,25 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		return if (parsed in 0..8) parsed else null
 	}
 
-	suspend fun click(slot: Int, button: Int, mode: Int) {
-		val hadOpenInventory = serverOpenInventory
-
+	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
 		if (simulateInventory && !serverOpenInventory)
 			sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
-		// Delay first click
 		if (!hasClicked) {
+			// Delay first click
 			// If AutoArmor finished with open inventory, don't delay InventoryCleaner by another start delay
-			if (!hadOpenInventory)
+			if (isFirstInventoryClick) {
+				// Have to set this manually, because it would delay all clicks until scheduled clicks were sent
+				isFirstInventoryClick = false
+
 				delay(startDelay.toLong())
+
+			}
 
 			hasClicked = true
 		}
 
-		TickScheduler.scheduleClick(slot, button, mode)
+		TickScheduler.scheduleClick(slot, button, mode, allowDuplicates)
 
 		delay(randomDelay(minDelay, maxDelay).toLong())
 	}
@@ -287,7 +349,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		if (item is ItemPotion) {
 			val isSplash = stack.isSplashPotion()
-			val isHarmful = item.getEffects(stack).any { it.potionID in NEGATIVE_EFFECT_IDS }
+			val isHarmful = item.getEffects(stack)?.any { it.potionID in NEGATIVE_EFFECT_IDS } ?: return false
 
 			// Only keep helpful potions and, if 'onlyGoodPotions' is disabled, also splash harmful potions
 			return !isHarmful || (!onlyGoodPotions && isSplash)
