@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
@@ -66,6 +67,8 @@ import kotlin.random.Random
  *
  * Automatically attacks enemies.
  */
+
+
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Attack speed
@@ -186,7 +189,22 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
+        renderEnvironment(matrixStack) {
+            chat("rendering graiden quead")
+            withPosition(Vec3(player.pos)) {
+                drawGradientQuad(
+                    listOf(Vec3(-1.0, 0.0, -1.0),
+                        Vec3(-1.0, 0.0, 1.0),
+                        Vec3(1.0, 0.0, 1.0),
+                        Vec3(1.0, 0.0, -1.0)),
+                    listOf(Color4b.BLUE,
+                        Color4b.BLUE,
+                        Color4b.GREEN,
+                        Color4b.GREEN))
+            }
 
+
+        }
         if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
             failedHits.clear()
             return@handler

@@ -209,6 +209,37 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
     tessellator.draw()
 }
 
+fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>){
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position program
+    RenderSystem.setShader { GameRenderer.getPositionProgram() }
+
+    with(bufferBuilder){
+        begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR)
+
+        if (vertices.size == 4 && colors.size == 4) {
+            vertices.forEachIndexed { index, (x, y, z) ->
+                val color4b = colors[index]
+                println("x: $x y: $y z: $z ")
+                vertex(matrix, x, y, z).color(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f).next()
+            }
+        } else {
+            throw RuntimeException("length of lists are incorrect")
+        }
+
+
+    }
+    tessellator.draw()
+
+}
+
+
+
+
+
 /**
  * Function to draw an outlined box using the specified [box].
  *
