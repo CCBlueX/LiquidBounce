@@ -38,7 +38,6 @@ import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.init.Blocks.air
 import net.minecraft.item.ItemBlock
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.stats.StatList
 import net.minecraft.util.BlockPos
@@ -105,9 +104,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         mc.timer.timerSpeed = 1f
         lockRotation = null
 
-        if (serverSlot != thePlayer.inventory.currentItem) {
-            sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
-        }
+        serverSlot = thePlayer.inventory.currentItem
     }
 
     @EventTarget
@@ -262,11 +259,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                     mc.playerController.updateController()
                 }
 
-                "Spoof", "Switch" -> {
-                    if (blockSlot - 36 != serverSlot) {
-                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
-                    }
-                }
+                "Spoof", "Switch" -> serverSlot = blockSlot - 36
             }
             itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
         }
@@ -282,8 +275,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 sendPacket(C0APacketAnimation())
             }
         }
-        if (autoBlock == "Switch" && serverSlot != mc.thePlayer.inventory.currentItem)
-            sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+
+        if (autoBlock == "Switch")
+            serverSlot = thePlayer.inventory.currentItem
 
         placeInfo = null
     }

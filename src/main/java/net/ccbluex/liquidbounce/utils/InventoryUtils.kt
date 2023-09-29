@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.minecraft.block.BlockBush
 import net.minecraft.init.Blocks
@@ -21,11 +22,27 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     // What slot is selected on server-side?
     // TODO: Is this equal to mc.playerController.currentPlayerItem?
     var serverSlot = -1
-        private set
+        set(value) {
+            if (value != field) {
+                sendPacket(C09PacketHeldItemChange(value))
+
+                field = value
+            }
+        }
 
     // Is inventory open on server-side?
     var serverOpenInventory = false
-        private set
+        set(value) {
+            if (value != field) {
+                sendPacket(
+                    if (value) C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT)
+                    else C0DPacketCloseWindow(mc.thePlayer?.openContainer?.windowId ?: 0)
+                )
+
+
+                field = value
+            }
+        }
 
     var isFirstInventoryClick = true
 

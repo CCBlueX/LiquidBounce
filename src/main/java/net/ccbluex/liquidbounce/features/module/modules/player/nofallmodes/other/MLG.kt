@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.minFallDistance
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.extensions.eyes
@@ -15,7 +14,6 @@ import net.minecraft.init.Blocks.web
 import net.minecraft.init.Items.water_bucket
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemBucket
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import kotlin.math.ceil
@@ -65,9 +63,7 @@ object MLG : NoFallMode("MLG") {
 
                     currentMlgBlock = collision.pos
 
-                    if (thePlayer.inventory.currentItem != index) {
-                        sendPacket(C09PacketHeldItemChange(index))
-                    }
+                    serverSlot = index
 
                     currentMlgRotation = faceBlock(collision.pos)
                     currentMlgRotation?.rotation?.toPlayer(thePlayer)
@@ -81,7 +77,7 @@ object MLG : NoFallMode("MLG") {
                 mlgTimer.reset()
             }
 
-            if (thePlayer.inventory.currentItem != serverSlot) sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+            serverSlot = thePlayer.inventory.currentItem
         }
     }
 }

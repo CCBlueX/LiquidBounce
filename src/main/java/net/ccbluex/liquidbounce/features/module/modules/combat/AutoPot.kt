@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.Rotation
@@ -29,9 +30,6 @@ import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
-import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
 
 object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
@@ -91,15 +89,13 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                     if (openInventory && mc.currentScreen !is GuiInventory)
                         return
 
-                    val openInventory = mc.currentScreen !is GuiInventory && simulateInventory
-
-                    if (openInventory)
-                        sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
+                    if (simulateInventory)
+                        serverOpenInventory = true
 
                     mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
 
-                    if (openInventory)
-                        sendPacket(C0DPacketCloseWindow())
+                    if (simulateInventory)
+                        serverOpenInventory = false
 
                     msTimer.reset()
                 }

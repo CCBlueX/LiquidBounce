@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
+import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
@@ -46,7 +47,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.GuiContainer
-import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
@@ -54,11 +54,12 @@ import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemSword
-import net.minecraft.network.play.client.*
+import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.INTERACT
+import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
-import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -444,11 +445,11 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         // Settings
         val multi = targetMode == "Multi"
-        val openInventory = aac && mc.currentScreen is GuiInventory
+        val manipulateInventory = aac && serverOpenInventory
         val failHit = failRate > 0 && nextInt(endExclusive = 100) <= failRate
 
         // Close inventory when open
-        if (openInventory) sendPacket(C0DPacketCloseWindow())
+        if (manipulateInventory) serverOpenInventory = false
 
         updateHitable()
 
@@ -489,7 +490,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         }
 
         // Open inventory
-        if (openInventory) sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
+        if (manipulateInventory) serverOpenInventory = true
     }
 
     /**

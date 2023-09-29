@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
 import net.ccbluex.liquidbounce.utils.extensions.shuffled
 import net.ccbluex.liquidbounce.utils.item.*
@@ -29,9 +28,6 @@ import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
 import net.minecraft.item.*
-import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
-import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
 
 // TODO: diamond pickaxe slot 2, diamond pickaxe effi 1 slot 3, idk it works fine?
@@ -254,7 +250,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 			// Check if screen hasn't changed after the delay
 			if (shouldCloseSimulatedInv())
-				sendPacket(C0DPacketCloseWindow(thePlayer.openContainer.windowId))
+				serverOpenInventory = false
 		}
 	}
 
@@ -298,8 +294,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	}
 
 	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
-		if (simulateInventory && !serverOpenInventory)
-			sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
+		if (simulateInventory) serverOpenInventory = true
 
 		if (!hasClicked) {
 			// Delay first click

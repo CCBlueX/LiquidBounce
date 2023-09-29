@@ -75,7 +75,7 @@ public class Ignite extends Module {
 
                RotationUtils.INSTANCE.setKeepCurrentRotation(true);
 
-               sendPacket(new C09PacketHeldItemChange(fireInHotbar - 36));
+               InventoryUtils.INSTANCE.setServerSlot(fireInHotbar - 36);
 
                final ItemStack itemStack =
                        mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();

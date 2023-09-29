@@ -14,10 +14,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C0EPacketClickWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
-import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
 object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val delay by IntegerValue("Delay", 400, 10..1000)
@@ -89,12 +86,11 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
         }
 
         if (simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory)
-            sendPacket(C0DPacketCloseWindow(mc.thePlayer.openContainer.windowId))
+            serverOpenInventory = false
     }
 
     fun click(slot: Int, button: Int, mode: Int, stack: ItemStack) {
-        if (simulateInventory && !serverOpenInventory)
-            sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
+        if (simulateInventory) serverOpenInventory = true
 
         sendPacket(
             C0EPacketClickWindow(mc.thePlayer.openContainer.windowId, slot, button, mode, stack,

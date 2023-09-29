@@ -49,7 +49,6 @@ import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.START_SNEAKING
@@ -565,11 +564,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                     mc.playerController.updateController()
                 }
 
-                "spoof", "switch" -> {
-                    if (blockSlot - 36 != serverSlot) {
-                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
-                    }
-                }
+                "spoof", "switch" -> serverSlot = blockSlot - 36
             }
             itemStack = player.inventoryContainer.getSlot(blockSlot).stack
         }
@@ -600,11 +595,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             }
         }
 
-        if (autoBlock == "Switch") {
-            if (serverSlot != player.inventory.currentItem) {
-                sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
-            }
-        }
+        if (autoBlock == "Switch")
+            serverSlot = player.inventory.currentItem
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         switchBlockNextTickIfPossible(itemStack)
@@ -696,9 +688,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         placeRotation = null
         mc.timer.timerSpeed = 1f
 
-        if (serverSlot != player.inventory.currentItem) {
-            sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
-        }
+        serverSlot = player.inventory.currentItem
 
         TickScheduler.clear()
     }
@@ -1041,7 +1031,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                         player.inventory.currentItem = it - 36
                         mc.playerController.updateController()
                     } else {
-                        sendPacket(C09PacketHeldItemChange(it - 36))
+                        serverSlot = it - 36
                     }
                 }
             }
