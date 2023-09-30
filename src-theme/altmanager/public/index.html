@@ -43,7 +43,7 @@
             height: 5%;
             position: absolute;
             left: 15.5%;
-            bottom: 32.5%
+            bottom: 32.5%;
         }
 
         .checkbox2 {
@@ -52,7 +52,7 @@
             height: 5%;
             position: absolute;
             left: 25%;
-            bottom: 32.5%
+            bottom: 32.5%;
         }
 
         .checkbox5 {
@@ -110,7 +110,7 @@
             font-family: "Montserrat", sans-serif;
             user-select: none;
             box-sizing: border-box;
-            color: white;
+            color: rgb(255, 255, 255);
         }
 
         body {
@@ -236,16 +236,15 @@
             z-index: 0;
             opacity: 0;
             position: absolute;
-            top: 0%;
-            left: 0%;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
         }
 
         .button {
-            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
-            background-position: right bottom;
+            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, rgb(70, 119, 255) 50%) right bottom;
             will-change: background-position;
             transition: background-position .2s ease-out;
             width: 25%;
@@ -296,10 +295,9 @@
             border-radius: 6px;
             margin-top: 10px;
             margin-bottom: 10px;
-            border-color: white;
             background-color: rgba(0, 0, 0, 0.68);
-            color: white;
-            border: none;
+            color: rgb(255, 255, 255);
+            border: none rgb(255, 255, 255);
             height: 40px;
         }
 
@@ -308,7 +306,7 @@
             background-color: rgba(0, 0, 0, 0);
             min-width: 80px;
             height: 30px;
-            color: white;
+            color: rgb(255, 255, 255);
             border: none;
         }
 
@@ -339,12 +337,10 @@
             height: 75px;
             width: 250px;
             font-size: 26px;
-            background-color: rgba(0, 0, 0, 0.68);
             border-radius: 6px;
             margin-right: 10px;
-            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
-            background-position: right bottom;
+            background: rgba(0, 0, 0, 0.68) linear-gradient(to left, rgba(0, 0, 0, .68) 50%, rgb(70, 119, 255) 50%) right bottom;
             will-change: background-position;
             transition: background-position .2s ease-out;
         }
@@ -369,6 +365,10 @@
             background-color: rgba(0, 0, 0, 0.68);
             border-radius: 6px;
             overflow-y: scroll;
+        }
+
+        tr {
+            background-color: rgba(0, 0, 0, 0.3);
         }
 
         .removeButtons {
@@ -436,8 +436,9 @@
         }
 
         .accountFace {
-            hidth: 32px;
-            height: 32px;
+            width: 40px;
+            height: 50px;
+            border-radius: 60%;
         }
     </style>
     <script>
@@ -446,7 +447,7 @@
             // Declare all characters
             let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-            // Pick characers randomly
+            // Pick characters randomly
             let str = '';
             for (let i = 0; i < length; i++) {
                 str += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -542,6 +543,7 @@
 
         function updateAccountList() {
             let accountsDiv = document.getElementById('accounts');
+            // noinspection JSUnresolvedReference
             let accounts = client.getAccountManager().getAccounts().iterator();
 
             // Clear the div
@@ -549,23 +551,25 @@
 
             // Add all accounts
             console.log(accounts);
-            var i = 0;
+            let i = 0;
             while (accounts.hasNext()) {
                 let account = accounts.next();
                 console.log(account.getType());
                 console.log(account.getName());
 
                 let row = document.createElement('tr');
-                let head = document.createElement('td')
+                let head = document.createElement('td');
                 let type = document.createElement('td');
                 let name = document.createElement('td');
                 let button = document.createElement('td');
+                // noinspection JSUnresolvedReference
                 let uuid = client.getSessionService().uuid();
                 console.log(uuid);
+                // noinspection JSUnresolvedReference
                 let faceUrl = client.getSessionService().getFaceUrlByUUID(uuid);
-                console.log(faceUrl)
+                console.log(faceUrl);
                 head.innerHTML =
-                    "<img src=\"" + faceUrl + "\" alt=\"\">"
+                    "<img class=\"accountFace\" src=\"" + faceUrl + "\" alt=\"\">";
 
                 type.innerText = account.getType();
                 name.innerText = account.getName();
@@ -589,8 +593,8 @@
                     "<img src=\"img/account/play.svg\" alt=\"\">" +
                     "</button>";
                 button.className = "accountsButton";
-                head.className = "accountFace"
-                row.append(head)
+                head.className = "accountFace";
+                row.append(head);
                 row.appendChild(type);
                 row.appendChild(name);
                 row.appendChild(button);
@@ -600,9 +604,13 @@
         }
 
         function updateAccountData() {
+            // noinspection JSUnresolvedReference
             const username = client.getSessionService().getUsername();
+            // noinspection JSUnresolvedReference
             const faceUrl = client.getSessionService().getFaceUrl();
+            // noinspection JSUnresolvedReference
             const accountType = client.getSessionService().getAccountType();
+            // noinspection JSUnresolvedReference
             const location = client.getSessionService().getLocation();
 
             document.getElementById('sessionUsername').innerText = username;
@@ -616,7 +624,9 @@
             updateAccountData();
 
             // Set altening token
+            // noinspection JSUnresolvedReference
             console.log(client.getAccountManager().getAlteningApiToken());
+            // noinspection JSUnresolvedReference
             document.getElementById('apitoken').value = client.getAccountManager().getAlteningApiToken();
         };
 
@@ -627,7 +637,7 @@
                 document.getElementById('response').innerText = "Please enter a username";
                 return;
             }
-
+            // noinspection JSUnresolvedReference
             client.getAccountManager().newCrackedAccount(username);
             updateAccountList();
         }
@@ -640,11 +650,13 @@
                 return;
             }
 
+            // noinspection JSUnresolvedReference
             client.getAccountManager().newAlteningAccount(token);
             updateAccountList();
         }
 
         function newMicrosoftAccount() {
+            // noinspection JSUnresolvedReference
             client.getAccountManager().newMicrosoftAccount(successMicrosoft, errorMicrosoft);
             updateAccountList();
         }
@@ -657,8 +669,10 @@
                 return;
             }
 
+            // noinspection JSUnresolvedReference
             client.getAccountManager().setAlteningApiToken(apiToken);
             console.log("Generating new altening account using token: " + client.getAccountManager().getAlteningApiToken());
+            // noinspection JSUnresolvedReference
             client.getAccountManager().generateNewAlteningAccount(apiToken);
             updateAccountList();
         }
@@ -669,7 +683,7 @@
         }
 
         function deleteAccount(id) {
-            var account = client.getAccountManager().getAccounts().remove(parseInt(id));
+            let account = client.getAccountManager().getAccounts().remove(parseInt(id));
             updateAccountList();
 
             document.getElementById('response').innerText = "Deleted account: " + account.getName();
@@ -712,7 +726,7 @@
                     <img alt="" src="img/lb-logo.svg">
                 </picture>
                 <div class="button">
-                    <img alt="head" class="head" id="face"/>
+                    <img src="" alt="head" class="head" id="face"/>
                     <div class="username" id="sessionUsername"></div>
                     <div class="accountType" id="accountType"></div>
                     <div class="location" id="location"></div>
