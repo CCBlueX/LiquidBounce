@@ -31,6 +31,7 @@ abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscri
 
     val trackedBlockMap = hashMapOf<TargetBlockPos, T>()
 
+
     abstract fun getStateFor(pos: BlockPos, state: BlockState): T?
 
     override fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean) {
@@ -58,6 +59,10 @@ abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscri
 
     override fun clearAllChunks() {
         this.trackedBlockMap.clear()
+    }
+
+    override fun chunkUpdate(x: Int, z: Int) {
+        // Do nothing. Logic is already implemented in recordBlock
     }
 
     data class TargetBlockPos(val x: Int, val y: Int, val z: Int) {

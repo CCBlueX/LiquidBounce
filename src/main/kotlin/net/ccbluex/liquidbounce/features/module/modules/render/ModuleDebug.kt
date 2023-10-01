@@ -44,7 +44,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             debuggedGeometry.values.forEach {
                 it.render(this)
             }

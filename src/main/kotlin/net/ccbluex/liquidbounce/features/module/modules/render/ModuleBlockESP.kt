@@ -66,7 +66,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
             val markedBlocks = BlockTracker.trackedBlockMap.keys
 
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 for (pos in markedBlocks) {
                     val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
