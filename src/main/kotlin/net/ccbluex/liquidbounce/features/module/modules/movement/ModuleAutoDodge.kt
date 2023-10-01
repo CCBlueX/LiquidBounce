@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -44,53 +45,58 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.PI
 
 object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
-
     private val positions = mutableMapOf<SimulatedArrow, MutableList<Vec3>>()
 
-    val tickRep = handler<MovementInputEvent> { event ->
-        // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
-        if (ModuleBlink.enabled) {
-            return@handler
+    val tickRep =
+        handler<MovementInputEvent> { event ->
+            // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
+            if (ModuleBlink.enabled) {
+                return@handler
+            }
+
+            val world = world
+
+            val arrows = findFlyingArrows(world)
+
+            val input =
+                SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
+
+            val simulatedPlayer = SimulatedPlayer.fromPlayer(player, input)
+
+            val inflictedHit =
+                getInflictedHits(simulatedPlayer, arrows, hitboxExpansion = SAFE_DISTANCE) {}
+                ?: return@handler
+
+            val optimalDodgePosition =
+                findOptimalDodgePosition(inflictedHit.prevArrowPos, inflictedHit.arrowVelocity) ?: return@handler
+
+            if (inflictedHit.tickDelta == 0) {
+                notification("Blink", "Evasion failed!", NotificationEvent.Severity.INFO)
+            }
+
+            val positionRelativeToPlayer = optimalDodgePosition.subtract(player.pos.x, 0.0, player.pos.z)
+
+            val dgs = getDegreesRelativeToPlayerView(positionRelativeToPlayer.negate())
+
+            val dgs1 = MathHelper.wrapDegrees(dgs + 90.0F)
+
+            val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs1, deadAngle = 20.0F)
+
+            event.directionalInput = newDirectionalInput
+            event.jumping = false
         }
 
-        val world = world
-
-        val arrows = findFlyingArrows(world)
-
-        val simulatedPlayer = SimulatedPlayer.fromPlayer(
-            player,
-            SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
-        )
-
-        val inflictedHit = getInflictedHits(simulatedPlayer, arrows) {} ?: return@handler
-
-        val optimalDodgePosition =
-            findOptimalDodgePosition(inflictedHit.prevArrowPos, inflictedHit.arrowVelocity) ?: return@handler
-
-        if (inflictedHit.tickDelta == 0) {
-            notification("Blink", "Evasion failed!", NotificationEvent.Severity.INFO)
-        }
-
-        val positionRelativeToPlayer = optimalDodgePosition.subtract(player.pos.x, 0.0, player.pos.z)
-
-        val dgs = getDegreesRelativeToPlayerView(positionRelativeToPlayer)
-
-        val dgs1 = MathHelper.wrapDegrees(dgs + 90.0F)
-
-        val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs1, deadAngle = 20.0F)
-
-        event.directionalInput = newDirectionalInput
-        event.jumping = false
-    }
-
-    fun findOptimalDodgePosition(arrowPos: Vec3d, arrowVelocity: Vec3d): Vec3d? {
-        val baseLine = Line(
-            Vec3d(arrowPos.x, 0.0, arrowPos.z),
-            Vec3d(arrowVelocity.x, 0.0, arrowVelocity.z)
-        )
+    fun findOptimalDodgePosition(
+        arrowPos: Vec3d,
+        arrowVelocity: Vec3d,
+    ): Vec3d? {
+        val baseLine =
+            Line(
+                Vec3d(arrowPos.x, 0.0, arrowPos.z),
+                Vec3d(arrowVelocity.x, 0.0, arrowVelocity.z),
+            )
 
         val playerPos2d = Vec3d(player.pos.x, 0.0, player.pos.z)
 
@@ -104,7 +110,22 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         val nearestPointsToDangerZoneBorders = dangerZone.map { it.getNearestPointTo(playerPos2d) }
         val nearestPointDistancesToPlayer = nearestPointsToDangerZoneBorders.map { it.distanceTo(playerPos2d) }
 
-//        println(nearestPointsToDangerZoneBorders.map { it.subtract(player.pos) })
+        ModuleDebug.debugGeometry(
+            this,
+            "DodgePos1",
+            ModuleDebug.DebuggedBox(
+                Box.of(nearestPointsToDangerZoneBorders[0].add(0.0, player.y, 0.0), 0.2, 0.2, 0.2),
+                Color4b.GREEN
+            ),
+        )
+        ModuleDebug.debugGeometry(
+            this,
+            "DodgePos2",
+            ModuleDebug.DebuggedBox(
+                Box.of(nearestPointsToDangerZoneBorders[1].add(0.0, player.y, 0.0), 0.2, 0.2, 0.2),
+                Color4b.GREEN
+            ),
+        )
 
         // Find the nearest point that is outside the danger zone
         return if (nearestPointDistancesToPlayer[0] < nearestPointDistancesToPlayer[1] - 0.1) {
@@ -114,16 +135,19 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         }
     }
 
-    const val SAFE_DISTANCE: Double = 0.5 * 1.4 + 0.5
-    const val SAFE_DISTANCE_PLUS_PLAYER_HITBOX: Double = SAFE_DISTANCE + 0.9 * 1.4
+    const val SAFE_DISTANCE: Double = 0.3 * 5
+    const val SAFE_DISTANCE_PLUS_PLAYER_HITBOX: Double = SAFE_DISTANCE
 
     /**
      * Returns the two lines at the border of the danger zone (in 2D)
      */
-    private fun getDangerZoneBorders(baseLine: Line, distanceFromBaseLine: Double): Array<Line> {
+    private fun getDangerZoneBorders(
+        baseLine: Line,
+        distanceFromBaseLine: Double,
+    ): Array<Line> {
         val orthoVecToBaseLine = baseLine.direction.crossProduct(Vec3d(0.0, 1.0, 0.0)).normalize()
 
-        val orthoOffsetVec = baseLine.direction.multiply(distanceFromBaseLine)
+        val orthoOffsetVec = orthoVecToBaseLine.multiply(distanceFromBaseLine)
 
         val lineLeft = Line(baseLine.position.subtract(orthoOffsetVec), baseLine.direction)
         val lineRight = Line(baseLine.position.add(orthoOffsetVec), baseLine.direction)
@@ -136,19 +160,20 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
             if (it !is ArrowEntity) {
                 return@mapNotNull null
             }
-            if (it.inGround)
+            if (it.inGround) {
                 return@mapNotNull null
+            }
 
             return@mapNotNull it
         }
     }
 
-
     fun <T : PlayerSimulation> getInflictedHits(
         simulatedPlayer: T,
         arrows: List<ArrowEntity>,
         maxTicks: Int = 80,
-        behaviour: (T) -> Unit
+        hitboxExpansion: Double = 0.7,
+        behaviour: (T) -> Unit,
     ): HitInfo? {
         val simulatedArrows = arrows.map { SimulatedArrow(world, it.pos, it.velocity, false) }
 
@@ -169,7 +194,10 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
                 positions.getOrPut(arrow) { mutableListOf() }.add(Vec3(arrow.pos))
 
-                val playerHitBox = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3).expand(0.7).offset(simulatedPlayer.pos)
+                val playerHitBox =
+                    Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
+                        .expand(hitboxExpansion)
+                        .offset(simulatedPlayer.pos)
                 val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
                 raycastResult.orElse(null)?.let { hitPos ->
@@ -186,23 +214,23 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         val arrowEntity: ArrowEntity,
         val hitPos: Vec3d,
         val prevArrowPos: Vec3d,
-        val arrowVelocity: Vec3d
+        val arrowVelocity: Vec3d,
     )
 
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+    val renderHandler =
+        handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
 
-        synchronized(positions) {
-            // Get all positions for each arrow
+            synchronized(positions) {
+                // Get all positions for each arrow
 
-            renderEnvironment(matrixStack) {
-                withColor(Color4b.WHITE) {
-                    for ((_, positions) in positions) {
-                        drawLineStrip(*positions.toTypedArray())
+                renderEnvironment(matrixStack) {
+                    withColor(Color4b.WHITE) {
+                        for ((_, positions) in positions) {
+                            drawLineStrip(*positions.toTypedArray())
+                        }
                     }
                 }
             }
         }
-    }
-
 }
