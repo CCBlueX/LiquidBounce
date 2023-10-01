@@ -120,6 +120,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
 
+    private val shouldDelayJump by BoolValue("Delay-Jump") { mode == "Telly" }
+    private val jumpDelay by IntegerValue("Jump-Delay", 10, 5..50) { mode == "Telly" && shouldDelayJump }
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
         override fun isSupported() = mode == "GodBridge" && !jumpAutomatically
@@ -298,6 +300,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private var verticalPlacements = randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
     private val shouldPlaceHorizontally
         get() = mode == "Telly" && isMoving && (startHorizontally && blocksUntilAxisChange <= horizontalPlacements || !startHorizontally && blocksUntilAxisChange > verticalPlacements)
+    
+    private val jumpDelayTimer = MSTimer()
 
     // Enabling module
     override fun onEnable() {
@@ -319,6 +323,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             offGroundTicks = 0
         } else {
             offGroundTicks++
+            jumpDelayTimer.reset()
         }
 
         if (shouldGoDown) {
@@ -426,7 +431,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer
 
         // Jumping needs to be done here, so it doesn't get detected by movement-sensitive anti-cheats.
-        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation && !mc.gameSettings.keyBindJump.isKeyDown) {
+        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation && !mc.gameSettings.keyBindJump.isKeyDown && jumpDelayTimer.hasTimePassed(jumpDelay)) {
             player.jump()
         }
     }
