@@ -118,7 +118,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = mode == "Telly"
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
-
     }
 
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
@@ -132,6 +131,32 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = mode == "GodBridge" && !jumpAutomatically && !maxBlocksToJump.isMinimal()
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxBlocksToJump.get())
+    }
+
+    private val startHorizontally by BoolValue("StartHorizontally", true) { mode == "Telly" }
+
+    private val maxHorizontalPlacements: IntegerValue = object : IntegerValue("MaxHorizontalPlacements", 1, 1..10) {
+        override fun isSupported() = mode == "Telly"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minHorizontalPlacements.get())
+    }
+
+    private val minHorizontalPlacements: IntegerValue = object : IntegerValue("MinHorizontalPlacements", 1, 1..10) {
+        override fun isSupported() = mode == "Telly"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxHorizontalPlacements.get())
+    }
+
+    private val maxVerticalPlacements: IntegerValue = object : IntegerValue("MaxVerticalPlacements", 1, 1..10) {
+        override fun isSupported() = mode == "Telly"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minVerticalPlacements.get())
+    }
+
+    private val minVerticalPlacements: IntegerValue = object : IntegerValue("MinVerticalPlacements", 1, 1..10) {
+        override fun isSupported() = mode == "Telly"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxVerticalPlacements.get())
     }
 
     // Eagle
@@ -248,7 +273,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Downwards
     private val shouldGoDown
-        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && mode != "TellyBridge" && mode != "GodBridge" && blocksAmount > 1
+        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && mode !in arrayOf(
+            "GodBridge",
+            "Telly"
+        ) && blocksAmount > 1
 
     // Current rotation
     private val currRotation
@@ -265,11 +293,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Telly
     private var offGroundTicks = 0
+    private var blocksUntilAxisChange = 0
+    private var horizontalPlacements = randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
+    private var verticalPlacements = randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
+    private val shouldPlaceHorizontally
+        get() = mode == "Telly" && isMoving && (startHorizontally && blocksUntilAxisChange <= horizontalPlacements || !startHorizontally && blocksUntilAxisChange > verticalPlacements)
 
     // Enabling module
     override fun onEnable() {
         val player = mc.thePlayer ?: return
+
         launchY = player.posY.roundToInt()
+        blocksUntilAxisChange = 0
     }
 
     // Events
@@ -279,7 +314,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         mc.timer.timerSpeed = timer
 
-        // TellyBridge
+        // Telly
         if (mc.thePlayer.onGround) {
             offGroundTicks = 0
         } else {
@@ -505,7 +540,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             BlockPos(player).down()
         }
 
-        if (!expand && (!isReplaceable(blockPosition) || search(blockPosition, !shouldGoDown, area))) {
+        if (!expand && (!isReplaceable(blockPosition) || search(
+                blockPosition,
+                !shouldGoDown,
+                area,
+                shouldPlaceHorizontally
+            ))
+        ) {
             return
         }
 
@@ -532,7 +573,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }.sortedBy {
             getCenterDistance(blockPosition.add(it))
         }.forEach {
-            if (canBeClicked(blockPosition.add(it)) || search(blockPosition.add(it), !shouldGoDown, area)) {
+            if (canBeClicked(blockPosition.add(it)) || search(
+                    blockPosition.add(it),
+                    !shouldGoDown,
+                    area,
+                    shouldPlaceHorizontally
+                )
+            ) {
                 return
             }
         }
@@ -594,6 +641,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (isManualJumpOptionActive) {
                 blocksPlacedUntilJump++
             }
+
+            updatePlacedBlocksForTelly()
         } else {
             if (mc.playerController.sendUseItem(player, world, itemStack)) {
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
@@ -639,6 +688,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         } else {
             if (shouldKeepLaunchPosition) {
                 raytrace.blockPos.y == launchY - 1 && !canPlaceOnUpperFace
+            } else if (shouldPlaceHorizontally) {
+                !canPlaceOnUpperFace
             } else {
                 raytrace.blockPos.y <= player.posY.toInt() - 1 && !(raytrace.blockPos.y == player.posY.toInt() - 1 && canPlaceOnUpperFace && raytrace.sideHit == EnumFacing.UP)
             }
@@ -661,6 +712,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (isManualJumpOptionActive) {
                 blocksPlacedUntilJump++
             }
+
+            updatePlacedBlocksForTelly()
         } else {
             if (mc.playerController.sendUseItem(player, world, stack)) {
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
@@ -803,7 +856,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
      * @return
      */
 
-    private fun search(blockPosition: BlockPos, raycast: Boolean, area: Boolean): Boolean {
+    private fun search(
+        blockPosition: BlockPos,
+        raycast: Boolean,
+        area: Boolean,
+        horizontalOnly: Boolean = false
+    ): Boolean {
         val player = mc.thePlayer ?: return false
 
         if (!isReplaceable(blockPosition)) {
@@ -826,7 +884,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             arrayOf(45f, 135f).any { yaw == it } && player.movementInput.moveStrafe == 0f
         }
 
-        for (side in EnumFacing.values()) {
+        for (side in EnumFacing.values().filter { !horizontalOnly || it.axis != EnumFacing.Axis.Y }) {
             val neighbor = blockPosition.offset(side)
 
             if (!canBeClicked(neighbor)) {
@@ -1140,6 +1198,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val blue = 0.0f
 
         return Color3f(interpolationFactor, green, blue)
+    }
+
+    private fun updatePlacedBlocksForTelly() {
+        if (blocksUntilAxisChange > horizontalPlacements + verticalPlacements) {
+            blocksUntilAxisChange = 0
+
+            horizontalPlacements = randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
+            verticalPlacements = randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
+            return
+        }
+
+        blocksUntilAxisChange++
     }
 
     /**

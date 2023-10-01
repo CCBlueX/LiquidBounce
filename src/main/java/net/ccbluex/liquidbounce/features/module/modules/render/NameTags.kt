@@ -193,11 +193,10 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
                 fontRenderer.FONT_HEIGHT + 4F,
                 Color(10, 155, 10).rgb
             )
-            val currHealth = entity.health + if (absorption) entity.absorptionAmount else 0f
             quickDrawRect(
                 -width - 2F,
                 fontRenderer.FONT_HEIGHT + 3F,
-                -width - 2F + (dist * (currHealth / entity.maxHealth).coerceIn(0F, 1F)),
+                -width - 2F + (dist * (getHealth(entity) / entity.maxHealth).coerceIn(0F, 1F)),
                 fontRenderer.FONT_HEIGHT + 4F,
                 Color(10, 255, 10).rgb
             )
@@ -270,6 +269,15 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     }
 
     private fun getHealthString(entity: EntityLivingBase): String {
+        val prefix = if (healthPrefix) healthPrefixText else ""
+        val suffix = if (healthSuffix) healthSuffixText else ""
+
+        val result = getHealth(entity)
+
+        return prefix + "§c " + (if (healthInInt) result.toInt() else decimalFormat.format(result)) + suffix
+    }
+
+    private fun getHealth(entity: EntityLivingBase): Float {
         val scoreboard = if (entity is EntityPlayer) entity.worldScoreboard else null
         val objective = scoreboard?.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))
 
@@ -297,12 +305,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             0f
         }
 
-        val result = health + absorption
-
-        val prefix = if (healthPrefix) healthPrefixText else ""
-        val suffix = if (healthSuffix) healthSuffixText else ""
-
-        return prefix + "§c " + (if (healthInInt) result.toInt() else decimalFormat.format(result)) + suffix
+        return health + absorption
     }
 
     fun shouldRenderNameTags(entity: Entity) =

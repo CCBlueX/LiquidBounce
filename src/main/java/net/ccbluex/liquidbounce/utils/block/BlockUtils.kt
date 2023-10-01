@@ -47,9 +47,11 @@ object BlockUtils : MinecraftInstance() {
         return block.canCollideCheck(
             state,
             false
-        ) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable
-                && !block.hasTileEntity(state) && isFullBlock(blockPos, state)
-                && mc.theWorld.loadedEntityList.find { it is EntityFallingBlock && it.position == blockPos } == null && block !is BlockContainer && block !is BlockWorkbench
+        ) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable && !block.hasTileEntity(state) && isFullBlock(
+            blockPos,
+            state,
+            true
+        ) && mc.theWorld.loadedEntityList.find { it is EntityFallingBlock && it.position == blockPos } == null && block !is BlockContainer && block !is BlockWorkbench
     }
 
     /**
@@ -60,11 +62,13 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if block is full block
      */
-    fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null): Boolean {
+    fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
         val box = state.block.getCollisionBoundingBox(mc.theWorld, blockPos, state) ?: return false
-        return box.maxX - box.minX == 1.0 && box.maxY - box.minY == 1.0 && box.maxZ - box.minZ == 1.0
+
+        // The slab will only return true if it's placed at a level that can be placed like any normal full block
+        return box.maxX - box.minX == 1.0 && (box.maxY - box.minY == 1.0 || supportSlabs && box.maxY % 1.0 == 0.0) && box.maxZ - box.minZ == 1.0
     }
 
     fun isFullBlock(block: Block) =
