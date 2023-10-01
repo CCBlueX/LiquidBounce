@@ -114,7 +114,11 @@ object ChunkScanner : Listenable {
 
                             is UpdateRequest.BlockUpdateEvent -> {
                                 for (sub in subscriber) {
-                                    sub.recordBlock(chunkUpdate.blockPos, chunkUpdate.newState, false)
+                                    sub.recordBlock(
+                                        chunkUpdate.blockPos,
+                                        chunkUpdate.newState,
+                                        cleared = false
+                                    )
                                 }
                             }
                         }
@@ -141,6 +145,19 @@ object ChunkScanner : Listenable {
                 return
             }
 
+            val currentSubscriber = if (request.singleSubscriber != null) {
+                listOf(request.singleSubscriber)
+            } else {
+                subscriber
+            }
+
+            currentSubscriber.forEach {
+                it.chunkUpdate(request.chunk.pos.x, request.chunk.pos.z)
+            }
+
+            // Contains all subscriber that want recordBlock called on a chunk update
+            val subscribersForRecordBlock = currentSubscriber.filter { it.shouldCallRecordBlockOnChunkUpdate }
+
             val start = System.nanoTime()
 
             for (x in 0 until 16) {
@@ -149,12 +166,8 @@ object ChunkScanner : Listenable {
                         val pos = BlockPos(x + chunk.pos.startX, y, z + chunk.pos.startZ)
                         val blockState = chunk.getBlockState(pos)
 
-                        if (request.singleSubscriber == null) {
-                            for (sub in subscriber) {
-                                sub.recordBlock(pos, blockState, true)
-                            }
-                        } else {
-                            request.singleSubscriber.recordBlock(pos, blockState, true)
+                        for (sub in subscribersForRecordBlock) {
+                            sub.recordBlock(pos, blockState, cleared = true)
                         }
                     }
                 }
@@ -182,11 +195,23 @@ object ChunkScanner : Listenable {
 
     interface BlockChangeSubscriber {
         /**
+         * If this is true [recordBlock] is called on chunk updates and on single block updates.
+         * This might be inefficient for some modules, so they can choose to not call that method on chunk updates.
+         */
+        val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = true
+
+        /**
          * Registers a block update and asks the subscriber to make a decision about what should be done.
          *
          * @param cleared true, if the section the block is in was already cleared
          */
         fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean)
+
+        /**
+         * Is called when a chunk is loaded or entirely updated.
+         */
+        fun chunkUpdate(x: Int, z: Int)
         fun clearChunk(x: Int, z: Int)
         fun clearAllChunks()
     }

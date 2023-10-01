@@ -201,7 +201,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             for ((pos, opacity) in markedBlocks) {
                 val vec3 = Vec3(pos)
 

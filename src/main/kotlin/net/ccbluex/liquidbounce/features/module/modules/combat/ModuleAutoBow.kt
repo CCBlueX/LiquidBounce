@@ -262,25 +262,6 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         positions.add(targetPos)
 
-//        var lowerBound = if (vertex != null) -maxX
-//        else 0.0
-//
-//        val upperBound = sqrt(deltaPos.x * deltaPos.x + deltaPos.z * deltaPos.z)
-//
-//        while ((upperBound - lowerBound).absoluteValue > 2.0) {
-//            lowerBound += (upperBound - lowerBound) / 2.0
-//
-//            val y = (ACCELERATION * lowerBound * lowerBound) / (v_x * v_x) + (v_y * lowerBound) / v_x
-//
-//            println("$lowerBound $y")
-//
-//            positions.add(
-//                Vec3d(
-//                    xPitch * lowerBound, y, zPitch * lowerBound
-//                ).add(eyePos)
-//            )
-//        }
-
         for (i in 0 until positions.lastIndex) {
             val raycast = world.raycast(
                 RaycastContext(

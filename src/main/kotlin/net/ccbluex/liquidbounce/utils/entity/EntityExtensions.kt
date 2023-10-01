@@ -204,6 +204,13 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
     )
 }
 
+fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
+    return Rotation(
+        this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
+        this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
+    )
+}
+
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */

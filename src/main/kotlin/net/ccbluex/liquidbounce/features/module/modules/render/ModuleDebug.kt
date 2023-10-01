@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.minecraft.util.math.Box
 
 /**
@@ -43,7 +42,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             debuggedGeometry.values.forEach {
                 it.render(this)
             }

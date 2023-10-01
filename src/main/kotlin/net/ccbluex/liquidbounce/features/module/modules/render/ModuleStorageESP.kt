@@ -72,7 +72,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             val matrixStack = event.matrixStack
             val blocksToRender = locations.entries.filter { it.value.shouldRender(it.key) }
 
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 for ((pos, type) in blocksToRender) {
                     val color = type.color
 
