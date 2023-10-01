@@ -120,8 +120,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
 
-    private val shouldDelayJump by BoolValue("Delay-Jump", false) { mode == "Telly" }
-    private val jumpDelay by IntegerValue("Jump-Delay", 10, 5..50) { mode == "Telly" && shouldDelayJump }
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
         override fun isSupported() = mode == "GodBridge" && !jumpAutomatically
@@ -159,6 +157,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = mode == "Telly"
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxVerticalPlacements.get())
+    }
+
+    private val maxJumpTicks: IntegerValue = object : IntegerValue("MaxJumpTicks", 0, 0..10) {
+        override fun isSupported() = mode == "Telly"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minJumpTicks.get())
+    }
+
+    private val minJumpTicks: IntegerValue = object : IntegerValue("MinJumpTicks", 0, 0..10) {
+        override fun isSupported() = mode == "Telly"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxJumpTicks.get())
     }
 
     // Eagle
@@ -295,13 +305,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Telly
     private var offGroundTicks = 0
+    private var ticksUntilJump = 0
     private var blocksUntilAxisChange = 0
+    private var jumpTicks = randomDelay(minJumpTicks.get(), maxJumpTicks.get())
     private var horizontalPlacements = randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
     private var verticalPlacements = randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
     private val shouldPlaceHorizontally
         get() = mode == "Telly" && isMoving && (startHorizontally && blocksUntilAxisChange <= horizontalPlacements || !startHorizontally && blocksUntilAxisChange > verticalPlacements)
-    
-    private val jumpDelayTimer = MSTimer()
 
     // Enabling module
     override fun onEnable() {
@@ -321,9 +331,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         // Telly
         if (mc.thePlayer.onGround) {
             offGroundTicks = 0
+            ticksUntilJump++
         } else {
             offGroundTicks++
-            jumpDelayTimer.reset()
         }
 
         if (shouldGoDown) {
@@ -431,15 +441,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer
 
         // Jumping needs to be done here, so it doesn't get detected by movement-sensitive anti-cheats.
-        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation && !mc.gameSettings.keyBindJump.isKeyDown) {
-            if (shouldDelayJump) {
-                if (jumpDelayTimer.hasTimePassed(jumpDelay)) {
-                    player.jump()
-                }
-            }
-            else {
-                player.jump()
-            }
+        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation && !mc.gameSettings.keyBindJump.isKeyDown && ticksUntilJump >= jumpTicks) {
+            player.jump()
+
+            ticksUntilJump = 0
+            jumpTicks = randomDelay(minJumpTicks.get(), maxJumpTicks.get())
         }
     }
 
@@ -516,7 +522,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (silentRotation) {
             if (mode == "Telly" && isMoving) {
-                if (offGroundTicks < ticksUntilRotation.get()) {
+                if (offGroundTicks < ticksUntilRotation.get() && ticksUntilJump >= jumpTicks) {
                     return
                 }
             }
