@@ -120,7 +120,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
 
-    private val shouldDelayJump by BoolValue("Delay-Jump") { mode == "Telly" }
+    private val shouldDelayJump by BoolValue("Delay-Jump", false) { mode == "Telly" }
     private val jumpDelay by IntegerValue("Jump-Delay", 10, 5..50) { mode == "Telly" && shouldDelayJump }
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
