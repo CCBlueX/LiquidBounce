@@ -431,8 +431,15 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer
 
         // Jumping needs to be done here, so it doesn't get detected by movement-sensitive anti-cheats.
-        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation && !mc.gameSettings.keyBindJump.isKeyDown && jumpDelayTimer.hasTimePassed(jumpDelay)) {
-            player.jump()
+        if (mode == "Telly" && player.onGround && isMoving && currRotation == player.rotation && !mc.gameSettings.keyBindJump.isKeyDown) {
+            if (shouldDelayJump) {
+                if (jumpDelayTimer.hasTimePassed(jumpDelay)) {
+                    player.jump()
+                }
+            }
+            else {
+                player.jump()
+            }
         }
     }
 
