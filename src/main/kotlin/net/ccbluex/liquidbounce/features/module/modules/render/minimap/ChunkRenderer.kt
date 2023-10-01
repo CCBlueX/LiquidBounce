@@ -2,37 +2,55 @@ package net.ccbluex.liquidbounce.features.module.modules.render.minimap
 
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.block.BlockState
-import net.minecraft.block.MapColor.Brightness
+import net.minecraft.block.Blocks
+import net.minecraft.block.MapColor
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
+import net.minecraft.world.Heightmap
 import net.minecraft.world.World
-import java.awt.Color
-import kotlin.math.PI
-import kotlin.math.roundToInt
-import kotlin.math.sin
 
 object ChunkRenderer {
-    private val textureAtlasManager = MinimapTextureAtlasManager()
-    private val heightmapManager = MinimapHeightmapManager()
+    private val chunkTextures = HashMap<ChunkPos, ChunkTexture>()
 
-    val SUN_DIRECTION = Vec2i(2, 1)
-
-    fun unloadEverything() {
-        heightmapManager.unloadAllChunks()
-        this.textureAtlasManager.deallocateAll()
+    fun deleteAllTextures() {
+        lockChunkTextures { textures ->
+            textures.values.forEach { it.delete() }
+            textures.clear()
+        }
     }
 
-    fun getAtlasPosition(chunkPos: ChunkPos): MinimapTextureAtlasManager.AtlasPosition {
-        return textureAtlasManager.getOrNotLoadedTexture(chunkPos)
+    class ChunkTexture {
+        var dirtyFlag: Boolean = false
+        var wasImageUploaded: Boolean = false
+
+        var front: NativeImage = createNativeImage()
+        var back: NativeImage = createNativeImage()
+
+        var renderData: RenderData? = null
+
+        fun delete() {
+            this.renderData?.texture?.close()
+        }
+
+        fun pushBackToFront() {
+            val new = createNativeImage()
+
+            new.copyFrom(this.back)
+
+            this.front = new
+
+            this.dirtyFlag = true
+            this.wasImageUploaded = true
+        }
+
+        private fun createNativeImage() = NativeImage(NativeImage.Format.RGBA, 16, 16, false)
     }
 
-    fun prepareRendering(): Int {
-        return this.textureAtlasManager.prepareRendering()
-    }
+    class RenderData(val texture: NativeImageBackedTexture)
 
     object MinimapChunkUpdateSubscriber : ChunkScanner.BlockChangeSubscriber {
         override val shouldCallRecordBlockOnChunkUpdate: Boolean
@@ -43,135 +61,129 @@ object ChunkRenderer {
             state: BlockState,
             cleared: Boolean,
         ) {
-            val heightmapUpdated = heightmapManager.updatePosition(pos, state)
+            val color = getColor(pos)
 
-            val positionsToUpdate =
-                if (heightmapUpdated) {
-                    arrayOf(
-                        pos,
-                        pos.add(1, 0, 0),
-                        pos.add(-1, 0, 0),
-                        pos.add(0, 0, 1),
-                        pos.add(0, 0, -1),
-                    )
-                } else {
-                    arrayOf(pos)
-                }
+            val texture = lockChunkTextures { textures -> getOrCreateTexture(ChunkPos(pos)) }
 
-            for (posToUpdate in positionsToUpdate) {
-                val color = getColor(posToUpdate)
+            texture.back.setColor(pos.x and 15, pos.z and 15, color)
 
-                textureAtlasManager.editChunk(ChunkPos(posToUpdate)) { texture, atlasPosition ->
-                    val (x, y) = atlasPosition.getPosOnAtlas(posToUpdate.x and 15, posToUpdate.z and 15)
-
-                    texture.image!!.setColor(x, y, color)
-                }
-            }
+            texture.pushBackToFront()
         }
 
         private fun getColor(pos: BlockPos): Int {
+            val mutable = BlockPos.Mutable(pos.x, pos.y, pos.z)
+            val mutable2 = BlockPos.Mutable(pos.x, pos.y, pos.z)
+
             val world = mc.world!!
 
-            val height = heightmapManager.getHeight(pos.x, pos.z)
-            val offsetsToCheck =
-                arrayOf(
-                    Vec2i(-1, 0),
-                    Vec2i(1, 0),
-                    Vec2i(0, -1),
-                    Vec2i(0, 1),
-                    Vec2i(-1, 1),
-                    Vec2i(1, 1),
-                    Vec2i(-1, -1),
-                    Vec2i(1, -1),
+            val chunk = world.getChunk(pos)
+
+            var blockState: BlockState
+            var w: Int = chunk.sampleHeightmap(Heightmap.Type.WORLD_SURFACE, mutable.x, mutable.z) + 1
+            if (w > world.bottomY + 1) {
+                do {
+                    mutable.setY(--w)
+                } while (chunk.getBlockState(mutable).also { blockState = it }
+                        .getMapColor(world, mutable) === MapColor.CLEAR && w > world.bottomY
                 )
+                if (w > world.bottomY && !blockState.fluidState.isEmpty) {
+                    var blockState2: BlockState
+                    var y = w - 1
+                    mutable2.set(mutable)
+                    do {
+                        mutable2.setY(y--)
+                        blockState2 = chunk.getBlockState(mutable2)
+                    } while (y > world.bottomY && !blockState2.fluidState.isEmpty)
 
-            val higherOffsets =
-                offsetsToCheck.filter { offset ->
-                    heightmapManager.getHeight(pos.x + offset.x, pos.z + offset.y) > height
+                    blockState = getFluidStateIfVisible(world, blockState, mutable)
                 }
+            } else {
+                blockState = Blocks.BEDROCK.defaultState
+            }
 
-            val higherOffsetVec = higherOffsets.fold(Vec2i(0, 0)) { acc, vec -> acc.add(vec) }
-
-            val brightness =
-                if (higherOffsets.size < 2) {
-                    220 / 255.0
-                } else if (MathHelper.approximatelyEquals(higherOffsetVec.length(), 0.0)) {
-                    130.0 / 255.0
-                } else {
-                    val similarityToSunDirection = higherOffsetVec.similarity(SUN_DIRECTION)
-                    val eee = higherOffsetVec.dotProduct(Vec2i(pos.x, pos.z)).toDouble() / higherOffsetVec.length()
-                    val sine = sin(eee * 0.5 * PI)
-
-                    (190 + (similarityToSunDirection * 55.0) + sine * 10) / 255.0
-                }
-
-            val surfaceBlockPos = BlockPos(pos.x, height, pos.z)
-            val surfaceBlockState = world.getBlockState(surfaceBlockPos)
-
-            val color = Color(surfaceBlockState.getMapColor(world, surfaceBlockPos).getRenderColor(Brightness.HIGH))
-
-            return Color(
-                (color.red * brightness).roundToInt(),
-                (color.green * brightness).roundToInt(),
-                (color.blue * brightness).roundToInt(),
-            ).rgb
+            return blockState.getMapColor(world, mutable).getRenderColor(MapColor.Brightness.HIGH)
         }
 
         override fun chunkUpdate(
             x: Int,
             z: Int,
         ) {
-            val chunkPos = ChunkPos(x, z)
+            val texture = lockChunkTextures { _ -> getOrCreateTexture(ChunkPos(x, z)) }
 
-            val chunkBordersToUpdate =
-                arrayOf(
-                    Triple(ChunkPos(x + 1, z), Vec2i(0, 0), Vec2i(0, 15)),
-                    Triple(ChunkPos(x - 1, z), Vec2i(15, 0), Vec2i(15, 15)),
-                    Triple(ChunkPos(x, z + 1), Vec2i(0, 0), Vec2i(15, 0)),
-                    Triple(ChunkPos(x, z - 1), Vec2i(0, 15), Vec2i(15, 15)),
-                )
+            for (offX in 0..15) {
+                for (offZ in 0..15) {
+                    val color = getColor(BlockPos(offX + x * 16, 0, offZ + z * 16))
 
-            heightmapManager.updateChunk(chunkPos)
-
-            textureAtlasManager.editChunk(chunkPos) { texture, atlasPosition ->
-                for (offX in 0..15) {
-                    for (offZ in 0..15) {
-                        val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
-
-                        val color = getColor(BlockPos(offX + x * 16, 0, offZ + z * 16))
-
-                        texture.image!!.setColor(texX, texY, color)
-                    }
+                    texture.back.setColor(offX, offZ, color)
                 }
             }
 
-            for ((otherPos, from, to) in chunkBordersToUpdate) {
-                textureAtlasManager.editChunk(otherPos) { texture, atlasPosition ->
-                    for (offX in from.x..to.x) {
-                        for (offZ in from.y..to.y) {
-                            val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
-
-                            val color = getColor(BlockPos(offX + otherPos.startX, 0, offZ + otherPos.startZ))
-
-                            texture.image!!.setColor(texX, texY, color)
-                        }
-                    }
-                }
-            }
+            texture.pushBackToFront()
         }
 
         override fun clearChunk(
             x: Int,
             z: Int,
         ) {
-            val chunkPos = ChunkPos(x, z)
-
-            heightmapManager.unloadChunk(chunkPos)
-            textureAtlasManager.deallocate(chunkPos)
+            lockChunkTextures { textures ->
+                textures.remove(ChunkPos(x, z))?.delete()
+            }
         }
 
         override fun clearAllChunks() {
-            unloadEverything()
+            deleteAllTextures()
         }
+    }
+
+    private fun getOrCreateTexture(chunkPos: ChunkPos) = chunkTextures.computeIfAbsent(chunkPos) { ChunkTexture() }
+
+    private fun getFluidStateIfVisible(
+        world: World,
+        state: BlockState,
+        pos: BlockPos,
+    ): BlockState {
+        val fluidState = state.fluidState
+        return if (!fluidState.isEmpty && !state.isSideSolidFullSquare(world, pos, Direction.UP)) {
+            fluidState.blockState
+        } else {
+            state
+        }
+    }
+
+    fun <R> lockChunkTextures(fn: (HashMap<ChunkPos, ChunkTexture>) -> R): R {
+        val textures = chunkTextures
+
+        synchronized(textures) {
+            return fn(textures)
+        }
+    }
+
+    fun getOrUploadMinimapChunkTexture(chunkPos: ChunkPos): NativeImageBackedTexture? {
+        val chunkTexture = lockChunkTextures { textures -> getOrCreateTexture(chunkPos) }
+
+        if (!chunkTexture.wasImageUploaded) {
+            return null
+        }
+
+        if (chunkTexture.renderData == null) {
+            chunkTexture.renderData =
+                RenderData(
+                    NativeImageBackedTexture(chunkTexture.front),
+                )
+
+            chunkTexture.dirtyFlag = false
+        }
+        val renderData = chunkTexture.renderData!!
+
+        val texture = renderData.texture
+
+        if (chunkTexture.dirtyFlag) {
+            texture.image = chunkTexture.front
+            texture.upload()
+
+            chunkTexture.dirtyFlag = false
+        }
+
+        return texture
     }
 }
