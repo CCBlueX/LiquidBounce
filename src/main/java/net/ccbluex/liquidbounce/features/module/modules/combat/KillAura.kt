@@ -549,20 +549,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         for (entity in targets) {
             // Update rotations to current target
             if (!updateRotations(entity)) {
-                var success = false
-                Backtrack.loopThroughBacktrackData(entity) {
-                    if (updateRotations(entity)) {
-                        success = true
-                        return@loopThroughBacktrackData true
-                    }
-
-                    return@loopThroughBacktrackData false
-                }
-
-                if (!success) {
-                    // when failed then try another target
-                    continue
-                }
+               continue
             }
 
             // Set target to current entity
