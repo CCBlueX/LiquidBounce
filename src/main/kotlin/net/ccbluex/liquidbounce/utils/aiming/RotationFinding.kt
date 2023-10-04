@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.step
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.BlockPos
@@ -27,7 +28,7 @@ fun raytraceBlock(
             box.offset(offset),
             range,
             wallsRange,
-            visibilityPredicate = BlockVisibilityPredicate(pos),
+            rotationPreference = LeastDifferencePreference(RotationManager.makeRotation(pos.toCenterPos(), eyes))
         ) ?: continue
     }
 
@@ -173,7 +174,7 @@ fun raytraceBox(
         // No need to enter the loop when we already have a result.
         val validCauseBelowWallsRange = preferredSpotDistance < wallsRangeSquared
 
-        val validCauseVisible = visibilityPredicate.isVisible(eyesPos = eyes, targetSpot = preferredSpot)
+        val validCauseVisible = visibilityPredicate.isVisible(eyesPos = eyes, targetSpot = preferredSpotOnBox)
 
         if (validCauseBelowWallsRange || validCauseVisible && preferredSpotDistance < rangeSquared) {
             return VecRotation(RotationManager.makeRotation(preferredSpot, eyes), preferredSpot)
