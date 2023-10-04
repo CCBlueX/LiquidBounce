@@ -66,7 +66,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = RotationsConfigurable()
 
     private var currentTarget: DestroyerTarget? = null
 

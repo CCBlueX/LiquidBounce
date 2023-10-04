@@ -51,7 +51,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val throughWalls by boolean("ThroughWalls", false)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = RotationsConfigurable()
 
     private var currentTarget: BlockPos? = null
 
