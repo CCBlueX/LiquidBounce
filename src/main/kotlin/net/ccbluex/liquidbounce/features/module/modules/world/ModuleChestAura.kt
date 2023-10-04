@@ -76,11 +76,11 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         tree(AwaitContainerOptions)
         tree(CloseInstantlyOptions)
     }
-    private val rotations = tree(RotationsConfigurable())
 
     private val closeInstantlyTimeout = Chronometer()
 
     // Rotation
+    private val rotations = tree(RotationsConfigurable())
 
     private var currentBlock: BlockPos? = null
     val clickedBlocks = hashSetOf<BlockPos>()
