@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
-import net.ccbluex.liquidbounce.utils.timer.TickTimer
+import net.ccbluex.liquidbounce.utils.timing.TickTimer
 
 object Frame : SpeedMode("Frame") {
     private var motionTicks = 0

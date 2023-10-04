@@ -4,11 +4,12 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.InventoryUtils.CLICK_TIMER
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.item.hasItemAgePassed
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.CLICK_TIMER
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
+import net.ccbluex.liquidbounce.utils.inventory.hasItemAgePassed
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -26,9 +27,9 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val invOpen by BoolValue("InvOpen", false)
     private val simulateInventory by BoolValue("SimulateInventory", false) { !invOpen }
 
-    private val noMove by BoolValue("NoMoveClicks", false)
-    private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
-    private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
+    private val noMove by InventoryManager.noMoveValue
+    private val noMoveAir by InventoryManager.noMoveAirValue
+    private val noMoveGround by InventoryManager.noMoveGroundValue
 
     @EventTarget
     fun onTick(event: TickEvent) {
@@ -38,7 +39,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
         if (invOpen && mc.currentScreen !is GuiInventory)
             return
 
-        if (noMove && isMoving && if (mc.thePlayer.onGround) noMoveGround else noMoveAir)
+        if (!canClickInventory())
             return
 
         for (slot in 36..44) {

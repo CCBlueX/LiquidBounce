@@ -23,7 +23,7 @@ object EventManager {
 
                 val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())
                 invokableEventTargets += EventHook(listener, method, eventTarget)
-                registry[eventClass] = invokableEventTargets
+                registry[eventClass] = invokableEventTargets.sortedByDescending { it.priority }.toMutableList()
             }
         }
 
@@ -33,10 +33,8 @@ object EventManager {
      * @param listenable for unregister
      */
     fun unregisterListener(listenable: Listenable) =
-        registry.forEach { (key, targets) ->
+        registry.forEach { (_, targets) ->
             targets.removeIf { it.eventClass == listenable }
-
-            registry[key] = targets
         }
 
     /**
@@ -47,7 +45,7 @@ object EventManager {
     fun callEvent(event: Event) {
         val targets = registry[event.javaClass] ?: return
 
-        for (invokableEventTarget in targets.sortedByDescending { it.priority }) {
+        for (invokableEventTarget in targets) {
             try {
                 if (!invokableEventTarget.eventClass.handleEvents() && !invokableEventTarget.isIgnoreCondition)
                     continue

@@ -5,13 +5,17 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
+import net.minecraft.network.play.client.C03PacketPlayer
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-object MovementUtils : MinecraftInstance() {
+object MovementUtils : MinecraftInstance(), Listenable {
 
     var speed
         get() = mc.thePlayer?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
@@ -21,7 +25,7 @@ object MovementUtils : MinecraftInstance() {
         get() = mc.thePlayer?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
 
     val hasMotion
-        get() = mc.thePlayer?.run { motionX != .0 && motionY != .0 && motionZ != .0 } ?: false
+        get() = mc.thePlayer?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
 
     fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false) =
         mc.thePlayer?.run {
@@ -63,4 +67,30 @@ object MovementUtils : MinecraftInstance() {
     fun isOnGround(height: Double) =
         mc.theWorld != null && mc.thePlayer != null &&
         mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
+
+    var serverOnGround = false
+
+    var serverX = .0
+    var serverY = .0
+    var serverZ = .0
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        if (event.isCancelled)
+            return
+
+        val packet = event.packet
+
+        if (packet is C03PacketPlayer) {
+            serverOnGround = packet.onGround
+
+            if (packet.isMoving) {
+                serverX = packet.x
+                serverY = packet.y
+                serverZ = packet.z
+            }
+        }
+    }
+
+    override fun handleEvents() = true
 }

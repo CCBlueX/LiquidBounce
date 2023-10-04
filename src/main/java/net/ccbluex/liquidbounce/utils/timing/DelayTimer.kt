@@ -1,7 +1,7 @@
-package net.ccbluex.liquidbounce.utils.timer
+package net.ccbluex.liquidbounce.utils.timing
 
-import net.ccbluex.liquidbounce.utils.InventoryUtils.CLICK_TIMER
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.CLICK_TIMER
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 open class DelayTimer(

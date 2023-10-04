@@ -8,10 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.oth
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.mineplexGroundSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
@@ -48,9 +48,9 @@ object MineplexGround : SpeedMode("MineplexGround") {
 
         mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, null, blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
-        speed += mineplexGroundSpeed / 8
+        speed = (speed + mineplexGroundSpeed / 8).coerceAtMost(mineplexGroundSpeed)
 
-        strafe(speed.coerceAtMost(mineplexGroundSpeed))
+        strafe(speed)
 
         if (!spoofSlot) serverSlot = mc.thePlayer.inventory.currentItem
     }

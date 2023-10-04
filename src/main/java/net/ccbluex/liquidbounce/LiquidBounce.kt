@@ -42,10 +42,11 @@ import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
-import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.TickedActions
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
+import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import kotlin.concurrent.thread
 
 object LiquidBounce {
@@ -102,6 +103,7 @@ object LiquidBounce {
         registerListener(InventoryUtils)
         registerListener(MiniMapRegister)
         registerListener(TickedActions)
+        registerListener(MovementUtils)
 
         // Load client fonts
         loadFonts()

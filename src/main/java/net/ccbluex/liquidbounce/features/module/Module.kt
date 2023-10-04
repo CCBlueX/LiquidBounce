@@ -15,11 +15,12 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.TickedActions
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
+import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.item.ItemStack
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
@@ -154,10 +155,10 @@ open class Module @JvmOverloads constructor(
         internal fun schedule(id: Int, allowDuplicates: Boolean = false, action: () -> Unit) =
             TickedActions.schedule(id, instance, allowDuplicates, action)
 
-        internal fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: (() -> Unit)? = null) =
+        internal fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: ((ItemStack?) -> Unit)? = null) =
             TickedActions.schedule(slot, instance, allowDuplicates) {
-                mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
-                action?.invoke()
+                val newStack = mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
+                action?.invoke(newStack)
             }
 
         operator fun plusAssign(action: () -> Unit) {
@@ -178,6 +179,9 @@ open class Module @JvmOverloads constructor(
         operator fun contains(id: Int) = isScheduled(id)
 
         internal fun clear() = TickedActions.clear(instance)
+
+        internal val size
+            get() = TickedActions.size(instance)
 
         internal fun isEmpty() = TickedActions.isEmpty(instance)
 

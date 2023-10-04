@@ -5,17 +5,17 @@ package net.ccbluex.liquidbounce.features.module.modules.beta
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
-import net.ccbluex.liquidbounce.utils.InventoryUtils.isFirstInventoryClick
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
 import net.ccbluex.liquidbounce.utils.extensions.shuffled
-import net.ccbluex.liquidbounce.utils.item.*
-import net.ccbluex.liquidbounce.utils.item.CoroutineArmorComparator.getBestArmorSet
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
+import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.CoroutineArmorComparator.getBestArmorSet
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduled
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -30,8 +30,6 @@ import net.minecraft.init.Items
 import net.minecraft.item.*
 import net.minecraft.potion.Potion
 
-// TODO: diamond pickaxe slot 2, diamond pickaxe effi 1 slot 3, idk it works fine?
-
 object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val drop by BoolValue("Drop", true)
 	val sort by BoolValue("Sort", true)
@@ -44,25 +42,25 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 	}
-
 	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
 
-	private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36)
-	private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36)
+	private val limitStackCounts by BoolValue("LimitStackCounts", true)
+	private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36) { limitStackCounts }
+	private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36) { limitStackCounts }
+	// TODO: max potion, vehicle, throwable, bucket stacks, ..., or limit buckets by default
 
-	private val compactStacks by BoolValue("CompactStacks", true)
+	private val mergeStacks by BoolValue("MergeStacks", true)
 
-	private val invOpen by BoolValue("InvOpen", false)
-	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
+	private val invOpen by InventoryManager.invOpenValue
+	private val simulateInventory by InventoryManager.simulateInventoryValue
 
-	private val autoClose by BoolValue("AutoClose", false) { invOpen }
-	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
+	private val autoClose by InventoryManager.autoCloseValue
+	private val startDelay by InventoryManager.startDelayValue
+	private val closeDelay by InventoryManager.closeDelayValue
 
-	private val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || (!invOpen && simulateInventory) }
-	private val noMove by BoolValue("NoMoveClicks", false)
-	private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
-
-	private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
+	private val noMove by InventoryManager.noMoveValue
+	private val noMoveAir by InventoryManager.noMoveAirValue
+	private val noMoveGround by InventoryManager.noMoveGroundValue
 
 	private val randomSlot by BoolValue("RandomSlot", false)
 	private val ignoreVehicles by BoolValue("IgnoreVehicles", false)
@@ -77,29 +75,158 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val slot4Value = SortValue("Slot4", "Axe")
 	private val slot5Value = SortValue("Slot5", "Shovel")
 	private val slot6Value = SortValue("Slot6", "Food")
-	private val slot7Value = SortValue("Slot7", "Ignore")
+	private val slot7Value = SortValue("Slot7", "Throwable")
 	private val slot8Value = SortValue("Slot8", "Block")
 	private val slot9Value = SortValue("Slot9", "Block")
 
-	private var hasClicked = false
+	// Compact multiple small stacks into one to free up inventory space
+	suspend fun compactStacks() {
+		if (!mergeStacks || !shouldExecute())
+			return
+
+		val thePlayer = mc.thePlayer ?: return
+
+		// Loop multiple times until no clicks were scheduled
+		while (true) {
+			if (!shouldExecute()) return
+
+			val stacks = thePlayer.openContainer.inventory
+
+			// List of stack indices with different types to be compacted by double-clicking
+			val indicesToDoubleClick = stacks.withIndex()
+				.groupBy { it.value?.item }
+				.mapNotNull { (item, groupedStacks) ->
+					item ?: return@mapNotNull null
+
+					val sortedStacks = groupedStacks
+						// Only try to merge non-full stacks, without limiting stack counts in isStackUseful
+						.filter { it.value.stackSize != it.value.maxStackSize && isStackUseful(it.value, stacks, ignoreLimits = true) }
+						// Prioritise stacks that are lower in inventory
+						.sortedByDescending { it.index }
+						// Prioritise stacks that are sorted
+						.sortedByDescending { canBeSortedTo(it.index, it.value?.item, stacks.size) }
+
+					// Return first stack that can be merged with a different stack of the same type else null
+					sortedStacks.firstOrNull { (_, clickedStack) ->
+						sortedStacks.any { (_, mergedStack) ->
+							clickedStack != mergedStack
+									&& clickedStack.stackSize + mergedStack.stackSize <= clickedStack.maxStackSize
+						}
+					}?.index
+				}
+
+			var hasMerged = false
+
+			for (index in indicesToDoubleClick) {
+				if (!shouldExecute()) return
+
+				if (index in TickScheduler) continue
+
+				hasMerged = true
+
+				// TODO: Perhaps add a slider for merge delay?
+
+				click(index, 0, 0, coerceTo = 100)
+
+				click(index, 0, 6, allowDuplicates = true, coerceTo = 100)
+
+				click(index, 0, 0, allowDuplicates = true, coerceTo = 100)
+			}
+
+			// No stacks to be merged were found
+			if (!hasMerged) break
+
+			// This part isn't fully instant because of the complex vanilla merging behaviour, stack size changes and so on
+			// Waits a tick to see how the stacks got merged
+			waitUntil { TickScheduler.isEmpty() }
+		}
+	}
+
+	// Sort hotbar (with useful items without even dropping bad items first)
+	suspend fun sortHotbar() {
+		if (!sort || !shouldExecute()) return
+
+		val thePlayer = mc.thePlayer ?: return
+
+		for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
+			// Check if slot has a valid sorting target
+			val isRightType = SORTING_TARGETS[value.get()] ?: continue
+
+			// Stop if player violates invopen or nomove checks
+			if (!shouldExecute()) return
+
+			val stacks = thePlayer.openContainer.inventory
+
+			val index = hotbarIndex + 36
+
+			val stack = stacks.getOrNull(index)
+			val item = stack?.item
+
+			// Slot is already sorted
+			if (isRightType(item) && isStackUseful(stack, stacks))
+				continue
+
+			// Search for best item to sort
+			for ((otherIndex, otherStack) in stacks.withIndex()) {
+				if (otherIndex in TickScheduler)
+					continue
+
+				if (!otherStack.hasItemAgePassed(minItemAge))
+					continue
+
+				val otherItem = otherStack?.item
+
+				// Check if an item is the correct type, isn't bad and isn't already sorted
+				if (isRightType(otherItem) && isStackUseful(otherStack, stacks) && !canBeSortedTo(otherIndex, otherItem, stacks.size)) {
+					click(otherIndex, hotbarIndex, 2)
+					break
+				}
+			}
+		}
+
+		waitUntil { TickScheduler.isEmpty() }
+	}
+
+	// Drop bad items to free up inventory space
+	suspend fun dropGarbage() {
+		if (!drop || !shouldExecute()) return
+
+		val thePlayer = mc.thePlayer ?: return
+
+		for (index in thePlayer.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
+			// Stop if player violates invopen or nomove checks
+			if (!shouldExecute()) return
+
+			if (index in TickScheduler)
+				continue
+
+			val stacks = thePlayer.openContainer.inventory
+			val stack = stacks.getOrNull(index) ?: continue
+
+			if (!stack.hasItemAgePassed(minItemAge))
+				continue
+
+			// If stack isn't useful, drop it
+			if (!isStackUseful(stack, stacks))
+				click(index, 1, 4)
+		}
+
+		waitUntil { TickScheduler.isEmpty() }
+	}
 
 	private suspend fun shouldExecute(): Boolean {
 		while (true) {
 			if (!state)
 				return false
 
-			// Wait for AutoArmor to execute first, when opening inventory (for AutoClose compatibility)
-			if (CoroutineArmorer.state && !CoroutineArmorer.hasSearched)
-				return false
-
 			if (mc.thePlayer?.openContainer?.windowId != 0)
 				return false
 
-			if (invOpen && mc.currentScreen !is GuiInventory && !serverOpenInventory)
+			if (invOpen && mc.currentScreen !is GuiInventory)
 				return false
 
 			// Wait till NoMove check isn't violated
-			if (InventoryMove.canClickInventory() && !(noMove && isMoving && if (mc.thePlayer.onGround) noMoveGround else noMoveAir))
+			if (canClickInventory(closeWhenViolating = true))
 				return true
 
 			// If NoMove is violated, wait a tick and check again
@@ -108,160 +235,27 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 	}
 
-	suspend fun execute() {
-		val thePlayer = mc.thePlayer ?: return
+	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, coerceTo: Int = Int.MAX_VALUE) {
+		if (simulateInventory || invOpen)
+			serverOpenInventory = true
 
-		if (!shouldExecute())
-			return
+		if (isFirstInventoryClick) {
+			// Have to set this manually, because it would delay all clicks until a first scheduled click was sent
+			isFirstInventoryClick = false
 
-		hasClicked = false
-
-		// Compact multiple small stacks into one
-		if (compactStacks) {
-			// Loop multiple times until no clicks were scheduled
-			while (true) {
-				if (!shouldExecute()) return
-
-				val stacks = thePlayer.openContainer.inventory
-
-				// List of stack indices with different types to be compacted by double-clicking
-				val indicesToDoubleClick = stacks.withIndex()
-					.groupBy { it.value?.item }
-					.mapNotNull { (item, groupedStacks) ->
-						item ?: return@mapNotNull null
-
-						val sortedStacks = groupedStacks
-							.filterNot { it.value.stackSize == it.value.maxStackSize }
-							// Prioritise stacks that are lower in inventory
-							.sortedByDescending { it.index }
-							// Prioritise stacks that are sorted
-							.sortedByDescending { canBeSortedTo(it.index, it.value?.item, stacks.size) }
-
-						// Return first stack that can be merged with a different stack of the same type else null
-						sortedStacks.firstOrNull { (_, clickedStack) ->
-							sortedStacks.any { (_, mergedStack) ->
-								clickedStack.stackSize + mergedStack.stackSize <= clickedStack.maxStackSize
-							}
-						}?.index
-					}
-
-				var hasMerged = false
-
-				for (index in indicesToDoubleClick) {
-					if (!shouldExecute()) return
-
-					if (index in TickScheduler) continue
-
-					hasMerged = true
-
-					click(index, 0, 0)
-
-					click(index, 0, 6, allowDuplicates = true)
-
-					click(index, 0, 0, allowDuplicates = true)
-				}
-
-				if (!hasMerged)
-					break
-
-				// This part can't be fully instant because of the complex vanilla merging behaviour, stack size changes and so on
-				waitUntil { TickScheduler.isEmpty() }
-			}
+			delay(startDelay.toLong())
 		}
 
-		// Sort hotbar (with useful items without even dropping bad items first)
-		if (sort) {
-			for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
-				// Check if slot has a valid sorting target
-				val isRightType = SORTING_TARGETS[value.get()] ?: continue
+		TickScheduler.scheduleClick(slot, button, mode, allowDuplicates)
 
-				// Stop if player violates invopen or nomove checks
-				if (!shouldExecute()) return
+		hasScheduled = true
 
-				val stacks = thePlayer.openContainer.inventory
-
-				val index = hotbarIndex + 36
-
-				val stack = stacks.getOrNull(index)
-				val item = stack?.item
-
-				// Slot is already sorted
-				if (isRightType(item) && isStackUseful(stack, stacks))
-					continue
-
-				// Search for best item to sort
-				for ((otherIndex, otherStack) in stacks.withIndex()) {
-					if (otherIndex in TickScheduler)
-						continue
-
-					if (!otherStack.hasItemAgePassed(minItemAge))
-						continue
-
-					val otherItem = otherStack?.item
-
-					// Check if an item is the correct type, isn't bad and isn't already sorted
-					if (isRightType(otherItem) && isStackUseful(otherStack, stacks) && !canBeSortedTo(otherIndex, otherItem, stacks.size)) {
-						click(otherIndex, hotbarIndex, 2)
-						break
-					}
-				}
-			}
-		}
-
-		// Drop bad items
-		if (drop) {
-			for (index in thePlayer.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
-				// Stop if player violates invopen or nomove checks
-				if (!shouldExecute()) return
-
-				if (index in TickScheduler)
-					continue
-
-				val stacks = thePlayer.openContainer.inventory
-				val stack = stacks.getOrNull(index) ?: continue
-
-				if (!stack.hasItemAgePassed(minItemAge))
-					continue
-
-				// If stack isn't useful, drop it
-				if (!isStackUseful(stack, stacks))
-					click(index, 1, 4)
-			}
-		}
-
-		// Wait till all scheduled clicks were sent
-		waitUntil { TickScheduler.isEmpty() }
-
-		// If InventoryCleaner had clicked on items, use its CloseDelay, else use AutoArmor's
-		val sharedCloseDelay = if (hasClicked) closeDelay else CoroutineArmorer.closeDelay
-
-		// Close visually open inventory (also for AutoArmor, that depends on InventoryCleaner to do this)
-		if (shouldCloseOpenInv()) {
-			delay(sharedCloseDelay.toLong())
-
-			// Check if screen hasn't changed after the delay
-			if (shouldCloseOpenInv())
-				thePlayer.closeScreen()
-		}
-
-		// Close simulated inventory if player doesn't have it open visually
-		else if (shouldCloseSimulatedInv()) {
-			delay(sharedCloseDelay.toLong())
-
-			// Check if screen hasn't changed after the delay
-			if (shouldCloseSimulatedInv())
-				serverOpenInventory = false
-		}
+		delay(randomDelay(minDelay, maxDelay).coerceAtMost(coerceTo).toLong())
 	}
 
 	private val SORTING_VALUES = arrayOf(
 		slot1Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value
 	)
-
-	private fun shouldCloseOpenInv() = (hasClicked || CoroutineArmorer.hasClicked) && mc.currentScreen is GuiInventory
-			&& ((invOpen && autoClose) || (CoroutineArmorer.invOpen && CoroutineArmorer.autoClose))
-
-	private fun shouldCloseSimulatedInv() = simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory
 
 	private class SortValue(name: String, value: String) : ListValue(name, SORTING_KEYS, value) {
 		override fun isSupported() = sort
@@ -287,35 +281,13 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		return SORTING_TARGETS[SORTING_VALUES.getOrNull(index)?.get()]?.invoke(item) ?: false
 	}
 
-	private fun Int.toHotbarIndex(stacksSize: Int): Int? {
+	fun Int.toHotbarIndex(stacksSize: Int): Int? {
 		val parsed = this - stacksSize + 9
 
 		return if (parsed in 0..8) parsed else null
 	}
 
-	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
-		if (simulateInventory) serverOpenInventory = true
-
-		if (!hasClicked) {
-			// Delay first click
-			// If AutoArmor finished with open inventory, don't delay InventoryCleaner by another start delay
-			if (isFirstInventoryClick) {
-				// Have to set this manually, because it would delay all clicks until scheduled clicks were sent
-				isFirstInventoryClick = false
-
-				delay(startDelay.toLong())
-
-			}
-
-			hasClicked = true
-		}
-
-		TickScheduler.scheduleClick(slot, button, mode, allowDuplicates)
-
-		delay(randomDelay(minDelay, maxDelay).toLong())
-	}
-
-	fun isStackUseful(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
+	fun isStackUseful(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null, ignoreLimits: Boolean = false): Boolean {
 		val item = stack?.item ?: return false
 
 		return when (item) {
@@ -324,9 +296,9 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			// TODO: Limit max bucket count, vehicle count
 			is ItemEnderPearl, is ItemEnchantedBook, is ItemBucket, is ItemBed -> true
 
-			// TODO: Simplify and maybe add support for stack merging when comparing max stack counts
-			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap)
-			is ItemBlock -> isUsefulBlock(stack, stacks, entityStacksMap)
+			// TODO: Simplify
+			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap, ignoreLimits)
+			is ItemBlock -> isUsefulBlock(stack, stacks, entityStacksMap, ignoreLimits)
 
 			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
@@ -385,10 +357,12 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 	}
 
-	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
+	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean): Boolean {
 		val item = stack?.item ?: return false
 
 		if (item !is ItemFood) return false
+
+		if (ignoreLimits || !limitStackCounts) return true
 
 		val stackSaturation = item.getSaturationModifier(stack) * stack.stackSize
 
@@ -396,16 +370,16 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		val isSorted = canBeSortedTo(index, item, stacks.size)
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
+		val betterCount = stacksToIterate.withIndex().count { (otherIndex, otherStack) ->
 			if (stack == otherStack)
 				return@count false
 
@@ -428,6 +402,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 					if (index == otherIndex) {
 						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
 
+						// If other item is closer, count it as better
 						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
 					} else {
 						val isOtherSorted = canBeSortedTo(otherIndex, otherItem, stacks.size)
@@ -443,9 +418,10 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		return betterCount < maxFoodStacks
 	}
 
-	private fun isUsefulBlock(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
-		if (!isSuitableBlock(stack))
-			return false
+	private fun isUsefulBlock(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean): Boolean {
+		if (!isSuitableBlock(stack)) return false
+
+		if (ignoreLimits || !limitStackCounts) return true
 
 		val index = stacks.indexOf(stack)
 
@@ -476,6 +452,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 					if (index == otherIndex) {
 						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
 
+						// If other item is closer, count it as better
 						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
 					} else {
 						val isOtherSorted = canBeSortedTo(otherIndex, otherStack.item, stacks.size)
@@ -570,7 +547,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 }
 
 private val ITEMS_WHITELIST = arrayOf(
-	Items.arrow, Items.diamond, Items.iron_ingot, Items.gold_ingot, Items.stick
+	Items.arrow, Items.diamond, Items.iron_ingot, Items.gold_ingot, Items.stick, Items.egg, Items.snowball
 )
 
 private val NEGATIVE_EFFECT_IDS = arrayOf(
@@ -587,10 +564,11 @@ private val SORTING_TARGETS: Map<String, ((Item?) -> Boolean)?> = mapOf(
 	"Food" to { it is ItemFood },
 	"Block" to { it is ItemBlock },
 	"Water" to { it == Items.water_bucket || it == Items.bucket },
-	"Fire" to { it == Items.flint_and_steel || it == Items.lava_bucket || it == Items.bucket },
+	"Fire" to { it is ItemFlintAndSteel || it == Items.lava_bucket || it == Items.bucket },
 	"Gapple" to { it is ItemAppleGold },
 	"Pearl" to { it is ItemEnderPearl },
 	"Potion" to { it is ItemPotion },
+	"Throwable" to { it is ItemEgg || it is ItemSnowball },
 	"Ignore" to null
 )
 

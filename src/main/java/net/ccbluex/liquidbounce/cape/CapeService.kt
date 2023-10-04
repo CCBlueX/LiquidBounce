@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.api.ClientApi.API_ENDPOINT
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.SessionEvent
@@ -14,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpDelete

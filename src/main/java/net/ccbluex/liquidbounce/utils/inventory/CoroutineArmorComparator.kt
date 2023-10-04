@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.utils.item
+package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.enchantment.Enchantment

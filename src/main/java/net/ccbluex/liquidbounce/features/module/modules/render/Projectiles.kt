@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
-import net.ccbluex.liquidbounce.utils.item.isSplashPotion
+import net.ccbluex.liquidbounce.utils.inventory.isSplashPotion
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap

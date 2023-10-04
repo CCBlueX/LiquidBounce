@@ -10,11 +10,11 @@ import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack;
-import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.utils.item.ArmorComparator;
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece;
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils;
+import net.ccbluex.liquidbounce.utils.inventory.ArmorComparator;
+import net.ccbluex.liquidbounce.utils.inventory.ArmorPiece;
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils;
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.IntegerValue;
 import net.minecraft.client.gui.inventory.GuiInventory;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
-import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.isEmpty;
+import static net.ccbluex.liquidbounce.utils.inventory.ItemUtilsKt.isEmpty;
 import static net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT;
 
 public class AutoArmor extends Module {

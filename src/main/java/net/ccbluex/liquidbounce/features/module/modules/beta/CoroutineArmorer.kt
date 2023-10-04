@@ -5,20 +5,22 @@ package net.ccbluex.liquidbounce.features.module.modules.beta
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
-import net.ccbluex.liquidbounce.utils.InventoryUtils.isFirstInventoryClick
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.ccbluex.liquidbounce.utils.item.CoroutineArmorComparator.getBestArmorSet
-import net.ccbluex.liquidbounce.utils.item.hasItemAgePassed
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
+import net.ccbluex.liquidbounce.utils.inventory.CoroutineArmorComparator.getBestArmorSet
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduled
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
+import net.ccbluex.liquidbounce.utils.inventory.hasItemAgePassed
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.item.ItemArmor
+import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
@@ -35,127 +37,94 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	}
 	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
 
-	val invOpen by BoolValue("InvOpen", false)
-	private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
-	val autoClose by BoolValue("AutoClose", false) { invOpen }
+	private val invOpen by InventoryManager.invOpenValue
+	private val simulateInventory by InventoryManager.simulateInventoryValue
 
-	private val startDelay by IntegerValue("StartDelay", 0, 0..500) { invOpen || simulateInventory }
-	val closeDelay by IntegerValue("CloseDelay", 0, 0..500) { (invOpen && autoClose) || (!invOpen && simulateInventory) }
+	private val autoClose by InventoryManager.autoCloseValue
+	private val startDelay by InventoryManager.startDelayValue
+	private val closeDelay by InventoryManager.closeDelayValue
 
 	// When swapping armor pieces, it grabs the better one, drags and swaps it with equipped one and drops the equipped one (no time of having no armor piece equipped)
 	// Has to make more clicks, works slower
 	private val smartSwap by BoolValue("SmartSwap", true)
 
-	private val noMove by BoolValue("NoMoveClicks", false)
-	private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
-	private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
+	private val noMove by InventoryManager.noMoveValue
+	private val noMoveAir by InventoryManager.noMoveAirValue
+	private val noMoveGround by InventoryManager.noMoveGroundValue
 
-	private val hotbar by BoolValue("Hotbar", true)
+	val hotbar by BoolValue("Hotbar", true)
 	// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan
 	private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
 	// Prevents AutoArmor from hotbar equipping while any screen is open
-	private val onlyWhenNoScreen by BoolValue("OnlyWhenNoScreen", false) { hotbar }
+	val onlyWhenNoScreen by BoolValue("OnlyWhenNoScreen", false) { hotbar }
 
-	var hasClicked = false
-		private set
-
-	var hasSearched = false
-
-	private suspend fun shouldExecute(onlyHotbar: Boolean = false): Boolean {
-		while (true) {
-			if (!state)
-				return false
-
-			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if onlyWhenNoScreen is disabled)
-			if (mc.thePlayer?.openContainer?.windowId != 0 && (!onlyHotbar || onlyWhenNoScreen))
-				return false
-
-			// Player doesn't need to have inventory open or not to move, when equipping from hotbar
-			if (onlyHotbar)
-				return true
-
-			if (invOpen && (mc.currentScreen !is GuiInventory || !serverOpenInventory))
-				return false
-
-			// Wait till NoMove check isn't violated
-			if (InventoryMove.canClickInventory() && !(noMove && isMoving && if (mc.thePlayer.onGround) noMoveGround else noMoveAir))
-				return true
-
-			// If NoMove is violated, wait a tick and check again
-			// If there is no delay, very weird things happen: https://www.guilded.gg/CCBlueX/groups/1dgpg8Jz/channels/034be45e-1b72-4d5a-bee7-d6ba52ba1657/chat?messageId=94d314cd-6dc4-41c7-84a7-212c8ea1cc2a
-			delay(50)
-		}
-	}
-
-	suspend fun execute() {
-		if (!state)
+	suspend fun equipFromHotbar() {
+		if (!shouldExecute(onlyHotbar = true))
 			return
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (hotbar) {
-			var hasClickedHotbar = false
+		var hasClickedHotbar = false
 
-			for (hotbarIndex in 0..8) {
-				if (!shouldExecute(onlyHotbar = true))
-					return
+		for (hotbarIndex in 0..8) {
+			if (!shouldExecute(onlyHotbar = true))
+				return
 
-				// Don't right-click to equip items while inventory is open when value onlyWhenNoScreen is enabled
-				if (onlyWhenNoScreen && serverOpenInventory)
-					break
+			// Don't right-click to equip items while inventory is open when value onlyWhenNoScreen is enabled
+			if (onlyWhenNoScreen && serverOpenInventory)
+				break
 
-				val stacks = thePlayer.openContainer.inventory
+			val stacks = thePlayer.openContainer.inventory
 
-				val bestArmorSet = getBestArmorSet(stacks) ?: return
+			val bestArmorSet = getBestArmorSet(stacks) ?: return
 
-				val stack = stacks.getOrNull(hotbarIndex + 36) ?: continue
+			val stack = stacks.getOrNull(hotbarIndex + 36) ?: continue
 
-				if (stack !in bestArmorSet)
-					continue
+			if (stack !in bestArmorSet)
+				continue
 
-				val equippedStack = stacks[(stack.item as ItemArmor).armorType + 5]
+			val equippedStack = stacks[(stack.item as ItemArmor).armorType + 5]
 
-				// If armor slot isn't occupied, right click to equip
-				if (equippedStack == null) {
-					hasClickedHotbar = true
+			// If armor slot isn't occupied, right click to equip
+			if (equippedStack == null) {
+				hasClickedHotbar = true
 
-					if (delayedSlotSwitch) {
-						// Schedule for the following tick and wait for them to be sent
-						TickScheduler.scheduleAndSuspend({
-							sendPackets(
-								C09PacketHeldItemChange(hotbarIndex),
-								C08PacketPlayerBlockPlacement(stack)
-							)
-						})
-					} else {
-						// Schedule all possible hotbar clicks for the following tick (doesn't suspend the loop)
-						TickScheduler += {
-							// Switch selected hotbar slot, right click to equip
-							sendPackets(
-								C09PacketHeldItemChange(hotbarIndex),
-								C08PacketPlayerBlockPlacement(stack)
-							)
+				val equippingAction = {
+					// Switch selected hotbar slot, right click to equip
+					sendPackets(
+						C09PacketHeldItemChange(hotbarIndex),
+						C08PacketPlayerBlockPlacement(stack)
+					)
 
-							/* TODO: Isn't really needed, maybe for high pingers?
-							// Move the armor on the client-side to prevent repeated clicks (until server updates the inventory)
-							thePlayer.openContainer.putStackInSlot(36 + hotbarIndex, null)
-							thePlayer.openContainer.putStackInSlot((stack.item as ItemArmor).armorType + 5, stack)
-							*/
-						}
-					}
+					// TODO: Still clicks repetitively, probably because openContainer gets updated after some ticks?
+					// Instantly update inventory on client-side to prevent repetitive clicking because of ping
+					/*
+					thePlayer.inventory.armorInventory[abs((stack.item as ItemArmor).armorType - 3)] = stack
+					thePlayer.inventory.mainInventory[hotbarIndex] = null
+					*/
 				}
+
+				if (delayedSlotSwitch)
+					// Schedule for the following tick and wait for them to be sent
+					TickScheduler.scheduleAndSuspend(equippingAction)
+				else
+					// Schedule all possible hotbar clicks for the following tick (doesn't suspend the loop)
+					TickScheduler += equippingAction
 			}
-
-			waitUntil { TickScheduler.isEmpty() }
-
-			// Sync selected slot, if it is a duplicate, InventoryUtils will handle it
-			if (hasClickedHotbar)
-				TickScheduler += {
-					serverSlot = thePlayer.inventory.currentItem
-				}
 		}
 
-		hasClicked = false
+		waitUntil { TickScheduler.isEmpty() }
+
+		// Sync selected slot
+		if (hasClickedHotbar)
+			TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
+	}
+
+	suspend fun equipFromInventory() {
+		if (!shouldExecute())
+			return
+
+		val thePlayer = mc.thePlayer ?: return
 
 		for (armorType in 0..3) {
 			if (!shouldExecute())
@@ -215,52 +184,59 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 		// Wait till all scheduled clicks were sent
 		waitUntil { TickScheduler.isEmpty() }
+	}
 
-		hasSearched = true
-
-		// Cleaner follows AutoArmor, don't close inventory
-		if (CoroutineCleaner.state)
+	fun equipFromHotbarInChest(hotbarIndex: Int?, stack: ItemStack) {
+		// AutoArmor is disabled or prohibited from equipping while in containers
+		if (hotbarIndex == null || !state || onlyWhenNoScreen)
 			return
 
-		// Close visually open inventory if AutoArmor has clicked and AutoClose is active
-		if (shouldCloseOpenInv()) {
-			delay(closeDelay.toLong())
+		sendPackets(
+			C09PacketHeldItemChange(hotbarIndex),
+			C08PacketPlayerBlockPlacement(stack)
+		)
+	}
 
-			// Check if screen hasn't changed after the delay
-			if (shouldCloseOpenInv())
-				thePlayer.closeScreen()
-		}
+	private suspend fun shouldExecute(onlyHotbar: Boolean = false): Boolean {
+		while (true) {
+			if (!state)
+				return false
 
-		// Close simulated inventory if player doesn't have it open visually
-		else if (shouldCloseSimulatedInv()) {
-			delay(closeDelay.toLong())
+			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if onlyWhenNoScreen is disabled)
+			if (mc.thePlayer?.openContainer?.windowId != 0 && (!onlyHotbar || onlyWhenNoScreen))
+				return false
 
-			// Check if screen hasn't changed after the delay
-			if (shouldCloseSimulatedInv())
-				serverOpenInventory = false
+			// Player doesn't need to have inventory open or not to move, when equipping from hotbar
+			if (onlyHotbar)
+				return hotbar
+
+			if (invOpen && mc.currentScreen !is GuiInventory)
+				return false
+
+			// Wait till NoMove check isn't violated
+			if (canClickInventory(closeWhenViolating = true))
+				return true
+
+			// If NoMove is violated, wait a tick and check again
+			// If there is no delay, very weird things happen: https://www.guilded.gg/CCBlueX/groups/1dgpg8Jz/channels/034be45e-1b72-4d5a-bee7-d6ba52ba1657/chat?messageId=94d314cd-6dc4-41c7-84a7-212c8ea1cc2a
+			delay(50)
 		}
 	}
 
-	private fun shouldCloseOpenInv() = hasClicked && mc.currentScreen is GuiInventory && invOpen && autoClose
+	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
+		if (simulateInventory || invOpen)
+			serverOpenInventory = true
 
-	private fun shouldCloseSimulatedInv() = simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory
+		if (isFirstInventoryClick) {
+			// Have to set this manually, because it would delay all clicks until a first scheduled click was sent
+			isFirstInventoryClick = false
 
-	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
-		if (simulateInventory) serverOpenInventory = true
-
-		if (!hasClicked) {
-			// Delay first click
-			if (isFirstInventoryClick) {
-				// Have to set this manually, because it would delay all clicks until scheduled clicks were sent
-				isFirstInventoryClick = false
-
-				delay(startDelay.toLong())
-			}
-
-			hasClicked = true
+			delay(startDelay.toLong())
 		}
 
 		TickScheduler.scheduleClick(slot, button, mode, allowDuplicates)
+
+		hasScheduled = true
 
 		delay(randomDelay(minDelay, maxDelay).toLong())
 	}

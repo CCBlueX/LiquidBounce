@@ -4,12 +4,12 @@ import net.ccbluex.liquidbounce.event.EventState.PRE
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.minFallDistance
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.extensions.eyes
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
-import net.ccbluex.liquidbounce.utils.timer.TickTimer
+import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.minecraft.init.Blocks.web
 import net.minecraft.init.Items.water_bucket
 import net.minecraft.item.ItemBlock

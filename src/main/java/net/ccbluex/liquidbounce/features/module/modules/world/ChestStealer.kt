@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.InventoryUtils.hasSpaceInInventory
-import net.ccbluex.liquidbounce.utils.item.isEmpty
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.hasSpaceInInventory
+import net.ccbluex.liquidbounce.utils.inventory.isEmpty
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.inventory.GuiChest

@@ -12,15 +12,14 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor.ARMOR_COMPARATOR
-import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.InventoryUtils.CLICK_TIMER
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.item.*
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
+import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.CLICK_TIMER
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -52,12 +51,12 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
     }
     private val itemDelay by IntegerValue("ItemDelay", 0, 0..5000)
 
-    private val invOpen by BoolValue("InvOpen", false)
-    private val simulateInventory by BoolValue("SimulateInventory", true) { !invOpen }
+    private val invOpen by InventoryManager.invOpenValue
+    private val simulateInventory by InventoryManager.simulateInventoryValue
 
-    private val noMove by BoolValue("NoMoveClicks", false)
-    private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
-    private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
+    private val noMove by InventoryManager.noMoveValue
+    private val noMoveAir by InventoryManager.noMoveAirValue
+    private val noMoveGround by InventoryManager.noMoveGroundValue
 
     private val ignoreVehicles by BoolValue("IgnoreVehicles", false)
     private val hotbar by BoolValue("Hotbar", true)
@@ -93,7 +92,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
             return
 
         // Check if movement clicking isn't blocked by InventoryMove itself
-        if (!InventoryMove.canClickInventory())
+        if (!canClickInventory())
             return
 
         if (noMove && isMoving && if (mc.thePlayer.onGround) noMoveGround else noMoveAir)

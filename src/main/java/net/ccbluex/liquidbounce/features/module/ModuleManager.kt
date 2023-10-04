@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.event.EventManager.registerListener
 import net.ccbluex.liquidbounce.event.EventManager.unregisterListener
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -26,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.Timer
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import java.util.*
 
 
@@ -34,8 +33,6 @@ object ModuleManager : Listenable {
 
     val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
     private val moduleClassMap = hashMapOf<Class<*>, Module>()
-
-    private lateinit var inventoryWorker: Job
 
     init {
         registerListener(this)
@@ -212,27 +209,7 @@ object ModuleManager : Listenable {
             Zoot
         )
 
-        inventoryWorker = CoroutineScope(Dispatchers.Default).launch {
-            while (isActive) {
-                runCatching {
-                    CoroutineArmorer.hasSearched = false
-
-                    // Try to steal stuff from chests
-                    CoroutineStealer.execute()
-
-                    // Try to drop and equip armor
-                    CoroutineArmorer.execute()
-
-                    // Try to sort and clean inventory
-                    CoroutineCleaner.execute()
-                }.onFailure {
-                    // TODO: Remove when stable
-                    displayChatMessage("§cReworked coroutine inventory management has ran into an issue! Please report this: ${it.message}")
-
-                    it.printStackTrace()
-                }
-            }
-        }
+        InventoryManager.startCoroutine()
 
         LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")
     }
