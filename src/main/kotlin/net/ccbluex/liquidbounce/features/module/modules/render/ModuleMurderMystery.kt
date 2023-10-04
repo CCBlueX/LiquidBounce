@@ -264,7 +264,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
     }
 
-    private val packetHandler = handler<PacketEvent> { packetEvent ->
+    val packetHandler = handler<PacketEvent> { packetEvent ->
         val world = mc.world ?: return@handler
 
         if (packetEvent.packet is PlaySoundS2CPacket) {
@@ -290,104 +290,22 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
 
         if (packetEvent.packet is EntityEquipmentUpdateS2CPacket) {
-            val packet = packetEvent.packet
+            val packet: EntityEquipmentUpdateS2CPacket = packetEvent.packet
 
-            packet.equipmentList.filter {
-                !it.second.isEmpty && it.first in arrayOf(
-                    EquipmentSlot.MAINHAND,
-                    EquipmentSlot.OFFHAND
-                )
-            }.forEach {
-                val itemStack = it.second
-                val item = itemStack.item
-
-                val isSword =
-                    item is SwordItem ||
-                            item is PickaxeItem ||
-                            item is ShovelItem && item != Items.WOODEN_SHOVEL && item != Items.GOLDEN_SHOVEL ||
-                            item is AxeItem ||
-                            item is HoeItem ||
-                            item is BoatItem ||
-                            run {
-                                if (item !is BlockItem) {
-                                    return@run false
-                                }
-
-                                val block = item.block
-
-                                return@run block == Blocks.SPONGE ||
-                                        block == Blocks.DEAD_BUSH ||
-                                        block == Blocks.REDSTONE_TORCH ||
-                                        block == Blocks.CHORUS_PLANT
-                            } ||
-                            item in arrayOf(
-                        Items.GOLDEN_CARROT,
-                        Items.CARROT,
-                        Items.CARROT_ON_A_STICK,
-                        Items.BONE,
-                        Items.TROPICAL_FISH,
-                        Items.PUFFERFISH,
-                        Items.SALMON,
-                        Items.BLAZE_ROD,
-                        Items.PUMPKIN_PIE,
-                        Items.NAME_TAG,
-                        Items.APPLE,
-                        Items.FEATHER,
-                        Items.COOKIE,
-                        Items.SHEARS,
-                        Items.COOKED_SALMON,
-                        Items.STICK,
-                        Items.QUARTZ,
-                        Items.ROSE_BUSH,
-                        Items.ICE,
-                        Items.COOKED_BEEF,
-                        Items.NETHER_BRICK,
-                        Items.COOKED_CHICKEN,
-                        Items.MUSIC_DISC_BLOCKS,
-                        Items.RED_DYE,
-                        Items.OAK_BOAT,
-                        Items.BOOK,
-                        Items.GLISTERING_MELON_SLICE
-
+            packet.equipmentList
+                .filter {
+                    !it.second.isEmpty && it.first in arrayOf(
+                        EquipmentSlot.MAINHAND,
+                        EquipmentSlot.OFFHAND
                     )
-
-                val isBow = item is BowItem
-
-                if (!isSword && !isBow) {
-                    return@forEach
                 }
+                .forEach {
+                    val itemStack = it.second
+                    val item = itemStack.item
+                    val entity = world.getEntityById(packet.id)
 
-                val entity = world.getEntityById(packet.id)
-
-                if (entity !is AbstractClientPlayerEntity) {
-                    return@forEach
+                    handleItem(item, entity)
                 }
-//                if (ModuleAntiBot.isBot(entity)) {
-//                    return@forEach
-//                }
-
-                val locationSkin = entity.skinTexture
-
-                if (isSword && modes.activeChoice !== AssassinationMode) {
-                    if (murdererSkins.add(locationSkin.path)) {
-                        if (modes.activeChoice === InfectionMode) {
-                            if (murdererSkins.size == 1) {
-                                chat("Alpha: " + entity.gameProfile.name)
-                            }
-                        } else {
-                            chat("It's " + entity.gameProfile.name)
-
-                            playHurt = true
-                        }
-                    }
-                } else if (modes.activeChoice === ClassicMode) {
-                    if (bowSkins.add(locationSkin.path)) {
-                        chat(entity.gameProfile.name + " has a bow.")
-
-                        playBow = true
-                    }
-                }
-            }
 
         }
         if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) {
@@ -397,6 +315,103 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             currentAssasinationTarget = null
             currentAssasin = null
         }
+    }
+
+    private fun handleItem(item: Item?, entity: Entity?) {
+        val isSword = isSword(item)
+
+        val isBow = item is BowItem
+
+        if (entity !is AbstractClientPlayerEntity) {
+            return
+        }
+
+        val locationSkin = entity.skinTexture
+
+        when {
+            isSword -> handleHasSword(entity, locationSkin)
+            isBow -> handleHasBow(entity, locationSkin)
+        }
+    }
+
+    private fun handleHasBow(entity: AbstractClientPlayerEntity, locationSkin: Identifier) {
+        if (bowSkins.add(locationSkin.path)) {
+            chat(entity.gameProfile.name + " has a bow.")
+
+            playBow = true
+        }
+    }
+
+    private fun handleHasSword(entity: AbstractClientPlayerEntity, locationSkin: Identifier) {
+        when (modes.activeChoice) {
+            AssassinationMode -> {}
+            InfectionMode -> {
+                if (murdererSkins.add(locationSkin.path) && murdererSkins.size == 1) {
+                    chat(entity.gameProfile.name + " is infected.")
+                }
+            }
+
+            ClassicMode -> {
+                if (murdererSkins.add(locationSkin.path)) {
+                    chat("It's " + entity.gameProfile.name)
+
+                    playHurt = true
+                }
+            }
+
+            else -> {}
+        }
+    }
+
+    @Suppress("CyclomaticComplexMethod")
+    private fun isSword(item: Item?): Boolean {
+        return item is SwordItem ||
+            item is PickaxeItem ||
+            item is ShovelItem && item != Items.WOODEN_SHOVEL && item != Items.GOLDEN_SHOVEL ||
+            item is AxeItem ||
+            item is HoeItem ||
+            item is BoatItem ||
+            run {
+                if (item !is BlockItem) {
+                    return@run false
+                }
+
+                val block = item.block
+
+                return@run block == Blocks.SPONGE ||
+                    block == Blocks.DEAD_BUSH ||
+                    block == Blocks.REDSTONE_TORCH ||
+                    block == Blocks.CHORUS_PLANT
+            } ||
+            item in arrayOf(
+            Items.GOLDEN_CARROT,
+            Items.CARROT,
+            Items.CARROT_ON_A_STICK,
+            Items.BONE,
+            Items.TROPICAL_FISH,
+            Items.PUFFERFISH,
+            Items.SALMON,
+            Items.BLAZE_ROD,
+            Items.PUMPKIN_PIE,
+            Items.NAME_TAG,
+            Items.APPLE,
+            Items.FEATHER,
+            Items.COOKIE,
+            Items.SHEARS,
+            Items.COOKED_SALMON,
+            Items.STICK,
+            Items.QUARTZ,
+            Items.ROSE_BUSH,
+            Items.ICE,
+            Items.COOKED_BEEF,
+            Items.NETHER_BRICK,
+            Items.COOKED_CHICKEN,
+            Items.MUSIC_DISC_BLOCKS,
+            Items.RED_DYE,
+            Items.OAK_BOAT,
+            Items.BOOK,
+            Items.GLISTERING_MELON_SLICE
+        )
     }
 
     fun getColor(entityPlayer: Entity): Color4b? {
@@ -420,6 +435,18 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     }
 
     fun isMurderer(entityPlayer: AbstractClientPlayerEntity) = murdererSkins.contains(entityPlayer.skinTexture.path)
+    fun disallowsArrowDodge(): Boolean {
+        if (!enabled) {
+            return false
+        }
+
+        if (this.modes.activeChoice === AssassinationMode) {
+            // Don't dodge if we are not dead yet.
+            return player.handItems.any { it.item is BowItem || it.item == Items.ARROW }
+        }
+
+        return false
+    }
 
     object FontRecognition {
         val LETTER_MAP = HashMap<String, BooleanArray>()

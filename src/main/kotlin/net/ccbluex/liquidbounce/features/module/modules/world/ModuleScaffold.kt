@@ -73,7 +73,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToPlayerView
+import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
@@ -91,6 +91,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.cos
 import kotlin.math.round
 import kotlin.math.sin
@@ -213,6 +214,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
         // Makes you shift until first block placed, so with eagle enabled you won't fall off, when enabled
         placedBlocks = 0
+        lastPlacedBlocks.clear()
         mc.timer.timerSpeed = 1f
         SilentHotbar.resetSlot(this)
     }
@@ -464,41 +466,48 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private object StabilizeMovement : ToggleableConfigurable(this, "StabilizeMovement", true) {
-        const val MIN_VELOCITY: Double = 0.05
-        const val MAX_CENTER_DEVIATION: Double = 0.1
+        const val MAX_CENTER_DEVIATION: Double = 0.2
+        const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075
 
         var lastPosition: BlockPos? = null
 
         val moveEvent =
             handler<MovementInputEvent> { event ->
-                val currentVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
+                val currentInput = event.directionalInput
 
-                if (RotationManager.angleDifference(player.yaw, RotationManager.currentRotation?.yaw ?: player.yaw) < 10.0) {
-                    return@handler
-                }
-
-                if (currentVelocity.lengthSquared() < MIN_VELOCITY * MIN_VELOCITY) {
+                if (currentInput == DirectionalInput.NONE) {
                     return@handler
                 }
 
                 val optimalLine = getOptimalMovementLine(event.directionalInput) ?: return@handler
-
                 val nearestPointOnLine = optimalLine.getNearestPointTo(player.pos)
 
-                if (nearestPointOnLine.squaredDistanceTo(player.pos) < MAX_CENTER_DEVIATION * MAX_CENTER_DEVIATION) {
+                val vecToLine = nearestPointOnLine.subtract(player.pos)
+                val horizontalVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
+                val isRunningTowardsLine = vecToLine.dotProduct(horizontalVelocity) > 0.0
+
+                val maxDeviation = if (isRunningTowardsLine)
+                    MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS
+                else
+                    MAX_CENTER_DEVIATION
+
+                if (nearestPointOnLine.squaredDistanceTo(player.pos) < maxDeviation * maxDeviation) {
                     return@handler
                 }
 
-                val dgs = getDegreesRelativeToPlayerView(nearestPointOnLine.subtract(player.pos.x, 0.0, player.pos.z))
+                val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.pos), player.yaw)
 
-                val newDirectionalInput = getDirectionalInputForDegrees(event.directionalInput, dgs, deadAngle = 0.0F)
+                val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 0.0F)
+
+                val frontalAxisBlocked = currentInput.forwards || currentInput.backwards
+                val sagitalAxisBlocked = currentInput.right || currentInput.left
 
                 event.directionalInput =
                     DirectionalInput(
-                        newDirectionalInput.forwards,
-                        newDirectionalInput.backwards,
-                        newDirectionalInput.right,
-                        newDirectionalInput.left,
+                        if (frontalAxisBlocked) currentInput.forwards else newDirectionalInput.forwards,
+                        if (frontalAxisBlocked) currentInput.backwards else newDirectionalInput.backwards,
+                        if (sagitalAxisBlocked) currentInput.left else newDirectionalInput.left,
+                        if (sagitalAxisBlocked) currentInput.right else newDirectionalInput.right,
                     )
             }
 

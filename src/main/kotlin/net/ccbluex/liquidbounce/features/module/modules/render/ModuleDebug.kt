@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.minecraft.util.math.Box
+import java.awt.Color
 
 /**
  * Rotations module
@@ -55,6 +55,11 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     }
 
     data class DebuggedGeometryOwner(val owner: Any, val name: String)
+
+    fun getArrayEntryColor(idx: Int, length: Int): Color4b {
+        val hue = idx.toFloat() / length.toFloat()
+        return Color4b(Color.getHSBColor(hue, 1f, 1f)).alpha(32)
+    }
 
     abstract class DebuggedGeometry(val color: Color4b) {
         abstract fun render(env: RenderEnvironment)
@@ -91,6 +96,12 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
             env.withColor(color) {
                 this.drawSolidBox(box)
             }
+        }
+    }
+
+    class DebugCollection(val geometry: List<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
+        override fun render(env: RenderEnvironment) {
+            this.geometry.forEach { it.render(env) }
         }
     }
 }
