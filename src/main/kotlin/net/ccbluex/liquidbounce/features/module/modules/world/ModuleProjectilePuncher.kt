@@ -57,7 +57,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = RotationsConfigurable()
+    private val rotations = tree(RotationsConfigurable())
 
     private val cpsTimer = tree(CpsScheduler())
 
