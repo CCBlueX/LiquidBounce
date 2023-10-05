@@ -80,7 +80,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private val closeInstantlyTimeout = Chronometer()
 
     // Rotation
-    private val rotations = RotationsConfigurable()
+    private val rotations = tree(RotationsConfigurable())
 
     private var currentBlock: BlockPos? = null
     val clickedBlocks = hashSetOf<BlockPos>()
@@ -98,10 +98,6 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
         if (mc.currentScreen != null) {
             return@repeatable
-        }
-
-        if (mc.currentScreen is HandledScreen<*>) {
-            wait { delay }
         }
 
         updateTarget()
