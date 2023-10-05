@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleZoot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.blocksToEagle
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.edgeDistance
@@ -53,6 +54,7 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.enforced
 import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.client.opposite
@@ -68,6 +70,7 @@ import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
 import net.ccbluex.liquidbounce.utils.item.PreferLessSlipperyBlocks
 import net.ccbluex.liquidbounce.utils.item.PreferSolidBlocks
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -215,7 +218,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         // Makes you shift until first block placed, so with eagle enabled you won't fall off, when enabled
         placedBlocks = 0
         lastPlacedBlocks.clear()
-        mc.timer.timerSpeed = 1f
         SilentHotbar.resetSlot(this)
     }
 
@@ -309,7 +311,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.velocity.x *= slowSpeed
                 player.velocity.z *= slowSpeed
             }
-            mc.timer.timerSpeed = timer
+
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
         }
 
     val networkTickHandler =

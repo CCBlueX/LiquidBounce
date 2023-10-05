@@ -94,29 +94,19 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
     }
 
-    private val motionUpdateHandler = handler<GameTickEvent> { event ->
+    val motionUpdateHandler = handler<GameTickEvent> { event ->
         val world = mc.world ?: return@handler
         val player = mc.player ?: return@handler
 
         if (this.modes.activeChoice === InfectionMode) {
-            world.players.filter { it.isUsingItem }.filterIsInstance<AbstractClientPlayerEntity>()
-                .forEach { playerEntity ->
-                    val hasBow = arrayOf(playerEntity.mainHandStack, playerEntity.offHandStack)
-                        .any { it.item is BowItem }
-
-                    if (hasBow) {
-                        this.bowSkins += playerEntity.skinTexture.path
-                    }
+            world.players
+                .filterIsInstance<AbstractClientPlayerEntity>()
+                .filter {
+                    it.isUsingItem && arrayOf(it.mainHandStack, it.offHandStack).any { stack -> stack.item is BowItem }
                 }
-
-//            for (EntityPlayer playerEntity : mc.theWorld.playerEntities) {
-//                if (playerEntity.getHeldItem() != null && playerEntity.getHeldItem().getItem() instanceof ItemBow && playerEntity.isUsingItem()) {
-//                    if (!(playerEntity instanceof AbstractClientPlayer))
-//                        continue;
-//
-//                    this.bowSkins.add(((AbstractClientPlayer) playerEntity).getLocationSkin().getResourcePath());
-//                }
-//            }
+                .forEach { playerEntity ->
+                    handleHasBow(playerEntity, playerEntity.skinTexture, isCharging=true)
+                }
         }
 
         if (this.modes.activeChoice !== AssassinationMode) {
@@ -330,11 +320,18 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
         when {
             isSword -> handleHasSword(entity, locationSkin)
-            isBow -> handleHasBow(entity, locationSkin)
+            isBow -> handleHasBow(entity, locationSkin, isCharging = false)
         }
     }
 
-    private fun handleHasBow(entity: AbstractClientPlayerEntity, locationSkin: Identifier) {
+    private fun handleHasBow(entity: AbstractClientPlayerEntity, locationSkin: Identifier, isCharging: Boolean) {
+        if (this.modes.activeChoice === AssassinationMode) {
+            return
+        }
+        if (this.modes.activeChoice === InfectionMode && !isCharging) {
+            return
+        }
+
         if (bowSkins.add(locationSkin.path)) {
             chat(entity.gameProfile.name + " has a bow.")
 
@@ -440,7 +437,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             return false
         }
 
-        if (this.modes.activeChoice === AssassinationMode) {
+        if (this.modes.activeChoice === InfectionMode) {
             // Don't dodge if we are not dead yet.
             return player.handItems.any { it.item is BowItem || it.item == Items.ARROW }
         }

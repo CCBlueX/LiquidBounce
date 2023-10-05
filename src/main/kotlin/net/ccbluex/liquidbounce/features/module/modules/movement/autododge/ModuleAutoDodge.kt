@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
@@ -57,8 +58,6 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
             if (ModuleMurderMystery.disallowsArrowDodge()) {
                 return@handler
             }
-
-            Timer.timerSpeed = 1.0F
 
             val world = world
 
@@ -88,7 +87,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
             }
 
             if (AllowTimer.enabled && dodgePlan.useTimer) {
-                Timer.timerSpeed = AllowTimer.timerSpeed
+                Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE)
             }
         }
 

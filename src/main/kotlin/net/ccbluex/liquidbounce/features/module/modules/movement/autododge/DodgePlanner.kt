@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.rayTraceCollidingBlocks
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.eyes
@@ -197,12 +198,45 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
     val nearestPointDistancesToPlayer =
         nearestPointsToDangerZoneBorders.map { it.distanceTo(playerPosAfterFreeMovement) }
 
+    val nearestPosToLine = baseLine.getNearestPointTo(playerPos2d)
+
+    // Check if one direction is not viable because we would collide with a block
+    when {
+        getWalkableDistance(nearestPosToLine, nearestPointsToDangerZoneBorders[0]) < DodgePlanner.SAFE_DISTANCE -> {
+            return nearestPointsToDangerZoneBorders[1]
+        }
+        getWalkableDistance(nearestPosToLine, nearestPointsToDangerZoneBorders[1]) < DodgePlanner.SAFE_DISTANCE -> {
+            return nearestPointsToDangerZoneBorders[0]
+        }
+    }
+
     // Find the nearest point that is outside the danger zone
     return if (nearestPointDistancesToPlayer[0] < nearestPointDistancesToPlayer[1] - 0.05) {
         nearestPointsToDangerZoneBorders[0]
     } else {
         nearestPointsToDangerZoneBorders[1]
     }
+}
+
+fun getWalkableDistance(basePos: Vec3d, dodgePos: Vec3d): Double {
+    val playerY = mc.player!!.y
+    val rayYs = arrayOf(0.6, 1.6)
+
+    val worstRay =
+        rayYs
+            .map {
+                val rayFrom = Vec3d(basePos.x, playerY + it, basePos.z)
+                val rayTo = Vec3d(dodgePos.x, playerY + it, dodgePos.z)
+
+                val realRayTo = rayTraceCollidingBlocks(rayFrom, rayTo)?.pos ?: rayTo
+
+                Pair(rayFrom, realRayTo)
+            }
+            .minBy { (rayFrom, realRayTo) ->
+                rayFrom.squaredDistanceTo(realRayTo)
+            }
+
+    return worstRay.first.distanceTo(worstRay.second)
 }
 
 /**

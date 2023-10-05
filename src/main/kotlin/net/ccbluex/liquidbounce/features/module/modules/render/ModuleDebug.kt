@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 /**
@@ -91,13 +92,18 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
+    open class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
         override fun render(env: RenderEnvironment) {
             env.withColor(color) {
                 this.drawSolidBox(box)
             }
         }
     }
+
+    class DebuggedPoint(point: Vec3d, color: Color4b, size: Double = 0.2) : DebuggedBox(
+        Box.of(point, size, size, size),
+        color
+    )
 
     class DebugCollection(val geometry: List<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
         override fun render(env: RenderEnvironment) {

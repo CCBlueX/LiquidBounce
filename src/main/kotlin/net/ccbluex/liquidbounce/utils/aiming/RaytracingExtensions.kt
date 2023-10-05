@@ -31,6 +31,23 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
+fun rayTraceCollidingBlocks(start: Vec3d, end: Vec3d): BlockHitResult? {
+    val result = mc.world!!.raycast(
+        RaycastContext(
+            start,
+            end,
+            RaycastContext.ShapeType.COLLIDER,
+            RaycastContext.FluidHandling.ANY,
+            mc.player!!
+        )
+    )
+
+    if (result == null || result.type != HitResult.Type.BLOCK)
+        return null
+
+    return result
+}
+
 fun raytraceEntity(
     range: Double,
     rotation: Rotation,

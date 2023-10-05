@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -61,6 +62,18 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     private val random = Random()
 
     /**
+     * Keeps track of the last bow shot that has taken place
+     */
+    private val lastShotTimer = Chronometer()
+
+    @JvmStatic
+    fun onStopUsingItem() {
+        if (player.activeItem.item is BowItem) {
+            this.lastShotTimer.reset()
+        }
+    }
+
+    /**
      * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
      */
     private object AutoShootOptions : ToggleableConfigurable(this, "AutoShoot", true) {
@@ -72,6 +85,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val charged by int("Charged", 20, 3..20)
 
         val chargedRandom by floatRange("ChargedRandom", 0.0F..0.0F, -10.0F..10.0F)
+        val delayBetweenShots by int("DelayBetweenShots", 0, 0..5000)
 
         var currentChargeRandom: Int? = null
 
@@ -104,6 +118,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 }
 
                 if (player.itemUseTime < charged + getChargedRandom()) { // Wait until the bow is fully charged
+                    return@handler
+                }
+                if (!lastShotTimer.hasElapsed(delayBetweenShots.toLong())) {
                     return@handler
                 }
 
