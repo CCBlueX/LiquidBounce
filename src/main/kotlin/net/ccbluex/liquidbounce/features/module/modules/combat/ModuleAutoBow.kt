@@ -425,4 +425,3 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         tree(FastChargeOptions)
     }
 }
-
