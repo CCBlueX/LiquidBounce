@@ -5,8 +5,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.timer
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -18,7 +20,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
 
     private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)
-    private val normalSpeed by float("normalSpeed", 0.9F, 0.1F..10F)
+    private val normalSpeed by float("NormalSpeed", 0.9F, 0.1F..10F)
     private val boostSpeed by float("BoostTimer", 2F, 0.1F..10F)
     private val balanceRecoveryIncrement by float("BalanceRecoveryIncrement", 1f, 1f..10f)
     private val distanceToSpeedUp by float("DistanceToSpeedUp", 3.5f, 0f..10f)
@@ -41,18 +43,29 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         if (balanceTimer <= 0)
             reachedTheLimit = false
 
-        if (world.findEnemy(0f..distanceToStartWorking) != null && !reachedTheLimit) {
-            if (world.findEnemy(0f..distanceToSpeedUp) != null) {
-                if (balanceTimer < timerBalanceLimit * 2)
-                    mc.timer.timerSpeed = boostSpeed
-                else {
-                    reachedTheLimit = true
-                    mc.timer.timerSpeed = normalSpeed
-                }
-            } else
-                mc.timer.timerSpeed = normalSpeed
-        } else
-            mc.timer.timerSpeed = 1f
+        val timerSpeed = updateTimerSpeed()
+
+        if (timerSpeed != null) {
+            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
+        }
+    }
+
+    private fun updateTimerSpeed(): Float? {
+        if (world.findEnemy(0f..distanceToStartWorking) == null || reachedTheLimit) {
+            return null
+        }
+
+        if (world.findEnemy(0f..distanceToSpeedUp) == null) {
+            return normalSpeed
+        }
+
+        return if (balanceTimer < timerBalanceLimit * 2)
+            boostSpeed
+        else {
+            reachedTheLimit = true
+
+            normalSpeed
+        }
     }
 
     val packetHandler = handler<PacketEvent> {
@@ -61,8 +74,4 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         // Stops speeding up when you got flagged
     }
 
-    override fun disable() {
-        mc.timer.timerSpeed = 1f
-        super.disable()
-    }
 }

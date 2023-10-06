@@ -22,7 +22,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -37,49 +39,44 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
     val noAir by boolean("NoAir", false)
     val timer by float("Timer", 0.6f, 0.1f..10f)
 
-    var resetTimer = false
-
-    override fun disable() {
-        mc.timer.timerSpeed = 1F
-        resetTimer = false
-    }
-
     val repeatable = repeatable {
 
-        if (resetTimer) {
-            mc.timer.timerSpeed = 1F
-            resetTimer = false
+        // Accelerate game time (1.8.X)// todo: check if && !status.isPermanent// Accelerate game time (1.8.X)
+
+        // Skip to next tick
+        if (!player.isOnGround && noAir) {
+            return@repeatable
         }
 
-        if (player.isOnGround || !noAir) {
-            if (fire && !player.abilities.creativeMode && player.isOnFire) {
+        val shouldZootFire = fire && !player.abilities.creativeMode
+
+        if (shouldZootFire && player.isOnFire) {
+            // Accelerate game time (1.8.X)
+            repeat(9) {
+                network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
+            }
+
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+
+            // Skip to next tick
+            return@repeatable
+        }
+
+        if (badEffects) {
+            val (effect, status) = player.activeStatusEffects.maxByOrNull { it.value.duration }
+                ?: return@repeatable
+
+            // todo: check if && !status.isPermanent
+            if (!effect.isBeneficial && !status.isInfinite) {
                 // Accelerate game time (1.8.X)
-                repeat(9) {
+                repeat(status.duration / 20) {
                     network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                 }
 
-                mc.timer.timerSpeed = timer
-                resetTimer = true
-
-                // Skip to next tick
-                return@repeatable
-            }
-
-            if (badEffects) {
-                val (effect, status) = player.activeStatusEffects.maxByOrNull { it.value.duration }
-                    ?: return@repeatable
-
-                // todo: check if && !status.isPermanent
-                if (!effect.isBeneficial ) {
-                    // Accelerate game time (1.8.X)
-                    repeat(status.duration / 20) {
-                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
-                    }
-
-                    mc.timer.timerSpeed = timer
-                    resetTimer = true
-                }
+                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
             }
         }
+
+        return@repeatable
     }
 }
