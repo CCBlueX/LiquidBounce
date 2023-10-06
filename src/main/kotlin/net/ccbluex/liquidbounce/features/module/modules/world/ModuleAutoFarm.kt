@@ -29,10 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.drawBoxNew
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyes
@@ -428,20 +425,15 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         // searches for any blocks within the radius that need to be destroyed, such as crops.
         // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on
-        val blocksToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val blocksToBreak = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && isTargeted(state, pos) && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() } +
-            if(AutoPlaceCrops.enabled) {searchBlocksInCuboid(radius.toInt()) { pos, state ->
-                !state.isAir && isFarmBlockWithAir(state, pos) && getNearestPoint(
-                    eyesPos,
-                    Box(pos, pos.add(1, 1, 1))
-                ).squaredDistanceTo(eyesPos) <= radiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }} else listOf()
+        }.sortedBy { it.first.getCenterDistanceSquared() }
 
-        for ((pos, state) in blocksToProcess) {
+
+        for ((pos, state) in blocksToBreak) {
             val (rotation, _) = raytraceBlock(
                 player.eyes,
                 pos,
@@ -452,11 +444,37 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
             // set currentTarget to the new target
             this.currentTarget = pos
-            // aim on target
+            // aim at target
+            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            break // We got a free angle at the block? No need to see more of them.
+        }
+
+        if (!AutoPlaceCrops.enabled) return
+        val blocksToPlace =
+            searchBlocksInCuboid(radius.toInt()) { pos, state ->
+                !state.isAir && isFarmBlockWithAir(state, pos) && getNearestPoint(
+                    eyesPos,
+                    Box(pos, pos.add(1, 1, 1))
+                ).squaredDistanceTo(eyesPos) <= radiusSquared
+            }.sortedBy { it.first.getCenterDistanceSquared() }
+
+        for ((pos, state) in blocksToPlace) {
+            val (rotation, _) = raytracePlaceBlock(
+                player.eyes,
+                pos.up(),
+                state,
+                range = range.toDouble(),
+                wallsRange = wallRange.toDouble()
+            ) ?: continue // We don't have a free angle at the block? Well let me see the next.
+
+            // set currentTarget to the new target
+            this.currentTarget = pos
+            // aim at target
             RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break // We got a free angle at the block? No need to see more of them.
         }
     }
+
 
     private fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
         val block = state.block

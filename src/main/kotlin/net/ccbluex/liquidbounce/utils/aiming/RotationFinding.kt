@@ -1,5 +1,8 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
+import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.step
@@ -149,6 +152,75 @@ class BoxVisibilityPredicate(private val expectedTarget: Box) : VisibilityPredic
     }
 }
 
+fun ClosedRange<Double>.shrinkBy(value: Double) = (start + value)..(endInclusive - value)
+
+fun raytracePlaceBlock(
+    eyes: Vec3d,
+    pos: BlockPos,
+    state: BlockState,
+    range: Double,
+    wallsRange: Double,
+): VecRotation? {
+    val rangeSquared = range * range
+    val wallsRangeSquared = wallsRange * wallsRange
+    val shapeContext = ShapeContext.of(mc.player)
+    val posBellow = pos.down()
+    val offset = Vec3d(posBellow.x.toDouble(), posBellow.y.toDouble(), posBellow.z.toDouble())
+    val shapeBellow = posBellow.getState()?.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))?.let { shape ->
+        for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
+            val box = boxShape.offset(offset)
+            val visibilityPredicate = BoxVisibilityPredicate(box)
+
+            val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
+
+            val nearestSpot =
+                Vec3d(
+                    eyes.x.coerceIn((box.minX..box.maxX).shrinkBy(0.05)),
+                    box.maxY,
+                    eyes.z.coerceIn((box.minZ..box.maxZ).shrinkBy(0.05)),
+                )
+            chat(visibilityPredicate.isVisible(eyes, nearestSpot).toString())
+
+            considerSpot(
+                nearestSpot,
+                box,
+                eyes,
+                visibilityPredicate,
+                rangeSquared,
+                wallsRangeSquared,
+                nearestSpot,
+                bestRotationTracker,
+            )
+
+            for (x in 0.05..0.95 step 0.1){
+                for (z in 0.05..0.95 step 0.1){
+                    val spot =
+                        Vec3d(
+                            box.minX + (box.maxX - box.minX) * x,
+                            box.maxY,
+                            box.minZ + (box.maxZ - box.minZ) * z,
+                        )
+                    considerSpot(
+                        spot,
+                        box,
+                        eyes,
+                        visibilityPredicate,
+                        rangeSquared,
+                        wallsRangeSquared,
+                        spot,
+                        bestRotationTracker,
+                    )
+
+                }
+            }
+            return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
+
+        }
+    }
+
+    return null
+}
+
 /**
  * Find the best spot of a box to aim at.
  */
@@ -236,7 +308,7 @@ private fun considerSpot(
     spot: Vec3d,
     bestRotationTracker: BestRotationTracker,
 ) {
-    val spotOnBox = box.raycast(eyes, preferredSpot).getOrNull() ?: return
+    val spotOnBox = box.raycast(eyes, preferredSpot).getOrNull() ?: spot
     val distance = eyes.squaredDistanceTo(spotOnBox)
 
     val visible = visibilityPredicate.isVisible(eyes, spotOnBox)
