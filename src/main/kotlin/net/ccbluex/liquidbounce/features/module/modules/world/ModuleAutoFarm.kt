@@ -45,8 +45,6 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -54,8 +52,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
 import kotlin.math.abs
 
 /**
@@ -156,11 +153,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 val baseForReadyBlocks = if (colorRainbow) rainbow() else readyBlockColor
                 val baseForFarmBlocks = if (colorRainbow) rainbow() else farmBlockColor
 
-                val markedBlocks = BlockTracker.trackedBlockMap.keys
+                val markedBlocks = BlockTracker.trackedBlockMap
 //                val markedFarmBlocks = FarmBlockTracker.trackedBlockMap.keys
                 renderEnvironment(matrixStack) {
                     CurrentTarget.render(this)
-                    for (pos in markedBlocks) {
+                    for ((pos, type) in markedBlocks) {
                         val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
                         val baseColor = baseForReadyBlocks.alpha(50)
@@ -168,10 +165,15 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
                         withPosition(vec3) {
                             withColor(baseColor) {
-                                drawSolidBox(box)
+                                if(type == TrackedState.Destroy){
+                                    drawSolidBox(box)
+                                } else {
+                                    drawSideBox(box, Direction.UP)
+                                }
+
                             }
 
-                            if (outline) {
+                            if (outline && type == TrackedState.Destroy) {
                                 withColor(outlineColor) {
                                     drawOutlinedBox(box)
                                 }
@@ -346,6 +348,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
     }
+    private fun getHotbarItems() = (0..8).map { player.inventory.getStack(it).item }
+
 
     private fun findWalkToBlock(): Vec3d?{
 
@@ -353,8 +357,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return null
         }
 
-        val allowedItems = arrayOf(true, true, false, false)
-        val hotbarItems = (0..8).map { player.inventory.getStack(it).item }
+        val allowedItems = arrayOf(true, false, false)
+        // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
+        // 2. false: we should only walk to farmland blocks if we got the needed items
+        // 3. false: same as 2. only go if we got the needed items for souldsand (netherwarts)
+        val hotbarItems = getHotbarItems()
         for (item in hotbarItems){
             if(item in itemsForFarmland) allowedItems[2] = true
             else if(item in itemsForSoulsand) allowedItems[3] = true
@@ -450,6 +457,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
         if (!AutoPlaceCrops.enabled) return
+
         val blocksToPlace =
             searchBlocksInCuboid(radius.toInt()) { pos, state ->
                 !state.isAir && isFarmBlockWithAir(state, pos) && getNearestPoint(
