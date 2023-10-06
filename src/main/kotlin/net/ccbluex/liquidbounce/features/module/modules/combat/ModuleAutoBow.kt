@@ -23,13 +23,18 @@ import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -41,6 +46,7 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.*
 
 /**
@@ -50,17 +56,27 @@ import kotlin.math.*
  *  + and make it possible to shoot faster
  */
 object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
-
     const val ACCELERATION = -0.006
     const val REAL_ACCELERATION = -0.005
 
     private val random = Random()
 
     /**
+     * Keeps track of the last bow shot that has taken place
+     */
+    private val lastShotTimer = Chronometer()
+
+    @JvmStatic
+    fun onStopUsingItem() {
+        if (player.activeItem.item is BowItem) {
+            this.lastShotTimer.reset()
+        }
+    }
+
+    /**
      * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
      */
     private object AutoShootOptions : ToggleableConfigurable(this, "AutoShoot", true) {
-
         // Target
         val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
@@ -69,6 +85,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val charged by int("Charged", 20, 3..20)
 
         val chargedRandom by floatRange("ChargedRandom", 0.0F..0.0F, -10.0F..10.0F)
+        val delayBetweenShots by int("DelayBetweenShots", 0, 0..5000)
 
         var currentChargeRandom: Int? = null
 
@@ -76,8 +93,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             val lenHalf = (this.chargedRandom.endInclusive - this.chargedRandom.start) / 2.0F
             val mid = this.chargedRandom.start + lenHalf
 
-            currentChargeRandom = (mid + random.nextGaussian() * lenHalf).toInt()
-                .coerceIn(this.chargedRandom.start.toInt()..this.chargedRandom.endInclusive.toInt())
+            currentChargeRandom =
+                (mid + random.nextGaussian() * lenHalf).toInt()
+                    .coerceIn(this.chargedRandom.start.toInt()..this.chargedRandom.endInclusive.toInt())
         }
 
         fun getChargedRandom(): Int {
@@ -88,52 +106,58 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             return currentChargeRandom!!
         }
 
-        val tickRepeatable = handler<GameTickEvent> {
-            val player = mc.player ?: return@handler
+        val tickRepeatable =
+            handler<GameTickEvent> {
+                val player = mc.player ?: return@handler
 
-            val currentItem = player.activeItem
+                val currentItem = player.activeItem
 
-            // Should check if player is using bow
-            if (currentItem?.item !is BowItem) {
-                return@handler
-            }
-
-            if (this.murderMysteryMode) {
-                val hypotheticalHit = getHypotheticalHit()
-
-                if (hypotheticalHit == null || !ModuleMurderMystery.isMurderer(hypotheticalHit)) {
+                // Should check if player is using bow
+                if (currentItem?.item !is BowItem) {
                     return@handler
                 }
+
+                if (player.itemUseTime < charged + getChargedRandom()) { // Wait until the bow is fully charged
+                    return@handler
+                }
+                if (!lastShotTimer.hasElapsed(delayBetweenShots.toLong())) {
+                    return@handler
+                }
+
+                if (this.murderMysteryMode) {
+                    val hypotheticalHit = getHypotheticalHit()
+
+                    if (hypotheticalHit == null || !ModuleMurderMystery.isMurderer(hypotheticalHit)) {
+                        return@handler
+                    }
+                }
+
+                mc.interactionManager!!.stopUsingItem(player)
+
+                updateChargeRandom()
             }
-
-            if (player.itemUseTime < charged + getChargedRandom()) { // Wait until the bow is fully charged
-                return@handler
-            }
-
-            mc.interactionManager!!.stopUsingItem(player)
-
-            updateChargeRandom()
-        }
 
         fun getHypotheticalHit(): AbstractClientPlayerEntity? {
             val rotation = RotationManager.currentRotation ?: player.rotation
             val yaw = rotation.yaw
             val pitch = rotation.pitch
 
-
             val velocity = getHypotheticalArrowVelocity(player, false)
 
-            val vX =
-                -MathHelper.sin(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity
-            val vY = -MathHelper.sin(pitch * (Math.PI.toFloat() / 180)) * velocity
-            val vZ =
-                MathHelper.cos(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity
+            val vX = -MathHelper.sin(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
+            val vY = -MathHelper.sin(pitch.toRadians()) * velocity
+            val vZ = MathHelper.cos(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
 
-            val arrow = SimulatedArrow(world, player.eyes, Vec3d(vX.toDouble(), vY.toDouble(), vZ.toDouble()), false)
+            val arrow = SimulatedArrow(
+                world,
+                player.eyes,
+                Vec3d(vX.toDouble(), vY.toDouble(), vZ.toDouble()),
+                collideEntities = false
+            )
 
             val players = findAndBuildSimulatedPlayers()
 
-            for (i in 0 until 15) {
+            for (i in 0 until 40) {
                 val lastPos = arrow.pos
 
                 arrow.tick()
@@ -141,7 +165,10 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 players.forEach { (entity, player) ->
                     player.tick()
 
-                    val playerHitBox = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3).expand(0.3).offset(player.pos)
+                    val playerHitBox =
+                        Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
+                        .expand(0.3)
+                        .offset(player.pos)
 
                     val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
@@ -155,21 +182,11 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayer>> {
-            val playerPosVec = Vec3d(player.pos.x, player.pos.z, 0.0)
-            val playerDirectionVec = run {
-                val rotVec = player.rotationVector
-
-                return@run Vec3d(rotVec.x, rotVec.z, 0.0)
-            }
-
             return world.players.filter {
-                straightLinePointDistanceSquared(
-                    playerPosVec,
-                    playerDirectionVec,
-                    Vec3d(it.x, it.z, 0.0)
-                ) < 10.0
+                it != mc.player &&
+                    Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
             }.map {
-                Pair(it, SimulatedPlayer.fromPlayer(it, SimulatedPlayer.SimulatedPlayerInput.guessInput(it)))
+                Pair(it, SimulatedPlayer.fromOtherPlayer(it, SimulatedPlayer.SimulatedPlayerInput.guessInput(it)))
             }
         }
     }
@@ -178,7 +195,6 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      * Bow aimbot automatically aims at enemy targets
      */
     private object BowAimbotOptions : ToggleableConfigurable(this, "BowAimbot", false) {
-
         // Target
         val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
@@ -193,55 +209,60 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(rotationConfigurable)
         }
 
-        val tickRepeatable = handler<GameTickEvent> {
-            val player = mc.player ?: return@handler
+        val tickRepeatable =
+            handler<GameTickEvent> {
+                val player = mc.player ?: return@handler
 
-            targetTracker.lockedOnTarget = null
+                targetTracker.lockedOnTarget = null
 
-            // Should check if player is using bow
-            if (player.activeItem?.item !is BowItem) {
-                return@handler
+                // Should check if player is using bow
+                if (player.activeItem?.item !is BowItem) {
+                    return@handler
+                }
+
+                val eyePos = player.eyes
+
+                var target: Entity? = null
+                var rotation: Rotation? = null
+
+                for (enemy in targetTracker.enemies()) {
+                    val rot = getRotationToTarget(enemy.box.center, eyePos, enemy) ?: continue
+
+                    target = enemy
+                    rotation = rot
+
+                    break
+                }
+
+                if (rotation == null) {
+                    return@handler
+                }
+
+                RotationManager.aimAt(rotation, configurable = rotationConfigurable)
             }
-
-            val eyePos = player.eyes
-
-            var target: Entity? = null
-            var rotation: Rotation? = null
-
-            for (enemy in targetTracker.enemies()) {
-                val rot = getRotationToTarget(enemy.box.center, eyePos, enemy) ?: continue
-
-                target = enemy
-                rotation = rot
-
-                break
-            }
-
-            if (rotation == null) {
-                return@handler
-            }
-
-
-            RotationManager.aimAt(rotation, configurable = rotationConfigurable)
-        }
-
     }
 
-    private fun getRotationToTarget(targetPos: Vec3d, eyePos: Vec3d, target: Entity): Rotation? {
+    private fun getRotationToTarget(
+        targetPos: Vec3d,
+        eyePos: Vec3d,
+        target: Entity,
+    ): Rotation? {
         var deltaPos = targetPos.subtract(eyePos)
         val basePrediction = predictBow(deltaPos, FastChargeOptions.enabled)
 
-        val realTravelTime = getTravelTime(
-            basePrediction.travelledOnX,
-            cos(Math.toRadians(basePrediction.rotation.pitch.toDouble())) * basePrediction.pullProgress * 3.0F * 0.7f
-        )
+        val realTravelTime =
+            getTravelTime(
+                basePrediction.travelledOnX,
+                cos(basePrediction.rotation.pitch.toRadians()) * basePrediction.pullProgress * 3.0 * 0.7,
+            )
 
         if (!realTravelTime.isNaN()) {
-            deltaPos = deltaPos.add(
-                (target.x - target.prevX) * realTravelTime,
-                (target.y - target.prevY) * realTravelTime,
-                (target.z - target.prevZ) * realTravelTime
-            )
+            deltaPos =
+                deltaPos.add(
+                    (target.x - target.prevX) * realTravelTime,
+                    (target.y - target.prevY) * realTravelTime,
+                    (target.z - target.prevZ) * realTravelTime,
+                )
         }
 
         val finalPrediction = predictBow(deltaPos, FastChargeOptions.enabled)
@@ -262,35 +283,17 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         positions.add(targetPos)
 
-//        var lowerBound = if (vertex != null) -maxX
-//        else 0.0
-//
-//        val upperBound = sqrt(deltaPos.x * deltaPos.x + deltaPos.z * deltaPos.z)
-//
-//        while ((upperBound - lowerBound).absoluteValue > 2.0) {
-//            lowerBound += (upperBound - lowerBound) / 2.0
-//
-//            val y = (ACCELERATION * lowerBound * lowerBound) / (v_x * v_x) + (v_y * lowerBound) / v_x
-//
-//            println("$lowerBound $y")
-//
-//            positions.add(
-//                Vec3d(
-//                    xPitch * lowerBound, y, zPitch * lowerBound
-//                ).add(eyePos)
-//            )
-//        }
-
         for (i in 0 until positions.lastIndex) {
-            val raycast = world.raycast(
-                RaycastContext(
-                    positions[i],
-                    positions[i + 1],
-                    RaycastContext.ShapeType.OUTLINE,
-                    RaycastContext.FluidHandling.ANY,
-                    player
+            val raycast =
+                world.raycast(
+                    RaycastContext(
+                        positions[i],
+                        positions[i + 1],
+                        RaycastContext.ShapeType.OUTLINE,
+                        RaycastContext.FluidHandling.ANY,
+                        player,
+                    ),
                 )
-            )
 
             if (raycast.type == HitResult.Type.BLOCK) return null
         }
@@ -301,7 +304,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     private fun getHighestPointOfTrajectory(
         deltaPos: Vec3d,
         rotation: Rotation,
-        pullProgress: Float
+        pullProgress: Float,
     ): Vec3d? {
         val v0 = pullProgress * 3.0F * 0.7f
 
@@ -315,19 +318,23 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val xPitch = cos(Math.toRadians(rotation.yaw.toDouble() - 90.0F))
         val zPitch = sin(Math.toRadians(rotation.yaw.toDouble() - 90.0F))
 
-        val vertex = if (maxX < 0 && maxX * maxX < deltaPos.x * deltaPos.x + deltaPos.z * deltaPos.z) {
-            Vec3d(
-                xPitch * maxX,
-                maxY,
-                zPitch * maxX
-            )
-        } else {
-            null
-        }
+        val vertex =
+            if (maxX < 0 && maxX * maxX < deltaPos.x * deltaPos.x + deltaPos.z * deltaPos.z) {
+                Vec3d(
+                    xPitch * maxX,
+                    maxY,
+                    zPitch * maxX,
+                )
+            } else {
+                null
+            }
         return vertex
     }
 
-    fun getTravelTime(dist: Double, v0: Double): Float {
+    fun getTravelTime(
+        dist: Double,
+        v0: Double,
+    ): Float {
         return log((v0 / (ln(0.99)) + dist) / (v0 / (ln(0.99))), 0.99).toFloat()
     }
 
@@ -335,7 +342,11 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         BowAimbotOptions.targetTracker.cleanup()
     }
 
-    fun predictBow(target: Vec3d, assumeElongated: Boolean): BowPredictionResult {
+    @Suppress("MaxLineLength")
+    private fun predictBow(
+        target: Vec3d,
+        assumeElongated: Boolean,
+    ): BowPredictionResult {
         val player = player
 
         val travelledOnX = sqrt(target.x * target.x + target.z * target.z)
@@ -345,18 +356,28 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         return BowPredictionResult(
             Rotation(
                 (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
-                (-Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
+                (
+                    -Math.toDegrees(
+                        atan(
+                            (velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX),
+                        ),
+                    )
+                ).toFloat(),
             ),
             velocity,
-            travelledOnX
+            travelledOnX,
         )
     }
 
     private fun getHypotheticalArrowVelocity(
         player: ClientPlayerEntity,
-        assumeElongated: Boolean
+        assumeElongated: Boolean,
     ): Float {
-        var velocity: Float = if (assumeElongated) 1f else player.itemUseTime.coerceAtLeast(BowAimbotOptions.minExpectedPull) / 20f
+        var velocity: Float =
+            if (assumeElongated)
+                1.0F
+            else
+                player.itemUseTime.coerceAtLeast(BowAimbotOptions.minExpectedPull) / 20.0F
 
         velocity = (velocity * velocity + velocity * 2.0f) / 3.0f
 
@@ -375,26 +396,27 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      * TODO: Add version specific options
      */
     private object FastChargeOptions : ToggleableConfigurable(this, "FastCharge", true) {
-
         val packets by int("Packets", 20, 3..20)
 
-        val tickRepeatable = handler<GameTickEvent> {
-            val player = mc.player ?: return@handler
+        val tickRepeatable =
+            handler<GameTickEvent> {
+                val player = mc.player ?: return@handler
 
-            val currentItem = player.activeItem
+                val currentItem = player.activeItem
 
-            // Should accelerated game ticks when using bow
-            if (currentItem?.item is BowItem) {
-                repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
-                    network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true)) // Just show visual effect (not required to work - but looks better)
-                    player.tickActiveItemStack()
+                // Should accelerated game ticks when using bow
+                if (currentItem?.item is BowItem) {
+                    repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
+                        network.sendPacket(
+                            PlayerMoveC2SPacket.OnGroundOnly(true),
+                        ) // Just show visual effect (not required to work - but looks better)
+                        player.tickActiveItemStack()
+                    }
+
+                    // Shoot with bow (auto shoot has to be enabled)
+                    // TODO: Depend on Auto Shoot
                 }
-
-                // Shoot with bow (auto shoot has to be enabled)
-                // TODO: Depend on Auto Shoot
             }
-        }
-
     }
 
     init {
@@ -402,5 +424,4 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         tree(BowAimbotOptions)
         tree(FastChargeOptions)
     }
-
 }

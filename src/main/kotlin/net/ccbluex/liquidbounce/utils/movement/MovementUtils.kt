@@ -1,19 +1,11 @@
 package net.ccbluex.liquidbounce.utils.movement
 
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEagle
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.client.input.Input
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -22,8 +14,6 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.atan2
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.sqrt
 
 data class DirectionalInput(
@@ -36,6 +26,7 @@ data class DirectionalInput(
 
     companion object {
         val NONE = DirectionalInput(forwards = false, backwards = false, left = false, right = false)
+        val FORWARDS = DirectionalInput(forwards = true, backwards = false, left = false, right = false)
     }
 }
 
@@ -51,12 +42,12 @@ val HORIZONTAL_DIRECTIONS: Array<Direction> = arrayOf(
  *
  * @param positionRelativeToPlayer relative position to player
  */
-fun getDegreesRelativeToPlayerView(positionRelativeToPlayer: Vec3d): Float {
-    val player = mc.player!!
-    val yaw = RotationManager.currentRotation?.yaw ?: player.yaw
-
+fun getDegreesRelativeToView(
+    positionRelativeToPlayer: Vec3d,
+    yaw: Float = RotationManager.currentRotation?.yaw ?: mc.player!!.yaw
+): Float {
     val optimalYaw =
-        atan2(positionRelativeToPlayer.z, positionRelativeToPlayer.x).toFloat()
+        atan2(-positionRelativeToPlayer.x, positionRelativeToPlayer.z).toFloat()
     val currentYaw = MathHelper.wrapDegrees(yaw).toRadians()
 
     return MathHelper.wrapDegrees((optimalYaw - currentYaw).toDegrees())

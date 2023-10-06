@@ -26,8 +26,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.timer
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.MovementType
 
 /**
@@ -75,14 +77,8 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         }
 
         val timerRepeatable = repeatable {
-            mc.timer.timerSpeed = 2f
-            wait { 1 }
-            mc.timer.timerSpeed = 1f
-            wait { 100 }
-        }
-
-        override fun disable() {
-            mc.timer.timerSpeed = 1f
+            Timer.requestTimerSpeed(2.0F, priority = Priority.IMPORTANT_FOR_USAGE)
+            wait { 101 }
         }
     }
 
@@ -134,21 +130,22 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
 
         val repeatable = repeatable {
-            if (player.moving) {
-                mc.timer.timerSpeed = timerSpeed
-
-                when {
-                    player.isOnGround -> {
-                        player.strafe(speed = horizontalSpeed.toDouble())
-                        player.velocity.y = verticalSpeed.toDouble()
-                    }
-
-                    customStrafe -> player.strafe(speed = strafe.toDouble())
-                    else -> player.strafe()
-                }
-            } else {
-                mc.timer.timerSpeed - 1f
+            if (!player.moving) {
+                return@repeatable
             }
+
+            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
+
+            when {
+                player.isOnGround -> {
+                    player.strafe(speed = horizontalSpeed.toDouble())
+                    player.velocity.y = verticalSpeed.toDouble()
+                }
+
+                customStrafe -> player.strafe(speed = strafe.toDouble())
+                else -> player.strafe()
+            }
+
         }
 
         override fun enable() {
@@ -158,10 +155,6 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
             }
 
             if (resetVerticalSpeed) player.velocity.y = 0.0
-        }
-
-        override fun disable() {
-            mc.timer.timerSpeed = 1f
         }
     }
 
