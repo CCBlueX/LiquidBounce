@@ -316,11 +316,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                     player.swingHand(Hand.MAIN_HAND)
                 }
-                if(blockPos.down().getState()?.let { isFarmBlock(it) } == true && Walk.toReplace){
-                    farmLandBlocks.add(Vec3d.ofCenter(blockPos))
-                }
-
-
             }
         } else if(isFarmBlockWithAir(
                 state,
@@ -363,8 +358,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         // 3. false: same as 2. only go if we got the needed items for souldsand (netherwarts)
         val hotbarItems = getHotbarItems()
         for (item in hotbarItems){
-            if(item in itemsForFarmland) allowedItems[2] = true
-            else if(item in itemsForSoulsand) allowedItems[3] = true
+            if(item in itemsForFarmland) allowedItems[1] = true
+            else if(item in itemsForSoulsand) allowedItems[2] = true
         }
 
 //        val closestCropBlock = BlockTracker.trackedBlockMap.keys.map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))}
@@ -445,7 +440,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos,
                 state,
-                range = range.toDouble(),
+                range = range.toDouble() - 0.05,
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
@@ -457,10 +452,15 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
         if (!AutoPlaceCrops.enabled) return
+        val hotbarItems = getHotbarItems()
+        val allowFarmland = hotbarItems.any { it in itemsForFarmland }
+        val allowSoulsand = hotbarItems.any { it in itemsForSoulsand }
 
+        if(!allowFarmland && !allowSoulsand) return
         val blocksToPlace =
             searchBlocksInCuboid(radius.toInt()) { pos, state ->
-                !state.isAir && isFarmBlockWithAir(state, pos) && getNearestPoint(
+                !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
+                && getNearestPoint(
                     eyesPos,
                     Box(pos, pos.add(1, 1, 1))
                 ).squaredDistanceTo(eyesPos) <= radiusSquared
@@ -471,7 +471,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos.up(),
                 state,
-                range = range.toDouble(),
+                range = range.toDouble() - 0.05,
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
@@ -503,15 +503,18 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     /**
      * checks if the block is either a farmland or soulsand block and has air above it
      */
-    private fun isFarmBlockWithAir(state: BlockState, pos: BlockPos): Boolean {
-        return isFarmBlock(state) && pos.up().getState()?.isAir == true
+    private fun isFarmBlockWithAir(state: BlockState, pos: BlockPos, allowFarmland: Boolean = true, allowSoulsand: Boolean = true): Boolean {
+        return isFarmBlock(state, allowFarmland, allowSoulsand) && hasAirAbove(pos)
     }
 
-    private fun isFarmBlock(state: BlockState): Boolean {
+    private fun hasAirAbove(pos: BlockPos) = pos.up().getState()?.isAir == true
+
+
+    private fun isFarmBlock(state: BlockState, allowFarmland: Boolean, allowSoulsand: Boolean): Boolean {
         val block = state.block
         return when (block) {
-                is FarmlandBlock -> true
-                is SoulSandBlock -> true
+                is FarmlandBlock -> allowFarmland
+                is SoulSandBlock -> allowSoulsand
                 else -> false
         }
     }
@@ -539,9 +542,19 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             val block = state.block
-            if(block !is FarmlandBlock){
-                val stateBellow = pos.down().getState()
-                if(stateBellow?.block is FarmlandBlock){
+            if(block is FarmlandBlock) {
+                if(hasAirAbove(pos)){
+                    return TrackedState.Farmland
+                }
+            } else if(block is SoulSandBlock){
+                if(hasAirAbove(pos)){
+                    return TrackedState.Soulsand
+                }
+            } else {
+
+                val blockBellow = pos.down().getState()?.block
+
+                if(blockBellow is FarmlandBlock){
                     val targetBlockPos = TargetBlockPos(pos.down())
                     if(state.isAir){
                         this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
@@ -549,12 +562,17 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                     } else {
                         this.trackedBlockMap.remove(targetBlockPos)
                     }
+                } else if(blockBellow is SoulSandBlock){
+                    val targetBlockPos = TargetBlockPos(pos.down())
+                    if(state.isAir){
+                        this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
+                        return null
+                    } else {
+                        this.trackedBlockMap.remove(targetBlockPos)
+                    }
                 }
 
                 if (isTargeted(state, pos)) return TrackedState.Destroy
-
-            } else if(pos.up().getState()?.isAir == true){
-                return TrackedState.Farmland
             }
             return null
 
