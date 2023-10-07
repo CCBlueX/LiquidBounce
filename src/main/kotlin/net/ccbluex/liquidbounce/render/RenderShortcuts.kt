@@ -25,13 +25,18 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gl.ShaderProgram
+import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import org.joml.Matrix4f
+import java.nio.Buffer
 
 /**
  * Data class representing the rendering environment.
@@ -193,6 +198,32 @@ fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
     // Draw the outlined box
     tessellator.draw()
 }
+/**
+ */
+fun RenderEnvironment.drawCustomMesh(
+    drawMode: DrawMode,
+    vertexFormat: VertexFormat,
+    shader: ShaderProgram,
+    drawer: BufferBuilder.(Matrix4f) -> Unit
+) {
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    RenderSystem.setShader { shader }
+
+    val matrix = matrixStack.peek().positionMatrix
+
+    // Draw the vertices of the box
+    with(bufferBuilder) {
+        // Begin drawing lines with position format
+        begin(drawMode, vertexFormat)
+
+        drawer(this, matrix)
+    }
+
+    // Draw the outlined box
+    tessellator.draw()
+}
 
 fun RenderEnvironment.drawQuad(pos1: Vec3d, pos2: Vec3d) {
     val tessellator = RenderSystem.renderThreadTesselator()
@@ -241,6 +272,12 @@ fun RenderEnvironment.drawTriangle(p1: Vec3d, p2: Vec3d, p3: Vec3d) {
 
     // Draw the outlined box
     tessellator.draw()
+}
+
+fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Vec3d, color4b: Color4b) {
+    vertex(matrix, p1.x.toFloat(), p1.y.toFloat(), p1.z.toFloat()).color(color4b.toRGBA()).next()
+    vertex(matrix, p2.x.toFloat(), p2.y.toFloat(), p2.z.toFloat()).color(color4b.toRGBA()).next()
+    vertex(matrix, p3.x.toFloat(), p3.y.toFloat(), p3.z.toFloat()).color(color4b.toRGBA()).next()
 }
 
 /**
