@@ -1,4 +1,5 @@
 <script>
+	import SubSettings from './SubSettings.svelte';
     import {sineInOut} from "svelte/easing";
     import {fade} from "svelte/transition";
     import GenericSetting from "./GenericSetting.svelte";
@@ -42,21 +43,11 @@
     </div>
 
     {#if value}
-        <div class="settings" transition:fade|local={{duration: 200}}>
-            {#each settings as s}
-                <GenericSetting instance={s}/>
-            {/each}
-        </div>
+      <SubSettings {settings}/>
     {/if}
 </div>
 
 <style lang="scss">
-  .settings {
-    background-color: rgba(0, 0, 0, 0.36);
-    border-right: solid 4px #4677FF;
-    overflow: hidden;
-  }
-
   .boolean {
     padding: 7px 10px;
     display: grid;
