@@ -7,8 +7,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.coloredTriangle
+import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawLines
-import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTextureQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -19,8 +20,13 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
+import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.AlignmentConfigurable
+import net.minecraft.client.render.BufferBuilder
+import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -28,6 +34,7 @@ import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.AxisAngle4f
+import org.joml.Matrix4f
 import org.joml.Quaternionf
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
@@ -74,9 +81,9 @@ object ModuleMinimap : Module("Minimap", Category.RENDER) {
             val playerOffX = (playerPos.x / 16.0) % 1.0
             val playerOffZ = (playerPos.z / 16.0) % 1.0
 
-            val chunksToRenderAround = ceil(sqrt(2.0) * viewDistance).toInt()
+            val chunksToRenderAround = ceil(sqrt(2.0) * (viewDistance + 1)).toInt()
 
-            val scale = minimapSize / viewDistance
+            val scale = minimapSize / (2.0F * viewDistance)
 
             matStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
             matStack.scale(scale, scale, scale)
@@ -87,14 +94,34 @@ object ModuleMinimap : Module("Minimap", Category.RENDER) {
             matStack.translate(-playerOffX, -playerOffZ, 0.0)
 
             renderEnvironmentForGUI(matStack) {
-                for (x in -chunksToRenderAround..chunksToRenderAround) {
-                    for (y in -chunksToRenderAround..chunksToRenderAround) {
-                        drawMinimapChunkAt(this, ChunkPos(baseX + x, baseZ + y), x, y)
-                    }
+                val glId = ChunkRenderer.prepareRendering()
+
+                RenderSystem.bindTexture(glId)
+
+                RenderSystem.setShaderTexture(0, glId)
+
+                drawCustomMesh(
+                    VertexFormat.DrawMode.QUADS,
+                    VertexFormats.POSITION_TEXTURE_COLOR,
+                    GameRenderer.getPositionTexColorProgram()!!,
+                ) { matrix ->
+                    buildMinimapMesh(this, matrix, Vec2i(baseX, baseZ), chunksToRenderAround, viewDistance)
                 }
 
-                for (renderedEntity in ModuleESP.findRenderedEntities()) {
-                    drawEntityOnMinimap(this, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat()))
+                drawCustomMesh(
+                    VertexFormat.DrawMode.TRIANGLES,
+                    VertexFormats.POSITION_COLOR,
+                    GameRenderer.getPositionColorProgram()!!,
+                ) { matrix ->
+                    for (renderedEntity in ModuleESP.findRenderedEntities()) {
+                        drawEntityOnMinimap(
+                            this,
+                            matStack,
+                            renderedEntity,
+                            event.tickDelta,
+                            Vec2f(baseX.toFloat(), baseZ.toFloat())
+                        )
+                    }
                 }
             }
 
@@ -102,91 +129,102 @@ object ModuleMinimap : Module("Minimap", Category.RENDER) {
 
             renderEnvironmentForGUI(matStack) {
                 drawLines(
-                    Vec3(-4.0, 0.0, 0.0),
-                    Vec3(4.0, 0.0, 0.0),
-                    Vec3(0.0, -4.0, 0.0),
-                    Vec3(0.0, 4.0, 0.0),
+                    Vec3(-chunksToRenderAround.toDouble(), 0.0, 0.0),
+                    Vec3(chunksToRenderAround.toDouble(), 0.0, 0.0),
+                    Vec3(0.0, -chunksToRenderAround.toDouble(), 0.0),
+                    Vec3(0.0, chunksToRenderAround.toDouble(), 0.0),
                 )
             }
 
             GL11.glDisable(GL11.GL_SCISSOR_TEST)
         }
 
-    private fun drawEntityOnMinimap(
-        env: RenderEnvironment,
-        entity: Entity,
-        partialTicks: Float,
-        basePos: Vec2f,
+    private fun buildMinimapMesh(
+        builder: BufferBuilder,
+        matrix: Matrix4f,
+        centerPos: Vec2i,
+        chunksToRenderAround: Int,
+        viewDistance: Float,
     ) {
-        env.withColor(ModuleESP.getColor(entity)) {
-            val pos = entity.interpolateCurrentPosition(partialTicks)
-            val rot = entity.interpolateCurrentRotation(partialTicks)
+        for (x in -chunksToRenderAround..chunksToRenderAround) {
+            for (y in -chunksToRenderAround..chunksToRenderAround) {
+                // Don't render too much
+                if (x * x + y * y > (viewDistance + 3) * (viewDistance + 3)) {
+                    continue
+                }
 
-            val mat = env.matrixStack
+                val chunkPos = ChunkPos(centerPos.x + x, centerPos.y + y)
 
-            mat.push()
-            mat.translate(pos.x / 16.0 - basePos.x, pos.z / 16.0 - basePos.y, 0.0)
-            mat.multiply(Quaternionf(AxisAngle4f(-(rot.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
+                val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
+                val from = Vec2f(x.toFloat(), y.toFloat())
+                val to = from.add(Vec2f(1.0F, 1.0F))
 
-            val w = 2.0
-            val h = w * 1.618
-
-            env.drawTriangle(
-                Vec3d(-w * 0.5 / 16.0, 0.0, 0.0),
-                Vec3d(0.0, h / 16.0, 0.0),
-                Vec3d(w * 0.5 / 16.0, 0.0, 0.0),
-            )
-
-            mat.pop()
-        }
-    }
-
-    private fun drawMinimapChunkAt(
-        env: RenderEnvironment,
-        chunkPos: ChunkPos,
-        x: Int,
-        y: Int,
-    ) {
-        val texture = ChunkRenderer.getOrUploadMinimapChunkTexture(chunkPos)
-
-        if (texture == null) {
-            drawMinimapChunkNotLoaded(env, x, y)
-        } else {
-            drawMinimapChunkInternal(env, x, y, texture)
-        }
-    }
-
-    private fun drawMinimapChunkNotLoaded(
-        env: RenderEnvironment,
-        x: Int,
-        y: Int,
-    ) {
-        renderEnvironmentForGUI {
-            withColor(Color4b.BLACK) {
-                val from = Vec3d(x.toDouble(), y.toDouble(), 0.0)
-                val to = from + Vec3d(1.0, 1.0, 0.0)
-
-                env.drawQuad(from, to)
+                builder
+                    .vertex(matrix, from.x, from.y, 0.0F)
+                    .texture(texPosition.xMin, texPosition.yMin)
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
+                    .next()
+                builder
+                    .vertex(matrix, from.x, to.y, 0.0F)
+                    .texture(texPosition.xMin, texPosition.yMax)
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
+                    .next()
+                builder
+                    .vertex(matrix, to.x, to.y, 0.0F)
+                    .texture(texPosition.xMax, texPosition.yMax)
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
+                    .next()
+                builder
+                    .vertex(matrix, to.x, from.y, 0.0F)
+                    .texture(texPosition.xMax, texPosition.yMin)
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
+                    .next()
             }
         }
     }
 
-    private fun drawMinimapChunkInternal(
-        env: RenderEnvironment,
-        x: Int,
-        y: Int,
-        texture: NativeImageBackedTexture,
+    private fun drawEntityOnMinimap(
+        bufferBuilder: BufferBuilder,
+        matStack: MatrixStack,
+        entity: Entity,
+        partialTicks: Float,
+        basePos: Vec2f,
     ) {
-        val from = Vec3d(x.toDouble(), y.toDouble(), 0.0)
-        val to = from + Vec3d(1.0, 1.0, 0.0)
+        val color = ModuleESP.getColor(entity)
 
-        texture.bindTexture()
-        // Prepare OpenGL for 2D textures and bind our texture
-        RenderSystem.bindTexture(texture.glId)
+        val pos = entity.interpolateCurrentPosition(partialTicks)
+        val rot = entity.interpolateCurrentRotation(partialTicks)
 
-        RenderSystem.setShaderTexture(0, texture.glId)
+        matStack.push()
+        matStack.translate(pos.x / 16.0 - basePos.x, pos.z / 16.0 - basePos.y, 0.0)
+        val rotation = Quaternionf(AxisAngle4f((rot.yaw).toRadians(), 0.0F, 0.0F, 1.0F))
 
-        env.drawTextureQuad(from, to)
+        val w = 2.0
+        val h = w * 1.618
+
+        val p1 = Vec3d(-w * 0.5 / 16.0, -h * 0.5 / 16.0, 0.0)
+        val p2 = Vec3d(0.0, h * 0.5 / 16.0, 0.0)
+        val p3 = Vec3d(w * 0.5 / 16.0, -h * 0.5 / 16.0, 0.0)
+
+        matStack.multiply(rotation)
+
+        matStack.push()
+
+        matStack.translate(
+            /* x = */ -w / 5.0 * ChunkRenderer.SUN_DIRECTION.x / 16.0,
+            /* y = */ -w / 5.0 * ChunkRenderer.SUN_DIRECTION.y / 16.0,
+            /* z = */ 0.0
+        )
+        bufferBuilder.coloredTriangle(
+            matStack.peek().positionMatrix,
+            p1, p2, p3,
+            Color4b((color.r * 0.1).toInt(), (color.g * 0.1).toInt(), (color.b * 0.1).toInt(), 200)
+        )
+        matStack.pop()
+
+        bufferBuilder.coloredTriangle(matStack.peek().positionMatrix, p1, p2, p3, color)
+
+        matStack.pop()
     }
 
     override fun enable() {
@@ -195,6 +233,6 @@ object ModuleMinimap : Module("Minimap", Category.RENDER) {
 
     override fun disable() {
         ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
-        ChunkRenderer.deleteAllTextures()
+        ChunkRenderer.unloadEverything()
     }
 }
