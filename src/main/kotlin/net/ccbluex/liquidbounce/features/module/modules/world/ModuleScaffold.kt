@@ -204,7 +204,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             player.inventory.getStack(blockInHotbar)
         }
 
-//     val optimalLine: Line? = null
         val optimalLine = StabilizeMovement.getOptimalMovementLine(DirectionalInput(player.input))
 
         val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
@@ -306,7 +305,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return@repeatable
         }
 
-        // Is the target the crosshair points to well-adjusted to our target?
+        // Is the target the crosshair points too well-adjusted to our target?
         if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) || !isValidCrosshairTarget(
                 currentCrosshairTarget
             )
@@ -727,20 +726,26 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return false
         }
 
+        if (hitResult.type != HitResult.Type.BLOCK)
+            return false
+
         val context = ItemUsageContext(player, suitableHand, hitResult)
 
         val canPlaceOnFace = (stack.item as BlockItem).getPlacementState(ItemPlacementContext(context)) != null
 
-        val shouldAttemptPlacement = if (option.failedAttemptsOnly) {
-            !canPlaceOnFace
-        } else {
-            if (sameY) {
-                context.blockPos.y == startY - 1 && (hitResult.side != Direction.UP || !canPlaceOnFace)
-            } else {
-                context.blockPos.y <= player.blockY - 1 && !(context.blockPos.y == player.blockY - 1 && canPlaceOnFace && context.side == Direction.UP)
-            }
+        if (option.failedAttemptsOnly) {
+            return !canPlaceOnFace
         }
 
-        return hitResult.type == HitResult.Type.BLOCK && shouldAttemptPlacement
+        return if (sameY) {
+            context.blockPos.y == startY - 1 && (hitResult.side != Direction.UP || !canPlaceOnFace)
+        } else {
+            val isTowering =
+                context.blockPos.y == player.blockY - 1
+                    && canPlaceOnFace
+                        && context.side == Direction.UP
+
+            context.blockPos.y <= player.blockY - 1 && !isTowering
+        }
     }
 }
