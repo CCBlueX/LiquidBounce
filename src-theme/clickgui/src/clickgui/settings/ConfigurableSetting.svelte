@@ -1,5 +1,6 @@
 <script>
     import GenericSetting from "./GenericSetting.svelte";
+    import SubSettings from "./SubSettings.svelte";
 
     export let instance;
 
@@ -23,11 +24,7 @@
 <div class="setting">
     <div class="name">{name}</div>
 
-    <div class="settings">
-        {#each settings as s}
-            <GenericSetting instance={s}/>
-        {/each}
-    </div>
+    <SubSettings {settings}/>
 </div>
 
 <style>
@@ -37,12 +34,6 @@
         font-size: 12px;
         margin-left: 10px;
         margin-bottom: 3px;
-    }
-
-    .setting {
-        background-color: rgba(0, 0, 0, 0.36);
-        border-right: solid 4px #4677FF;
-        padding: 7px 0;
     }
 </style>
 

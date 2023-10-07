@@ -2,6 +2,7 @@
     import {sineInOut} from "svelte/easing";
     import {fade, slide} from "svelte/transition";
     import GenericSetting from "./GenericSetting.svelte";
+    import SubSettings from "./SubSettings.svelte";
 
     export let instance;
 
@@ -53,25 +54,15 @@
     </div>
 
     {#if settings.length > 0}
-        <div class="settings" transition:fade|local={{duration: 200, easing: sineInOut}}>
-            {#each settings as s}
-                <GenericSetting instance={s}/>
-            {/each}
-        </div>
+      <SubSettings {settings}/>
     {/if}
 </div>
 
 <style lang="scss">
-  .settings {
-    background-color: rgba(0, 0, 0, 0.36);
-    border-right: solid 4px #4677FF;
-    overflow: hidden;
-    margin-top: 10px;
-  }
 
   .setting {
-    overflow: hidden;
-  }
+      overflow: hidden;
+    }
 
   .choice {
     padding: 7px 10px;
