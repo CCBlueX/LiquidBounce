@@ -53,6 +53,8 @@ object ModuleMinimap : Module("Minimap", Category.RENDER) {
         )
 
     init {
+        ChunkRenderer
+
         tree(alignment)
     }
 
