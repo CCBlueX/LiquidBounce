@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
@@ -188,21 +188,5 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         val prevArrowPos: Vec3d,
         val arrowVelocity: Vec3d
     )
-
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
-        synchronized(positions) {
-            // Get all positions for each arrow
-
-            renderEnvironment(matrixStack) {
-                withColor(Color4b.WHITE) {
-                    for ((_, positions) in positions) {
-                        drawLineStrip(*positions.toTypedArray())
-                    }
-                }
-            }
-        }
-    }
 
 }

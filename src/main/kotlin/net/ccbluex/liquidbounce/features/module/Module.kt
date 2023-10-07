@@ -52,11 +52,6 @@ open class Module(
     // Module options
     var enabled by boolean("Enabled", state).listen { new ->
         runCatching {
-            // Check if player is in-game
-            if (mc.player == null || mc.world == null) {
-                return@runCatching
-            }
-
             // Call enable or disable function
             if (new) {
                 enable()
