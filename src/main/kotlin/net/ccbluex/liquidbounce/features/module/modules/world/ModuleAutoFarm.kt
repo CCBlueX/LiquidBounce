@@ -77,7 +77,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
     }
 
-    private val rotations = tree(RotationsConfigurable())
     private val fortune by boolean("fortune", true)
 //    open class ToggleableBlockRenderer(module: Module? = null, name: String, enabled: Boolean) : ToggleableConfigurable(module, name, enabled) {
 //        private val color by color("Color", Color4b(66, 120, 245, 255))
@@ -210,10 +209,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
     init {
         tree(AutoPlaceCrops)
-        tree(rotations)
         tree(Walk)
         tree(Visualize)
     }
+    private val rotations = tree(RotationsConfigurable())
+
 
     private val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
     private val itemsForSoulsand = arrayOf(Items.NETHER_WART)
