@@ -294,7 +294,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         repeat(
             cpsScheduler.clicks(
-                { simulatePlacementAttempts(currentCrosshairTarget, suitableHand) },
+                { simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving },
                 SimulatePlacementAttempts.cps
             )
         ) {
