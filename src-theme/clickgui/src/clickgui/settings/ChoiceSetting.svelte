@@ -59,6 +59,11 @@
 </div>
 
 <style lang="scss">
+
+  .setting {
+      overflow: hidden;
+    }
+
   .choice {
     padding: 7px 10px;
   }
