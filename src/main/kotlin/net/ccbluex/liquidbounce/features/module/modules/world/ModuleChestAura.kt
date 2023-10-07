@@ -76,7 +76,6 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         tree(AwaitContainerOptions)
         tree(CloseInstantlyOptions)
     }
-    private val rotations = tree(RotationsConfigurable())
 
     private val closeInstantlyTimeout = Chronometer()
 
