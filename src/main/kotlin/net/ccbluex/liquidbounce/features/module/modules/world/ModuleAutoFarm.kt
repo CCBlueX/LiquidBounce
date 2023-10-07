@@ -41,6 +41,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
+import net.minecraft.entity.ai.brain.WalkTarget
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -59,7 +60,7 @@ import kotlin.math.abs
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     // TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 1F..6F).listen {
+    private val wallRange by float("WallRange", 0f, 0F..6F).listen {
         if (it > range) {
             range
         } else {
@@ -269,7 +270,14 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             }
             invHadSpace = invHasSpace
 
-            walkTarget = (findWalkToBlock() ?: if(Walk.toItems && invHasSpace) findWalkToItem() else null)
+            val walkToBlock = findWalkToBlock()
+            val walkToItem = findWalkToItem()
+
+            walkTarget = if (Walk.toItems && invHasSpace &&  walkToItem != null) {
+                walkToBlock?.takeIf {it.distanceTo(player.pos) < walkToItem.squaredDistanceTo(player.pos) } ?: walkToItem
+            } else {
+                walkToBlock
+            }
 
             val target = walkTarget ?: run {
                 movingToBlock = false
@@ -298,11 +306,10 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
 
-        if (rayTraceResult.type != HitResult.Type.BLOCK
-        ) {
-            chat("hdhefef")
+        if (rayTraceResult.type != HitResult.Type.BLOCK) {
             return@repeatable
         }
+
         val blockPos = rayTraceResult.blockPos
 
         val state = rayTraceResult.blockPos.getState() ?: return@repeatable
@@ -322,6 +329,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                     player.swingHand(Hand.MAIN_HAND)
                 }
+                return@repeatable
             }
         } else if(isFarmBlockWithAir(
                 state,
@@ -385,7 +393,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         return closestBlock
     }
 
-    private fun findWalkToItem() = world.entities.filter {it is ItemEntity &&  it.distanceTo(player) < 20}.minByOrNull { it.distanceTo(player) }?.pos
+    private fun findWalkToItem() = world.entities.filter {it is ItemEntity && it.distanceTo(player) < 20}.minByOrNull { it.distanceTo(player) }?.pos
 
 
 
