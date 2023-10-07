@@ -104,7 +104,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     }
 
-    private object MLG : Choice("MLG") {
+    object MLG : Choice("MLG") {
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -171,18 +171,25 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
             .minByOrNull { abs(player.inventory.selectedSlot - it) }
 
-        private fun doPlacement(rayTraceResult: BlockHitResult) {
+        fun doPlacement(
+            rayTraceResult: BlockHitResult,
+            hand: Hand = Hand.MAIN_HAND,
+            onPlacementSuccess: () -> Boolean = { true },
+            onItemUseSuccess: () -> Boolean = { true }
+        ) {
             val stack = player.mainHandStack
             val count = stack.count
 
-            val interactBlock = interaction.interactBlock(player, Hand.MAIN_HAND, rayTraceResult)
+            val interactBlock = interaction.interactBlock(player, hand, rayTraceResult)
 
             if (interactBlock.isAccepted) {
                 if (interactBlock.shouldSwingHand()) {
-                    player.swingHand(Hand.MAIN_HAND)
+                    if (onPlacementSuccess()) {
+                        player.swingHand(hand)
+                    }
 
                     if (!stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())) {
-                        mc.gameRenderer.firstPersonRenderer.resetEquipProgress(Hand.MAIN_HAND)
+                        mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
                     }
                 }
 
@@ -192,14 +199,16 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             }
 
             if (!stack.isEmpty) {
-                val interactItem = interaction.interactItem(player, Hand.MAIN_HAND)
+                val interactItem = interaction.interactItem(player, hand)
 
                 if (interactItem.isAccepted) {
                     if (interactItem.shouldSwingHand()) {
-                        player.swingHand(Hand.MAIN_HAND)
+                        if (onItemUseSuccess()) {
+                            player.swingHand(hand)
+                        }
                     }
 
-                    mc.gameRenderer.firstPersonRenderer.resetEquipProgress(Hand.MAIN_HAND)
+                    mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
                     return
                 }
             }
