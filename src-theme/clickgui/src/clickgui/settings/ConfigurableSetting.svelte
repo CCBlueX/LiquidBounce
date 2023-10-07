@@ -28,6 +28,11 @@
 </div>
 
 <style>
+
+    .setting {
+        padding: 7px 0;
+    }
+    
     .name {
         font-weight: 500;
         color: white;
