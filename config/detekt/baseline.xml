@@ -310,7 +310,7 @@
     <ID>NewLineAtEndOfFile:ModuleAimbot.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleAutoArmor.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleAutoBow.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleAutoDodge.kt$net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAutoDodge.kt</ID>
+    <ID>NewLineAtEndOfFile:ModuleAutoDodge.kt$net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleAutoGapple.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleAutoPot.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoPot.kt</ID>
     <ID>NewLineAtEndOfFile:ModuleBlink.kt$net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.kt</ID>

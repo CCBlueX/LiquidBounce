@@ -81,7 +81,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
     }
 
-    private val rotations = RotationsConfigurable()
+    private val rotations = tree(RotationsConfigurable())
     private val fortune by boolean("fortune", true)
     open class ToggleableBlockRenderer(module: Module? = null, name: String, enabled: Boolean) : ToggleableConfigurable(module, name, enabled) {
         private val color by color("Color", Color4b(66, 120, 245, 255))
