@@ -43,22 +43,22 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
     private val turnSpeed = tree(RotationsConfigurable())
+
     private var targetRotation: Rotation? = null
 
     override fun disable() {
         targetRotation = null
     }
 
-    val tickHandler =
-        handler<PlayerNetworkMovementTickEvent> { event ->
-            if (event.state != EventState.PRE) {
-                return@handler
-            }
-
-            targetRotation?.let { RotationManager.aimAt(it, false, turnSpeed) }
-
-            targetRotation = findNextTargetRotation()
+    val tickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
+        if (event.state != EventState.PRE) {
+            return@handler
         }
+
+        targetRotation = findNextTargetRotation()
+
+        targetRotation?.let { RotationManager.aimAt(it, false, turnSpeed) }
+    }
 
     private fun findNextTargetRotation(): Rotation? {
         for (target in targetTracker.enemies()) {
@@ -67,7 +67,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             }
 
             if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
-                val spot = raytraceBox(player.eyes, target.box, range.toDouble(), 0.0) ?: break
+                val spot = raytraceBox(player.eyes, target.box, range = range.toDouble(), wallsRange = 0.0) ?: break
 
                 return spot.rotation
             }

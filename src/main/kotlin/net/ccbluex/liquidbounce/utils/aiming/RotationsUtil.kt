@@ -64,15 +64,23 @@ object RotationManager : Listenable {
 
     // Current rotation
     var currentRotation: Rotation? = null
+        set(value) {
+            previousRotation = field ?: mc.player?.rotation
+
+            field = value
+        }
+
     var ticksUntilReset: Int = 0
     var ignoreOpenInventory = false
+
+    // Used for rotation interpolation
+    var previousRotation: Rotation? = null
 
     // Active configurable
     var activeConfigurable: RotationsConfigurable? = null
 
     fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
         aimAt(makeRotation(vec, eyes), openInventory, configurable)
-
 
     fun aimAt(rotation: Rotation, openInventory: Boolean = false, configurable: RotationsConfigurable) {
         if (!shouldUpdate()) {
@@ -112,17 +120,15 @@ object RotationManager : Listenable {
 
         // Update rotations
         val speed = RandomUtils.nextFloat(
-            activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive
+            activeConfigurable!!.turnSpeed.start,
+            activeConfigurable!!.turnSpeed.endInclusive
         )
 
         val playerRotation = mc.player?.rotation ?: return
 
         if (ticksUntilReset == 0 || !shouldUpdate()) {
-
-            if (rotationDifference(
-                    currentRotation ?: serverRotation, playerRotation
-                ) < activeConfigurable!!.resetThreshold || !activeConfigurable!!.silent
-            ) {
+            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) <
+                activeConfigurable!!.resetThreshold || !activeConfigurable!!.silent) {
                 ticksUntilReset = -1
 
                 targetRotation = null
@@ -147,9 +153,7 @@ object RotationManager : Listenable {
         }
         if (canRotate) {
             targetRotation?.let { targetRotation ->
-                limitAngleChange(
-                    currentRotation ?: playerRotation, targetRotation, speed
-                ).fixedSensitivity().let {
+                limitAngleChange(currentRotation ?: playerRotation, targetRotation, speed).fixedSensitivity().let {
                     currentRotation = it
                     if (!activeConfigurable!!.silent) mc.player!!.applyRotation(it)
                 }
@@ -277,7 +281,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.currentRotation ?: mc.player?.rotation!!)
+            get() = LeastDifferencePreference(RotationManager.currentRotation ?: RotationManager.serverRotation)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)
