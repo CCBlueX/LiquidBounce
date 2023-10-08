@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
@@ -116,6 +117,7 @@ object LiquidBounce : Listenable {
             FriendManager
             ProxyManager
             AccountManager
+            InventoryTracker
             Tabs
             Chat
 
