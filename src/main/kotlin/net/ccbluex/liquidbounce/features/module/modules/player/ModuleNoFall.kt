@@ -169,8 +169,11 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             currentTarget = null
         }
 
-        private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
-            .minByOrNull { abs(player.inventory.selectedSlot - it) }
+        private fun findClosestItem(items: Array<Item>): Int? {
+            return (0..8)
+                .filter { player.inventory.getStack(it).item in items }
+                .minByOrNull { abs(player.inventory.selectedSlot - it) }
+        }
 
         fun doPlacement(
             rayTraceResult: BlockHitResult,
@@ -183,23 +186,22 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
             val interactionResult = interaction.interactBlock(player, hand, rayTraceResult)
 
-            if (interactionResult == ActionResult.FAIL) {
-                return
+            when {
+                interactionResult == ActionResult.FAIL -> {
+                    return
+                }
+                interactionResult == ActionResult.PASS -> {
+                    // Ok, we cannot place on the block, so let's just use the item in the direction
+                    // without targeting a block
+                    handlePass(hand, stack, onItemUseSuccess)
+                    return
+                }
+                interactionResult.isAccepted -> {
+                    val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
+
+                    handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
+                }
             }
-
-            // Ok, we cannot place on the block, so let's just use the item in the direction without targeting a block
-            if (interactionResult == ActionResult.PASS) {
-                handlePass(hand, stack, onItemUseSuccess)
-                return
-            }
-
-            if (!interactionResult.isAccepted) {
-                return
-            }
-
-            val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
-
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
         }
 
         /**

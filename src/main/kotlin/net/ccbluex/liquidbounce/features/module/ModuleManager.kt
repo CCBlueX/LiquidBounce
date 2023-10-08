@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
