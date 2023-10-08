@@ -26,3 +26,7 @@ style:
     maxJumpCount: 3
   WildcardImport:
     active: false
+  ForbiddenComment:
+    active: false
+  UnusedPrivateProperty:
+    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler'

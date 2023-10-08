@@ -50,7 +50,7 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
     }
 
     init {
-        this.module?.enabledValue?.listen { newState ->
+        this.module?.valueEnabled?.listen { newState ->
             updateEnabled(newState, this.enabled)
 
             newState
@@ -80,6 +80,13 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
     open fun enable() {}
     open fun disable() {}
 
+    /**
+     * Used in JS-bindings
+     */
+    @Suppress("unused")
+    fun getEnabledValue(): Value<*> {
+        return this.value[0]
+    }
 }
 
 /**

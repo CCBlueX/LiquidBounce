@@ -103,8 +103,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
 
-    val down by boolean("Down", false)
-
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
     private val aimMode = enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
@@ -196,7 +194,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
-    val rotationUpdateHandler =
+    private val rotationUpdateHandler =
         handler<PlayerNetworkMovementTickEvent> {
             if (it.state != EventState.PRE) {
                 return@handler

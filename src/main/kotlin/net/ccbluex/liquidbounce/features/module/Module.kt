@@ -49,10 +49,10 @@ open class Module(
     hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
 
-    val enabledValue = boolean("Enabled", state)
+    val valueEnabled = boolean("Enabled", state)
 
     // Module options
-    var enabled by enabledValue.listen { new ->
+    var enabled by valueEnabled.listen { new ->
         runCatching {
             // Call enable or disable function
             if (new) {
