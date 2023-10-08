@@ -19,23 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
-import com.viaversion.viaversion.api.connection.UserConnection
-import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
-import com.viaversion.viaversion.api.type.Type
-import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
-import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
-import io.netty.util.AttributeKey
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.block.Blocks
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.screen.ScreenHandler
-import net.minecraft.util.Hand
 
 val ScreenHandler.isPlayerInventory: Boolean
     get() = this.syncId == 0
+
+val isInInventoryScreen
+    get() = mc.currentScreen is InventoryScreen

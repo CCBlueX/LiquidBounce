@@ -21,14 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.MovementInputEvent
-import net.ccbluex.liquidbounce.event.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.blocksToEagle
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.Eagle.edgeDistance
@@ -40,60 +36,28 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.isNeighborOfOrEquivalent
-import net.ccbluex.liquidbounce.utils.block.targetFinding.AimMode
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.FaceTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.NearestRotationTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.PositionFactoryConfiguration
-import net.ccbluex.liquidbounce.utils.block.targetFinding.RandomTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.StabilizedRotationTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
-import net.ccbluex.liquidbounce.utils.client.opposite
-import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
-import net.ccbluex.liquidbounce.utils.client.timer
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
-import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.item.DISALLOWED_BLOCKS_TO_PLACE
-import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferLessSlipperyBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferSolidBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.block.targetFinding.*
+import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
+import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToPlayerView
+import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.item.*
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.round
-import kotlin.math.sin
+import net.minecraft.util.hit.HitResult
+import net.minecraft.util.math.*
+import kotlin.math.*
 import kotlin.random.Random
 
 /**
@@ -102,6 +66,15 @@ import kotlin.random.Random
  * Places blocks under you.
  */
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
+
+    object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
+        val cps by intRange("CPS", 5..8, 0..50)
+
+        val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
+    }
+
+    private val cpsScheduler = tree(CpsScheduler())
+
     private val silent by boolean("Silent", true)
     private val slotResetDelay by int("SlotResetDelay", 5, 0..40)
     private var delay by intRange("Delay", 3..5, 0..40)
@@ -157,6 +130,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
 
     init {
+        tree(SimulatePlacementAttempts)
         tree(Eagle)
         tree(Slow)
         tree(AdvancedRotation)
@@ -213,70 +187,67 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
         // Makes you shift until first block placed, so with eagle enabled you won't fall off, when enabled
         placedBlocks = 0
-        mc.timer.timerSpeed = 1f
+        lastPlacedBlocks.clear()
         SilentHotbar.resetSlot(this)
     }
 
-    val rotationUpdateHandler =
-        handler<PlayerNetworkMovementTickEvent> {
-            if (it.state != EventState.PRE) {
-                return@handler
+    val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE) {
+            return@handler
+        }
+
+        val blockInHotbar = findBestValidHotbarSlotForTarget()
+
+        val bestStick = if (blockInHotbar == null) {
+            ItemStack(Items.SANDSTONE, 64)
+        } else {
+            player.inventory.getStack(blockInHotbar)
+        }
+
+        val optimalLine = StabilizeMovement.getOptimalMovementLine(DirectionalInput(player.input))
+
+        val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
+            { vec ->
+                -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
             }
+        } else {
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+        }
 
-            val blockInHotbar = findBestValidHotbarSlotForTarget()
+        val searchOptions =
+            BlockPlacementTargetFindingOptions(
+                if (shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                bestStick,
+                getFacePositionFactoryForConfig(),
+                priorityGetter
+            )
 
-            val bestStick =
-                if (blockInHotbar == null) {
-                    ItemStack(Items.SANDSTONE, 64)
-                } else {
-                    player.inventory.getStack(blockInHotbar)
-                }
+        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
 
-//            val optimalLine: Line? = null
-            val optimalLine = StabilizeMovement.getOptimalMovementLine(DirectionalInput(player.input))
+        val target = currentTarget ?: return@handler
 
-            val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
-                { vec ->
-                    -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
-                }
-            } else {
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
-            }
+        if (optimalLine != null) {
+            val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
+            val a = optimalLine.getNearestPointTo(b)
 
-            val searchOptions =
-                BlockPlacementTargetFindingOptions(
-                    if (shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-                    bestStick,
-                    getFacePositionFactoryForConfig(),
-                    priorityGetter
-                )
-
-            currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
-
-            val target = currentTarget ?: return@handler
-
-            if (optimalLine != null) {
-                val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
-                val a = optimalLine.getNearestPointTo(b)
-
-                // Debug the line a-b
-                ModuleDebug.debugGeometry(
-                    ModuleScaffold,
-                    "lineToBlock",
-                    ModuleDebug.DebuggedLineSegment(
-                        from = Vec3(a),
-                        to = Vec3(b),
-                        Color4b(255, 0, 0, 255),
-                    ),
-                )
-            }
-
-            RotationManager.aimAt(
-                target.rotation,
-                openInventory = ignoreOpenInventory,
-                configurable = rotationsConfigurable,
+            // Debug the line a-b
+            ModuleDebug.debugGeometry(
+                ModuleScaffold,
+                "lineToBlock",
+                ModuleDebug.DebuggedLineSegment(
+                    from = Vec3(a),
+                    to = Vec3(b),
+                    Color4b(255, 0, 0, 255),
+                ),
             )
         }
+
+        RotationManager.aimAt(
+            target.rotation,
+            openInventory = ignoreOpenInventory,
+            configurable = rotationsConfigurable,
+        )
+    }
 
     fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
         val config =
@@ -297,90 +268,111 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     config,
                     StabilizeMovement.getOptimalMovementLine(DirectionalInput(player.input)),
                 )
+
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
         }
     }
 
-    val moveHandler =
-        repeatable {
-            if (Slow.enabled) {
-                player.velocity.x *= slowSpeed
-                player.velocity.z *= slowSpeed
-            }
-            mc.timer.timerSpeed = timer
+    val moveHandler = repeatable {
+        if (Slow.enabled) {
+            player.velocity.x *= slowSpeed
+            player.velocity.z *= slowSpeed
         }
 
-    val networkTickHandler =
-        repeatable {
-            val target = currentTarget ?: return@repeatable
-            val currentRotation = RotationManager.currentRotation ?: return@repeatable
-            val currentCrosshairTarget = raycast(4.5, currentRotation) ?: return@repeatable
+        Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+    }
 
-            // Is the target the crosshair points to well-adjusted to our target?
-            if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) || !isValidCrosshairTarget(currentCrosshairTarget)) {
-                return@repeatable
-            }
+    val networkTickHandler = repeatable {
+        val target = currentTarget
+        val currentRotation = RotationManager.currentRotation ?: player.rotation
+        val currentCrosshairTarget = raycast(4.5, currentRotation)
 
-            var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
-            val hasBlockInOffHand = isValidBlock(player.offHandStack)
+        // Prioritize by all means the main hand if it has a block
+        val suitableHand =
+            arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull { isValidBlock(player.getStackInHand(it)) }
 
-            // Handle silent block selection
-            if (silent && !hasBlockInMainHand && !hasBlockInOffHand) {
-                val bestMainHandSlot = findBestValidHotbarSlotForTarget()
+        repeat(
+            cpsScheduler.clicks(
+                { simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving },
+                SimulatePlacementAttempts.cps
+            )
+        ) {
+            // By the time this reaches here the variables are already non-null
+            ModuleNoFall.MLG.doPlacement(currentCrosshairTarget!!, suitableHand!!, ::swing, ::swing)
+        }
 
-                if (bestMainHandSlot != null) {
-                    SilentHotbar.selectSlotSilently(this, bestMainHandSlot, slotResetDelay)
+        if (target == null || currentCrosshairTarget == null) {
+            return@repeatable
+        }
 
-                    hasBlockInMainHand = true
-                } else {
-                    SilentHotbar.resetSlot(this)
-                }
+        // Is the target the crosshair points too well-adjusted to our target?
+        if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) || !isValidCrosshairTarget(
+                currentCrosshairTarget
+            )
+        ) {
+            return@repeatable
+        }
+
+        var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
+        val hasBlockInOffHand = isValidBlock(player.offHandStack)
+
+        // Handle silent block selection
+        if (silent && !hasBlockInMainHand && !hasBlockInOffHand) {
+            val bestMainHandSlot = findBestValidHotbarSlotForTarget()
+
+            if (bestMainHandSlot != null) {
+                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, slotResetDelay)
+
+                hasBlockInMainHand = true
             } else {
                 SilentHotbar.resetSlot(this)
             }
+        } else {
+            SilentHotbar.resetSlot(this)
+        }
 
-            if (!hasBlockInMainHand && !hasBlockInOffHand) {
-                return@repeatable
-            }
+        if (!hasBlockInMainHand && !hasBlockInOffHand) {
+            return@repeatable
+        }
 
-            // no need for additional checks
-            val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
-            val result =
-                interaction.interactBlock(
-                    player,
-                    handToInteractWith,
-                    currentCrosshairTarget,
-                )
+        // no need for additional checks
+        val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
+        val result =
+            interaction.interactBlock(
+                player,
+                handToInteractWith,
+                currentCrosshairTarget,
+            )
 
-            if (!result.isAccepted) {
-                return@repeatable
-            }
+        if (!result.isAccepted) {
+            return@repeatable
+        }
 
-            trackPlacedBlock(target)
+        trackPlacedBlock(target)
 
-            if (Eagle.enabled) {
-                placedBlocks += 1
+        if (Eagle.enabled) {
+            placedBlocks += 1
 
-                if (placedBlocks > blocksToEagle) {
-                    placedBlocks = 0
-                }
-            }
-            if (player.isOnGround) {
-                player.velocity.x *= speedModifier
-                player.velocity.z *= speedModifier
-            }
-            if (result.shouldSwingHand() && swing) {
-                player.swingHand(handToInteractWith)
-            }
-
-            currentTarget = null
-
-            delay.random().let {
-                if (it > 0) {
-                    wait(it)
-                }
+            if (placedBlocks > blocksToEagle) {
+                placedBlocks = 0
             }
         }
+        if (player.isOnGround) {
+            player.velocity.x *= speedModifier
+            player.velocity.z *= speedModifier
+        }
+        if (result.shouldSwingHand() && swing) {
+            player.swingHand(handToInteractWith)
+        }
+
+        currentTarget = null
+
+        delay.random().let {
+            if (it > 0) {
+                wait(it)
+            }
+        }
+    }
 
     private fun trackPlacedBlock(target: BlockPlacementTarget) {
         lastPlacedBlocks.add(target.placedBlock)
@@ -464,41 +456,48 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private object StabilizeMovement : ToggleableConfigurable(this, "StabilizeMovement", true) {
-        const val MIN_VELOCITY: Double = 0.05
-        const val MAX_CENTER_DEVIATION: Double = 0.1
+        const val MAX_CENTER_DEVIATION: Double = 0.2
+        const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075
 
         var lastPosition: BlockPos? = null
 
         val moveEvent =
             handler<MovementInputEvent> { event ->
-                val currentVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
+                val currentInput = event.directionalInput
 
-                if (RotationManager.angleDifference(player.yaw, RotationManager.currentRotation?.yaw ?: player.yaw) < 10.0) {
-                    return@handler
-                }
-
-                if (currentVelocity.lengthSquared() < MIN_VELOCITY * MIN_VELOCITY) {
+                if (currentInput == DirectionalInput.NONE) {
                     return@handler
                 }
 
                 val optimalLine = getOptimalMovementLine(event.directionalInput) ?: return@handler
-
                 val nearestPointOnLine = optimalLine.getNearestPointTo(player.pos)
 
-                if (nearestPointOnLine.squaredDistanceTo(player.pos) < MAX_CENTER_DEVIATION * MAX_CENTER_DEVIATION) {
+                val vecToLine = nearestPointOnLine.subtract(player.pos)
+                val horizontalVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
+                val isRunningTowardsLine = vecToLine.dotProduct(horizontalVelocity) > 0.0
+
+                val maxDeviation = if (isRunningTowardsLine)
+                    MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS
+                else
+                    MAX_CENTER_DEVIATION
+
+                if (nearestPointOnLine.squaredDistanceTo(player.pos) < maxDeviation * maxDeviation) {
                     return@handler
                 }
 
-                val dgs = getDegreesRelativeToPlayerView(nearestPointOnLine.subtract(player.pos.x, 0.0, player.pos.z))
+                val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.pos), player.yaw)
 
-                val newDirectionalInput = getDirectionalInputForDegrees(event.directionalInput, dgs, deadAngle = 0.0F)
+                val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 0.0F)
+
+                val frontalAxisBlocked = currentInput.forwards || currentInput.backwards
+                val sagitalAxisBlocked = currentInput.right || currentInput.left
 
                 event.directionalInput =
                     DirectionalInput(
-                        newDirectionalInput.forwards,
-                        newDirectionalInput.backwards,
-                        newDirectionalInput.right,
-                        newDirectionalInput.left,
+                        if (frontalAxisBlocked) currentInput.forwards else newDirectionalInput.forwards,
+                        if (frontalAxisBlocked) currentInput.backwards else newDirectionalInput.backwards,
+                        if (sagitalAxisBlocked) currentInput.left else newDirectionalInput.left,
+                        if (sagitalAxisBlocked) currentInput.right else newDirectionalInput.right,
                     )
             }
 
@@ -535,7 +534,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         fun findLastPlacedBlocksAverage(blockUnderPlayer: BlockPos): Vec3d? {
             val lastPlacedBlocksToConsider = lastPlacedBlocks.subList(
                 fromIndex = (lastPlacedBlocks.size - 2).coerceAtLeast(0),
-                toIndex = (lastPlacedBlocks.size ).coerceAtLeast(0),
+                toIndex = (lastPlacedBlocks.size).coerceAtLeast(0),
             )
 
             if (lastPlacedBlocksToConsider.isEmpty()) {
@@ -711,6 +710,42 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     listOf(Vec3i(x, y, z))
                 }
             }
+        }
+    }
+
+    private fun simulatePlacementAttempts(hitResult: BlockHitResult?, suitableHand: Hand?): Boolean {
+        val stack = if (suitableHand == Hand.MAIN_HAND) {
+            player.inventory.getStack(SilentHotbar.serversideSlot)
+        } else {
+            player.offHandStack
+        }
+
+        val option = SimulatePlacementAttempts
+
+        if (hitResult == null || suitableHand == null || !option.enabled) {
+            return false
+        }
+
+        if (hitResult.type != HitResult.Type.BLOCK)
+            return false
+
+        val context = ItemUsageContext(player, suitableHand, hitResult)
+
+        val canPlaceOnFace = (stack.item as BlockItem).getPlacementState(ItemPlacementContext(context)) != null
+
+        if (option.failedAttemptsOnly) {
+            return !canPlaceOnFace
+        }
+
+        return if (sameY) {
+            context.blockPos.y == startY - 1 && (hitResult.side != Direction.UP || !canPlaceOnFace)
+        } else {
+            val isTowering =
+                context.blockPos.y == player.blockY - 1
+                    && canPlaceOnFace
+                        && context.side == Direction.UP
+
+            context.blockPos.y <= player.blockY - 1 && !isTowering
         }
     }
 }

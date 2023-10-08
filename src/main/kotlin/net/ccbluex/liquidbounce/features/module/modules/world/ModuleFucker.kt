@@ -51,7 +51,7 @@ import net.minecraft.world.RaycastContext
 object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 1F..6F).listen {
+    private val wallRange by float("WallRange", 0f, 0F..6F).listen {
         if (it > range) {
             range
         } else {
@@ -66,7 +66,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Rotation
-    private val rotations = RotationsConfigurable()
+    private val rotations = tree(RotationsConfigurable())
 
     private var currentTarget: DestroyerTarget? = null
 

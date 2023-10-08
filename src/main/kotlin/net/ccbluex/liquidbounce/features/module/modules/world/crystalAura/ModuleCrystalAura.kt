@@ -55,7 +55,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
     }
 
     // Rotation
-    internal val rotations = RotationsConfigurable()
+    internal val rotations = tree(RotationsConfigurable())
 
     init {
         tree(PlaceOptions)

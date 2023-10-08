@@ -27,7 +27,7 @@ fun raytraceBlock(
             box.offset(offset),
             range,
             wallsRange,
-            visibilityPredicate = BlockVisibilityPredicate(pos),
+            rotationPreference = LeastDifferencePreference(RotationManager.makeRotation(pos.toCenterPos(), eyes))
         ) ?: continue
     }
 
@@ -173,7 +173,7 @@ fun raytraceBox(
         // No need to enter the loop when we already have a result.
         val validCauseBelowWallsRange = preferredSpotDistance < wallsRangeSquared
 
-        val validCauseVisible = visibilityPredicate.isVisible(eyesPos = eyes, targetSpot = preferredSpot)
+        val validCauseVisible = visibilityPredicate.isVisible(eyesPos = eyes, targetSpot = preferredSpotOnBox)
 
         if (validCauseBelowWallsRange || validCauseVisible && preferredSpotDistance < rangeSquared) {
             return VecRotation(RotationManager.makeRotation(preferredSpot, eyes), preferredSpot)
