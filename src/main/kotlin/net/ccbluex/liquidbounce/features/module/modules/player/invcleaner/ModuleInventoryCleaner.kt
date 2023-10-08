@@ -22,12 +22,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
-import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
-import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.ccbluex.liquidbounce.utils.item.openInventorySilently
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
@@ -80,53 +75,69 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.values())
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
-    val repeatable =
-        repeatable {
-            if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
+    val repeatable = repeatable {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
+            return@repeatable
+        }
+
+        if (ModuleAutoArmor.locked) {
+            return@repeatable
+        }
+
+        val cleanupPlan = createCleanupPlan()
+
+        var hasClickedOnce = false
+
+        for (hotbarSwap in cleanupPlan.hotbarSwaps) {
+            if (checkNoMoveViolation()) {
                 return@repeatable
             }
 
-            if (ModuleAutoArmor.locked) {
-                return@repeatable
-            }
+            if (tryRunActionInInventory { executeAction(hotbarSwap.from, hotbarSwap.to, SlotActionType.SWAP) }) {
+                hasClickedOnce = true
 
-            val cleanupPlan = createCleanupPlan()
-
-            for (hotbarSwap in cleanupPlan.hotbarSwaps) {
-                if (tryRunActionInInventory { executeAction(hotbarSwap.from, hotbarSwap.to, SlotActionType.SWAP) }) {
-                    wait { inventoryConstraints.delay.random() }
-
-                    return@repeatable
-                }
-            }
-
-            val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
-
-            for (i in stacksToMerge) {
-                val shouldReturn =
-                    tryRunActionInInventory {
-                        executeAction(i, 0, SlotActionType.PICKUP)
-                        executeAction(i, 0, SlotActionType.PICKUP_ALL)
-                        executeAction(i, 0, SlotActionType.PICKUP)
-                    }
-
-                if (shouldReturn) {
-                    wait { inventoryConstraints.delay.random() }
-
-                    return@repeatable
-                }
-            }
-
-            val itemsToThrowOut = findItemsToThrowOut(cleanupPlan)
-
-            for (i in itemsToThrowOut) {
-                if (tryRunActionInInventory { executeAction(i, 1, SlotActionType.THROW) }) {
-                    wait { inventoryConstraints.delay.random() }
-
-                    return@repeatable
-                }
+                wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
             }
         }
+
+        val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
+
+        for (i in stacksToMerge) {
+            if (checkNoMoveViolation()) {
+                return@repeatable
+            }
+
+            val shouldReturn = tryRunActionInInventory {
+                executeAction(i, 0, SlotActionType.PICKUP)
+                executeAction(i, 0, SlotActionType.PICKUP_ALL)
+                executeAction(i, 0, SlotActionType.PICKUP)
+            }
+
+            if (shouldReturn) {
+                hasClickedOnce = true
+
+                wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
+            }
+        }
+
+        val itemsToThrowOut = findItemsToThrowOut(cleanupPlan)
+
+        for (i in itemsToThrowOut) {
+            if (checkNoMoveViolation()) {
+                return@repeatable
+            }
+
+            if (tryRunActionInInventory { executeAction(i, 1, SlotActionType.THROW) }) {
+                hasClickedOnce = true
+
+                wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
+            }
+        }
+
+        if (hasClickedOnce && !isInInventoryScreen) {
+            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        }
+    }
 
     fun findItemsToThrowOut(cleanupPlan: InventoryCleanupPlan): List<Int> {
         val itemsToThrowOut = mutableListOf<Int>()
@@ -143,18 +154,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     }
 
     private fun tryRunActionInInventory(action: () -> Unit): Boolean {
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen
-
-        if (!isInInventoryScreen) {
+        if (!inventoryConstraints.violatesNoMove && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             openInventorySilently()
-        }
 
-        if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             action()
-
-            if (!isInInventoryScreen) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
 
             return true
         }
@@ -170,5 +173,15 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         val remappedSlot = convertClientSlotToServerSlot(slot)
 
         interaction.clickSlot(0, remappedSlot, clickData, slotActionType, player)
+    }
+
+    private fun checkNoMoveViolation(): Boolean {
+        if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
+            network.sendPacket(CloseHandledScreenC2SPacket(0))
+
+            return true
+        }
+
+        return false
     }
 }

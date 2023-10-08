@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -95,6 +96,26 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
         }
     }
 
+    /**
+     * Waits for the requested [ticks]
+     *
+     * @param breakLoop In case it must exit early
+     */
+
+    // Somehow implement this only with the help of this class
+    suspend fun wait(ticks: Int, breakLoop: () -> Boolean = { false }) {
+        val player = mc.player ?: return
+        val ticksToWait = player.age + ticks
+
+        while (player.age < ticksToWait) {
+            if (breakLoop()) {
+                break
+            }
+
+            sync()
+        }
+    }
+
 }
 
 class DummyEvent : Event()
@@ -115,6 +136,7 @@ class RepeatingSequence(handler: SuspendableHandler<DummyEvent>) : Sequence<Dumm
 
             sync()
         }
+
     }
 
     fun cancel() {

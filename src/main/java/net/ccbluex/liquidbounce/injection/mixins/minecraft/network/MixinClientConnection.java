@@ -35,7 +35,7 @@ public class MixinClientConnection {
     /**
      * Handle sending packets
      *
-     * @param packet packet to send
+     * @param packet       packet to send
      * @param callbackInfo callback
      */
     @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
@@ -59,10 +59,13 @@ public class MixinClientConnection {
     private void hookReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
         final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
 
-        EventManager.INSTANCE.callEvent(event);
+        // Filter out client-side packets. Only happens in Single-player
+        if (packet.getClass().getSimpleName().contains("S2C")) {
+            EventManager.INSTANCE.callEvent(event);
 
-        if (event.isCancelled())
-            callbackInfo.cancel();
+            if (event.isCancelled())
+                callbackInfo.cancel();
+        }
     }
 
 }

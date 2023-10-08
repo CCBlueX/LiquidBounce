@@ -29,12 +29,13 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.entity.Entity
-import net.minecraft.util.math.*
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.RandomUtils
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -106,8 +107,8 @@ object RotationManager : Listenable {
      */
     fun update() {
         // Prevents any rotation changes, when inventory is opened
-        val canRotate =
-            (mc.currentScreen !is InventoryScreen && mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
+        val canRotate = (!InventoryTracker.isInventoryOpenServerSide &&
+            mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
 
         // Update rotations
         val speed = RandomUtils.nextFloat(
