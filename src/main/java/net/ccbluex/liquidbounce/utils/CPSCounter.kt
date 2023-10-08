@@ -10,26 +10,22 @@ package net.ccbluex.liquidbounce.utils
  */
 object CPSCounter {
     private const val MAX_CPS = 50
-    private val TIMESTAMP_BUFFERS = arrayOfNulls<RollingArrayLongBuffer>(MouseButton.values().size)
-
-    init {
-        TIMESTAMP_BUFFERS.fill(RollingArrayLongBuffer(MAX_CPS))
-    }
+    private val TIMESTAMP_BUFFERS = Array(MouseButton.values().size) { RollingArrayLongBuffer(MAX_CPS) }
 
     /**
      * Registers a mouse button click
      *
      * @param button The clicked button
      */
-    fun registerClick(button: MouseButton) = TIMESTAMP_BUFFERS[button.ordinal]!!.add(System.currentTimeMillis())
+    fun registerClick(button: MouseButton) = TIMESTAMP_BUFFERS[button.ordinal].add(System.currentTimeMillis())
 
     /**
-     * Gets the count of clicks that have occurrence since the last 1000ms
+     * Gets the count of clicks that have occurred in the last 1000ms
      *
      * @param button The mouse button
      * @return The CPS
      */
-    fun getCPS(button: MouseButton) = TIMESTAMP_BUFFERS[button.ordinal]!!.getTimestampsSince(System.currentTimeMillis() - 1000L)
+    fun getCPS(button: MouseButton) = TIMESTAMP_BUFFERS[button.ordinal].getTimestampsSince(System.currentTimeMillis() - 1000L)
 
     enum class MouseButton { LEFT, MIDDLE, RIGHT }
 }
