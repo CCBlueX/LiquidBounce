@@ -107,8 +107,8 @@ object RotationManager : Listenable {
      */
     fun update() {
         // Prevents any rotation changes, when inventory is opened
-        val canRotate =
-            (!InventoryTracker.isInventoryOpenServerSide && mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
+        val canRotate = (!InventoryTracker.isInventoryOpenServerSide &&
+            mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
 
         // Update rotations
         val speed = RandomUtils.nextFloat(
