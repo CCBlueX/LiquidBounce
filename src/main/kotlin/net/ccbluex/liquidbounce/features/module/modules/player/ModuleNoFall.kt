@@ -192,7 +192,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
                 }
                 interactionResult == ActionResult.PASS -> {
                     // Ok, we cannot place on the block, so let's just use the item in the direction
-                    // without targeting a block
+                    // without targeting a block (for buckets, etc.)
                     handlePass(hand, stack, onItemUseSuccess)
                     return
                 }
