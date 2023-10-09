@@ -63,7 +63,7 @@
   .title {
     grid-area: b;
     font-size: 14px;
-    color: white;
+    color: var(--text);;
     font-weight: 600;
   }
 

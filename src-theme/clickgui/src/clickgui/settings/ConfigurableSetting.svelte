@@ -33,7 +33,7 @@
 <style>
     .name {
         font-weight: 500;
-        color: white;
+        color: var(--text);;
         font-size: 12px;
         margin-left: 10px;
         margin-bottom: 3px;

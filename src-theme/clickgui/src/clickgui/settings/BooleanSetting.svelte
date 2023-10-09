@@ -70,7 +70,8 @@
   }
 
   .switch input:checked + .slider {
-    background-color: #4860a7;
+    background-color: var(--accent);
+    filter: brightness(0.4);
   }
 
   .switch input:checked + .slider:before {

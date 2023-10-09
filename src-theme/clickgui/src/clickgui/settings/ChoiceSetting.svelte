@@ -82,7 +82,7 @@
     padding: 7px 10px;
     position: relative;
     font-weight: 500;
-    color: white;
+    color: var(--text);
     font-size: 12px;
     border-radius: 5px;
     transition: ease border-radius .2s;
@@ -117,7 +117,7 @@
     overflow: hidden;
 
     .value {
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--textdimmed);
       font-weight: 500;
       font-size: 12px;
       text-align: center;

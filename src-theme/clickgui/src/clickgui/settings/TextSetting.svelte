@@ -21,7 +21,7 @@
 
   .name {
     font-weight: 500;
-    color: white;
+    color: var(--text);;
     font-size: 12px;
   }
 
@@ -35,7 +35,7 @@
     border-radius: 5px;
     font-size: 12px;
     margin-top: 5px;
-    color: white;
+    color: var(--text);;
     transition: ease border-bottom 0.2s;
     border: solid 2px transparent;
 

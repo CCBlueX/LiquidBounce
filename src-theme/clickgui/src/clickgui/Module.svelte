@@ -55,7 +55,7 @@
 
 <style lang="scss">
   .module {
-    color: #CBD1E3;
+    color: var(--textdimmed);
     text-align: center;
     font-weight: 600;
     font-size: 12px;
@@ -64,7 +64,7 @@
     position: relative;
 
     &.enabled {
-      color: white;
+      color: var(--text);
     }
 
     &:hover {

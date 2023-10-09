@@ -165,7 +165,7 @@
         background-color: rgba(0, 0, 0, 0.68);
         border-radius: 5rem;
         border: 0;
-        color: lightgray;
+        color: var(--textdimmed);
         flex: 1;
         font-size: 18px;
         height: 50px;
@@ -187,13 +187,13 @@
       padding: 10px 0;
 
       &-item {
-        color: lightgray;
+        color: var(--textdimmed);
         cursor: pointer;
         font-size: 16px;
         padding: 10px 15px;
 
         &:hover {
-          color: white;
+          color: var(--text);
         }
 
         &.selected {

@@ -85,7 +85,7 @@
     .name {
         grid-area: a;
         font-weight: 500;
-        color: white;
+        color: var(--text);;
         font-size: 12px;
     }
 
@@ -101,7 +101,7 @@
 
     .value {
         font-weight: 500;
-        color: white;
+        color: var(--text);;
         text-align: right;
         font-size: 12px;
         cursor: text;

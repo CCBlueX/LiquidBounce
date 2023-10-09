@@ -121,7 +121,7 @@
   .title {
     font-size: 14px;
     font-weight: 600;
-    color: white;
+    color: var(--text);
   }
 
   .modules {

@@ -26,7 +26,7 @@
 
     .category-name {
         font-weight: 600;
-        color: white;
+        color: var(--text);;
         font-size: 14px;
         width: 100%;
         padding: 7px 12px 7px 12px;
