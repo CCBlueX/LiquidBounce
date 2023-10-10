@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sneak;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
-import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
@@ -62,27 +61,42 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
     @Shadow
     public boolean serverSprintState;
+    @Shadow
+    public int sprintingTicksLeft;
+    @Shadow
+    public float timeInPortal;
+    @Shadow
+    public float prevTimeInPortal;
+    @Shadow
+    public MovementInput movementInput;
+    @Shadow
+    public float horseJumpPower;
+    @Shadow
+    public int horseJumpPowerCounter;
+    @Shadow
+    @Final
+    public NetHandlerPlayClient sendQueue;
+    @Shadow
+    protected int sprintToggleTimer;
+    @Shadow
+    protected Minecraft mc;
+    @Shadow
+    private boolean serverSneakState;
+    @Shadow
+    private double lastReportedPosX;
+    @Shadow
+    private int positionUpdateTicks;
+    @Shadow
+    private double lastReportedPosY;
+    @Shadow
+    private double lastReportedPosZ;
+    @Shadow
+    private float lastReportedYaw;
+    @Shadow
+    private float lastReportedPitch;
 
     @Shadow
     public abstract void playSound(String name, float volume, float pitch);
-
-    @Shadow
-    public int sprintingTicksLeft;
-
-    @Shadow
-    protected int sprintToggleTimer;
-
-    @Shadow
-    public float timeInPortal;
-
-    @Shadow
-    public float prevTimeInPortal;
-
-    @Shadow
-    protected Minecraft mc;
-
-    @Shadow
-    public MovementInput movementInput;
 
     @Shadow
     public abstract void setSprinting(boolean sprinting);
@@ -94,47 +108,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     public abstract void sendPlayerAbilities();
 
     @Shadow
-    public float horseJumpPower;
-
-    @Shadow
-    public int horseJumpPowerCounter;
-
-    @Shadow
     protected abstract void sendHorseJump();
 
     @Shadow
     public abstract boolean isRidingHorse();
 
     @Shadow
-    @Final
-    public NetHandlerPlayClient sendQueue;
-
-    @Shadow
-    private boolean serverSneakState;
-
-    @Shadow
     public abstract boolean isSneaking();
 
     @Shadow
     protected abstract boolean isCurrentViewEntity();
-
-    @Shadow
-    private double lastReportedPosX;
-
-    @Shadow
-    private int positionUpdateTicks;
-
-    @Shadow
-    private double lastReportedPosY;
-
-    @Shadow
-    private double lastReportedPosZ;
-
-    @Shadow
-    private float lastReportedYaw;
-
-    @Shadow
-    private float lastReportedPitch;
 
     /**
      * @author CCBlueX
@@ -171,7 +154,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             float yaw = rotationYaw;
             float pitch = rotationPitch;
 
-            final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
+            final Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
 
             final Derp derp = Derp.INSTANCE;
             if (derp.getState()) {
@@ -180,9 +163,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 pitch = rot.getPitch();
             }
 
-            if (targetRotation != null) {
-                yaw = targetRotation.getYaw();
-                pitch = targetRotation.getPitch();
+            if (currentRotation != null) {
+                yaw = currentRotation.getYaw();
+                pitch = currentRotation.getPitch();
             }
 
             double xDiff = posX - lastReportedPosX;
@@ -320,22 +303,56 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         boolean flag2 = movementInput.moveForward >= f;
         movementInput.updatePlayerMoveState();
 
+        final Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
+
+        // A separate movement input for currentRotation
+        MovementInput modifiedInput = new MovementInput();
+
+        // Recreate inputs
+        modifiedInput.moveForward = movementInput.moveForward;
+        modifiedInput.moveStrafe = movementInput.moveStrafe;
+
+        // Reverse the effects of sneak and apply them after the input variable calculates the input
+        if (movementInput.sneak) {
+            modifiedInput.moveStrafe /= 0.3f;
+            modifiedInput.moveForward /= 0.3f;
+        }
+
+        // Calculate and apply the movement input based on rotation
+        float moveForward = currentRotation != null ? Math.round(modifiedInput.moveForward * MathHelper.cos(MathExtensionsKt.toRadians(rotationYaw - currentRotation.getYaw())) + modifiedInput.moveStrafe * MathHelper.sin(MathExtensionsKt.toRadians(rotationYaw - currentRotation.getYaw()))) : movementInput.moveForward;
+        float moveStrafe = currentRotation != null ? Math.round(modifiedInput.moveStrafe * MathHelper.cos(MathExtensionsKt.toRadians(rotationYaw - currentRotation.getYaw())) - modifiedInput.moveForward * MathHelper.sin(MathExtensionsKt.toRadians(rotationYaw - currentRotation.getYaw()))) : movementInput.moveStrafe;
+
+        modifiedInput.moveForward = moveForward;
+        modifiedInput.moveStrafe = moveStrafe;
+
         if (movementInput.sneak) {
             final SneakSlowDownEvent sneakSlowDownEvent = new SneakSlowDownEvent(movementInput.moveStrafe, movementInput.moveForward);
             EventManager.INSTANCE.callEvent(sneakSlowDownEvent);
             movementInput.moveStrafe = sneakSlowDownEvent.getStrafe();
             movementInput.moveForward = sneakSlowDownEvent.getForward();
+            // Add the sneak effect back
+            modifiedInput.moveForward *= 0.3f;
+            modifiedInput.moveStrafe *= 0.3f;
+            // Call again the event but this time have the modifiedInput
+            final SneakSlowDownEvent secondSneakSlowDownEvent = new SneakSlowDownEvent(modifiedInput.moveStrafe, modifiedInput.moveForward);
+            EventManager.INSTANCE.callEvent(secondSneakSlowDownEvent);
+            modifiedInput.moveStrafe = secondSneakSlowDownEvent.getStrafe();
+            modifiedInput.moveForward = secondSneakSlowDownEvent.getForward();
         }
 
         final NoSlow noSlow = NoSlow.INSTANCE;
         final KillAura killAura = KillAura.INSTANCE;
 
-        if (getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus())) && !isRiding()) {
+        boolean isUsingItem = getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus()));
+
+        if (isUsingItem && !isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
             EventManager.INSTANCE.callEvent(slowDownEvent);
             movementInput.moveStrafe *= slowDownEvent.getStrafe();
             movementInput.moveForward *= slowDownEvent.getForward();
             sprintToggleTimer = 0;
+            modifiedInput.moveStrafe *= slowDownEvent.getStrafe();
+            modifiedInput.moveForward *= slowDownEvent.getForward();
         }
 
         pushOutOfBlocks(posX - width * 0.35, getEntityBoundingBox().minY + 0.5, posZ + width * 0.35);
@@ -345,11 +362,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final Sprint sprint = Sprint.INSTANCE;
 
-        final boolean legitSprint = sprint.getMode().equals("Legit");
-
-        // TODO: Simplify this
-        boolean flag3 = !sprint.getState() ? (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying : sprint.getState() && (legitSprint || sprint.getFood()) ? (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying : sprint.getState() && (!legitSprint && !sprint.getFood()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
-
+        boolean flag3 = (float) getFoodStats().getFoodLevel() > 6F || capabilities.allowFlying;
         if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
             if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown()) {
                 sprintToggleTimer = 7;
@@ -362,26 +375,13 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             setSprinting(true);
         }
 
-        final Scaffold scaffold = Scaffold.INSTANCE;
-
-        final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
-
-        boolean shouldStop = targetRotation != null && movementInput.moveForward * MathHelper.cos(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) + movementInput.moveStrafe * MathHelper.sin(MathExtensionsKt.toRadians(rotationYaw - targetRotation.getYaw())) < 0.8;
-
-        if (scaffold.getState() && !scaffold.getSprint() || sprint.getState() && (legitSprint || sprint.getCheckServerSide() && (onGround || !sprint.getCheckServerSideGround()) && !sprint.getAllDirections()) && shouldStop)
-            setSprinting(false);
-
-        if (scaffold.getState() && scaffold.getSprint() && scaffold.getEagle().equals("Normal") && MovementUtils.INSTANCE.isMoving() && scaffold.getEagleSneaking())
-            setSprinting(scaffold.getEagleSprint());
-
-        // TODO: Simplify this
-        boolean flag6 = !sprint.getState() ? movementInput.moveForward < f : sprint.getState() && (legitSprint || !sprint.getAllDirections()) ? movementInput.moveForward < f : (!sprint.getState() || (legitSprint || !sprint.getAllDirections())) && movementInput.moveForward < f;
-
-        if (isSprinting() && flag6 || isCollidedHorizontally || !flag3) {
+        if (isSprinting() && (movementInput.moveForward < f || isCollidedHorizontally || !flag3)) {
             setSprinting(false);
         }
 
         EventManager.INSTANCE.callEvent(new PostSprintUpdateEvent());
+
+        sprint.correctSprintState(modifiedInput, isUsingItem);
 
         if (capabilities.allowFlying) {
             if (mc.playerController.isSpectatorMode()) {

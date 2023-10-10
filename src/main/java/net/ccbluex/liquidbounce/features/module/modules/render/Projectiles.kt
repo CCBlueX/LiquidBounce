@@ -9,8 +9,9 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
+import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.ccbluex.liquidbounce.utils.inventory.isSplashPotion
@@ -97,9 +98,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
         }
 
         // Yaw and pitch of player
-        val yaw = targetRotation?.yaw ?: thePlayer.rotationYaw
-
-        val pitch = targetRotation?.pitch ?: thePlayer.rotationPitch
+        val (yaw, pitch) = currentRotation ?: thePlayer.rotation
 
         val yawRadians = yaw.toRadiansD()
         val pitchRadians = pitch.toRadiansD()
@@ -112,8 +111,8 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
         // Motions
         var motionX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
         var motionY = -sin(
-                (pitch + if (item is ItemPotion && heldStack.isSplashPotion()) -20 else 0).toRadians()
-            ) * if (isBow) 1.0 else 0.4
+            (pitch + if (item is ItemPotion && heldStack.isSplashPotion()) -20 else 0).toRadians()
+        ) * if (isBow) 1.0 else 0.4
         var motionZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
         val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
@@ -142,9 +141,11 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
             "custom" -> {
                 glColor(Color(colorRed, colorGreen, colorBlue, 255))
             }
+
             "bowpower" -> {
                 glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
             }
+
             "rainbow" -> {
                 glColor(ColorUtils.rainbow())
             }
@@ -159,8 +160,10 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
             var posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
 
             // Get landing position
-            landingPosition = theWorld.rayTraceBlocks(posBefore, posAfter, false,
-                    true, false)
+            landingPosition = theWorld.rayTraceBlocks(
+                posBefore, posAfter, false,
+                true, false
+            )
 
             // Set pos before and after
             posBefore = Vec3(posX, posY, posZ)
@@ -169,12 +172,15 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
             // Check if arrow is landing
             if (landingPosition != null) {
                 hasLanded = true
-                posAfter = Vec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
+                posAfter =
+                    Vec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
             }
 
             // Set arrow box
-            val arrowBox = AxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
-                posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+            val arrowBox = AxisAlignedBB(
+                posX - size, posY - size, posZ - size, posX + size,
+                posY + size, posZ + size
+            ).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
             val chunkMinX = ((arrowBox.minX - 2) / 16).toInt()
             val chunkMaxX = ((arrowBox.maxX + 2.0) / 16.0).toInt()
@@ -187,16 +193,16 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
             for (x in chunkMinX..chunkMaxX)
                 for (z in chunkMinZ..chunkMaxZ)
                     theWorld.getChunkFromChunkCoords(x, z)
-                            .getEntitiesWithinAABBForEntity(thePlayer, arrowBox, collidedEntities, null)
+                        .getEntitiesWithinAABBForEntity(thePlayer, arrowBox, collidedEntities, null)
 
             // Check all possible entities
             for (possibleEntity in collidedEntities) {
                 if (possibleEntity.canBeCollidedWith() && possibleEntity != thePlayer) {
                     val possibleEntityBoundingBox = possibleEntity.entityBoundingBox
-                            .expand(size.toDouble(), size.toDouble(), size.toDouble())
+                        .expand(size.toDouble(), size.toDouble(), size.toDouble())
 
                     val possibleEntityLanding = possibleEntityBoundingBox
-                            .calculateIntercept(posBefore, posAfter) ?: continue
+                        .calculateIntercept(posBefore, posAfter) ?: continue
 
                     hitEntity = true
                     hasLanded = true
@@ -224,15 +230,19 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
             motionY -= gravity.toDouble()
 
             // Draw path
-            worldRenderer.pos(posX - renderManager.renderPosX, posY - renderManager.renderPosY,
-                    posZ - renderManager.renderPosZ).endVertex()
+            worldRenderer.pos(
+                posX - renderManager.renderPosX, posY - renderManager.renderPosY,
+                posZ - renderManager.renderPosZ
+            ).endVertex()
         }
 
         // End the rendering of the path
         tessellator.draw()
         glPushMatrix()
-        glTranslated(posX - renderManager.renderPosX, posY - renderManager.renderPosY,
-                posZ - renderManager.renderPosZ)
+        glTranslated(
+            posX - renderManager.renderPosX, posY - renderManager.renderPosY,
+            posZ - renderManager.renderPosZ
+        )
 
         if (landingPosition != null) {
             // Switch rotation of hit cylinder of the hit axis

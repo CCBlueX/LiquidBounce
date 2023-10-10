@@ -10,7 +10,8 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
+import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.item.ItemBow
 import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
@@ -34,11 +35,18 @@ object FastBow : Module("FastBow", ModuleCategory.COMBAT) {
         val currentItem = thePlayer.inventory.getCurrentItem()
 
         if (currentItem != null && currentItem.item is ItemBow) {
-            sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, mc.thePlayer.currentEquippedItem, 0F, 0F, 0F))
+            sendPacket(
+                C08PacketPlayerBlockPlacement(
+                    BlockPos.ORIGIN,
+                    255,
+                    mc.thePlayer.currentEquippedItem,
+                    0F,
+                    0F,
+                    0F
+                )
+            )
 
-            val yaw = targetRotation?.yaw ?: thePlayer.rotationYaw
-
-            val pitch = targetRotation?.pitch ?: thePlayer.rotationPitch
+            val (yaw, pitch) = currentRotation ?: thePlayer.rotation
 
             repeat(packets) {
                 sendPacket(C05PacketPlayerLook(yaw, pitch, true))
