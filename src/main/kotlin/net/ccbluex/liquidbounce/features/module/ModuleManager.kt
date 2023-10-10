@@ -33,8 +33,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.Modul
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.render.*
+import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
@@ -200,6 +202,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrueSight,
             ModuleXRay,
             ModuleDebug,
+            ModuleMinimap,
 
             // World
             ModuleAutoDisable,

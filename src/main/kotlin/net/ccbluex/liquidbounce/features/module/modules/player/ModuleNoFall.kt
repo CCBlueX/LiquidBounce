@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.block.Blocks
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.ActionResult
@@ -168,8 +169,11 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             currentTarget = null
         }
 
-        private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
-            .minByOrNull { abs(player.inventory.selectedSlot - it) }
+        private fun findClosestItem(items: Array<Item>): Int? {
+            return (0..8)
+                .filter { player.inventory.getStack(it).item in items }
+                .minByOrNull { abs(player.inventory.selectedSlot - it) }
+        }
 
         fun doPlacement(
             rayTraceResult: BlockHitResult,
@@ -180,38 +184,63 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             val stack = player.mainHandStack
             val count = stack.count
 
-            val interactBlock = interaction.interactBlock(player, hand, rayTraceResult)
+            val interactionResult = interaction.interactBlock(player, hand, rayTraceResult)
 
-            if (interactBlock.isAccepted) {
-                if (interactBlock.shouldSwingHand()) {
-                    if (onPlacementSuccess()) {
-                        player.swingHand(hand)
-                    }
-
-                    if (!stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())) {
-                        mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
-                    }
-                }
-
-                return
-            } else if (interactBlock == ActionResult.FAIL) {
-                return
-            }
-
-            if (!stack.isEmpty) {
-                val interactItem = interaction.interactItem(player, hand)
-
-                if (interactItem.isAccepted) {
-                    if (interactItem.shouldSwingHand()) {
-                        if (onItemUseSuccess()) {
-                            player.swingHand(hand)
-                        }
-                    }
-
-                    mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
+            when {
+                interactionResult == ActionResult.FAIL -> {
                     return
                 }
+                interactionResult == ActionResult.PASS -> {
+                    // Ok, we cannot place on the block, so let's just use the item in the direction
+                    // without targeting a block (for buckets, etc.)
+                    handlePass(hand, stack, onItemUseSuccess)
+                    return
+                }
+                interactionResult.isAccepted -> {
+                    val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
+
+                    handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
+                }
             }
+        }
+
+        /**
+         * Swings item, resets equip progress and hand swing progress
+         *
+         * @param wasStackUsed was an item consumed in order to place the block
+         */
+        private fun handleActionsOnAccept(
+            hand: Hand,
+            interactionResult: ActionResult,
+            wasStackUsed: Boolean,
+            onPlacementSuccess: () -> Boolean,
+        ) {
+            if (!interactionResult.shouldSwingHand()) {
+                return
+            }
+
+            if (onPlacementSuccess()) {
+                player.swingHand(hand)
+            }
+
+            if (wasStackUsed) {
+                mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
+            }
+
+            return
+        }
+
+        /**
+         * Just interacts with the item in the hand instead of using it on the block
+         */
+        private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boolean) {
+            if (stack.isEmpty) {
+                return
+            }
+
+            val actionResult = interaction.interactItem(player, hand)
+
+            handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess)
         }
     }
 

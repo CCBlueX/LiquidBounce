@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
@@ -100,7 +100,7 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             val eyeVector = Vec3(0.0, 0.0, 1.0)
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -43,6 +43,7 @@ import net.minecraft.util.Pair
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
     val showRotationVector by boolean("ShowRotationVector", false)
+    val pov by boolean("POV", false)
 
     var rotationPitch: Pair<Float, Float> = Pair(0f, 0f)
 
@@ -60,7 +61,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
             .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
             .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             withColor(Color4b.WHITE) {
                 drawLineStrip(eyeVector, eyeVector + Vec3(serverRotation.rotationVec * 2.0))
             }

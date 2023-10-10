@@ -21,8 +21,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,15 +41,13 @@ public abstract class MixinCamera {
 
     @Shadow
     private boolean thirdPerson;
+    @Shadow
+    private float yaw;
+    @Shadow
+    private float pitch;
 
     @Shadow
     protected abstract void setRotation(float yaw, float pitch);
-
-    @Shadow
-    private float yaw;
-
-    @Shadow
-    private float pitch;
 
     @Shadow
     protected abstract void moveBy(double x, double y, double z);
@@ -61,7 +63,24 @@ public abstract class MixinCamera {
             this.setRotation(this.yaw + 180.0f, -this.pitch);
 
             this.moveBy(-this.clipToSpace(4.0), 0.0, 0.0);
+            return;
         }
+
+        RotationsConfigurable configurable = RotationManager.INSTANCE.getActiveConfigurable();
+
+        var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
+        var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
+
+        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getPov() || configurable != null && !configurable.getSilent();
+
+        if (currentRotation == null || previousRotation == null || !shouldModifyRotation) {
+            return;
+        }
+
+        this.setRotation(
+                MathHelper.lerp(tickDelta, previousRotation.getYaw(), currentRotation.getYaw()),
+                MathHelper.lerp(tickDelta, previousRotation.getPitch(), currentRotation.getPitch())
+        );
     }
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
