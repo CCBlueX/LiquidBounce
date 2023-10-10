@@ -10,21 +10,29 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.GuiChat
 import net.minecraft.client.gui.GuiIngameMenu
-import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiChest
+import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.client.settings.GameSettings
 
 object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
-    private val undetectable by BoolValue("Undetectable", false)
+    private val notInChests by BoolValue("NotInChests", false)
     val aacAdditionPro by BoolValue("AACAdditionPro", false)
 
-    private val noMoveClicks by BoolValue("NoMoveClicks", false)
-    private val noClicksAir by BoolValue("NoClicksInAir", false) { noMoveClicks }
-    private val noClicksGround by BoolValue("NoClicksOnGround", true) { noMoveClicks }
+    private val noMove by InventoryManager.noMoveValue
+    private val noMoveAir by InventoryManager.noMoveAirValue
+    private val noMoveGround by InventoryManager.noMoveGroundValue
+
+    // If player violates nomove check and inventory is open, close inventory and reopen it when still
+    private val silentlyCloseAndReopen by BoolValue("SilentlyCloseAndReopen", false) { noMove && (noMoveAir || noMoveGround) }
+    // Reopen closed inventory just before a click (could flag for clicking too fast after opening inventory)
+    private val reopenOnClick by BoolValue("ReopenOnClick", false) { silentlyCloseAndReopen && noMove && (noMoveAir || noMoveGround) }
 
     private val affectedBindings = arrayOf(
         mc.gameSettings.keyBindForward,
@@ -35,32 +43,36 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
         mc.gameSettings.keyBindSprint
     )
 
-    fun canClickInventory() =
-        !state || !isMoving || !noMoveClicks || (if (mc.thePlayer.onGround) !noClicksGround else !noClicksAir)
-
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable || mc.currentScreen !is GuiContainer)) {
-            for (affectedBinding in affectedBindings) {
-                val shouldExcept = Sprint.state && Sprint.mode == "Legit"
-                affectedBinding.pressed = if (affectedBinding == affectedBindings.last() && shouldExcept) true else GameSettings.isKeyDown(affectedBinding)
-            }
+        val screen = mc.currentScreen
+
+        // Don't make player move when chat or ESC menu are open
+        if (screen is GuiChat || screen is GuiIngameMenu)
+            return
+
+        if (notInChests && screen is GuiChest)
+            return
+
+        if (silentlyCloseAndReopen && screen is GuiInventory) {
+            if (canClickInventory(closeWhenViolating = true) && !reopenOnClick)
+                serverOpenInventory = true
         }
+
+        for (affectedBinding in affectedBindings)
+            affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
+                || (affectedBinding == mc.gameSettings.keyBindSprint && Sprint.state && Sprint.mode == "Legit")
     }
 
     @EventTarget
     fun onClick(event: ClickWindowEvent) {
-        if (!canClickInventory())
-            event.cancelEvent()
+        if (!canClickInventory()) event.cancelEvent()
+        else if (reopenOnClick) serverOpenInventory = true
     }
 
     override fun onDisable() {
-        val isIngame = mc.currentScreen != null
-
-        for (affectedBinding in affectedBindings) {
-            if (!GameSettings.isKeyDown(affectedBinding) || isIngame)
-                affectedBinding.pressed = false
-        }
+        for (affectedBinding in affectedBindings)
+            affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
     }
 
     override val tag

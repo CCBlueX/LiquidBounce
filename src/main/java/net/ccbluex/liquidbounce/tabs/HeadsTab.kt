@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.tabs
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.inventory.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.init.Items

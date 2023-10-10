@@ -30,7 +30,11 @@ object RandomUtils {
 
     fun random(length: Int, chars: CharArray): String {
         val stringBuilder = StringBuilder()
-        for (i in 0 until length) stringBuilder.append(chars[Random.nextInt(chars.size)])
+
+        repeat(length) {
+            stringBuilder.append(chars[Random.nextInt(chars.size)])
+        }
+
         return stringBuilder.toString()
     }
 

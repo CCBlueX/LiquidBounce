@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.inventory.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.item.Item
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
@@ -32,23 +32,7 @@ class GiveCommand : Command("give", "item", "i", "get") {
                 return
             }
 
-            var emptySlot = -1
-
-            for (i in 36..44) {
-                if (thePlayer.inventoryContainer.getSlot(i).stack == null) {
-                    emptySlot = i
-                    break
-                }
-            }
-
-            if (emptySlot == -1) {
-                for (i in 9..44) {
-                    if (thePlayer.inventoryContainer.getSlot(i).stack == null) {
-                        emptySlot = i
-                        break
-                    }
-                }
-            }
+            val emptySlot = thePlayer.inventory.firstEmptyStack
 
             if (emptySlot != -1) {
                 sendPacket(C10PacketCreativeInventoryAction(emptySlot, itemStack))

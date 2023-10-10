@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.stop
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue

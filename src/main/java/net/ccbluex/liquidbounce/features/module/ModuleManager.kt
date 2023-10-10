@@ -11,6 +11,9 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.command.CommandManager.registerCommand
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineArmorer
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner
+import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineStealer
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
@@ -22,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.Timer
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import java.util.*
 
 
@@ -99,6 +103,9 @@ object ModuleManager : Listenable {
             Clip,
             ComponentOnHover,
             ConsoleSpammer,
+            CoroutineArmorer,
+            CoroutineCleaner,
+            CoroutineStealer,
             Criticals,
             Damage,
             Derp,
@@ -201,6 +208,8 @@ object ModuleManager : Listenable {
             XRay,
             Zoot
         )
+
+        InventoryManager.startCoroutine()
 
         LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")
     }

@@ -13,11 +13,14 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
+import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.item.ItemStack
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
@@ -67,6 +70,8 @@ open class Module @JvmOverloads constructor(
 
             // Call toggle
             onToggle(value)
+
+            TickScheduler.clear()
 
             // Play sound and add notification
             if (!isStarting) {
@@ -143,4 +148,51 @@ open class Module @JvmOverloads constructor(
      * Events should be handled when module is enabled
      */
     override fun handleEvents() = state
+
+    internal object TickScheduler {
+       lateinit var instance: Module
+
+        internal fun schedule(id: Int, allowDuplicates: Boolean = false, action: () -> Unit) =
+            TickedActions.schedule(id, instance, allowDuplicates, action)
+
+        internal fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: ((ItemStack?) -> Unit)? = null) =
+            schedule(slot, allowDuplicates) {
+                val newStack = mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
+                action?.invoke(newStack)
+            }
+
+        operator fun plusAssign(action: () -> Unit) {
+            schedule(-1, true, action)
+        }
+
+        // Schedule actions to be executed in following ticks, one each tick
+        // Thread is frozen until all actions were executed (suitable for coroutines)
+        internal fun scheduleAndSuspend(vararg actions: () -> Unit) =
+            actions.forEach {
+                this += it
+                waitUntil(::isEmpty)
+            }
+
+        internal fun scheduleAndSuspend(id: Int = -1, allowDuplicates: Boolean = true, action: () -> Unit) {
+            schedule(id, allowDuplicates, action)
+            waitUntil(::isEmpty)
+        }
+
+        internal fun isScheduled(id: Int) = TickedActions.isScheduled(id, instance)
+
+        // Checks if id click is scheduled: if (id in TickScheduler)
+        operator fun contains(id: Int) = isScheduled(id)
+
+        internal fun clear() = TickedActions.clear(instance)
+
+        internal val size
+            get() = TickedActions.size(instance)
+
+        internal fun isEmpty() = TickedActions.isEmpty(instance)
+
+    }
+
+    init {
+        TickScheduler.instance = this
+    }
 }

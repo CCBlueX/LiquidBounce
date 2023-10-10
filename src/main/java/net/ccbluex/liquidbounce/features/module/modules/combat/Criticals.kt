@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.EntityLivingBase

@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.ClickWindowEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
-import net.ccbluex.liquidbounce.utils.InventoryUtils;
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;

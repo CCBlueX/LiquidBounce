@@ -12,14 +12,14 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.item.attackDamage
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
+import net.ccbluex.liquidbounce.utils.inventory.attackDamage
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.item.ItemSword
 import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
 
@@ -37,8 +37,7 @@ object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is C02PacketUseEntity && event.packet.action == ATTACK
-            && attackEnemy) {
+        if (event.packet is C02PacketUseEntity && event.packet.action == ATTACK && attackEnemy) {
             attackEnemy = false
 
             // Find the best weapon in hotbar (#Kotlin Style)
@@ -52,7 +51,7 @@ object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
 
             // Switch to best weapon
             if (spoof) {
-                sendPacket(C09PacketHeldItemChange(slot))
+                serverSlot = slot
                 ticks = spoofTicks
             } else {
                 mc.thePlayer.inventory.currentItem = slot
@@ -70,7 +69,8 @@ object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
         // Switch back to old item after some time
         if (ticks > 0) {
             if (ticks == 1)
-                sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+                serverSlot = mc.thePlayer.inventory.currentItem
+
             ticks--
         }
     }

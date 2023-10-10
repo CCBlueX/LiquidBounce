@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue

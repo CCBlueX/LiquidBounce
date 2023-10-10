@@ -13,9 +13,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.hypixelBoos
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.hypixelBoostDelay
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.hypixelBoostTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.minecraft.init.Blocks
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB

@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.utils.timer
+package net.ccbluex.liquidbounce.utils.timing
 
 class TickTimer {
     private var tick = 0

@@ -10,10 +10,10 @@ import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
-import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
-import net.ccbluex.liquidbounce.utils.timer.MSTimer;
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils;
+import net.ccbluex.liquidbounce.utils.timing.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.minecraft.block.BlockAir;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -75,7 +75,7 @@ public class Ignite extends Module {
 
                RotationUtils.INSTANCE.setKeepCurrentRotation(true);
 
-               sendPacket(new C09PacketHeldItemChange(fireInHotbar - 36));
+               InventoryUtils.INSTANCE.setServerSlot(fireInHotbar - 36);
 
                final ItemStack itemStack =
                        mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();

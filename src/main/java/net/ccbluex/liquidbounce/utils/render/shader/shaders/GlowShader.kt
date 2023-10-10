@@ -8,10 +8,7 @@ package net.ccbluex.liquidbounce.utils.render.shader.shaders
 import net.ccbluex.liquidbounce.utils.render.shader.FramebufferShader
 import org.lwjgl.opengl.GL20.*
 
-class GlowShader : FramebufferShader("glow.frag") {
-    companion object {
-        val GLOW_SHADER = GlowShader()
-    }
+object GlowShader : FramebufferShader("glow.frag") {
     
     override fun setupUniforms() {
         setupUniform("texture")

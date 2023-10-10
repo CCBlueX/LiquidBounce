@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.script.api
 
 import jdk.nashorn.api.scripting.JSObject
 import jdk.nashorn.api.scripting.ScriptUtils
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.inventory.ItemUtils
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.item.ItemStack
 

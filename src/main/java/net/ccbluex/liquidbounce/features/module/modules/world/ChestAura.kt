@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getVec
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BlockValue
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue

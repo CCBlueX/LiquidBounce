@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.utils.item;
+package net.ccbluex.liquidbounce.utils.inventory;
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import net.minecraft.enchantment.Enchantment;
@@ -14,8 +14,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 
-import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.getEnchantmentCount;
-import static net.ccbluex.liquidbounce.utils.item.ItemUtilsKt.getEnchantmentLevel;
+import static net.ccbluex.liquidbounce.utils.inventory.ItemUtilsKt.getEnchantmentCount;
+import static net.ccbluex.liquidbounce.utils.inventory.ItemUtilsKt.getEnchantmentLevel;
 
 public class ArmorComparator extends MinecraftInstance implements Comparator<ArmorPiece> {
 

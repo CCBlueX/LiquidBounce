@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
+import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.EntityLivingBase;
@@ -96,7 +97,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
             final Sprint sprint = Sprint.INSTANCE;
             if (sprint.getState() && sprint.getAllDirections() && sprint.getJumpDirections()) {
-                fixedYaw += MovementUtils.INSTANCE.getMovingYaw() - this.rotationYaw;
+                fixedYaw += MathExtensionsKt.toDegreesF(MovementUtils.INSTANCE.getDirection()) - this.rotationYaw;
             }
 
             final float f = fixedYaw * 0.017453292F;

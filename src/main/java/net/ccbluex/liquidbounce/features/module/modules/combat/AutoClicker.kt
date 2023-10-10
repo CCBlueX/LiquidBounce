@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding

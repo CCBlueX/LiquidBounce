@@ -9,7 +9,6 @@ import jdk.internal.dynalink.beans.StaticClass
 import jdk.nashorn.api.scripting.JSObject
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory
 import jdk.nashorn.api.scripting.ScriptUtils
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.LiquidBounce.scriptManager
@@ -41,7 +40,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
 
     private var state = false
 
-    private val events = HashMap<String, JSObject>()
+    private val events = mutableMapOf<String, JSObject>()
 
     private val registeredModules = mutableListOf<Module>()
     private val registeredCommands = mutableListOf<Command>()
@@ -51,19 +50,21 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
 
         // Global classes
-        scriptEngine.put("Chat", StaticClass.forClass(Chat::class.java))
-        scriptEngine.put("Setting", StaticClass.forClass(Setting::class.java))
-        scriptEngine.put("Item", StaticClass.forClass(Item::class.java))
+        scriptEngine.run {
+            put("Chat", StaticClass.forClass(Chat::class.java))
+            put("Setting", StaticClass.forClass(Setting::class.java))
+            put("Item", StaticClass.forClass(Item::class.java))
 
-        // Global instances
-        scriptEngine.put("mc", mc)
+            // Global instances
+            put("mc", mc)
 
-        scriptEngine.put("moduleManager", moduleManager)
-        scriptEngine.put("commandManager", commandManager)
-        scriptEngine.put("scriptManager", scriptManager)
+            put("moduleManager", moduleManager)
+            put("commandManager", commandManager)
+            put("scriptManager", scriptManager)
 
-        // Global functions
-        scriptEngine.put("registerScript", RegisterScript())
+            // Global functions
+            put("registerScript", RegisterScript())
+        }
     }
 
     fun initScript() {

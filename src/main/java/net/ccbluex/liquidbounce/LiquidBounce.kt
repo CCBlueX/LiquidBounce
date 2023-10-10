@@ -42,10 +42,11 @@ import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
-import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.TickedActions
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
+import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import kotlin.concurrent.thread
 
 object LiquidBounce {
@@ -102,13 +103,14 @@ object LiquidBounce {
         registerListener(InventoryUtils)
         registerListener(MiniMapRegister)
         registerListener(TickedActions)
+        registerListener(MovementUtils)
 
         // Load client fonts
         loadFonts()
 
         // Load settings
         loadSettings(false) {
-            LOGGER.info("Successfully loaded ${it.count()} settings.")
+            LOGGER.info("Successfully loaded ${it.size} settings.")
         }
 
         // Register commands
@@ -174,7 +176,7 @@ object LiquidBounce {
 
         // Refresh cape service
         CapeService.refreshCapeCarriers {
-            LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
+            LOGGER.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
         }
 
         // Load background

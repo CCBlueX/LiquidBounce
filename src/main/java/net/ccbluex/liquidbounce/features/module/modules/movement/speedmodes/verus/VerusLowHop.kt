@@ -27,7 +27,7 @@ object VerusLowHop : SpeedMode("VerusLowHop") {
                 }
 
                 airTicks++
-                speed *= 0.98f;
+                speed *= 0.98f
             }
 
             strafe(speed, false)

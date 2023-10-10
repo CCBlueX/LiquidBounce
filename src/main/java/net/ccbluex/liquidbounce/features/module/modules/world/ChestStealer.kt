@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.TickedActions
-import net.ccbluex.liquidbounce.utils.item.isEmpty
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.hasSpaceInInventory
+import net.ccbluex.liquidbounce.utils.inventory.isEmpty
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.inventory.GuiChest
@@ -102,7 +102,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         if (screen !is GuiChest || mc.currentScreen == null) {
             if (delayOnFirst) delayTimer.reset()
             autoCloseTimer.reset()
-            TickedActions.clear(this)
+            TickScheduler.clear()
             return
         }
 
@@ -129,7 +129,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         }
 
         // Is empty?
-        if (!isEmpty(screen) && (!closeOnFull || !fullInventory)) {
+        if (!isEmpty(screen) && (!closeOnFull || hasSpaceInInventory())) {
             autoCloseTimer.reset()
 
             // Randomized
@@ -144,7 +144,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                         if (stack != null && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(
                                 stack, -1
-                            )) && !TickedActions.containsId(slot.slotNumber, this)
+                            )) && slot.slotNumber !in TickScheduler
                         ) items += slot
                     }
 
@@ -152,7 +152,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                         val randomSlot = nextInt(endExclusive = items.size)
                         val slot = items[randomSlot]
 
-                        if (TickedActions.add({ move(screen, slot) }, slot.slotNumber, this)) {
+                        if (TickScheduler.schedule(slot.slotNumber) { move(screen, slot) }) {
                             resetDelay()
                         }
                     }
@@ -167,23 +167,19 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                 val stack = slot.stack
 
                 if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, slot.slotNumber)) {
-                    if (TickedActions.add({ move(screen, slot) }, slot.slotNumber, this)) {
+                    if (TickScheduler.schedule(slot.slotNumber) { move(screen, slot) }) {
                         resetDelay()
                     }
                 }
             }
-        } else if (autoClose && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(
-                nextCloseDelay
-            )
+        } else if (autoClose && screen.inventorySlots.windowId == contentReceived
+            && autoCloseTimer.hasTimePassed(nextCloseDelay)
         ) {
-            if (TickedActions.add({ thePlayer.closeScreen() }, -1, this)) {
+            TickScheduler += {
+                thePlayer.closeScreen()
                 nextCloseDelay = randomDelay(autoCloseMinDelay, autoCloseMaxDelay)
             }
         }
-    }
-
-    override fun onToggle(state: Boolean) {
-        TickedActions.clear(this)
     }
 
     @EventTarget
@@ -201,9 +197,9 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     }
 
     private fun shouldTake(stack: ItemStack?, slot: Int): Boolean {
-        return stack != null && !stack.isEmpty && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(
-            stack, -1
-        )) && !TickedActions.containsId(slot, this)
+        return !stack.isEmpty() && (!onlyItems || stack.item !is ItemBlock)
+                && slot !in TickScheduler
+                && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1))
     }
 
     private fun move(screen: GuiChest, slot: Slot) {
@@ -226,7 +222,4 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
         return true
     }
-
-    private val fullInventory
-        get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemStack::isEmpty) ?: false
 }

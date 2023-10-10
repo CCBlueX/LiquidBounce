@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -41,6 +42,8 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
     private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
 
     private val usingItem by BoolValue("UsingItem", false) { mode == "Vanilla" }
+
+    private val inventory by BoolValue("Inventory", false) { mode == "Vanilla" }
 
     val food by BoolValue("Food", true) { mode == "Vanilla" }
 
@@ -75,7 +78,13 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
             ) < 0.8
 
         if (mode == "Vanilla") {
-            if (!isMoving || mc.thePlayer.isSneaking || blindness && mc.thePlayer.isPotionActive(Potion.blindness) || usingItem && mc.thePlayer.isUsingItem || food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying) || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)) {
+            if (!isMoving || mc.thePlayer.isSneaking
+                || (blindness && mc.thePlayer.isPotionActive(Potion.blindness))
+                || (usingItem && mc.thePlayer.isUsingItem)
+                || (food && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying))
+                || (checkServerSide && (mc.thePlayer.onGround || !checkServerSideGround) && !allDirections && shouldStop)
+                || (inventory && serverOpenInventory)
+            ) {
                 mc.thePlayer.isSprinting = false
                 return
             }

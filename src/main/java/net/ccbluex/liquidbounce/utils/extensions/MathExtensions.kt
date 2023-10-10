@@ -78,3 +78,9 @@ class RangeIterator(private val range: ClosedFloatingPointRange<Double>, private
 }
 operator fun ClosedFloatingPointRange<Double>.iterator() = RangeIterator(this)
 infix fun ClosedFloatingPointRange<Double>.step(step: Double) = RangeIterator(this, step)
+
+/**
+ * Conditionally shuffles an `Iterable`
+ * @param shuffle determines if the returned `Iterable` is shuffled
+ */
+fun <T> Iterable<T>.shuffled(shuffle: Boolean) = toMutableList().apply { if (shuffle) shuffle() }

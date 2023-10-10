@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.login.UserUtils
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.event.ClickEvent
 import net.minecraft.util.ChatComponentText

@@ -33,7 +33,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
     private val mode by
         ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "Glow", "2D", "WireFrame"), "Outline")
 
-    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
     private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
     private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
     private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
@@ -64,8 +64,6 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         try {
-            val mode = mode
-
             if (mode == "Outline") {
                 disableFastRender()
                 OutlineUtils.checkSetupFBO()
@@ -80,15 +78,15 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
 
                 if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
                     drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
-                    if (tileEntity !is TileEntityEnchantmentTable) {
-                        continue
-                    }
-                }
-                when (mode.lowercase()) {
-                    "otherbox", "box" -> drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
 
-                    "2d" -> draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
-                    "outline" -> {
+                    if (tileEntity !is TileEntityEnchantmentTable)
+                        continue
+                }
+                when (mode) {
+                    "OtherBox", "Box" -> drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
+
+                    "2D" -> draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
+                    "Outline" -> {
                         glColor(color)
                         OutlineUtils.renderOne(3F)
                         TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
@@ -103,7 +101,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                         OutlineUtils.setColor(Color.WHITE)
                     }
 
-                    "wireframe" -> {
+                    "WireFrame" -> {
                         glPushMatrix()
                         glPushAttrib(GL_ALL_ATTRIB_BITS)
                         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
@@ -127,11 +125,11 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
             }
             for (entity in mc.theWorld.loadedEntityList) {
                 if (entity is EntityMinecartChest) {
-                    when (mode.lowercase()) {
-                        "otherbox", "box" -> drawEntityBox(entity, Color(0, 66, 255), mode != "OtherBox")
+                    when (mode) {
+                        "OtherBox", "Box" -> drawEntityBox(entity, Color(0, 66, 255), mode != "OtherBox")
 
                         "2d" -> draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
-                        "outline" -> {
+                        "Outline" -> {
                             val entityShadow = mc.gameSettings.entityShadows
                             mc.gameSettings.entityShadows = false
                             glColor(Color(0, 66, 255))
@@ -148,7 +146,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                             mc.gameSettings.entityShadows = entityShadow
                         }
 
-                        "wireframe" -> {
+                        "WireFrame" -> {
                             val entityShadow = mc.gameSettings.entityShadows
                             mc.gameSettings.entityShadows = false
                             glPushMatrix()
@@ -172,6 +170,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                     }
                 }
             }
+
             glColor(Color(255, 255, 255, 255))
             mc.gameSettings.gammaSetting = gamma
         } catch (ignored: Exception) {
@@ -180,44 +179,36 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        val mode = mode.lowercase()
-        val partialTicks = event.partialTicks
-        val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
-        val renderManager = mc.renderManager
-        shader.startDraw(event.partialTicks, glowRenderScale)
+        if (mc.theWorld == null || mode != "Glow")
+            return
 
-        if (mc.theWorld == null) return
+        val renderManager = mc.renderManager
+        GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
         try {
-            val tileEntityMap = hashMapOf<Color, ArrayList<TileEntity>>()
+            mc.theWorld.loadedTileEntityList
+                .groupBy { getColor(it) }
+                .forEach { (color, tileEntities) ->
+                    color ?: return@forEach
 
-            mc.theWorld.loadedTileEntityList.forEach { tileEntity ->
-                val color = getColor(tileEntity) ?: return@forEach
-                if (color !in tileEntityMap) {
-                    tileEntityMap[color] = ArrayList()
+                    GlowShader.startDraw(event.partialTicks, glowRenderScale)
+
+                    for (entity in tileEntities) {
+                        TileEntityRendererDispatcher.instance.renderTileEntityAt(
+                            entity,
+                            entity.pos.x - renderManager.renderPosX,
+                            entity.pos.y - renderManager.renderPosY,
+                            entity.pos.z - renderManager.renderPosZ,
+                            event.partialTicks
+                        )
+                    }
+
+                    GlowShader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
                 }
-
-                tileEntityMap[color]!! += tileEntity
-            }
-
-            tileEntityMap.forEach { (color, tileEntites) ->
-                shader.startDraw(partialTicks, glowRenderScale)
-
-                for (entity in tileEntites) {
-                    TileEntityRendererDispatcher.instance.renderTileEntityAt(
-                        entity,
-                        entity.pos.x - renderManager.renderPosX,
-                        entity.pos.y - renderManager.renderPosY,
-                        entity.pos.z - renderManager.renderPosZ,
-                        partialTicks
-                    )
-                }
-                shader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
-            }
         } catch (ex: Exception) {
             LOGGER.error("An error occurred while rendering all storages for shader esp", ex)
         }
 
-        shader.stopDraw(Color(0, 66, 255), glowRadius, glowFade, glowTargetAlpha)
+       GlowShader.stopDraw(Color(0, 66, 255), glowRadius, glowFade, glowTargetAlpha)
     }
 }

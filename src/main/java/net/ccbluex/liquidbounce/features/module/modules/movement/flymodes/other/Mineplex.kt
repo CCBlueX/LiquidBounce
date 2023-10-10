@@ -15,8 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.*
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.minecraft.init.Blocks
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB

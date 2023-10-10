@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.network.play.client.C01PacketChatMessage

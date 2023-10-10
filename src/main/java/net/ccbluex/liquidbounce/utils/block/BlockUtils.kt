@@ -6,9 +6,7 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.block.Block
-import net.minecraft.block.BlockContainer
-import net.minecraft.block.BlockWorkbench
+import net.minecraft.block.*
 import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.AxisAlignedBB
@@ -44,14 +42,10 @@ object BlockUtils : MinecraftInstance() {
         val state = getState(blockPos) ?: return false
         val block = state.block ?: return false
 
-        return block.canCollideCheck(
-            state,
-            false
-        ) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable && !block.hasTileEntity(state) && isFullBlock(
-            blockPos,
-            state,
-            true
-        ) && mc.theWorld.loadedEntityList.find { it is EntityFallingBlock && it.position == blockPos } == null && block !is BlockContainer && block !is BlockWorkbench
+        return block.canCollideCheck(state, false) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable
+                && !block.hasTileEntity(state) && isFullBlock(blockPos, state, true)
+                && mc.theWorld.loadedEntityList.find { it is EntityFallingBlock && it.position == blockPos } == null
+                && block !is BlockContainer && block !is BlockWorkbench
     }
 
     /**
@@ -71,8 +65,19 @@ object BlockUtils : MinecraftInstance() {
         return box.maxX - box.minX == 1.0 && (box.maxY - box.minY == 1.0 || supportSlabs && box.maxY % 1.0 == 0.0) && box.maxZ - box.minZ == 1.0
     }
 
-    fun isFullBlock(block: Block) =
-        block.blockBoundsMaxX == 1.0 && block.blockBoundsMaxY == 1.0 && block.blockBoundsMaxZ == 1.0
+    fun isFullBlock(block: Block): Boolean {
+        when (block) {
+            // Soul Sand is considered as full block?!
+            is BlockSoulSand -> return false
+
+            // Glass isn't considered as full block?!
+            is BlockGlass, is BlockStainedGlass -> return true
+        }
+
+        // Many translucent or non-full blocks have blockBounds set to 1.0
+        return block.isFullBlock && block.isBlockNormalCube &&
+                block.blockBoundsMaxX == 1.0 && block.blockBoundsMaxY == 1.0 && block.blockBoundsMaxZ == 1.0
+    }
 
     /**
      * Get distance to center of [blockPos]

@@ -3,31 +3,55 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.utils
+package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.minecraft.block.BlockBush
 import net.minecraft.init.Blocks
 import net.minecraft.item.Item
 import net.minecraft.item.ItemBlock
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
+import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.network.play.server.S09PacketHeldItemChange
+import net.minecraft.network.play.server.S2DPacketOpenWindow
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 object InventoryUtils : MinecraftInstance(), Listenable {
 
     // What slot is selected on server-side?
-    var serverSlot = -1
-        private set
+    // TODO: Is this equal to mc.playerController.currentPlayerItem?
+    var serverSlot
+        get() = _serverSlot
+        set(value) {
+            if (value != _serverSlot) {
+                sendPacket(C09PacketHeldItemChange(value))
+
+                _serverSlot = value
+            }
+        }
 
     // Is inventory open on server-side?
-    var serverOpenInventory = false
-        private set
+    var serverOpenInventory
+        get() = _serverOpenInventory
+        set(value) {
+            if (value != _serverOpenInventory) {
+                sendPacket(
+                    if (value) C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT)
+                    else C0DPacketCloseWindow(mc.thePlayer?.openContainer?.windowId ?: 0)
+                )
+
+                _serverOpenInventory = value
+            }
+        }
+
+    // Backing fields
+    private var _serverSlot = 0
+    private var _serverOpenInventory = false
+
+    var isFirstInventoryClick = true
 
     val CLICK_TIMER = MSTimer()
 
@@ -55,22 +79,24 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     fun findItem(startInclusive: Int, endInclusive: Int, item: Item): Int? {
         for (i in startInclusive..endInclusive)
-            if (mc.thePlayer.inventoryContainer.getSlot(i).stack?.item == item)
+            if (mc.thePlayer.openContainer.getSlot(i).stack?.item == item)
                 return i
 
         return null
     }
 
-    fun hasSpaceHotbar(): Boolean {
+    fun hasSpaceInHotbar(): Boolean {
         for (i in 36..44)
-            mc.thePlayer.inventoryContainer.getSlot(i).stack ?: return true
+            mc.thePlayer.openContainer.getSlot(i).stack ?: return true
 
         return false
     }
 
+    fun hasSpaceInInventory() = mc.thePlayer?.inventory?.firstEmptyStack != -1
+
     fun findBlockInHotbar(): Int? {
         val player = mc.thePlayer ?: return null
-        val inventory = player.inventoryContainer
+        val inventory = player.openContainer
 
         return (36..44).filter {
             val stack = inventory.getSlot(it).stack ?: return@filter false
@@ -82,7 +108,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     fun findLargestBlockStackInHotbar(): Int? {
         val player = mc.thePlayer ?: return null
-        val inventory = player.inventoryContainer
+        val inventory = player.openContainer
 
         return (36..44).filter {
             val stack = inventory.getSlot(it).stack ?: return@filter false
@@ -97,33 +123,44 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         if (event.isCancelled) return
 
         when (val packet = event.packet) {
-            is C08PacketPlayerBlockPlacement -> CLICK_TIMER.reset()
+            is C08PacketPlayerBlockPlacement, is C0EPacketClickWindow -> {
+                CLICK_TIMER.reset()
+
+                if (packet is C0EPacketClickWindow)
+                    isFirstInventoryClick = false
+            }
 
             is C16PacketClientStatus ->
                 if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
-                    if (serverOpenInventory) event.cancelEvent()
-                    else serverOpenInventory = true
+                    if (_serverOpenInventory) event.cancelEvent()
+                    else {
+                        isFirstInventoryClick = true
+                        _serverOpenInventory = true
+                    }
                 }
 
-            is C0DPacketCloseWindow, is S2EPacketCloseWindow -> serverOpenInventory = false
+            is C0DPacketCloseWindow, is S2EPacketCloseWindow, is S2DPacketOpenWindow -> {
+                isFirstInventoryClick = false
+                _serverOpenInventory = false
+            }
 
             is C09PacketHeldItemChange -> {
                 // Support for Singleplayer
                 // (client packets get sent and received, duplicates would get cancelled, making slot changing impossible)
                 if (event.eventType == EventState.RECEIVE) return
 
-                if (packet.slotId == serverSlot) event.cancelEvent()
-                else serverSlot = packet.slotId
+                if (packet.slotId == _serverSlot) event.cancelEvent()
+                else _serverSlot = packet.slotId
             }
 
-            is S09PacketHeldItemChange -> serverSlot = packet.heldItemHotbarIndex
+            is S09PacketHeldItemChange -> _serverSlot = packet.heldItemHotbarIndex
         }
     }
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        // Prevent desync
-        serverOpenInventory = false
+        // Prevents desync
+        _serverOpenInventory = false
     }
 
     override fun handleEvents() = true

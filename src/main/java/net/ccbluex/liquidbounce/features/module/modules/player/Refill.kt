@@ -1,54 +1,50 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.InventoryUtils.serverOpenInventory
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.item.hasItemDelayPassed
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.CLICK_TIMER
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
+import net.ccbluex.liquidbounce.utils.inventory.hasItemAgePassed
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C0EPacketClickWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
-import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
 object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val delay by IntegerValue("Delay", 400, 10..1000)
 
-    private val itemDelay by IntegerValue("ItemDelay", 400, 0..1000)
+    private val minItemAge by IntegerValue("MinItemAge", 400, 0..1000)
 
     private val mode by ListValue("Mode", arrayOf("Swap", "Merge"), "Swap")
 
     private val invOpen by BoolValue("InvOpen", false)
     private val simulateInventory by BoolValue("SimulateInventory", false) { !invOpen }
 
-    private val noMove by BoolValue("NoMoveClicks", false)
-    private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
-    private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
-
-    private val timer = MSTimer()
+    private val noMove by InventoryManager.noMoveValue
+    private val noMoveAir by InventoryManager.noMoveAirValue
+    private val noMoveGround by InventoryManager.noMoveGroundValue
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        if (!timer.hasTimePassed(delay))
+    fun onTick(event: TickEvent) {
+        if (!CLICK_TIMER.hasTimePassed(delay))
             return
 
         if (invOpen && mc.currentScreen !is GuiInventory)
             return
 
-        if (noMove && isMoving && if (mc.thePlayer.onGround) noMoveGround else noMoveAir)
+        if (!canClickInventory())
             return
 
         for (slot in 36..44) {
             val stack = mc.thePlayer.inventoryContainer.getSlot(slot).stack ?: continue
-            if (stack.stackSize == stack.maxStackSize || !stack.hasItemDelayPassed(itemDelay)) continue
+            if (stack.stackSize == stack.maxStackSize || !stack.hasItemAgePassed(minItemAge)) continue
 
             when (mode) {
                 "Swap" -> {
@@ -91,18 +87,15 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
         }
 
         if (simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory)
-            sendPacket(C0DPacketCloseWindow(mc.thePlayer.openContainer.windowId))
+            serverOpenInventory = false
     }
 
     fun click(slot: Int, button: Int, mode: Int, stack: ItemStack) {
-        if (simulateInventory && !serverOpenInventory)
-            sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
+        if (simulateInventory) serverOpenInventory = true
 
         sendPacket(
             C0EPacketClickWindow(mc.thePlayer.openContainer.windowId, slot, button, mode, stack,
                 mc.thePlayer.openContainer.getNextTransactionID(mc.thePlayer.inventory))
         )
-
-        timer.reset()
     }
 }

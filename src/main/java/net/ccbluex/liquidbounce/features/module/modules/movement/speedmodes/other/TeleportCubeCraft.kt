@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import kotlin.math.cos
 import kotlin.math.sin
 
