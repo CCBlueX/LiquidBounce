@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 
 object Rotations : Module("Rotations", ModuleCategory.RENDER) {
@@ -48,7 +48,7 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER) {
     /**
      * Rotate when current rotation is not null or special modules which do not make use of RotationUtils like Derp are enabled.
      */
-    fun shouldRotate() = state && (Derp.state || targetRotation != null)
+    fun shouldRotate() = state && (Derp.state || currentRotation != null)
 
     /**
      * Imitate the game's head and body rotation logic
@@ -58,5 +58,5 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER) {
     /**
      * Which rotation should the module use?
      */
-    fun getRotation() = if (Derp.state) serverRotation else targetRotation
+    fun getRotation() = if (Derp.state) serverRotation else currentRotation
 }

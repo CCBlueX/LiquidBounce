@@ -12,14 +12,13 @@ import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -84,7 +83,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
             if (rotations) {
                 setTargetRotation(
                     limitAngleChange(
-                        targetRotation ?: player.rotation,
+                        currentRotation ?: player.rotation,
                         toRotation(nearestPoint, true),
                         nextFloat(minTurnSpeed, maxTurnSpeed)
                     ),
@@ -103,7 +102,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
     fun onTick(event: TickEvent) {
         val player = mc.thePlayer ?: return
 
-        val rotation = targetRotation ?: player.rotation
+        val rotation = currentRotation ?: player.rotation
         val entity = target ?: return
 
         if (!rotations && player.getDistanceToBox(entity.hitBox) <= range || isRotationFaced(

@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.SlowDownEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -21,20 +20,17 @@ import net.minecraft.item.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
-    // Highly customizable values
+    private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "AAC5"), "None")
 
-    val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "AAC5"), "None")
-    
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5"), "None")
+    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5"), "None")
 
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
@@ -55,44 +51,58 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
         if (!isMoving) {
             return
         }
-        
-        if (heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk && thePlayer.isUsingItem()) {
 
+        if (heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk && thePlayer.isUsingItem) {
             when (consumePacket.lowercase()) {
-                "none" -> {
-                    null
-                }
-
                 "aac5" -> {
-                    mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f))
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
                 }
 
                 else -> {
-                    null
+                    return
                 }
-
             }
         }
-            
-        if (heldItem.item is ItemSword && thePlayer.isBlocking()) {
 
+        if (heldItem.item is ItemSword && thePlayer.isBlocking) {
             when (swordMode.lowercase()) {
                 "none" -> {
-                    null
+                    return
                 }
 
                 "ncp" -> {
                     when (event.eventState) {
                         EventState.PRE ->
-                            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN))
+                            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+
                         EventState.POST ->
-                            sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
+                            sendPacket(
+                                C08PacketPlayerBlockPlacement(
+                                    BlockPos(-1, -1, -1),
+                                    255,
+                                    thePlayer.heldItem,
+                                    0f,
+                                    0f,
+                                    0f
+                                )
+                            )
+
+                        else -> {}
                     }
                 }
-                
+
                 "aac5" -> {
                     if (event.eventState == EventState.POST) {
-                        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f))
+                        sendPacket(
+                            C08PacketPlayerBlockPlacement(
+                                BlockPos(-1, -1, -1),
+                                255,
+                                thePlayer.heldItem,
+                                0f,
+                                0f,
+                                0f
+                            )
+                        )
                     }
                 }
             }

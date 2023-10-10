@@ -26,7 +26,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        targetRotation?.let { rotation ->
+        currentRotation?.let { rotation ->
             if (keepLength > 0) {
                 keepLength--
             } else {
@@ -34,7 +34,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     resetRotation()
                 } else {
                     val speed = RandomUtils.nextFloat(speedForReset.first, speedForReset.second)
-                    targetRotation = limitAngleChange(rotation, mc.thePlayer.rotation, speed).fixedSensitivity()
+                    currentRotation = limitAngleChange(rotation, mc.thePlayer.rotation, speed).fixedSensitivity()
                 }
             }
         }
@@ -53,7 +53,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             return
         }
 
-        targetRotation?.let {
+        currentRotation?.let {
             it.applyStrafeToPlayer(event, strict)
             event.cancelEvent()
         }
@@ -72,7 +72,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             return
         }
 
-        targetRotation?.let {
+        currentRotation?.let {
             packet.yaw = it.yaw
             packet.pitch = it.pitch
         }
@@ -93,7 +93,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     var speedForReset = 0f to 0f
     var angleThresholdForReset = 0f
 
-    var targetRotation: Rotation? = null
+    var currentRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
 
     var keepCurrentRotation = false
@@ -264,7 +264,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     if (vecDist <= distance) {
                         if (throughWalls || isVisible(vec)) {
                             val currentVec = VecRotation(vec, rotation)
-                            val rotationToCompare = if (random) randomRotation else targetRotation ?: serverRotation
+                            val rotationToCompare = if (random) randomRotation else currentRotation ?: serverRotation
 
                             if (vecRotation == null || getRotationDifference(
                                     rotation, rotationToCompare
@@ -388,7 +388,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     ) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) return
 
-        targetRotation = rotation.fixedSensitivity()
+        currentRotation = rotation.fixedSensitivity()
 
         this.strafe = strafe
         this.strict = strict
@@ -399,14 +399,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     fun resetRotation() {
         keepLength = 0
-        targetRotation?.let { rotation ->
+        currentRotation?.let { rotation ->
             mc.thePlayer?.let {
                 it.rotationYaw = rotation.yaw + getAngleDifference(it.rotationYaw, rotation.yaw)
                 it.renderArmYaw = it.rotationYaw
                 it.prevRenderArmYaw = it.rotationYaw
             }
         }
-        targetRotation = null
+        currentRotation = null
         strafe = false
         strict = false
     }

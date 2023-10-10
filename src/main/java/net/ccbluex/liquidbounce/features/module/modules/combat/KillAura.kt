@@ -26,13 +26,13 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
@@ -167,10 +167,18 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val maxOwnHurtTime by IntegerValue("MaxOwnHurtTime", 3, 0..10) { autoBlock != "Off" && smartAutoBlock }
 
     // Don't block if target isn't looking at you
-    private val maxDirectionDiff by FloatValue("MaxOpponentDirectionDiff", 60f, 30f..180f) { autoBlock != "Off" && smartAutoBlock }
+    private val maxDirectionDiff by FloatValue(
+        "MaxOpponentDirectionDiff",
+        60f,
+        30f..180f
+    ) { autoBlock != "Off" && smartAutoBlock }
 
     // Don't block if target is swinging an item and therefore cannot attack
-    private val maxSwingProgress by IntegerValue("MaxOpponentSwingProgress", 1, 0..5) { autoBlock != "Off" && smartAutoBlock }
+    private val maxSwingProgress by IntegerValue(
+        "MaxOpponentSwingProgress",
+        1,
+        0..5
+    ) { autoBlock != "Off" && smartAutoBlock }
     private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock != "Off" && releaseAutoBlock }
 
     // Turn Speed
@@ -699,7 +707,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         ) ?: return false
 
         // Get our current rotation. Otherwise, player rotation.
-        val currentRotation = targetRotation ?: mc.thePlayer.rotation
+        val currentRotation = currentRotation ?: mc.thePlayer.rotation
 
         var limitedRotation = limitAngleChange(
             currentRotation, rotation, nextFloat(minTurnSpeed, maxTurnSpeed)
@@ -740,7 +748,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             return
         }
 
-        val currentRotation = targetRotation ?: mc.thePlayer.rotation
+        val currentRotation = currentRotation ?: mc.thePlayer.rotation
 
         if (raycast) {
             val raycastedEntity =
@@ -778,7 +786,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
                 val boundingBox = interactEntity.hitBox
 
-                val (yaw, pitch) = targetRotation ?: mc.thePlayer.rotation
+                val (yaw, pitch) = currentRotation ?: mc.thePlayer.rotation
 
                 val vec = RotationUtils.getVectorForRotation(Rotation(yaw, pitch))
 

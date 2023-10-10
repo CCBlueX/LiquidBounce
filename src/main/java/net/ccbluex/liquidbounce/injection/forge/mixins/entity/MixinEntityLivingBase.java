@@ -39,6 +39,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Shadow
+    public float rotationYawHead;
+    @Shadow
+    protected boolean isJumping;
+    @Shadow
+    private int jumpTicks;
+
+    @Shadow
     protected abstract float getJumpUpwardsMotion();
 
     @Shadow
@@ -46,12 +53,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Shadow
     public abstract boolean isPotionActive(Potion potionIn);
-
-    @Shadow
-    private int jumpTicks;
-
-    @Shadow
-    protected boolean isJumping;
 
     @Shadow
     public void onLivingUpdate() {
@@ -68,9 +69,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Shadow
     protected abstract void updateAITick();
-
-    @Shadow
-    public float rotationYawHead;
 
     /**
      * @author CCBlueX
@@ -90,9 +88,9 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
             float fixedYaw = this.rotationYaw;
 
             final RotationUtils rotationUtils = RotationUtils.INSTANCE;
-            final Rotation targetRotation = rotationUtils.getTargetRotation();
-            if (targetRotation != null && rotationUtils.getStrafe()) {
-                fixedYaw = targetRotation.getYaw();
+            final Rotation currentRotation = rotationUtils.getCurrentRotation();
+            if (currentRotation != null && rotationUtils.getStrafe()) {
+                fixedYaw = currentRotation.getYaw();
             }
 
             final Sprint sprint = Sprint.INSTANCE;
