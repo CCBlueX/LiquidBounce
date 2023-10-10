@@ -51,6 +51,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
     private val renderCrosshair by boolean("RenderCrosshair", false)
     private val renderHand by boolean("RenderHand", true)
     private val disableRotations by boolean("DisableRotations", true)
+    private val resetRotation by boolean("ResetRotation", true)
 
     private var pos = Vec3d.ZERO
     private var lastPos = Vec3d.ZERO
@@ -138,6 +139,14 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
         pos += if (increase) newPos else newPos - pos
         if (!lastPosBeforePos) {
             lastPos = pos
+        }
+    }
+
+    override fun disable() {
+        if(resetRotation){
+            val rotation = ModuleRotations.displayRotations()
+            player.yaw = rotation.yaw
+            player.pitch = rotation.pitch
         }
     }
 
