@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -41,7 +40,6 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
-import net.minecraft.entity.ai.brain.WalkTarget
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -68,6 +66,10 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
     }
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+
+    // the ticks to wait after interacting with something
+
+    private val interactDelay by intRange("InteractDelay", 2..3, 1..15)
 
 //    private val extraSearchRange by float("extraSearchRange", 0F, 0F..3F)
 //    private val breakDelay by intRange("BreakDelay", 0..1, 1..15)
@@ -251,7 +253,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         // disable the module and return if the inventory is full and the setting for disabling the module is enabled
         if(disableOnFullInventory && !hasInventorySpace()){
-            notification("Inventory is Full", "autoFarm has been disabled", NotificationEvent.Severity.ERROR)
+            notification("Inventory is Full", "AutoFarm has been disabled", NotificationEvent.Severity.ERROR)
             disable()
             enabled = false
             return@repeatable
@@ -326,14 +328,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
+            wait(interactDelay.random())
             return@repeatable
 
         } else {
             val pos = blockPos.offset(rayTraceResult.side).down()
             val state = pos.getState()?: return@repeatable
-            chat(state.toString())
             if(isFarmBlockWithAir(state, pos)){
-                chat("hi")
                 val item =
                     findClosestItem(
                         if(state.block is FarmlandBlock) {
@@ -346,6 +347,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if(item != null){
                     SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                     placeCrop(rayTraceResult)
+                    wait(interactDelay.random())
+
                 }
             }
         }
