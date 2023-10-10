@@ -66,8 +66,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Shadow
     protected abstract boolean isWalking();
 
-    @Shadow public boolean inSneakingPose;
-
     /**
      * Hook entity tick event
      */
