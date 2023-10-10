@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.dot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.step
@@ -14,6 +15,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import kotlin.jvm.optionals.getOrNull
+import kotlin.math.sign
 
 fun raytraceBlock(
     eyes: Vec3d,
@@ -154,6 +156,14 @@ class BoxVisibilityPredicate(private val expectedTarget: Box) : VisibilityPredic
 
 fun ClosedRange<Double>.shrinkBy(value: Double) = (start + value)..(endInclusive - value)
 
+val sidesToCheck = arrayOf(
+//    Direction.DOWN, // first down because it is the most likely that you can place a block on top a the one below
+    Direction.NORTH, // then the sides
+    Direction.SOUTH,
+    Direction.WEST,
+    Direction.EAST,
+    Direction.UP // last and least up because it is the most unlikely place to be able to place a block on
+    )
 fun raytracePlaceBlock(
     eyes: Vec3d,
     pos: BlockPos,
@@ -164,57 +174,113 @@ fun raytracePlaceBlock(
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
     val shapeContext = ShapeContext.of(mc.player)
-    val posBellow = pos.down()
-    val offset = Vec3d(posBellow.x.toDouble(), posBellow.y.toDouble(), posBellow.z.toDouble())
-    val shapeBellow = posBellow.getState()?.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))?.let { shape ->
-        for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
-            val box = boxShape.offset(offset)
-            val visibilityPredicate = BoxVisibilityPredicate(box)
+    val player = mc.player
+    val eyeOffsetFromBlock = pos.toCenterPos() - eyes
+    for (side in sidesToCheck) {
+        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, 0.5) // the difference between the eyes and the center of the face
+        val dotProduct = side.vector.x * eyeOffsetFromFace.x + side.vector.y * eyeOffsetFromFace.y + side.vector.z * eyeOffsetFromFace.z
+        if(dotProduct <= 0) continue // we are behind the face
 
-            val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
+        val newPos = pos.offset(side)
 
-            val nearestSpot =
-                Vec3d(
-                    eyes.x.coerceIn((box.minX..box.maxX).shrinkBy(0.05)),
-                    box.maxY,
-                    eyes.z.coerceIn((box.minZ..box.maxZ).shrinkBy(0.05)),
-                )
-            chat(visibilityPredicate.isVisible(eyes, nearestSpot).toString())
+        val offset = Vec3d(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())
+        newPos.getState()?.getOutlineShape(mc.world, pos, ShapeContext.of(player))?.let { shape ->
+            for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
+                val box = boxShape.offset(offset)
+                val visibilityPredicate = BoxVisibilityPredicate(box)
 
-            considerSpot(
-                nearestSpot,
-                box,
-                eyes,
-                visibilityPredicate,
-                rangeSquared,
-                wallsRangeSquared,
-                nearestSpot,
-                bestRotationTracker,
-            )
+                val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
 
-            for (x in 0.05..0.95 step 0.1){
-                for (z in 0.05..0.95 step 0.1){
-                    val spot =
-                        Vec3d(
-                            box.minX + (box.maxX - box.minX) * x,
-                            box.maxY,
-                            box.minZ + (box.maxZ - box.minZ) * z,
-                        )
-                    considerSpot(
-                        spot,
-                        box,
-                        eyes,
-                        visibilityPredicate,
-                        rangeSquared,
-                        wallsRangeSquared,
-                        spot,
-                        bestRotationTracker,
+                val nearestSpot =
+                    Vec3d(
+                        when(side) {
+                            Direction.WEST -> box.maxX
+                            Direction.EAST -> box.minX
+                            else -> eyes.x.coerceIn((box.minX..box.maxX).shrinkBy(0.05))
+                        },
+                        when(side) {
+                            Direction.DOWN -> box.maxY
+                            Direction.UP -> box.minY
+                            else -> eyes.y.coerceIn((box.minY..box.maxY).shrinkBy(0.05))
+                        },
+                        when(side) {
+                            Direction.DOWN -> box.maxZ
+                            Direction.UP -> box.minZ
+                            else -> eyes.z.coerceIn((box.minZ..box.maxZ).shrinkBy(0.05))
+                        }
                     )
+                chat(visibilityPredicate.isVisible(eyes, nearestSpot).toString())
 
+//                considerSpot(
+//                    nearestSpot,
+//                    box,
+//                    eyes,
+//                    visibilityPredicate,
+//                    rangeSquared,
+//                    wallsRangeSquared,
+//                    nearestSpot,
+//                    bestRotationTracker,
+//                )
+                chat(bestRotationTracker.bestVisible.toString())
+
+                for (a in 0.05..0.95 step 0.1){
+                    for (b in 0.05..0.95 step 0.1){
+
+
+                        val spot =
+                        Vec3d(
+                            when(side) {
+                                Direction.WEST -> box.maxX
+                                Direction.EAST -> box.minX
+                                else -> box.minX + (box.maxX - box.minX) *
+                                    when(side.axis) {
+                                        Direction.Axis.Z -> a
+                                        else -> b
+                                    }
+                            },
+                            when(side) {
+                                Direction.DOWN -> box.maxY
+                                Direction.UP -> box.minY
+                                else -> box.minY + (box.maxY - box.minY) *
+                                    when(side.axis) {
+                                        Direction.Axis.X -> a
+                                        else -> b
+                                    }
+                            },
+                            when(side) {
+                                Direction.NORTH -> box.maxZ
+                                Direction.SOUTH -> box.minZ
+                                else -> box.minZ + (box.maxZ - box.minZ)  *
+                                    when(side.axis) {
+                                        Direction.Axis.Y -> a
+                                        else -> b
+                                    }
+                            }
+                        )
+                        considerSpot(
+                            spot,
+                            box,
+                            eyes,
+                            visibilityPredicate,
+                            rangeSquared,
+                            wallsRangeSquared,
+                            spot,
+                            bestRotationTracker,
+                        )
+
+                    }
                 }
-            }
-            return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
+                bestRotationTracker.bestInvisible?.let {
+                    return it // if we found a point we can place a block on, on this face there is no need to look at the others
+                }
 
+
+                bestRotationTracker.bestVisible?.let {
+                    return it
+                }
+//                return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
+
+            }
         }
     }
 

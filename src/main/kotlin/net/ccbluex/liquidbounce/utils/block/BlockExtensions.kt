@@ -28,6 +28,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
@@ -41,17 +43,15 @@ fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance
 /**
  * Search blocks around the player in a cuboid
  */
-inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+inline fun searchBlocksInCuboid(a: Int, eyes: Vec3d, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
-    val thePlayer = mc.player ?: return blocks
-
-    for (x in a downTo -a + 1) {
-        for (y in a downTo -a + 1) {
-            for (z in a downTo -a + 1) {
-                val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
+//    val (eyeX, eyeY, eyeZ) = Triple(eyes.x.roundToInt(), eyes.y.roundToInt(), eyes.z.roundToInt())
+    for (x in a downTo -a) {
+        for (y in a downTo -a) {
+            for (z in a downTo -a) {
+                val blockPos = BlockPos(floor(eyes.x).toInt() + x, floor(eyes.y).toInt() + y, floor(eyes.z).toInt() + z)
                 val state = blockPos.getState() ?: continue
-
                 if (!filter(blockPos, state)) {
                     continue
                 }

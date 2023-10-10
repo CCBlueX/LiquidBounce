@@ -307,51 +307,46 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
+
             return@repeatable
+
         }
 
         val blockPos = rayTraceResult.blockPos
 
         val state = rayTraceResult.blockPos.getState() ?: return@repeatable
-        if(isTargeted(
-                state,
-                blockPos
-            )){
-
-            if (!state.isAir) {
-                if(fortune){
-                    findBestItem (1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
-                        ?.let { (slot, _) ->
-                            SilentHotbar.selectSlotSilently(this, slot, 2)
-                        } // swap to a fortune item to increase drops
-                }
-                val direction = rayTraceResult.side
-                if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
-                    player.swingHand(Hand.MAIN_HAND)
-                }
-                return@repeatable
+        if(isTargeted(state, blockPos)){
+            if(fortune){
+                findBestItem (1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
+                    ?.let { (slot, _) ->
+                        SilentHotbar.selectSlotSilently(this, slot, 2)
+                    } // swap to a fortune item to increase drops
             }
-        } else if(isFarmBlockWithAir(
-                state,
-                blockPos.offset(rayTraceResult.side).down())){
-            val item =
-                findClosestItem(
-                    if(state.block is FarmlandBlock) {
-                        itemsForFarmland
-                    } else {
-                        itemsForSoulsand
-                    }
-                )
+            val direction = rayTraceResult.side
+            if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
+                player.swingHand(Hand.MAIN_HAND)
+            }
+            return@repeatable
 
-            if(item != null){
-                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
-                placeCrop(rayTraceResult)
+        } else {
+            val pos = blockPos.offset(rayTraceResult.side).down()
+            val state = pos.getState()?: return@repeatable
+            chat(state.toString())
+            if(isFarmBlockWithAir(state, pos)){
+                chat("hi")
+                val item =
+                    findClosestItem(
+                        if(state.block is FarmlandBlock) {
+                            itemsForFarmland
+                        } else {
+                            itemsForSoulsand
+                        }
+                    )
 
-                if(Walk.toReplace){
-                    farmLandBlocks.remove(Vec3d.ofCenter(rayTraceResult.blockPos.offset(rayTraceResult.side)))
+                if(item != null){
+                    SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
+                    placeCrop(rayTraceResult)
                 }
-
-
             }
         }
 
@@ -441,7 +436,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         // searches for any blocks within the radius that need to be destroyed, such as crops.
         // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on
-        val blocksToBreak = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val blocksToBreak = searchBlocksInCuboid(radius.toInt(), eyesPos) { pos, state ->
             !state.isAir && isTargeted(state, pos) && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
@@ -454,7 +449,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos,
                 state,
-                range = range.toDouble() - 0.05,
+                range = range.toDouble(),
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
@@ -472,7 +467,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         if(!allowFarmland && !allowSoulsand) return
         val blocksToPlace =
-            searchBlocksInCuboid(radius.toInt()) { pos, state ->
+            searchBlocksInCuboid(radius.toInt(), eyesPos) { pos, state ->
                 !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
                 && getNearestPoint(
                     eyesPos,
@@ -485,7 +480,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos.up(),
                 state,
-                range = range.toDouble() - 0.05,
+                range = range.toDouble(),
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
@@ -541,9 +536,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     override fun enable() {
 //        ChunkScanner.subscribe(ReadyBlockTracker)
         ChunkScanner.subscribe(BlockTracker)
-        for (dir in Direction.values()){
-            chat(dir.toString())
-        }
     }
 
     override fun disable() {
@@ -559,38 +551,41 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             val block = state.block
-            if(block is FarmlandBlock) {
-                if(hasAirAbove(pos)){
-                    return TrackedState.Farmland
-                }
-            } else if(block is SoulSandBlock){
-                if(hasAirAbove(pos)){
-                    return TrackedState.Soulsand
-                }
-            } else {
+//            if(block is FarmlandBlock && hasAirAbove(pos))
+//                return TrackedState.Farmland
+//
+//            if(block is SoulSandBlock && hasAirAbove(pos))
+//                return TrackedState.Soulsand
 
-                val blockBellow = pos.down().getState()?.block
+            if (isTargeted(state, pos))
+                return TrackedState.Destroy
 
-                if(blockBellow is FarmlandBlock){
-                    val targetBlockPos = TargetBlockPos(pos.down())
-                    if(state.isAir){
-                        this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
-                        return null
-                    } else {
-                        this.trackedBlockMap.remove(targetBlockPos)
-                    }
-                } else if(blockBellow is SoulSandBlock){
-                    val targetBlockPos = TargetBlockPos(pos.down())
-                    if(state.isAir){
-                        this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
-                        return null
-                    } else {
-                        this.trackedBlockMap.remove(targetBlockPos)
-                    }
-                }
 
-                if (isTargeted(state, pos)) return TrackedState.Destroy
-            }
+//            val stateBellow = pos.down().getState() ?: return null
+//
+//            if(stateBellow.isAir) return null
+//
+//            val blockBellow = stateBellow.block
+//
+//            if(blockBellow is FarmlandBlock){
+//                val targetBlockPos = TargetBlockPos(pos.down())
+//                if(state.isAir){
+//                    this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
+//                    return null
+//                } else {
+//                    this.trackedBlockMap.remove(targetBlockPos)
+//                }
+//            } else if(blockBellow is SoulSandBlock){
+//                val targetBlockPos = TargetBlockPos(pos.down())
+//                if(state.isAir){
+//                    this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
+//                    return null
+//                } else {
+//                    this.trackedBlockMap.remove(targetBlockPos)
+//                }
+//            }
+
+
             return null
 
 
