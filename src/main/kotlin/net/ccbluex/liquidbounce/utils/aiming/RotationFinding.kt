@@ -154,7 +154,11 @@ class BoxVisibilityPredicate(private val expectedTarget: Box) : VisibilityPredic
     }
 }
 
-fun ClosedRange<Double>.shrinkBy(value: Double) = (start + value)..(endInclusive - value)
+fun ClosedRange<Double>.shrinkBy(value: Double): ClosedFloatingPointRange<Double> {
+    val dif = endInclusive - start
+    if(dif < value) return (dif / 2)..(dif / 2)
+    return (start + value)..(endInclusive - value)
+}
 
 val sidesToCheck = arrayOf(
 //    Direction.DOWN, // first down because it is the most likely that you can place a block on top a the one below
@@ -173,18 +177,18 @@ fun raytracePlaceBlock(
 ): VecRotation? {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
-    val shapeContext = ShapeContext.of(mc.player)
     val player = mc.player
+    val shapeContext = ShapeContext.of(player)
     val eyeOffsetFromBlock = pos.toCenterPos() - eyes
     for (side in sidesToCheck) {
-        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, 0.5) // the difference between the eyes and the center of the face
+        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, 0.45) // the difference between the eyes and the center of the face. using 0.45 instead of 0.5 to avoid too narrow angles
         val dotProduct = side.vector.x * eyeOffsetFromFace.x + side.vector.y * eyeOffsetFromFace.y + side.vector.z * eyeOffsetFromFace.z
         if(dotProduct <= 0) continue // we are behind the face
 
         val newPos = pos.offset(side)
 
         val offset = Vec3d(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())
-        newPos.getState()?.getOutlineShape(mc.world, pos, ShapeContext.of(player))?.let { shape ->
+        newPos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
             for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
                 val box = boxShape.offset(offset)
                 val visibilityPredicate = BoxVisibilityPredicate(box)

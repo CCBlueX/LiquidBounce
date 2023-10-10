@@ -452,7 +452,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos,
                 state,
-                range = range.toDouble(),
+                range = range.toDouble() - 0.05,
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
@@ -483,7 +483,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos.up(),
                 state,
-                range = range.toDouble(),
+                range = range.toDouble() - 0.05,
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
