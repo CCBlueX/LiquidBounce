@@ -63,7 +63,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             withColor(Color4b.WHITE) {
-                drawLineStrip(eyeVector, eyeVector + Vec3(serverRotation.rotationVec * 2.0))
+                drawLineStrip(eyeVector, eyeVector + Vec3(serverRotation.rotationVec * 100.0))
             }
         }
     }
@@ -71,12 +71,15 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     /**
      * Should server-side rotations be shown?
      */
-    fun shouldDisplayRotations(): Boolean {
-        val priority = ModuleFreeCam.shouldDisableRotations()
+    fun shouldDisplayRotations() = shouldSendCustomRotation() || ModuleFreeCam.shouldDisableRotations()
 
+    /**
+     * Should we even send a rotation if we use freeCam
+     */
+    fun shouldSendCustomRotation(): Boolean {
         val special = arrayOf(ModuleDerp).any { it.enabled }
 
-        return priority || enabled && (RotationManager.currentRotation != null || special)
+        return RotationManager.currentRotation != null || special
     }
 
     /**
