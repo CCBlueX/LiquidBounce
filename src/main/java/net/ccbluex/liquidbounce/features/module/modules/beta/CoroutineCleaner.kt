@@ -81,14 +81,14 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 	// Compact multiple small stacks into one to free up inventory space
 	suspend fun compactStacks() {
-		if (!mergeStacks || !shouldExecute())
+		if (!mergeStacks || !shouldOperate())
 			return
 
 		val thePlayer = mc.thePlayer ?: return
 
 		// Loop multiple times until no clicks were scheduled
 		while (true) {
-			if (!shouldExecute()) return
+			if (!shouldOperate()) return
 
 			val stacks = thePlayer.openContainer.inventory
 
@@ -118,7 +118,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			var hasMerged = false
 
 			for (index in indicesToDoubleClick) {
-				if (!shouldExecute()) return
+				if (!shouldOperate()) return
 
 				if (index in TickScheduler) continue
 
@@ -138,13 +138,13 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 			// This part isn't fully instant because of the complex vanilla merging behaviour, stack size changes and so on
 			// Waits a tick to see how the stacks got merged
-			waitUntil { TickScheduler.isEmpty() }
+			waitUntil(TickScheduler::isEmpty)
 		}
 	}
 
 	// Sort hotbar (with useful items without even dropping bad items first)
 	suspend fun sortHotbar() {
-		if (!sort || !shouldExecute()) return
+		if (!sort || !shouldOperate()) return
 
 		val thePlayer = mc.thePlayer ?: return
 
@@ -153,7 +153,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			val isRightType = SORTING_TARGETS[value.get()] ?: continue
 
 			// Stop if player violates invopen or nomove checks
-			if (!shouldExecute()) return
+			if (!shouldOperate()) return
 
 			val stacks = thePlayer.openContainer.inventory
 
@@ -184,18 +184,18 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			}
 		}
 
-		waitUntil { TickScheduler.isEmpty() }
+		waitUntil(TickScheduler::isEmpty)
 	}
 
 	// Drop bad items to free up inventory space
 	suspend fun dropGarbage() {
-		if (!drop || !shouldExecute()) return
+		if (!drop || !shouldOperate()) return
 
 		val thePlayer = mc.thePlayer ?: return
 
 		for (index in thePlayer.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
 			// Stop if player violates invopen or nomove checks
-			if (!shouldExecute()) return
+			if (!shouldOperate()) return
 
 			if (index in TickScheduler)
 				continue
@@ -211,12 +211,15 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 				click(index, 1, 4)
 		}
 
-		waitUntil { TickScheduler.isEmpty() }
+		waitUntil(TickScheduler::isEmpty)
 	}
 
-	private suspend fun shouldExecute(): Boolean {
+	private suspend fun shouldOperate(): Boolean {
 		while (true) {
 			if (!state)
+				return false
+
+			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
 				return false
 
 			if (mc.thePlayer?.openContainer?.windowId != 0)

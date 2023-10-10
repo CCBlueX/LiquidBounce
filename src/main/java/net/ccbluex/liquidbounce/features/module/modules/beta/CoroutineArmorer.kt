@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.inventory.GuiInventory
-import net.minecraft.item.ItemArmor
+import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
@@ -59,7 +59,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 	val onlyWhenNoScreen by BoolValue("OnlyWhenNoScreen", false) { hotbar }
 
 	suspend fun equipFromHotbar() {
-		if (!shouldExecute(onlyHotbar = true))
+		if (!shouldOperate(onlyHotbar = true))
 			return
 
 		val thePlayer = mc.thePlayer ?: return
@@ -67,7 +67,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 		var hasClickedHotbar = false
 
 		for (hotbarIndex in 0..8) {
-			if (!shouldExecute(onlyHotbar = true))
+			if (!shouldOperate(onlyHotbar = true))
 				return
 
 			// Don't right-click to equip items while inventory is open when value onlyWhenNoScreen is enabled
@@ -76,17 +76,17 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 
 			val stacks = thePlayer.openContainer.inventory
 
-			val bestArmorSet = getBestArmorSet(stacks) ?: return
-
 			val stack = stacks.getOrNull(hotbarIndex + 36) ?: continue
+
+			val bestArmorSet = getBestArmorSet(stacks) ?: return
 
 			if (stack !in bestArmorSet)
 				continue
 
-			val equippedStack = stacks[(stack.item as ItemArmor).armorType + 5]
+			val armorPosition = getArmorPosition(stack) - 1
 
 			// If armor slot isn't occupied, right click to equip
-			if (equippedStack == null) {
+			if (thePlayer.getCurrentArmor(armorPosition) == null) {
 				hasClickedHotbar = true
 
 				val equippingAction = {
@@ -96,12 +96,9 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 						C08PacketPlayerBlockPlacement(stack)
 					)
 
-					// TODO: Still clicks repetitively, probably because openContainer gets updated after some ticks?
 					// Instantly update inventory on client-side to prevent repetitive clicking because of ping
-					/*
-					thePlayer.inventory.armorInventory[abs((stack.item as ItemArmor).armorType - 3)] = stack
+					thePlayer.inventory.armorInventory[armorPosition] = stack
 					thePlayer.inventory.mainInventory[hotbarIndex] = null
-					*/
 				}
 
 				if (delayedSlotSwitch)
@@ -113,21 +110,24 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 			}
 		}
 
-		waitUntil { TickScheduler.isEmpty() }
+		// Not really needed to bypass
+		delay(randomDelay(minDelay, maxDelay).toLong())
 
-		// Sync selected slot
+		waitUntil(TickScheduler::isEmpty)
+
+		// Sync selected slot next tick
 		if (hasClickedHotbar)
 			TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
 	}
 
 	suspend fun equipFromInventory() {
-		if (!shouldExecute())
+		if (!shouldOperate())
 			return
 
 		val thePlayer = mc.thePlayer ?: return
 
 		for (armorType in 0..3) {
-			if (!shouldExecute())
+			if (!shouldOperate())
 				return
 
 			val stacks = thePlayer.openContainer.inventory
@@ -183,7 +183,7 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 		}
 
 		// Wait till all scheduled clicks were sent
-		waitUntil { TickScheduler.isEmpty() }
+		waitUntil(TickScheduler::isEmpty)
 	}
 
 	fun equipFromHotbarInChest(hotbarIndex: Int?, stack: ItemStack) {
@@ -197,9 +197,12 @@ object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
 		)
 	}
 
-	private suspend fun shouldExecute(onlyHotbar: Boolean = false): Boolean {
+	private suspend fun shouldOperate(onlyHotbar: Boolean = false): Boolean {
 		while (true) {
 			if (!state)
+				return false
+
+			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
 				return false
 
 			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if onlyWhenNoScreen is disabled)

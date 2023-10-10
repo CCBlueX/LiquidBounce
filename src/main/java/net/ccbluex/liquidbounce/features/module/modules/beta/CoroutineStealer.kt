@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner.canBeSortedTo
 import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner.isStackUseful
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner.toHotbarIndex
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
@@ -29,6 +28,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.gui.inventory.GuiChest
+import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
 import net.minecraft.item.ItemArmor
@@ -79,9 +79,12 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
     private var stacks = emptyList<ItemStack?>()
 
-    private suspend fun shouldExecute(): Boolean {
+    private suspend fun shouldOperate(): Boolean {
         while (true) {
             if (!state)
+                return false
+
+            if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
                 return false
 
             if (mc.currentScreen !is GuiChest)
@@ -108,7 +111,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
         val screen = mc.currentScreen ?: return
 
-        if (screen !is GuiChest || !shouldExecute())
+        if (screen !is GuiChest || !shouldOperate())
             return
 
         // Check if player isn't holding a compass and browsing navigation gui
@@ -125,7 +128,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
         // Go through the chest multiple times, till there are no useful items anymore
         while (true) {
-            if (!shouldExecute())
+            if (!shouldOperate())
                 return
 
             val sortBlacklist = BooleanArray(9)
@@ -176,7 +179,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
 
             run scheduler@ {
                 usefulItems.forEachIndexed { index, (slot, stack, sortableTo) ->
-                    if (!shouldExecute()) {
+                    if (!shouldOperate()) {
                         TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
                         return
                     }
@@ -185,24 +188,24 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                         // Check if the chest has any empty slot
                         val hasChestEmptySlot = stacks.dropLast(36).any { it == null }
 
-                        if (!hasChestEmptySlot)
-                            return@scheduler
-
                         // If the item is supposed to be sorted, put the stack that occupies its slot into chest, else find first garbage item
-                        var indexToMoveToChest = sortableTo?.plus(stacks.size - 9)
+                        var garbageIndex = sortableTo?.plus(stacks.size - 9)
 
-                        if (indexToMoveToChest == null) {
+                        if (garbageIndex == null) {
                             val garbageInventoryIndex = stacks.takeLast(36)
                                 .indexOfLast { CoroutineCleaner.state && !isStackUseful(it, stacks) }
 
                             if (garbageInventoryIndex != -1)
-                                indexToMoveToChest = stacks.size - 36 + garbageInventoryIndex
+                                // Convert index in player's inventory to index of the whole open container
+                                garbageIndex = stacks.size - 36 + garbageInventoryIndex
                         }
 
-                        indexToMoveToChest ?: return@scheduler
+                        garbageIndex ?: return@scheduler
 
                         // Shift + left-click bad item from inventory into chest to free up space
-                        TickScheduler.scheduleClick(indexToMoveToChest, 0, 1)
+                        if (hasChestEmptySlot) TickScheduler.scheduleClick(garbageIndex, 0, 1)
+                        // Drop bad item from inventory when there is no space
+                        else TickScheduler.scheduleClick(garbageIndex, 1, 4)
 
                         delay(randomDelay(minDelay, maxDelay).toLong())
                     }
@@ -210,6 +213,7 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                     hasTaken = true
 
                     // TODO: If armor can be equipped from hotbar, but all slots are occupied, sort it to slot with useless item or not sorted item and equip (if the item was useful or sorted, sort it back in the end)
+                    // this is kinda finished ^
 
                     // TODO: might schedule clicks that exceed inventory space at low delays, it will notice that it doesn't have space in inventory next tick, when the scheduled click gets executed
                     // If target is sortable to a hotbar slot, steal and sort it at the same time, else shift + left-click
@@ -217,14 +221,20 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
                         progress = (index + 1) / usefulItems.size.toFloat()
 
                         // Try to equip armor piece from hotbar 1 tick after stealing it
-                        if (stack.item is ItemArmor) {
+                        run equipArmor@ {
+                            val item = stack.item
+
+                            if (item !is ItemArmor || thePlayer.inventory.armorInventory[getArmorPosition(stack) - 1] != null)
+                                return@equipArmor
+
                             TickScheduler += {
-                                val stacks = thePlayer.openContainer.inventory
+                                val hotbarStacks = thePlayer.inventory.mainInventory.take(9)
 
                                 // Can't get index of stack instance, because it is different even from the one returned from windowClick()
-                                stacks.indexOfLast { it?.getIsItemStackEqual(stack) ?: false }.toHotbarIndex(stacks.size)?.let {
-                                    CoroutineArmorer.equipFromHotbarInChest(it, stack)
-                                }
+                                val newIndex = hotbarStacks.indexOfFirst { it?.getIsItemStackEqual(stack) ?: false }
+
+                                if (newIndex != -1)
+                                    CoroutineArmorer.equipFromHotbarInChest(newIndex, stack)
                             }
                         }
                     }
@@ -243,17 +253,17 @@ object CoroutineStealer : Module("CoroutineStealer", ModuleCategory.BETA) {
             }
 
             // Wait till all scheduled clicks were sent
-            waitUntil { TickScheduler.isEmpty() }
+            waitUntil(TickScheduler::isEmpty)
 
             // Before closing the chest, check all items once more, whether server hadn't cancelled some of the actions.
             stacks = thePlayer.openContainer.inventory
         }
 
         // Wait before the chest gets closed (if it gets closed out of tick loop it could throw npe)
-        TickScheduler.scheduleAndSuspend({
+        TickScheduler.scheduleAndSuspend {
             thePlayer.closeScreen()
             progress = null
-        })
+        }
     }
 
     // Progress bar

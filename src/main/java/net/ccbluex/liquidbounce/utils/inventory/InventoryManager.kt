@@ -90,7 +90,6 @@ object InventoryManager: MinecraftInstance() {
 
 			// Try to search through inventory one more time, only close when no actions were scheduled in current iteration
 			if (!hasScheduled) {
-				displayChatMessage("closing action was invoked $canCloseInventory")
 				closingAction?.invoke()
 				return
 			}

@@ -197,7 +197,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     }
 
     private fun shouldTake(stack: ItemStack?, slot: Int): Boolean {
-        return stack != null && !stack.isEmpty && (!onlyItems || stack.item !is ItemBlock)
+        return !stack.isEmpty() && (!onlyItems || stack.item !is ItemBlock)
                 && slot !in TickScheduler
                 && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1))
     }

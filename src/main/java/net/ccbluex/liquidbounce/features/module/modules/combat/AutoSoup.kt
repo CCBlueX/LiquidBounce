@@ -102,7 +102,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
 
             mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
 
-            if (simulateInventory)
+            if (simulateInventory && mc.currentScreen !is GuiInventory)
                 serverOpenInventory = false
 
             timer.reset()

@@ -276,7 +276,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                         val item = stack.item
 
                         if (item is ItemFood && item !is ItemAppleGold && type(index) != "Food") {
-                            val replaceCurr = slotStack.isEmpty || slotStack?.item !is ItemFood
+                            val replaceCurr = slotStack.isEmpty() || slotStack.item !is ItemFood
 
                             return if (replaceCurr) index else null
                         }
@@ -290,7 +290,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                         val item = stack.item
 
                         if (item is ItemBlock && item.block !in InventoryUtils.BLOCK_BLACKLIST && type(index) != "Block") {
-                            val replaceCurr = slotStack.isEmpty || slotStack?.item !is ItemBlock
+                            val replaceCurr = slotStack.isEmpty() || slotStack.item !is ItemBlock
 
                             return if (replaceCurr) index else null
                         }
@@ -305,7 +305,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
                         if (item is ItemBucket && item.isFull == Blocks.flowing_water && type(index) != "Water") {
                             val replaceCurr =
-                                slotStack.isEmpty || slotStack?.item !is ItemBucket || (slotStack.item as ItemBucket).isFull != Blocks.flowing_water
+                                slotStack.isEmpty() || slotStack.item !is ItemBucket || (slotStack.item as ItemBucket).isFull != Blocks.flowing_water
 
                             return if (replaceCurr) index else null
                         }
@@ -319,7 +319,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                         val item = stack.item
 
                         if (item is ItemAppleGold && type(index) != "Gapple") {
-                            val replaceCurr = slotStack.isEmpty || slotStack?.item !is ItemAppleGold
+                            val replaceCurr = slotStack.isEmpty() || slotStack.item !is ItemAppleGold
 
                             return if (replaceCurr) index else null
                         }
@@ -333,7 +333,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                         val item = stack.item
 
                         if (item is ItemEnderPearl && type(index) != "Pearl") {
-                            val replaceCurr = slotStack.isEmpty || slotStack?.item !is ItemEnderPearl
+                            val replaceCurr = slotStack.isEmpty() || slotStack.item !is ItemEnderPearl
 
                             return if (replaceCurr) index else null
                         }
@@ -354,7 +354,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
         for (i in endInclusive downTo startInclusive) {
             val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
 
-            if (itemStack.isEmpty) {
+            if (itemStack.isEmpty()) {
                 continue
             }
 

@@ -156,7 +156,7 @@ open class Module @JvmOverloads constructor(
             TickedActions.schedule(id, instance, allowDuplicates, action)
 
         internal fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: ((ItemStack?) -> Unit)? = null) =
-            TickedActions.schedule(slot, instance, allowDuplicates) {
+            schedule(slot, allowDuplicates) {
                 val newStack = mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
                 action?.invoke(newStack)
             }
@@ -170,8 +170,13 @@ open class Module @JvmOverloads constructor(
         internal fun scheduleAndSuspend(vararg actions: () -> Unit) =
             actions.forEach {
                 this += it
-                waitUntil { isEmpty() }
+                waitUntil(::isEmpty)
             }
+
+        internal fun scheduleAndSuspend(id: Int = -1, allowDuplicates: Boolean = true, action: () -> Unit) {
+            schedule(id, allowDuplicates, action)
+            waitUntil(::isEmpty)
+        }
 
         internal fun isScheduled(id: Int) = TickedActions.isScheduled(id, instance)
 

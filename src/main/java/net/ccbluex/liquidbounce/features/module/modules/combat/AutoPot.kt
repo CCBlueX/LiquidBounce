@@ -58,7 +58,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                 // Hotbar Potion
                 val potionInHotbar = findPotion(36, 45)
 
-                if (thePlayer.health <= health && potionInHotbar != -1) {
+                if (potionInHotbar != null && thePlayer.health <= health) {
                     if (thePlayer.onGround) {
                         when (mode.lowercase()) {
                             "jump" -> thePlayer.jump()
@@ -84,8 +84,8 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                 }
 
                 // Inventory Potion -> Hotbar Potion
-                val potionInInventory = findPotion(9, 36)
-                if (potionInInventory != -1 && InventoryUtils.hasSpaceInHotbar()) {
+                val potionInInventory = findPotion(9, 36) ?: return
+                if (InventoryUtils.hasSpaceInHotbar()) {
                     if (openInventory && mc.currentScreen !is GuiInventory)
                         return
 
@@ -94,7 +94,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
 
                     mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
 
-                    if (simulateInventory)
+                    if (simulateInventory && mc.currentScreen !is GuiInventory)
                         serverOpenInventory = false
 
                     msTimer.reset()
@@ -119,7 +119,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
         }
     }
 
-    private fun findPotion(startSlot: Int, endSlot: Int): Int {
+    private fun findPotion(startSlot: Int, endSlot: Int): Int? {
         val thePlayer = mc.thePlayer
 
         for (i in startSlot until endSlot) {
@@ -140,7 +140,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                         return i
         }
 
-        return -1
+        return null
     }
 
     override val tag

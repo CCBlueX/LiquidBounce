@@ -12,6 +12,8 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.*
 import net.minecraft.nbt.JsonToNBT
 import net.minecraft.util.ResourceLocation
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 object ItemUtils : MinecraftInstance() {
     /**
@@ -24,8 +26,8 @@ object ItemUtils : MinecraftInstance() {
         return try {
             val args = itemArguments.replace('&', '§').split(" ")
 
-            val amount = args.getOrNull(1)?.toInt() ?: 1
-            val meta = args.getOrNull(2)?.toInt() ?: 0
+            val amount = args.getOrNull(1)?.toIntOrNull() ?: 1
+            val meta = args.getOrNull(2)?.toIntOrNull() ?: 0
 
             val resourceLocation = ResourceLocation(args[0])
             val item = Item.itemRegistry.getObject(resourceLocation) ?: return null
@@ -52,7 +54,7 @@ object ItemUtils : MinecraftInstance() {
         for (i in startInclusive..endInclusive) {
             val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
 
-            if (itemStack.isEmpty)
+            if (itemStack.isEmpty())
                 continue
 
             if (itemDelay != null && !itemStack.hasItemAgePassed(itemDelay))
@@ -70,9 +72,8 @@ object ItemUtils : MinecraftInstance() {
      * Allows you to check if player is consuming item
      */
     fun isConsumingItem(): Boolean {
-        if (!mc.thePlayer.isUsingItem) {
+        if (!mc.thePlayer.isUsingItem)
             return false
-        }
 
         val usingItem = mc.thePlayer.itemInUse.item
         return usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion
@@ -88,6 +89,7 @@ object ItemUtils : MinecraftInstance() {
 val ItemStack.durability
     get() = maxDamage - itemDamage
 
+// Calculates how much estimated durability does the item have thanks to its unbreaking level
 val ItemStack.totalDurability
     get() = durability * (getEnchantmentLevel(Enchantment.unbreaking) + 1)
 
@@ -116,8 +118,15 @@ val ItemStack.enchantmentSum
 
 fun ItemStack.getEnchantmentLevel(enchantment: Enchantment) = enchantments.getOrDefault(enchantment, 0)
 
-val ItemStack?.isEmpty
-    get() = this == null || item == null
+// Makes Kotlin smart-cast the stack to not null ItemStack
+@OptIn(ExperimentalContracts::class)
+fun ItemStack?.isEmpty(): Boolean {
+    contract {
+        returns(false) implies (this@isEmpty != null)
+    }
+
+    return this == null || item == null
+}
 
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ItemStack?.hasItemAgePassed(delay: Int) = this == null
@@ -127,4 +136,4 @@ val ItemStack.attackDamage
     get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) +
             1.25 * getEnchantmentLevel(Enchantment.sharpness)
 
-fun ItemStack.isSplashPotion() = item is ItemPotion && ItemPotion.isSplash(this.metadata)
+fun ItemStack.isSplashPotion() = item is ItemPotion && ItemPotion.isSplash(metadata)
