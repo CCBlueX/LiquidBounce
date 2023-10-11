@@ -11,12 +11,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bedrock
 import net.minecraft.network.play.client.C07PacketPlayerDigging
@@ -34,6 +36,9 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
 
     private val range by FloatValue("Range", 5F, 1F..6F)
     private val rotations by BoolValue("Rotations", true)
+    private val rotationStrafe by ListValue(
+        "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
+    )
     private val visualSwing by BoolValue("VisualSwing", true)
 
     private val airReset by BoolValue("Air-Reset", true)
@@ -89,6 +94,21 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
         }
     }
 
+    /**
+     * Handle strafing
+     */
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        if (rotationStrafe == "Off" || !rotations) {
+            return
+        }
+
+        currentRotation?.let {
+            it.applyStrafeToPlayer(event, if (rotationStrafe == "Strict") true else false)
+            event.cancelEvent()
+        }
+    }
+    
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         drawBlockBox(blockPos ?: return, Color.RED, true)
