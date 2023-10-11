@@ -47,6 +47,9 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
     private val swing by BoolValue("Swing", true)
     private val rotations by BoolValue("Rotations", true)
+    private val rotationStrafe by ListValue(
+        "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
+    ) { rotations }
     private val surroundings by BoolValue("Surroundings", true)
     private val noHit by BoolValue("NoHit", false)
 
@@ -186,6 +189,21 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                     currentDamage = 0F
                     pos = null
                 }
+        }
+    }
+
+    /**
+     * Handle strafing
+     */
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        if (rotationStrafe == "Off" || !rotations) {
+            return
+        }
+
+        currentRotation?.let {
+            it.applyStrafeToPlayer(event, if (rotationStrafe == "Strict") true else false)
+            event.cancelEvent()
         }
     }
 
