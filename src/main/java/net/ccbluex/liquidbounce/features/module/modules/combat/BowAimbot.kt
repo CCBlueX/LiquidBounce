@@ -31,7 +31,7 @@ object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
     private val silent by BoolValue("Silent", true)
     private val rotationStrafe by ListValue(
         "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
-    ) { silent.isActive() }
+    ) { silent }
     private val throughWalls by BoolValue("ThroughWalls", false)
     private val mark by BoolValue("Mark", true)
 
@@ -62,10 +62,8 @@ object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
             return
         }
 
-        var strict = if (rotationStrafe == "Strict") true else false
-
         currentRotation?.let {
-            it.applyStrafeToPlayer(event, strict)
+            it.applyStrafeToPlayer(event, if (rotationStrafe == "Strict") true else false)
             event.cancelEvent()
         }
     }
