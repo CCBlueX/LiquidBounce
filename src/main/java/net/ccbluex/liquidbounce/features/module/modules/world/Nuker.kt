@@ -8,11 +8,13 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
@@ -48,6 +50,9 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     private val throughWalls by BoolValue("ThroughWalls", false)
     private val priority by ListValue("Priority", arrayOf("Distance", "Hardness"), "Distance")
     private val rotations by BoolValue("Rotations", true)
+    private val rotationStrafe by ListValue(
+        "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
+    ) { rotations }
     private val layer by BoolValue("Layer", false)
     private val hitDelay by IntegerValue("HitDelay", 4, 0..20)
     private val nuke by IntegerValue("Nuke", 1, 1..20)
@@ -214,6 +219,21 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                         sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                         attackedBlocks += pos
                     }
+        }
+    }
+
+    /**
+     * Handle strafing
+     */
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        if (rotationStrafe == "Off" || !rotations) {
+            return
+        }
+
+        currentRotation?.let {
+            it.applyStrafeToPlayer(event, if (rotationStrafe == "Strict") true else false)
+            event.cancelEvent()
         }
     }
 
