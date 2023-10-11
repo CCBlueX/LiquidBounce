@@ -8,12 +8,14 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
@@ -39,6 +41,9 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
     private val visualSwing by BoolValue("VisualSwing", true)
     private val chest by BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
     private val rotations by BoolValue("Rotations", true)
+    private val rotationStrafe by ListValue(
+        "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
+    ) { rotations }
 
     private var currentBlock: BlockPos? = null
     private val timer = MSTimer()
@@ -96,6 +101,22 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
                     timer.reset()
                 }
             }
+        }
+    }
+
+    
+    /**
+     * Handle strafing
+     */
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        if (rotationStrafe == "Off" || !rotations) {
+            return
+        }
+
+        currentRotation?.let {
+            it.applyStrafeToPlayer(event, if (rotationStrafe == "Strict") true else false)
+            event.cancelEvent()
         }
     }
 
