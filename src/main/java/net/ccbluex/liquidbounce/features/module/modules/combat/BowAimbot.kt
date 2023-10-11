@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
@@ -28,6 +29,9 @@ object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
     private val predict by BoolValue("Predict", true)
     private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F) { predict }
     private val silent by BoolValue("Silent", true)
+    private val rotationStrafe by ListValue(
+        "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
+    ) { silent.isActive() }
     private val throughWalls by BoolValue("ThroughWalls", false)
     private val mark by BoolValue("Mark", true)
 
@@ -46,6 +50,23 @@ object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
 
             target = entity
             faceBow(entity, silent, predict, predictSize)
+        }
+    }
+
+    /**
+     * Handle strafing
+     */
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        if (rotationStrafe == "Off" || !silent) {
+            return
+        }
+
+        var strict = if (rotationStrafe == "Strict") true else false
+
+        currentRotation?.let {
+            it.applyStrafeToPlayer(event, strict)
+            event.cancelEvent()
         }
     }
 
