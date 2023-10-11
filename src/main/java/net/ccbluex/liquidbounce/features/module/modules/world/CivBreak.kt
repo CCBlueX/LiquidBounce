@@ -38,7 +38,7 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
     private val rotations by BoolValue("Rotations", true)
     private val rotationStrafe by ListValue(
         "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
-    )
+    ) { rotations }
     private val visualSwing by BoolValue("VisualSwing", true)
 
     private val airReset by BoolValue("Air-Reset", true)
