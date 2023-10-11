@@ -193,7 +193,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Rotation Options
     private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized"), "Normal")
-    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
+        private val rotationStrafe by ListValue(
+        "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
+    ) {  rotationMode != "Off" && silentRotation }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
     private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
@@ -531,7 +533,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             setTargetRotation(
                 rotation,
                 ticks,
-                strafe,
+                !(!silentRotation || rotationStrafe == "Off"),
+                rotationStrafe == "Strict",
                 resetSpeed = minTurnSpeed to maxTurnSpeed,
                 angleThresholdForReset = angleThresholdUntilReset
             )
