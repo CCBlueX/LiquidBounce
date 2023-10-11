@@ -192,8 +192,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     ) { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
-    private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized"), "Normal")
-        private val rotationStrafe by ListValue(
+    private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized", "GodBridge"), "Normal")
+    private val rotationStrafe by ListValue(
         "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
     ) {  rotationMode != "Off" && silentRotation }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
@@ -902,7 +902,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 continue
             }
 
-            if (mode == "GodBridge") {
+            if (mode == "GodBridge" || mode == "Normal" && rotationMode == "GodBridge") {
                 // Selection of these values only. Mostly used by Godbridgers.
                 val list = arrayOf(-135f, -45f, 45f, 135f)
 
