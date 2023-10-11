@@ -126,7 +126,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
         return interpolatePosition(tickDelta, lastPos, pos)
     }
 
-    fun shouldRenderCrosshair(isFirstPerson: Boolean) = !isFirstPerson && !(enabled && !renderCrosshair)
+    fun shouldRenderCrosshair(isFirstPerson: Boolean) = isFirstPerson && !(enabled && !renderCrosshair)
 
     fun shouldDisableHandRender() = enabled && !renderHand
 
