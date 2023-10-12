@@ -63,6 +63,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     private object PacketCrit : Choice("Packet") {
 
+        private val ignoreSprint by boolean("IgnoreSprint", true)
         override val parent: ChoiceConfigurable
             get() = ActiveOption.modes
 
@@ -71,7 +72,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCritNow(player, true)) {
+            if (!canCritNow(player, true, ignoreSprint)) {
                 chat("cant crit enemy")
                 return@handler
             }
