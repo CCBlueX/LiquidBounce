@@ -205,7 +205,6 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
         currentRotation?.let {
             it.applyStrafeToPlayer(event, if (rotationStrafe == "Strict") true else false)
-            event.cancelEvent()
         }
     }
 
