@@ -30,16 +30,15 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
 import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -73,9 +72,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             }
 
             if (!canCritNow(player, true, ignoreSprint)) {
-                chat("cant crit enemy")
                 return@handler
             }
+
+
+            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
+            player.isSprinting = false
+
 
 
 
@@ -84,8 +87,6 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.11, z, false))
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.1100013579, z, false))
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.0000013579, z, false))
-
-            chat("tried to crit enemy")
         }
     }
 
@@ -265,7 +266,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun wouldCrit(ignoreSprint: Boolean = false): Boolean {
-        return canCritNow(player) && player.fallDistance > 0.0
+        return canCritNow(player, false, ignoreSprint) && player.fallDistance > 0.0
     }
 
 }
