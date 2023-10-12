@@ -66,7 +66,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         private object whenSprinting: ToggleableConfigurable(ActiveOption.module, "WhenSprinting", true) {
             // TODO: Check if a un sprint is even needed.
-            //  Even when sprinting it is possible to crit, as long as you have done a knockback hit since you've began sprinting
+            //  Even when sprinting it is possible to crit,
+            //  as long as you have done a knockback hit since you've began sprinting
             val unSprint by boolean("UnSprint", false)
         }
         init {
