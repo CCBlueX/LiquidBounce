@@ -62,7 +62,12 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     private object PacketCrit : Choice("Packet") {
 
-        private val ignoreSprint by boolean("IgnoreSprint", true)
+//        private val whenSprinting by boolean("WhenSprinting", true)
+
+        // TODO: whenSprinting should be removed and a check if we can
+        private object whenSprinting: ToggleableConfigurable(this.parent(), "WhenSprinting", true) {
+            val unSprint by boolean("UnSprint", false)
+        }
         override val parent: ChoiceConfigurable
             get() = ActiveOption.modes
 
@@ -71,13 +76,14 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCritNow(player, true, ignoreSprint)) {
+            if (!canCritNow(player, true, whenSprinting.enabled)) {
                 return@handler
             }
 
-
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
-            player.isSprinting = false
+            if(whenSprinting.unSprint && player.isSprinting) {
+                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
+                player.isSprinting = false
+            }
 
 
 
