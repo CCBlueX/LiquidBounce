@@ -249,7 +249,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) && !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
 
     fun canCritNow(player: ClientPlayerEntity, ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
-        canCrit(player, ignoreOnGround) && ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f && (!ModuleCriticals.player.isSprinting || ignoreSprint)
+        canCrit(player, ignoreOnGround) &&
+            ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f &&
+            (!ModuleCriticals.player.isSprinting || ignoreSprint)
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
 
