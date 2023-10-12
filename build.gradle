@@ -79,7 +79,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    modImplementation 'com.viaversion:viaversion:4.7.1-SNAPSHOT'
+    modImplementation 'com.viaversion:viaversion:4.9.0-23w41a-SNAPSHOT'
     modImplementation 'com.github.FlorianMichael:ViaLoadingBase:4.4.8'
 
     // Recommended mods (on IDE)
