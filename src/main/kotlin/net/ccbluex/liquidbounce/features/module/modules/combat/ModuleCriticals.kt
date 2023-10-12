@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
@@ -70,15 +71,20 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCrit(player, false)) {
+            if (!canCritNow(player, true)) {
+                chat("cant crit enemy")
                 return@handler
             }
+
+
 
             val (x, y, z) = player.exactPosition
 
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.11, z, false))
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.1100013579, z, false))
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.0000013579, z, false))
+
+            chat("tried to crit enemy")
         }
     }
 
@@ -241,6 +247,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             StatusEffects.LEVITATION
         ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) && !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
 
+    fun canCritNow(player: ClientPlayerEntity, ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) = canCrit(player, ignoreOnGround) && ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f && (!ModuleCriticals.player.isSprinting || ignoreSprint)
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
 
@@ -254,7 +261,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun wouldCrit(ignoreSprint: Boolean = false): Boolean {
-        return canCrit(player) && player.fallDistance > 0.0 && player.getAttackCooldownProgress(0.5f) > 0.9f && (!player.isSprinting || ignoreSprint)
+        return canCritNow(player) && player.fallDistance > 0.0
     }
 
 }
