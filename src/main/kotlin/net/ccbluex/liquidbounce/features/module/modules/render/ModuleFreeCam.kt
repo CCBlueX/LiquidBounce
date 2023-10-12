@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("detekt:TooManyFunctions")
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
