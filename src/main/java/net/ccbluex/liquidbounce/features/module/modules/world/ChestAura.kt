@@ -117,7 +117,6 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
 
         currentRotation?.let {
             it.applyStrafeToPlayer(event, if (rotationStrafe == "Strict") true else false)
-            event.cancelEvent()
         }
     }
 
