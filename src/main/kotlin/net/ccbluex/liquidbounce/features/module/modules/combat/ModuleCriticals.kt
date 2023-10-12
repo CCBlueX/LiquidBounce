@@ -68,6 +68,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         private object whenSprinting: ToggleableConfigurable(this.parent(), "WhenSprinting", true) {
             val unSprint by boolean("UnSprint", false)
         }
+        init {
+            tree(whenSprinting)
+        }
         override val parent: ChoiceConfigurable
             get() = ActiveOption.modes
 
