@@ -86,12 +86,11 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
      * Display case-represented rotations
      */
     fun displayRotations(): Rotation {
-        val priority = ModuleFreeCam.shouldDisableRotations()
 
         val server = RotationManager.serverRotation
         val current = RotationManager.currentRotation
 
-        return if (priority) server else current ?: server
+        return current ?: server
     }
 
 }
