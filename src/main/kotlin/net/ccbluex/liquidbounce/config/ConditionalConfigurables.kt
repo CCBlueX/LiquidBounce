@@ -43,12 +43,47 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
     val description: MutableText
         get() = Text.translatable("$translationBaseKey.description")
 
-    var enabled by boolean("Enabled", enabled)
+    var enabled by boolean("Enabled", enabled).listen { newState ->
+        updateEnabled(this.module?.enabled ?: true, newState)
+
+        newState
+    }
+
+    init {
+        this.module?.valueEnabled?.listen { newState ->
+            updateEnabled(newState, this.enabled)
+
+            newState
+        }
+    }
+
+    private var wasEnabled = false
+
+    private fun updateEnabled(parentEnabled: Boolean, thisEnabled: Boolean) {
+        val willBeEnabled = parentEnabled && thisEnabled
+
+        if (wasEnabled != this.enabled) {
+            if (willBeEnabled) {
+                enable()
+            } else {
+                disable()
+            }
+        }
+
+        wasEnabled = willBeEnabled
+    }
 
     override fun handleEvents() = super.handleEvents() && enabled
 
     override fun parent() = module
 
+    open fun enable() {}
+    open fun disable() {}
+
+    /**
+     * Used in JS-bindings
+     */
+    @Suppress("unused")
     fun getEnabledValue(): Value<*> {
         return this.value[0]
     }

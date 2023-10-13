@@ -25,7 +25,8 @@ style:
     active: true
     maxJumpCount: 3
   WildcardImport:
-    active: true
-    excludeImports:
-      - 'org.junit.jupiter.api.Assertions.*'
-      - 'java.util.*'
+    active: false
+  ForbiddenComment:
+    active: false
+  UnusedPrivateProperty:
+    allowedNames: '_|ignored|expected|serialVersionUID|.+Handler'
