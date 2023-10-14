@@ -47,24 +47,24 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private val maxDelay by IntegerValue("Delay", 50, 50..500)
     private val delayTimer = MSTimer()
-    private val maxDistanceValue: FloatValue = object : FloatValue("Max-Distance",  3.0f, 0.0f..3.0f) {
+    private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance",  3.0f, 0.0f..3.0f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minDistance)
     }
     private val maxDistance by maxDistanceValue
-    private val minDistance by object : FloatValue("Min-Distance", 2.0f, 0.0f..3.0f) {
+    private val minDistance by object : FloatValue("MinDistance", 2.0f, 0.0f..3.0f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxDistance)
     }
 
-    private val pingSpoof by BoolValue("Ping-Spoof", false)
-    private val delayVelocity by BoolValue("Delay-Velocity", false)
-    private val delayExplosion by BoolValue("Delay-Explosion", false)
-    private val everyPacket by BoolValue("All-Incoming-Packets", false)
+    private val pingSpoof by BoolValue("PingSpoof", false)
+    private val delayVelocity by BoolValue("DelayVelocity", false)
+    private val delayExplosion by BoolValue("DelayExplosion", false)
+    private val allPackets by BoolValue("AllPackets", false)
 
     // ESP
-    private val colorRainbow by BoolValue("Rainbow", true)
-    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow }
-    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
-    private val colorBlue by IntegerValue("B", 0, 0..255) { !colorRainbow }
+    private val rainbow by BoolValue("Rainbow", true)
+    private val red by IntegerValue("R", 0, 0..255) { !rainbow }
+    private val green by IntegerValue("G", 255, 0..255) { !rainbow }
+    private val blue by IntegerValue("B", 0, 0..255) { !rainbow }
 
     private val packets = LinkedList<TimedPacket>()
     private var target: Entity? = null
@@ -130,10 +130,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-
         if (!shouldBacktrack()) {
             clearPackets()
         }
+
         else handlePackets()
     }
 
@@ -216,16 +216,14 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         realZ = 0.0
     }
 
-    private fun getColor():Color{
-        return if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
+    private fun getColor(): Color{
+        return if (rainbow) rainbow() else Color(red, green, blue)
     }
 
     private fun shouldBacktrack(): Boolean {
         val result = (target != null) && (!target!!.isDead) && (mc.thePlayer.getDistanceToBox(target!!.hitBox) in minDistance..maxDistance) && (mc.thePlayer.ticksExisted > 20)
         return result
     }
-
-    
 }
 
 data class TimedPacket(val packet: Packet<INetHandlerPlayClient>, val timestamp: Long)
