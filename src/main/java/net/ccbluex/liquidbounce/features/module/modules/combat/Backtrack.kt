@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.Liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -31,6 +31,7 @@ import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
 import net.minecraft.network.play.server.S14PacketEntity 
+import net.minecraft.network.play.server.S0CPacketSpawnPlayer
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
@@ -119,7 +120,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
 
-        if (packet.javaClass.simpleName.startsWith("S", ignoreCase = true) && everyPacket && !(packet is S29PacketSoundEffect)) {
+        if (packet.javaClass.simpleName.startsWith("S", ignoreCase = true) && everyPacket && !(packet is S29PacketSoundEffect)) && !(packet is S0CPacketSpawnPlayer){
             packets.add(TimedPacket(packet as Packet<INetHandlerPlayClient>, System.currentTimeMillis()))
             event.cancelEvent()
         }
