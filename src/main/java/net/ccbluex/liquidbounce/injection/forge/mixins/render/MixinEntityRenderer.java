@@ -198,10 +198,6 @@ public abstract class MixinEntityRenderer {
 
                 final ArrayList<AxisAlignedBB> boxes = new ArrayList<>();
                 boxes.add(entity1.getEntityBoundingBox().expand(f1, f1, f1));
-                Backtrack.INSTANCE.loopThroughBacktrackData(entity1, () -> {
-                    boxes.add(entity1.getEntityBoundingBox().expand(f1, f1, f1));
-                    return false;
-                });
 
                 for (final AxisAlignedBB axisalignedbb : boxes) {
                     MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);
