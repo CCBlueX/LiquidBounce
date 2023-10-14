@@ -522,13 +522,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             var distance = thePlayer.getDistanceToEntityBox(entity)
-            if (Backtrack.state) {
-                val trackedDistance = Backtrack.getNearestTrackedDistance(entity)
 
-                if (distance > trackedDistance) {
-                    distance = trackedDistance
-                }
-            }
             val entityFov = getRotationDifference(entity)
 
             if (distance <= maxRange && (fov == 180F || entityFov <= fov)) {
