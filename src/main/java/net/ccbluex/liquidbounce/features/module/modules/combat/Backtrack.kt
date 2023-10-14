@@ -120,7 +120,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
 
-        if (packet.javaClass.simpleName.startsWith("S", ignoreCase = true) && everyPacket && !(packet is S29PacketSoundEffect)) && !(packet is S0CPacketSpawnPlayer){
+        if (packet.javaClass.simpleName.startsWith("S", ignoreCase = true) && everyPacket && !(packet is S29PacketSoundEffect) && !!(packet is S0CPacketSpawnPlayer)){
             packets.add(TimedPacket(packet as Packet<INetHandlerPlayClient>, System.currentTimeMillis()))
             event.cancelEvent()
         }
