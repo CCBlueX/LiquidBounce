@@ -103,7 +103,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
 
-        if (event.eventType == EventState.RECEIVE && allPackets && packet !is S29PacketSoundEffect && packet is S0CPacketSpawnPlayer) {
+        if (event.eventType == EventState.RECEIVE && allPackets && packet !is S29PacketSoundEffect && packet !is S0CPacketSpawnPlayer) {
             packets.add(TimedPacket(packet, System.currentTimeMillis()))
             event.cancelEvent()
         }
