@@ -107,7 +107,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             val color by color("PathColor", Color4b(36, 237, 0, 255))
 
             val renderHandler = handler<WorldRenderEvent> { event ->
-                renderEnvironment(event.matrixStack){
+                renderEnvironmentForWorld(event.matrixStack){
                     withColor(color){
                         walkTarget?.let { target ->
                             drawLines(player.interpolateCurrentPosition(event.partialTicks), Vec3(target))
@@ -163,7 +163,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
                 val markedBlocks = BlockTracker.trackedBlockMap
 //                val markedFarmBlocks = FarmBlockTracker.trackedBlockMap.keys
-                renderEnvironment(matrixStack) {
+                renderEnvironmentForWorld(matrixStack) {
                     CurrentTarget.render(this)
                     for ((pos, type) in markedBlocks) {
                         val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
