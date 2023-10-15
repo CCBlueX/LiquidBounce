@@ -10,10 +10,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.*
+import org.apache.commons.lang3.tuple.MutableTriple
 import java.util.*
 import kotlin.math.*
 
@@ -27,6 +27,21 @@ object RotationUtils : MinecraftInstance(), Listenable {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         currentRotation?.let { rotation ->
+            setbackRotation?.let {
+                if (it.middle) {
+                    currentRotation = it.left
+                    it.setMiddle(false)
+                    return
+                }
+
+                val sign = if (random.nextBoolean()) 1 else -1
+
+                rotation.yaw = (it.right.yaw + 0.000001f * sign) % 360f
+                rotation.pitch = (it.right.pitch + 0.000001f * sign) % 360f
+                setbackRotation = null
+                return
+            }
+
             if (keepLength > 0) {
                 keepLength--
             } else {
@@ -98,6 +113,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     var keepCurrentRotation = false
 
+    // (The priority, the active check and the original rotation)
+    var setbackRotation: MutableTriple<Rotation, Boolean, Rotation>? = null
+
     private val random = Random()
     private var x = random.nextDouble()
     private var y = random.nextDouble()
@@ -108,16 +126,33 @@ object RotationUtils : MinecraftInstance(), Listenable {
      *
      * @param blockPos target block
      */
-    fun faceBlock(blockPos: BlockPos?): VecRotation? {
-        if (blockPos == null) return null
-        var vecRotation: VecRotation? = null
-        val eyesPos = mc.thePlayer.eyes
+    fun faceBlock(blockPos: BlockPos?, throughWalls: Boolean = true): VecRotation? {
+        val world = mc.theWorld ?: return null
+        val player = mc.thePlayer ?: return null
+
+        if (blockPos == null) {
+            return null
+        }
+
+        val eyesPos = player.eyes
         val startPos = Vec3(blockPos)
 
-        for (x in 0.1..0.9) {
-            for (y in 0.1..0.9) {
-                for (z in 0.1..0.9) {
-                    val posVec = startPos.addVector(x, y, z)
+        var visibleVec: VecRotation? = null
+        var invisibleVec: VecRotation? = null
+
+        for (x in 0.0..1.0) {
+            for (y in 0.0..1.0) {
+                for (z in 0.0..1.0) {
+                    val block = blockPos.getBlock() ?: return null
+
+                    val posVec = startPos.add(
+                        Vec3(
+                            block.blockBoundsMinX + (block.blockBoundsMaxX - block.blockBoundsMinX) * x,
+                            block.blockBoundsMinY + (block.blockBoundsMaxY - block.blockBoundsMinY) * x,
+                            block.blockBoundsMinZ + (block.blockBoundsMaxZ - block.blockBoundsMinZ) * x,
+                        )
+                    )
+
                     val dist = eyesPos.distanceTo(posVec)
 
                     val (diffX, diffY, diffZ) = posVec - eyesPos
@@ -126,25 +161,44 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     val rotation = Rotation(
                         MathHelper.wrapAngleTo180_float(atan2(diffZ, diffX).toDegreesF() - 90f),
                         MathHelper.wrapAngleTo180_float(-atan2(diffY, diffXZ).toDegreesF())
-                    )
+                    ).fixedSensitivity()
 
                     val rotationVector = getVectorForRotation(rotation)
                     val vector = eyesPos + (rotationVector * dist)
 
-                    mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)?.let {
-                        if (it.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                            val currentVec = VecRotation(posVec, rotation)
-                            if (vecRotation == null || getRotationDifference(currentVec.rotation) < getRotationDifference(
-                                    vecRotation!!.rotation
-                                )
-                            ) vecRotation = currentVec
+                    val currentVec = VecRotation(posVec, rotation)
+                    val raycast = world.rayTraceBlocks(eyesPos, vector, false, true, false)
+
+                    val currentRotation = currentRotation ?: player.rotation
+
+                    if (raycast != null && raycast.blockPos == blockPos) {
+                        if (visibleVec == null || getRotationDifference(
+                                currentVec.rotation,
+                                currentRotation
+                            ) < getRotationDifference(visibleVec.rotation, currentRotation)
+                        ) {
+                            visibleVec = currentVec
+                        }
+                    } else if (throughWalls) {
+                        val invisibleRaycast = performRaytrace(blockPos, rotation) ?: continue
+
+                        if (invisibleRaycast.blockPos != blockPos) {
+                            continue
+                        }
+
+                        if (invisibleVec == null || getRotationDifference(
+                                currentVec.rotation,
+                                currentRotation
+                            ) < getRotationDifference(invisibleVec.rotation, currentRotation)
+                        ) {
+                            invisibleVec = currentVec
                         }
                     }
                 }
             }
         }
 
-        return vecRotation
+        return visibleVec ?: invisibleVec
     }
 
     /**
@@ -155,7 +209,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict     predict new enemy position
      * @param predictSize predict size of predict
      */
-    fun faceBow(target: Entity, silent: Boolean, predict: Boolean, predictSize: Float) {
+    fun faceBow(target: Entity, predict: Boolean, predictSize: Float, onSuccess: (rotation: Rotation) -> Unit) {
         val player = mc.thePlayer
 
         val posX =
@@ -173,10 +227,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
             atan2(posZ, posX).toDegreesF() - 90f,
             -atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)).toDegreesF()
         )
-        if (silent) setTargetRotation(rotation)
-        else limitAngleChange(
-            player.rotation, rotation, 10f + nextInt(endExclusive = 6)
-        ).toPlayer(mc.thePlayer)
+
+        onSuccess(rotation)
     }
 
     /**
@@ -402,8 +454,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         currentRotation?.let { rotation ->
             mc.thePlayer?.let {
                 it.rotationYaw = rotation.yaw + getAngleDifference(it.rotationYaw, rotation.yaw)
-                it.renderArmYaw = it.rotationYaw
-                it.prevRenderArmYaw = it.rotationYaw
+                syncRotations()
             }
         }
         currentRotation = null
@@ -422,4 +473,36 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     fun getFixedSensitivityAngle(targetAngle: Float, startAngle: Float = 0f, gcd: Float = getFixedAngleDelta()) =
         startAngle + ((targetAngle - startAngle) / gcd).roundToInt() * gcd
+
+    /**
+     * Creates a raytrace even when the target [blockPos] is not visible
+     */
+    fun performRaytrace(
+        blockPos: BlockPos,
+        rotation: Rotation,
+        reach: Float = mc.playerController.blockReachDistance
+    ): MovingObjectPosition? {
+        val world = mc.theWorld ?: return null
+        val player = mc.thePlayer ?: return null
+
+        val eyes = player.eyes
+
+        return blockPos.getBlock()?.collisionRayTrace(
+            world,
+            blockPos,
+            eyes,
+            eyes + (getVectorForRotation(rotation) * reach.toDouble())
+        )
+    }
+
+    fun syncRotations() {
+        val player = mc.thePlayer ?: return
+
+        player.prevRotationYaw = player.rotationYaw
+        player.prevRotationPitch = player.rotationPitch
+        player.renderArmYaw = player.rotationYaw
+        player.renderArmPitch = player.rotationPitch
+        player.prevRenderArmYaw = player.rotationYaw
+        player.prevRotationPitch = player.rotationPitch
+    }
 }

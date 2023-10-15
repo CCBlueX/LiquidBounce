@@ -1072,7 +1072,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         return null
     }
 
-    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
+    fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
         val player = mc.thePlayer ?: return null
         val world = mc.theWorld ?: return null
 
