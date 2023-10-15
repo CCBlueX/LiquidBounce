@@ -37,7 +37,7 @@ class BlockBBEvent(blockPos: BlockPos, val block: Block, var boundingBox: AxisAl
 /**
  * Called when player clicks a block
  */
-class ClickBlockEvent(val clickedBlock: BlockPos?, val WEnumFacing: EnumFacing?) : Event()
+class ClickBlockEvent(val clickedBlock: BlockPos?, val enumFacing: EnumFacing?) : Event()
 
 /**
  * Called when client is shutting down

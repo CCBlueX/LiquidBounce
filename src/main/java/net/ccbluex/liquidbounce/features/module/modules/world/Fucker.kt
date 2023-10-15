@@ -5,22 +5,27 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
+import net.ccbluex.liquidbounce.utils.RotationUtils.performRaytrace
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.getVec
+import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -30,7 +35,6 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
 import java.awt.Color
 
 object Fucker : Module("Fucker", ModuleCategory.WORLD) {
@@ -46,10 +50,24 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
     private val swing by BoolValue("Swing", true)
-    private val rotations by BoolValue("Rotations", true)
     private val surroundings by BoolValue("Surroundings", true)
     private val noHit by BoolValue("NoHit", false)
+    private val rotations by BoolValue("Rotations", true)
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
 
+        override fun isSupported() = rotations
+    }
+    private val maxTurnSpeed by maxTurnSpeedValue
+
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
+    }
+
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
 
     /**
      * VALUES
@@ -61,43 +79,57 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private val switchTimer = MSTimer()
     var currentDamage = 0F
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+    // Surroundings
+    private var areSurroundings = false
 
-        if (noHit && KillAura.state && KillAura.target != null)
+    override fun onToggle(state: Boolean) {
+        if (pos != null && !mc.thePlayer.capabilities.isCreativeMode) {
+            sendPacket(C07PacketPlayerDigging(ABORT_DESTROY_BLOCK, pos, EnumFacing.DOWN))
+        }
+
+        currentDamage = 0F
+        pos = null
+        areSurroundings = false
+    }
+
+    @EventTarget
+    fun onMotion(event: MotionEvent) {
+        val player = mc.thePlayer ?: return
+        val world = mc.theWorld ?: return
+
+        if (event.eventState != EventState.POST || noHit && KillAura.state && KillAura.target != null) {
             return
+        }
 
         val targetId = block
 
         if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId ||
-                getCenterDistance(pos!!) > range)
+            getCenterDistance(pos!!) > range
+        )
             pos = find(targetId)
 
         // Reset current breaking when there is no target block
         if (pos == null) {
             currentDamage = 0F
+            areSurroundings = false
             return
         }
 
         var currentPos = pos ?: return
-        var rotation = faceBlock(currentPos) ?: return
-
-        // Surroundings
-        var areSurroundings = false
+        var spot = faceBlock(currentPos) ?: return
 
         if (surroundings) {
-            val eyes = thePlayer.eyes
-            val blockPos = mc.theWorld.rayTraceBlocks(eyes, rotation.vec, false,
-                    false, true)?.blockPos
+            val eyes = player.eyes
+            val blockPos = world.rayTraceBlocks(eyes, spot.vec, false, false, true)?.blockPos
 
             if (blockPos != null && blockPos.getBlock() != air) {
-                if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z)
+                if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z) {
                     areSurroundings = true
+                }
 
                 pos = blockPos
                 currentPos = pos ?: return
-                rotation = faceBlock(currentPos) ?: return
+                spot = faceBlock(currentPos) ?: return
             }
         }
 
@@ -109,8 +141,9 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
         oldPos = currentPos
 
-        if (!switchTimer.hasTimePassed(switch))
+        if (!switchTimer.hasTimePassed(switch)) {
             return
+        }
 
         // Block hit delay
         if (blockHitDelay > 0) {
@@ -119,25 +152,58 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         }
 
         // Face block
-        if (rotations)
-            setTargetRotation(rotation.rotation)
+        if (rotations) {
+            val limitedRotation = limitAngleChange(
+                currentRotation ?: player.rotation,
+                spot.rotation,
+                nextFloat(minTurnSpeed, maxTurnSpeed)
+            )
+
+            setTargetRotation(
+                limitedRotation,
+                strafe = strafe != "Off",
+                strict = strafe == "Strict",
+                resetSpeed = minTurnSpeed to maxTurnSpeed,
+                angleThresholdForReset = angleThresholdUntilReset
+            )
+        }
+    }
+
+    @EventTarget
+    fun onUpdate(event: UpdateEvent) {
+        val player = mc.thePlayer ?: return
+        val world = mc.theWorld ?: return
+
+        val controller = mc.playerController ?: return
+
+        val currentPos = pos ?: return
+
+        val targetRotation = if (rotations) {
+            currentRotation ?: player.rotation
+        } else {
+            toRotation(currentPos.getVec(), false)
+        }
+
+        val raytrace = performRaytrace(currentPos, targetRotation, range) ?: return
 
         when {
             // Destroy block
             action == "Destroy" || areSurroundings -> {
                 // Auto Tool
-                if (AutoTool.state)
+                if (AutoTool.state) {
                     AutoTool.switchSlot(currentPos)
+                }
 
                 // Break block
                 if (instant) {
                     // CivBreak style block breaking
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
 
-                    if (swing)
-                        thePlayer.swingItem()
+                    if (swing) {
+                        player.swingItem()
+                    }
 
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
                     currentDamage = 0F
                     return
                 }
@@ -146,46 +212,65 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 val block = currentPos.getBlock() ?: return
 
                 if (currentDamage == 0F) {
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
 
-                    if (thePlayer.capabilities.isCreativeMode ||
-                            block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos) >= 1f) {
-                        if (swing)
-                            thePlayer.swingItem()
-                        mc.playerController.onPlayerDestroyBlock(pos, EnumFacing.DOWN)
+                    if (player.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(
+                            player,
+                            world,
+                            currentPos
+                        ) >= 1f
+                    ) {
+                        if (swing) {
+                            player.swingItem()
+                        }
+
+                        controller.onPlayerDestroyBlock(currentPos, raytrace.sideHit)
 
                         currentDamage = 0F
                         pos = null
+                        areSurroundings = false
                         return
                     }
                 }
 
-                if (swing)
-                    thePlayer.swingItem()
+                if (swing) {
+                    player.swingItem()
+                }
 
-                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, currentPos)
-                mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
+                currentDamage += block.getPlayerRelativeBlockHardness(player, world, currentPos)
+                world.sendBlockBreakProgress(player.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
-                    mc.playerController.onPlayerDestroyBlock(currentPos, EnumFacing.DOWN)
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    controller.onPlayerDestroyBlock(currentPos, raytrace.sideHit)
                     blockHitDelay = 4
                     currentDamage = 0F
                     pos = null
+                    areSurroundings = false
                 }
             }
 
             // Use block
-            action == "Use" ->
-                if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld, thePlayer.heldItem, pos, EnumFacing.DOWN,
-                            Vec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble()))) {
-                    if (swing)
-                        thePlayer.swingItem()
+            action == "Use" -> {
+                if (controller.onPlayerRightClick(
+                        player,
+                        world,
+                        player.heldItem,
+                        currentPos,
+                        raytrace.sideHit,
+                        raytrace.hitVec
+                    )
+                ) {
+                    if (swing) {
+                        player.swingItem()
+                    }
 
                     blockHitDelay = 4
                     currentDamage = 0F
                     pos = null
+                    areSurroundings = false
                 }
+            }
         }
     }
 
@@ -194,16 +279,6 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         drawBlockBox(pos ?: return, Color.RED, true)
     }
 
-    /**
-     * Find new target block by [targetID]
-     */
-    /*private fun find(targetID: Int) =
-        searchBlocks(rangeValue.get().toInt() + 1).filter {
-                    Block.getIdFromBlock(it.value) == targetID && getCenterDistance(it.key) <= rangeValue.get()
-                            && (isHitable(it.key) || surroundingsValue.get())
-                }.minBy { getCenterDistance(it.key) }?.key*/
-
-    //Removed triple iteration of blocks to improve speed
     /**
      * Find new target block by [targetID]
      */
@@ -218,16 +293,17 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
                 for (z in radius downTo -radius + 1) {
-                    val blockPos = BlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y,
-                            thePlayer.posZ.toInt() + z)
+                    val blockPos = BlockPos(thePlayer).add(x, y, z)
                     val block = getBlock(blockPos) ?: continue
 
-                    if (Block.getIdFromBlock(block) != targetID) continue
-
                     val distance = getCenterDistance(blockPos)
-                    if (distance > range) continue
-                    if (nearestBlockDistance < distance) continue
-                    if (!isHitable(blockPos) && !surroundings) continue
+
+                    if (Block.getIdFromBlock(block) != targetID || getCenterDistance(blockPos) > range || nearestBlockDistance < distance || (!isHittable(
+                            blockPos
+                        ) && !surroundings)
+                    ) {
+                        continue
+                    }
 
                     nearestBlockDistance = distance
                     nearestBlock = blockPos
@@ -239,21 +315,21 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     }
 
     /**
-     * Check if block is hitable (or allowed to hit through walls)
+     * Check if block is hittable (or allowed to hit through walls)
      */
-    private fun isHitable(blockPos: BlockPos): Boolean {
+    private fun isHittable(blockPos: BlockPos): Boolean {
         val thePlayer = mc.thePlayer ?: return false
 
         return when (throughWalls.lowercase()) {
             "raycast" -> {
                 val eyesPos = thePlayer.eyes
-                val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos,
-                        Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), false, true, false)
+                val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
             }
-            "around" -> !isFullBlock(blockPos.down()) || !isFullBlock(blockPos.up()) || !isFullBlock(blockPos.north())
-                    || !isFullBlock(blockPos.east()) || !isFullBlock(blockPos.south()) || !isFullBlock(blockPos.west())
+
+            "around" -> EnumFacing.values().any { !isFullBlock(blockPos.offset(it)) }
+
             else -> true
         }
     }

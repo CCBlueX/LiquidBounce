@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.strict
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -84,6 +85,12 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
         val isLegitModeActive = mode == "Legit"
 
+        val modifiedForward = if (currentRotation != null && strict) {
+            player.movementInput.moveForward
+        } else {
+            movementInput.moveForward
+        }
+
         if (!isMoving) {
             return true
         }
@@ -109,7 +116,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
         }
 
         if (isLegitModeActive) {
-            return movementInput.moveForward < 0.8
+            return modifiedForward < 0.8
         }
 
         if (allDirections) {
@@ -121,16 +128,16 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
         if (!checkServerSide) {
             return if (currentRotation != null) {
-                abs(playerForwardInput) < threshold || playerForwardInput < 0 && movementInput.moveForward < threshold
+                abs(playerForwardInput) < threshold || playerForwardInput < 0 && modifiedForward < threshold
             } else {
                 playerForwardInput < threshold
             }
         }
 
         if (checkServerSideGround && !player.onGround) {
-            return currentRotation == null && movementInput.moveForward < threshold
+            return currentRotation == null && modifiedForward < threshold
         }
 
-        return movementInput.moveForward < threshold
+        return modifiedForward < threshold
     }
 }

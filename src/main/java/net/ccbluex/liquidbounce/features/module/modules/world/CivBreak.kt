@@ -10,13 +10,18 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
+import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bedrock
 import net.minecraft.network.play.client.C07PacketPlayerDigging
@@ -29,24 +34,38 @@ import java.awt.Color
 
 object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
 
+    private val range by FloatValue("Range", 5F, 1F..6F)
+    private val visualSwing by BoolValue("VisualSwing", true)
+
+    private val rotations by BoolValue("Rotations", true)
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+
+        override fun isSupported() = rotations
+    }
+    private val maxTurnSpeed by maxTurnSpeedValue
+
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
+    }
+
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
 
-    private val range by FloatValue("Range", 5F, 1F..6F)
-    private val rotations by BoolValue("Rotations", true)
-    private val visualSwing by BoolValue("VisualSwing", true)
-
-    private val airReset by BoolValue("Air-Reset", true)
-    private val rangeReset by BoolValue("Range-Reset", true)
-
-
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
-        if (event.clickedBlock?.let { getBlock(it) } == bedrock)
+        if (event.clickedBlock?.let { getBlock(it) } == bedrock) {
             return
+        }
 
         blockPos = event.clickedBlock ?: return
-        enumFacing = event.WEnumFacing ?: return
+        enumFacing = event.enumFacing ?: return
 
         // Break
         sendPackets(
@@ -56,37 +75,58 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
     }
 
     @EventTarget
-    fun onUpdate(event: MotionEvent) {
+    fun onMotion(event: MotionEvent) {
+        val player = mc.thePlayer ?: return
+
+        if (event.eventState != EventState.POST) {
+            return
+        }
+
         val pos = blockPos ?: return
         val isAirBlock = getBlock(pos) == air
 
-        if (airReset && isAirBlock ||
-                rangeReset && getCenterDistance(pos) > range) {
+        if (isAirBlock || getCenterDistance(pos) > range) {
             blockPos = null
             return
         }
 
-        if (isAirBlock || getCenterDistance(pos) > range)
-            return
+        if (rotations) {
+            val spot = faceBlock(pos) ?: return
 
-        when (event.eventState) {
-            EventState.PRE -> if (rotations)
-                setTargetRotation((faceBlock(pos) ?: return).rotation)
+            val limitedRotation = limitAngleChange(
+                currentRotation ?: player.rotation,
+                spot.rotation,
+                nextFloat(minTurnSpeed, maxTurnSpeed)
+            )
 
-            EventState.POST -> {
-                if (visualSwing)
-                    mc.thePlayer.swingItem()
-                else
-                    sendPacket(C0APacketAnimation())
-
-                // Break
-                sendPackets(
-                    C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, enumFacing),
-                    C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing)
-                )
-                mc.playerController.clickBlock(blockPos, enumFacing)
-            }
+            setTargetRotation(
+                limitedRotation,
+                strafe = strafe != "Off",
+                strict = strafe == "Strict",
+                resetSpeed = minTurnSpeed to maxTurnSpeed,
+                angleThresholdForReset = angleThresholdUntilReset
+            )
         }
+    }
+
+    @EventTarget
+    fun onTick(event: TickEvent) {
+        blockPos ?: return
+        enumFacing ?: return
+
+        if (visualSwing) {
+            mc.thePlayer.swingItem()
+        } else {
+            sendPacket(C0APacketAnimation())
+        }
+
+        // Break
+        sendPackets(
+            C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, enumFacing),
+            C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing)
+        )
+
+        mc.playerController.clickBlock(blockPos, enumFacing)
     }
 
     @EventTarget
