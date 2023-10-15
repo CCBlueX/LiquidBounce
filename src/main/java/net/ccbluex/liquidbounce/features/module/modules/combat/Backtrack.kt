@@ -120,7 +120,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
 
-        if (packet.javaClass.simpleName.startsWith("S", ignoreCase = true) && everyPacket && !(packet is S29PacketSoundEffect) && !!(packet is S0CPacketSpawnPlayer)){
+        if (packet.javaClass.simpleName.startsWith("S", ignoreCase = true) && allPackets && !(packet is S29PacketSoundEffect) && !!(packet is S0CPacketSpawnPlayer)){
             packets.add(TimedPacket(packet as Packet<INetHandlerPlayClient>, System.currentTimeMillis()))
             event.cancelEvent()
         }
@@ -216,9 +216,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         realZ = 0.0
     }
 
-    private fun getColor(): Color{
-        return if (rainbow) rainbow() else Color(red, green, blue)
-    }
+    val color 
+        get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     private fun shouldBacktrack(): Boolean {
         val result = (target != null) && (!target!!.isDead) && (mc.thePlayer.getDistanceToBox(target!!.hitBox) in minDistance..maxDistance) && (mc.thePlayer.ticksExisted > 20)
