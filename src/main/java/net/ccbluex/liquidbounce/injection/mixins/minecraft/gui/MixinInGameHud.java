@@ -72,6 +72,6 @@ public class MixinInGameHud {
 
     @Redirect(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/Perspective;isFirstPerson()Z"))
     private boolean hookFreeCamRenderCrosshairInThirdPerson(Perspective instance) {
-        return ModuleFreeCam.INSTANCE.shouldRenderCrosshairInThirdPerson(instance.isFirstPerson());
+        return ModuleFreeCam.INSTANCE.shouldRenderCrosshair(instance.isFirstPerson());
     }
 }
