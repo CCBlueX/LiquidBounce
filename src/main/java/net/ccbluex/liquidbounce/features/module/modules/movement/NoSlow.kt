@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -20,12 +21,13 @@ import net.minecraft.item.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
-    private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "AAC5"), "None")
+    private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "AAC5", "SwitchItem"), "None")
 
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
@@ -72,20 +74,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
                 "ncp" -> {
                     when (event.eventState) {
-                        EventState.PRE ->
-                            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
-
-                        EventState.POST ->
-                            sendPacket(
-                                C08PacketPlayerBlockPlacement(
-                                    BlockPos(-1, -1, -1),
-                                    255,
-                                    thePlayer.heldItem,
-                                    0f,
-                                    0f,
-                                    0f
-                                )
+                        EventState.PRE -> sendPacket(
+                            C07PacketPlayerDigging(
+                                RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN
                             )
+                        )
+
+                        EventState.POST -> sendPacket(
+                            C08PacketPlayerBlockPlacement(
+                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                            )
+                        )
 
                         else -> {}
                     }
@@ -95,14 +94,26 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
                     if (event.eventState == EventState.POST) {
                         sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1),
-                                255,
-                                thePlayer.heldItem,
-                                0f,
-                                0f,
-                                0f
+                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
                             )
                         )
+                    }
+                }
+
+                "switchitem" -> {
+                    when (event.eventState) {
+                        EventState.PRE -> sendPackets(
+                            C09PacketHeldItemChange(thePlayer.inventory.currentItem % 8 + 1),
+                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                        )
+
+                        EventState.POST -> sendPacket(
+                            C08PacketPlayerBlockPlacement(
+                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                            )
+                        )
+
+                        else -> {}
                     }
                 }
             }
@@ -117,17 +128,13 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
         event.strafe = getMultiplier(heldItem, false)
     }
 
-    private fun getMultiplier(item: Item?, isForward: Boolean) =
-        when (item) {
-            is ItemFood, is ItemPotion, is ItemBucketMilk ->
-                if (isForward) consumeForwardMultiplier else consumeStrafeMultiplier
+    private fun getMultiplier(item: Item?, isForward: Boolean) = when (item) {
+        is ItemFood, is ItemPotion, is ItemBucketMilk -> if (isForward) consumeForwardMultiplier else consumeStrafeMultiplier
 
-            is ItemSword ->
-                if (isForward) blockForwardMultiplier else blockStrafeMultiplier
+        is ItemSword -> if (isForward) blockForwardMultiplier else blockStrafeMultiplier
 
-            is ItemBow ->
-                if (isForward) bowForwardMultiplier else bowStrafeMultiplier
+        is ItemBow -> if (isForward) bowForwardMultiplier else bowStrafeMultiplier
 
-            else -> 0.2F
-        }
+        else -> 0.2F
+    }
 }
