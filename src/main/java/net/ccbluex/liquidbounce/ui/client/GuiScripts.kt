@@ -137,7 +137,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
             } catch (ignored: Exception) { }
 
             6 -> try {
-                Desktop.getDesktop().browse(URL("https://forum.ccbluex.net/viewforum.php?id=16").toURI())
+                Desktop.getDesktop().browse(URL("https://forums.ccbluex.net/category/9/scripts").toURI())
             } catch (ignored: Exception) { }
         }
     }
