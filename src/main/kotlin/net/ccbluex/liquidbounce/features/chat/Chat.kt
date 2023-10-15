@@ -267,11 +267,11 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
                 try {
                     val sessionHash = packet.sessionHash
 
-                    mc.sessionService.joinServer(mc.session.profile, mc.session.accessToken, sessionHash)
+                    mc.sessionService.joinServer(mc.session.uuidOrNull, mc.session.accessToken, sessionHash)
                     client.sendPacket(
                         ServerLoginMojangPacket(
                             mc.session.username,
-                            mc.session.profile.id,
+                            mc.session.uuidOrNull,
                             allowMessages = true
                         )
                     )
