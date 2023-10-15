@@ -5,49 +5,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.WorldEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
-import net.ccbluex.liquidbounce.utils.timing.MSTimer
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.client.entity.EntityOtherPlayerMP
-import net.minecraft.network.Packet
-import net.minecraft.network.play.INetHandlerPlayClient
-import net.minecraft.network.play.server.S29PacketSoundEffect
-import net.minecraft.network.play.server.S19PacketEntityStatus
-import net.minecraft.network.play.server.S00PacketKeepAlive
-import net.minecraft.network.play.server.S03PacketTimeUpdate
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.network.play.server.S32PacketConfirmTransaction
-import net.minecraft.network.play.server.S14PacketEntity 
-import net.minecraft.network.play.server.S0CPacketSpawnPlayer
-import org.lwjgl.opengl.GL11.*
-import java.awt.Color
-import java.util.*
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePacket
-import net.minecraft.util.AxisAlignedBB
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToBox
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.entity.Entity
+import net.minecraft.network.Packet
+import net.minecraft.network.play.INetHandlerPlayClient
+import net.minecraft.network.play.server.*
+import net.minecraft.util.AxisAlignedBB
+import java.awt.Color
+import java.util.*
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private val maxDelay by IntegerValue("Delay", 50, 50..500)
-    private val delayTimer = MSTimer()
-    private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance",  3.0f, 0.0f..3.0f) {
+    private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance", 3.0f, 0.0f..3.0f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minDistance)
     }
     private val maxDistance by maxDistanceValue
@@ -72,11 +52,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private var realY = 0.0
     private var realZ = 0.0
 
-
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        
+
         if (!shouldBacktrack()) {
             return
         }
@@ -86,9 +65,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 if (pingSpoof) {
                     packets.add(TimedPacket(packet, System.currentTimeMillis()))
                     event.cancelEvent()
-                } 
+                }
                 return
             }
+
             is S12PacketEntityVelocity -> {
                 if (delayVelocity) {
                     packets.add(TimedPacket(packet, System.currentTimeMillis()))
@@ -96,6 +76,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
                 return
             }
+
             is S27PacketExplosion -> {
                 if (delayExplosion) {
                     packets.add(TimedPacket(packet, System.currentTimeMillis()))
@@ -103,6 +84,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
                 return
             }
+
             is S14PacketEntity -> {
                 if (packet.getEntity(mc.theWorld) == target) {
                     realX += packet.func_149062_c().toDouble()
@@ -113,6 +95,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
                 return
             }
+
             is S19PacketEntityStatus -> {
                 packets.add(TimedPacket(packet, System.currentTimeMillis()))
                 event.cancelEvent()
@@ -120,21 +103,17 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
 
-        if (packet.javaClass.simpleName.startsWith("S", ignoreCase = true) && allPackets && !(packet is S29PacketSoundEffect) && !!(packet is S0CPacketSpawnPlayer)){
-            packets.add(TimedPacket(packet as Packet<INetHandlerPlayClient>, System.currentTimeMillis()))
+        if (event.eventType == EventState.RECEIVE && allPackets && packet !is S29PacketSoundEffect && packet is S0CPacketSpawnPlayer) {
+            packets.add(TimedPacket(packet, System.currentTimeMillis()))
             event.cancelEvent()
         }
-
-        
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (!shouldBacktrack()) {
             clearPackets()
-        }
-
-        else handlePackets()
+        } else handlePackets()
     }
 
     @EventTarget
@@ -151,24 +130,25 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         val renderManager = mc.renderManager
         val timer = mc.timer
 
-        val x = target!!.lastTickPosX + (target!!.posX - target!!.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
-        val y = target!!.lastTickPosY + (target!!.posY - target!!.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
-        val z = target!!.lastTickPosZ + (target!!.posZ - target!!.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-        val axisAlignedBB = target!!.entityBoundingBox
-            .offset(-target!!.posX, -target!!.posY, -target!!.posZ)
-            .offset(x, y, z)
+        target?.let {
+            val x = it.lastTickPosX + (it.posX - it.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
+            val y = it.lastTickPosY + (it.posY - it.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
+            val z = it.lastTickPosZ + (it.posZ - it.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+            val axisAlignedBB = it.entityBoundingBox.offset(-it.posX, -it.posY, -it.posZ).offset(x, y, z)
 
-        drawBacktrackBox(
-            AxisAlignedBB.fromBounds(
-                axisAlignedBB.minX,
-                axisAlignedBB.minY,
-                axisAlignedBB.minZ,
-                axisAlignedBB.maxX,
-                axisAlignedBB.maxY,
-                axisAlignedBB.maxZ
-            ).offset(realX/32.0, realY/32.0, realZ/32.0), getColor()
-        )                
+            drawBacktrackBox(
+                AxisAlignedBB.fromBounds(
+                    axisAlignedBB.minX,
+                    axisAlignedBB.minY,
+                    axisAlignedBB.minZ,
+                    axisAlignedBB.maxX,
+                    axisAlignedBB.maxY,
+                    axisAlignedBB.maxZ
+                ).offset(realX / 32.0, realY / 32.0, realZ / 32.0), color
+            )
+        }
     }
+
     @EventTarget
     fun onWorld(event: WorldEvent) {
         clearPackets(false)
@@ -184,7 +164,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     override fun onDisable() {
-        clearPackets()         
+        clearPackets()
     }
 
     private fun handlePackets() {
@@ -200,28 +180,27 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 packetsToRemove.add(timedPacket)
             }
         }
-        packets.removeAll(packetsToRemove)         
+        packets.removeAll(packetsToRemove.toSet())
     }
 
     private fun clearPackets(handlePackets: Boolean = true) {
         target = null
         if (handlePackets) {
-            for (timedPacket in packets) {
-                handlePacket(timedPacket.packet)
+            for ((packet) in packets) {
+                handlePacket(packet)
             }
-        }        
-        packets.clear()  
+        }
+        packets.clear()
         realX = 0.0
         realY = 0.0
         realZ = 0.0
     }
 
-    val color 
+    val color
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     private fun shouldBacktrack(): Boolean {
-        val result = (target != null) && (!target!!.isDead) && (mc.thePlayer.getDistanceToBox(target!!.hitBox) in minDistance..maxDistance) && (mc.thePlayer.ticksExisted > 20)
-        return result
+        return (target != null) && (!target!!.isDead) && (mc.thePlayer.getDistanceToBox(target!!.hitBox) in minDistance..maxDistance) && (mc.thePlayer.ticksExisted > 20)
     }
 }
 
