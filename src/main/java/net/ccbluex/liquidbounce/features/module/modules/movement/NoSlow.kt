@@ -106,13 +106,6 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
                             C09PacketHeldItemChange(thePlayer.inventory.currentItem % 8 + 1),
                             C09PacketHeldItemChange(thePlayer.inventory.currentItem)
                         )
-
-                        EventState.POST -> sendPacket(
-                            C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
-                            )
-                        )
-
                         else -> {}
                     }
                 }
