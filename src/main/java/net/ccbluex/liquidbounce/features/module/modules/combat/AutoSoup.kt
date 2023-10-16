@@ -53,7 +53,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
         if (thePlayer.health <= health && soupInHotbar != null) {
             sendPackets(
                 C09PacketHeldItemChange(soupInHotbar - 36),
-                C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar))
+                C08PacketPlayerBlockPlacement(thePlayer.inventoryContainer.getSlot(soupInHotbar).stack)
             )
 
             if (bowl == "Drop")
