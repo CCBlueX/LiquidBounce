@@ -5,13 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.JumpEvent
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
@@ -32,7 +31,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
      * OPTIONS
      */
     private val mode by ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-        "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
+        "Reverse", "SmoothReverse", "Jump", "JumpReset", "Glitch", "Legit"), "Simple")
 
     private val horizontal by FloatValue("Horizontal", 0F, 0F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by FloatValue("Vertical", 0F, 0F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -88,6 +87,17 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     thePlayer.motionX -= sin(yaw) * 0.2
                     thePlayer.motionZ += cos(yaw) * 0.2
                 }
+
+            "jumpreset" -> {
+                if (thePlayer.hurtTime == 9) {
+                    if (velocityInput && thePlayer.onGround) {
+                        thePlayer.jump()
+                        // I tested it on mc.loyisa.cn test server (GrimAC)
+                        // ClientUtils.displayChatMessage("Reset.")
+                    }
+                }
+            }
+
 
             "glitch" -> {
                 thePlayer.noClip = velocityInput
@@ -216,7 +226,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     }
                 }
 
-                "aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true
+                "aac", "reverse", "smoothreverse", "aaczero", "jumpreset" -> velocityInput = true
 
                 "glitch" -> {
                     if (!thePlayer.onGround)
