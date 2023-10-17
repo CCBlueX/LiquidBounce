@@ -5,10 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.JumpEvent
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -218,13 +215,6 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
                 "aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true
 
-                "jumpreset" -> {
-                    if (thePlayer.onGround) {
-                        // Less likely to get banned than "Jump" mode.
-                        thePlayer.jump()
-                    }
-                }
-
                 "glitch" -> {
                     if (!thePlayer.onGround)
                         return
@@ -280,6 +270,19 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             "aaczero" ->
                 if (thePlayer.hurtTime > 0)
                     event.cancelEvent()
+        }
+    }
+
+    fun onStrafe(event: StrafeEvent) {
+        val thePlayer = mc.thePlayer
+
+        when (mode.lowercase()) {
+            "jumpreset" -> {
+                if (thePlayer.hurtTime > 0 && thePlayer.onGround) {
+                    // Less likely to get banned than "Jump" mode.
+                    thePlayer.jump()
+                }
+            }
         }
     }
 }
