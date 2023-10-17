@@ -169,7 +169,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private fun handlePackets() {
         val packetsToRemove = mutableListOf<TimedPacket>()
-        for (timedPacket in packets) {
+        val lastIndex = packets.size - 1
+
+        for (i in lastIndex downTo 0) {
+            val timedPacket = packets[i]
+            
             if (timedPacket.timestamp + maxDelay <= System.currentTimeMillis()) {
                 handlePacket(timedPacket.packet)
                 if (timedPacket.packet is S14PacketEntity) {
@@ -180,7 +184,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 packetsToRemove.add(timedPacket)
             }
         }
-        packets.removeAll(packetsToRemove.toSet())
+
+        packets.removeAll(packetsToRemove)
     }
 
     private fun clearPackets(handlePackets: Boolean = true) {
