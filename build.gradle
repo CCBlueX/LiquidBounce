@@ -105,7 +105,7 @@ dependencies {
     implementation 'org.graalvm.truffle:truffle-api:23.0.1'
     implementation 'org.graalvm.js:js:23.0.1'
 
-    runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
+    runtimeOnly 'org.graalvm.tools:profiler:23.0.2'
     runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
 
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
