@@ -94,7 +94,8 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             return@sequenceHandler
         }
 
-        // Trigger word checking. Cooldown prevents the bot from answering the question twice if the result has the same tag.
+        // Trigger word checking. Cooldown prevents the bot from answering the question twice
+        // if the result has the same tag.
         if (cooldownChronometer.hasElapsed(cooldownMinutes * 60000L)) {
             // Does the message contain the magic trigger word?
             if (message.contains(triggerSentence)) {
