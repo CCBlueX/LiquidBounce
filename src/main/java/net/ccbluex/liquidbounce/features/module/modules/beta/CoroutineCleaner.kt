@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInvento
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduled
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.toHotbarIndex
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -45,9 +46,10 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
 
 	private val limitStackCounts by BoolValue("LimitStackCounts", true)
-	private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36) { limitStackCounts }
-	private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36) { limitStackCounts }
-	// TODO: max potion, vehicle, throwable, bucket stacks, ..., or limit buckets by default
+		private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36) { limitStackCounts }
+		private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36) { limitStackCounts }
+		private val maxThrowableStacks by IntegerValue("MaxThrowableStacks", 5, 0..36) { limitStackCounts }
+		// TODO: max potion, vehicle, ..., stacks?
 
 	private val mergeStacks by BoolValue("MergeStacks", true)
 
@@ -80,7 +82,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	private val slot9Value = SortValue("Slot9", "Block")
 
 	// Compact multiple small stacks into one to free up inventory space
-	suspend fun compactStacks() {
+	suspend fun mergeInventoryStacks() {
 		if (!mergeStacks || !shouldOperate())
 			return
 
@@ -100,7 +102,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 					val sortedStacks = groupedStacks
 						// Only try to merge non-full stacks, without limiting stack counts in isStackUseful
-						.filter { it.value.stackSize != it.value.maxStackSize && isStackUseful(it.value, stacks, ignoreLimits = true) }
+						.filter { it.value.stackSize != it.value.maxStackSize && isStackUseful(it.value, stacks, noLimits = true) }
 						// Prioritise stacks that are lower in inventory
 						.sortedByDescending { it.index }
 						// Prioritise stacks that are sorted
@@ -148,7 +150,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 		val thePlayer = mc.thePlayer ?: return
 
-		for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
+		hotbarLoop@ for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
 			// Check if slot has a valid sorting target
 			val isRightType = SORTING_TARGETS[value.get()] ?: continue
 
@@ -162,26 +164,34 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			val stack = stacks.getOrNull(index)
 			val item = stack?.item
 
-			// Slot is already sorted
-			if (isRightType(item) && isStackUseful(stack, stacks))
-				continue
-
 			// Search for best item to sort
-			for ((otherIndex, otherStack) in stacks.withIndex()) {
-				if (otherIndex in TickScheduler)
-					continue
+			suspend fun searchAndSort(strictlyBest: Boolean = false): Boolean {
+				// Slot is already sorted
+				if (isRightType(item) && isStackUseful(stack, stacks, strictlyBest = strictlyBest))
+					return true
 
-				if (!otherStack.hasItemAgePassed(minItemAge))
-					continue
+				for ((otherIndex, otherStack) in stacks.withIndex()) {
+					if (otherIndex in TickScheduler)
+						continue
 
-				val otherItem = otherStack?.item
+					val otherItem = otherStack?.item
 
-				// Check if an item is the correct type, isn't bad and isn't already sorted
-				if (isRightType(otherItem) && isStackUseful(otherStack, stacks) && !canBeSortedTo(otherIndex, otherItem, stacks.size)) {
-					click(otherIndex, hotbarIndex, 2)
-					break
+					// Check if an item is the correct type, isn't bad and isn't already sorted to a different slot
+					if (isRightType(otherItem) && isStackUseful(otherStack, stacks, strictlyBest = strictlyBest) && !canBeSortedTo(otherIndex, otherItem, stacks.size)) {
+						// If best item to sort was found, but its item age hasn't yet passed, skip search for this hotbar slot
+						if (otherStack.hasItemAgePassed(minItemAge))
+							click(otherIndex, hotbarIndex, 2)
+
+						return true
+					}
 				}
+
+				return false
 			}
+
+			// Try to sort strictly the best and if it is already sorted in a different slot try any other useful item of the correct type
+			if (!searchAndSort(strictlyBest = true))
+				searchAndSort()
 		}
 
 		waitUntil(TickScheduler::isEmpty)
@@ -284,24 +294,17 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		return SORTING_TARGETS[SORTING_VALUES.getOrNull(index)?.get()]?.invoke(item) ?: false
 	}
 
-	fun Int.toHotbarIndex(stacksSize: Int): Int? {
-		val parsed = this - stacksSize + 9
-
-		return if (parsed in 0..8) parsed else null
-	}
-
-	fun isStackUseful(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null, ignoreLimits: Boolean = false): Boolean {
+	// TODO: Simplify all useful checks by a single getBetterAlternativeCount and checking if it is above 0, above stack limit, ...
+	fun isStackUseful(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null, noLimits: Boolean = false, strictlyBest: Boolean = false): Boolean {
 		val item = stack?.item ?: return false
 
 		return when (item) {
 			in ITEMS_WHITELIST -> true
 
-			// TODO: Limit max bucket count, vehicle count
-			is ItemEnderPearl, is ItemEnchantedBook, is ItemBucket, is ItemBed -> true
+			is ItemEnderPearl, is ItemEnchantedBook, is ItemBed -> true
 
-			// TODO: Simplify
-			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap, ignoreLimits)
-			is ItemBlock -> isUsefulBlock(stack, stacks, entityStacksMap, ignoreLimits)
+			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap, noLimits, strictlyBest)
+			is ItemBlock -> isUsefulBlock(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 
 			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
@@ -309,23 +312,12 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 
 			is ItemPotion -> isUsefulPotion(stack)
 
+			is ItemBucket -> isUsefulBucket(stack, stacks, entityStacksMap)
+
+			in THROWABLE_ITEMS -> isUsefulThrowable(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 
 			else -> false
 		}
-	}
-
-	private fun isUsefulPotion(stack: ItemStack?): Boolean {
-		val item = stack?.item ?: return false
-
-		if (item is ItemPotion) {
-			val isSplash = stack.isSplashPotion()
-			val isHarmful = item.getEffects(stack)?.any { it.potionID in NEGATIVE_EFFECT_IDS } ?: return false
-
-			// Only keep helpful potions and, if 'onlyGoodPotions' is disabled, also splash harmful potions
-			return !isHarmful || (!onlyGoodPotions && isSplash)
-		}
-
-		return false
 	}
 
 	private fun isUsefulEquipment(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
@@ -360,12 +352,30 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 	}
 
-	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean): Boolean {
+	private fun isUsefulPotion(stack: ItemStack?): Boolean {
+		val item = stack?.item ?: return false
+
+		if (item !is ItemPotion) return false
+
+		val isSplash = stack.isSplashPotion()
+		val isHarmful = item.getEffects(stack)?.any { it.potionID in NEGATIVE_EFFECT_IDS } ?: return false
+
+		// Only keep helpful potions and, if 'onlyGoodPotions' is disabled, also splash harmful potions
+		return !isHarmful || (!onlyGoodPotions && isSplash)
+	}
+
+	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean, strictlyBest: Boolean): Boolean {
 		val item = stack?.item ?: return false
 
 		if (item !is ItemFood) return false
 
-		if (ignoreLimits || !limitStackCounts) return true
+		// Skip checks if there is no stack limit set and when you are not strictly searching for best option
+		if (ignoreLimits || !limitStackCounts) {
+			if (!strictlyBest)
+				return true
+		// Skip checks if limit is set to 0
+		} else if (maxFoodStacks == 0)
+			return false
 
 		val stackSaturation = item.getSaturationModifier(stack) * stack.stackSize
 
@@ -418,13 +428,20 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			}
 		}
 
-		return betterCount < maxFoodStacks
+		// If sorting is checking if item is strictly the best option, only return true for items that have no better alternatives
+		return if (strictlyBest) betterCount == 0 else betterCount < maxFoodStacks
 	}
 
-	private fun isUsefulBlock(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean): Boolean {
+	private fun isUsefulBlock(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean, strictlyBest: Boolean): Boolean {
 		if (!isSuitableBlock(stack)) return false
 
-		if (ignoreLimits || !limitStackCounts) return true
+		// Skip checks if there is no stack limit set and when you are not strictly searching for best option
+		if (ignoreLimits || !limitStackCounts) {
+			if (!strictlyBest)
+				return true
+		// Skip checks if limit is set to 0
+		} else if (maxBlockStacks == 0)
+			return false
 
 		val index = stacks.indexOf(stack)
 
@@ -440,7 +457,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 		}
 
 		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
-			if (!isSuitableBlock(otherStack) || otherStack == stack)
+			if (otherStack == stack || !isSuitableBlock(otherStack))
 				return@count false
 
 			// Items dropped on ground should have index -1
@@ -468,7 +485,115 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 			}
 		}
 
-		return betterCount < maxBlockStacks
+		// If sorting is checking if item is strictly the best option, only return true for items that have no better alternatives
+		return if (strictlyBest) betterCount == 0 else betterCount < maxBlockStacks
+	}
+
+	private fun isUsefulThrowable(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean, strictlyBest: Boolean): Boolean {
+		val item = stack?.item ?: return false
+
+		if (item !in THROWABLE_ITEMS) return false
+
+		// Skip checks if there is no stack limit set and when you are not strictly searching for best option
+		if (ignoreLimits || !limitStackCounts) {
+			if (!strictlyBest)
+				return true
+		// Skip checks if limit is set to 0
+		} else if (maxBlockStacks == 0)
+			return false
+
+		val index = stacks.indexOf(stack)
+
+		val isSorted = canBeSortedTo(index, item, stacks.size)
+
+		val iteratedStacks = stacks.toMutableList()
+
+		var distanceSqToItem = .0
+
+		if (!entityStacksMap.isNullOrEmpty()) {
+			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			iteratedStacks += entityStacksMap.keys
+		}
+
+		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
+			if (otherStack == stack)
+				return@count false
+
+			val otherItem = otherStack?.item ?: return@count false
+
+			if (otherItem !in THROWABLE_ITEMS) return@count false
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
+
+			when (otherStack.stackSize.compareTo(stack.stackSize)) {
+				// Found a stack that has higher size
+				1 -> true
+				// Both stacks are equally good
+				0 -> {
+					// Only true when both items are dropped on ground
+					if (index == otherIndex) {
+						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
+
+						// If other item is closer, count it as better
+						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+					} else {
+						val isOtherSorted = canBeSortedTo(otherIndex, otherStack.item, stacks.size)
+
+						// Count as better alternative only when compared stack isn't sorted and the other is sorted, or has higher index
+						!isSorted && (isOtherSorted || otherIndex > index)
+					}
+				}
+				else -> false
+			}
+		}
+
+		// If sorting is checking if item is strictly the best option, only return true for items that have no better alternatives
+		return if (strictlyBest) betterCount == 0 else betterCount < maxThrowableStacks
+	}
+
+	// Limit buckets to max 1 per type
+	private fun isUsefulBucket(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?): Boolean {
+		val item = stack?.item ?: return false
+
+		if (item !is ItemBucket) return false
+
+		val index = stacks.indexOf(stack)
+
+		val isSorted = canBeSortedTo(index, item, stacks.size)
+
+		if (isSorted) return true
+
+		val iteratedStacks = stacks.toMutableList()
+
+		var distanceSqToItem = .0
+
+		if (!entityStacksMap.isNullOrEmpty()) {
+			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			iteratedStacks += entityStacksMap.keys
+		}
+
+		return iteratedStacks.withIndex().none { (otherIndex, otherStack) ->
+			if (otherStack == stack)
+				return@none false
+
+			val otherItem = otherStack?.item ?: return@none false
+
+			if (otherItem != item)
+				return@none false
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
+
+			// Only when both items are dropped on ground
+			if (index == otherIndex) {
+				val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@none false
+
+				return distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+			}
+
+			canBeSortedTo(otherIndex, otherItem, stacks.size) || otherIndex > index
+		}
 	}
 
 	private fun hasBestParameters(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null, parameters: (ItemStack) -> Float): Boolean {
@@ -535,7 +660,7 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 	}
 
 	@Suppress("DEPRECATION")
-	fun isSuitableBlock(stack: ItemStack?): Boolean {
+	private fun isSuitableBlock(stack: ItemStack?): Boolean {
 		val item = stack?.item ?: return false
 
 		if (item is ItemBlock) {
@@ -550,8 +675,10 @@ object CoroutineCleaner: Module("CoroutineCleaner", ModuleCategory.BETA) {
 }
 
 private val ITEMS_WHITELIST = arrayOf(
-	Items.arrow, Items.diamond, Items.iron_ingot, Items.gold_ingot, Items.stick, Items.egg, Items.snowball
+	Items.arrow, Items.diamond, Items.iron_ingot, Items.gold_ingot, Items.stick
 )
+
+private val THROWABLE_ITEMS = arrayOf(Items.egg, Items.snowball)
 
 private val NEGATIVE_EFFECT_IDS = arrayOf(
 	Potion.moveSlowdown.id, Potion.digSlowdown.id, Potion.harm.id, Potion.confusion.id, Potion.blindness.id,
