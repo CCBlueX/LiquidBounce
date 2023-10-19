@@ -73,6 +73,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val switchDelay by int("SwitchDelay", 0, 0..20)
 
+    private val comparisonMode by enumChoice("Preferred", ComparisonMode.CROSSHAIR, ComparisonMode.values())
+
     /**
      * Makes a safe platform
      */
@@ -89,7 +91,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
 
                 for (x in -size..size) {
                     for (z in -size..size) {
-                        val vec3 = Vec3(playerPosition.x.toDouble() + x, playerPosition.y.toDouble(), playerPosition.z.toDouble() + z)
+                        val vec3 = Vec3(playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
+                            playerPosition.z.toDouble() + z)
                         val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                         val baseColor = base.alpha(50)
@@ -118,17 +121,15 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
     private var currentTarget: DestroyerTarget? = null
 
     // TODO: Make use of path finding AI baritone
-    private object Prison : ToggleableConfigurable(this, "Prison", false) {
+    //private object Prison : ToggleableConfigurable(this, "Prison", false) {
 
-        private val followArea by boolean("FollowArea", true)
+        //private val followArea by boolean("FollowArea", true)
 
-    }
-
-    private val comparisonMode by enumChoice("Preferred", ComparisonMode.CROSSHAIR, ComparisonMode.values())
+    //}
 
     init {
         tree(Platform)
-        tree(Prison)
+        //tree(Prison)
     }
 
     /**
@@ -168,9 +169,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
         val direction = rayTraceResult.side
 
         if (forceImmediateBreak) {
-            network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction))
+            network.sendPacket(
+                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction)
+            )
             swingHand()
-            network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction))
+            network.sendPacket(
+                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction)
+            )
         } else {
             if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
                 swingHand()
@@ -195,10 +200,14 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
 
         val targets = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && !blacklistedBlocks.contains(state.block) && !isOnPlatform(pos)
-                && getNearestPoint(eyesPos, Box(pos, pos.add(1, 1, 1))).squaredDistanceTo(eyesPos) <= radiusSquared
+                && getNearestPoint(eyesPos, Box(pos, pos.add(1, 1, 1)))
+                    .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {
-                ComparisonMode.CROSSHAIR -> RotationManager.rotationDifference(RotationManager.makeRotation(pos.toCenterPos(), player.eyes), RotationManager.serverRotation)
+                ComparisonMode.CROSSHAIR -> RotationManager.rotationDifference(
+                    RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
+                    RotationManager.serverRotation
+                )
                 ComparisonMode.DISTANCE -> pos.getCenterDistanceSquared()
                 ComparisonMode.HARDNESS -> state.getHardness(world, pos).toDouble()
             }
@@ -208,10 +217,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
             return
         }
 
-        println("targets: ${targets.size}")
-
         for ((pos, state) in targets) {
-            val raytrace = raytraceBlock(player.eyes, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble())
+            val raytrace = raytraceBlock(player.eyes, pos, state, range = range.toDouble(),
+                wallsRange = wallRange.toDouble())
 
             // Check if there is a free angle to the block.
             if (raytrace != null) {
@@ -225,7 +233,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
     }
 
     private fun isOnPlatform(block: BlockPos) = Platform.enabled
-        && block.x <= player.blockPos.x + Platform.size && block.x >= player.blockPos.x - Platform.size // X and Z are within the platform
+        && block.x <= player.blockPos.x + Platform.size && block.x >= player.blockPos.x - Platform.size
         && block.z <= player.blockPos.z + Platform.size && block.z >= player.blockPos.z - Platform.size
         && block.y == player.blockPos.down().y // Y level is the same as the player's feet
 
