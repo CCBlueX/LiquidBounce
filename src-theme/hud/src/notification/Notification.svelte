@@ -45,7 +45,7 @@
     }
 
     &.info {
-      background-color: var(--accent);
+      background-color: #4677ff;
       background-image: url("../img/notification/info.svg");
     }
 
@@ -63,7 +63,7 @@
   .title {
     grid-area: b;
     font-size: 14px;
-    color: var(--text);;
+    color: white;
     font-weight: 600;
   }
 
