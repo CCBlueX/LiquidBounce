@@ -1,9 +1,14 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.utils.inventory
 
 import kotlinx.coroutines.*
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineArmorer
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineStealer
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
+import net.ccbluex.liquidbounce.features.module.modules.world.ChestStealer
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -46,13 +51,13 @@ object InventoryManager: MinecraftInstance() {
 		 * ChestStealer actions
 		 */
 
-		CoroutineStealer.stealFromChest()
+		ChestStealer.stealFromChest()
 
 		/**
 		 * AutoArmor actions
 		 */
 
-		CoroutineArmorer.equipFromHotbar()
+		AutoArmor.equipFromHotbar()
 
 		// Following actions require inventory / simulated inventory, ...
 
@@ -66,20 +71,20 @@ object InventoryManager: MinecraftInstance() {
 		while (true) {
 			hasScheduled = false
 
-			CoroutineArmorer.equipFromInventory()
+			AutoArmor.equipFromInventory()
 
 			/**
 			 * InventoryCleaner actions
 			 */
 
 			// Compact multiple small stacks into one to free up inventory space
-			CoroutineCleaner.mergeInventoryStacks()
+			InventoryCleaner.mergeInventoryStacks()
 
 			// Sort hotbar (with useful items without even dropping bad items first)
-			CoroutineCleaner.sortHotbar()
+			InventoryCleaner.sortHotbar()
 
 			// Drop bad items to free up inventory space
-			CoroutineCleaner.dropGarbage()
+			InventoryCleaner.dropGarbage()
 
 			// Stores which action should be executed to close open inventory or simulated inventory
 			// If no clicks were scheduled throughout any iteration (canCloseInventory == false), then it is null, to prevent closing inventory all the time
@@ -130,7 +135,7 @@ object InventoryManager: MinecraftInstance() {
 				runCatching {
 					manageInventory()
 				}.onFailure {
-					// TODO: Remove when stable
+					// TODO: Remove when stable, probably in b86
 					displayChatMessage("§cReworked coroutine inventory management had ran into an issue! Please report this: ${it.message ?: it.cause}")
 
 					it.printStackTrace()

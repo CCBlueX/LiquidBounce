@@ -1,13 +1,16 @@
-@file:Suppress("ControlFlowWithEmptyBody")
-
-package net.ccbluex.liquidbounce.features.module.modules.beta
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.ccbluex.liquidbounce.utils.inventory.CoroutineArmorComparator.getBestArmorSet
+import net.ccbluex.liquidbounce.utils.inventory.ArmorComparator.getBestArmorSet
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduled
@@ -25,9 +28,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
-// TODO: What happens if you get an armor while spoofing selected slot while scaffolding?
-// hotbar option should check whether serverSlot == currentItem or smth like that
-object CoroutineArmorer: Module("CoroutineArmorer", ModuleCategory.BETA) {
+object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 	private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
 		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 	}

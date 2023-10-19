@@ -11,9 +11,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.command.CommandManager.registerCommand
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineArmorer
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineStealer
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
@@ -27,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.Timer
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import java.util.*
-
 
 object ModuleManager : Listenable {
 
@@ -46,7 +42,6 @@ object ModuleManager : Listenable {
 
         // Register modules which need to be instanced (Java classes)
         registerModules(
-            AutoArmor::class.java,
             Ignite::class.java,
             ItemTeleport::class.java,
             Phase::class.java,
@@ -71,6 +66,7 @@ object ModuleManager : Listenable {
             AtAllProvider,
             AttackEffects,
             AutoAccount,
+            AutoArmor,
             AutoBow,
             AutoBreak,
             AutoClicker,
@@ -103,9 +99,6 @@ object ModuleManager : Listenable {
             Clip,
             ComponentOnHover,
             ConsoleSpammer,
-            CoroutineArmorer,
-            CoroutineCleaner,
-            CoroutineStealer,
             Criticals,
             Damage,
             Derp,
