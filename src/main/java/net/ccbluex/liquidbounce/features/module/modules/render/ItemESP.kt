@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.beta.CoroutineCleaner
+import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
@@ -75,8 +75,8 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
 
         try {
             entityStacksMap.forEach { (stack, entity) ->
-                val isUseful = CoroutineCleaner.state && CoroutineCleaner.highlightUseful
-                        && CoroutineCleaner.isStackUseful(stack, stacks, entityStacksMap)
+                val isUseful = InventoryCleaner.state && InventoryCleaner.highlightUseful
+                        && InventoryCleaner.isStackUseful(stack, stacks, entityStacksMap)
 
                 // If ItemESP is disabled, only render boxes on useful items
                 if (!state && !isUseful)
@@ -89,5 +89,5 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
         }
     }
 
-    override fun handleEvents() = state || (CoroutineCleaner.state && CoroutineCleaner.highlightUseful)
+    override fun handleEvents() = state || (InventoryCleaner.state && InventoryCleaner.highlightUseful)
 }
