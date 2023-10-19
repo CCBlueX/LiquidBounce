@@ -65,6 +65,10 @@ repositories {
         url = "https://maven.terraformersmc.com/"
     }
     maven {
+        name = "modrinth"
+        url = "https://api.modrinth.com/maven"
+    }
+    maven {
         name = "ViaVersion"
         url = "https://repo.viaversion.com/"
     }
