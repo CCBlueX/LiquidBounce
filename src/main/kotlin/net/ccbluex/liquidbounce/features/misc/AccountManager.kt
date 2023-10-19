@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import com.google.gson.JsonObject
+import com.labymedia.ultralight.javascript.JavascriptObject
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.thealtening.api.TheAltening
@@ -57,9 +58,11 @@ object AccountManager : Configurable("Accounts") {
         when (account) {
             is CrackedAccount -> {
                 mc.session = mc.sessionService.loginCracked(account.session.username)
-                mc.sessionService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment)
-                    .createMinecraftSessionService()
+                mc.sessionService = YggdrasilAuthenticationService(
+                    Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
+                ).createMinecraftSessionService()
             }
+
             is MicrosoftAccount -> {
                 mc.session = net.minecraft.client.util.Session(
                     account.name,
@@ -69,9 +72,11 @@ object AccountManager : Configurable("Accounts") {
                     Optional.empty(),
                     net.minecraft.client.util.Session.AccountType.MSA
                 )
-                mc.sessionService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment)
-                    .createMinecraftSessionService()
+                mc.sessionService = YggdrasilAuthenticationService(
+                    Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
+                ).createMinecraftSessionService()
             }
+
             is AlteningAccount -> {
                 val (session, sessionService) = mc.sessionService.loginAltening(account.token)
 
@@ -94,8 +99,21 @@ object AccountManager : Configurable("Accounts") {
         accounts += CrackedAccount().also { account ->
             account.name = username
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
+    @RequiredByScript
+    fun newMicrosoftAccount(success: JavascriptObject, error: JavascriptObject) {
+        newMicrosoftAccount(success = { account ->
+            // TODO: fix this
+            // success.callAsFunction(null, JavascriptValue(account))
+        }, error = { errorString ->
+            // TODO: fix this
+            // error.callAsFunction(null, errorString)
+        })
+    }
 
     /**
      * Create a new Microsoft Account using the OAuth2 flow which opens a browser window to authenticate the user
@@ -122,6 +140,9 @@ object AccountManager : Configurable("Accounts") {
 
                 // Add account to list of accounts
                 accounts += account
+
+                // Store configurable
+                ConfigSystem.storeConfigurable(this@AccountManager)
             }
 
             /**
@@ -138,6 +159,9 @@ object AccountManager : Configurable("Accounts") {
         accounts += AlteningAccount().also { account ->
             account.token = accountToken
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
     fun generateNewAlteningAccount(apiToken: String = this.alteningApiToken) {
@@ -154,6 +178,9 @@ object AccountManager : Configurable("Accounts") {
             account.hypixelRank = alteningAccount.info.hypixelRank ?: ""
             account.hypixelLevel = alteningAccount.info.hypixelLevel
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
 }

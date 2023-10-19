@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -50,7 +51,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val throughWalls by boolean("ThroughWalls", false)
 
     // Rotation
-    private val rotations = RotationsConfigurable()
+    private val rotations = tree(RotationsConfigurable())
 
     private var currentTarget: BlockPos? = null
 
@@ -113,7 +114,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val (pos, state) = blockToProcess
 
-        val rt = RotationManager.raytraceBlock(
+        val rt = raytraceBlock(
             player.eyes,
             pos,
             state,

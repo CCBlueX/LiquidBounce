@@ -84,7 +84,8 @@ object ConfigSystem {
      * Create new root configurable
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()): Configurable {
-        @Suppress("UNCHECKED_CAST") return root(Configurable(name, tree as MutableList<Value<*>>))
+        @Suppress("UNCHECKED_CAST")
+        return root(Configurable(name, tree as MutableList<Value<*>>))
     }
 
     /**

@@ -23,7 +23,6 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.io.HttpClient.request
-
 import org.apache.commons.lang3.RandomStringUtils
 
 /**
@@ -46,7 +45,6 @@ object ClientApi {
 
     fun requestMessageOfTheDayEndpoint(branch: String = HARD_CODED_BRANCH) =
         endpointRequest<MessageOfTheDay>("client/$branch/motd")
-
 
     fun requestSettingsList(branch: String = HARD_CODED_BRANCH) =
         endpointRequest<Array<AutoSettings>>("client/$branch/settings")
@@ -103,15 +101,11 @@ object ClientApi {
  */
 
 data class Build(
-    @SerializedName("build_id")
-    val buildId: Int,
-    @SerializedName("commit_id")
-    val commitId: String,
+    @SerializedName("build_id") val buildId: Int,
+    @SerializedName("commit_id") val commitId: String,
     val branch: String,
-    @SerializedName("lb_version")
-    val lbVersion: String,
-    @SerializedName("mc_version")
-    val mcVersion: String,
+    @SerializedName("lb_version") val lbVersion: String,
+    @SerializedName("mc_version") val mcVersion: String,
     val release: Boolean,
     val date: String,
     val message: String,
@@ -132,18 +126,14 @@ data class MessageOfTheDay(val message: String)
  * The setting id will later be used to actually request the setting and load it
  */
 data class AutoSettings(
-    @SerializedName("setting_id")
-    val settingId: String,
+    @SerializedName("setting_id") val settingId: String,
     val name: String,
-    @SerializedName("setting_type")
-    val type: AutoSettingsType,
+    @SerializedName("setting_type") val type: AutoSettingsType,
     val description: String,
     var date: String,
     val contributors: String,
-    @SerializedName("status_type")
-    val statusType: AutoSettingsStatusType,
-    @SerializedName("status_date")
-    var statusDate: String
+    @SerializedName("status_type") val statusType: AutoSettingsStatusType,
+    @SerializedName("status_date") var statusDate: String
 )
 
 /**

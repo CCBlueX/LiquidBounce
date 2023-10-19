@@ -22,15 +22,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.util.Hand
 
 /**
  * AutoArmor module
@@ -38,7 +35,6 @@ import net.minecraft.util.Hand
  * Automatically put on the best armor.
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
-
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
     private val hotbar by boolean("Hotbar", true)
 
@@ -46,105 +42,115 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
-        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
-            return@repeatable
-        }
 
-        val bestArmor = (0..41).mapNotNull { slot ->
-            val stack = player.inventory.getStack(slot)
+        val bestArmor = findBestArmorPiecesInInventory(player)
 
-            return@mapNotNull when (stack?.item) {
-                is ArmorItem -> ArmorPiece(stack, slot)
-                else -> null
-            }
-        }.groupBy(ArmorPiece::entitySlotId).values.mapNotNull {
-            it.maxWithOrNull(ArmorComparator)
-        }
+        for ((index, armorPiece) in bestArmor.withIndex()) {
+            val isOnLastPiece = index == bestArmor.lastIndex
 
-        for (armorPiece in bestArmor) {
-            if (armorPiece.isAlreadyEquipped) {
-                continue
+            if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
+                break
             }
 
             val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
 
-            if (stackInArmor.item == Items.ELYTRA) {
+            if (armorPiece.isAlreadyEquipped || stackInArmor.item == Items.ELYTRA) {
                 continue
             }
 
-            if (!stackInArmor.isNothing() && move(armorPiece.inventorySlot, true) || stackInArmor.isNothing() && move(
-                    armorPiece.slot, false
-                )
-            ) {
-                locked = true
-                wait { inventoryConstraints.delay.random() }
-
-                return@repeatable
+            val moveOccurred = if (!stackInArmor.isNothing()) {
+                // Clear current armor
+                move(armorPiece.inventorySlot, true)
+            } else {
+                // Equip new armor
+                move(armorPiece.slot, false)
             }
+
+            if (moveOccurred) {
+                locked = true
+
+                if (!isOnLastPiece) {
+                    wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
+                }
+            }
+        }
+
+        if (locked && !isInInventoryScreen) {
+            network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
 
         locked = false
     }
 
+    private fun findBestArmorPiecesInInventory(player: ClientPlayerEntity): List<ArmorPiece> {
+        val armorPiecesGroupedBySlotId = (0..41).mapNotNull { slot ->
+            val stack = player.inventory.getStack(slot) ?: return@mapNotNull null
+
+            return@mapNotNull when (stack.item) {
+                is ArmorItem -> ArmorPiece(stack, slot)
+                else -> null
+            }
+        }.groupBy(ArmorPiece::entitySlotId)
+
+        return armorPiecesGroupedBySlotId.values.mapNotNull { it.maxWithOrNull(ArmorComparator) }
+    }
+
     /**
-     * Shift+Left clicks the specified [item]
+     * Shift+Left-clicks the specified [clientSlot]
      *
      * @return True if it is unable to move the item
      */
-    private fun move(item: Int, isObsolete: Boolean): Boolean {
-        val slot = convertClientSlotToServerSlot(item)
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+    private fun move(
+        clientSlot: Int,
+        isObsolete: Boolean,
+    ): Boolean {
+        val serverSlot = convertClientSlotToServerSlot(clientSlot)
+        val isInventoryOpen = InventoryTracker.isInventoryOpenServerSide
 
-        if (!isObsolete && hotbar && !isInInventoryScreen) {
-            if (slot in 36..44) {
-                if (item != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(item))
-                }
+        val canTryHotbarMove = !isObsolete && hotbar && !isInventoryOpen
 
-                val interact = interaction.interactItem(player, Hand.MAIN_HAND)
+        if (isHotbarSlot(clientSlot) && canTryHotbarMove) {
+            clickHotbarOrOffhand(clientSlot)
 
-                if (interact.shouldSwingHand()) {
-                    player.swingHand(Hand.MAIN_HAND)
-                }
-
-                if (item != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-                }
-
-                return true
-            } else if (slot == 45) {
-                val interact = interaction.interactItem(player, Hand.OFF_HAND)
-
-                if (interact.shouldSwingHand()) {
-                    player.swingHand(Hand.OFF_HAND)
-                }
-
-                return true
-            }
+            return true
         }
 
-        if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
-            // Should the item be just thrown out of the inventory
-            val shouldThrow = isObsolete && player.inventory.main.none { it.isEmpty }
+        val canDoConventionalMove = !interaction.hasRidingInventory()
 
-            if (!isInInventoryScreen) {
-                openInventorySilently()
-            }
+        if (!canDoConventionalMove) {
+            return false
+        }
 
+        return tryConventionalMove(isInventoryOpen, isObsolete, serverSlot)
+    }
+
+    private fun tryConventionalMove(
+        isInventoryOpen: Boolean,
+        isObsolete: Boolean,
+        slot: Int,
+    ): Boolean {
+        val isCurrentMovementLegal = !inventoryConstraints.violatesNoMove
+        val isInventoryStateLegal = !inventoryConstraints.invOpen || isInventoryOpen
+
+        if (!isCurrentMovementLegal || !isInventoryStateLegal) {
+            return false
+        }
+
+        // Should the item be just thrown out of the inventory
+        val shouldThrow = isObsolete && player.inventory.main.none { it.isEmpty }
+
+        // Open inventory, click selected slots but don't close it just yet
+        runWithOpenedInventory {
             if (shouldThrow) {
                 interaction.clickSlot(0, slot, 1, SlotActionType.THROW, player)
             } else {
                 interaction.clickSlot(0, slot, 0, SlotActionType.QUICK_MOVE, player)
             }
 
-            if (!isInInventoryScreen) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
-
-            return true
+            false
         }
 
-        return false
+        return true
     }
 
     override fun disable() {

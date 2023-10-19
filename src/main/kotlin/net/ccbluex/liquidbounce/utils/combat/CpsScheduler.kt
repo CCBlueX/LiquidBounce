@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import kotlin.math.roundToInt
-
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleClickRecorder
 

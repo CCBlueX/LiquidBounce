@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.block.Blocks
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.ActionResult
@@ -104,7 +105,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     }
 
-    private object MLG : Choice("MLG") {
+    object MLG : Choice("MLG") {
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -138,7 +139,8 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             val options = BlockPlacementTargetFindingOptions(
                 listOf(Vec3i(0, 0, 0)),
                 player.inventory.getStack(itemForMLG!!),
-                CenterTargetPositionFactory
+                CenterTargetPositionFactory,
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
             )
 
             currentTarget = findBestBlockPlacementTarget(collision.up(), options)
@@ -154,7 +156,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
             val rayTraceResult = raycast(4.5, rotation) ?: return@handler
 
-            if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction) {
+            if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.interactedBlockPos || rayTraceResult.side != target.direction) {
                 return@handler
             }
 
@@ -167,41 +169,78 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             currentTarget = null
         }
 
-        private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
-            .minByOrNull { abs(player.inventory.selectedSlot - it) }
+        private fun findClosestItem(items: Array<Item>): Int? {
+            return (0..8)
+                .filter { player.inventory.getStack(it).item in items }
+                .minByOrNull { abs(player.inventory.selectedSlot - it) }
+        }
 
-        private fun doPlacement(rayTraceResult: BlockHitResult) {
+        fun doPlacement(
+            rayTraceResult: BlockHitResult,
+            hand: Hand = Hand.MAIN_HAND,
+            onPlacementSuccess: () -> Boolean = { true },
+            onItemUseSuccess: () -> Boolean = { true }
+        ) {
             val stack = player.mainHandStack
             val count = stack.count
 
-            val interactBlock = interaction.interactBlock(player, Hand.MAIN_HAND, rayTraceResult)
+            val interactionResult = interaction.interactBlock(player, hand, rayTraceResult)
 
-            if (interactBlock.isAccepted) {
-                if (interactBlock.shouldSwingHand()) {
-                    player.swingHand(Hand.MAIN_HAND)
-
-                    if (!stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())) {
-                        mc.gameRenderer.firstPersonRenderer.resetEquipProgress(Hand.MAIN_HAND)
-                    }
-                }
-
-                return
-            } else if (interactBlock == ActionResult.FAIL) {
-                return
-            }
-
-            if (!stack.isEmpty) {
-                val interactItem = interaction.interactItem(player, Hand.MAIN_HAND)
-
-                if (interactItem.isAccepted) {
-                    if (interactItem.shouldSwingHand()) {
-                        player.swingHand(Hand.MAIN_HAND)
-                    }
-
-                    mc.gameRenderer.firstPersonRenderer.resetEquipProgress(Hand.MAIN_HAND)
+            when {
+                interactionResult == ActionResult.FAIL -> {
                     return
                 }
+                interactionResult == ActionResult.PASS -> {
+                    // Ok, we cannot place on the block, so let's just use the item in the direction
+                    // without targeting a block (for buckets, etc.)
+                    handlePass(hand, stack, onItemUseSuccess)
+                    return
+                }
+                interactionResult.isAccepted -> {
+                    val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
+
+                    handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
+                }
             }
+        }
+
+        /**
+         * Swings item, resets equip progress and hand swing progress
+         *
+         * @param wasStackUsed was an item consumed in order to place the block
+         */
+        private fun handleActionsOnAccept(
+            hand: Hand,
+            interactionResult: ActionResult,
+            wasStackUsed: Boolean,
+            onPlacementSuccess: () -> Boolean,
+        ) {
+            if (!interactionResult.shouldSwingHand()) {
+                return
+            }
+
+            if (onPlacementSuccess()) {
+                player.swingHand(hand)
+            }
+
+            if (wasStackUsed) {
+                mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
+            }
+
+            return
+        }
+
+        /**
+         * Just interacts with the item in the hand instead of using it on the block
+         */
+        private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boolean) {
+            if (stack.isEmpty) {
+                return
+            }
+
+            val actionResult = interaction.interactItem(player, hand)
+
+            handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess)
         }
     }
 

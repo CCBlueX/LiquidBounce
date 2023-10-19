@@ -36,15 +36,12 @@ import net.minecraft.entity.effect.StatusEffects
 object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
     private val modes = choices(
-        "Mode",
-        FullBrightGamma,
-        arrayOf(
-            FullBrightGamma,
-            FullBrightNightVision
+        "Mode", FullBrightGamma, arrayOf(
+            FullBrightGamma, FullBrightNightVision
         )
     )
 
-   object FullBrightGamma : Choice("Gamma") {
+    object FullBrightGamma : Choice("Gamma") {
 
         override val parent: ChoiceConfigurable
             get() = modes

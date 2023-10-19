@@ -36,6 +36,7 @@ fun BlockPos.getState() = mc.world?.getBlockState(this)
 fun BlockPos.getBlock() = getState()?.block
 
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
 
 /**
  * Search blocks around the player in a cuboid
@@ -78,9 +79,9 @@ inline fun searchBlocksInRadius(
     val radiusSquared = radius * radius
     val radiusInt = radius.toInt()
 
-    for (x in radiusInt downTo -radiusInt + 1) {
-        for (y in radiusInt downTo -radiusInt + 1) {
-            for (z in radiusInt downTo -radiusInt + 1) {
+    for (x in radiusInt downTo -radiusInt) {
+        for (y in radiusInt downTo -radiusInt) {
+            for (z in radiusInt downTo -radiusInt) {
                 val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
                 val state = blockPos.getState() ?: continue
 
@@ -153,15 +154,14 @@ fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
     val from = BlockPos(this.minX.toInt(), this.minY.toInt(), this.minZ.toInt())
     val to = BlockPos(ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt())
 
-    for (x in from.x..to.x) {
-        for (y in from.y..to.y) {
-            for (z in from.z..to.z) {
+    for (x in from.x until to.x) {
+        for (y in from.y until to.y) {
+            for (z in from.z until to.z) {
                 function(x, y, z)
             }
         }
     }
 }
-
 
 fun BlockState.canBeReplacedWith(pos: BlockPos, usedStack: ItemStack): Boolean {
     val placementContext = ItemPlacementContext(

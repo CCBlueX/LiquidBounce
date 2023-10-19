@@ -31,17 +31,12 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.combat.findEnemy
-import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
@@ -106,8 +101,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val blockingTicks by int("BlockingTicks", 0, 0..20)
     }
 
+    private val legitAimingConfigurable = LegitAimpointTracker.LegitAimpointTrackerConfigurable(this)
+
     init {
         tree(WhileBlocking)
+        tree(legitAimingConfigurable)
     }
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
@@ -199,7 +197,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             for ((pos, opacity) in markedBlocks) {
                 val vec3 = Vec3(pos)
 
@@ -228,7 +226,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Make sure killaura-logic is not running while inventory is open
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
@@ -241,12 +240,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     val repeatable = repeatable {
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
         // Did you ever send a rotation before?
         val rotation = RotationManager.currentRotation
+
+        if (CombatManager.shouldPauseCombat())
+            return@repeatable
 
         if (rotation != null && target != null && target.boxedDistanceTo(player) <= range && facingEnemy(
                 target, rotation, range.toDouble(), wallRange.toDouble()
@@ -271,7 +274,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val clicks = cpsTimer.clicks(condition = {
                 (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
                     player
-                ))
+                )) && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
             }, cps)
 
             repeat(clicks) {
@@ -345,7 +348,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@repeatable
         }
 
-        val entity = target ?: world.findEnemy(0f..FailSwing.LimitRange.range)?.first
+        val entity = target ?: world.findEnemy(0f..FailSwing.LimitRange.range)
 
         val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
 
@@ -370,6 +373,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    private val legitAimpointTracker = LegitAimpointTracker(legitAimingConfigurable)
+
+    private var lastRotation: VecRotation? = null
+
     /**
      * Update enemy on target tracker
      */
@@ -393,26 +400,48 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             val predictedTicks = predict.random()
 
-            val targetPrediction = Vec3d(
-                target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ
-            ).multiply(predictedTicks)
-
-            val playerPrediction = Vec3d(
-                player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ
-            ).multiply(predictedTicks)
+            val targetPrediction = target.pos.subtract(target.prevPos).multiply(predictedTicks)
+            val playerPrediction = player.pos.subtract(player.prevPos).multiply(predictedTicks)
 
             val box = target.box.offset(targetPrediction)
 
+            val rotationPreference =
+                this.lastRotation
+                    ?.let { LeastDifferencePreference(it.rotation, basePoint = it.vec) }
+                    ?: LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
+
             // find best spot
-            val spot = RotationManager.raytraceBox(
-                eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble()
+            val spot = raytraceBox(
+                eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble(),
+                rotationPreference = rotationPreference
             ) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
 
+            val nextPoint = if (this.legitAimingConfigurable.enabled) {
+                val aimpointChange = target.pos.subtract(target.prevPos).subtract(player.pos.subtract(player.prevPos))
+
+                val nextPoint = this.legitAimpointTracker.nextPoint(box, spot.vec, aimpointChange)
+
+                lastRotation = VecRotation(
+                    RotationManager.makeRotation(nextPoint.aimSpotWithoutNoise, eyes),
+                    nextPoint.aimSpotWithoutNoise
+                )
+
+                nextPoint.aimSpot
+            } else {
+                lastRotation = null
+
+                spot.vec
+            }
+
             // aim at target
-            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                RotationManager.makeRotation(nextPoint, player.eyes),
+                openInventory = ignoreOpenInventory,
+                configurable = rotations
+            )
             break
         }
     }
@@ -423,19 +452,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             player.isSprinting = false
         }
 
-        EventManager.callEvent(AttackEvent(entity))
-
-        // Swing before attacking (on 1.8)
-        if (swing && protocolVersion == MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
-
-        // Swing after attacking (on 1.9+)
-        if (swing && protocolVersion != MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
+        entity.attack(swing)
 
         if (keepSprint) {
             var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()

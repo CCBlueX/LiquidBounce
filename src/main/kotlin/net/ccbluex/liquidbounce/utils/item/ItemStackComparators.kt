@@ -63,12 +63,13 @@ object PreferAverageHardBlocks : Comparator<ItemStack> {
 
 }
 
-object PreferHigherStackSize : Comparator<ItemStack> {
+class PreferStackSize(val higher: Boolean) : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         val o1Size = o1.count
         val o2Size = o2.count
 
-        return o2Size.compareTo(o1Size)
+        return if (higher) o1Size.compareTo(o2Size)
+        else o2Size.compareTo(o1Size)
     }
 
 }

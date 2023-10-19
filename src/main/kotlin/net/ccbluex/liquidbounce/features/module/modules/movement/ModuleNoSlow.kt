@@ -56,6 +56,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                             Direction.DOWN
                         )
                     )
+
                     EventState.POST -> interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(player.activeHand, sequence)
                     }
@@ -148,10 +149,12 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             Consume.forwardMultiplier,
             Consume.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
+
         UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> if (Block.enabled) Pair(
             Block.forwardMultiplier,
             Block.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
+
         UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> if (Bow.enabled) Pair(
             Bow.forwardMultiplier,
             Bow.sidewaysMultiplier

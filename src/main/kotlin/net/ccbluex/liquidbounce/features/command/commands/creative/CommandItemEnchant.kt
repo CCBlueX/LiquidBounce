@@ -40,65 +40,56 @@ import kotlin.math.absoluteValue
 object CommandItemEnchant {
 
     fun createCommand(): Command {
-        return CommandBuilder
-            .begin("enchant")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("enchantment")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedWith {
-                        Registries.ENCHANTMENT.map {
-                            it.translationKey.removePrefix("enchantment.").replace('.', ':')
-                        }
+        return CommandBuilder.begin("enchant").parameter(
+            ParameterBuilder.begin<String>("enchantment").verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                .autocompletedWith {
+                    Registries.ENCHANTMENT.map {
+                        it.translationKey.removePrefix("enchantment.").replace('.', ':')
                     }
-                    .required()
-                    .build()
-            )
-            .parameter(
-                ParameterBuilder
-                    .begin<Int>("level")
-                    .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
-                    .required()
-                    .build()
-            )
-            .handler { command, args ->
-                val enchantmentName = args[0] as String
-                val level = args[1] as Int
+                }.required().build()
+        ).parameter(
+            ParameterBuilder.begin<Int>("level").verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR).required()
+                .build()
+        ).handler { command, args ->
+            val enchantmentName = args[0] as String
+            val level = args[1] as Int
 
-                if (mc.interactionManager?.hasCreativeInventory() == false) {
-                    throw CommandException(command.result("mustBeCreative"))
-                }
-
-                val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
-                if (itemStack.isNothing()) {
-                    throw CommandException(command.result("mustHoldItem"))
-                }
-
-                val identifier = Identifier.tryParse(enchantmentName)
-                val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
-                    throw CommandException(command.result("enchantmentNotExists", enchantmentName))
-                }
-
-
-                if (level <= 255) {
-                    enchant(itemStack!!, enchantment, level)
-                } else {
-                    var next = level
-                    while (true) {
-                        next -= 255
-                        if (next <= 0) {
-                            next = 255 - next.absoluteValue
-                            enchant(itemStack!!, enchantment, next)
-                            break
-                        }
-                        enchant(itemStack!!, enchantment, 255)
-                    }
-                }
-
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
-                chat(regular(command.result("enchantedItem", identifier.toString(), level)))
+            if (mc.interactionManager?.hasCreativeInventory() == false) {
+                throw CommandException(command.result("mustBeCreative"))
             }
-            .build()
+
+            val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+            if (itemStack.isNothing()) {
+                throw CommandException(command.result("mustHoldItem"))
+            }
+
+            val identifier = Identifier.tryParse(enchantmentName)
+            val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
+                throw CommandException(command.result("enchantmentNotExists", enchantmentName))
+            }
+
+            if (level <= 255) {
+                enchant(itemStack!!, enchantment, level)
+            } else {
+                var next = level
+                while (true) {
+                    next -= 255
+                    if (next <= 0) {
+                        next = 255 - next.absoluteValue
+                        enchant(itemStack!!, enchantment, next)
+                        break
+                    }
+                    enchant(itemStack!!, enchantment, 255)
+                }
+            }
+
+            mc.networkHandler!!.sendPacket(
+                CreativeInventoryActionC2SPacket(
+                    36 + mc.player!!.inventory.selectedSlot, itemStack
+                )
+            )
+            chat(regular(command.result("enchantedItem", identifier.toString(), level)))
+        }.build()
     }
 
     private fun enchant(item: ItemStack, enchantment: Enchantment, level: Int) {

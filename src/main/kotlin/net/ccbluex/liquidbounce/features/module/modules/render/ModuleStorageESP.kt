@@ -72,7 +72,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             val matrixStack = event.matrixStack
             val blocksToRender = locations.entries.filter { it.value.shouldRender(it.key) }
 
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 for ((pos, type) in blocksToRender) {
                     val color = type.color
 
@@ -106,6 +106,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             is DispenserBlockEntity -> ChestType.DISPENSER
             is HopperBlockEntity -> ChestType.HOPPER
             is ShulkerBoxBlockEntity -> ChestType.SHULKER_BOX
+            is BarrelBlockEntity -> ChestType.CHEST
             else -> null
         }
     }

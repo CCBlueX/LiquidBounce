@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
@@ -38,7 +39,6 @@ import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
-import net.minecraft.util.math.Vec3d
 
 /**
  * ProjectilePuncher module
@@ -57,7 +57,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = RotationsConfigurable()
+    private val rotations = tree(RotationsConfigurable())
 
     private val cpsTimer = tree(CpsScheduler())
 
@@ -101,23 +101,17 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                 continue
             }
 
-            val distance = entity.squaredBoxedDistanceTo(player)
+            val distanceSquared = entity.squaredBoxedDistanceTo(player)
 
-            val entityPrediction = Vec3d(
-                entity.x - entity.prevX, entity.y - entity.prevY, entity.z - entity.prevZ
-            )
 
             // Avoid fireball if its speed-predicted next position goes further than the normal distance.
             // Useful in preventing the user from changing their own thrown fireball's direction
-            if (distance > rangeSquared || entity is FireballEntity && (entity.age <= 1 && entityPrediction == Vec3d.ZERO || entity.box.offset(
-                    entityPrediction
-                ).squaredBoxedDistanceTo(player) > distance)
-            ) {
+            if (distanceSquared > rangeSquared || !shouldAttack(entity)) {
                 continue
             }
 
             // find best spot
-            val spot = RotationManager.raytraceBox(
+            val spot = raytraceBox(
                 player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
@@ -128,6 +122,18 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
             break
         }
+    }
+
+    private fun shouldAttack(entity: Entity): Boolean {
+        if (entity !is FireballEntity)
+            return true
+
+        // Check if the fireball is going towards the player
+        val vecToPlayer = entity.pos.subtract(player.pos)
+
+        val dot = vecToPlayer.dotProduct(player.velocity)
+
+        return dot > 0.0
     }
 
     private fun attackEntity(entity: Entity) {

@@ -33,7 +33,7 @@ object ClientUpdate {
     val gitInfo = Properties().also {
         val inputStream = LiquidBounce::class.java.classLoader.getResourceAsStream("git.properties")
 
-        if(inputStream != null) {
+        if (inputStream != null) {
             it.load(inputStream)
         } else {
             it["git.build.version"] = "unofficial"
@@ -57,7 +57,8 @@ object ClientUpdate {
 
             return if (IN_DEVELOPMENT) { // check if new build is newer than current build
                 val newestVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestVersion.date)
-                val currentVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(gitInfo["git.commit.time"].toString())
+                val currentVersionDate =
+                    SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(gitInfo["git.commit.time"].toString())
 
                 newestVersionDate.after(currentVersionDate)
             } else {
@@ -74,4 +75,3 @@ object ClientUpdate {
     }
 
 }
-

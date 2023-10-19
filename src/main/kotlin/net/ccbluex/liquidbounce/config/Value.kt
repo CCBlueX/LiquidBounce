@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
@@ -92,6 +93,8 @@ open class Value<T : Any>(
         }.onSuccess {
             value = currT
             EventManager.callEvent(ValueChangedEvent(this))
+        }.onFailure { ex ->
+            logger.error("Failed to set ${this.name} from ${this.value} to $t", ex)
         }
     }
 
@@ -108,28 +111,29 @@ open class Value<T : Any>(
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.value
 
-        set(
-            when (currValue) {
-                is List<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                        mutableListOf()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-                is HashSet<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                        HashSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-                is Set<*> -> {
-                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                        TreeSet()
-                    ) { gson.fromJson(it, this.listType.type!!) } as T
-                }
-                else -> {
-                    gson.fromJson(element, currValue.javaClass)
-                }
+        set(when (currValue) {
+            is List<*> -> {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    mutableListOf()
+                ) { gson.fromJson(it, this.listType.type!!) } as T
             }
-        )
+
+            is HashSet<*> -> {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    HashSet()
+                ) { gson.fromJson(it, this.listType.type!!) } as T
+            }
+
+            is Set<*> -> {
+                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                    TreeSet()
+                ) { gson.fromJson(it, this.listType.type!!) } as T
+            }
+
+            else -> {
+                gson.fromJson(element, currValue.javaClass)
+            }
+        })
     }
 
     open fun setByString(string: String) {
@@ -159,10 +163,7 @@ open class Value<T : Any>(
  * Ranged value adds support for closed ranges
  */
 class RangedValue<T : Any>(
-    name: String,
-    value: T,
-    @Exclude val range: ClosedRange<*>,
-    type: ValueType
+    name: String, value: T, @Exclude val range: ClosedRange<*>, type: ValueType
 ) : Value<T>(name, value, valueType = type) {
 
     fun getFrom(): Double {
@@ -206,9 +207,7 @@ class RangedValue<T : Any>(
 }
 
 class ChooseListValue<T : NamedChoice>(
-    name: String,
-    value: T,
-    @Exclude val choices: Array<T>
+    name: String, value: T, @Exclude val choices: Array<T>
 ) : Value<T>(name, value, ValueType.CHOOSE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
@@ -235,17 +234,14 @@ interface NamedChoice {
 }
 
 enum class ValueType {
-    BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM,
-    ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
+    BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM, ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {
-    Block(net.minecraft.block.Block::class.java),
-    Item(net.minecraft.item.Item::class.java),
-    String(kotlin.String::class.java),
-    Friend(FriendManager.Friend::class.java),
-    Proxy(ProxyManager.Proxy::class.java),
-    Account(MinecraftAccount::class.java),
-    FontDetail(Fonts.FontDetail::class.java),
-    None(null)
+    Block(net.minecraft.block.Block::class.java), Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java), Friend(
+        FriendManager.Friend::class.java
+    ),
+    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontDetail::class.java), None(
+        null
+    )
 }

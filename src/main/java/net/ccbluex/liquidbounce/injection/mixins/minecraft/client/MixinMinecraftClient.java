@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
+import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
@@ -31,11 +32,13 @@ import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -54,6 +57,9 @@ public abstract class MixinMinecraftClient {
     @Shadow
     @Nullable
     public HitResult crosshairTarget;
+    @Shadow
+    @Final
+    public GameOptions options;
     @Shadow
     @Nullable
     private IntegratedServer server;
@@ -117,7 +123,7 @@ public abstract class MixinMinecraftClient {
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
         LiquidBounce.INSTANCE.getLogger().debug("Modifying window title");
 
-        final StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
+        StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
         titleBuilder.append(" v");
         titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
 
@@ -130,15 +136,15 @@ public abstract class MixinMinecraftClient {
         titleBuilder.append(" | ");
         titleBuilder.append(SharedConstants.getGameVersion().getName());
 
-        final ClientPlayNetworkHandler clientPlayNetworkHandler = getNetworkHandler();
+        ClientPlayNetworkHandler clientPlayNetworkHandler = getNetworkHandler();
         if (clientPlayNetworkHandler != null && clientPlayNetworkHandler.getConnection().isOpen()) {
             titleBuilder.append(" | ");
 
-            if (this.server != null && !this.server.isRemote()) {
+            if (server != null && !server.isRemote()) {
                 titleBuilder.append(I18n.translate("title.singleplayer"));
             } else if (this.isConnectedToRealms()) {
                 titleBuilder.append(I18n.translate("title.multiplayer.realms"));
-            } else if (this.server == null && (this.getCurrentServerEntry() == null || !this.getCurrentServerEntry().isLocal())) {
+            } else if (server == null && (this.getCurrentServerEntry() == null || !this.getCurrentServerEntry().isLocal())) {
                 titleBuilder.append(I18n.translate("title.multiplayer.other"));
             } else {
                 titleBuilder.append(I18n.translate("title.multiplayer.lan"));
@@ -156,7 +162,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
-        final ScreenEvent event = new ScreenEvent(screen);
+        ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
         if (event.isCancelled()) callbackInfo.cancel();
         // Who need this GUI?
@@ -187,7 +193,7 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "doItemUse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;itemUseCooldown:I", shift = At.Shift.AFTER))
     private void hookItemUseCooldown(CallbackInfo callbackInfo) {
-        final UseCooldownEvent useCooldownEvent = new UseCooldownEvent(itemUseCooldown);
+        UseCooldownEvent useCooldownEvent = new UseCooldownEvent(itemUseCooldown);
         EventManager.INSTANCE.callEvent(useCooldownEvent);
         itemUseCooldown = useCooldownEvent.getCooldown();
     }
@@ -201,15 +207,20 @@ public abstract class MixinMinecraftClient {
 
     @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
     private void injectPerfectHit(CallbackInfoReturnable<Boolean> cir) {
-        if (!ModulePerfectHit.INSTANCE.getEnabled() || this.player == null || this.crosshairTarget == null) {
+        if (player == null || crosshairTarget == null) {
             return;
         }
 
-        float h = this.player.getAttackCooldownProgress(0.5F);
+        if (CombatManager.INSTANCE.shouldPauseCombat()) {
+            cir.setReturnValue(false);
+        }
+        if (!ModulePerfectHit.INSTANCE.getEnabled()) {
+            return;
+        }
+        float h = player.getAttackCooldownProgress(0.5F);
 
-        if (h <= 0.9 && this.crosshairTarget.getType() == HitResult.Type.ENTITY) {
+        if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {
             cir.setReturnValue(false);
         }
     }
-
 }

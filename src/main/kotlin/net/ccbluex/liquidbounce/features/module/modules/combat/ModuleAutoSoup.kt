@@ -18,22 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.utilizeInventory
-import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
 
 /**
  * AutoSoup module
@@ -43,78 +38,48 @@ import net.minecraft.util.math.Direction
 
 object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
-    private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())
-    private val health by int("Health", 15, 1..20)
-    private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    private val health by int("Health", 15, 1..40)
+    private val bowl by boolean("DropAfterUse", true)
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
+    private val itemDropDelay by intRange("ItemDropDelay", 1..2, 0..40)
+    private val swapPreviousDelay by int("SwapPreviousAdditionalDelay", 5, 1..100)
 
     val repeatable = repeatable {
         val mushroomStewSlot = findHotbarSlot(Items.MUSHROOM_STEW)
-        val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
-        val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
 
-        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null || interaction.hasRidingInventory()) {
+        if (interaction.hasRidingInventory()) {
             return@repeatable
         }
 
-        if (bowlHotbarSlot != null) {
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    BlockPos.ORIGIN,
-                    Direction.DOWN
-                )
-            )
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-            if (bowlHotbarSlot != player.inventory.selectedSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+        if (player.health < health && mushroomStewSlot != null && !isInInventoryScreen) {
+            // We need to take some actions
+            CombatManager.pauseCombatForAtLeast(combatPauseTime)
+
+            if (player.isBlocking) {
+                interaction.stopUsingItem(player)
+                wait(1)
             }
 
-            when (bowl) {
-                BowlMode.DROP -> {
-                    utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, inventoryConstraints)
-                }
-                BowlMode.MOVE -> {
-                    // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
-                    if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, inventoryConstraints, false)
-                        utilizeInventory(9, 0, SlotActionType.PICKUP, inventoryConstraints, false)
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, inventoryConstraints)
-                    } else {
-                        // If there is, simply shift + left-click the empty bowl from hotbar
-                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.QUICK_MOVE, inventoryConstraints)
-                    }
-                }
+            val itemDrop = itemDropDelay.random()
+
+            if (mushroomStewSlot != player.inventory.selectedSlot) {
+                SilentHotbar.selectSlotSilently(this, mushroomStewSlot, swapPreviousDelay + itemDrop)
+            }
+
+            // Use soup
+            interaction.sendSequencedPacket(world) { sequence ->
+                PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+            }
+
+            // If action was successful, drop the now-empty bowl
+            if (bowl && player.inventory.getStack(mushroomStewSlot).item == Items.BOWL) {
+                wait(itemDrop)
+                player.dropSelectedItem(true)
             }
             return@repeatable
         }
-
-        if (player.health < health) {
-            if (mushroomStewSlot != null) {
-                wait { inventoryConstraints.delay.random() }
-
-                if (mushroomStewSlot != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(mushroomStewSlot))
-                }
-
-                if (player.isBlocking) {
-                    waitUntil { !player.isBlocking }
-                }
-
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
-                }
-                return@repeatable
-            } else {
-                // Search for the specific item in inventory and quick move it to hotbar
-                if (bowlInvSlot != null) {
-                    utilizeInventory(bowlInvSlot, 0, SlotActionType.QUICK_MOVE, inventoryConstraints)
-                }
-                return@repeatable
-            }
-        }
-    }
-
-    enum class BowlMode(override val choiceName: String) : NamedChoice {
-        DROP("Drop"), MOVE("Move")
     }
 }
