@@ -15,6 +15,11 @@ object Legit : SpeedMode("Legit") {
         if (mc.thePlayer.onGround && isMoving && !mc.gameSettings.keyBindJump.isKeyDown) {
             player.jump()
         }
+    }
 
+    override fun onUpdate() {
+        val player = mc.thePlayer ?: return
+
+        player.isSprinting = player.movementInput.moveForward > 0.8
     }
 }
