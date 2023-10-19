@@ -57,7 +57,7 @@ public class MixinChatInputSuggestor {
         return this.slashOptional || this.textField.getText().startsWith(CommandManager.Options.INSTANCE.getPrefix());
     }
 
-    @Inject(method = "refresh", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;getCommandDispatcher()Lcom/mojang/brigadier/CommandDispatcher;"), cancellable = true)
+    @Inject(method = "refresh", at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/StringReader;canRead()Z"), cancellable = true)
     private void injectAutoCompletionB(CallbackInfo ci) {
         if (this.textField.getText().startsWith(CommandManager.Options.INSTANCE.getPrefix())) {
             this.pendingSuggestions = CommandManager.INSTANCE.autoComplete(this.textField.getText(), this.textField.getCursor());
