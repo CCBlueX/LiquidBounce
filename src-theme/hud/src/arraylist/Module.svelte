@@ -9,11 +9,11 @@
 <style>
     .module {
         background-color: rgba(0, 0, 0, 0.68);
-        color: white;
+        color: var(--text);;
         font-size: 14px;
         border-radius: 4px;
         padding: 5px 15px 5px 8px;
-        border-left: solid 4px #4677FF;
+        border-left: solid 4px var(--accent);
         text-align: right;
         width: max-content;
         font-weight: 500;

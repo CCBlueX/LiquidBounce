@@ -113,19 +113,19 @@
     grid-template-columns: max-content auto max-content;
     align-items: center;
     column-gap: 12px;
-    background-color: rgba(0, 0, 0, 0.68);
-    border-bottom: solid 2px #4677ff;
+    background-color: var(--header);
+    border-bottom: solid 2px var(--accent);
     padding: 10px 15px;
   }
 
   .title {
     font-size: 14px;
     font-weight: 600;
-    color: white;
+    color: var(--text);
   }
 
   .modules {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--modules);
     max-height: 545px;
     overflow: auto;
   }

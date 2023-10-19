@@ -1,11 +1,14 @@
 <script>
     import {onMount} from "svelte";
 
-    export let name;
-    export let value;
+    export let instance;
+
+    let name = instance.getName();
+    let value = kotlin.colorToHex(instance.get());
 
     let colorPicker = null;
     let pickr = null;
+    
 
     onMount(() => {
         pickr = Pickr.create({
@@ -14,10 +17,11 @@
             showAlways: true,
             inline: true,
             default: value,
+          
 
             components: {
                 preview: false,
-                opacity: false,
+                opacity: true,
                 hue: true,
 
                 interaction: {
@@ -34,7 +38,9 @@
         });
 
         pickr.on("change", v => {
-            value = `RGBA(${v.toRGBA().map(val => val | 0).join(", ")})`;
+            const rgba = v.toRGBA()
+            value = v.toHEXA();
+            instance.set(kotlin.color(rgba[0] | 0, rgba[1] | 0, rgba[2] | 0, rgba[3]))
         });
     });
 
@@ -44,14 +50,26 @@
                 if (v.length === 6) {
                     pickr.setColor(`#${v}`);
                 } */
+
+        pickr.setColor(e.target.value)
+
+    }
+
+    let hidden = true
+
+    function togglePickr() {
+        hidden = !hidden
     }
 </script>
 
 <div class="setting">
     <div class="name">{name}</div>
-    <input class="value" {value} on:input={handleValueChange}>
-    <div class="animation-fix color-picker">
-        <div bind:this={colorPicker}/>
+    <div class="value-spot">
+        <input class="value" {value} on:input={handleValueChange}>
+        <button class="color-pickr-button" on:click={togglePickr} style="background-color: {value};"></button>
+    </div>
+    <div class="animation-fix color-picker" class:hidden={hidden}>
+        <button bind:this={colorPicker}/>
     </div>
 </div>
 
@@ -67,7 +85,7 @@
     .name {
         grid-area: a;
         font-weight: 500;
-        color: white;
+        color: var(--text);;
         font-size: 12px;
     }
 
@@ -76,10 +94,14 @@
         height: 138px;
     }
 
+    .hidden {
+        height: 0px;
+        display: none;
+    }
+
     .value {
-        grid-area: b;
         font-weight: 500;
-        color: white;
+        color: var(--text);;
         text-align: right;
         font-size: 12px;
         cursor: text;
@@ -88,9 +110,32 @@
         border: none;
         padding: 0;
         margin: 0;
+        margin-right: 15px;
+        margin-left: auto;
+        width: 70px;
+    }
+
+    .value-spot {
+        grid-area: b;
+        display: flex;
+    
+        align-items: stretch;
     }
 
     .color-picker {
         grid-area: c;
+    }
+
+    .color-pickr-button {
+        margin-top: -2px;
+        margin-bottom: -2px;
+        width: 30px;
+        border-radius: 3px;
+        background-color: blue;
+        border-style: none;
+
+    }
+    .color-pickr-button:focus {
+        outline: 3px solid  #ffffff;
     }
 </style>

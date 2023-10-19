@@ -179,12 +179,13 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         buffer.put(idx + 3, a.toByte())
     }
 
-    fun toHex(): String {
+    fun toHex(alpha: Boolean = false): String {
         val hex = StringBuilder("#")
 
         hex.append(componentToHex(r))
         hex.append(componentToHex(g))
         hex.append(componentToHex(b))
+        if(alpha) hex.append((componentToHex(a)))
 
         return hex.toString().uppercase()
     }
