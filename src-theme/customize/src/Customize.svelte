@@ -29,7 +29,7 @@
         border-radius: 6px;
         margin-right: 10px;
         background-size: 200% 100%;
-        background: rgba(0, 0, 0, 0.68) linear-gradient(to left, rgba(0, 0, 0, .68) 50%, var(--accent) 50%) right bottom;
+        background: rgba(0, 0, 0, 0.68) linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%) right bottom;
         will-change: background-position;
         transition: background-position .2s ease-out;
     }
