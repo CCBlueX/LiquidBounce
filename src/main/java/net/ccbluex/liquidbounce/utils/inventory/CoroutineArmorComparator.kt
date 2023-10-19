@@ -11,42 +11,47 @@ object CoroutineArmorComparator: MinecraftInstance() {
 	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
 		val thePlayer = mc.thePlayer ?: return null
 
-		val armorMap = (
-			(
-				// Consider dropped armor pieces
-				if (!entityStacksMap.isNullOrEmpty())
-					entityStacksMap.keys.mapNotNull { stack ->
-						if (stack.item is ItemArmor) -1 to stack
-						else null
-					}
-				else emptyList()
-			) + (
-				// Consider currently equipped armor, when searching useful stuff in chests
-				// Index is null for equipped armor when searching through a chest to prevent any accidental impossible interactions
-				if (thePlayer.openContainer.windowId != 0)
-					thePlayer.inventory.armorInventory.mapNotNull { null to (it ?: return@mapNotNull null) }
-				else emptyList()
-			) + (
-				stacks
-					.mapIndexedNotNull { index, itemStack ->
-						if (itemStack?.item is ItemArmor) index to itemStack
-						else null
-					}
-				)
-			)
-			.sortedBy { (index, stack) ->
-				// Sort items by distance from player, equipped items are always preferred with distance -1
-				if (index == -1)
-					thePlayer.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
-				else -1.0
+		// Consider dropped armor pieces
+		val droppedStacks =
+			if (!entityStacksMap.isNullOrEmpty())
+				entityStacksMap.keys.mapNotNull { stack ->
+					if (stack.item is ItemArmor) -1 to stack
+					else null
+				}
+			else emptyList()
+
+		// Consider currently equipped armor, when searching useful stuff in chests
+		// Index is null for equipped armor when searching through a chest to prevent any accidental impossible interactions
+		val equippedArmorWhenInChest =
+			if (thePlayer.openContainer.windowId != 0)
+				thePlayer.inventory.armorInventory.mapNotNull { null to (it ?: return@mapNotNull null) }
+			else emptyList()
+
+		val inventoryStacks =
+			stacks.mapIndexedNotNull { index, itemStack ->
+				if (itemStack?.item is ItemArmor) index to itemStack
+				else null
 			}
-			// Prioritise sets that are in lower parts of inventory (not in chest) or equipped, prevents stealing multiple armor duplicates.
-			.sortedByDescending { it.first ?: Int.MAX_VALUE }
-			// Prioritise sets with more durability, enchantments
-			.sortedByDescending { it.second.totalDurability }
-			.sortedByDescending { it.second.enchantmentCount }
-			.sortedByDescending { it.second.enchantmentSum }
-			.groupBy { (it.second.item as ItemArmor).armorType }
+
+		val armorMap =
+			(droppedStacks + equippedArmorWhenInChest + inventoryStacks)
+				.asSequence()
+				.sortedBy { (index, stack) ->
+					// Sort items by distance from player, equipped items are always preferred with distance -1
+					if (index == -1)
+						thePlayer.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
+					else -1.0
+				}
+				// Prioritise sets that are in lower parts of inventory (not in chest) or equipped, prevents stealing multiple armor duplicates.
+				.sortedByDescending {
+					if (it.second in thePlayer.inventory.armorInventory) Int.MAX_VALUE
+					else it.first ?: Int.MAX_VALUE
+				}
+				// Prioritise sets with more durability, enchantments
+				.sortedByDescending { it.second.totalDurability }
+				.sortedByDescending { it.second.enchantmentCount }
+				.sortedByDescending { it.second.enchantmentSum }
+				.groupBy { (it.second.item as ItemArmor).armorType }
 
 		val helmets = armorMap[0] ?: NULL_LIST
 		val chestplates = armorMap[1] ?: NULL_LIST
@@ -61,14 +66,6 @@ object CoroutineArmorComparator: MinecraftInstance() {
 							ArmorSet(helmet, chestplate, leggings, boots)
 						}
 					}
-				}
-			}
-			// Prioritise armor sets that are mostly equipped
-			.sortedByDescending { set ->
-				set.count {
-					// Equipped items are additionally added to stacks map, when searching through a chest.
-					// Their slot ids are set to null, in order to make them easily distinguishable from real items in the chest.
-					it != null && (it.first == null || it.first in 5..8)
 				}
 			}
 
@@ -112,18 +109,6 @@ class ArmorSet(private vararg val armorPairs: Pair<Int?, ItemStack>?) : Iterable
 	fun indexOf(stack: ItemStack) = armorPairs.find { it?.second == stack }?.first ?: -1
 
 	operator fun get(index: Int) = armorPairs.getOrNull(index)
-
-	val helmet
-		get() = armorPairs[0]?.second
-
-	val chestplate
-		get() = armorPairs[1]?.second
-
-	val leggings
-		get() = armorPairs[2]?.second
-
-	val boots
-		get() = armorPairs[3]?.second
 }
 
 private val NULL_LIST = listOf<Pair<Int?, ItemStack>?>(null)

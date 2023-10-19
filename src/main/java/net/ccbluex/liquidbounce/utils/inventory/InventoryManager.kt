@@ -73,7 +73,7 @@ object InventoryManager: MinecraftInstance() {
 			 */
 
 			// Compact multiple small stacks into one to free up inventory space
-			CoroutineCleaner.compactStacks()
+			CoroutineCleaner.mergeInventoryStacks()
 
 			// Sort hotbar (with useful items without even dropping bad items first)
 			CoroutineCleaner.sortHotbar()

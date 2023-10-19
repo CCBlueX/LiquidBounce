@@ -94,6 +94,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     fun hasSpaceInInventory() = mc.thePlayer?.inventory?.firstEmptyStack != -1
 
+    fun countSpaceInInventory() = mc.thePlayer.inventory.mainInventory.count { it.isEmpty() }
+
     fun findBlockInHotbar(): Int? {
         val player = mc.thePlayer ?: return null
         val inventory = player.openContainer
@@ -116,6 +118,13 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
             stack.item is ItemBlock && stack.stackSize > 0 && block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush
         }.maxByOrNull { inventory.getSlot(it).stack.stackSize }
+    }
+
+    // Converts container slot to hotbar slot id, else returns null
+    fun Int.toHotbarIndex(stacksSize: Int): Int? {
+        val parsed = this - stacksSize + 9
+
+        return if (parsed in 0..8) parsed else null
     }
 
     @EventTarget

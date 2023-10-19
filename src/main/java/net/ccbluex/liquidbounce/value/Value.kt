@@ -185,8 +185,8 @@ open class FontValue(name: String, value: FontRenderer, isSupported: (() -> Bool
     }
 
     fun previous() {
-        val fonts = Fonts.fonts.reversed()
-        value = fonts[(fonts.indexOf(value) + 1) % fonts.size]
+        val fonts = Fonts.fonts
+        value = fonts[(fonts.indexOf(value) - 1) % fonts.size]
     }
 }
 
