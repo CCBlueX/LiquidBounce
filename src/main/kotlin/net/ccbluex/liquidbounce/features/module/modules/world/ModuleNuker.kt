@@ -152,7 +152,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
         val colorRainbow by boolean("Rainbow", false)
 
         val repeat = repeatable {
-            if (mc.currentScreen is HandledScreen<*>) {
+            if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
                 wait { switchDelay }
                 return@repeatable
             }
@@ -273,7 +273,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
         private val packetChronometer = Chronometer()
 
         val repeat = repeatable {
-            if (mc.currentScreen is HandledScreen<*>) {
+            if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
                 wait { switchDelay }
                 return@repeatable
             }
