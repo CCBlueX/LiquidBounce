@@ -63,7 +63,7 @@
         --accent: {accentColor};
         --accent-dimmed: {accendDimmed};
         --text: {textColor};
-        --textdimmed: {textDimmedColor}>">
+        --textdimmed: {textDimmedColor};">
 
             <SearchBar root="{clickGuiModule}" modules={modules}/>
             {#each panels as panel}
