@@ -25,41 +25,69 @@ import net.ccbluex.liquidbounce.value.ListValue
 object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
     private val speedModes = arrayOf(
-        
+
         // NCP
-        NCPBHop, NCPFHop, SNCPBHop, NCPHop, NCPYPort,
-        
+        NCPBHop,
+        NCPFHop,
+        SNCPBHop,
+        NCPHop,
+        NCPYPort,
+
         // YPort
-        YPort, YPort2, 
-        
+        YPort,
+        YPort2,
+
         // AAC
-        AACBHop, AAC2BHop, AAC3BHop, AAC4BHop, AAC5BHop, AAC6BHop, AAC7BHop, AACHop3313, AACHop350, AACHop438, OldAACBHop, 
-        AACLowHop, AACLowHop2, AACLowHop3,
-        AACGround, AACGround2,
-        AACYPort, AACYPort2, AACPort,
-        
+        AACBHop,
+        AAC2BHop,
+        AAC3BHop,
+        AAC4BHop,
+        AAC5BHop,
+        AAC6BHop,
+        AAC7BHop,
+        AACHop3313,
+        AACHop350,
+        AACHop438,
+        OldAACBHop,
+        AACLowHop,
+        AACLowHop2,
+        AACLowHop3,
+        AACGround,
+        AACGround2,
+        AACYPort,
+        AACYPort2,
+        AACPort,
+
         // Spartan
         SpartanYPort,
-        
+
         // Spectre
-        SpectreLowHop, SpectreBHop, SpectreOnGround,
+        SpectreLowHop,
+        SpectreBHop,
+        SpectreOnGround,
 
         // Verus
-        VerusHop, VerusLowHop,
-            
+        VerusHop,
+        VerusLowHop,
+
         // Server specific
         TeleportCubeCraft,
         HiveHop,
         HypixelHop,
         Mineplex,
         MineplexGround,
-        
+
         // Other
         Matrix,
-        Boost, Frame, MiJump, OnGround,
-        SlowHop, Legit, CustomSpeed,
-        MineBlazeHop, MineBlazeTimer
-        
+        Boost,
+        Frame,
+        MiJump,
+        OnGround,
+        SlowHop,
+        Legit,
+        CustomSpeed,
+        MineBlazeHop,
+        MineBlazeTimer
     )
 
     private val modes = speedModes.map { it.modeName }.toTypedArray()
@@ -96,9 +124,8 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (thePlayer.isSneaking)
             return
 
-        if (isMoving) {
+        if (isMoving && !sprintManually)
             thePlayer.isSprinting = true
-        }
 
         modeModule.onUpdate()
     }
@@ -110,7 +137,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         if (thePlayer.isSneaking || event.eventState != EventState.PRE)
             return
 
-        if (isMoving)
+        if (isMoving && !sprintManually)
             thePlayer.isSprinting = true
 
         modeModule.onMotion()
@@ -136,9 +163,8 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
     fun onStrafe(event: StrafeEvent) {
         if (mc.thePlayer.isSneaking)
             return
-        
-        modeModule.onStrafe()
 
+        modeModule.onStrafe()
     }
 
     override fun onEnable() {
@@ -164,4 +190,8 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
     private val modeModule
         get() = speedModes.find { it.modeName == mode }!!
+
+    private val sprintManually
+        // Maybe there are more but for now there's the Legit mode.
+        get() = modeModule in arrayOf(Legit)
 }
