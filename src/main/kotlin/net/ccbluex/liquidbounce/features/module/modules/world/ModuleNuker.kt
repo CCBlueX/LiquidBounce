@@ -73,7 +73,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val switchDelay by int("SwitchDelay", 0, 0..20)
 
-    private val comparisonMode by enumChoice("Preferred", ComparisonMode.PLAYERROTATION, ComparisonMode.values())
+    private val comparisonMode by enumChoice("Preferred", ComparisonMode.SERVER_ROTATION, ComparisonMode.values())
 
     init {
         tree(Swing)
@@ -338,11 +338,11 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
                 .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {
-                ComparisonMode.PLAYERROTATION -> RotationManager.rotationDifference(
+                ComparisonMode.SERVER_ROTATION -> RotationManager.rotationDifference(
                     RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
                     RotationManager.serverRotation
                 )
-                ComparisonMode.VIEWROTATION -> RotationManager.rotationDifference(
+                ComparisonMode.CLIENT_ROTATION -> RotationManager.rotationDifference(
                     RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
                     player.rotation
                 )
@@ -360,8 +360,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
     data class DestroyerTarget(val pos: BlockPos, val rotation: Rotation)
 
     enum class ComparisonMode(override val choiceName: String) : NamedChoice {
-        PLAYERROTATION("PlayerRotation"),
-        VIEWROTATION("ViewRotation"),
+        SERVER_ROTATION("ServerRotation"),
+        CLIENT_ROTATION("ClientRotation"),
         DISTANCE("Distance"),
         HARDNESS("Hardness")
     }
