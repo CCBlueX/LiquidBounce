@@ -54,7 +54,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
             return
         }
 
-        if (heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk && thePlayer.isUsingItem) {
+        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && thePlayer.isUsingItem) {
             when (consumePacket.lowercase()) {
                 "aac5" -> {
                     sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
