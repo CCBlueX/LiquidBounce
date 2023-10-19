@@ -25,6 +25,7 @@
     font-size: 12px;
     padding: 6px 15px 6px 10px;
     transition: ease color .2s;
+    transform: skew(20deg); /* Tilt from top left to bottom right with positive values (Change to (rounded) parallelogram) */
 
     .name {
       transition: ease transform .2s;
@@ -42,4 +43,5 @@
       color: white;
     }
   }
+
 </style>

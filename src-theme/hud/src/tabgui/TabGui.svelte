@@ -146,21 +146,31 @@
         background-clip: content-box;
         display: flex;
         flex-direction: column;
-        border-radius: 5px;
         overflow: hidden;
+
+        /* Change to (rounded) parallelogram */
+        transform: skew(-20deg); /* Tilt negative values from upper-left to lower-right */
+        transform-origin: 0% 0%; /* Set the origin of the transformation to the top left */
+        border-radius: 5px; /* Add rounded corners as needed */
     }
+
 
     .modules {
         background-clip: content-box;
         background-color: rgba(0, 0, 0, 0.5);
         margin-left: 6px;
-        border-radius: 5px;
         overflow: hidden;
         min-width: 100px;
         display: flex;
         flex-direction: column;
         overflow: auto;
+
+        /* Change to (rounded) parallelogram */
+        transform: skew(-20deg); /* Tilt negative values from upper-left to lower-right */
+        transform-origin: 0% 0%; /* Set the origin of the transformation to the top left */
+        border-radius: 5px; /* Add rounded corners as needed */
     }
+
 
     ::-webkit-scrollbar {
         width: 0;
