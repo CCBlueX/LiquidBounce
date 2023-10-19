@@ -99,6 +99,9 @@ object AccountManager : Configurable("Accounts") {
         accounts += CrackedAccount().also { account ->
             account.name = username
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
     @RequiredByScript
@@ -137,6 +140,9 @@ object AccountManager : Configurable("Accounts") {
 
                 // Add account to list of accounts
                 accounts += account
+
+                // Store configurable
+                ConfigSystem.storeConfigurable(this@AccountManager)
             }
 
             /**
@@ -153,6 +159,9 @@ object AccountManager : Configurable("Accounts") {
         accounts += AlteningAccount().also { account ->
             account.token = accountToken
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
     fun generateNewAlteningAccount(apiToken: String = this.alteningApiToken) {
@@ -169,6 +178,9 @@ object AccountManager : Configurable("Accounts") {
             account.hypixelRank = alteningAccount.info.hypixelRank ?: ""
             account.hypixelLevel = alteningAccount.info.hypixelLevel
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
 }

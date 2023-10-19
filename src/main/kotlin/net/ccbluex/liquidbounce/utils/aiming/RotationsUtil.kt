@@ -29,12 +29,13 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.entity.Entity
-import net.minecraft.util.math.*
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.RandomUtils
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -63,15 +64,23 @@ object RotationManager : Listenable {
 
     // Current rotation
     var currentRotation: Rotation? = null
+        set(value) {
+            previousRotation = field ?: mc.player.rotation
+
+            field = value
+        }
+
     var ticksUntilReset: Int = 0
     var ignoreOpenInventory = false
+
+    // Used for rotation interpolation
+    var previousRotation: Rotation? = null
 
     // Active configurable
     var activeConfigurable: RotationsConfigurable? = null
 
     fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
         aimAt(makeRotation(vec, eyes), openInventory, configurable)
-
 
     fun aimAt(rotation: Rotation, openInventory: Boolean = false, configurable: RotationsConfigurable) {
         if (!shouldUpdate()) {
@@ -105,28 +114,30 @@ object RotationManager : Listenable {
      * Update current rotation to new rotation step
      */
     fun update() {
+        val player = mc.player ?: return
+
         // Prevents any rotation changes, when inventory is opened
-        val canRotate =
-            (mc.currentScreen !is InventoryScreen && mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
+        val canRotate = (!InventoryTracker.isInventoryOpenServerSide &&
+            mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
+
+        val configurable = activeConfigurable ?: return
 
         // Update rotations
         val speed = RandomUtils.nextFloat(
-            activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive
+            configurable.turnSpeed.start,
+            configurable.turnSpeed.endInclusive
         )
 
-        val playerRotation = mc.player?.rotation ?: return
+        val playerRotation = player.rotation
 
         if (ticksUntilReset == 0 || !shouldUpdate()) {
-
-            if (rotationDifference(
-                    currentRotation ?: serverRotation, playerRotation
-                ) < activeConfigurable!!.resetThreshold || !activeConfigurable!!.silent
-            ) {
+            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) <
+                configurable.resetThreshold || !configurable.silent) {
                 ticksUntilReset = -1
 
                 targetRotation = null
                 currentRotation?.let { rotation ->
-                    mc.player?.let { player ->
+                    player.let { player ->
                         player.yaw = rotation.yaw + angleDifference(player.yaw, rotation.yaw)
                         player.renderYaw = player.yaw
                         player.lastRenderYaw = player.yaw
@@ -139,18 +150,23 @@ object RotationManager : Listenable {
             if (canRotate) {
                 limitAngleChange(currentRotation ?: serverRotation, playerRotation, speed).fixedSensitivity().let {
                     currentRotation = it
-                    if (!activeConfigurable!!.silent) mc.player!!.applyRotation(it)
+
+                    if (!configurable.silent) {
+                        player.applyRotation(it)
+                    }
                 }
             }
             return
         }
+
         if (canRotate) {
             targetRotation?.let { targetRotation ->
-                limitAngleChange(
-                    currentRotation ?: playerRotation, targetRotation, speed
-                ).fixedSensitivity().let {
+                limitAngleChange(currentRotation ?: playerRotation, targetRotation, speed).fixedSensitivity().let {
                     currentRotation = it
-                    if (!activeConfigurable!!.silent) mc.player!!.applyRotation(it)
+
+                    if (!configurable.silent) {
+                        player.applyRotation(it)
+                    }
                 }
             }
         }
@@ -276,7 +292,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.currentRotation ?: mc.player?.rotation!!)
+            get() = LeastDifferencePreference(RotationManager.currentRotation ?: mc.player.rotation)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)

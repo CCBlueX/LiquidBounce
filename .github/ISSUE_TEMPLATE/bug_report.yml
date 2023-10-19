@@ -15,6 +15,14 @@ body:
 
   - type: input
     attributes:
+      label: LiquidBounce Branch
+      description: Which edition of LiquidBounce does this bug affect?
+      placeholder: legacy or nextgen
+    validations:
+      required: true
+
+  - type: input
+    attributes:
       label: LiquidBounce Build/Version
       description: Which version of LiquidBounce does this bug affect?
       placeholder: e.g. b61

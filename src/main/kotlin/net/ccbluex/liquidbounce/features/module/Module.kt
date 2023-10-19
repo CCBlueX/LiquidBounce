@@ -49,14 +49,11 @@ open class Module(
     hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
 
-    // Module options
-    var enabled by boolean("Enabled", state).listen { new ->
-        runCatching {
-            // Check if player is in-game
-            if (mc.player == null || mc.world == null) {
-                return@runCatching
-            }
+    val valueEnabled = boolean("Enabled", state)
 
+    // Module options
+    var enabled by valueEnabled.listen { new ->
+        runCatching {
             // Call enable or disable function
             if (new) {
                 enable()
