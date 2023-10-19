@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -45,11 +44,10 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.option.KeyBinding
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.Hand
@@ -75,7 +73,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val switchDelay by int("SwitchDelay", 0, 0..20)
 
-    private val comparisonMode by enumChoice("Preferred", ComparisonMode.CROSSHAIR, ComparisonMode.values())
+    private val comparisonMode by enumChoice("Preferred", ComparisonMode.PLAYERROTATION, ComparisonMode.values())
 
     init {
         tree(Swing)
@@ -340,9 +338,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
                 .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {
-                ComparisonMode.CROSSHAIR -> RotationManager.rotationDifference(
+                ComparisonMode.PLAYERROTATION -> RotationManager.rotationDifference(
                     RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
                     RotationManager.serverRotation
+                )
+                ComparisonMode.VIEWROTATION -> RotationManager.rotationDifference(
+                    RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
+                    player.rotation
                 )
                 ComparisonMode.DISTANCE -> pos.getCenterDistanceSquared()
                 ComparisonMode.HARDNESS -> state.getHardness(world, pos).toDouble()
@@ -358,7 +360,10 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
     data class DestroyerTarget(val pos: BlockPos, val rotation: Rotation)
 
     enum class ComparisonMode(override val choiceName: String) : NamedChoice {
-        CROSSHAIR("Crosshair"), DISTANCE("Distance"), HARDNESS("Hardness")
+        PLAYERROTATION("PlayerRotation"),
+        VIEWROTATION("ViewRotation"),
+        DISTANCE("Distance"),
+        HARDNESS("Hardness")
     }
 
 }
