@@ -21,7 +21,7 @@ import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
 
-object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
+object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT, subjective = true) {
 
     private val spoof by BoolValue("SpoofItem", false)
     private val spoofTicks by IntegerValue("SpoofTicks", 10, 1..20) { spoof }

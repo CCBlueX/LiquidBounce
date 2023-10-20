@@ -9,8 +9,6 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
-import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
@@ -149,13 +147,11 @@ object SettingsUtils {
         val all = values && binds && states
 
         return moduleManager.modules
-            .filter { module ->
-                module.category != ModuleCategory.RENDER && module !is NameProtect && module !is Spammer
-            }
+            .filter { module -> all || (module.category != ModuleCategory.RENDER && !module.subjective) }
             .joinToString("\n") { module ->
                 buildString {
                     if (values) {
-                        val filteredValues = module.values.filter { all || it.isSupported() }
+                        val filteredValues = module.values.filter { all || (!it.subjective && it.isSupported()) }
                         if (filteredValues.isNotEmpty()) {
                             filteredValues.joinTo(this, separator = "\n") { "${module.name} ${it.name} ${it.get()}" }
                             appendLine()

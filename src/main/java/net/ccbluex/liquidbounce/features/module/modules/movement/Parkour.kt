@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
-object Parkour : Module("Parkour", ModuleCategory.MOVEMENT) {
+object Parkour : Module("Parkour", ModuleCategory.MOVEMENT, subjective = true) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

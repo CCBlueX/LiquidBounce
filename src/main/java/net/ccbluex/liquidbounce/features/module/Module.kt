@@ -34,7 +34,8 @@ open class Module @JvmOverloads constructor(
     private val canBeEnabled: Boolean = true,
     private val forcedDescription: String? = null,
     // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
-    val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
+    val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " "),
+    val subjective: Boolean = false
 
 ) : MinecraftInstance(), Listenable {
 

@@ -39,7 +39,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
     val mode by ListValue("Mode", modes, "SpoofGround")
 
-    val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f) { mode == "MLG" }
+    val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
 
     override fun onEnable() {
         modeModule.onEnable()

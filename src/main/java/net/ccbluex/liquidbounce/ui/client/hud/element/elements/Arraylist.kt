@@ -44,10 +44,10 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow") { rectMode != "None" }
     
     private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
-    private val rectRed by IntegerValue("Rect-R", 255, 0..255, isCustomRectSupported)
-    private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isCustomRectSupported)
-    private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isCustomRectSupported)
-    private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isCustomRectSupported)
+    private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
 
     private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
     private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }

@@ -73,10 +73,10 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val mode by ListValue(
         "Mode", modes, "Vanilla"
     )
-    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f) {
+    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f, subjective = true) {
         mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan")
     }
-    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false) {
+    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true) {
         mode in arrayOf("Vanilla", "SmoothVanilla")
     }
     val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
@@ -98,7 +98,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
 
     // Visuals
-    private val mark by BoolValue("Mark", true)
+    private val mark by BoolValue("Mark", true, subjective = true)
     var startY = 0.0
         private set
 

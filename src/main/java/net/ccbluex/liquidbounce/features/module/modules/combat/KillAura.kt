@@ -248,13 +248,13 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     // Bypass
     private val failRate by IntegerValue("FailRate", 0, 0..99)
     private val fakeSwing by BoolValue("FakeSwing", true) { swing }
-    private val noInventoryAttack by BoolValue("NoInvAttack", false)
-    private val noConsumeAttack by ListValue("NoConsumeAttack", arrayOf("Off", "NoHits", "NoRotation"), "Off")
-    private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500) { noInventoryAttack }
+    private val noInventoryAttack by BoolValue("NoInvAttack", false, subjective = true)
+    private val noConsumeAttack by ListValue("NoConsumeAttack", arrayOf("Off", "NoHits", "NoRotation"), "Off", subjective = true)
+    private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500, subjective = true) { noInventoryAttack }
 
     // Visuals
-    private val mark by BoolValue("Mark", true)
-    private val fakeSharp by BoolValue("FakeSharp", true)
+    private val mark by BoolValue("Mark", true, subjective = true)
+    private val fakeSharp by BoolValue("FakeSharp", true, subjective = true)
 
     /**
      * MODULE
