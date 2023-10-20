@@ -24,39 +24,43 @@ import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.ListValueType
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PipelineEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import java.net.InetSocketAddress
-import java.util.*
 
 /**
  * Proxy Manager
  *
  * Only supports SOCKS5 proxies.
  */
-object ProxyManager : Configurable("Proxies"), Listenable {
+object ProxyManager : Configurable("proxy"), Listenable {
 
-    // List of proxies. Not used yet.
-    val proxies by value(name, TreeSet<Proxy>(), listType = ListValueType.Proxy)
+    private val noProxy = Proxy("", 0, null)
+    var proxy by value("proxy", noProxy)
 
     /**
      * The proxy that is set in the current session and used for all server connections
+     *
+     * !! DO NOT CHANGE IT TO PRIVATE AS IT IS USED BY THE ULTRALIGHT GUI. !!
      */
-    var currentProxy: Proxy? = null
+    @RequiredByScript
+    val currentProxy
+        get() = proxy.takeIf { it.host.isNotBlank() }
 
     init {
         ConfigSystem.root(this)
     }
 
     fun setProxy(host: String, port: Int, username: String, password: String): String {
-        currentProxy = Proxy(InetSocketAddress(host, port),
+        proxy = Proxy(host, port,
             if (username.isNotBlank())
                 ProxyCredentials(username, password)
             else
                 null
         )
+        ConfigSystem.storeConfigurable(this)
 
         // Refreshes local IP info when proxy is set
         IpInfoApi.refreshLocalIpInfo()
@@ -64,7 +68,8 @@ object ProxyManager : Configurable("Proxies"), Listenable {
     }
 
     fun unsetProxy(): String {
-        currentProxy = null
+        proxy = noProxy
+        ConfigSystem.storeConfigurable(this)
 
         // Refreshes local IP info when proxy is unset
         IpInfoApi.refreshLocalIpInfo()
@@ -98,7 +103,10 @@ object ProxyManager : Configurable("Proxies"), Listenable {
     /**
      * Contains serializable proxy data
      */
-    data class Proxy(val address: InetSocketAddress, val credentials: ProxyCredentials?)
+    data class Proxy(val host: String, val port: Int, val credentials: ProxyCredentials?) {
+        val address
+            get() = InetSocketAddress(host, port)
+    }
 
     /**
      * Contains serializable proxy credentials
