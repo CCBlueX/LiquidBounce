@@ -101,13 +101,13 @@
         Input {
             border-radius: 6px;
             margin-top: 10px;
-            padding: 5px;
+            padding: 10px;
             border-color: white;
             background-color: rgba(0, 0, 0, 0.68);
             color: white;
             border: none;
             height: 40px;
-            width: 150px;
+            width: 100%;
         }
 
         Button {
@@ -115,7 +115,7 @@
             padding: 5px;
             background-color: rgba(0, 0, 0, 0.68);
             width: 90px;
-            height: 30px;
+            height: 35px;
             color: white;
             border: none;
         }
@@ -136,7 +136,7 @@
             margin-bottom: 45px;
         }
 
-        .butto {
+        .back {
             height: 75px;
             width: 150px;
             font-size: 26px;
@@ -150,7 +150,7 @@
             transition: background-position .2s ease-out;
         }
 
-        .butto:hover, .Button:hover {
+        .back:hover, Button:hover {
             background-position: left bottom;
         }
 
@@ -163,7 +163,7 @@
 
         <div id="buttongrid">
             <div class="Button">
-                <h2>Set proxy</h2>
+                <h2>Proxy Configuration</h2>
                 <div>
                     <label for="host"></label><input type="text" id="host" name="host"
                                                      placeholder="Host"><br>
@@ -172,23 +172,72 @@
                     <label for="username"></label><input type="text" id="username" name="username"
                                                          placeholder="Username"><br>
                     <label for="password"></label><input type="password" id="password" name="password"
-                                                         placeholder="Password"><br>
-                    <button onclick="ddocument.getElementById('response').innerText = client.getProxyManager().setProxy(document.getElementById('host').value, parseInt(document.getElementById('port').value), document.getElementById('username').value, document.getElementById('password').value);">
+                                                         placeholder="Password">
+
+                    <br><br>
+
+                    <button onclick="set()">
                         Set proxy
                     </button>
 
-                    <button onclick="ddocument.getElementById('response').innerText = client.getProxyManager().unsetProxy();">
+                    <button onclick="remove()">
                         Unset proxy
                     </button>
                 </div>
             </div>
+
+            <label id="response"></label>
+        </div>
+
+        <div>
+            <h2>Proxy Details</h2>
+
+            <label><b>Current proxy: </b><label id="proxy"></label></label><br>
+            <label><b>Location: </b><label id="location"></label></label>
         </div>
     </div>
     <footer>
         <div class="footinit">
-            <button class="butto" onclick="pages.open('title', screen)">Back</button>
+            <button class="back" onclick="pages.open('title', screen)">Back</button>
         </div>
     </footer>
 </div>
+
+<script>
+    function set() {
+        document.getElementById('response').innerText = client.getProxyManager().setProxy(document.getElementById('host').value, parseInt(document.getElementById('port').value), document.getElementById('username').value, document.getElementById('password').value);
+        refresh();
+    }
+
+    function remove() {
+        document.getElementById('response').innerText = client.getProxyManager().unsetProxy();
+        refresh();
+    }
+
+    function refresh() {
+        let proxy = client.getProxyManager().getCurrentProxy();
+
+        if (proxy != null) {
+            document.getElementById('proxy').innerText = proxy.getHost() + ":" + proxy.getPort();
+
+            // Fill in input fields
+            document.getElementById('host').value = proxy.getHost();
+            document.getElementById('port').value = proxy.getPort();
+
+            let creds = proxy.getCredentials();
+            if (creds != null) {
+                document.getElementById('username').value = creds.getUsername();
+                document.getElementById('password').value = creds.getPassword();
+            }
+        } else {
+            document.getElementById('proxy').innerText = "No proxy.";
+        }
+
+
+        document.getElementById('location').innerText = client.getSessionService().getLocation();
+    }
+
+    refresh();
+</script>
 </body>
 </html>

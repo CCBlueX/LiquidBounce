@@ -108,9 +108,6 @@ object LiquidBounce : Listenable {
             ChunkScanner
             WorldChangeNotifier
 
-            // Load API data
-            IpInfoApi
-
             // Features
             ModuleManager
             CommandManager
@@ -140,6 +137,10 @@ object LiquidBounce : Listenable {
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
             }
+
+            // Refresh local IP info
+            logger.info("Refreshing local IP info...")
+            IpInfoApi.refreshLocalIpInfo()
 
             // Connect to chat server
             Chat.connectAsync()

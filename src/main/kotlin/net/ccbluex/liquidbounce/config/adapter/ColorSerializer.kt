@@ -31,7 +31,7 @@ object ColorSerializer : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
     }
 
     override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Color4b {
-        return Color4b(Color(json.asInt))
+        return Color4b(Color(json.asInt, true))
     }
 
 }

@@ -20,20 +20,20 @@ public class MixinMessageHandler {
 
     @Inject(method = "method_45745", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;)V"))
     private void injectDisguisedChatLambda(MessageType.Parameters parameters, Text text, Instant instant, CallbackInfoReturnable<Boolean> cir) {
-        emitChatEvent(text);
+        emitChatEvent(text, ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE);
     }
 
     @Inject(method = "processChatMessageInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V"))
     private void injectChatMessage(MessageType.Parameters params, SignedMessage message, Text decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
-        emitChatEvent(decorated);
+        emitChatEvent(decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
     }
 
     @Inject(method = "onGameMessage", at = @At(value = "HEAD"))
     private void injectGameMessage(Text message, boolean overlay, CallbackInfo ci) {
-        emitChatEvent(message);
+        emitChatEvent(message, ChatReceiveEvent.ChatType.GAME_MESSAGE);
     }
 
-    private void emitChatEvent(Text text) {
-        EventManager.INSTANCE.callEvent(new ChatReceiveEvent(text.getString(), text));
+    private void emitChatEvent(Text text, ChatReceiveEvent.ChatType type) {
+        EventManager.INSTANCE.callEvent(new ChatReceiveEvent(text.getString(), text, type));
     }
 }
