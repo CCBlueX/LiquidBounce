@@ -38,10 +38,12 @@ import kotlin.concurrent.thread
 object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
 
     private val openAiKey by text("OpenAiKey", "")
+    private val model by text("Model", "gpt-4")
     private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000)
     private val cooldownMinutes by int("Cooldown", 2, 0..60)
     private val bufferTime by int("BufferTime", 200, 0..500)
     private val triggerSentence by text("TriggerSentence", "Chat Game")
+    private val includeTrigger by boolean("IncludeTrigger", true)
     private val serverName by text("ServerName", "Minecraft")
 
     /**
@@ -61,8 +63,14 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
         On true or false questions, respond without any dots, in lower-case with 'true' or 'false'.
         On math questions, respond with the result.
         On first to type tasks, respond with the word.
+        On unscramble tasks, the word is scrambled and might be from the game Minecraft (ex. Spawners, Iron Golem),
+        respond with the unscrambled word.
         On other questions, respond with the answer.
         DO NOT SAY ANYTHING ELSE THAN THE ANSWER! If you do, you will be disqualified.
+        A few hints: [
+        Amethyst geodes spawn at Y level and below in 1.18 -> 30,
+        Minecraft's moon has the same amount of lunar phases as the moon in real life -> true
+        ]
         """.trimIndent().replace("\n", " ")
     private val prompt by text("Prompt", defaultPrompt)
 
@@ -101,10 +109,11 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             if (message.contains(triggerSentence)) {
                 triggerWordChronometer.reset()
 
-                // TODO: Add option for servers that have the trigger word and question in the same message.
-                // Do not include the trigger word in the buffer.
                 chatBuffer.clear()
-                return@sequenceHandler
+                if (!includeTrigger) {
+                    // Do not include the trigger word in the buffer.
+                    return@sequenceHandler
+                }
             }
 
             // If the trigger word has been said, add the message to the buffer.
@@ -140,7 +149,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             chat("§aUnderstood question: $question")
 
             // Create new AI instance with OpenAI key
-            val ai = Gpt(openAiKey, prompt.replace("{SERVER_NAME}", serverName))
+            val ai = Gpt(openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
 
             thread {
                 runCatching {
@@ -162,6 +171,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
                     // Send answer
                     network.sendChatMessage(answer)
                 }.onFailure {
+                    it.printStackTrace()
                     chat("§cFailed to answer question: ${it.message}")
                 }
             }
