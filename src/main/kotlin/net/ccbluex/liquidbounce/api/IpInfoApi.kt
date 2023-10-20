@@ -109,7 +109,7 @@ object IpInfoApi {
                                 if (msg is HttpResponse) {
                                     // Throw error if status code is not 200
                                     if (msg.status().code() != 200) {
-                                        throw IllegalStateException("Invalid status code: ${msg.status().code()}")
+                                        error("Invalid status code: ${msg.status().code()}")
                                     }
                                 }
 

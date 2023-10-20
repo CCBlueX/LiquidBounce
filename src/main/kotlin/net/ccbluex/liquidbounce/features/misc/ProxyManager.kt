@@ -51,7 +51,12 @@ object ProxyManager : Configurable("Proxies"), Listenable {
     }
 
     fun setProxy(host: String, port: Int, username: String, password: String): String {
-        currentProxy = Proxy(InetSocketAddress(host, port), if (username.isNotBlank()) ProxyCredentials(username, password) else null)
+        currentProxy = Proxy(InetSocketAddress(host, port),
+            if (username.isNotBlank())
+                ProxyCredentials(username, password)
+            else
+                null
+        )
 
         // Refreshes local IP info when proxy is set
         IpInfoApi.refreshLocalIpInfo()
