@@ -10,13 +10,18 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 object HypixelHop : SpeedMode("HypixelHop") {
-    override fun onMotion() {
-        if (!isMoving || mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isEating || mc.thePlayer.isBlocking)
+    override fun onStrafe() {
+        if (mc.thePlayer.isInWater || mc.thePlayer.isInLava)
             return
 
-        if (mc.thePlayer.onGround) {
-            mc.thePlayer.jump()
-            strafe(0.4f)
+        if (mc.thePlayer.onGround && isMoving) {
+            if (mc.thePlayer.isUsingItem) {
+                mc.thePlayer.jump()
+            } else {
+                mc.thePlayer.jump()
+                strafe(0.4f)
+            }
         }
+
     }
 }
