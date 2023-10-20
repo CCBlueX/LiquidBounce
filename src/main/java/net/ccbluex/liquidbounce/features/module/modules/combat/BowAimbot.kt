@@ -31,12 +31,12 @@ import java.awt.Color
 
 object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
 
-    private val priority by ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
-    private val predict by BoolValue("Predict", true)
-    private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F) { predict }
-    private val throughWalls by BoolValue("ThroughWalls", false)
-    private val mark by BoolValue("Mark", true)
-    private val silent by BoolValue("Silent", true)
+    private val priority by ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction", subjective = true)
+    private val predict by BoolValue("Predict", true, subjective = true)
+    private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F, subjective = true) { predict }
+    private val throughWalls by BoolValue("ThroughWalls", false, subjective = true)
+    private val mark by BoolValue("Mark", true, subjective = true)
+    private val silent by BoolValue("Silent", true, subjective = true)
     private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silent }
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)

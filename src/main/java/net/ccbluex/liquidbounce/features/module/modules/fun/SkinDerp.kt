@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.player.EnumPlayerModelParts
 import kotlin.random.Random.Default.nextBoolean
 
-object SkinDerp : Module("SkinDerp", ModuleCategory.FUN) {
+object SkinDerp : Module("SkinDerp", ModuleCategory.FUN, subjective = true) {
 
     private val delay by IntegerValue("Delay", 0, 0..1000)
     private val hat by BoolValue("Hat", true)

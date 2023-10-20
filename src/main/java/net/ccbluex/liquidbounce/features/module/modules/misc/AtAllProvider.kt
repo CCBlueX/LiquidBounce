@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.network.play.client.C01PacketChatMessage
 import java.util.concurrent.LinkedBlockingQueue
 
-object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
+object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC, subjective = true) {
 
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0..20000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)

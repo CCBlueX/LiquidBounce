@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.TextValue
 
-object Spammer : Module("Spammer", ModuleCategory.MISC) {
+object Spammer : Module("Spammer", ModuleCategory.MISC, subjective = true) {
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0..5000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 

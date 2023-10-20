@@ -26,7 +26,7 @@ import java.net.URISyntaxException
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
 
-object LiquidChat : Module("LiquidChat", ModuleCategory.MISC) {
+object LiquidChat : Module("LiquidChat", ModuleCategory.MISC, subjective = true) {
 
     init {
         state = true

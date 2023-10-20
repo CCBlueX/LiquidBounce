@@ -35,8 +35,8 @@ import net.minecraft.item.*
 import net.minecraft.potion.Potion
 
 object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
-	private val drop by BoolValue("Drop", true)
-	val sort by BoolValue("Sort", true)
+	private val drop by BoolValue("Drop", true, subjective = true)
+	val sort by BoolValue("Sort", true, subjective = true)
 
 	private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
 		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
@@ -48,13 +48,13 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 	}
 	private val minItemAge by IntegerValue("MinItemAge", 0, 0..2000)
 
-	private val limitStackCounts by BoolValue("LimitStackCounts", true)
-		private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36) { limitStackCounts }
-		private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36) { limitStackCounts }
-		private val maxThrowableStacks by IntegerValue("MaxThrowableStacks", 5, 0..36) { limitStackCounts }
+	private val limitStackCounts by BoolValue("LimitStackCounts", true, subjective = true)
+		private val maxBlockStacks by IntegerValue("MaxBlockStacks", 5, 0..36, subjective = true) { limitStackCounts }
+		private val maxFoodStacks by IntegerValue("MaxFoodStacks", 5, 0..36, subjective = true) { limitStackCounts }
+		private val maxThrowableStacks by IntegerValue("MaxThrowableStacks", 5, 0..36, subjective = true) { limitStackCounts }
 		// TODO: max potion, vehicle, ..., stacks?
 
-	private val mergeStacks by BoolValue("MergeStacks", true)
+	private val mergeStacks by BoolValue("MergeStacks", true, subjective = true)
 
 	private val invOpen by InventoryManager.invOpenValue
 	private val simulateInventory by InventoryManager.simulateInventoryValue
@@ -68,11 +68,11 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 	private val noMoveGround by InventoryManager.noMoveGroundValue
 
 	private val randomSlot by BoolValue("RandomSlot", false)
-	private val ignoreVehicles by BoolValue("IgnoreVehicles", false)
+	private val ignoreVehicles by BoolValue("IgnoreVehicles", false, subjective = true)
 
-	private val onlyGoodPotions by BoolValue("OnlyGoodPotions", false)
+	private val onlyGoodPotions by BoolValue("OnlyGoodPotions", false, subjective = true)
 
-	val highlightUseful by BoolValue("HighlightUseful", true)
+	val highlightUseful by BoolValue("HighlightUseful", true, subjective = true)
 
 	private val slot1Value = SortValue("Slot1", "Sword")
 	private val slot2Value = SortValue("Slot2", "Bow")
@@ -273,7 +273,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 		slot1Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value
 	)
 
-	private class SortValue(name: String, value: String) : ListValue(name, SORTING_KEYS, value) {
+	private class SortValue(name: String, value: String) : ListValue(name, SORTING_KEYS, value, subjective = true) {
 		override fun isSupported() = sort
 		override fun onChanged(oldValue: String, newValue: String) =
 			SORTING_VALUES.forEach { value ->

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorC
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.TextValue
 
-object NameProtect : Module("NameProtect", ModuleCategory.MISC) {
+object NameProtect : Module("NameProtect", ModuleCategory.MISC, subjective = true) {
 
     val allPlayers by BoolValue("AllPlayers", false)
 
