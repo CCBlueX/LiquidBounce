@@ -22,7 +22,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.delay
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -52,16 +54,14 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
      * Do not create any line breaks, as it might break the JSON format.
      */
     private val defaultPrompt = """
-        You participate in a chat game in which you have to answer questions.
-        The goal is to answer them as short and precise as possible.
-        It mostly only requires one word as an answer or if it's a math question it requires the result.
-        The questions might be based on the game Minecraft and the server you are playing on.
-        Always answer with the first thing that comes to your mind.
+        You participate in a chat game in which you have to answer questions or do tasks.
+        Your goal is to answer them as short and precise as possible and win the game.
+        The questions might be based on the game Minecraft or the minecraft server you are playing on.
         The server name is {SERVER_NAME}.
         On true or false questions, respond without any dots, in lower-case with 'true' or 'false'.
-        If you do not know it, just guess with something that fits.
-        DO NOT PUT ANYTHING IN THE FRONT OF YOUR ANSWER!
-        DO NOT PUT ANY DOTS AT THE END OF YOUR ANSWER!
+        On math questions, respond with the result.
+        On first to type tasks, respond with the word.
+        On other questions, respond with the answer.
         DO NOT SAY ANYTHING ELSE THAN THE ANSWER! If you do, you will be disqualified.
         """.trimIndent().replace("\n", " ")
     private val prompt by text("Prompt", defaultPrompt)
@@ -133,6 +133,9 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             while (question.contains("  ")) {
                 question = question.replace("  ", " ")
             }
+
+            // Remove leading and trailing whitespace
+            question = question.trim()
 
             chat("§aUnderstood question: $question")
 
