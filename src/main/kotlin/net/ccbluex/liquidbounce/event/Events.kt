@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import io.netty.channel.ChannelPipeline
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
@@ -197,6 +198,10 @@ class PlayerStepEvent(var height: Float) : Event()
 class FluidPushEvent : CancellableEvent()
 
 // Network events
+
+@Nameable("pipeline")
+class PipelineEvent(val channelPipeline: ChannelPipeline) : Event()
+
 @Nameable("packet")
 class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 
