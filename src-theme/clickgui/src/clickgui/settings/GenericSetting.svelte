@@ -27,4 +27,6 @@
     <ConfigurableSetting {instance}/>
 {:else if type === "TEXT"}
     <TextSetting {instance}/>
+{:else if type === "COLOR"}
+    <ColorSetting {instance}/>
 {/if}

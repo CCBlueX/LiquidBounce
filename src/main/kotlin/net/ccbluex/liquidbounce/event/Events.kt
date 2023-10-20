@@ -122,7 +122,13 @@ class ScreenEvent(val screen: Screen?) : CancellableEvent()
 class ChatSendEvent(val message: String) : CancellableEvent()
 
 @Nameable("chatReceive")
-class ChatReceiveEvent(val message: String, val textData: Text) : Event()
+class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatType) : Event() {
+
+    enum class ChatType {
+        CHAT_MESSAGE, DISGUISED_CHAT_MESSAGE, GAME_MESSAGE
+    }
+
+}
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()

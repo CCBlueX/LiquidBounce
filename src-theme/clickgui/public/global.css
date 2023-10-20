@@ -18,7 +18,7 @@ body {
 }
 
 .noUi-handle {
-    background-color: #4677ff;
+    background-color: var(--accent);
     box-shadow: unset;
     border: none;
     border-radius: 50%;
@@ -41,7 +41,7 @@ body {
 }
 
 .noUi-connect {
-    background-color: #4677ff;
+    background-color: var(--accent);
 }
 
 .pcr-button {
