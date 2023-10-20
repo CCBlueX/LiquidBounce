@@ -39,8 +39,6 @@ object UltralightJsPages {
     // A collection of minecraft screens
     private val _jsScreens = arrayOf(
         JsScreen("title", TitleScreen::class.java) { mc.setScreen(TitleScreen()) },
-        JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.setScreen(SelectWorldScreen(it)) },
-        JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.setScreen(MultiplayerScreen(it)) },
         JsScreen("options", OptionsScreen::class.java) { mc.setScreen(OptionsScreen(it, mc.options)) },
         JsScreen("language_options", LanguageOptionsScreen::class.java) {
             mc.setScreen(

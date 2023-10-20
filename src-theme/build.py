@@ -35,22 +35,8 @@ if os.path.exists("resources"):
 print("Building theme")
 os.system("npm i && npm run build")
 
-# Go through every folder and copy public folder to tmp folder with the name of folder
-for folder in os.listdir("."):
-    if os.path.isdir(folder):
-        # Check if theme has public folder to copy
-        if os.path.exists(folder + "/public"):
-            # Copy theme to tmp folder
-            shutil.copytree(folder + "/public", "tmp/" + folder)
-        else:
-            print("Folder " + folder + " has no public folder")
-
 # Zip into a theme bundle
-shutil.make_archive("theme", "zip", "tmp")
-
-# Delete tmp folder
-if os.path.exists("tmp"):
-    shutil.rmtree("tmp")
+shutil.make_archive("theme", "zip", "dist")
 
 # Copy a theme bundle to jar structure
 if os.path.exists("resources"):

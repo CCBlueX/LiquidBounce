@@ -1,0 +1,43 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #4677ff;
+}
+
+body {
+  background-color: #181a1b;
+}
+
+@media screen and (max-width: 1366px) {
+  body {
+    zoom: 0.7;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  body {
+    zoom: 0.5;
+  }
+}
+
+@media screen and (max-height: 1000px) {
+  body {
+    zoom: 0.7;
+  }
+}
+
+@media screen and (max-height: 700px) {
+  body {
+    zoom: 0.5;
+  }
+}
+
+@media screen and (max-height: 540px) {
+  body {
+    zoom: 0.4;
+  }
+}

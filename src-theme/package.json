@@ -1,27 +1,48 @@
 {
   "name": "liquidbounce-theme",
   "version": "1.0.0",
+  "private": true,
   "description": "Default theme of the minecraft hacked-client LiquidBounce",
-  "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w"
-  },
   "repository": "github:CCBlueX/LiquidBounce",
   "author": "CCBlueX",
   "bugs": {
     "url": "https://github.com/CCBlueX/LiquidBounce/issues"
   },
   "homepage": "https://github.com/CCBlueX/LiquidBounce#readme",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-switch": "^1.0.3",
+    "@radix-ui/react-tooltip": "^1.0.7",
+    "class-variance-authority": "^0.7.0",
+    "framer-motion": "^10.12.18",
+    "fuse.js": "^6.6.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.1",
+    "tiny-invariant": "^1.3.1"
+  },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.0",
-    "@rollup/plugin-node-resolve": "^15.0.2",
-    "@rollup/plugin-terser": "^0.4.1",
-    "rollup": "^3.21.6",
-    "rollup-plugin-css-only": "^4.3.0",
-    "rollup-plugin-livereload": "^2.0.5",
-    "rollup-plugin-svelte": "^7.1.4",
-    "sass": "^1.62.1",
-    "serve-handler": "^6.1.5",
-    "svelte-preprocess": "^5.0.3"
+    "@types/react": "^18.0.37",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "@vitejs/plugin-react-swc": "^3.0.0",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.38.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.3.4",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.3.2",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.9",
+    "vite-plugin-svgr": "^3.2.0"
   }
 }

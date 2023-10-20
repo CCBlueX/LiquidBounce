@@ -71,23 +71,22 @@ class Theme(val name: String) {
         if (page.exists) {
             return page
         }
+
         return null
     }
 
 }
 
-class Page(theme: Theme, val name: String) {
-
-    private val pageFolder = File(theme.themeFolder, name)
+class Page(val theme: Theme, val name: String) {
 
     val viewableFile: String
-        get() = "file:///${File(pageFolder, "index.html").absolutePath}"
+        get() = "file:///${File(theme.themeFolder, "index.html").absolutePath}"
 
     val exists: Boolean
-        get() = pageFolder.exists()
+        get() = theme.themeFolder.exists()
 
     private val watcher by lazy {
-        val path = pageFolder.toPath()
+        val path = theme.themeFolder.toPath()
         val watchService = path.fileSystem.newWatchService()
         path.register(watchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
         watchService
