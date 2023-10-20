@@ -29,7 +29,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     private val mode by ListValue(
         "Mode", arrayOf(
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
-            "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
+            "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"
         ), "Simple"
     )
 
