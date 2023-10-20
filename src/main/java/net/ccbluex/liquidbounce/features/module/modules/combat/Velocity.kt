@@ -222,7 +222,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             velocityTimer.reset()
 
             when (mode.lowercase()) {
-                "simple", "limit" -> handleVelocity(event)
+                "simple" -> handleVelocity(event)
 
                 "aac", "reverse", "smoothreverse", "aaczero", "jump" -> hasReceivedVelocity = true
 
