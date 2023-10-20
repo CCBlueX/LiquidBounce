@@ -5,7 +5,7 @@
     "dstrgb": "1-srcalpha"
   },
   "vertex": "position_tex",
-  "fragment": "inertiaclient:bgra_position_tex",
+  "fragment": "liquidbounce:bgra_position_tex",
   "attributes": [
     "Position",
     "UV0"

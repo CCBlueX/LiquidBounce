@@ -1,6 +1,7 @@
 package net.janrupf.ujr.example.glfw.web;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.janrupf.ujr.api.*;
 import net.janrupf.ujr.api.event.UlKeyEvent;
 import net.janrupf.ujr.api.event.UlKeyEventType;
@@ -70,7 +71,7 @@ public class WebWindow {
         //RenderSystem.setShaderTexture(0, texture);
         RenderSystem.setShaderTexture(0, surface.getTexture());
         //RenderSystem.shaderTextures[0] = surface.getTexture();
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+        RenderSystem.setShader(() -> ((IMixinGameRenderer) getMc().gameRenderer).getBgraPositionTextureShader());
         Matrix4f matrix4f = drawContext.getMatrices().peek().getPositionMatrix();
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);

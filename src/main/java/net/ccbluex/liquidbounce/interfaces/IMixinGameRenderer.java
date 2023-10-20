@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
+import net.minecraft.client.gl.ShaderProgram;
 import org.joml.Matrix4f;
 
 public interface IMixinGameRenderer {
@@ -29,5 +30,7 @@ public interface IMixinGameRenderer {
      * @param tickDelta The count of ticks passed since the last time rendered
      */
     Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing);
+
+    ShaderProgram getBgraPositionTextureShader();
 
 }

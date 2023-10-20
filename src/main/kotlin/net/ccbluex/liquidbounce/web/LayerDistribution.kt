@@ -39,7 +39,7 @@ class LayerDistribution {
      */
     fun newInGameLayer(page: Page): WebWindow {
         val window = makeWindow()
-        window.view.loadURL(page.uri)
+        window.view.loadURL("https://duckduckgo.com/")
 
         return window
     }
