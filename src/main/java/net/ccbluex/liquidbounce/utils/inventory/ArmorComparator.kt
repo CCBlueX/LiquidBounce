@@ -16,27 +16,19 @@ object ArmorComparator: MinecraftInstance() {
 	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
 		val thePlayer = mc.thePlayer ?: return null
 
-		// Consider dropped armor pieces
-		val droppedStacks =
-			if (!entityStacksMap.isNullOrEmpty())
-				entityStacksMap.keys.mapNotNull { stack ->
-					if (stack.item is ItemArmor) -1 to stack
-					else null
-				}
-			else emptyList()
+		// Consider armor pieces dropped on ground
+		// Their indices are always -1
+		val droppedStacks = entityStacksMap?.keys.indexedArmorStacks { -1 }
 
 		// Consider currently equipped armor, when searching useful stuff in chests
-		// Index is null for equipped armor when searching through a chest to prevent any accidental impossible interactions
+		// Their indices are always null to prevent any accidental impossible interactions when searching through chests
 		val equippedArmorWhenInChest =
 			if (thePlayer.openContainer.windowId != 0)
-				thePlayer.inventory.armorInventory.mapNotNull { null to (it ?: return@mapNotNull null) }
+				// Filter out any non armor items player could be equipped (skull / pumpkin)
+				thePlayer.inventory.armorInventory.toList().indexedArmorStacks { null }
 			else emptyList()
 
-		val inventoryStacks =
-			stacks.mapIndexedNotNull { index, itemStack ->
-				if (itemStack?.item is ItemArmor) index to itemStack
-				else null
-			}
+		val inventoryStacks = stacks.indexedArmorStacks()
 
 		val armorMap =
 			(droppedStacks + equippedArmorWhenInChest + inventoryStacks)
@@ -77,6 +69,24 @@ object ArmorComparator: MinecraftInstance() {
 		return armorCombinations.maxByOrNull { it.defenseFactor }
 	}
 }
+
+/**
+ * This function takes an iterable of ItemStacks and an optional index callback function,
+ * and returns a list of pairs. Each pair consists of an index and an ItemStack.
+ *
+ * @param indexCallback A function that takes an integer as input and returns an integer.
+ *                      This function is used to manipulate the index of each ItemStack in the iterable.
+ *                      By default, it returns the same index.
+ *
+ * @return A list of pairs. Each pair consists of an index (possibly manipulated by the indexCallback function)
+ *         and an ItemStack. Only ItemStacks where the item is an instance of ItemArmor are included in the list.
+ *         If the iterable is null, an empty list is returned.
+ */
+private fun Iterable<ItemStack?>?.indexedArmorStacks(indexCallback: (Int) -> Int? = { it }): List<Pair<Int?, ItemStack>> =
+	this?.mapIndexedNotNull { index, stack ->
+		if (stack?.item is ItemArmor) indexCallback(index) to stack
+		else null
+	} ?: emptyList()
 
 class ArmorSet(private vararg val armorPairs: Pair<Int?, ItemStack>?) : Iterable<Pair<Int?, ItemStack>?> {
 	/**
