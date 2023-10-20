@@ -92,6 +92,9 @@ object LiquidBounce : Listenable {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
+            // Initialize web view
+            GameWebView
+
             // Load themes
             ThemeManager.load()
 
@@ -150,8 +153,6 @@ object LiquidBounce : Listenable {
             logger.error("Unable to load client.", it)
             exitProcess(1)
         }
-
-        GameWebView
     }
 
     /**
