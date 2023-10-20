@@ -142,8 +142,13 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             thread {
                 runCatching {
                     val startAsk = System.currentTimeMillis()
-                    val answer = ai.requestNewAnswer(question)
-                        .replace(".", "") // Remove dots from the answer
+                    var answer = ai.requestNewAnswer(question)
+
+                    // Remove dot on the end of answer
+                    if (answer.last() == '.') {
+                        answer = answer.substring(0, answer.length - 1)
+                    }
+
                     chat("§aAnswer: $answer, took ${System.currentTimeMillis() - startAsk}ms.")
 
                     val delay = delayResponse.random()
