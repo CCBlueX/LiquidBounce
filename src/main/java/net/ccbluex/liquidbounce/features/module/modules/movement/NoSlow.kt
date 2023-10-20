@@ -40,7 +40,6 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
     private val bowForwardMultiplier by FloatValue("BowForwardMultiplier", 1f, 0.2F..1f)
     private val bowStrafeMultiplier by FloatValue("BowStrafeMultiplier", 1f, 0.2F..1f)
 
-
     // Blocks
     val soulsand by BoolValue("Soulsand", true)
     val liquidPush by BoolValue("LiquidPush", true)
@@ -106,6 +105,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
                             C09PacketHeldItemChange(thePlayer.inventory.currentItem % 8 + 1),
                             C09PacketHeldItemChange(thePlayer.inventory.currentItem)
                         )
+
                         else -> {}
                     }
                 }

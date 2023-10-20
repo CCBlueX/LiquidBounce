@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
@@ -40,8 +39,25 @@ object SettingsUtils {
             }
 
             when (args[0]) {
-                "chat" -> ClientUtils.displayChatMessage("§e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
-                "unchat" -> ClientUtils.displayChatMessage(translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
+                "chat" -> ClientUtils.displayChatMessage(
+                    "§e${
+                        translateAlternateColorCodes(
+                            StringUtils.toCompleteString(
+                                args,
+                                1
+                            )
+                        )
+                    }"
+                )
+
+                "unchat" -> ClientUtils.displayChatMessage(
+                    translateAlternateColorCodes(
+                        StringUtils.toCompleteString(
+                            args,
+                            1
+                        )
+                    )
+                )
 
                 "load" -> {
                     val url = StringUtils.toCompleteString(args, 1)
@@ -109,7 +125,13 @@ object SettingsUtils {
     // Utility functions for setting binds
     private fun setBind(module: Module, value: String) {
         module.keyBind = Keyboard.getKeyIndex(value)
-        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()} §7was bound to §c§l${Keyboard.getKeyName(module.keyBind)}§7.")
+        ClientUtils.displayChatMessage(
+            "§7[§3§lAutoSettings§7] §a§l${module.getName()} §7was bound to §c§l${
+                Keyboard.getKeyName(
+                    module.keyBind
+                )
+            }§7."
+        )
     }
 
     // Utility functions for setting values
@@ -147,7 +169,7 @@ object SettingsUtils {
         val all = values && binds && states
 
         return moduleManager.modules
-            .filter { module -> all || (module.category != ModuleCategory.RENDER && !module.subjective) }
+            .filter { module -> all || !module.subjective }
             .joinToString("\n") { module ->
                 buildString {
                     if (values) {

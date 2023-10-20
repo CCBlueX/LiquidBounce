@@ -113,11 +113,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
-    private val sortByHighestAmount by BoolValue("SortByHighestAmount", false) { autoBlock != "Off" }
+    private val sortByHighestAmount by BoolValue("SortByHighestAmount", false, subjective = true) { autoBlock != "Off" }
 
     // Basic stuff
     val sprint by BoolValue("Sprint", false)
-    private val swing by BoolValue("Swing", true)
+    private val swing by BoolValue("Swing", true, subjective = true)
     private val down by BoolValue("Down", true) { mode !in arrayOf("GodBridge", "Telly") }
 
     private val ticksUntilRotation: IntegerValue = object : IntegerValue("TicksUntilRotation", 3, 1..5) {
@@ -258,10 +258,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val airSafe by BoolValue("AirSafe", false) { safeWalk.isActive() }
 
     // Visuals
-    private val counterDisplay by BoolValue("Counter", true)
-    private val mark by BoolValue("Mark", false)
-    private val trackCPS by BoolValue("TrackCPS", false)
-    private val safetyLines by BoolValue("SafetyLines", false) { mode == "GodBridge" }
+    private val counterDisplay by BoolValue("Counter", true, subjective = true)
+    private val mark by BoolValue("Mark", false, subjective = true)
+    private val trackCPS by BoolValue("TrackCPS", false, subjective = true)
+    private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { mode == "GodBridge" }
 
     // Target placement
     private var placeRotation: PlaceRotation? = null
