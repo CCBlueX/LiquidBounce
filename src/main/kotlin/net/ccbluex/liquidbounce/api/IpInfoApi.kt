@@ -42,7 +42,7 @@ import java.net.URI
 
 object IpInfoApi {
 
-    private const val API_URL = "https://ipinfo.io/jsondasdas"
+    private const val API_URL = "https://ipinfo.io/json"
 
     var localIpInfo: IpInfo? = null
         private set
