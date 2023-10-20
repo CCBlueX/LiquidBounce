@@ -59,7 +59,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         "Motion"
     )
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
-    private val swing by BoolValue("Swing", true)
+    private val swing by BoolValue("Swing", true, subjective = true)
     private val stopWhenBlockAbove by BoolValue("StopWhenBlockAbove", false)
     private val rotations by BoolValue("Rotations", true)
     private val keepRotation by BoolValue("KeepRotation", false) { rotations }
@@ -83,7 +83,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
     private val teleportNoMotion by BoolValue("TeleportNoMotion", false) { mode == "Teleport" }
 
     // Render
-    private val counterDisplay by BoolValue("Counter", true)
+    private val counterDisplay by BoolValue("Counter", true, subjective = true)
 
     /**
      * MODULE

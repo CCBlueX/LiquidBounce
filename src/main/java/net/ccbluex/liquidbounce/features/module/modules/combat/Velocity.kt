@@ -5,16 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.JumpEvent
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -23,16 +19,18 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
-import kotlin.math.cos
-import kotlin.math.sin
 
 object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     /**
      * OPTIONS
      */
-    private val mode by ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-        "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
+    private val mode by ListValue(
+        "Mode", arrayOf(
+            "Simple", "AAC", "AACPush", "AACZero", "AACv4",
+            "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"
+        ), "Simple"
+    )
 
     private val horizontal by FloatValue("Horizontal", 0F, 0F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
     private val vertical by FloatValue("Vertical", 0F, 0F..1F) { mode in arrayOf("Simple", "Legit") }
@@ -52,6 +50,23 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     private val legitDisableInAir by BoolValue("DisableInAir", true) { mode == "Legit" }
     private val legitChance by IntegerValue("Chance", 100, 0..100) { mode == "Legit" }
 
+    // Jump
+    private val jumpCooldownMode by ListValue(
+        "JumpCooldownMode",
+        arrayOf("Ticks", "ReceivedHits"),
+        "Ticks"
+    ) { mode == "Jump" }
+    private val ticksUntilJump by IntegerValue(
+        "TicksUntilJump",
+        4,
+        0..20
+    ) { jumpCooldownMode == "Ticks" && mode == "Jump" }
+    private val hitsUntilJump by IntegerValue(
+        "ReceivedHitsUntilJump",
+        2,
+        0..5
+    ) { jumpCooldownMode == "ReceivedHits" && mode == "Jump" }
+
     /**
      * VALUES
      */
@@ -63,6 +78,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     // AACPush
     private var jump = false
+
+    // Jump
+    private var limitUntilJump = 0
 
     override val tag
         get() = mode
@@ -79,16 +97,6 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             return
 
         when (mode.lowercase()) {
-            "jump" ->
-                if (thePlayer.hurtTime > 0 && thePlayer.onGround) {
-                    thePlayer.motionY = 0.42
-
-                    val yaw = thePlayer.rotationYaw.toRadians()
-
-                    thePlayer.motionX -= sin(yaw) * 0.2
-                    thePlayer.motionZ += cos(yaw) * 0.2
-                }
-
             "glitch" -> {
                 thePlayer.noClip = velocityInput
 
@@ -134,7 +142,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             }
 
             "aacv4" ->
-                if (thePlayer.hurtTime>0 && !thePlayer.onGround){
+                if (thePlayer.hurtTime > 0 && !thePlayer.onGround) {
                     val reduce = aacv4MotionReducer
                     thePlayer.motionX *= reduce
                     thePlayer.motionZ *= reduce
@@ -270,9 +278,32 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 if (!thePlayer.isCollidedVertically)
                     event.cancelEvent()
             }
+
             "aaczero" ->
                 if (thePlayer.hurtTime > 0)
                     event.cancelEvent()
         }
+    }
+
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        val player = mc.thePlayer ?: return
+
+        if (mode == "Jump" && player.onGround && player.hurtTime == 9 && shouldJump()) {
+            player.jump()
+            limitUntilJump = 0
+            return
+        }
+
+        when (jumpCooldownMode.lowercase()) {
+            "ticks" -> limitUntilJump++
+            "receivedhits" -> if (player.hurtTime == 9) limitUntilJump++
+        }
+    }
+
+    private fun shouldJump() = when (jumpCooldownMode.lowercase()) {
+        "ticks" -> limitUntilJump >= ticksUntilJump
+        "receivedhits" -> limitUntilJump >= hitsUntilJump
+        else -> false
     }
 }

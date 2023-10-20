@@ -75,7 +75,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
                 )
             )
 
-            // Is the fireball's speed-predicted distance is further than the original distance?
+            // Is the fireball's speed-predicted distance further than the original distance?
             if (predictedDistance >= distance || distance > range) {
                 continue
             }

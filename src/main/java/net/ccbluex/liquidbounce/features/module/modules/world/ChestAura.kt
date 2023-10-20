@@ -39,7 +39,7 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
     private val range by FloatValue("Range", 5F, 1F..6F)
     private val delay by IntegerValue("Delay", 100, 50..200)
     private val throughWalls by BoolValue("ThroughWalls", true)
-    private val visualSwing by BoolValue("VisualSwing", true)
+    private val visualSwing by BoolValue("VisualSwing", true, subjective = true)
     private val chest by BlockValue("Chest", Block.getIdFromBlock(Blocks.chest))
     private val rotations by BoolValue("Rotations", true)
     private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }

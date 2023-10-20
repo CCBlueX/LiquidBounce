@@ -65,7 +65,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
     private val randomSlot by BoolValue("RandomSlot", true)
 
-    private val progressBar by BoolValue("ProgressBar", true)
+    private val progressBar by BoolValue("ProgressBar", true, subjective = true)
 
     private var progress: Float? = null
         set(value) {
