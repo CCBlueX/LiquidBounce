@@ -14,7 +14,7 @@
         "notification.moduleEnabled": "Ligaste %s",
         "notification.moduleDisabled": "Desligastes %s",
 
-        "module.aimbot.description": "Automaticamente olha nas entidades selecionadas á volta de tí.",
+        "module.aimbot.description": "Automaticamente olha nas entidades selecionadas á volta de ti.",
 
         "module.autoArmor.description": "Automaticamente equipa a melhor armadura no teu inventário.",
 
@@ -42,9 +42,9 @@
 
         "module.hitBox.description": "Torna as \"\"hitboxes\"\" dos alvos maiores.",
 
-        "module.ignite.description": "Automaticamente mete os teus alvos á volta de tí em fogo.",
+        "module.ignite.description": "Automaticamente mete os teus alvos á volta de ti em fogo.",
 
-        "module.killAura.description": "Automaticamente ataca alvos á volta de tí.",
+        "module.killAura.description": "Automaticamente ataca alvos á volta de ti.",
 
         "module.noFriends.description": "Permite que tu ataques amigos.",
 
@@ -84,11 +84,11 @@
         
         "module.atAllProvider.description": "Automaticamente menciona todos no servidor quando for utilizado '@a' na tua mensagem.",
         
-        "module.attackEffects.description": "Show effect when you attack",
+        "module.attackEffects.description": "Mostra efeitos quanto tu atacas.",
         
         "module.autoAccount.description": "Most feature-packed auto register/login & account manager.",
         
-        "module.autoBreak.description": "Automatically breaks the block you are looking at.",
+        "module.autoBreak.description": "Automaticamente quebra o bloco que estás a olhar em.",
         
         "module.autoFish.description": "Automatically catches fish when using a rod.",
         
@@ -154,7 +154,7 @@
         
         "module.freeze.description": "Permite que tu estejas parado no meio do ár.",
         
-        "module.fucker.description": "Destroys selected blocks around you. (aka.  IDNuker)",
+        "module.fucker.description": "Destrói blocos selecionados á volta de ti. (também conhecido como IDNuker)",
         
         "module.fullbright.description": "Brightens up the world around you.",
         
@@ -176,7 +176,7 @@
         
         "module.itemESP.description": "Permite que tu vejas itens através de paredes.",
         
-        "module.itemTeleport.description": "Allows you to pick up items far away.",
+        "module.itemTeleport.description": "Permie que tu adquires blocos longe.",
         
         "module.keepAlive.description": "Tenta prevenir que tu morras.",
         
