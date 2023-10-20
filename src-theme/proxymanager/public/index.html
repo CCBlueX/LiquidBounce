@@ -215,7 +215,25 @@
     }
 
     function refresh() {
-        document.getElementById('proxy').innerText = client.getProxyManager().getCurrentProxy();
+        let proxy = client.getProxyManager().getCurrentProxy();
+
+        if (proxy != null) {
+            document.getElementById('proxy').innerText = proxy.getHost() + ":" + proxy.getPort();
+
+            // Fill in input fields
+            document.getElementById('host').value = proxy.getHost();
+            document.getElementById('port').value = proxy.getPort();
+
+            let creds = proxy.getCredentials();
+            if (creds != null) {
+                document.getElementById('username').value = creds.getUsername();
+                document.getElementById('password').value = creds.getPassword();
+            }
+        } else {
+            document.getElementById('proxy').innerText = "No proxy.";
+        }
+
+
         document.getElementById('location').innerText = client.getSessionService().getLocation();
     }
 
