@@ -26,7 +26,7 @@ import org.apache.http.client.entity.EntityBuilder
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.impl.client.HttpClientBuilder
 
-class Gpt(val openAiKey: String, val prompt: String) {
+class Gpt(val openAiKey: String, val model: String, val prompt: String) {
 
     /**
      * {
@@ -54,7 +54,7 @@ class Gpt(val openAiKey: String, val prompt: String) {
 
         val json = """
             {
-                "model": "gpt-3.5-turbo",
+                "model": "$model",
                 "messages": [
                     {
                         "role": "system",
@@ -68,7 +68,7 @@ class Gpt(val openAiKey: String, val prompt: String) {
             }
         """.trimIndent()
 
-        println(json)
+        println("Sending request to OpenAI: $json")
 
         // Set entity to JSON body
         httpPost.entity = EntityBuilder.create().setText(json).build()

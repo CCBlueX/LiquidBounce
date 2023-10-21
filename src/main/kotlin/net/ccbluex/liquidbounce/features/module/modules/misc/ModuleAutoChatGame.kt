@@ -22,7 +22,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.delay
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -36,10 +38,12 @@ import kotlin.concurrent.thread
 object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
 
     private val openAiKey by text("OpenAiKey", "")
+    private val model by text("Model", "gpt-4")
     private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000)
     private val cooldownMinutes by int("Cooldown", 2, 0..60)
     private val bufferTime by int("BufferTime", 200, 0..500)
     private val triggerSentence by text("TriggerSentence", "Chat Game")
+    private val includeTrigger by boolean("IncludeTrigger", true)
     private val serverName by text("ServerName", "Minecraft")
 
     /**
@@ -52,17 +56,21 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
      * Do not create any line breaks, as it might break the JSON format.
      */
     private val defaultPrompt = """
-        You participate in a chat game in which you have to answer questions.
-        The goal is to answer them as short and precise as possible.
-        It mostly only requires one word as an answer or if it's a math question it requires the result.
-        The questions might be based on the game Minecraft and the server you are playing on.
-        Always answer with the first thing that comes to your mind.
+        You participate in a chat game in which you have to answer questions or do tasks.
+        Your goal is to answer them as short and precise as possible and win the game.
+        The questions might be based on the game Minecraft or the minecraft server you are playing on.
         The server name is {SERVER_NAME}.
         On true or false questions, respond without any dots, in lower-case with 'true' or 'false'.
-        If you do not know it, just guess with something that fits.
-        DO NOT PUT ANYTHING IN THE FRONT OF YOUR ANSWER!
-        DO NOT PUT ANY DOTS AT THE END OF YOUR ANSWER!
+        On math questions, respond with the result.
+        On first to type tasks, respond with the word.
+        On unscramble tasks, the word is scrambled and might be from the game Minecraft (ex. Spawners, Iron Golem),
+        respond with the unscrambled word.
+        On other questions, respond with the answer.
         DO NOT SAY ANYTHING ELSE THAN THE ANSWER! If you do, you will be disqualified.
+        A few hints: [
+        Amethyst geodes spawn at Y level and below in 1.18 -> 30,
+        Minecraft's moon has the same amount of lunar phases as the moon in real life -> true
+        ]
         """.trimIndent().replace("\n", " ")
     private val prompt by text("Prompt", defaultPrompt)
 
@@ -101,10 +109,11 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             if (message.contains(triggerSentence)) {
                 triggerWordChronometer.reset()
 
-                // TODO: Add option for servers that have the trigger word and question in the same message.
-                // Do not include the trigger word in the buffer.
                 chatBuffer.clear()
-                return@sequenceHandler
+                if (!includeTrigger) {
+                    // Do not include the trigger word in the buffer.
+                    return@sequenceHandler
+                }
             }
 
             // If the trigger word has been said, add the message to the buffer.
@@ -134,10 +143,13 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
                 question = question.replace("  ", " ")
             }
 
+            // Remove leading and trailing whitespace
+            question = question.trim()
+
             chat("§aUnderstood question: $question")
 
             // Create new AI instance with OpenAI key
-            val ai = Gpt(openAiKey, prompt.replace("{SERVER_NAME}", serverName))
+            val ai = Gpt(openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
 
             thread {
                 runCatching {
@@ -159,6 +171,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
                     // Send answer
                     network.sendChatMessage(answer)
                 }.onFailure {
+                    it.printStackTrace()
                     chat("§cFailed to answer question: ${it.message}")
                 }
             }
