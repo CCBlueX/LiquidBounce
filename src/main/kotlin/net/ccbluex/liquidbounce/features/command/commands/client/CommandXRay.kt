@@ -47,6 +47,11 @@ object CommandXRay {
                         ParameterBuilder
                             .begin<String>("block")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .autocompletedWith {
+                                Registries.BLOCK.map {
+                                    it.translationKey.removePrefix("block.").replace('.', ':')
+                                }
+                            }
                             .required()
                             .build()
                     )
@@ -75,6 +80,11 @@ object CommandXRay {
                             .begin<String>("block")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
+                            .autocompletedWith {
+                                Registries.BLOCK.map {
+                                    it.translationKey.removePrefix("block.").replace('.', ':')
+                                }
+                            }
                             .build()
                     )
                     .handler { command, args ->
@@ -154,6 +164,15 @@ object CommandXRay {
                     .handler { command, _ ->
                         ModuleXRay.blocks.clear()
                         chat(regular(command.result("blocksCleared")))
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("reset")
+                    .handler {command, _ ->
+                        ModuleXRay.resetBlocks()
+                        chat(regular(command.result("Reset the blocks to the deafult values")))
                     }
                     .build()
             )
