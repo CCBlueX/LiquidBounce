@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
-import net.ccbluex.liquidbounce.web.GameWebView
+import net.ccbluex.liquidbounce.web.WebController
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 
 import org.apache.logging.log4j.LogManager
@@ -93,7 +93,7 @@ object LiquidBounce : Listenable {
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
             // Initialize web view
-            GameWebView
+            WebController
 
             // Load themes
             ThemeManager.load()

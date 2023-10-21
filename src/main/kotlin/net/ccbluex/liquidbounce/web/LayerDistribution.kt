@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.web
 
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.theme.Page
 import net.janrupf.ujr.example.glfw.web.WebWindow
 import net.minecraft.client.gui.screen.Screen
@@ -65,6 +64,6 @@ class LayerDistribution {
         return window
     }
 
-    private fun makeWindow(layer: Layer) = GameWebView.webController.createWindow({ mc.window.framebufferWidth }, { mc.window.framebufferHeight }, layer)
+    private fun makeWindow(layer: Layer) = WebController.createWindow(layer)
 
 }

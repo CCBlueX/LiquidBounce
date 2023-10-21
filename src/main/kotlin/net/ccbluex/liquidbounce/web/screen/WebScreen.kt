@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.web.screen
 
-import net.ccbluex.liquidbounce.web.GameWebView
+import net.ccbluex.liquidbounce.web.WebController
 import net.janrupf.ujr.example.glfw.web.WebWindow
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -30,7 +30,7 @@ import net.minecraft.text.Text
 class WebScreen(val window: WebWindow) : Screen(Text.of("Web Screen")) {
 
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        GameWebView.renderScreen(context, this)
+        WebController.renderScreen(context, this)
         super.render(context, mouseX, mouseY, delta)
     }
 

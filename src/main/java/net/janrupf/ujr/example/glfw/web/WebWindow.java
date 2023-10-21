@@ -23,14 +23,15 @@ import static net.ccbluex.liquidbounce.utils.client.ClientUtilsKt.getMc;
 public class WebWindow {
 
     private final Layer layer;
-
     private final UltralightView view;
     private final Supplier<Integer> width;
     private final Supplier<Integer> height;
     private double lastMouseX;
     private double lastMouseY;
-    private int lastWidth = -1;//use this instead of view.width, because this is technically faster
-    private int lastHeight = -1;
+    private int lastWidth;//use this instead of view.width, because this is technically faster
+    private int lastHeight;
+
+    private boolean takesInput;
 
     public WebWindow(Supplier<Integer> width, Supplier<Integer> height, Layer layer) {
         this.lastWidth = width.get();
@@ -39,6 +40,7 @@ public class WebWindow {
         this.view = UltralightRenderer.getOrCreate().createView(this.lastWidth, this.lastHeight, new UltralightViewConfigBuilder().transparent(true).build());
         this.width = width;
         this.height = height;
+        this.takesInput = layer == Layer.SCREEN_LAYER;
 
         // Make sure we receive all events
         this.view.setViewListener(new WebViewListener(this));
@@ -107,6 +109,10 @@ public class WebWindow {
 
 
     public void onMouseButton(int button, int action, int mods) {
+        if (!this.takesInput) {
+            return;
+        }
+
         UlMouseButton ulButton;
 
         switch (button) {
@@ -140,19 +146,31 @@ public class WebWindow {
     }
 
     public void onScroll(double x, double y) {
+        if (!this.takesInput) {
+            return;
+        }
+
         // The 50 down below is an arbitrary value that seems to work well,
         // feel free to adjust this value as "scroll sensitivity"
 
         this.view.fireScrollEvent(new UltralightScrollEventBuilder(UlScrollEventType.BY_PIXEL).deltaY((int) (x * 50)).deltaY((int) (y * 50)).build());
     }
 
-    public void onCharMods(int codepoint, int mods) {
+    public void onChar(int codepoint) {
+        if (!this.takesInput) {
+            return;
+        }
+
         String text = new String(Character.toChars(codepoint));
 
         this.view.fireKeyEvent(UltralightKeyEventBuilder.character().unmodifiedText(text).text(text).build());
     }
 
     public void onKey(int key, int scancode, int action, int mods) {
+        if (!this.takesInput) {
+            return;
+        }
+
         UltralightKeyEventBuilder builder;
 
         if (action == GLFW.GLFW_PRESS) {

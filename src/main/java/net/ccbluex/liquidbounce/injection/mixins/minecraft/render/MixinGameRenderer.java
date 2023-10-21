@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
-import net.ccbluex.liquidbounce.web.GameWebView;
+import net.ccbluex.liquidbounce.web.WebController;
 import net.fabricmc.fabric.impl.client.rendering.FabricShaderProgram;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderProgram;
@@ -89,7 +89,8 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void hookRenderHead(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) {
-        GameWebView.INSTANCE.renderTick();
+        WebController.INSTANCE.update();
+        WebController.INSTANCE.render();
     }
 
     /**
@@ -97,7 +98,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
      */
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;render(Lnet/minecraft/client/gui/DrawContext;F)V"))
     public void hookInGameRender(InGameHud instance, DrawContext context, float tickDelta) {
-        GameWebView.INSTANCE.renderInGame(context);
+        WebController.INSTANCE.renderInGame(context);
         EventManager.INSTANCE.callEvent(new GameRenderEvent());
         instance.render(context, tickDelta);
     }
@@ -108,7 +109,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Overlay;render(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
     public void hookOverlayRender(Overlay instance, DrawContext context, int mouseX, int mouseY, float delta) {
         instance.render(context, mouseX, mouseY, delta);
-        GameWebView.INSTANCE.renderOverlay(context);
+        WebController.INSTANCE.renderOverlay(context);
     }
 
     /**
