@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
+import kotlin.math.sqrt
 
 object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
@@ -57,6 +58,19 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         { jumpCooldownMode == "Ticks" && mode == "Jump" }
     private val hitsUntilJump by IntegerValue("ReceivedHitsUntilJump", 2, 0..5)
         { jumpCooldownMode == "ReceivedHits" && mode == "Jump" }
+
+    // TODO: Could this be useful in other modes? (Jump?)
+    // Limits
+    private val limitMaxMotionValue = BoolValue("LimitMaxMotion", false) { mode == "Simple" }
+    private val maxXZMotion by FloatValue("MaxXZMotion", 0.4f, 0f..1.9f) { limitMaxMotionValue.isActive() }
+    private val maxYMotion by FloatValue("MaxYMotion", 0.36f, 0f..0.46f) { limitMaxMotionValue.isActive() } //0.00075 is added silently
+
+    // Vanilla XZ limits
+    // Non-KB: 0.4 (no sprint), 0.9 (sprint)
+    // KB 1: 0.9 (no sprint), 1.4 (sprint)
+    // KB 2: 1.4 (no sprint), 1.9 (sprint)
+    // Vanilla Y limits
+    // 0.36075 (no sprint), 0.46075 (sprint)
 
     /**
      * VALUES
@@ -199,12 +213,16 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         val packet = event.packet
 
         if (
-            (packet is S12PacketEntityVelocity
+            (
+                packet is S12PacketEntityVelocity
                     && thePlayer.entityId == packet.entityID
-                    && packet.motionX != 0
                     && packet.motionY > 0
-                    && packet.motionZ != 0
-            ) || packet is S27PacketExplosion
+                    && (packet.motionX != 0 || packet.motionZ != 0)
+            ) || (
+                packet is S27PacketExplosion
+                    && packet.field_149153_g > 0f
+                    && (packet.field_149152_f != 0f || packet.field_149159_h != 0f)
+            )
         ) {
             velocityTimer.reset()
 
@@ -278,11 +296,43 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             packet.motionX = (packet.motionX * horizontal).toInt()
             packet.motionY = (packet.motionY * vertical).toInt()
             packet.motionZ = (packet.motionZ * horizontal).toInt()
+
+            if (limitMaxMotionValue.get()) {
+                val distXZ = sqrt((packet.motionX * packet.motionX + packet.motionZ * packet.motionZ).toDouble()) / 8000.0
+                val distY = packet.motionY / 8000.0
+                val maxYMotion = maxYMotion + 0.00075
+
+                if (distXZ > maxXZMotion) {
+                    val ratioXZ = maxXZMotion / distXZ
+
+                    packet.motionX = (packet.motionX * ratioXZ).toInt()
+                    packet.motionZ = (packet.motionZ * ratioXZ).toInt()
+                }
+
+                if (distY > maxYMotion) {
+                    packet.motionY = (packet.motionY * maxYMotion / distY).toInt()
+                }
+            }
         } else if (packet is S27PacketExplosion) {
-            mc.thePlayer?.run {
-                motionX += packet.func_149149_c() * horizontal
-                motionY += packet.func_149144_d() * vertical
-                motionZ += packet.func_149147_e() * horizontal
+            packet.field_149152_f *= horizontal // motionX
+            packet.field_149153_g *= vertical // motionY
+            packet.field_149159_h *= horizontal // motionZ
+
+            if (limitMaxMotionValue.get()) {
+                val distXZ = sqrt(packet.field_149152_f * packet.field_149152_f + packet.field_149159_h * packet.field_149159_h)
+                val distY = packet.field_149153_g
+                val maxYMotion = maxYMotion + 0.00075f
+
+                if (distXZ > maxXZMotion) {
+                    val ratioXZ = maxXZMotion / distXZ
+
+                    packet.field_149152_f *= ratioXZ
+                    packet.field_149159_h *= ratioXZ
+                }
+
+                if (distY > maxYMotion) {
+                    packet.field_149153_g *= maxYMotion / distY
+                }
             }
         }
     }
