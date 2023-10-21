@@ -48,7 +48,10 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
         val text = if (customFormatter) {
             format(message)
         } else {
-            "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " + message.toCharArray().joinToString("") { if (Random.nextBoolean()) it.uppercase() else it.lowercase() }
+            "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " +
+                message.toCharArray().joinToString("") {
+                    if (Random.nextBoolean()) it.uppercase() else it.lowercase()
+                }
         }
 
         // Check if message text is command
