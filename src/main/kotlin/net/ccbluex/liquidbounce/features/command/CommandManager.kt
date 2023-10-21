@@ -414,9 +414,7 @@ object CommandManager : Iterable<Command> {
 
     override fun iterator() = commands.iterator()
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
-        chat("$origCmd  $start")
         if (start < Options.prefix.length) {
-            chat("returned empty")
             return Suggestions.empty()
         }
 
@@ -451,7 +449,6 @@ object CommandManager : Iterable<Command> {
                 for (command in this.commands) {
                     if (command.name.startsWith(args[0], true)) {
                         builder.suggest(command.name)
-                        chat(command.name)
                     }
 
                     command.aliases.filter { it.startsWith(args[0], true) }.forEach { builder.suggest(it) }
@@ -461,8 +458,6 @@ object CommandManager : Iterable<Command> {
             }
 
             if (pair == null) {
-                chat("returned empty")
-
                 return Suggestions.empty()
             }
 
@@ -470,9 +465,7 @@ object CommandManager : Iterable<Command> {
 
             return builder.buildFuture()
         } catch (e: Exception) {
-            chat("fail $e")
             e.printStackTrace()
-            chat("returned empty")
             return Suggestions.empty()
         }
 
