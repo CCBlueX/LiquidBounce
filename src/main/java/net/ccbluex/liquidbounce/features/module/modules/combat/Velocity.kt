@@ -213,11 +213,16 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         val packet = event.packet
 
         if (
-            (packet is S12PacketEntityVelocity
-                && thePlayer.entityId == packet.entityID
-                && packet.motionY > 0
-                && (packet.motionX != 0 || packet.motionZ != 0)
-            ) || packet is S27PacketExplosion
+            (
+                packet is S12PacketEntityVelocity
+                    && thePlayer.entityId == packet.entityID
+                    && packet.motionY > 0
+                    && (packet.motionX != 0 || packet.motionZ != 0)
+            ) || (
+                packet is S27PacketExplosion
+                    && packet.field_149153_g > 0f
+                    && (packet.field_149152_f != 0f || packet.field_149159_h != 0f)
+            )
         ) {
             velocityTimer.reset()
 
