@@ -200,7 +200,7 @@ object WebController : Listenable, AutoCloseable {
         val yPosition = event.y
 
         for (window in windows) {
-            window.onCursorPos(event.x, event.y)
+            window.onCursorPos(xPosition, yPosition)
         }
         cursorPosition = Pair(xPosition, yPosition)
     }
