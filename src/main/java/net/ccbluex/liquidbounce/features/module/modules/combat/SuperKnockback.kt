@@ -117,7 +117,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
         if (mode == "SprintTap") {
             if (ticks == 2) {
                 mc.thePlayer.isSprinting = false
-            } else if (ticks == 1) {
+            } else if (ticks == 1 && mc.thePlayer.movementInput.moveForward > 0.8) {
                 mc.thePlayer.isSprinting = true
             }
 
