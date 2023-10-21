@@ -25,10 +25,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.item.addEnchantment
-import net.ccbluex.liquidbounce.utils.item.clearEnchantments
-import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.ccbluex.liquidbounce.utils.item.removeEnchantment
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.registry.Registries
