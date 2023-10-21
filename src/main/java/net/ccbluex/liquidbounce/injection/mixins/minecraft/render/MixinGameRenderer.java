@@ -36,6 +36,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -86,14 +87,28 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     @Shadow
     protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
 
+    @Inject(method = "render", at = @At("HEAD"))
+    private void hookRenderHead(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) {
+        GameWebView.INSTANCE.renderTick();
+    }
+
     /**
      * Hook game render event
      */
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;render(Lnet/minecraft/client/gui/DrawContext;F)V"))
-    public void hookGameRender(InGameHud instance, DrawContext context, float tickDelta) {
-        GameWebView.INSTANCE.render(context, tickDelta);
+    public void hookInGameRender(InGameHud instance, DrawContext context, float tickDelta) {
+        GameWebView.INSTANCE.renderInGame(context);
         EventManager.INSTANCE.callEvent(new GameRenderEvent());
         instance.render(context, tickDelta);
+    }
+
+    /**
+     * Hook overlay render event
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Overlay;render(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
+    public void hookOverlayRender(Overlay instance, DrawContext context, int mouseX, int mouseY, float delta) {
+        instance.render(context, mouseX, mouseY, delta);
+        GameWebView.INSTANCE.renderOverlay(context);
     }
 
     /**
@@ -223,10 +238,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private void registerBgraShader(ResourceFactory factory, CallbackInfo info, List<?> shaderStages, List<Pair<ShaderProgram, Consumer<ShaderProgram>>> programs) throws IOException {
         programs.add(new Pair<>(new FabricShaderProgram(factory, new Identifier("liquidbounce", "bgra_position_tex"), VertexFormats.POSITION_TEXTURE), program -> {
             bgraPositionTextureShader = program;
-            System.out.println("Registered BGRA shader program" + program);
         }));
-
-        System.out.println("Registered BGRA shader");
     }
 
     @Override

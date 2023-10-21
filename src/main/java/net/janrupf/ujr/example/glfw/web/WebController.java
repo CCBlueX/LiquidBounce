@@ -1,9 +1,13 @@
 package net.janrupf.ujr.example.glfw.web;
 
+import net.ccbluex.liquidbounce.web.Layer;
 import net.janrupf.ujr.api.UltralightConfigBuilder;
 import net.janrupf.ujr.api.UltralightPlatform;
 import net.janrupf.ujr.api.UltralightRenderer;
-import net.janrupf.ujr.api.javascript.*;
+import net.janrupf.ujr.api.javascript.JSClass;
+import net.janrupf.ujr.api.javascript.JSGlobalContext;
+import net.janrupf.ujr.api.javascript.JSObject;
+import net.janrupf.ujr.api.javascript.JavaScriptValueException;
 import net.janrupf.ujr.core.UltralightJavaReborn;
 import net.janrupf.ujr.core.platform.PlatformEnvironment;
 import net.janrupf.ujr.example.glfw.CustomJavaScriptClass;
@@ -76,8 +80,8 @@ public class WebController implements AutoCloseable {
         ujr.cleanup();
     }
 
-    public WebWindow createWindow(Supplier<Integer> width, Supplier<Integer> height) {
-        WebWindow window = new WebWindow(width, height);
+    public WebWindow createWindow(Supplier<Integer> width, Supplier<Integer> height, Layer layer) {
+        WebWindow window = new WebWindow(width, height, layer);
         this.windows.add(window);
 
         return window;
@@ -87,15 +91,24 @@ public class WebController implements AutoCloseable {
         for (WebWindow window : this.windows) {
             window.resizeIfNeeded();
         }
+
         UltralightRenderer.getOrCreate().update();
     }
 
-    public void render(DrawContext drawContext) {
+    public void render() {
         UltralightRenderer.getOrCreate().render();
+    }
 
-        for (WebWindow window : this.windows) {
-            window.renderToFramebuffer(drawContext, getMc().getWindow().getScaledWidth(), getMc().getWindow().getScaledHeight());
+    public void renderToFramebuffer(DrawContext drawContext, Layer layer) {
+        for (final WebWindow window : this.windows) {
+            if (window.getLayer() == layer) {
+                window.renderToFramebuffer(drawContext, getMc().getWindow().getScaledWidth(), getMc().getWindow().getScaledHeight());
+            }
         }
+    }
+
+    public void renderToFramebuffer(DrawContext drawContext, WebWindow window) {
+        window.renderToFramebuffer(drawContext, getMc().getWindow().getScaledWidth(), getMc().getWindow().getScaledHeight());
     }
 
     @Override

@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.web
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.theme.Page
 import net.janrupf.ujr.example.glfw.web.WebWindow
+import net.minecraft.client.gui.screen.Screen
 
 // idk yet
 enum class Layer {
@@ -38,12 +39,32 @@ class LayerDistribution {
      * This layer does not require any screen to function. It will show up in-game, other contents might overlay it.
      */
     fun newInGameLayer(page: Page): WebWindow {
-        val window = makeWindow()
+        val window = makeWindow(Layer.IN_GAME_LAYER)
         window.view.loadURL("https://duckduckgo.com/")
 
         return window
     }
 
-    private fun makeWindow() = GameWebView.webController.createWindow({ mc.window.framebufferWidth }) { mc.window.framebufferHeight }
+    /**
+     * This layer does not require any screen to function. It will show up on splash and draw over the splash screen.
+     */
+    fun newSplash(): WebWindow {
+        val window = makeWindow(Layer.SPLASH_LAYER)
+        window.view.loadURL("https://liquidbounce.net/")
+
+        return window
+    }
+
+    /**
+     * This layer does not require any screen to function. It will show up on splash and draw over the splash screen.
+     */
+    fun newScreen(screen: Screen): WebWindow {
+        val window = makeWindow(Layer.SCREEN_LAYER)
+        window.view.loadURL("https://google.com/")
+
+        return window
+    }
+
+    private fun makeWindow(layer: Layer) = GameWebView.webController.createWindow({ mc.window.framebufferWidth }, { mc.window.framebufferHeight }, layer)
 
 }

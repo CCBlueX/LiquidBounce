@@ -2,6 +2,7 @@ package net.janrupf.ujr.example.glfw.web;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
+import net.ccbluex.liquidbounce.web.Layer;
 import net.janrupf.ujr.api.*;
 import net.janrupf.ujr.api.event.UlKeyEvent;
 import net.janrupf.ujr.api.event.UlKeyEventType;
@@ -21,9 +22,9 @@ import static net.ccbluex.liquidbounce.utils.client.ClientUtilsKt.getMc;
 
 public class WebWindow {
 
-    private final UltralightView view;
+    private final Layer layer;
 
-    //private WebDrawParameters drawParameters;
+    private final UltralightView view;
     private final Supplier<Integer> width;
     private final Supplier<Integer> height;
     private double lastMouseX;
@@ -31,9 +32,10 @@ public class WebWindow {
     private int lastWidth = -1;//use this instead of view.width, because this is technically faster
     private int lastHeight = -1;
 
-    public WebWindow(Supplier<Integer> width, Supplier<Integer> height) {
+    public WebWindow(Supplier<Integer> width, Supplier<Integer> height, Layer layer) {
         this.lastWidth = width.get();
         this.lastHeight = height.get();
+        this.layer = layer;
         this.view = UltralightRenderer.getOrCreate().createView(this.lastWidth, this.lastHeight, new UltralightViewConfigBuilder().transparent(true).build());
         this.width = width;
         this.height = height;
@@ -67,6 +69,10 @@ public class WebWindow {
         float y2 = viewportHeight;
         float z = 0;
 
+        // Check if the shader is available
+        if (((IMixinGameRenderer) getMc().gameRenderer).getBgraPositionTextureShader() == null) {
+            return;
+        }
 
         //RenderSystem.setShaderTexture(0, texture);
         RenderSystem.setShaderTexture(0, surface.getTexture());
@@ -175,4 +181,7 @@ public class WebWindow {
         return view;
     }
 
+    public Layer getLayer() {
+        return layer;
+    }
 }

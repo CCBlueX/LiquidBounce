@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.web
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.web.screen.WebScreen
 import net.janrupf.ujr.api.UltralightKeyEventBuilder
 import net.janrupf.ujr.api.UltralightMouseEventBuilder
 import net.janrupf.ujr.api.UltralightScrollEventBuilder
@@ -12,12 +13,27 @@ import net.janrupf.ujr.api.event.UlScrollEventType
 import net.janrupf.ujr.example.glfw.web.KeyboardTranslator
 import net.janrupf.ujr.example.glfw.web.WebController
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.screen.TitleScreen
 import org.lwjgl.glfw.GLFW
 
 
 object GameWebView : Listenable {
 
     var webController = WebController()
+
+    init {
+        // Immediately create a new splash
+        LayerDistribution().newSplash()
+    }
+
+    val screenHandler = handler<ScreenEvent> {
+        if (it.screen is TitleScreen) {
+            it.cancelEvent()
+
+            val window = LayerDistribution().newScreen(it.screen)
+            mc.setScreen(WebScreen(window))
+        }
+    }
 
     val windowResizeWHandler = handler<WindowResizeEvent> {
 
@@ -125,9 +141,15 @@ object GameWebView : Listenable {
 
     }
 
-    fun render(context: DrawContext?, partialTicks: Float) {
+    fun renderTick() {
         webController.update()
-        webController.render(context)
+        webController.render()
     }
+
+    fun renderInGame(context: DrawContext?) = webController.renderToFramebuffer(context, Layer.IN_GAME_LAYER)
+    fun renderOverlay(context: DrawContext?) = webController.renderToFramebuffer(context, Layer.SPLASH_LAYER)
+    fun renderScreen(context: DrawContext?, webScreen: WebScreen) = webController.renderToFramebuffer(context, webScreen.window)
+
+
 
 }
