@@ -20,9 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.web.LayerDistribution
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
-import net.janrupf.ujr.example.glfw.web.WebWindow
 
 /**
  * Module HUD
@@ -32,39 +29,7 @@ import net.janrupf.ujr.example.glfw.web.WebWindow
 
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
-    private var hudWindow: WebWindow? = null
-
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
-
-    /**
-     * Create new HUD view
-     */
-    private fun makeView() {
-        hudWindow = ThemeManager.page("hud")?.let {
-            LayerDistribution().newInGameLayer(it)
-        }
-    }
-
-    /**
-     * Unload HUD view
-     */
-    private fun unloadView() {
-        hudWindow?.view?.stop()
-        // todo: remove from windows
-        hudWindow = null
-    }
-
-    override fun init() {
-        makeView()
-    }
-
-    override fun enable() {
-        makeView()
-    }
-
-    override fun disable() {
-        unloadView()
-    }
 
 }

@@ -4,16 +4,11 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.screen.WebScreen
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.janrupf.ujr.api.UltralightConfigBuilder
 import net.janrupf.ujr.api.UltralightPlatform
 import net.janrupf.ujr.api.UltralightRenderer
-import net.janrupf.ujr.api.javascript.JSClass
-import net.janrupf.ujr.api.javascript.JSGlobalContext
-import net.janrupf.ujr.api.javascript.JavaScriptValueException
 import net.janrupf.ujr.core.UltralightJavaReborn
 import net.janrupf.ujr.core.platform.PlatformEnvironment
-import net.janrupf.ujr.example.glfw.CustomJavaScriptClass
 import net.janrupf.ujr.example.glfw.bridge.FilesystemBridge
 import net.janrupf.ujr.example.glfw.bridge.GlfwClipboardBridge
 import net.janrupf.ujr.example.glfw.bridge.LoggerBridge
@@ -53,57 +48,18 @@ object WebController : Listenable, AutoCloseable {
 
         //TODO: change
         platform.setConfig(
-            UltralightConfigBuilder().cachePath(System.getProperty("java.io.tmpdir") + File.separator + "ujr-example-glfw")
-                .resourcePathPrefix(FilesystemBridge.RESOURCE_PREFIX).build()
+            UltralightConfigBuilder().cachePath(System.getProperty("java.io.tmpdir")
+                + File.separator + "ujr-example-glfw")
+                .resourcePathPrefix(FilesystemBridge.RESOURCE_PREFIX)
+                .build()
         )
-
-        // Runs JS test
-        jsTest()
-
-        // Runs splash test
-        splashTest()
-    }
-
-    /**
-     * Tests of the web cotnroller.
-     */
-    fun jsTest() {
-        val context = JSGlobalContext(null as JSClass?)
-        context.name = "TestContext"
-        try {
-            // Create the custom object and make it available on the global object
-            val customObject = context.makeObject(CustomJavaScriptClass.getJavaScriptClass())
-            context.globalObject.setProperty("customObject", customObject)
-            context.evaluateScript(
-                """
-                customObject.test = 42;
-
-                new customObject();
-                customObject();
-
-                delete customObject.test;
-                delete customObject;
-
-                """.trimIndent(), null, null, 1
-            )
-        } catch (e: JavaScriptValueException) {
-            logger.error("Failed to run demo JavaScript code", e)
-        }
-    }
-
-    fun splashTest() {
-        createWindow(Layer.SPLASH_LAYER).also { window ->
-            ThemeManager.page("https://myip.is/")?.uri?.let { uri ->
-                window.view.loadURL(uri)
-            }
-        }
     }
 
     val screenTest = handler<ScreenEvent> {
         if (it.screen is TitleScreen) {
             it.cancelEvent()
 
-            val screen = WebScreen(createWindow(Layer.SCREEN_LAYER).also { window ->
+            val screen = WebScreen(createWindow(LayerDistribution.SCREEN_LAYER).also { window ->
                 window.view.loadURL("https://duckduckgo.com/")
             })
             mc.setScreen(screen)
@@ -124,7 +80,7 @@ object WebController : Listenable, AutoCloseable {
     /**
      * Creates a new window with the given width, height and layer.
      */
-    fun createWindow(layer: Layer)
+    fun createWindow(layer: LayerDistribution)
         = WebWindow({ mc.window.framebufferWidth }, { mc.window.framebufferHeight }, layer).also { windows += it }
 
     /**
@@ -148,12 +104,12 @@ object WebController : Listenable, AutoCloseable {
     /**
      * Shortcut to render the windows on the in-game layer to the framebuffer.
      */
-    fun renderInGame(context: DrawContext?) = renderToFramebuffer(context, Layer.IN_GAME_LAYER)
+    fun renderInGame(context: DrawContext?) = renderToFramebuffer(context, LayerDistribution.IN_GAME_LAYER)
 
     /**
      * Shortcut to render the windows on the splash layer to the framebuffer.
      */
-    fun renderOverlay(context: DrawContext?) = renderToFramebuffer(context, Layer.SPLASH_LAYER)
+    fun renderOverlay(context: DrawContext?) = renderToFramebuffer(context, LayerDistribution.SPLASH_LAYER)
 
     /**
      * Shortcut to render the window on the given screen to the framebuffer.
@@ -163,7 +119,7 @@ object WebController : Listenable, AutoCloseable {
     /**
      * Renders the windows on the given layer to the framebuffer.
      */
-    private fun renderToFramebuffer(drawContext: DrawContext?, layer: Layer) {
+    private fun renderToFramebuffer(drawContext: DrawContext?, layer: LayerDistribution) {
         for (window in windows) {
             if (window.layer === layer) {
                 window.renderToFramebuffer(drawContext, mc.window.scaledWidth, mc.window.scaledHeight)

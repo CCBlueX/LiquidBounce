@@ -40,7 +40,8 @@ class Theme(val name: String, val folder: File) {
      *  "description": "Default theme for LiquidBounce"
      *  }
      */
-    data class ThemeMetadata(val format: Int, val displayName: String, val authors: List<String>, val description: String)
+    data class ThemeMetadata(val format: Int, val displayName: String, val authors: List<String>,
+                             val description: String)
 
     init {
         val metadataFile = File(folder, "theme.json")

@@ -2,7 +2,7 @@ package net.janrupf.ujr.example.glfw.web;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
-import net.ccbluex.liquidbounce.web.Layer;
+import net.ccbluex.liquidbounce.web.LayerDistribution;
 import net.janrupf.ujr.api.*;
 import net.janrupf.ujr.api.event.UlKeyEvent;
 import net.janrupf.ujr.api.event.UlKeyEventType;
@@ -22,7 +22,7 @@ import static net.ccbluex.liquidbounce.utils.client.ClientUtilsKt.getMc;
 
 public class WebWindow {
 
-    private final Layer layer;
+    private final LayerDistribution layer;
     private final UltralightView view;
     private final Supplier<Integer> width;
     private final Supplier<Integer> height;
@@ -33,14 +33,14 @@ public class WebWindow {
 
     private boolean takesInput;
 
-    public WebWindow(Supplier<Integer> width, Supplier<Integer> height, Layer layer) {
+    public WebWindow(Supplier<Integer> width, Supplier<Integer> height, LayerDistribution layer) {
         this.lastWidth = width.get();
         this.lastHeight = height.get();
         this.layer = layer;
         this.view = UltralightRenderer.getOrCreate().createView(this.lastWidth, this.lastHeight, new UltralightViewConfigBuilder().transparent(true).build());
         this.width = width;
         this.height = height;
-        this.takesInput = layer == Layer.SCREEN_LAYER;
+        this.takesInput = layer == LayerDistribution.SCREEN_LAYER;
 
         // Make sure we receive all events
         this.view.setViewListener(new WebViewListener(this));
@@ -199,7 +199,7 @@ public class WebWindow {
         return view;
     }
 
-    public Layer getLayer() {
+    public LayerDistribution getLayer() {
         return layer;
     }
 }

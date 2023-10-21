@@ -88,7 +88,8 @@ object ThemeManager {
             val stream = resource("/assets/liquidbounce/default_theme.zip")
             extractZip(stream, defaultFolder)
 
-            // Delete zip file when process exits, but this is not guaranteed to work. That's why we delete the folder above.
+            // Delete zip file when process exits, but this is not guaranteed to work.
+            // That's why we delete the folder above.
             defaultFolder.deleteOnExit()
         }.onFailure {
             logger.error("Unable to extract default theme", it)
@@ -96,7 +97,9 @@ object ThemeManager {
             logger.info("Successfully extracted default theme")
         }
 
-        return loadTheme(defaultFolder) ?: error("Unable to load default theme") // This should never happen. If it does, the client is unable to function properly. Crash if this happens or notify the user.
+        // An error should never happen.
+        // If it does, the client is unable to function properly. Crash if this happens or notify the user.
+        return loadTheme(defaultFolder) ?: error("Unable to load default theme")
     }
 
     /**
