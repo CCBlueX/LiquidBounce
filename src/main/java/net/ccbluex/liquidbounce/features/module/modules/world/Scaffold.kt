@@ -261,7 +261,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val counterDisplay by BoolValue("Counter", true, subjective = true)
     private val mark by BoolValue("Mark", false, subjective = true)
     private val trackCPS by BoolValue("TrackCPS", false, subjective = true)
-    private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { mode == "GodBridge" || mode == "Normal" && rotationMode == "GodBridge"}
+    private val safetyLines by BoolValue(
+        "SafetyLines",
+        false,
+        subjective = true
+    ) { isGodBridgeEnabled }
 
     // Target placement
     private var placeRotation: PlaceRotation? = null
@@ -305,6 +309,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val isManualJumpOptionActive
         get() = mode == "GodBridge" && !jumpAutomatically
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
+    private val isGodBridgeEnabled
+        get() = mode == "GodBridge" || mode == "Normal" && rotationMode == "GodBridge"
 
     // Telly
     private var offGroundTicks = 0
@@ -899,7 +905,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 continue
             }
 
-            if (mode == "GodBridge" || mode == "Normal" && rotationMode == "GodBridge") {
+            if (isGodBridgeEnabled) {
                 // Selection of these values only. Mostly used by Godbridgers.
                 val list = arrayOf(-135f, -45f, 45f, 135f)
 
@@ -1115,7 +1121,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     }
 
     private fun displaySafetyLinesIfEnabled() {
-        if (!safetyLines || !(mode == "GodBridge" || mode == "Normal" && rotationMode == "GodBridge") {
+        if (!safetyLines || !isGodBridgeEnabled) {
             return
         }
 
