@@ -32,6 +32,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import kotlin.math.absoluteValue
+import kotlin.math.min
 
 object CommandItemEnchant {
 
@@ -65,32 +66,20 @@ object CommandItemEnchant {
                         val enchantmentName = args[0] as String
                         val level = getLevel(args[1] as String)
 
-                        if (mc.interactionManager?.hasCreativeInventory() == false) {
-                            throw CommandException(command.result("mustBeCreative"))
-                        }
-
-                        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
-                        if (itemStack.isNothing()) {
-                            throw CommandException(command.result("mustHoldItem"))
-                        }
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
 
                         val identifier = Identifier.tryParse(enchantmentName)
                         val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
                             throw CommandException(command.result("enchantmentNotExists", enchantmentName))
                         }
-
                         if (level == null || level <= 255) {
-                            addEnchantment(itemStack!!, enchantment, level)
+                            addEnchantment(itemStack, enchantment, level)
                         } else {
                             var next = level!!
-                            while (true) {
+                            while (next > 255) {
+                                addEnchantment(itemStack, enchantment, min(next, 255))
                                 next -= 255
-                                if (next <= 0) {
-                                    next = 255 - next.absoluteValue
-                                    addEnchantment(itemStack!!, enchantment, next)
-                                    break
-                                }
-                                addEnchantment(itemStack!!, enchantment, 255)
                             }
                         }
 
@@ -106,14 +95,8 @@ object CommandItemEnchant {
                     .handler {command, args ->
                         val enchantmentName = args[0] as String
 
-                        if (mc.interactionManager?.hasCreativeInventory() == false) {
-                            throw CommandException(command.result("mustBeCreative"))
-                        }
-
-                        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
-                        if (itemStack.isNothing()) {
-                            throw CommandException(command.result("mustHoldItem"))
-                        }
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
 
                         val identifier = Identifier.tryParse(enchantmentName)
                         val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
@@ -131,14 +114,8 @@ object CommandItemEnchant {
                 CommandBuilder
                     .begin("clear")
                     .handler {command, _ ->
-                        if (mc.interactionManager?.hasCreativeInventory() == false) {
-                            throw CommandException(command.result("mustBeCreative"))
-                        }
-
-                        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
-                        if (itemStack.isNothing()) {
-                            throw CommandException(command.result("mustHoldItem"))
-                        }
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
 
                         clearEnchantments(itemStack!!)
 
@@ -151,16 +128,8 @@ object CommandItemEnchant {
                     .begin("all")
                     .parameter(levelParameter.build())
                     .handler { command, args ->
-
-
-                        if (mc.interactionManager?.hasCreativeInventory() == false) {
-                            throw CommandException(command.result("mustBeCreative"))
-                        }
-
-                        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
-                        if (itemStack.isNothing()) {
-                            throw CommandException(command.result("mustHoldItem"))
-                        }
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
 
                         val level = getLevel(args[0] as String)
 
@@ -176,14 +145,8 @@ object CommandItemEnchant {
                     .begin("all_possible")
                     .parameter(levelParameter.build())
                     .handler { command, args ->
-                        if (mc.interactionManager?.hasCreativeInventory() == false) {
-                            throw CommandException(command.result("mustBeCreative"))
-                        }
-
-                        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
-                        if (itemStack.isNothing()) {
-                            throw CommandException(command.result("mustHoldItem"))
-                        }
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
 
                         val level = getLevel(args[0] as String)
 
@@ -216,6 +179,21 @@ object CommandItemEnchant {
         )
     }
 
+
+
+    private fun creativeOrThrow(command: Command) {
+        if (mc.interactionManager?.hasCreativeInventory() == false) {
+            throw CommandException(command.result("mustBeCreative"))
+        }
+    }
+
+    private fun getItemOrThrow(command: Command): ItemStack {
+        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+        if (itemStack.isNothing()) {
+                throw CommandException(command.result("mustHoldItem")) }
+        return itemStack!!
+    }
+
     private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
         Registries.ENCHANTMENT.forEach {enchantment ->
             if(!enchantment.isAcceptableItem(item) && onlyAcceptable) return@forEach
@@ -224,14 +202,9 @@ object CommandItemEnchant {
                 addEnchantment(item, enchantment, level)
             } else {
                 var next = level!!
-                while (true) {
+                while (next > 255) {
+                    addEnchantment(item, enchantment, min(next, 255))
                     next -= 255
-                    if (next <= 0) {
-                        next = 255 - next.absoluteValue
-                        addEnchantment(item, enchantment, next)
-                        break
-                    }
-                    addEnchantment(item, enchantment, 255)
                 }
             }
         }
