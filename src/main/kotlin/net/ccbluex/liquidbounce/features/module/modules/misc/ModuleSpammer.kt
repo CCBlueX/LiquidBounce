@@ -50,7 +50,12 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
                 .map { if (Random.nextBoolean()) it.toUpperCase() else it.toLowerCase() }.joinToString("")
         }
 
-        network.sendChatMessage(text)
+        // Check if message text is command
+        if (text.startsWith("/")) {
+            network.sendCommand(text.substring(1))
+        } else {
+            network.sendChatMessage(text)
+        }
         wait(delay.random())
     }
 
