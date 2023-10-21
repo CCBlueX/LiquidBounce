@@ -73,11 +73,12 @@ public abstract class MixinChatInputSuggestor {
 //            this.window = null;
             this.pendingSuggestions.thenRun(() -> {
                 if(this.pendingSuggestions.isDone()) {
-                    CommandManager.INSTANCE.chaty(this.pendingSuggestions.join().getList().toString());
+                    if(window == null) {
+                        this.show(false);
+                    }
+
                 }
             });
-            this.showCommandSuggestions();
-//            this.show(true);
             this.parse = null;
 
             ci.cancel();
