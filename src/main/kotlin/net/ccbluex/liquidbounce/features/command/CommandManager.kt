@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -35,6 +36,8 @@ import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPositio
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.outputString
+import net.minecraft.client.network.ClientCommandSource
+import net.minecraft.command.CommandSource
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -119,6 +122,10 @@ object CommandManager : Iterable<Command> {
 
         // Initialize the executor
         CommandExecutor
+    }
+
+    fun chaty(string: String) {
+        chat(string)
     }
 
     fun registerInbuilt() {
@@ -406,9 +413,10 @@ object CommandManager : Iterable<Command> {
     }
 
     override fun iterator() = commands.iterator()
-
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
+        chat("$origCmd  $start")
         if (start < Options.prefix.length) {
+            chat("returned empty")
             return Suggestions.empty()
         }
 
@@ -443,6 +451,7 @@ object CommandManager : Iterable<Command> {
                 for (command in this.commands) {
                     if (command.name.startsWith(args[0], true)) {
                         builder.suggest(command.name)
+                        chat(command.name)
                     }
 
                     command.aliases.filter { it.startsWith(args[0], true) }.forEach { builder.suggest(it) }
@@ -452,6 +461,8 @@ object CommandManager : Iterable<Command> {
             }
 
             if (pair == null) {
+                chat("returned empty")
+
                 return Suggestions.empty()
             }
 
@@ -459,8 +470,9 @@ object CommandManager : Iterable<Command> {
 
             return builder.buildFuture()
         } catch (e: Exception) {
+            chat("fail $e")
             e.printStackTrace()
-
+            chat("returned empty")
             return Suggestions.empty()
         }
 
