@@ -65,17 +65,8 @@ object CommandItemEnchant {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
-
                         val enchantment = enchantmentByName(enchantmentName, command)!!
-                        if (level == null || level <= 255) {
-                            addEnchantment(itemStack, enchantment, level)
-                        } else {
-                            var next = level!!
-                            while (next > 255) {
-                                addEnchantment(itemStack, enchantment, min(next, 255))
-                                next -= 255
-                            }
-                        }
+                        enchantAnyLevel(itemStack, enchantment, level)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("enchantedItem", enchantment.toString(), level ?: "max")))
@@ -190,19 +181,23 @@ object CommandItemEnchant {
         return enchantment!!
     }
 
+    private fun enchantAnyLevel(item: ItemStack, enchantment: Enchantment, level: Int?) {
+        if (level == null || level <= 255) {
+            addEnchantment(item, enchantment, level)
+        } else {
+            var next = level!!
+            while (next > 255) {
+                addEnchantment(item, enchantment, min(next, 255))
+                next -= 255
+            }
+        }
+    }
+
     private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
         Registries.ENCHANTMENT.forEach {enchantment ->
             if(!enchantment.isAcceptableItem(item) && onlyAcceptable) return@forEach
+            enchantAnyLevel(item, enchantment, level)
 
-            if (level == null || level <= 255) {
-                addEnchantment(item, enchantment, level)
-            } else {
-                var next = level!!
-                while (next > 255) {
-                    addEnchantment(item, enchantment, min(next, 255))
-                    next -= 255
-                }
-            }
         }
     }
 
