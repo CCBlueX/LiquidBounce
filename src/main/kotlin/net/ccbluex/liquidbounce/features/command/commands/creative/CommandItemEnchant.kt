@@ -58,7 +58,6 @@ object CommandItemEnchant {
                     .begin("add")
                     .parameter(enchantmentParameter().required().build())
                     .parameter(levelParameter.build())
-                    .parameter(itemParameter().required().build())
                     .handler { command, args ->
                         val enchantmentName = args[0] as String
                         val level = getLevel(args[1] as String)
