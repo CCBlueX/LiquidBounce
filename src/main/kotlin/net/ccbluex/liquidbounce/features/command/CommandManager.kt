@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -36,8 +35,6 @@ import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPositio
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.outputString
-import net.minecraft.client.network.ClientCommandSource
-import net.minecraft.command.CommandSource
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -122,10 +119,6 @@ object CommandManager : Iterable<Command> {
 
         // Initialize the executor
         CommandExecutor
-    }
-
-    fun chaty(string: String) {
-        chat(string)
     }
 
     fun registerInbuilt() {
