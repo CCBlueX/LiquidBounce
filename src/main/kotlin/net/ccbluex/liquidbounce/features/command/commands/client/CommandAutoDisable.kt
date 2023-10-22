@@ -33,6 +33,7 @@ import kotlin.math.roundToInt
 
 object CommandAutoDisable {
 
+    @Suppress("MaxLineLength")
     fun createCommand(): Command {
         return CommandBuilder
             .begin("AutoDisable")
