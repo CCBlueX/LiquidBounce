@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
 import net.ccbluex.liquidbounce.utils.client.*
@@ -94,9 +95,7 @@ object CommandAutoDisable {
                 CommandBuilder
                     .begin("list")
                     .parameter(
-                        ParameterBuilder
-                            .begin<Int>("page")
-                            .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                        pageParameter()
                             .optional()
                             .build()
                     )

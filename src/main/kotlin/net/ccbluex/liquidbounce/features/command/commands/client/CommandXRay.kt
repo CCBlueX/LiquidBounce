@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.blockParameter
+import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -36,6 +38,8 @@ import kotlin.math.roundToInt
 
 object CommandXRay {
 
+
+
     fun createCommand(): Command {
         return CommandBuilder
             .begin("xray")
@@ -44,14 +48,7 @@ object CommandXRay {
                 CommandBuilder
                     .begin("add")
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("block")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith {
-                                Registries.BLOCK.map {
-                                    it.translationKey.removePrefix("block.").replace('.', ':')
-                                }
-                            }
+                        blockParameter()
                             .required()
                             .build()
                     )
@@ -76,15 +73,8 @@ object CommandXRay {
                 CommandBuilder
                     .begin("remove")
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("block")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                        blockParameter()
                             .required()
-                            .autocompletedWith {
-                                Registries.BLOCK.map {
-                                    it.translationKey.removePrefix("block.").replace('.', ':')
-                                }
-                            }
                             .build()
                     )
                     .handler { command, args ->
@@ -108,9 +98,7 @@ object CommandXRay {
                 CommandBuilder
                     .begin("list")
                     .parameter(
-                        ParameterBuilder
-                            .begin<Int>("page")
-                            .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
+                        pageParameter()
                             .optional()
                             .build()
                     )

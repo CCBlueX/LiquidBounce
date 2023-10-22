@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Formatting
@@ -97,8 +98,7 @@ object CommandBinds {
                 CommandBuilder
                     .begin("list")
                     .parameter(
-                        ParameterBuilder
-                            .begin<Int>("page")
+                        pageParameter()
                             .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
                             .optional()
                             .build()
