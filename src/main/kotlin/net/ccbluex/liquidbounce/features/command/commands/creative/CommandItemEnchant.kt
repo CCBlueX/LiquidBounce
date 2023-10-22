@@ -22,82 +22,187 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enchantmentParameter
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.item.addEnchantment
+import net.ccbluex.liquidbounce.utils.item.clearEnchantments
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.item.removeEnchantment
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtElement
-import net.minecraft.nbt.NbtList
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
-import kotlin.math.absoluteValue
+import kotlin.math.min
 
 object CommandItemEnchant {
 
-    fun createCommand(): Command {
-        return CommandBuilder.begin("enchant").parameter(
-            ParameterBuilder.begin<String>("enchantment").verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedWith {
-                    Registries.ENCHANTMENT.map {
-                        it.translationKey.removePrefix("enchantment.").replace('.', ':')
-                    }
-                }.required().build()
-        ).parameter(
-            ParameterBuilder.begin<Int>("level").verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR).required()
-                .build()
-        ).handler { command, args ->
-            val enchantmentName = args[0] as String
-            val level = args[1] as Int
 
-            if (mc.interactionManager?.hasCreativeInventory() == false) {
-                throw CommandException(command.result("mustBeCreative"))
-            }
-
-            val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
-            if (itemStack.isNothing()) {
-                throw CommandException(command.result("mustHoldItem"))
-            }
-
-            val identifier = Identifier.tryParse(enchantmentName)
-            val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
-                throw CommandException(command.result("enchantmentNotExists", enchantmentName))
-            }
-
-            if (level <= 255) {
-                enchant(itemStack!!, enchantment, level)
-            } else {
-                var next = level
-                while (true) {
-                    next -= 255
-                    if (next <= 0) {
-                        next = 255 - next.absoluteValue
-                        enchant(itemStack!!, enchantment, next)
-                        break
-                    }
-                    enchant(itemStack!!, enchantment, 255)
-                }
-            }
-
-            mc.networkHandler!!.sendPacket(
-                CreativeInventoryActionC2SPacket(
-                    36 + mc.player!!.inventory.selectedSlot, itemStack
-                )
-            )
-            chat(regular(command.result("enchantedItem", identifier.toString(), level)))
-        }.build()
-    }
-
-    private fun enchant(item: ItemStack, enchantment: Enchantment, level: Int) {
-        val nbt = item.orCreateNbt
-        if (nbt?.contains(ItemStack.ENCHANTMENTS_KEY, NbtElement.LIST_TYPE.toInt()) == false) {
-            nbt.put(ItemStack.ENCHANTMENTS_KEY, NbtList())
+    val levelParameter= ParameterBuilder
+        .begin<String>("level")
+        .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+        .autocompletedWith {begin ->
+            mutableListOf("max", "1", "2", "3", "4", "5").filter { it.startsWith(begin) }
         }
-        val nbtList = nbt?.getList(ItemStack.ENCHANTMENTS_KEY, NbtElement.COMPOUND_TYPE.toInt())
-        nbtList?.add(EnchantmentHelper.createNbt(EnchantmentHelper.getEnchantmentId(enchantment), level))
+        .required()
+
+    @Suppress("LongMethod")
+    fun createCommand(): Command {
+        return CommandBuilder
+            .begin("enchant")
+            .hub()
+            .subcommand(
+                CommandBuilder
+                    .begin("add")
+                    .parameter(enchantmentParameter().required().build())
+                    .parameter(levelParameter.build())
+                    .handler { command, args ->
+                        val enchantmentName = args[0] as String
+                        val level = getLevel(args[1] as String)
+
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
+
+                        val enchantment = enchantmentByName(enchantmentName, command)!!
+                        enchantAnyLevel(itemStack, enchantment, level)
+
+                        sendItemPacket(itemStack)
+                        chat(regular(command.result("enchantedItem", enchantment.toString(), level ?: "max")))
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("remove")
+                    .parameter(enchantmentParameter().required().build())
+                    .handler {command, args ->
+                        val enchantmentName = args[0] as String
+
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
+
+                        val enchantment = enchantmentByName(enchantmentName, command)!!
+                        removeEnchantment(itemStack!!, enchantment)
+
+                        sendItemPacket(itemStack)
+                        chat(regular(command.result("unenchantedItem", enchantment.toString())))
+                    }
+                    .build()
+
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("clear")
+                    .handler {command, _ ->
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
+
+                        clearEnchantments(itemStack!!)
+
+                        sendItemPacket(itemStack)
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("all")
+                    .parameter(levelParameter.build())
+                    .handler { command, args ->
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
+
+                        val level = getLevel(args[0] as String)
+
+                        enchantAll(itemStack!!, false, level)
+
+                        sendItemPacket(itemStack)
+                        chat(regular(command.result("enchantedItem","all", level ?: "Max")))
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("all_possible")
+                    .parameter(levelParameter.build())
+                    .handler { command, args ->
+                        creativeOrThrow(command)
+                        val itemStack = getItemOrThrow(command)
+
+                        val level = getLevel(args[0] as String)
+                        enchantAll(itemStack!!, true, level)
+
+                        sendItemPacket(itemStack)
+                        chat(regular(command.result("enchantedItem", "all_possible", level ?: "Max")))
+                    }
+                    .build()
+            )
+
+
+            .build()
     }
+
+    private fun getLevel(arg: String) =
+        if(arg == "max")
+            null
+        else
+            arg.toInt()
+
+
+    private fun sendItemPacket(itemStack: ItemStack?) {
+        mc.networkHandler!!.sendPacket(
+            CreativeInventoryActionC2SPacket(
+                36 + mc.player!!.inventory.selectedSlot, itemStack
+            )
+        )
+    }
+
+
+
+    private fun creativeOrThrow(command: Command) {
+        if (mc.interactionManager?.hasCreativeInventory() == false) {
+            throw CommandException(command.result("mustBeCreative"))
+        }
+    }
+
+    private fun getItemOrThrow(command: Command): ItemStack {
+        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+        if (itemStack.isNothing()) {
+                throw CommandException(command.result("mustHoldItem")) }
+        return itemStack!!
+    }
+
+    private fun enchantmentByName(enchantmentName: String, command: Command): Enchantment? {
+        val identifier = Identifier.tryParse(enchantmentName)
+        val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
+            throw CommandException(command.result("enchantmentNotExists", enchantmentName))
+        }
+        return enchantment!!
+    }
+
+    private fun enchantAnyLevel(item: ItemStack, enchantment: Enchantment, level: Int?) {
+        if (level == null || level <= 255) {
+            addEnchantment(item, enchantment, level)
+        } else {
+            var next = level!!
+            while (next > 255) {
+                addEnchantment(item, enchantment, min(next, 255))
+                next -= 255
+            }
+        }
+    }
+
+    private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
+        Registries.ENCHANTMENT.forEach {enchantment ->
+            if(!enchantment.isAcceptableItem(item) && onlyAcceptable) return@forEach
+            enchantAnyLevel(item, enchantment, level)
+
+        }
+    }
+
+
+
+
 }

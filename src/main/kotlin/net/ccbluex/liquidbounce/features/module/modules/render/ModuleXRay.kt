@@ -33,138 +33,145 @@ object ModuleXRay : Module("XRay", Category.RENDER) {
     // Lighting of blocks through walls
     val fullBright by boolean("FullBright", true)
 
+    private val deafultBlocks = mutableSetOf(
+        // Overworld ores
+        COAL_ORE,
+        COPPER_ORE,
+        DIAMOND_ORE,
+        EMERALD_ORE,
+        GOLD_ORE,
+        IRON_ORE,
+        LAPIS_ORE,
+        REDSTONE_ORE,
+
+        // Overworld ores (deepslate variants)
+        DEEPSLATE_COAL_ORE,
+        DEEPSLATE_COPPER_ORE,
+        DEEPSLATE_DIAMOND_ORE,
+        DEEPSLATE_EMERALD_ORE,
+        DEEPSLATE_GOLD_ORE,
+        DEEPSLATE_IRON_ORE,
+        DEEPSLATE_LAPIS_ORE,
+        DEEPSLATE_REDSTONE_ORE,
+
+        // Overworld mineral blocks
+        COAL_BLOCK,
+        COPPER_BLOCK,
+        DIAMOND_BLOCK,
+        EMERALD_BLOCK,
+        GOLD_BLOCK,
+        IRON_BLOCK,
+        LAPIS_BLOCK,
+        REDSTONE_BLOCK,
+
+        // Overworld raw mineral blocks
+        RAW_COPPER_BLOCK,
+        RAW_GOLD_BLOCK,
+        RAW_IRON_BLOCK,
+
+        // Nether ores
+        ANCIENT_DEBRIS,
+        NETHER_GOLD_ORE,
+        NETHER_QUARTZ_ORE,
+
+        // Nether material blocks
+        NETHERITE_BLOCK,
+        QUARTZ_BLOCK,
+
+        // Storage blocks
+        CHEST,
+        DISPENSER,
+        DROPPER,
+        ENDER_CHEST,
+        HOPPER,
+        TRAPPED_CHEST,
+
+        // Storage blocks (shulker box variants)
+        BLACK_SHULKER_BOX,
+        BLUE_SHULKER_BOX,
+        BROWN_SHULKER_BOX,
+        CYAN_SHULKER_BOX,
+        GRAY_SHULKER_BOX,
+        GREEN_SHULKER_BOX,
+        LIGHT_BLUE_SHULKER_BOX,
+        LIGHT_GRAY_SHULKER_BOX,
+        LIME_SHULKER_BOX,
+        MAGENTA_SHULKER_BOX,
+        ORANGE_SHULKER_BOX,
+        PINK_SHULKER_BOX,
+        PURPLE_SHULKER_BOX,
+        RED_SHULKER_BOX,
+        SHULKER_BOX,
+        WHITE_SHULKER_BOX,
+        YELLOW_SHULKER_BOX,
+
+        // Utility blocks
+        BEACON,
+        CRAFTING_TABLE,
+        ENCHANTING_TABLE,
+        FURNACE,
+        FLOWER_POT,
+        JUKEBOX,
+        LODESTONE,
+        RESPAWN_ANCHOR,
+
+        // Utility blocks (anvil variants)
+        ANVIL,
+        CHIPPED_ANVIL,
+        DAMAGED_ANVIL,
+
+        // Utility blocks (job variants)
+        BARREL,
+        BLAST_FURNACE,
+        BREWING_STAND,
+        CARTOGRAPHY_TABLE,
+        COMPOSTER,
+        FLETCHING_TABLE,
+        GRINDSTONE,
+        LECTERN,
+        LOOM,
+        SMITHING_TABLE,
+        SMOKER,
+        STONECUTTER,
+
+        // Utility blocks (job variants (cauldron variants))
+        CAULDRON,
+        LAVA_CAULDRON,
+        WATER_CAULDRON,
+
+        // Liquids
+        LAVA,
+        WATER,
+
+        // Portals
+        END_PORTAL,
+        END_PORTAL_FRAME,
+        NETHER_PORTAL,
+
+        // Command block variants
+        CHAIN_COMMAND_BLOCK,
+        COMMAND_BLOCK,
+        REPEATING_COMMAND_BLOCK,
+
+        // Remaining blocks
+        BOOKSHELF,
+        CLAY,
+        DRAGON_EGG,
+        FIRE,
+        SPAWNER,
+        TNT
+    )
+
     // Set of blocks that will not be excluded
     val blocks by blocks(
         "Blocks",
-        mutableSetOf(
-            // Overworld ores
-            COAL_ORE,
-            COPPER_ORE,
-            DIAMOND_ORE,
-            EMERALD_ORE,
-            GOLD_ORE,
-            IRON_ORE,
-            LAPIS_ORE,
-            REDSTONE_ORE,
-
-            // Overworld ores (deepslate variants)
-            DEEPSLATE_COAL_ORE,
-            DEEPSLATE_COPPER_ORE,
-            DEEPSLATE_DIAMOND_ORE,
-            DEEPSLATE_EMERALD_ORE,
-            DEEPSLATE_GOLD_ORE,
-            DEEPSLATE_IRON_ORE,
-            DEEPSLATE_LAPIS_ORE,
-            DEEPSLATE_REDSTONE_ORE,
-
-            // Overworld mineral blocks
-            COAL_BLOCK,
-            COPPER_BLOCK,
-            DIAMOND_BLOCK,
-            EMERALD_BLOCK,
-            GOLD_BLOCK,
-            IRON_BLOCK,
-            LAPIS_BLOCK,
-            REDSTONE_BLOCK,
-
-            // Overworld raw mineral blocks
-            RAW_COPPER_BLOCK,
-            RAW_GOLD_BLOCK,
-            RAW_IRON_BLOCK,
-
-            // Nether ores
-            ANCIENT_DEBRIS,
-            NETHER_GOLD_ORE,
-            NETHER_QUARTZ_ORE,
-
-            // Nether material blocks
-            NETHERITE_BLOCK,
-            QUARTZ_BLOCK,
-
-            // Storage blocks
-            CHEST,
-            DISPENSER,
-            DROPPER,
-            ENDER_CHEST,
-            HOPPER,
-            TRAPPED_CHEST,
-
-            // Storage blocks (shulker box variants)
-            BLACK_SHULKER_BOX,
-            BLUE_SHULKER_BOX,
-            BROWN_SHULKER_BOX,
-            CYAN_SHULKER_BOX,
-            GRAY_SHULKER_BOX,
-            GREEN_SHULKER_BOX,
-            LIGHT_BLUE_SHULKER_BOX,
-            LIGHT_GRAY_SHULKER_BOX,
-            LIME_SHULKER_BOX,
-            MAGENTA_SHULKER_BOX,
-            ORANGE_SHULKER_BOX,
-            PINK_SHULKER_BOX,
-            PURPLE_SHULKER_BOX,
-            RED_SHULKER_BOX,
-            SHULKER_BOX,
-            WHITE_SHULKER_BOX,
-            YELLOW_SHULKER_BOX,
-
-            // Utility blocks
-            BEACON,
-            CRAFTING_TABLE,
-            ENCHANTING_TABLE,
-            FURNACE,
-            FLOWER_POT,
-            JUKEBOX,
-            LODESTONE,
-            RESPAWN_ANCHOR,
-
-            // Utility blocks (anvil variants)
-            ANVIL,
-            CHIPPED_ANVIL,
-            DAMAGED_ANVIL,
-
-            // Utility blocks (job variants)
-            BARREL,
-            BLAST_FURNACE,
-            BREWING_STAND,
-            CARTOGRAPHY_TABLE,
-            COMPOSTER,
-            FLETCHING_TABLE,
-            GRINDSTONE,
-            LECTERN,
-            LOOM,
-            SMITHING_TABLE,
-            SMOKER,
-            STONECUTTER,
-
-            // Utility blocks (job variants (cauldron variants))
-            CAULDRON,
-            LAVA_CAULDRON,
-            WATER_CAULDRON,
-
-            // Liquids
-            LAVA,
-            WATER,
-
-            // Portals
-            END_PORTAL,
-            END_PORTAL_FRAME,
-            NETHER_PORTAL,
-
-            // Command block variants
-            CHAIN_COMMAND_BLOCK,
-            COMMAND_BLOCK,
-            REPEATING_COMMAND_BLOCK,
-
-            // Remaining blocks
-            BOOKSHELF,
-            CLAY,
-            DRAGON_EGG,
-            FIRE,
-            SPAWNER,
-            TNT
-        )
+        deafultBlocks
     )
+
+    fun resetBlocks() {
+        blocks.clear()
+        blocks.addAll(deafultBlocks)
+    }
 
     override fun enable() {
         mc.worldRenderer.reload()
