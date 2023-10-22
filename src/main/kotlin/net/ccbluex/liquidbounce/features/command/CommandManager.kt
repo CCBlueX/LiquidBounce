@@ -406,6 +406,7 @@ object CommandManager : Iterable<Command> {
     }
 
     override fun iterator() = commands.iterator()
+
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
         if (start < Options.prefix.length) {
             return Suggestions.empty()
@@ -459,6 +460,7 @@ object CommandManager : Iterable<Command> {
             return builder.buildFuture()
         } catch (e: Exception) {
             e.printStackTrace()
+
             return Suggestions.empty()
         }
 
