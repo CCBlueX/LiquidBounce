@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.web.theme
 
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.io.extractZip
-import net.ccbluex.liquidbounce.utils.io.resource
 import java.io.File
 
 /**
@@ -71,8 +69,8 @@ class Theme(val name: String, val folder: File) {
  */
 class Page(theme: Theme, val name: String) {
 
-    private val pageFolder = File(theme.folder, name)
-    private val indexFile = File(pageFolder, "index.html")
+    // private val pageFolder = File(theme.folder, name)
+    private val indexFile = File(theme.folder, "index.html")
 
     val uri = "file:///${indexFile.absolutePath}"
 

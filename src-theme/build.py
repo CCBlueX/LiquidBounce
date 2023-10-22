@@ -35,6 +35,9 @@ if os.path.exists("resources"):
 print("Building theme")
 os.system("npm i && npm run build")
 
+# Copy theme.json into tmp folder
+shutil.copy("theme.json", "dist/theme.json")
+
 # Zip into a theme bundle
 shutil.make_archive("theme", "zip", "dist")
 
