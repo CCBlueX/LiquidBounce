@@ -4,8 +4,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.minecraft.registry.Registries
 
-
-
 fun blockParameter(name: String = "block") =
     ParameterBuilder
         .begin<String>(name)
@@ -17,7 +15,6 @@ fun blockParameter(name: String = "block") =
                     .replace('.', ':')
             }
         }
-
 fun itemParameter(name: String = "item") =
     ParameterBuilder
         .begin<String>(name)
@@ -30,7 +27,6 @@ fun itemParameter(name: String = "item") =
                     .replace('.', ':')
             }
         }
-
 fun enchantmentParameter(name: String = "enchantment") =
     ParameterBuilder
         .begin<String>(name)

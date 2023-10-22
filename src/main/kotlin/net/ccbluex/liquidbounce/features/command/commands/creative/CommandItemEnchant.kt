@@ -88,7 +88,7 @@ object CommandItemEnchant {
             .subcommand(
                 CommandBuilder
                     .begin("remove")
-                    .parameter(enchantmentParameter.required().build())
+                    .parameter(enchantmentParameter().required().build())
                     .handler {command, args ->
                         val enchantmentName = args[0] as String
 
