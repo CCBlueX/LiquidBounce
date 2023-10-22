@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.item.*
+import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.registry.Registries
@@ -47,8 +48,6 @@ object CommandItemEnchant {
         }
         .required()
 
-
-
     fun createCommand(): Command {
         return CommandBuilder
             .begin("enchant")
@@ -65,10 +64,8 @@ object CommandItemEnchant {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
-                        val identifier = Identifier.tryParse(enchantmentName)
-                        val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
-                            throw CommandException(command.result("enchantmentNotExists", enchantmentName))
-                        }
+
+                        val enchantment = enchantmentByName(enchantmentName, command)!!
                         if (level == null || level <= 255) {
                             addEnchantment(itemStack, enchantment, level)
                         } else {
@@ -80,7 +77,7 @@ object CommandItemEnchant {
                         }
 
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("enchantedItem", identifier.toString(), level ?: "max")))
+                        chat(regular(command.result("enchantedItem", enchantment.toString(), level ?: "max")))
                     }
                     .build()
             )
@@ -94,14 +91,11 @@ object CommandItemEnchant {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
-                        val identifier = Identifier.tryParse(enchantmentName)
-                        val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
-                            throw CommandException(command.result("enchantmentNotExists", enchantmentName))
-                        }
+                        val enchantment = enchantmentByName(enchantmentName, command)!!
                         removeEnchantment(itemStack!!, enchantment)
 
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("unenchantedItem", identifier.toString())))
+                        chat(regular(command.result("unenchantedItem", enchantment.toString())))
                     }
                     .build()
 
@@ -132,7 +126,7 @@ object CommandItemEnchant {
                         enchantAll(itemStack!!, false, level)
 
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("enchantedItem", level ?: "Max")))
+                        chat(regular(command.result("enchantedItem","all", level ?: "Max")))
                     }
                     .build()
             )
@@ -145,13 +139,10 @@ object CommandItemEnchant {
                         val itemStack = getItemOrThrow(command)
 
                         val level = getLevel(args[0] as String)
-
-
                         enchantAll(itemStack!!, true, level)
 
-
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("enchantedItem", level ?: "Max")))
+                        chat(regular(command.result("enchantedItem", "all_possible", level ?: "Max")))
                     }
                     .build()
             )
@@ -188,6 +179,14 @@ object CommandItemEnchant {
         if (itemStack.isNothing()) {
                 throw CommandException(command.result("mustHoldItem")) }
         return itemStack!!
+    }
+
+    private fun enchantmentByName(enchantmentName: String, command: Command): Enchantment? {
+        val identifier = Identifier.tryParse(enchantmentName)
+        val enchantment = Registries.ENCHANTMENT.getOrEmpty(identifier).orElseThrow {
+            throw CommandException(command.result("enchantmentNotExists", enchantmentName))
+        }
+        return enchantment!!
     }
 
     private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
