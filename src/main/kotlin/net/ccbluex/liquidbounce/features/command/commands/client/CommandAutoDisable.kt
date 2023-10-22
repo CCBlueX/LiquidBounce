@@ -32,7 +32,7 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 object CommandAutoDisable {
-    
+
     fun createCommand(): Command {
         return CommandBuilder
             .begin("AutoDisable")
