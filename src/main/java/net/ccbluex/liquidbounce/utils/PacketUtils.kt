@@ -59,7 +59,7 @@ object PacketUtils : MinecraftInstance() {
     fun sendPackets(vararg packets: Packet<*>, triggerEvents: Boolean = true) =
         packets.forEach { sendPacket(it, triggerEvents) }
 
-    fun handlePacket(packet: Packet<INetHandlerPlayClient>?) = packet?.processPacket(mc.netHandler)
+    fun handlePacket(packet: Packet<*>?) = (packet as Packet<INetHandlerPlayClient>).processPacket(mc.netHandler)
 
     val Packet<*>.type
         get() = when (this.javaClass.simpleName[0]) {
