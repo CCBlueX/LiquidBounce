@@ -49,6 +49,7 @@ object CommandItemEnchant {
         }
         .required()
 
+    @Suppress("MaxLineLength")
     fun createCommand(): Command {
         return CommandBuilder
             .begin("enchant")
