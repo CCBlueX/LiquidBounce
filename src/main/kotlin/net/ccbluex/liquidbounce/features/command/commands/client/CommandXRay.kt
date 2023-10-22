@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.blockParameter
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay

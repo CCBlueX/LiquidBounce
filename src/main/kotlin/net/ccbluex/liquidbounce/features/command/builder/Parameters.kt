@@ -15,6 +15,7 @@ fun blockParameter(name: String = "block") =
                     .replace('.', ':')
             }
         }
+
 fun itemParameter(name: String = "item") =
     ParameterBuilder
         .begin<String>(name)
@@ -27,6 +28,7 @@ fun itemParameter(name: String = "item") =
                     .replace('.', ':')
             }
         }
+
 fun enchantmentParameter(name: String = "enchantment") =
     ParameterBuilder
         .begin<String>(name)
