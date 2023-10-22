@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -34,10 +35,7 @@ object CommandToggle {
             .begin("toggle")
             .alias("t")
             .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedWith(ModuleManager::autoComplete)
+                moduleParameter()
                     .required()
                     .build()
             )
