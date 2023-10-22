@@ -40,8 +40,8 @@ object CommandItemEnchant {
     val levelParameter= ParameterBuilder
         .begin<String>("level")
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith {
-            mutableListOf("max", "1", "2", "3", "4", "5")
+        .autocompletedWith {begin ->
+            mutableListOf("max", "1", "2", "3", "4", "5").filter { it.startsWith(begin) }
         }
         .required()
 
