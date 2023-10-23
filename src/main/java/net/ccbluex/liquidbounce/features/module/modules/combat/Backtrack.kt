@@ -187,6 +187,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
         for (packet in filtered) {
             handlePacket(packet)
+            if (packet is S14PacketEntity) {
+                realX -= timedPacket.packet.func_149062_c().toDouble()
+                realY -= timedPacket.packet.func_149061_d().toDouble()
+                realZ -= timedPacket.packet.func_149064_e().toDouble()
+            }
             packetQueue.remove(packet)
         }
     }
