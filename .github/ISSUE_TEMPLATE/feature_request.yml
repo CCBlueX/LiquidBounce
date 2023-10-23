@@ -21,8 +21,8 @@ body:
       options:
         - Nextgen
         - Legacy
-      validations:
-        required: true
+    validations:
+      required: true
 
   - type: textarea
     attributes:
