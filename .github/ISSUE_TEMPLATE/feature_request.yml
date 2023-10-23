@@ -19,8 +19,8 @@ body:
       label: LiquidBounce Branch
       description: Which edition of LiquidBounce does this bug affect?
       options:
-        - nextgen
-        - legacy
+        - Nextgen
+        - Legacy
 
   - type: textarea
     attributes:
