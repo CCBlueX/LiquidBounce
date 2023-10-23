@@ -14,6 +14,16 @@ body:
         - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
         - If you want to ask a question instead of requesting a feature, please use the [forum](https://forums.ccbluex.net/) instead.
 
+  - type: select
+    attributes:
+      label: LiquidBounce Branch
+      description: Which edition of LiquidBounce does this bug affect?
+      options:
+        - nextgen
+        - legacy
+      validations:
+        required: true
+
   - type: textarea
     attributes:
       label: Describe your feature request.
