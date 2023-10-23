@@ -522,13 +522,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             var distance = thePlayer.getDistanceToEntityBox(entity)
-            if (Backtrack.state) {
-                val trackedDistance = Backtrack.getNearestTrackedDistance(entity)
 
-                if (distance > trackedDistance) {
-                    distance = trackedDistance
-                }
-            }
             val entityFov = getRotationDifference(entity)
 
             if (distance <= maxRange && (fov == 180F || entityFov <= fov)) {
@@ -558,20 +552,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         for (entity in targets) {
             // Update rotations to current target
             if (!updateRotations(entity)) {
-                var success = false
-                Backtrack.loopThroughBacktrackData(entity) {
-                    if (updateRotations(entity)) {
-                        success = true
-                        return@loopThroughBacktrackData true
-                    }
-
-                    return@loopThroughBacktrackData false
-                }
-
-                if (!success) {
-                    // when failed then try another target
-                    continue
-                }
+                continue
             }
 
             // Set target to current entity
