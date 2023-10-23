@@ -21,6 +21,7 @@ body:
       options:
         - Nextgen
         - Legacy
+        - Both
     validations:
       required: true
 
