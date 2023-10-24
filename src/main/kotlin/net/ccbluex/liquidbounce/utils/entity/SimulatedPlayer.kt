@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -128,7 +127,6 @@ class SimulatedPlayer(
         }
 
         this.velocity = Vec3d(h, i, j)
-        chat(this.velocity.y.toString())
 
         if (this.isJumping) {
             val k = if (this.isInLava()) this.getFluidHeight(FluidTags.LAVA) else this.getFluidHeight(FluidTags.WATER)
