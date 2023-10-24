@@ -52,6 +52,7 @@ class SimulatedPlayer(
     private var fallDistance: Float,
     private var jumpingCooldown: Int,
     private var isJumping: Boolean,
+    private var isFallFlying: Boolean,
     private var onGround: Boolean,
     private var horizontalCollision: Boolean,
     private var verticalCollision: Boolean
@@ -72,9 +73,10 @@ class SimulatedPlayer(
                 player.fallDistance,
                 player.jumpingCooldown,
                 player.jumping,
+                player.isFallFlying,
                 player.isOnGround,
                 player.horizontalCollision,
-                player.verticalCollision
+                player.verticalCollision,
             )
         }
         fun fromOtherPlayer(player: PlayerEntity, input: SimulatedPlayerInput): SimulatedPlayer {
@@ -91,9 +93,10 @@ class SimulatedPlayer(
                 player.fallDistance,
                 player.jumpingCooldown,
                 player.jumping,
+                player.isFallFlying,
                 player.isOnGround,
                 player.horizontalCollision,
-                player.verticalCollision
+                player.verticalCollision,
             )
         }
     }
@@ -110,6 +113,7 @@ class SimulatedPlayer(
 
         this.isJumping = this.input.jumping
 
+
         val d: Vec3d = this.velocity
 
         var h = d.x
@@ -124,6 +128,9 @@ class SimulatedPlayer(
         }
         if (abs(d.z) < 0.003) {
             j = 0.0
+        }
+        if(onGround) {
+            this.isFallFlying = false
         }
 
         this.velocity = Vec3d(h, i, j)
@@ -211,7 +218,7 @@ class SimulatedPlayer(
 //                this.setVelocity(f.x, 0.3, f.z)
 //            }
 //        } else
-        if (this.isFallFlying()) {
+        if (this.isFallFlying) {
             var k: Double
             var e: Vec3d = this.velocity
             if (e.y > -0.5) {
@@ -384,8 +391,6 @@ class SimulatedPlayer(
         }
         return vec3d
     }
-
-    private fun isFallFlying(): Boolean = false
 
     private fun onLanding() {
         this.fallDistance = 0.0f
