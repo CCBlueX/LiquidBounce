@@ -60,7 +60,7 @@ object WebController : Listenable, AutoCloseable {
             it.cancelEvent()
 
             val screen = WebScreen(createWindow(LayerDistribution.SCREEN_LAYER).also { window ->
-                window.view.loadURL("http://localhost:5173")
+                window.view.loadURL("http://localhost:4173")
             })
             mc.setScreen(screen)
         }
