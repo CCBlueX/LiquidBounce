@@ -22,10 +22,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.NotificationEvent
-import net.ccbluex.liquidbounce.event.ToggleModuleEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -46,7 +43,8 @@ open class Module(
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
-    hide: Boolean = false // default hide
+    hide: Boolean = false, // default hide
+    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world
 ) : Listenable, Configurable(name) {
 
     val valueEnabled = boolean("Enabled", state)
@@ -139,6 +137,15 @@ open class Module(
      * Events should be handled when module is enabled
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
+
+    /**
+     * Handles disconnect from world and if [disableOnQuit] is true disables module
+     */
+    val onDisconnect = handler<WorldDisconnectEvent> {
+        if (disableOnQuit) {
+            enabled = false
+        }
+    }
 
     /**
      * Returns if module is hidden. Hidden modules are not displayed in the module list.
