@@ -33,8 +33,6 @@ public class GlfwSurfaceBuffer extends NioUltralightBuffer {
         // Copy the pixel data from the PBO to the texture
         GL30.glBindTexture(GL30.GL_TEXTURE_2D, surface.getTexture());
         if (dirtyBounds.width() == surface.width()) {
-            System.out.println("one1123");
-            System.out.flush();
             // We can copy using a rectangle
             GL30.glTexSubImage2D(
                     GL30.GL_TEXTURE_2D,
@@ -48,8 +46,6 @@ public class GlfwSurfaceBuffer extends NioUltralightBuffer {
                     bufferPtr + (surface.rowBytes() * dirtyBounds.getTop() + (dirtyBounds.getLeft() * 4L))
             );
         } else {
-            System.out.println("two1123");
-            System.out.flush();
             // We need to manually copy multiple scanlines
             for (int y = dirtyBounds.getTop(); y < dirtyBounds.getBottom(); y++) {
                 GL30.glTexSubImage2D(
