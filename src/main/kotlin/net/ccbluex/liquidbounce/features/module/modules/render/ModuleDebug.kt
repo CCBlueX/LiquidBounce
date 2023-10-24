@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -42,9 +43,9 @@ import java.awt.Color
 
 object ModuleDebug : Module("Debug", Category.RENDER) {
 
-    object SimulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
-
-        val simLines = mutableListOf<Vec3>()
+    object RenderSimulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
+        private val ticksToPredict by int("TicksToPredict", 20, 5..100)
+        private val simLines = mutableListOf<Vec3>()
         val tickRep =
             handler<MovementInputEvent> { event ->
                 // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
@@ -65,7 +66,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
-                repeat(20) {
+                repeat(ticksToPredict) {
                     simulatedPlayer.tick()
                     simLines.add(Vec3(simulatedPlayer.pos))
                 }
@@ -79,7 +80,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
     init {
-        tree(SimulatedPlayer)
+        tree(RenderSimulatedPlayer)
     }
 
     private val debuggedGeometry = hashMapOf<DebuggedGeometryOwner, DebuggedGeometry>()
