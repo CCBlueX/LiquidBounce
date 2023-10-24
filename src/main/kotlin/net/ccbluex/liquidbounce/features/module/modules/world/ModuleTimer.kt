@@ -50,7 +50,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
             TimerState.NormalSpeed -> {
                 Timer.requestTimerSpeed(normalSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = normalSpeedTicks)
                 wait(normalSpeedTicks)
-                currentTimerState = TimerState.BoostSpeed
+                currentTimerState = TimerState.NormalSpeed
             }
 
             TimerState.BoostSpeed -> {

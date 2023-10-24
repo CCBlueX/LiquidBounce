@@ -18,10 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.MovementInputEvent
 import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -30,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -152,6 +158,45 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 }
             }
         }
+    }
+    object simulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
+
+        val simLines = mutableListOf<Vec3>()
+        val tickRep =
+            handler<MovementInputEvent> { event ->
+                // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
+                if (ModuleBlink.enabled) {
+                    return@handler
+                }
+
+                simLines.clear()
+
+                val world = world
+
+                val input =
+                    SimulatedPlayer.SimulatedPlayerInput(
+                        event.directionalInput,
+                        player.input.jumping,
+                        player.isSprinting
+                    )
+
+                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+
+                repeat(20) {
+                    simulatedPlayer.tick()
+                    simLines.add(Vec3(simulatedPlayer.pos))
+                }
+            }
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            renderEnvironmentForWorld(event.matrixStack) {
+                withColor(Color4b.BLUE) {
+                    drawLineStrip(*simLines.toTypedArray())
+                }
+            }
+        }
+    }
+    init {
+        tree(simulatedPlayer)
     }
 
     private fun drawTrajectory(otherPlayer: PlayerEntity, matrixStack: MatrixStack, partialTicks: Float): HitResult? {
