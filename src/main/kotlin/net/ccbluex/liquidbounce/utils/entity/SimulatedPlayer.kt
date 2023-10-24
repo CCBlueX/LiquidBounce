@@ -397,7 +397,11 @@ class SimulatedPlayer(
     }
 
     fun jump() {
-        this.velocity += Vec3d(0.0, this.getJumpVelocity().toDouble() + this.getJumpBoostVelocityModifier() - this.velocity.y, 0.0)
+        this.velocity += Vec3d(
+            0.0,
+            this.getJumpVelocity().toDouble() + this.getJumpBoostVelocityModifier() - this.velocity.y,
+            0.0
+        )
 
         if (this.isSprinting()) {
             val f: Float = this.yaw.toRadians()
