@@ -159,45 +159,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             }
         }
     }
-    object simulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
 
-        val simLines = mutableListOf<Vec3>()
-        val tickRep =
-            handler<MovementInputEvent> { event ->
-                // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
-                if (ModuleBlink.enabled) {
-                    return@handler
-                }
-
-                simLines.clear()
-
-                val world = world
-
-                val input =
-                    SimulatedPlayer.SimulatedPlayerInput(
-                        event.directionalInput,
-                        player.input.jumping,
-                        player.isSprinting
-                    )
-
-                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
-                repeat(20) {
-                    simulatedPlayer.tick()
-                    simLines.add(Vec3(simulatedPlayer.pos))
-                }
-            }
-        val renderHandler = handler<WorldRenderEvent> { event ->
-            renderEnvironmentForWorld(event.matrixStack) {
-                withColor(Color4b.BLUE) {
-                    drawLineStrip(*simLines.toTypedArray())
-                }
-            }
-        }
-    }
-    init {
-        tree(simulatedPlayer)
-    }
 
     private fun drawTrajectory(otherPlayer: PlayerEntity, matrixStack: MatrixStack, partialTicks: Float): HitResult? {
         val heldItem = otherPlayer.handItems.find { shouldDrawTrajectory(otherPlayer, it.item) } ?: return null
