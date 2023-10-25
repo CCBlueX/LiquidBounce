@@ -52,7 +52,7 @@ import kotlin.math.sin
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, Verus, Enderpearl, Spartan))
+    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, VerusOld, Enderpearl, Spartan))
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -113,7 +113,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
-    private object Verus : Choice("Verus") {
+    private object VerusOld : Choice("VerusOld") {
 
         override val parent: ChoiceConfigurable
             get() = modes
