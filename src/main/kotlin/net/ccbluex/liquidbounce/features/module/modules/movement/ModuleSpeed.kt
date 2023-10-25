@@ -121,7 +121,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         private val resetHorizontalSpeed by boolean("ResetHorizontalSpeed", true)
         private val customStrafe by boolean("CustomStrafe", false)
         private val strafe by float("Strafe", 1f, 0.1f..10f)
-        private val verticalSpeed by float("VerticalSpeed", 0.42f, 0.1f..3f)
+        private val verticalSpeed by float("VerticalSpeed", 0.42f, 0.0f..3f)
         private val resetVerticalSpeed by boolean("ResetVerticalSpeed", true)
         private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
 
