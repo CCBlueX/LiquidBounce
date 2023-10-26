@@ -75,6 +75,8 @@ object RaycastUtils : MinecraftInstance() {
 
                 // Check newest entity first
                 checkEntity()
+                if (Backtrack.backtrackMode == "Legacy") 
+                    Backtrack.loopThroughBacktrackData(entity, checkEntity)
             }
 
             return pointedEntity
