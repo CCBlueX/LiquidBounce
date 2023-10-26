@@ -161,7 +161,7 @@ fun ClosedRange<Double>.shrinkBy(value: Double): ClosedFloatingPointRange<Double
 }
 
 val sidesToCheck = arrayOf(
-//    Direction.DOWN, // first down because it is the most likely that you can place a block on top a the one below
+    Direction.DOWN, // first down because it is the most likely that you can place a block on top a the one below
     Direction.NORTH, // then the sides
     Direction.SOUTH,
     Direction.WEST,
