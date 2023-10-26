@@ -160,7 +160,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
      * @testedOn minecraft.vagdedes.com
      * @note it might flag a bit at the start, but then stops for some reason
      */
-    private object Spartan : Choice("Spartan") {
+    private object Spartan : Choice("Spartan524") {
         override val parent: ChoiceConfigurable
             get() = modes
 

@@ -111,7 +111,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
      * @testedOn minecraft.vagdedes.com
      * @note it gives you 6 flags for 50 blocks, which isn't enough to get kicked
      */
-    private object SpartanFlag : Choice("SpartanFlag") {
+    private object SpartanFlag : Choice("Spartan524Flag") {
 
         override val parent: ChoiceConfigurable
             get() = modes

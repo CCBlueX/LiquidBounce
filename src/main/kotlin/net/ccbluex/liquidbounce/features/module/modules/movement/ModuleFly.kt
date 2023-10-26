@@ -221,7 +221,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
      * @testedOn minecraft.vagdedes.com
      * @note spartan flags less if your motion is stable, that's why we use PlayerMoveEvent
      */
-    private object Spartan : Choice("Spartan") {
+    private object Spartan : Choice("Spartan524") {
 
         override val parent: ChoiceConfigurable
             get() = modes
