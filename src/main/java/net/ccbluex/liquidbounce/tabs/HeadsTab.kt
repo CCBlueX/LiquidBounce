@@ -36,7 +36,8 @@ class HeadsTab : CreativeTabs("Heads") {
         try {
             LOGGER.info("Loading heads...")
 
-            val headsConfiguration = JsonParser().parse(get("$CLIENT_CLOUD/heads.json"))
+            val (response, _) = get("$CLIENT_CLOUD/heads.json")
+            val headsConfiguration = JsonParser().parse(response)
 
             if (!headsConfiguration.isJsonObject) return
 
@@ -47,7 +48,8 @@ class HeadsTab : CreativeTabs("Heads") {
 
                 LOGGER.info("Loading heads from $url...")
 
-                val headsElement = JsonParser().parse(get(url))
+                val (headsResponse, _) = get(url)
+                val headsElement = JsonParser().parse(headsResponse)
 
                 if (!headsElement.isJsonObject) {
                     LOGGER.error("Something is wrong, the heads json is not a JsonObject!")

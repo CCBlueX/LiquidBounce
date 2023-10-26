@@ -134,8 +134,10 @@ object ClientRichPresence : MinecraftInstance() {
      * @throws IOException If reading failed
      */
     private fun loadConfiguration() {
+        val (response, _) = get("$CLIENT_CLOUD/discord.json")
+
         // Read from web and convert to json object
-        val json = JsonParser().parse(get("$CLIENT_CLOUD/discord.json"))
+        val json = JsonParser().parse(response)
 
         if (json !is JsonObject)
             return

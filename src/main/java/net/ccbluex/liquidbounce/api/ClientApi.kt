@@ -97,12 +97,20 @@ object ClientApi {
     /**
      * Request to endpoint with custom agent and session token
      */
-    private fun textEndpointRequest(endpoint: String) = request(
-        "$API_ENDPOINT/$endpoint",
-        method = "GET",
-        agent = ENDPOINT_AGENT,
-        headers = arrayOf("X-Session-Token" to SESSION_TOKEN)
-    )
+    private fun textEndpointRequest(endpoint: String): String {
+        val (response, code) = request(
+            "$API_ENDPOINT/$endpoint",
+            method = "GET",
+            agent = ENDPOINT_AGENT,
+            headers = arrayOf("X-Session-Token" to SESSION_TOKEN)
+        )
+
+        if (code != 200) {
+            error(response)
+        } else {
+            return response
+        }
+    }
 
     private fun textEndpointPost(endpoint: String, entity: () -> HttpEntity) = post(
         "$API_ENDPOINT/$endpoint",

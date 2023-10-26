@@ -87,7 +87,11 @@ object CapeService : Listenable, MinecraftInstance() {
                 task = thread(name = "UpdateCarriersTask") {
                     runCatching {
                         // Capture data from API and parse JSON
-                        val parsedJson = JsonParser().parse(get(CAPE_CARRIERS_URL))
+                        val (json, code) = get(CAPE_CARRIERS_URL)
+                        if (code != 200) {
+                            error("Failed to get cape carriers. Status code: $code")
+                        }
+                        val parsedJson = JsonParser().parse(json)
 
                         // Should be a JSON Array. It will fail if not.
                         // Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]

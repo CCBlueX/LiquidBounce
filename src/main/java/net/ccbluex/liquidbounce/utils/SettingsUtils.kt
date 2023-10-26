@@ -61,13 +61,19 @@ object SettingsUtils {
 
                 "load" -> {
                     val url = StringUtils.toCompleteString(args, 1)
-                    val settings = if (url.startsWith("http")) {
-                        HttpUtils.get(url)
-                    } else {
-                        ClientApi.requestSettingsScript(url)
-                    }
-
                     runCatching {
+                        val settings = if (url.startsWith("http")) {
+                            val (text, code) = HttpUtils.get(url)
+
+                            if (code != 200) {
+                                error(text)
+                            }
+
+                            text
+                        } else {
+                            ClientApi.requestSettingsScript(url)
+                        }
+
                         applyScript(settings)
                     }.onSuccess {
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings §a§l$url§7.")

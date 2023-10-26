@@ -51,7 +51,7 @@ object HttpUtils {
 
     @Throws(IOException::class)
     fun request(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()) =
-        requestStream(url, method, agent, headers).reader().readText()
+        requestStream(url, method, agent, headers).let { (stream, code) -> stream.reader().readText() to code }
 
     fun post(url: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray(), entity: () -> HttpEntity): String {
         val httpClient = HttpClientBuilder
@@ -71,8 +71,12 @@ object HttpUtils {
     }
 
     @Throws(IOException::class)
-    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): InputStream =
-        make(url, method, agent, headers).inputStream
+    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()) : Pair<InputStream, Int> {
+        val conn = make(url, method, agent, headers)
+        // Return either the input stream or the error stream
+        return (if (conn.responseCode < 400) conn.inputStream else conn.errorStream) to conn.responseCode
+    }
+
 
     @Throws(IOException::class)
     fun get(url: String) = request(url, "GET")
@@ -82,7 +86,15 @@ object HttpUtils {
         make(url, method, agent).responseCode
 
     @Throws(IOException::class)
-    fun download(url: String, file: File) =
-        copyInputStreamToFile(requestStream(url, "GET"), file)
+    fun download(url: String, file: File) {
+        val (stream, code) = requestStream(url, "GET")
+
+        // Check if code is 200
+        if (code != 200) {
+            error("Response code is $code")
+        }
+
+        copyInputStreamToFile(stream, file)
+    }
 
 }
