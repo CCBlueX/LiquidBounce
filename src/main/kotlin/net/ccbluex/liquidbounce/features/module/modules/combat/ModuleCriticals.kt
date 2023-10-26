@@ -22,10 +22,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
@@ -33,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWal
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
-import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
@@ -130,8 +126,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             if (player.isOnGround) {
                 // Simulate player jumping and send jump stat increment
                 player.jump()
-                // Jump upwards specific height, increment not needed because it has already been sent by jump function
-                player.upwards(height, increment = false)
+            }
+        }
+
+        val onJump = handler<PlayerJumpEvent> { event ->
+            // Only change if there is nothing affecting the default motion (like a honey block)
+            if (event.motion == 0.42f) {
+                event.motion = height
             }
         }
 
