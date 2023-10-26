@@ -165,9 +165,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     @EventTarget
     fun onTick(event: TickEvent) {
         if (backtrackMode == "Modern") {
-            if (!shouldBacktrack()) {
-                clearPackets()
-            } else handlePackets()
+            handlePackets()
         }
         
     }
