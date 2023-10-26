@@ -48,6 +48,7 @@ open class Module(
 ) : Listenable, Configurable(name) {
 
     val valueEnabled = boolean("Enabled", state)
+        .doNotInclude()
 
     // Module options
     var enabled by valueEnabled.listen { new ->
@@ -92,7 +93,9 @@ open class Module(
     }
 
     var bind by int("Bind", bind, 0..0)
+        .doNotInclude()
     var hidden by boolean("Hidden", hide)
+        .doNotInclude()
 
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
