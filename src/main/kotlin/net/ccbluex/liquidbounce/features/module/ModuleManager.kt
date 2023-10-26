@@ -119,6 +119,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNotifier,
             ModuleSpammer,
             ModuleTeams,
+            ModuleAutoChatGame,
             ModuleDebugRecorder,
 
             // Movement
@@ -217,7 +218,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlowBreak,
             ModuleProjectilePuncher,
             ModuleScaffold,
-            ModuleTimer
+            ModuleTimer,
+            ModuleNuker
         )
 
         builtin.apply {

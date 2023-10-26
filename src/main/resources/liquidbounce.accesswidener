@@ -4,6 +4,9 @@ accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogM
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
 mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
+accessible field net/minecraft/client/MinecraftClient authenticationService Lcom/mojang/authlib/yggdrasil/YggdrasilAuthenticationService;
+accessible field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/util/ProfileKeys;
+mutable field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/util/ProfileKeys;
 
 accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;

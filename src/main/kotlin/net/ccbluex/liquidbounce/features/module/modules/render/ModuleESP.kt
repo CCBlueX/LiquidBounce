@@ -48,7 +48,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.esp"
 
-    private val modes = choices("Mode", OutlineMode, arrayOf(BoxMode, OutlineMode, GlowMode))
+    private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, OutlineMode, GlowMode))
 
     private val colorModes = choices("ColorMode", StaticMode, arrayOf(StaticMode, RainbowMode))
 
