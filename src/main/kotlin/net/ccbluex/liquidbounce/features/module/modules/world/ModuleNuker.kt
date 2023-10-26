@@ -436,7 +436,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        return searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        return searchBlocksInCuboid(radius.toInt(), eyesPos) { pos, state ->
             !state.isAir && !blacklistedBlocks.contains(state.block) && !isOnPlatform(pos)
                 && getNearestPoint(eyesPos, Box(pos, pos.add(1, 1, 1)))
                 .squaredDistanceTo(eyesPos) <= radiusSquared

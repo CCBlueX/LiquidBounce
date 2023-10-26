@@ -123,7 +123,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             val outline by boolean("Outline", true)
 
             private val readyBlockColor by color("ReadyBlockColor", Color4b(36, 237, 0, 255))
-            private val farmBlockColor by color("FarmBlockColor", Color4b(36, 237, 0, 255))
             private val range by int("Range", 50, 10..128).listen {
                 rangeSquared = it * it
                 it
