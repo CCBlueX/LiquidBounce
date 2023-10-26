@@ -299,6 +299,7 @@
         function loginAccount(id) {
             client.getAccountManager().loginAccount(parseInt(id));
             updateAccountData();
+            updateAccountList();
         }
 
         function deleteAccount(id) {
