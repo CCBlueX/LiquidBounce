@@ -327,7 +327,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
-            wait(interactDelay.random())
+//            wait(interactDelay.random())
             return@repeatable
 
         } else {
@@ -346,7 +346,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if(item != null){
                     SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                     placeCrop(rayTraceResult)
-                    wait(interactDelay.random())
+//                    wait(interactDelay.random())
 
                 }
             }
@@ -438,7 +438,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         // searches for any blocks within the radius that need to be destroyed, such as crops.
         // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on
-        val blocksToBreak = searchBlocksInCuboid(radius.toInt(), eyesPos) { pos, state ->
+        val blocksToBreak = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && isTargeted(state, pos) && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
@@ -451,7 +451,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos,
                 state,
-                range = range.toDouble() - 0.05,
+                range = range.toDouble(),
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
@@ -469,7 +469,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         if(!allowFarmland && !allowSoulsand) return
         val blocksToPlace =
-            searchBlocksInCuboid(radius.toInt(), eyesPos) { pos, state ->
+            searchBlocksInCuboid(radius, eyesPos) { pos, state ->
                 !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
                 && getNearestPoint(
                     eyesPos,
@@ -482,7 +482,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos.up(),
                 state,
-                range = range.toDouble() - 0.05,
+                range = range.toDouble(),
                 wallsRange = wallRange.toDouble()
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
