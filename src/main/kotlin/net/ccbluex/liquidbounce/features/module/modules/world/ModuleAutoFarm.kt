@@ -553,11 +553,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             val block = state.block
-//            if(block is FarmlandBlock && hasAirAbove(pos))
-//                return TrackedState.Farmland
-//
-//            if(block is SoulSandBlock && hasAirAbove(pos))
-//                return TrackedState.Soulsand
+            if(block is FarmlandBlock && hasAirAbove(pos))
+                return TrackedState.Farmland
+
+            if(block is SoulSandBlock && hasAirAbove(pos))
+                return TrackedState.Soulsand
 
             if (isTargeted(state, pos))
                 return TrackedState.Destroy

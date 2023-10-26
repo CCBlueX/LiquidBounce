@@ -194,38 +194,38 @@ fun raytracePlaceBlock(
                 val visibilityPredicate = BoxVisibilityPredicate(box)
 
                 val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
-
+                val a = 1.0E-7
                 val nearestSpot =
                     Vec3d(
                         when(side) {
-                            Direction.WEST -> box.maxX
-                            Direction.EAST -> box.minX
+                            Direction.WEST -> box.maxX - a
+                            Direction.EAST -> box.minX + a
                             else -> eyes.x.coerceIn((box.minX..box.maxX).shrinkBy(0.05))
                         },
                         when(side) {
-                            Direction.DOWN -> box.maxY
-                            Direction.UP -> box.minY
+                            Direction.DOWN -> box.maxY - a
+                            Direction.UP -> box.minY + a
                             else -> eyes.y.coerceIn((box.minY..box.maxY).shrinkBy(0.05))
                         },
                         when(side) {
-                            Direction.DOWN -> box.maxZ
-                            Direction.UP -> box.minZ
+                            Direction.NORTH -> box.maxZ - a
+                            Direction.SOUTH -> box.minZ + a
                             else -> eyes.z.coerceIn((box.minZ..box.maxZ).shrinkBy(0.05))
                         }
                     )
-                chat(visibilityPredicate.isVisible(eyes, nearestSpot).toString())
+//                chat(visibilityPredicate.isVisible(eyes, nearestSpot).toString())
 
-//                considerSpot(
-//                    nearestSpot,
-//                    box,
-//                    eyes,
-//                    visibilityPredicate,
-//                    rangeSquared,
-//                    wallsRangeSquared,
-//                    nearestSpot,
-//                    bestRotationTracker,
-//                )
-                chat(bestRotationTracker.bestVisible.toString())
+                considerSpot(
+                    nearestSpot,
+                    box,
+                    eyes,
+                    visibilityPredicate,
+                    rangeSquared,
+                    wallsRangeSquared,
+                    nearestSpot,
+                    bestRotationTracker,
+                )
+//                chat(bestRotationTracker.bestVisible.toString())
 
                 for (a in 0.05..0.95 step 0.1){
                     for (b in 0.05..0.95 step 0.1){
@@ -319,6 +319,9 @@ fun raytraceBox(
         val validCauseVisible = visibilityPredicate.isVisible(eyesPos = eyes, targetSpot = preferredSpotOnBox)
 
         if (validCauseBelowWallsRange || validCauseVisible && preferredSpotDistance < rangeSquared) {
+            if(preferredSpotDistance > 4.47 * 4.47) {
+                chat(preferredSpotDistance.toString())
+            }
             return VecRotation(RotationManager.makeRotation(preferredSpot, eyes), preferredSpot)
         }
     }
@@ -363,7 +366,6 @@ fun raytraceBox(
             }
         }
     }
-
     return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
 }
 
@@ -378,13 +380,15 @@ private fun considerSpot(
     spot: Vec3d,
     bestRotationTracker: BestRotationTracker,
 ) {
-    val spotOnBox = box.raycast(eyes, preferredSpot).getOrNull() ?: spot
+
+    val spotOnBox = box.raycast(eyes, preferredSpot).getOrNull() ?: return
     val distance = eyes.squaredDistanceTo(spotOnBox)
 
     val visible = visibilityPredicate.isVisible(eyes, spotOnBox)
 
+
     // Is either spot visible or distance within wall range?
-    if ((!visible || distance > rangeSquared) && distance > wallsRangeSquared) {
+    if ((!visible || distance >= rangeSquared - 0.1) && distance >= wallsRangeSquared - 0.1) {
         return
     }
 
