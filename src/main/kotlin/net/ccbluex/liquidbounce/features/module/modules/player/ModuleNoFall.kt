@@ -56,7 +56,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     private val modes = choices(
         "Mode", SpoofGround, arrayOf(
-            SpoofGround, NoGround, Packet, MLG, SpartanFlag
+            SpoofGround, NoGround, Packet, MLG, Spartan524Flag
         )
     )
 
@@ -111,7 +111,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
      * @testedOn minecraft.vagdedes.com
      * @note it gives you 6 flags for 50 blocks, which isn't enough to get kicked
      */
-    private object SpartanFlag : Choice("Spartan524Flag") {
+    private object Spartan524Flag : Choice("Spartan524Flag") {
 
         override val parent: ChoiceConfigurable
             get() = modes

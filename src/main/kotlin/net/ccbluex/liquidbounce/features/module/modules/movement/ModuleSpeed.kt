@@ -41,7 +41,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices(
         "Mode", SpeedYPort, arrayOf(
-            Verus, SpeedYPort, LegitHop, Custom, Spartan
+            Verus, SpeedYPort, LegitHop, Custom, Spartan524
         )
     )
 
@@ -160,7 +160,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
      * @testedOn minecraft.vagdedes.com
      * @note it might flag a bit at the start, but then stops for some reason
      */
-    private object Spartan : Choice("Spartan524") {
+    private object Spartan524 : Choice("Spartan524") {
         override val parent: ChoiceConfigurable
             get() = modes
 

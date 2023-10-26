@@ -52,7 +52,7 @@ import kotlin.math.sin
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, VerusOld, Enderpearl, Spartan))
+    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524))
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -221,7 +221,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
      * @testedOn minecraft.vagdedes.com
      * @note spartan flags less if your motion is stable, that's why we use PlayerMoveEvent
      */
-    private object Spartan : Choice("Spartan524") {
+    private object Spartan524 : Choice("Spartan524") {
 
         override val parent: ChoiceConfigurable
             get() = modes
