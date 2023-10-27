@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
@@ -83,26 +82,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
     private val fortune by boolean("fortune", true)
-//    open class ToggleableBlockRenderer(module: Module? = null, name: String, enabled: Boolean) : ToggleableConfigurable(module, name, enabled) {
-//        private val color by color("Color", Color4b(66, 120, 245, 255))
-//        private val colorRainbow by boolean("Rainbow", false)
-//        val outline by boolean("Outline", true)
-//
-//        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-//
-//        fun render(renderEnvironment: RenderEnvironment, pos: Vec3, color: Color4b, outlineColor: Color4b) {
-//            val baseColor = if(colorRainbow) rainbow() else color
-//
-//
-//            with(renderEnvironment){
-//                withPosition(pos){
-//                    withColor(if(colorRainbow) rainbow() else color){
-//                        drawSolidBox(box)
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     private object Visualize : ToggleableConfigurable(this, "Visualize", true) {
         private object Path : ToggleableConfigurable(this.module, "Path", true) {
@@ -124,7 +103,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         private object Blocks : ToggleableConfigurable(this.module, "Blocks", true) {
             val outline by boolean("Outline", true)
 
-            private val readyBlockColor by color("ReadyBlockColor", Color4b(36, 237, 0, 255))
+            private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
+            private val replaceColor by color("ReplaceColor", Color4b(36, 237, 0, 255))
             private val range by int("Range", 50, 10..128).listen {
                 rangeSquared = it * it
                 it
@@ -156,11 +136,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
             val renderHandler = handler<WorldRenderEvent> { event ->
                 val matrixStack = event.matrixStack
-                val baseColor = if (colorRainbow) rainbow() else readyBlockColor
+                val baseColor = if (colorRainbow) rainbow() else readyColor
 //                val baseForFarmBlocks = if (colorRainbow) rainbow() else farmBlockColor
 
                 val fillColor = baseColor.alpha(50)
                 val outlineColor = baseColor.alpha(100)
+
 
                 val markedBlocks = BlockTracker.trackedBlockMap
 //                val markedFarmBlocks = FarmBlockTracker.trackedBlockMap.keys
@@ -173,10 +154,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                         if (xdiff * xdiff + zdiff * zdiff > rangeSquared) continue
 
                         withPosition(vec3) {
-                            withColor(fillColor) {
-                                if(type == TrackedState.Destroy){
+                            if(type == TrackedState.Destroy){
+                                withColor(fillColor) {
                                     drawSolidBox(box)
-                                } else {
+                                }
+                            } else {
+                                withColor(replaceColor) {
                                     drawSideBox(box, Direction.UP)
                                 }
 
