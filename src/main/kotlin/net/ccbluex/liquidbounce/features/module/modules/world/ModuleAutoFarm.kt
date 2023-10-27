@@ -30,11 +30,13 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
@@ -229,13 +231,19 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private var farmLandBlocks = hashSetOf<Vec3d>()
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
+        chat("movementInput: ${event.movementInput} Speed: ${event.speed}")
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
             return@handler
         }
+
         RotationManager.currentRotation?.let { rotation ->
-            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed * 1.3f, rotation.yaw)
+            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed, rotation.yaw)
         }
+
+//        Vec3d vec3d = Entity.movementInputToVelocity(movementInput, speed, this.getYaw());
+//        this.setVelocity(this.getVelocity().add(vec3d));
     }
+
     val networkTickHandler = repeatable { _ ->
         // return if the user is inside a screen like the inventory
         if (mc.currentScreen is HandledScreen<*>) {
@@ -327,7 +335,10 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
-//            wait(interactDelay.random())
+            if(mc.interactionManager!!.blockBreakingProgress == -1) {
+                // Only wait if the block is completely broken
+                wait(interactDelay.random())
+            }
             return@repeatable
 
         } else {
@@ -346,7 +357,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if(item != null){
                     SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                     placeCrop(rayTraceResult)
-//                    wait(interactDelay.random())
+                    wait(interactDelay.random())
 
                 }
             }
@@ -563,29 +574,29 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 return TrackedState.Destroy
 
 
-//            val stateBellow = pos.down().getState() ?: return null
-//
-//            if(stateBellow.isAir) return null
-//
-//            val blockBellow = stateBellow.block
-//
-//            if(blockBellow is FarmlandBlock){
-//                val targetBlockPos = TargetBlockPos(pos.down())
-//                if(state.isAir){
-//                    this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
-//                    return null
-//                } else {
-//                    this.trackedBlockMap.remove(targetBlockPos)
-//                }
-//            } else if(blockBellow is SoulSandBlock){
-//                val targetBlockPos = TargetBlockPos(pos.down())
-//                if(state.isAir){
-//                    this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
-//                    return null
-//                } else {
-//                    this.trackedBlockMap.remove(targetBlockPos)
-//                }
-//            }
+            val stateBellow = pos.down().getState() ?: return null
+
+            if(stateBellow.isAir) return null
+
+            val blockBellow = stateBellow.block
+
+            if(blockBellow is FarmlandBlock){
+                val targetBlockPos = TargetBlockPos(pos.down())
+                if(state.isAir){
+                    this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
+                    return null
+                } else {
+                    this.trackedBlockMap.remove(targetBlockPos)
+                }
+            } else if(blockBellow is SoulSandBlock){
+                val targetBlockPos = TargetBlockPos(pos.down())
+                if(state.isAir){
+                    this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
+                    return null
+                } else {
+                    this.trackedBlockMap.remove(targetBlockPos)
+                }
+            }
 
 
             return null

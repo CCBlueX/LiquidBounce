@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.BlockPos
@@ -181,8 +182,8 @@ fun raytracePlaceBlock(
     val shapeContext = ShapeContext.of(player)
     val eyeOffsetFromBlock = pos.toCenterPos() - eyes
     for (side in sidesToCheck) {
-        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, 0.45) // the difference between the eyes and the center of the face. using 0.45 instead of 0.5 to avoid too narrow angles
-        val dotProduct = side.vector.x * eyeOffsetFromFace.x + side.vector.y * eyeOffsetFromFace.y + side.vector.z * eyeOffsetFromFace.z
+        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, -0.45) // the difference between the eyes and the center of the face. using 0.45 instead of 0.5 to avoid too narrow angles
+        val dotProduct = eyeOffsetFromFace.dotProduct(side.vector.toVec3d())
         if(dotProduct <= 0) continue // we are behind the face
 
         val newPos = pos.offset(side)
@@ -194,22 +195,22 @@ fun raytracePlaceBlock(
                 val visibilityPredicate = BoxVisibilityPredicate(box)
 
                 val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
-                val a = 1.0E-7
+                val o = 1.0E-7
                 val nearestSpot =
                     Vec3d(
                         when(side) {
-                            Direction.WEST -> box.maxX - a
-                            Direction.EAST -> box.minX + a
+                            Direction.WEST -> box.maxX - o
+                            Direction.EAST -> box.minX + o
                             else -> eyes.x.coerceIn((box.minX..box.maxX).shrinkBy(0.05))
                         },
                         when(side) {
-                            Direction.DOWN -> box.maxY - a
-                            Direction.UP -> box.minY + a
+                            Direction.DOWN -> box.maxY - o
+                            Direction.UP -> box.minY + o
                             else -> eyes.y.coerceIn((box.minY..box.maxY).shrinkBy(0.05))
                         },
                         when(side) {
-                            Direction.NORTH -> box.maxZ - a
-                            Direction.SOUTH -> box.minZ + a
+                            Direction.NORTH -> box.maxZ - o
+                            Direction.SOUTH -> box.minZ + o
                             else -> eyes.z.coerceIn((box.minZ..box.maxZ).shrinkBy(0.05))
                         }
                     )
@@ -234,8 +235,8 @@ fun raytracePlaceBlock(
                         val spot =
                         Vec3d(
                             when(side) {
-                                Direction.WEST -> box.maxX
-                                Direction.EAST -> box.minX
+                                Direction.WEST -> box.maxX - o
+                                Direction.EAST -> box.minX + o
                                 else -> box.minX + (box.maxX - box.minX) *
                                     when(side.axis) {
                                         Direction.Axis.Z -> a
@@ -243,8 +244,8 @@ fun raytracePlaceBlock(
                                     }
                             },
                             when(side) {
-                                Direction.DOWN -> box.maxY
-                                Direction.UP -> box.minY
+                                Direction.DOWN -> box.maxY - o
+                                Direction.UP -> box.minY + o
                                 else -> box.minY + (box.maxY - box.minY) *
                                     when(side.axis) {
                                         Direction.Axis.X -> a
@@ -252,8 +253,8 @@ fun raytracePlaceBlock(
                                     }
                             },
                             when(side) {
-                                Direction.NORTH -> box.maxZ
-                                Direction.SOUTH -> box.minZ
+                                Direction.NORTH -> box.maxZ - o
+                                Direction.SOUTH -> box.minZ + o
                                 else -> box.minZ + (box.maxZ - box.minZ)  *
                                     when(side.axis) {
                                         Direction.Axis.Y -> a
