@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
+import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
@@ -37,6 +38,10 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import java.nio.Buffer
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
 
 /**
  * Data class representing the rendering environment.
@@ -116,6 +121,7 @@ fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> 
  *
  * @param lines The vectors representing the lines.
  */
+
 fun RenderEnvironment.drawLines(vararg lines: Vec3) {
     drawLines(*lines, mode = DrawMode.DEBUG_LINES)
 }
@@ -354,7 +360,7 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
     val bufferBuilder = tessellator.buffer
 
     // Set the shader to the position program
-    RenderSystem.setShader { GameRenderer.getPositionProgram() }
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
 
     with(bufferBuilder){
         begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR)
@@ -362,7 +368,6 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
         if (vertices.size == 4 && colors.size == 4) {
             vertices.forEachIndexed { index, (x, y, z) ->
                 val color4b = colors[index]
-                println("x: $x y: $y z: $z ")
                 vertex(matrix, x, y, z).color(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f).next()
             }
         } else {
@@ -372,6 +377,45 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
 
     }
     tessellator.draw()
+
+}
+private fun circlePoints() =
+    (0 until 40).map {
+        val theta = 2 * PI * it / 40
+        Vec3(cos(theta), 0.0, sin(theta))
+    }
+
+fun RenderEnvironment.drawCircle(center: Vec3,radius: Float) {
+
+}
+
+fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float, outerColor4b: Color4b, innerColor4b: Color4b) {
+//    val matrix = matrixStack.peek().positionMatrix
+//    val tessellator = RenderSystem.renderThreadTesselator()
+//    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position program
+//    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    val points = circlePoints()
+
+    (0 until 40).forEach {
+        val p = points[it]
+        val next = points[(it + 1) % 40]
+        drawGradientQuad(
+            listOf(
+                next * outerRadius,
+                p * outerRadius,
+                p * innerRadius,
+                next * innerRadius,
+            ),
+            listOf(
+                outerColor4b,
+                outerColor4b,
+                innerColor4b,
+                innerColor4b
+            ))
+    }
 
 }
 

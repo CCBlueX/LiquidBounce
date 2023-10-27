@@ -185,18 +185,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-        renderEnvironment(matrixStack) {
-            chat("rendering graiden quead")
-            withPosition(Vec3(player.pos)) {
-                drawGradientQuad(
-                    listOf(Vec3(-1.0, 0.0, -1.0),
-                        Vec3(-1.0, 0.0, 1.0),
-                        Vec3(1.0, 0.0, 1.0),
-                        Vec3(1.0, 0.0, -1.0)),
-                    listOf(Color4b.BLUE,
-                        Color4b.BLUE,
-                        Color4b.GREEN,
-                        Color4b.GREEN))
+        renderEnvironmentForWorld(matrixStack) {
+            withPosition(player.interpolateCurrentPosition(event.partialTicks)) {
+                drawGradientCircle(0.9F, 0.4F, Color4b.BLUE, Color4b.BLUE.alpha(0))
             }
 
 
