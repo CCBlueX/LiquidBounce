@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.utils
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.chat
 import java.awt.Color
 
 object ColorUtils {
@@ -43,4 +44,11 @@ fun rainbow(): Color4b {
     val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
 
     return Color4b(currentColor)
+}
+
+fun shiftHue(color4b: Color4b, shift: Int): Color4b {
+    val hsb = Color.RGBtoHSB(color4b.r, color4b.g, color4b.b, null)
+    val shiftedColor = Color(Color.HSBtoRGB((hsb[0] + shift.toFloat() / 360) % 1F, hsb[1], hsb[2]))
+
+    return Color4b(shiftedColor).alpha(color4b.a)
 }
