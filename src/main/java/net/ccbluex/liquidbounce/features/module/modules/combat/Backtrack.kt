@@ -62,10 +62,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private val allPackets by BoolValue("AllPackets", false) { backtrackMode == "Modern" }
 
     // ESP
-    private val rainbow by BoolValue("Rainbow", true)
-    private val red by IntegerValue("R", 0, 0..255) { !rainbow }
-    private val green by IntegerValue("G", 255, 0..255) { !rainbow }
-    private val blue by IntegerValue("B", 0, 0..255) { !rainbow }
+    private val rainbow by BoolValue("Rainbow", true) { backtrackMode == "Modern" }
+    private val red by IntegerValue("R", 0, 0..255) { !rainbow && backtrackMode == "Modern" }
+    private val green by IntegerValue("G", 255, 0..255) { !rainbow && backtrackMode == "Modern"}
+    private val blue by IntegerValue("B", 0, 0..255) { !rainbow && backtrackMode == "Modern"}
 
     private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
     private var target: Entity? = null
@@ -107,9 +107,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             "modern" -> {
-                if (!shouldBacktrack()) {
-                    return
-                }
 
                 when (packet) {
                     is S32PacketConfirmTransaction -> {
@@ -165,7 +162,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     @EventTarget
     fun onTick(event: TickEvent) {
         if (backtrackMode == "Modern") {
-            handlePackets()
+            if (shouldBacktrack()) handlePackets()
+            else clearPackets()
         }
         
     }
