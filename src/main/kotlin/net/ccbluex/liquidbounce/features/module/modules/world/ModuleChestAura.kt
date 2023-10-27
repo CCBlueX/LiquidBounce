@@ -49,7 +49,7 @@ import net.minecraft.util.math.Box
 object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 1F..6F).listen {
+    private val wallRange by float("WallRange", 0f, 0F..6F).listen {
         if (it > range) {
             range
         } else {
@@ -80,7 +80,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private val closeInstantlyTimeout = Chronometer()
 
     // Rotation
-    private val rotations = RotationsConfigurable()
+    private val rotations = tree(RotationsConfigurable())
 
     private var currentBlock: BlockPos? = null
     val clickedBlocks = hashSetOf<BlockPos>()
@@ -98,10 +98,6 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
         if (mc.currentScreen != null) {
             return@repeatable
-        }
-
-        if (mc.currentScreen is HandledScreen<*>) {
-            wait { delay }
         }
 
         updateTarget()

@@ -64,8 +64,17 @@ object HttpClient {
         headers: Array<Pair<String, String>> = emptyArray()
     ): String {
         val connection = make(url, method, agent)
+        val responseCode = connection.responseCode
 
-        return connection.inputStream.reader().readText()
+        // we want to read the error stream or the input stream
+        val stream = if (connection.responseCode < 400) connection.inputStream else connection.errorStream
+        val text = stream.bufferedReader().use { it.readText() }
+
+        if (responseCode != 200) {
+            error(text)
+        }
+
+        return text
     }
 
     fun requestStream(

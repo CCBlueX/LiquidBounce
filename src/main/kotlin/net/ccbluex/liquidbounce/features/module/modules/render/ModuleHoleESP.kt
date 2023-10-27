@@ -67,7 +67,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             val matrixStack = event.matrixStack
             val markedBlocks = holes.entries
 
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 for ((pos, quality) in markedBlocks) {
                     val vec3 = Vec3(pos)
 

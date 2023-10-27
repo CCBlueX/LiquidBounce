@@ -4,20 +4,16 @@
   <CurrentIssues>
     <ID>ComplexCondition:Command.kt$Command$offset == 0 &amp;&amp; isNewParameter || offset == 1 &amp;&amp; !isNewParameter</ID>
     <ID>ComplexCondition:GlfwInputAdapter.kt$GlfwInputAdapter$(action == GLFW_PRESS || action == GLFW_REPEAT) &amp;&amp; (key == GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_TAB)</ID>
-    <ID>ComplexCondition:ModuleAutoGapple.kt$ModuleAutoGapple$!(inventoryConstraints.noMove &amp;&amp; player.moving) &amp;&amp; (!inventoryConstraints.invOpen || isInInventoryScreen)</ID>
     <ID>ComplexCondition:ModuleAutoWeapon.kt$ModuleAutoWeapon$stack.isNothing() || (!player.isCreative &amp;&amp; stack.damage &gt;= (stack.maxDamage - 2) &amp;&amp; ignoreDurability) || (stack.getEnchantment( KNOCKBACK ) != 0 &amp;&amp; ignoreKnockback)</ID>
     <ID>ComplexCondition:ModuleBadWifi.kt$ModuleBadWifi$event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket || event.packet is HandSwingC2SPacket || event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket</ID>
     <ID>ComplexCondition:ModuleBadWifi.kt$ModuleBadWifi$mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND</ID>
     <ID>ComplexCondition:ModuleBlink.kt$ModuleBlink$packet is PlayerMoveC2SPacket || packet is PlayerInteractBlockC2SPacket || packet is HandSwingC2SPacket || packet is PlayerActionC2SPacket || packet is PlayerInteractEntityC2SPacket</ID>
     <ID>ComplexCondition:ModuleFly.kt$ModuleFly.Enderpearl$event.origin == TransferOrigin.SEND &amp;&amp; event.packet is TeleportConfirmC2SPacket &amp;&amp; isABitAboveGround() &amp;&amp; threwPearl</ID>
-    <ID>ComplexCondition:ModuleInventoryCleaner.kt$ModuleInventoryCleaner$!(inventoryConstraints.noMove &amp;&amp; player.moving) &amp;&amp; (!inventoryConstraints.invOpen || isInInventoryScreen)</ID>
     <ID>ComplexCondition:ModuleKillAura.kt$ModuleKillAura$rotation != null &amp;&amp; target != null &amp;&amp; target.boxedDistanceTo(player) &lt;= range &amp;&amp; facingEnemy( target, rotation, range.toDouble(), wallRange.toDouble() )</ID>
     <ID>ComplexCondition:ModuleLiquidWalk.kt$ModuleLiquidWalk.NoCheatPlus$!player.input.sneaking &amp;&amp; !player.isTouchingWater &amp;&amp; standingOnWater() &amp;&amp; !collideBlockIntersects( detectionBox ) { it !is FluidBlock }</ID>
     <ID>ComplexCondition:ModuleLongJump.kt$ModuleLongJump$autoJump &amp;&amp; player.isOnGround &amp;&amp; player.moving &amp;&amp; mode.activeChoice != NCPBow</ID>
     <ID>ComplexCondition:ModuleParkour.kt$ModuleParkour$player.moving &amp;&amp; player.isOnGround &amp;&amp; !player.isSneaking &amp;&amp; !mc.options.sneakKey.isPressed &amp;&amp; !mc.options.jumpKey.isPressed</ID>
-    <ID>ComplexCondition:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$distance &gt; rangeSquared || entity is FireballEntity &amp;&amp; (entity.age &lt;= 1 &amp;&amp; entityPrediction == Vec3d.ZERO || entity.box.offset( entityPrediction ).squaredBoxedDistanceTo(player) &gt; distance)</ID>
     <ID>ComplexCondition:ModuleRegen.kt$ModuleRegen$(!noAir &amp;&amp; player.isOnGround) &amp;&amp; !player.abilities.creativeMode &amp;&amp; player.health &gt; 0 &amp;&amp; player.health &lt; health</ID>
-    <ID>ComplexCondition:ModuleScaffold.kt$ModuleScaffold$!player.abilities.flying &amp;&amp; Eagle.enabled &amp;&amp; player.isCloseToEdge(edgeDistance.toDouble()) &amp;&amp; placedBlocks == 0</ID>
     <ID>ComplexCondition:ModuleSuperKnockback.kt$ModuleSuperKnockback.Packet$enemy is LivingEntity &amp;&amp; enemy.hurtTime &lt;= hurtTime &amp;&amp; chance &gt; Random.nextInt( 0, 99 ) &amp;&amp; !ModuleCriticals.wouldCrit()</ID>
     <ID>ComplexCondition:ModuleTimerRange.kt$ModuleTimerRange$(balanceTimer &gt; 0 || balanceChange &gt; 0) &amp;&amp; (balanceTimer &lt; timerBalanceLimit * 2 || balanceChange &lt; 0)</ID>
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
@@ -38,11 +34,8 @@
     <ID>CyclomaticComplexMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>CyclomaticComplexMethod:ItemCategorization.kt$ItemCategorization$fun categorizeItem( items: MutableList&lt;WeightedItem&gt;, stack: ItemStack, slotId: Int, )</ID>
     <ID>CyclomaticComplexMethod:ModuleAntiBot.kt$ModuleAntiBot$fun isBot(player: PlayerEntity): Boolean</ID>
-    <ID>CyclomaticComplexMethod:ModuleESP.kt$ModuleESP$fun getColor(entity: Entity): Color4b</ID>
-    <ID>CyclomaticComplexMethod:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$private fun updateTarget()</ID>
     <ID>CyclomaticComplexMethod:ModuleTeams.kt$ModuleTeams$fun isInClientPlayersTeam(entity: LivingEntity): Boolean</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
-    <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun raytraceBox( eyes: Vec3d, box: Box, range: Double, wallsRange: Double, expectedTarget: BlockPos? = null, pattern: Pattern = GaussianPattern ): VecRotation?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:SimulatedPlayer.kt$SimulatedPlayer$override fun tick()</ID>
     <ID>CyclomaticComplexMethod:VertexFormat.kt$DelegatedVertexFormatComponent$operator fun setValue(thisRef: Any?, property: KProperty&lt;*&gt;, value: T)</ID>
@@ -58,28 +51,6 @@
     <ID>ForEachOnRange:ModuleMurderMystery.kt$ModuleMurderMystery$0 until 128</ID>
     <ID>ForEachOnRange:ModuleMurderMystery.kt$ModuleMurderMystery$0 until 7</ID>
     <ID>ForEachOnRange:ModuleMurderMystery.kt$ModuleMurderMystery$0 until rgb.size</ID>
-    <ID>ForbiddenComment:AccountManager.kt$AccountManager$// TODO: Implement directly into Elixir</ID>
-    <ID>ForbiddenComment:AccountManager.kt$AccountManager$// TODO: fix this</ID>
-    <ID>ForbiddenComment:CombatUtils.kt$CombatManager$// TODO: implement this for killaura autoblock and other</ID>
-    <ID>ForbiddenComment:CommandClient.kt$CommandClient$// TODO: contributors</ID>
-    <ID>ForbiddenComment:CommandClient.kt$CommandClient$// TODO: instructions</ID>
-    <ID>ForbiddenComment:CommandClient.kt$CommandClient$// TODO: links</ID>
-    <ID>ForbiddenComment:CommandClient.kt$CommandClient$// TODO: reload client</ID>
-    <ID>ForbiddenComment:CommandClient.kt$CommandClient$// TODO: reset</ID>
-    <ID>ForbiddenComment:CommandClient.kt$CommandClient$// TODO: script manager</ID>
-    <ID>ForbiddenComment:CommandClient.kt$CommandClient$// TODO: theme manager</ID>
-    <ID>ForbiddenComment:CommandConfig.kt$CommandConfig$// TODO: Fix module states being stored</ID>
-    <ID>ForbiddenComment:CpsScheduler.kt$CpsScheduler$// TODO: Make more stamina like</ID>
-    <ID>ForbiddenComment:LiquidBounce.kt$LiquidBounce$* Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning. * * TODO: Replace this approach with full semantic versioning.</ID>
-    <ID>ForbiddenComment:ModuleAutoBow.kt$ModuleAutoBow.FastChargeOptions$// TODO: Depend on Auto Shoot</ID>
-    <ID>ForbiddenComment:ModuleChestAura.kt$ModuleChestAura.CloseInstantlyOptions$// FIXME: Close instantly</ID>
-    <ID>ForbiddenComment:ModuleCrystalAura.kt$ModuleCrystalAura$// TODO: This module is being recoded by superblaubeere27:</ID>
-    <ID>ForbiddenComment:ModuleSuperKnockback.kt$ModuleSuperKnockback$// TODO: remove this once the issue with sequence type events being a bit late to detect player.isSprinting so these modes perform even better</ID>
-    <ID>ForbiddenComment:MojangApi.kt$MojangApi$// TODO: Use GameProfileSerializer from authlib</ID>
-    <ID>ForbiddenComment:ParameterBuilder.kt$ParameterBuilder$// TODO: Remove this once all commands are using translations</ID>
-    <ID>ForbiddenComment:SimulatedPlayer.kt$SimulatedPlayer$// TODO: Not yet implemented</ID>
-    <ID>ForbiddenComment:Tabs.kt$Tabs$// TODO: Add exploits</ID>
-    <ID>ForbiddenComment:UltralightJsClient.kt$UltralightJsClient.MinecraftSession$* Get face url to be displayed on display * * TODO: pull URL service from API instead of hard coding the url</ID>
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _directlyCallEvent(event: Event)</ID>
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _fireViewClose(): Boolean</ID>
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _unregisterEvents()</ID>
@@ -105,41 +76,23 @@
     <ID>LongMethod:GlyphPage.kt$GlyphPage.Companion$fun create(chars: Iterable&lt;Char&gt;, font: Font): GlyphPage</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
-    <ID>LongMethod:RotationsUtil.kt$RotationManager$fun raytraceBox( eyes: Vec3d, box: Box, range: Double, wallsRange: Double, expectedTarget: BlockPos? = null, pattern: Pattern = GaussianPattern ): VecRotation?</ID>
     <ID>LongParameterList:AbstractFontRenderer.kt$AbstractFontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean = false, z: Float = 0.0f, scale: Float = 1.0f )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String&gt;, val parameters: Array&lt;Parameter&lt;*&gt;&gt;, val subcommands: Array&lt;Command&gt;, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( x0: Float, x: Float, y: Float, z: Float, color: Color4b, through: Boolean )</ID>
     <ID>LongParameterList:Mat4.kt$Mat4.Companion$( left: Float, top: Float, right: Float, bottom: Float, nearPlane: Float, farPlane: Float )</ID>
+    <ID>LongParameterList:Module.kt$Module$( name: String, // name parameter in configurable @Exclude val category: Category, // module category bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind state: Boolean = false, // default state @Exclude val disableActivation: Boolean = false, // disable activation hide: Boolean = false, // default hide @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world )</ID>
     <ID>LongParameterList:ModuleTrajectories.kt$ModuleTrajectories$( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack )</ID>
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T&gt;?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
-    <ID>LongParameterList:RotationsUtil.kt$RotationManager$( eyes: Vec3d, box: Box, range: Double, wallsRange: Double, expectedTarget: BlockPos? = null, pattern: Pattern = GaussianPattern )</ID>
     <ID>LongParameterList:SimulatedPlayer.kt$SimulatedPlayer$( private val player: PlayerEntity, var input: SimulatedPlayerInput, override var pos: Vec3d, var velocity: Vec3d, private val yaw: Float, private val pitch: Float, private var sprinting: Boolean, private var fallDistance: Float, private var jumpingCooldown: Int, private var isJumping: Boolean, private var onGround: Boolean, private var horizontalCollision: Boolean, private var verticalCollision: Boolean )</ID>
     <ID>LongParameterList:VertexFormatRenderTask.kt$VertexFormatRenderTask$(private val vertexFormat: VertexFormat, internal val type: PrimitiveType, val shaderHandler: ShaderHandler&lt;T&gt;, private val indexBuffer: IndexBuffer? = null, private val perInstance: VertexFormat? = null, private val texture: Texture? = null, private val state: GlRenderState = GlRenderState(), private val shaderData: T? = null)</ID>
-    <ID>LoopWithTooManyJumpStatements:BlockExtensions.kt$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ConfigSystem.kt$ConfigSystem$for</ID>
-    <ID>LoopWithTooManyJumpStatements:FontRenderer.kt$FontRenderer$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleAimbot.kt$ModuleAimbot$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleAntiBot.kt$ModuleAntiBot.Matrix$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleAutoArmor.kt$ModuleAutoArmor$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleAutoBow.kt$ModuleAutoBow.BowAimbotOptions$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleBlink.kt$ModuleBlink$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleChestAura.kt$ModuleChestAura$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleCrystalAura.kt$ModuleCrystalAura$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleESP.kt$ModuleESP$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleNameProtect.kt$ModuleNameProtect$while</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleNametags.kt$ModuleNametags$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
-    <ID>LoopWithTooManyJumpStatements:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.FastClimb.Clip$for</ID>
-    <ID>LoopWithTooManyJumpStatements:RotationsUtil.kt$RotationManager$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
     <ID>MatchingDeclarationName:CombatUtils.kt$CombatManager : Listenable</ID>
     <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T&gt; : Comparator</ID>
-    <ID>MatchingDeclarationName:MinecraftExtensions.kt$Timer</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
     <ID>MatchingDeclarationName:RenderShortcuts.kt$RenderEnvironment</ID>
     <ID>MaxLineLength:ArmorComparator.kt$ArmorComparator$return 1 - 20.0f.coerceAtMost((defensePoints / 5.0f).coerceAtLeast(defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f</ID>
@@ -166,13 +119,7 @@
     <ID>MaxLineLength:ModuleAntiBot.kt$ModuleAntiBot$return noGameMode || invalidGround || fakeID || isADuplicate || illegalName || illegalPitch || alwaysInRadius || needHit || health</ID>
     <ID>MaxLineLength:ModuleAntiBot.kt$ModuleAntiBot.Custom$if</ID>
     <ID>MaxLineLength:ModuleAntiBot.kt$ModuleAntiBot.IntaveHeavy$*</ID>
-    <ID>MaxLineLength:ModuleAutoBow.kt$ModuleAutoBow$(-Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()</ID>
-    <ID>MaxLineLength:ModuleAutoBow.kt$ModuleAutoBow$var velocity: Float = if (assumeElongated) 1f else player.itemUseTime.coerceAtLeast(BowAimbotOptions.minExpectedPull) / 20f</ID>
-    <ID>MaxLineLength:ModuleAutoBow.kt$ModuleAutoBow.AutoShootOptions$-MathHelper.sin(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity</ID>
-    <ID>MaxLineLength:ModuleAutoBow.kt$ModuleAutoBow.AutoShootOptions$MathHelper.cos(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity</ID>
-    <ID>MaxLineLength:ModuleAutoBow.kt$ModuleAutoBow.FastChargeOptions$network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))</ID>
     <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$// We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.</ID>
-    <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$if</ID>
     <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
     <ID>MaxLineLength:ModuleAutoTool.kt$ModuleAutoTool$(stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)))</ID>
     <ID>MaxLineLength:ModuleAutoWeapon.kt$ModuleAutoWeapon$if</ID>
@@ -186,7 +133,6 @@
     <ID>MaxLineLength:ModuleClickGui.kt$ModuleClickGui$object</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$!player.isInLava &amp;&amp; !player.isTouchingWater &amp;&amp; !player.isClimbing &amp;&amp; !player.hasNoGravity()</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$)</ID>
-    <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$return canCrit(player) &amp;&amp; player.fallDistance &gt; 0.0 &amp;&amp; player.getAttackCooldownProgress(0.5f) &gt; 0.9f &amp;&amp; (!player.isSprinting || ignoreSprint)</ID>
     <ID>MaxLineLength:ModuleDisabler.kt$ModuleDisabler.VulcanMovement$return (offhand.item == Items.TRIDENT &amp;&amp; offhand.hasEnchantments() &amp;&amp; offhand.getEnchantment(Enchantments.RIPTIDE) != 0)</ID>
     <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.AAC$if</ID>
     <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.Custom$if</ID>
@@ -203,7 +149,6 @@
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.Vanilla$if</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$val response = decode&lt;Array&lt;UsernameRecord&gt;&gt;(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))</ID>
-    <ID>MaxLineLength:ModuleMurderMystery.kt$ModuleMurderMystery$// if (playerEntity.getHeldItem() != null &amp;&amp; playerEntity.getHeldItem().getItem() instanceof ItemBow &amp;&amp; playerEntity.isUsingItem()) {</ID>
     <ID>MaxLineLength:ModuleMurderMystery.kt$ModuleMurderMystery$if</ID>
     <ID>MaxLineLength:ModuleNameCollector.kt$ModuleNameCollector$notification("NameCollector", "Captured ${network.playerList.size} players", NotificationEvent.Severity.INFO)</ID>
     <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$if</ID>
@@ -212,14 +157,10 @@
     <ID>MaxLineLength:ModuleNoFall.kt$ModuleNoFall.MLG$if</ID>
     <ID>MaxLineLength:ModuleNoWeb.kt$ModuleNoWeb$notification("Compatibility error", "NoWeb is incompatible with AvoidHazards", NotificationEvent.Severity.ERROR)</ID>
     <ID>MaxLineLength:ModuleParkour.kt$ModuleParkour$if</ID>
-    <ID>MaxLineLength:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$if</ID>
     <ID>MaxLineLength:ModuleRegen.kt$ModuleRegen$if</ID>
-    <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else AdvancedRotation.DEFAULT_Y_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
-    <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$}</ID>
-    <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold.StabilizeMovement$if</ID>
     <ID>MaxLineLength:ModuleSpammer.kt$ModuleSpammer$formattedText = formattedText.substring(0, formattedText.indexOf("%f")) + Random.nextFloat() + formattedText.substring(formattedText.indexOf("%f") + "%f".length)</ID>
     <ID>MaxLineLength:ModuleSpammer.kt$ModuleSpammer$formattedText = formattedText.substring(0, formattedText.indexOf("%i")) + Random.nextInt(10000) + formattedText.substring(formattedText.indexOf("%i") + "%i".length)</ID>
     <ID>MaxLineLength:ModuleSpammer.kt$ModuleSpammer$formattedText = formattedText.substring(0, formattedText.indexOf("%ls")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%ls") + "%ls".length)</ID>
@@ -240,8 +181,6 @@
     <ID>MaxLineLength:ModuleVehicleOneHit.kt$ModuleVehicleOneHit$if (protocolVersion == MC_1_8) player.swingHand(Hand.MAIN_HAND) else network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))</ID>
     <ID>MaxLineLength:ModuleVelocity.kt$ModuleVelocity$if</ID>
     <ID>MaxLineLength:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
-    <ID>MaxLineLength:Pattern.kt$GaussianPattern$*</ID>
-    <ID>MaxLineLength:ProxyManager.kt$ProxyManager$ProxyManager.currentProxy = ProxyManager.Proxy(InetSocketAddress(host, port), if (username.isNotBlank()) ProxyManager.ProxyCredentials(username, password) else null)</ID>
     <ID>MaxLineLength:Region.kt$Region$return pos.from.x &gt;= this.from.x &amp;&amp; pos.to.x &lt;= this.to.x &amp;&amp; pos.from.y &gt;= this.from.y &amp;&amp; pos.to.y &lt;= this.to.y &amp;&amp; pos.from.z &gt;= this.from.z &amp;&amp; pos.to.z &lt;= this.to.z</ID>
     <ID>MaxLineLength:Region.kt$Region$return pos.x &gt;= this.from.x &amp;&amp; pos.x &lt; this.to.x &amp;&amp; pos.y &gt;= this.from.y &amp;&amp; pos.y &lt; this.to.y &amp;&amp; pos.z &gt;= this.from.z &amp;&amp; pos.z &lt; this.to.z</ID>
     <ID>MaxLineLength:Region.kt$Region$return this.from.x &lt;= maxX &amp;&amp; this.to.x &gt; minX &amp;&amp; this.from.y &lt;= maxY &amp;&amp; this.to.y &gt; minY &amp;&amp; this.from.z &lt;= maxZ &amp;&amp; this.to.z &gt; minZ</ID>
@@ -254,7 +193,6 @@
     <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$// if (this.horizontalCollision &amp;&amp; this.doesNotCollide(vec3d2.x, vec3d2.y + 0.6 - this.getY() + e, vec3d2.z)) {</ID>
     <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$if</ID>
     <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer.SimulatedPlayerInput$return "SimulatedPlayerInput(forwards={${this.pressingForward}}, backwards={${this.pressingBack}}, left={${this.pressingLeft}}, right={${this.pressingRight}}, jumping={${this.jumping}}, sprinting=$sprinting, slowDown=$slowDown)"</ID>
-    <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer.SimulatedPlayerInput.Companion$entity.velocity.x * entity.velocity.x + entity.velocity.z * entity.velocity.z &gt;= MAX_WALKING_SPEED * MAX_WALKING_SPEED</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$// it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")</ID>
     <ID>MaxLineLength:TargetFinding.kt$fun</ID>
@@ -291,15 +229,10 @@
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions&gt;</ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
-    <ID>NestedBlockDepth:ModuleESP.kt$ModuleESP$fun getColor(entity: Entity): Color4b</ID>
-    <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun raytraceBox( eyes: Vec3d, box: Box, range: Double, wallsRange: Double, expectedTarget: BlockPos? = null, pattern: Pattern = GaussianPattern ): VecRotation?</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>NewLineAtEndOfFile:CleanupPlan.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlan.kt</ID>
     <ID>NewLineAtEndOfFile:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
-    <ID>NewLineAtEndOfFile:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>NewLineAtEndOfFile:Face.kt$net.ccbluex.liquidbounce.utils.math.geometry.Face.kt</ID>
-    <ID>NewLineAtEndOfFile:InventoryExtensions.kt$net.ccbluex.liquidbounce.utils.item.InventoryExtensions.kt</ID>
-    <ID>NewLineAtEndOfFile:InventoryUtils.kt$net.ccbluex.liquidbounce.utils.item.InventoryUtils.kt</ID>
     <ID>NewLineAtEndOfFile:ItemCategorization.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization.kt</ID>
     <ID>NewLineAtEndOfFile:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>NewLineAtEndOfFile:ItemMerge.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemMerge.kt</ID>
@@ -307,30 +240,12 @@
     <ID>NewLineAtEndOfFile:Levensthein.kt$net.ccbluex.liquidbounce.utils.math.Levensthein.kt</ID>
     <ID>NewLineAtEndOfFile:Line.kt$net.ccbluex.liquidbounce.utils.math.geometry.Line.kt</ID>
     <ID>NewLineAtEndOfFile:LineSegment.kt$net.ccbluex.liquidbounce.utils.math.geometry.LineSegment.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleAimbot.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleAutoArmor.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleAutoBow.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleAutoDodge.kt$net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAutoDodge.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleAutoGapple.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleAutoPot.kt$net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoPot.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleBlink.kt$net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleBreadcrumbs.kt$net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleChestStealer.kt$net.ccbluex.liquidbounce.features.module.modules.player.ModuleChestStealer.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleDebug.kt$net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleIgnite.kt$net.ccbluex.liquidbounce.features.module.modules.world.ModuleIgnite.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleInventoryCleaner.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleMurderMystery.kt$net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleNoFall.kt$net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall.kt</ID>
-    <ID>NewLineAtEndOfFile:ModuleScaffold.kt$net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.kt</ID>
-    <ID>NewLineAtEndOfFile:MovementUtils.kt$net.ccbluex.liquidbounce.utils.movement.MovementUtils.kt</ID>
     <ID>NewLineAtEndOfFile:NormalizedPlane.kt$net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane.kt</ID>
     <ID>NewLineAtEndOfFile:PlayerSimulation.kt$net.ccbluex.liquidbounce.utils.entity.PlayerSimulation.kt</ID>
     <ID>NewLineAtEndOfFile:RigidPlayerSimulation.kt$net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation.kt</ID>
-    <ID>NewLineAtEndOfFile:SimulatedPlayer.kt$net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.kt</ID>
     <ID>NewLineAtEndOfFile:Tabs.kt$net.ccbluex.liquidbounce.features.tabs.Tabs.kt</ID>
     <ID>NewLineAtEndOfFile:WeightedArmorItem.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedArmorItem.kt</ID>
     <ID>NewLineAtEndOfFile:WeightedArrowItem.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedArrowItem.kt</ID>
-    <ID>NewLineAtEndOfFile:WeightedBlockItem.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedBlockItem.kt</ID>
     <ID>NewLineAtEndOfFile:WeightedBowItem.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedBowItem.kt</ID>
     <ID>NewLineAtEndOfFile:WeightedCrossbowItem.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedCrossbowItem.kt</ID>
     <ID>NewLineAtEndOfFile:WeightedFoodItem.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedFoodItem.kt</ID>
@@ -346,24 +261,7 @@
     <ID>PrintStackTrace:ModuleBlink.kt$ModuleBlink$e</ID>
     <ID>ReturnCount:ArmorComparator.kt$ArmorComparator$override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int</ID>
     <ID>ReturnCount:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
-    <ID>ReturnCount:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions&gt;</ID>
     <ID>ReturnCount:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
-    <ID>ReturnCount:ModuleAntiBot.kt$ModuleAntiBot$fun isBot(player: PlayerEntity): Boolean</ID>
-    <ID>ReturnCount:ModuleAutoFarm.kt$ModuleAutoFarm$private fun updateTarget()</ID>
-    <ID>ReturnCount:ModuleChestStealer.kt$ModuleChestStealer$private fun makeSpace( cleanupPlan: InventoryCleanupPlan, requiredSpace: Int, screen: GenericContainerScreen ): Boolean?</ID>
-    <ID>ReturnCount:ModuleCriticals.kt$ModuleCriticals$fun shouldWaitForCrit(): Boolean</ID>
-    <ID>ReturnCount:ModuleCrystalAura.kt$ModuleCrystalAura$private fun updateTarget()</ID>
-    <ID>ReturnCount:ModuleESP.kt$ModuleESP$fun getColor(entity: Entity): Color4b</ID>
-    <ID>ReturnCount:ModuleFreeCam.kt$ModuleFreeCam$fun applyPosition(entity: Entity, tickDelta: Float)</ID>
-    <ID>ReturnCount:ModuleFucker.kt$ModuleFucker$private fun updateTarget()</ID>
-    <ID>ReturnCount:ModuleMurderMystery.kt$ModuleMurderMystery$fun getColor(entityPlayer: Entity): Color4b?</ID>
-    <ID>ReturnCount:ModuleScaffold.kt$ModuleScaffold$private fun isValidBlock(stack: ItemStack?): Boolean</ID>
-    <ID>ReturnCount:ModuleTeams.kt$ModuleTeams$fun isInClientPlayersTeam(entity: LivingEntity): Boolean</ID>
-    <ID>ReturnCount:ModuleTrajectories.kt$ModuleTrajectories$private fun getTrajectoryInfo(player: PlayerEntity, item: Item): TrajectoryInfo?</ID>
-    <ID>ReturnCount:MovableRegionScanner.kt$MovableRegionScanner$fun moveRegion(region: Region): List&lt;Region&gt;?</ID>
-    <ID>ReturnCount:TargetFinding.kt$BlockPlacementTarget$fun doesCrosshairTargetFullfitRequirements(crosshairTarget: BlockHitResult): Boolean</ID>
-    <ID>ReturnCount:TargetFinding.kt$fun getTargetPlanForPositionAndDirection(pos: BlockPos, direction: Direction, mode: BlockTargetingMode): BlockTargetPlan?</ID>
-    <ID>SpreadOperator:ModuleAutoDodge.kt$ModuleAutoDodge$(*positions.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleBlink.kt$ModuleBlink$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
@@ -386,7 +284,6 @@
     <ID>ThrowsCount:CommandBuilder.kt$CommandBuilder$fun build(): Command</ID>
     <ID>ThrowsCount:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandItemEnchant.kt$CommandItemEnchant$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandManager.kt$CommandManager$fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
@@ -446,9 +343,6 @@
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$delta: Float</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseX: Int</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseY: Int</ID>
-    <ID>UnusedPrivateProperty:ModuleAutoDodge.kt$ModuleAutoDodge$private val renderHandler = handler&lt;WorldRenderEvent&gt; { event -&gt; val matrixStack = event.matrixStack synchronized(positions) { // Get all positions for each arrow renderEnvironment(matrixStack) { withColor(Color4b.WHITE) { for ((_, positions) in positions) { drawLineStrip(*positions.toTypedArray()) } } } } }</ID>
-    <ID>UnusedPrivateProperty:ModuleAutoDodge.kt$ModuleAutoDodge$val hitResult = arrow.tick()</ID>
-    <ID>UnusedPrivateProperty:ModuleAutoDodge.kt$ModuleAutoDodge$val orthoVecToBaseLine = baseLine.direction.crossProduct(Vec3d(0.0, 1.0, 0.0)).normalize()</ID>
     <ID>UnusedPrivateProperty:ModuleAutoFarm.kt$ModuleAutoFarm$val curr = currentTarget ?: return@repeatable</ID>
     <ID>UnusedPrivateProperty:ModuleBlink.kt$ModuleBlink$i</ID>
     <ID>UnusedPrivateProperty:ModuleBugUp.kt$ModuleBugUp$private val indicator by boolean("Indicator", true)</ID>
@@ -456,11 +350,8 @@
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>
     <ID>UnusedPrivateProperty:ModuleMurderMystery.kt$ModuleMurderMystery$private val gameRenderEvent = handler&lt;WorldRenderEvent&gt; { if (playHurt) { mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("entity.villager.hurt")), 1F)) playHurt = false } if (playBow) { mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("item.crossbow.shoot")), 1F)) playBow = false } }</ID>
-    <ID>UnusedPrivateProperty:ModuleMurderMystery.kt$ModuleMurderMystery$private val motionUpdateHandler = handler&lt;GameTickEvent&gt; { event -&gt; val world = mc.world ?: return@handler val player = mc.player ?: return@handler if (this.modes.activeChoice === InfectionMode) { world.players.filter { it.isUsingItem }.filterIsInstance&lt;AbstractClientPlayerEntity&gt;() .forEach { playerEntity -&gt; val hasBow = arrayOf(playerEntity.mainHandStack, playerEntity.offHandStack) .any { it.item is BowItem } if (hasBow) { this.bowSkins += playerEntity.skinTexture.path } } // for (EntityPlayer playerEntity : mc.theWorld.playerEntities) { // if (playerEntity.getHeldItem() != null &amp;&amp; playerEntity.getHeldItem().getItem() instanceof ItemBow &amp;&amp; playerEntity.isUsingItem()) { // if (!(playerEntity instanceof AbstractClientPlayer)) // continue; // // this.bowSkins.add(((AbstractClientPlayer) playerEntity).getLocationSkin().getResourcePath()); // } // } } if (this.modes.activeChoice !== AssassinationMode) { return@handler } val equippedItem = player.inventory.getStack(3) val item = equippedItem?.item if (item !is FilledMapItem) { return@handler } val mapName = FilledMapItem.getMapId(equippedItem)?.let { FilledMapItem.getMapName(it) } val mapData = mapName?.let { world.getMapState(it) } ?: return@handler if ( // equippedItem.name.string != "§cKill Contract" mapName == this.lastMap ) { return@handler } println(mapName + "/" + equippedItem.name.string) lastMap = mapName val rgb = IntArray(128 * 128) (0 until rgb.size).forEach { i -&gt; // if (j / 4 == 0) { // rgb[i] = (i + ((i / 128) and 1)) * 8 + (16 shl 24) // } else { val color = MapColor.getRenderColor(mapData.colors[i].toInt()) val r = color and 0xFF val g = (color ushr 8) and 0xFF val b = (color ushr 16) and 0xFF rgb[i] = Color(r, g, b).getRGB() // } } val contractLine = IntArray(128 * 7) (0 until 7).forEach { y -&gt; (0 until 128).forEach { x -&gt; var newRGB = rgb[128 * 105 + y * 128 + x] newRGB = if (newRGB == Color(123, 102, 62).rgb || newRGB == Color(143, 119, 72).rgb) { 0 } else { -1 } contractLine[128 * y + x] = newRGB } } val output = StringBuilder() var lastNonEmptyScanline = -1 var emptyScanlines = 0 (0 until 128).forEach { x -&gt; var isEmpty = true for (y in 0 until 7) { if (contractLine[128 * y + x] == -1) { isEmpty = false break } } if (isEmpty) { if (emptyScanlines++ &gt; 3) { output.append(" ") emptyScanlines = 0 } } if (lastNonEmptyScanline != -1 &amp;&amp; isEmpty) { var yoff = lastNonEmptyScanline var off: Int val w = x - lastNonEmptyScanline val h = 7 val fingerPrint = BooleanArray(w * h) var y1 = 0 while (y1 &lt; h) { off = yoff for (x1 in 0 until w) { fingerPrint[y1 * w + x1] = contractLine[off++] == -1 } y1++ yoff += 128 } var letter: String? = null for ((key, value1) in ModuleMurderMystery.FontRecognition.LETTER_MAP.entries) { if (value1.contentEquals(fingerPrint)) { letter = key break } } output.append(letter ?: "?") lastNonEmptyScanline = -1 } if (!isEmpty &amp;&amp; lastNonEmptyScanline == -1) { lastNonEmptyScanline = x emptyScanlines = 0 } } val s = output.toString().trim { it &lt;= ' ' }.split(" ").toTypedArray() println(s.contentToString()) if (s.isNotEmpty() &amp;&amp; s[0].startsWith("NAME:")) { val target = s[0].substring("NAME:".length).lowercase(Locale.getDefault()).trim() val targetPlayer = player.networkHandler.playerList.minByOrNull { netInfo -&gt; levenshtein(target, netInfo.profile.name.lowercase().trim()) } if (targetPlayer != null) { currentAssasinationTarget = targetPlayer.profile.id chat("Target: " + targetPlayer.profile.name) } else { chat("Failed to find target, but the name is: $target") } } }</ID>
-    <ID>UnusedPrivateProperty:ModuleMurderMystery.kt$ModuleMurderMystery$private val packetHandler = handler&lt;PacketEvent&gt; { packetEvent -&gt; val world = mc.world ?: return@handler if (packetEvent.packet is PlaySoundS2CPacket) { val packet = packetEvent.packet if (packet.sound.value().id.toString() == "minecraft:block.note_block.basedrum") { // println("${packet.sound.value().id}/${packet.volume}") // Fitted by observed values val expectedDistance = ((1/ packet.volume) - 0.98272992) / 0.04342088 val probablyAssassin = world.players.minByOrNull { (it.distanceTo(player) - expectedDistance).absoluteValue } ?: return@handler val newAssasin = probablyAssassin.gameProfile.id if (currentAssasin != newAssasin) chat("Your Assassin: " + probablyAssassin.gameProfile.name) currentAssasin = newAssasin } } if (packetEvent.packet is EntityEquipmentUpdateS2CPacket) { val packet = packetEvent.packet packet.equipmentList.filter { !it.second.isEmpty &amp;&amp; it.first in arrayOf( EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND ) }.forEach { val itemStack = it.second val item = itemStack.item val isSword = item is SwordItem || item is PickaxeItem || item is ShovelItem &amp;&amp; item != Items.WOODEN_SHOVEL &amp;&amp; item != Items.GOLDEN_SHOVEL || item is AxeItem || item is HoeItem || item is BoatItem || run { if (item !is BlockItem) { return@run false } val block = item.block return@run block == Blocks.SPONGE || block == Blocks.DEAD_BUSH || block == Blocks.REDSTONE_TORCH || block == Blocks.CHORUS_PLANT } || item in arrayOf( Items.GOLDEN_CARROT, Items.CARROT, Items.CARROT_ON_A_STICK, Items.BONE, Items.TROPICAL_FISH, Items.PUFFERFISH, Items.SALMON, Items.BLAZE_ROD, Items.PUMPKIN_PIE, Items.NAME_TAG, Items.APPLE, Items.FEATHER, Items.COOKIE, Items.SHEARS, Items.COOKED_SALMON, Items.STICK, Items.QUARTZ, Items.ROSE_BUSH, Items.ICE, Items.COOKED_BEEF, Items.NETHER_BRICK, Items.COOKED_CHICKEN, Items.MUSIC_DISC_BLOCKS, Items.RED_DYE, Items.OAK_BOAT, Items.BOOK, Items.GLISTERING_MELON_SLICE ) val isBow = item is BowItem if (!isSword &amp;&amp; !isBow) { return@forEach } val entity = world.getEntityById(packet.id) if (entity !is AbstractClientPlayerEntity) { return@forEach } // if (ModuleAntiBot.isBot(entity)) { // return@forEach // } val locationSkin = entity.skinTexture if (isSword &amp;&amp; modes.activeChoice !== AssassinationMode) { if (murdererSkins.add(locationSkin.path)) { if (modes.activeChoice === InfectionMode) { if (murdererSkins.size == 1) { chat("Alpha: " + entity.gameProfile.name) } } else { chat("It's " + entity.gameProfile.name) playHurt = true } } } else if (modes.activeChoice === ClassicMode) { if (bowSkins.add(locationSkin.path)) { chat(entity.gameProfile.name + " has a bow.") playBow = true } } } } if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) { murdererSkins.clear() bowSkins.clear() currentAssasinationTarget = null currentAssasin = null } }</ID>
     <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent&gt; { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
     <ID>UnusedPrivateProperty:Sequence.kt$Sequence$private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) { SequenceManager.sequences += this@Sequence coroutineRun() SequenceManager.sequences -= this@Sequence }</ID>
-    <ID>UnusedPrivateProperty:TickStateManager.kt$TickStateManager$private val tickEventHandler = handler&lt;GameTickEvent&gt; { val stateEvent = StateUpdateEvent() EventManager.callEvent(stateEvent) this.enforcedState = stateEvent.state }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Parameter already has a command")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Subcommand already has parent command")</ID>
@@ -489,97 +380,5 @@
     <ID>UseRequire:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
     <ID>UseRequire:UltralightJsEvents.kt$UltralightJsEvents$throw IllegalArgumentException("$handler is not a function.")</ID>
     <ID>UseRequire:Value.kt$RangedValue$throw IllegalArgumentException()</ID>
-    <ID>WildcardImport:AccountManager.kt$import net.ccbluex.liquidbounce.utils.client.*</ID>
-    <ID>WildcardImport:BlockExtensions.kt$import net.minecraft.util.math.*</ID>
-    <ID>WildcardImport:BlockValueSerializer.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:BrowserFileSystem.kt$import java.nio.file.*</ID>
-    <ID>WildcardImport:Chat.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:Chat.kt$import net.ccbluex.liquidbounce.features.chat.client.packet.*</ID>
-    <ID>WildcardImport:Chat.kt$import net.ccbluex.liquidbounce.utils.client.*</ID>
-    <ID>WildcardImport:ChunkScanner.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:Client.kt$import net.ccbluex.liquidbounce.features.chat.client.packet.*</ID>
-    <ID>WildcardImport:ColorSerializer.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:CombatUtils.kt$import net.ccbluex.liquidbounce.utils.aiming.*</ID>
-    <ID>WildcardImport:CombatUtils.kt$import net.minecraft.util.math.*</ID>
-    <ID>WildcardImport:CommandAutoDisable.kt$import net.ccbluex.liquidbounce.utils.client.*</ID>
-    <ID>WildcardImport:CommandBind.kt$import net.ccbluex.liquidbounce.utils.client.*</ID>
-    <ID>WildcardImport:CommandBinds.kt$import net.ccbluex.liquidbounce.utils.client.*</ID>
-    <ID>WildcardImport:CommandItemRename.kt$import net.ccbluex.liquidbounce.utils.client.*</ID>
-    <ID>WildcardImport:CommandManager.kt$import net.ccbluex.liquidbounce.features.command.commands.client.*</ID>
-    <ID>WildcardImport:ConfigSystem.kt$import net.ccbluex.liquidbounce.config.adapter.*</ID>
-    <ID>WildcardImport:CpuViewRenderer.kt$import org.lwjgl.opengl.GL12.*</ID>
-    <ID>WildcardImport:FontDetailSerializer.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:FontRenderer.kt$import net.ccbluex.liquidbounce.render.engine.*</ID>
-    <ID>WildcardImport:FontRenderer.kt$import net.ccbluex.liquidbounce.render.engine.memory.*</ID>
-    <ID>WildcardImport:GlfwInputAdapter.kt$import com.labymedia.ultralight.input.*</ID>
-    <ID>WildcardImport:GlfwInputAdapter.kt$import org.lwjgl.glfw.GLFW.*</ID>
-    <ID>WildcardImport:GlyphPage.kt$import java.awt.*</ID>
-    <ID>WildcardImport:IntRangeSerializer.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:ItemExtensions.kt$import net.minecraft.item.*</ID>
-    <ID>WildcardImport:ItemValueSerializer.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:LiquidBounce.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:MinecraftAccountSerializer.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:ModuleAutoBow.kt$import kotlin.math.*</ID>
-    <ID>WildcardImport:ModuleAutoBow.kt$import net.ccbluex.liquidbounce.utils.entity.*</ID>
-    <ID>WildcardImport:ModuleAutoFarm.kt$import net.minecraft.block.*</ID>
-    <ID>WildcardImport:ModuleAutoGapple.kt$import net.ccbluex.liquidbounce.utils.item.*</ID>
-    <ID>WildcardImport:ModuleAutoWeapon.kt$import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.PreferredWeapon.*</ID>
-    <ID>WildcardImport:ModuleAutoWeapon.kt$import net.minecraft.item.*</ID>
-    <ID>WildcardImport:ModuleAvoidHazards.kt$import net.minecraft.block.*</ID>
-    <ID>WildcardImport:ModuleBadWifi.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleBadWifi.kt$import net.minecraft.network.packet.c2s.play.*</ID>
-    <ID>WildcardImport:ModuleBlink.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleBlink.kt$import net.minecraft.network.packet.c2s.play.*</ID>
-    <ID>WildcardImport:ModuleBlockESP.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleChestStealer.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleDebug.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleDisabler.kt$import net.minecraft.network.packet.c2s.play.*</ID>
-    <ID>WildcardImport:ModuleESP.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleFly.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleHoleESP.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleItemESP.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleKillAura.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleKillAura.kt$import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*</ID>
-    <ID>WildcardImport:ModuleKillAura.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleKillAura.kt$import net.ccbluex.liquidbounce.utils.aiming.*</ID>
-    <ID>WildcardImport:ModuleKillAura.kt$import net.ccbluex.liquidbounce.utils.combat.*</ID>
-    <ID>WildcardImport:ModuleKillAura.kt$import net.ccbluex.liquidbounce.utils.entity.*</ID>
-    <ID>WildcardImport:ModuleKillAura.kt$import net.minecraft.network.packet.c2s.play.*</ID>
-    <ID>WildcardImport:ModuleLiquidWalk.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleLongJump.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleManager.kt$import net.ccbluex.liquidbounce.features.module.modules.combat.*</ID>
-    <ID>WildcardImport:ModuleManager.kt$import net.ccbluex.liquidbounce.features.module.modules.exploit.*</ID>
-    <ID>WildcardImport:ModuleManager.kt$import net.ccbluex.liquidbounce.features.module.modules.misc.*</ID>
-    <ID>WildcardImport:ModuleManager.kt$import net.ccbluex.liquidbounce.features.module.modules.movement.*</ID>
-    <ID>WildcardImport:ModuleManager.kt$import net.ccbluex.liquidbounce.features.module.modules.player.*</ID>
-    <ID>WildcardImport:ModuleManager.kt$import net.ccbluex.liquidbounce.features.module.modules.render.*</ID>
-    <ID>WildcardImport:ModuleManager.kt$import net.ccbluex.liquidbounce.features.module.modules.world.*</ID>
-    <ID>WildcardImport:ModuleMurderMystery.kt$import net.minecraft.item.*</ID>
-    <ID>WildcardImport:ModuleNametags.kt$import net.ccbluex.liquidbounce.render.engine.*</ID>
-    <ID>WildcardImport:ModuleNoFall.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleNoSlow.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleProjectilePuncher.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleSpeed.kt$import net.ccbluex.liquidbounce.utils.entity.*</ID>
-    <ID>WildcardImport:ModuleStorageESP.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleStorageESP.kt$import net.minecraft.block.entity.*</ID>
-    <ID>WildcardImport:ModuleSuperKnockback.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleTrajectories.kt$import net.ccbluex.liquidbounce.render.*</ID>
-    <ID>WildcardImport:ModuleTrajectories.kt$import net.minecraft.item.*</ID>
-    <ID>WildcardImport:ModuleVelocity.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:ModuleXRay.kt$import net.minecraft.block.Blocks.*</ID>
-    <ID>WildcardImport:PacketGsonExtension.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:RangeSerializer.kt$import com.google.gson.*</ID>
-    <ID>WildcardImport:RenderEngine.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:RenderEngine.kt$import org.lwjgl.opengl.*</ID>
-    <ID>WildcardImport:RenderUtils.kt$import net.ccbluex.liquidbounce.render.engine.memory.*</ID>
-    <ID>WildcardImport:RotationsUtil.kt$import net.minecraft.util.math.*</ID>
-    <ID>WildcardImport:TargetFinding.kt$import net.minecraft.block.*</ID>
-    <ID>WildcardImport:TargetFinding.kt$import net.minecraft.util.math.*</ID>
-    <ID>WildcardImport:Theme.kt$import java.nio.file.StandardWatchEventKinds.*</ID>
-    <ID>WildcardImport:TickStateManager.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:UltralightIntegrationHook.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:UltralightJsContext.kt$import net.ccbluex.liquidbounce.base.ultralight.js.bindings.*</ID>
-    <ID>WildcardImport:UltralightJsEvents.kt$import net.ccbluex.liquidbounce.event.*</ID>
-    <ID>WildcardImport:WorldChangeNotifier.kt$import net.ccbluex.liquidbounce.event.*</ID>
   </CurrentIssues>
 </SmellBaseline>

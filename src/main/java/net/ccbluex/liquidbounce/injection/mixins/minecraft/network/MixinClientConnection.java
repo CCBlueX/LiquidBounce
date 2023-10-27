@@ -19,10 +19,13 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PacketEvent;
+import net.ccbluex.liquidbounce.event.PipelineEvent;
 import net.ccbluex.liquidbounce.event.TransferOrigin;
 import net.minecraft.network.ClientConnection;
+import net.minecraft.network.NetworkSide;
 import net.minecraft.network.packet.Packet;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,7 +38,7 @@ public class MixinClientConnection {
     /**
      * Handle sending packets
      *
-     * @param packet packet to send
+     * @param packet       packet to send
      * @param callbackInfo callback
      */
     @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
@@ -59,10 +62,24 @@ public class MixinClientConnection {
     private void hookReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
         final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
 
-        EventManager.INSTANCE.callEvent(event);
+        // Filter out client-side packets. Only happens in Single-player
+        if (packet.getClass().getSimpleName().contains("S2C")) {
+            EventManager.INSTANCE.callEvent(event);
 
-        if (event.isCancelled())
-            callbackInfo.cancel();
+            if (event.isCancelled())
+                callbackInfo.cancel();
+        }
+    }
+
+    /**
+     * Hook proxy
+     */
+    @Inject(method = "addHandlers", at = @At("HEAD"))
+    private static void hookProxy(ChannelPipeline pipeline, NetworkSide side, CallbackInfo callbackInfo) {
+        if (side == NetworkSide.CLIENTBOUND) {
+            final PipelineEvent event = new PipelineEvent(pipeline);
+            EventManager.INSTANCE.callEvent(event);
+        }
     }
 
 }

@@ -165,7 +165,7 @@
         background-color: rgba(0, 0, 0, 0.68);
         border-radius: 5rem;
         border: 0;
-        color: lightgray;
+        color: var(--textdimmed);
         flex: 1;
         font-size: 18px;
         height: 50px;
@@ -181,19 +181,19 @@
     &-list {
       background-color: rgba(0, 0, 0, 0.60);
       border-radius: 0 0 10px 10px;
-      border-top: solid 2px #4677ff;
+      border-top: solid 2px var(--accent);
       max-height: 220px;
       overflow: auto;
       padding: 10px 0;
 
       &-item {
-        color: lightgray;
+        color: var(--textdimmed);
         cursor: pointer;
         font-size: 16px;
         padding: 10px 15px;
 
         &:hover {
-          color: white;
+          color: var(--text);
         }
 
         &.selected {
@@ -204,6 +204,6 @@
   }
 
   .active {
-    color: #4677ff;
+    color: var(--accent);
   }
 </style>

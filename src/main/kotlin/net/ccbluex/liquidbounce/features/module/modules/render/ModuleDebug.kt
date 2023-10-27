@@ -27,8 +27,9 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
+import java.awt.Color
 
 /**
  * Rotations module
@@ -43,7 +44,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             debuggedGeometry.values.forEach {
                 it.render(this)
             }
@@ -55,6 +56,11 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     }
 
     data class DebuggedGeometryOwner(val owner: Any, val name: String)
+
+    fun getArrayEntryColor(idx: Int, length: Int): Color4b {
+        val hue = idx.toFloat() / length.toFloat()
+        return Color4b(Color.getHSBColor(hue, 1f, 1f)).alpha(32)
+    }
 
     abstract class DebuggedGeometry(val color: Color4b) {
         abstract fun render(env: RenderEnvironment)
@@ -86,11 +92,22 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
+    open class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
         override fun render(env: RenderEnvironment) {
             env.withColor(color) {
                 this.drawSolidBox(box)
             }
+        }
+    }
+
+    class DebuggedPoint(point: Vec3d, color: Color4b, size: Double = 0.2) : DebuggedBox(
+        Box.of(point, size, size, size),
+        color
+    )
+
+    class DebugCollection(val geometry: List<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
+        override fun render(env: RenderEnvironment) {
+            this.geometry.forEach { it.render(env) }
         }
     }
 }

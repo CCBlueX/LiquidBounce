@@ -55,7 +55,7 @@
   }
 
   .icon {
-    background-color: #4677FF;
+    background-color: #4677ff;
     width: 90px;
     height: 90px;
     border-radius: 50%;

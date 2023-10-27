@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -66,7 +66,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         val color = if (colorRainbow) rainbow() else color
 
         synchronized(positions) {
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
                     drawLineStrip(*makeLines(color, positions, event.partialTicks))
                 }

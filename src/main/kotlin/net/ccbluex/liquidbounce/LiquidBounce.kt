@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
@@ -103,9 +104,6 @@ object LiquidBounce : Listenable {
             ChunkScanner
             WorldChangeNotifier
 
-            // Load API data
-            IpInfoApi
-
             // Features
             ModuleManager
             CommandManager
@@ -116,6 +114,7 @@ object LiquidBounce : Listenable {
             FriendManager
             ProxyManager
             AccountManager
+            InventoryTracker
             Tabs
             Chat
 
@@ -138,6 +137,10 @@ object LiquidBounce : Listenable {
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
             }
+
+            // Refresh local IP info
+            logger.info("Refreshing local IP info...")
+            IpInfoApi.refreshLocalIpInfo()
 
             // Connect to chat server
             Chat.connectAsync()

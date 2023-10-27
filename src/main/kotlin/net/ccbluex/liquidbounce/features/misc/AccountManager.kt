@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import com.labymedia.ultralight.javascript.JavascriptObject
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
+import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import com.thealtening.api.TheAltening
 import me.liuli.elixir.account.CrackedAccount
 import me.liuli.elixir.account.MicrosoftAccount
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.client.util.ProfileKeys
 import java.net.Proxy
 import java.util.*
 
@@ -55,16 +57,11 @@ object AccountManager : Configurable("Accounts") {
         val account = accounts.getOrNull(id) ?: return
 
         // TODO: Implement directly into Elixir
-        when (account) {
-            is CrackedAccount -> {
-                mc.session = mc.sessionService.loginCracked(account.session.username)
-                mc.sessionService = YggdrasilAuthenticationService(
-                    Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
-                ).createMinecraftSessionService()
-            }
+        val (session, sessionService, profileKeys) = when (account) {
+            is CrackedAccount -> mc.sessionService.loginCracked(account.session.username)
 
             is MicrosoftAccount -> {
-                mc.session = net.minecraft.client.util.Session(
+                val session = net.minecraft.client.util.Session(
                     account.name,
                     account.session.uuid,
                     account.session.token,
@@ -72,18 +69,37 @@ object AccountManager : Configurable("Accounts") {
                     Optional.empty(),
                     net.minecraft.client.util.Session.AccountType.MSA
                 )
-                mc.sessionService = YggdrasilAuthenticationService(
+                val sessionService = YggdrasilAuthenticationService(
                     Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
                 ).createMinecraftSessionService()
+
+                var profileKeys = ProfileKeys.MISSING
+                runCatching {
+                    val userAuthenticationService = YggdrasilUserApiService(session.accessToken,
+                        mc.authenticationService.proxy, YggdrasilEnvironment.PROD.environment)
+                    profileKeys = ProfileKeys.create(userAuthenticationService, session, mc.runDirectory.toPath())
+                }.onFailure {
+                    logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
+                }
+
+                Triple(session, sessionService, profileKeys)
             }
 
             is AlteningAccount -> {
-                val (session, sessionService) = mc.sessionService.loginAltening(account.token)
+                val (session, sessionService, keys) = mc.sessionService.loginAltening(account.token)
 
-                mc.session = session
-                mc.sessionService = sessionService
+                // Update account info
+                account.name = session.username
+                account.uuid = session.uuid
+
+                Triple(session, sessionService, keys)
             }
+            else -> error("Unknown account type: ${account::class.simpleName}")
         }
+
+        mc.session = session
+        mc.sessionService = sessionService
+        mc.profileKeys = profileKeys
     }
 
     /**
@@ -99,6 +115,9 @@ object AccountManager : Configurable("Accounts") {
         accounts += CrackedAccount().also { account ->
             account.name = username
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
     @RequiredByScript
@@ -137,6 +156,9 @@ object AccountManager : Configurable("Accounts") {
 
                 // Add account to list of accounts
                 accounts += account
+
+                // Store configurable
+                ConfigSystem.storeConfigurable(this@AccountManager)
             }
 
             /**
@@ -150,9 +172,17 @@ object AccountManager : Configurable("Accounts") {
     }
 
     fun newAlteningAccount(accountToken: String) {
+        // Check if altening token is valid
+        val (session) = mc.sessionService.loginAltening(accountToken)
+
         accounts += AlteningAccount().also { account ->
             account.token = accountToken
+            account.name = session.username
+            account.uuid = session.uuid
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
     fun generateNewAlteningAccount(apiToken: String = this.alteningApiToken) {
@@ -169,6 +199,9 @@ object AccountManager : Configurable("Accounts") {
             account.hypixelRank = alteningAccount.info.hypixelRank ?: ""
             account.hypixelLevel = alteningAccount.info.hypixelLevel
         }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
 }

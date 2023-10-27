@@ -18,6 +18,9 @@
  */
 
 package net.ccbluex.liquidbounce.base.ultralight.js.bindings
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.chat
+import kotlin.math.roundToInt
 
 /**
  * An easy way to create kotlin things in JS
@@ -27,5 +30,9 @@ object UltralightJsKotlin {
     fun intRange(from: Int, to: Int) = from..to
 
     fun floatRange(from: Float, to: Float) = from..to
+
+    fun color(r:Int, g: Int, b: Int, a: Float) = Color4b(r, g, b, (a * 255).roundToInt())
+
+    fun colorToHex(color4b: Color4b) = color4b.toHex(color4b.a != 255)
 
 }

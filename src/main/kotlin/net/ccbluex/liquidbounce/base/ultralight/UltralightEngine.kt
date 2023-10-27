@@ -59,7 +59,7 @@ object UltralightEngine {
     /**
      * Frame limiter
      */
-    private const val MAX_FRAME_RATE = 60
+    private const val MAX_FRAME_RATE = 144
     private var lastRenderTime = 0.0
 
     /**

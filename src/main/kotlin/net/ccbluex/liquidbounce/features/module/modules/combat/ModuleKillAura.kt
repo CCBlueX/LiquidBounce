@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
@@ -35,10 +34,10 @@ import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
@@ -46,9 +45,6 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
@@ -219,7 +215,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             for ((pos, opacity) in markedBlocks) {
                 val vec3 = Vec3(pos)
 
@@ -248,7 +244,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Make sure killaura-logic is not running while inventory is open
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
@@ -261,7 +258,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     val repeatable = repeatable {
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
@@ -292,9 +290,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
-                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
-                    player
-                ))
+                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) &&
+                    (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)
+                    && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
+                    !raycastedEntity.wouldBlockHit(player))
+                    && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
             }, cps)
 
             repeat(clicks) {
@@ -427,8 +427,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             val rotationPreference =
                 this.lastRotation
-                ?.let { LeastDifferencePreference(it.rotation, basePoint = it.vec) }
-                ?: LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
+                    ?.let { LeastDifferencePreference(it.rotation, basePoint = it.vec) }
+                    ?: LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
 
             // find best spot
             val spot = raytraceBox(

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
@@ -56,6 +57,13 @@ open class Value<T : Any>(
 
     @Exclude
     private val listeners = mutableListOf<ValueListener<T>>()
+
+    /**
+     * If true, value will not be included in generated public config
+     */
+    @Exclude
+    var doNotInclude = false
+        private set
 
     /**
      * Support for delegated properties
@@ -92,6 +100,8 @@ open class Value<T : Any>(
         }.onSuccess {
             value = currT
             EventManager.callEvent(ValueChangedEvent(this))
+        }.onFailure { ex ->
+            logger.error("Failed to set ${this.name} from ${this.value} to $t", ex)
         }
     }
 
@@ -99,6 +109,11 @@ open class Value<T : Any>(
 
     fun listen(listener: ValueListener<T>): Value<T> {
         listeners += listener
+        return this
+    }
+
+    fun doNotInclude(): Value<T> {
+        doNotInclude = true
         return this
     }
 

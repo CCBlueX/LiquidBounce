@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBreadcrumbs.makeLines
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -122,7 +122,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
         synchronized(positions) {
 
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
                     drawLineStrip(*makeLines(color, positions, event.partialTicks))
                 }

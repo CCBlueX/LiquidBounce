@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
@@ -50,28 +50,33 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         if (interaction.hasRidingInventory()) {
             return@repeatable
         }
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
+
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+
         if (player.health < health && mushroomStewSlot != null && !isInInventoryScreen) {
-            // we need to take some actions
+            // We need to take some actions
             CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
             if (player.isBlocking) {
                 interaction.stopUsingItem(player)
-                wait { 1 }
+                wait(1)
             }
+
             val itemDrop = itemDropDelay.random()
+
             if (mushroomStewSlot != player.inventory.selectedSlot) {
                 SilentHotbar.selectSlotSilently(this, mushroomStewSlot, swapPreviousDelay + itemDrop)
             }
 
-            // uses soup
+            // Use soup
             interaction.sendSequencedPacket(world) { sequence ->
                 PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
             }
 
-            // checks if using it, succeeded, if so - drop an empty bowl
+            // If action was successful, drop the now-empty bowl
             if (bowl && player.inventory.getStack(mushroomStewSlot).item == Items.BOWL) {
-                wait { itemDrop }
+                wait(itemDrop)
                 player.dropSelectedItem(true)
             }
             return@repeatable

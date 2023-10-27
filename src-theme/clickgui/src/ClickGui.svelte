@@ -34,6 +34,8 @@
                 clickGuiModule = module;
             }
         }
+        // console.log(JSON.stringify(modules))
+
     } catch (err) {
         console.log(err);
     }
@@ -41,11 +43,28 @@
     function getModulesOfCategory(category) {
         return modules.filter(m => m.category === category);
     }
+
+    
+
+    let modulesColor = kotlin.colorToHex(clickGuiModule.instance.getModuleColor())
+    let headerColor = kotlin.colorToHex(clickGuiModule.instance.getHeaderColor())
+    let accentColor = kotlin.colorToHex(clickGuiModule.instance.getAccentColor())
+    let accendDimmed = kotlin.colorToHex(clickGuiModule.instance.getAccentColor())
+    let textColor = kotlin.colorToHex(clickGuiModule.instance.getTextColor())
+    let textDimmedColor = kotlin.colorToHex(clickGuiModule.instance.getDimmedTextColor())
 </script>
 
 <main>
     {#if clickGuiOpened}
-        <div class="clickgui-container">
+        <div class="clickgui-container" 
+        style=
+        "--modules: {modulesColor};
+        --header: {headerColor};
+        --accent: {accentColor};
+        --accent-dimmed: {accendDimmed};
+        --text: {textColor};
+        --textdimmed: {textDimmedColor};">
+
             <SearchBar root="{clickGuiModule}" modules={modules}/>
             {#each panels as panel}
                 <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top}

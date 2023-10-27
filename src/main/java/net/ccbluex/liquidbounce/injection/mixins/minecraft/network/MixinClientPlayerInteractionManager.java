@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -118,5 +119,10 @@ public class MixinClientPlayerInteractionManager {
 
         args.set(3, rotation.getYaw());
         args.set(4, rotation.getPitch());
+    }
+
+    @Inject(method = "stopUsingItem", at = @At("HEAD"))
+    private void stopUsingItem(PlayerEntity player, CallbackInfo callbackInfo) {
+        ModuleAutoBow.onStopUsingItem();
     }
 }

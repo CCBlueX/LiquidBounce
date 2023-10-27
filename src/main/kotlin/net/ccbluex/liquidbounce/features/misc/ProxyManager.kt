@@ -19,51 +19,98 @@
 
 package net.ccbluex.liquidbounce.features.misc
 
+import io.netty.channel.ChannelPipeline
+import io.netty.handler.proxy.Socks5ProxyHandler
+import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.ListValueType
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PipelineEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import java.net.InetSocketAddress
-import java.util.*
 
 /**
  * Proxy Manager
+ *
+ * Only supports SOCKS5 proxies.
  */
-object ProxyManager : Configurable("Proxies") {
+object ProxyManager : Configurable("proxy"), Listenable {
 
-    val proxies by value(name, TreeSet<Proxy>(), listType = ListValueType.Proxy)
+    private val noProxy = Proxy("", 0, null)
+    var proxy by value("proxy", noProxy)
 
-    var currentProxy: Proxy? = null
+    /**
+     * The proxy that is set in the current session and used for all server connections
+     *
+     * !! DO NOT CHANGE IT TO PRIVATE AS IT IS USED BY THE ULTRALIGHT GUI. !!
+     */
+    @RequiredByScript
+    val currentProxy
+        get() = proxy.takeIf { it.host.isNotBlank() }
 
     init {
         ConfigSystem.root(this)
     }
 
     fun setProxy(host: String, port: Int, username: String, password: String): String {
-        ProxyManager.currentProxy = ProxyManager.Proxy(InetSocketAddress(host, port), if (username.isNotBlank()) ProxyManager.ProxyCredentials(username, password) else null)
+        proxy = Proxy(host, port,
+            if (username.isNotBlank())
+                ProxyCredentials(username, password)
+            else
+                null
+        )
+        ConfigSystem.storeConfigurable(this)
 
+        // Refreshes local IP info when proxy is set
+        IpInfoApi.refreshLocalIpInfo()
         return "Successfully set proxy"
     }
 
     fun unsetProxy(): String {
-        ProxyManager.currentProxy = null
+        proxy = noProxy
+        ConfigSystem.storeConfigurable(this)
+
+        // Refreshes local IP info when proxy is unset
+        IpInfoApi.refreshLocalIpInfo()
         return "Successfully unset proxy"
     }
 
-    // todo: hook into ChannelInitializer
-    // val proxy = currentProxy
-    //            if (proxy != null) {
-    //                p.addFirst(
-    //                    "proxy",
-    //                    if (proxy.credentials != null) {
-    //                        Socks5ProxyHandler(proxy.address, proxy.credentials.username, proxy.credentials.password)
-    //                    } else {
-    //                        Socks5ProxyHandler(proxy.address)
-    //                    }
-    //                )
-    //            }
+    /**
+     * Adds a SOCKS5 netty proxy handler to the pipeline when a proxy is set
+     *
+     * @see Socks5ProxyHandler
+     * @see PipelineEvent
+     */
+    val pipelineHandler = handler<PipelineEvent> {
+        val pipeline = it.channelPipeline
+        insertProxyHandler(pipeline)
+    }
 
-    data class Proxy(val address: InetSocketAddress, val credentials: ProxyCredentials?)
+    fun insertProxyHandler(pipeline: ChannelPipeline) {
+        currentProxy?.run {
+            pipeline.addFirst(
+                "proxy",
+                if (credentials != null) {
+                    Socks5ProxyHandler(address, credentials.username, credentials.password)
+                } else {
+                    Socks5ProxyHandler(address)
+                }
+            )
+        }
+    }
 
+    /**
+     * Contains serializable proxy data
+     */
+    data class Proxy(val host: String, val port: Int, val credentials: ProxyCredentials?) {
+        val address
+            get() = InetSocketAddress(host, port)
+    }
+
+    /**
+     * Contains serializable proxy credentials
+     */
     data class ProxyCredentials(val username: String, val password: String)
 
 }

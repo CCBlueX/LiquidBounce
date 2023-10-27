@@ -18,9 +18,12 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.client.input.Input
 import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffect
@@ -54,7 +57,8 @@ class SimulatedPlayer(
     private var verticalCollision: Boolean
 ) : PlayerSimulation {
     companion object {
-        fun fromPlayer(player: PlayerEntity, input: SimulatedPlayerInput): SimulatedPlayer {
+        fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {
+            val player = mc.player!!
             return SimulatedPlayer(
                 player,
                 input,
@@ -73,11 +77,32 @@ class SimulatedPlayer(
                 player.verticalCollision
             )
         }
+        fun fromOtherPlayer(player: PlayerEntity, input: SimulatedPlayerInput): SimulatedPlayer {
+            return SimulatedPlayer(
+                player,
+                input,
+                player.pos,
+                velocity = player.pos.subtract(player.prevPos),
+                player.yaw,
+                player.pitch,
+
+                player.isSprinting,
+
+                player.fallDistance,
+                player.jumpingCooldown,
+                player.jumping,
+                player.isOnGround,
+                player.horizontalCollision,
+                player.verticalCollision
+            )
+        }
     }
 
     private var simulatedTicks: Int = 0
 
     override fun tick() {
+        this.input.update()
+
         // LivingEntity.tickMovement()
         if (this.jumpingCooldown > 0) {
             this.jumpingCooldown--
@@ -445,52 +470,32 @@ class SimulatedPlayer(
         }
 
         companion object {
-            private const val MAX_WALKING_SPEED = 0.12
+            private const val MAX_WALKING_SPEED = 0.121
 
             /**
-             * Guesses the current input based on player position and velocity
+             * Guesses the current input of a server player based on player position and velocity
              */
             fun guessInput(entity: PlayerEntity): SimulatedPlayerInput {
-                val sprinting =
-                    entity.velocity.x * entity.velocity.x + entity.velocity.z * entity.velocity.z >= MAX_WALKING_SPEED * MAX_WALKING_SPEED
+                val velocity = entity.pos.subtract(entity.prevPos)
 
-                val rotatedVelocity = entity.velocity.rotateY(entity.yaw.toRadians())
+                val horizontalVelocity = velocity.horizontalLengthSquared()
 
-                val forwardVelocity = rotatedVelocity.z
-                val sidewardsVelocity = rotatedVelocity.x
+                val sprinting = horizontalVelocity >= MAX_WALKING_SPEED * MAX_WALKING_SPEED
 
-                val sidewardsRatio = forwardVelocity / sidewardsVelocity
+                val input = if (horizontalVelocity > 0.05 * 0.05) {
+                    val velocityAngle = getDegreesRelativeToView(velocity, yaw = entity.yaw)
 
-                var forwards = false
-                var backwards = false
-                var left = false
-                var right = false
+                    val velocityAngle1 = MathHelper.wrapDegrees(velocityAngle)
 
-                if (forwardVelocity > 0.08) {
-                    forwards = true
-                } else if (forwardVelocity < -0.08) {
-                    backwards = true
-                }
-
-                if (sidewardsRatio in -10.0..0.0) {
-                    right = true
-                } else if (sidewardsRatio in 0.0..10.0) {
-                    left = true
-                } else if (sidewardsVelocity > 0.08) {
-                    left = true
-                } else if (sidewardsVelocity < -0.08) {
-                    right = true
+                    getDirectionalInputForDegrees(DirectionalInput.NONE, velocityAngle1)
+                } else {
+                    DirectionalInput.NONE
                 }
 
                 val jumping = !entity.isOnGround
 
                 return SimulatedPlayerInput(
-                    DirectionalInput(
-                        forwards,
-                        backwards,
-                        left,
-                        right
-                    ),
+                    input,
                     jumping,
                     sprinting
                 ).apply { this.slowDown = entity.isSneaking }

@@ -48,7 +48,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.esp"
 
-    private val modes = choices("Mode", OutlineMode, arrayOf(BoxMode, OutlineMode, GlowMode))
+    private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, OutlineMode, GlowMode))
 
     private val colorModes = choices("ColorMode", StaticMode, arrayOf(StaticMode, RainbowMode))
 
@@ -76,7 +76,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            val entitiesWithBoxes = world.entities.filter { it.shouldBeShown() }.groupBy { entity ->
+            val entitiesWithBoxes = findRenderedEntities().groupBy { entity ->
                 val dimensions = entity.getDimensions(entity.pose)
 
                 val d = dimensions.width.toDouble() / 2.0
@@ -84,7 +84,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
             }
 
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 entitiesWithBoxes.forEach { box, entities ->
                     for (entity in entities) {
                         val pos = entity.interpolateCurrentPosition(event.partialTicks)
@@ -110,6 +110,8 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         }
     }
 
+    fun findRenderedEntities() = world.entities.filter { it.shouldBeShown() }
+
     object GlowMode : Choice("Glow") {
 
         override val parent: ChoiceConfigurable
@@ -129,44 +131,48 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     }
 
     fun getColor(entity: Entity): Color4b {
-        run {
-            if (entity is LivingEntity) {
-                if (entity.hurtTime > 0) {
-                    return Color4b(255, 0, 0)
-                }
-                if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
-                    return Color4b(0, 0, 255)
-                }
+        if (entity !is LivingEntity) {
+            return getBaseColor()
+        }
 
-                ModuleMurderMystery.getColor(entity)?.let { return it }
+        if (entity.hurtTime > 0) {
+            return Color4b(255, 0, 0)
+        }
+        if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
+            return Color4b(0, 0, 255)
+        }
 
-                if (teamColor) {
-                    val chars: CharArray = (entity.displayName ?: return@run).string.toCharArray()
-                    var color = Int.MAX_VALUE
+        ModuleMurderMystery.getColor(entity)?.let { return it }
 
-                    val colors = "0123456789abcdef"
-
-                    for (i in chars.indices) {
-                        if (chars[i] != '§' || i + 1 >= chars.size) {
-                            continue
-                        }
-
-                        val index = colors.indexOf(chars[i + 1])
-
-                        if (index < 0 || index > 15) {
-                            continue
-                        }
-
-                        color = ColorUtils.hexColors[index]
-                        break
-                    }
-
-                    return Color4b(Color(color))
-                }
-            }
+        if (teamColor) {
+            getTeamColor(entity)?.let { return it }
         }
 
         return getBaseColor()
+    }
+
+    fun getTeamColor(entity: Entity): Color4b? {
+        val chars: CharArray = (entity.displayName ?: return null).string.toCharArray()
+        var color = Int.MAX_VALUE
+
+        val colors = "0123456789abcdef"
+
+        for (i in 0 until chars.size - 1) {
+            if (chars[i] != '§') {
+                continue
+            }
+
+            val index = colors.indexOf(chars[i + 1])
+
+            if (index !in 0..15) {
+                continue
+            }
+
+            color = ColorUtils.hexColors[index]
+            break
+        }
+
+        return Color4b(Color(color))
     }
 
 }

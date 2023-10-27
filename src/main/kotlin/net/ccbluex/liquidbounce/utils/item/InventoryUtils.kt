@@ -8,9 +8,9 @@ import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPac
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
@@ -44,6 +44,10 @@ fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = n
 
 // https://github.com/FlorianMichael/ViaFabricPlus/blob/602d723945d011d7cd9ca6f4ed7312d85f9bdf36/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L118-L130
 fun openInventorySilently() {
+    if (InventoryTracker.isInventoryOpenServerSide) {
+        return
+    }
+
     runCatching {
         val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
 
@@ -62,25 +66,24 @@ fun openInventorySilently() {
 
                 runCatching {
                     clientStatus.sendToServer(Protocol1_12To1_11_1::class.java)
+                }.onSuccess {
+                    InventoryTracker.isInventoryOpenServerSide = true
                 }
             }
         }
     }
 }
 
-inline fun runWithOpenedInventory(f: () -> Unit) {
-    val isInInventory = mc.currentScreen is InventoryScreen
+inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
+    val isInInventory = InventoryTracker.isInventoryOpenServerSide
 
     if (!isInInventory) {
         openInventorySilently()
     }
 
-    f()
-
-    if (!isInInventory) {
-        mc.networkHandler!!.sendPacket(CloseHandledScreenC2SPacket(0))
+    if (closeInventory()) {
+        mc.networkHandler?.sendPacket(CloseHandledScreenC2SPacket(0))
     }
-
 }
 
 fun clickHotbarOrOffhand(item: Int) {
@@ -130,9 +133,12 @@ var DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND,
  * Configurable to configure the dynamic rotation engine
  */
 class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
-    internal var delay by intRange("Delay", 2..4, 0..20)
+    internal val delay by intRange("Delay", 2..4, 0..20)
     internal val invOpen by boolean("InvOpen", false)
     internal val noMove by boolean("NoMove", false)
+
+    val violatesNoMove
+        get() = noMove && mc.player?.moving == true
 }
 
 data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

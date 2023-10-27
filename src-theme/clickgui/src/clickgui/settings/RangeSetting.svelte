@@ -31,6 +31,9 @@
     updateValueString();
 
     let slider = null;
+    let valueField1 = null;
+    let valueField2 = null;
+
     onMount(() => {
         const start = value;
         let connect = "lower";
@@ -69,12 +72,37 @@
 
             updateValueString();
         });
+
+        slider.noUiSlider.on("start", () => {
+            // Prevents the input field from being focused when the slider is clicked
+            if (valueField1 != null) {
+                valueField1.blur();
+            }
+            if (valueField2 != null) {
+                valueField2.blur();
+            }
+        });
     });
+
+    function unfocusOnEnter(event) {
+        if (event.key === "Enter") {
+            event.target.blur();
+        }
+    }
 </script>
 
 <div class="setting animation-fix">
     <div class="name">{name}</div>
-    <div class="value">{valueString}</div>
+    {#if multi}
+        <!-- <div class="value grid-area-b ">{valueString}</div> -->
+        <div class="grid-area-b multiValues">
+            <input size="" type="number" on:change={slider.noUiSlider.set([this.value, null])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value multi text-align-center" value={value[0]}>
+            <div class="value">-</div>
+            <input size="" type="number" on:change={slider.noUiSlider.set([null, this.value])} bind:this={valueField2} on:keydown={unfocusOnEnter} class="value multi text-align-center" value={value[1]}>
+        </div>
+    {:else}
+            <input size="" type="number" on:change={slider.noUiSlider.set([this.value])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value grid-area-b single" id="inputElem" value={valueString}>
+    {/if}
     <div bind:this={slider} class="slider"/>
 </div>
 
@@ -96,7 +124,7 @@
     .name {
         grid-area: a;
         font-weight: 500;
-        color: white;
+        color: var(--text);;
         font-size: 12px;
     }
 
@@ -107,8 +135,35 @@
     .value {
         grid-area: b;
         font-weight: 500;
-        color: white;
+        color: var(--text);;
         text-align: right;
         font-size: 12px;
+        background-color: transparent;
+        outline: none;
+        border: none;
+        
+    }
+
+    .text-align-center {
+        text-align: center;
+    }
+
+    .single {
+        width: 100%;
+    }
+    
+    .multi {
+        width: 30px;
+    }
+    .value:focus {
+            outline: none;
+    }
+
+    .grid-area-b {
+        grid-area: b;
+    }
+
+    .multiValues {
+        display: flex;
     }
 </style>

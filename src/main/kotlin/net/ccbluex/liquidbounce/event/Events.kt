@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import io.netty.channel.ChannelPipeline
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
@@ -122,7 +123,13 @@ class ScreenEvent(val screen: Screen?) : CancellableEvent()
 class ChatSendEvent(val message: String) : CancellableEvent()
 
 @Nameable("chatReceive")
-class ChatReceiveEvent(val message: String, val textData: Text) : Event()
+class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatType) : Event() {
+
+    enum class ChatType {
+        CHAT_MESSAGE, DISGUISED_CHAT_MESSAGE, GAME_MESSAGE
+    }
+
+}
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()
@@ -191,6 +198,10 @@ class PlayerStepEvent(var height: Float) : Event()
 class FluidPushEvent : CancellableEvent()
 
 // Network events
+
+@Nameable("pipeline")
+class PipelineEvent(val channelPipeline: ChannelPipeline) : Event()
+
 @Nameable("packet")
 class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 

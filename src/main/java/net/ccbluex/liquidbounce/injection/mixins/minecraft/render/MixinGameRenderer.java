@@ -96,7 +96,12 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private HitResult hookRaycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
         if (instance != client.player) return instance.raycast(maxDistance, tickDelta, includeFluids);
 
-        Rotation rotation = (RotationManager.INSTANCE.getCurrentRotation() != null) ? RotationManager.INSTANCE.getCurrentRotation() : new Rotation(client.player.getYaw(tickDelta), client.player.getPitch(tickDelta));
+        Rotation rotation =
+                (RotationManager.INSTANCE.getCurrentRotation() != null) ?
+                        RotationManager.INSTANCE.getCurrentRotation() :
+                        ModuleFreeCam.INSTANCE.getEnabled() ?
+                            RotationManager.INSTANCE.getServerRotation() :
+                            new Rotation(client.player.getYaw(tickDelta), client.player.getPitch(tickDelta));
 
         return RaytracingExtensionsKt.raycast(maxDistance, rotation, includeFluids);
     }

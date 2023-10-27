@@ -26,7 +26,9 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
+import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.minecraft.client.util.ProfileKeys
 import net.minecraft.client.util.Session
 import java.net.Proxy
 import java.util.*
@@ -43,10 +45,23 @@ import java.util.*
  * @throws AuthenticationException If the account data is invalid
  * @throws Exception If an unknown issue occurs
  */
-private fun MinecraftSessionService.login(username: String, password: String = "", environment: Environment): Pair<Session, MinecraftSessionService?> {
+private fun MinecraftSessionService.login(username: String, password: String = "", environment: Environment) :
+    Triple<Session, MinecraftSessionService?, ProfileKeys> {
     // If the password is blank, we assume that the account is cracked
     if (password.isBlank()) {
-        return loginCracked(username) to null
+        val session = Session(
+            username,
+            MojangApi.getUUID(username),
+            "-",
+            Optional.empty(),
+            Optional.empty(),
+            Session.AccountType.LEGACY
+        )
+        val sessionService = YggdrasilAuthenticationService(
+            Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
+        ).createMinecraftSessionService()
+
+        return Triple(session, sessionService, ProfileKeys.MISSING)
     }
 
     // Create a new authentication service
@@ -62,14 +77,27 @@ private fun MinecraftSessionService.login(username: String, password: String = "
     userAuthentication.logIn()
 
     // Create a new session
-    return Session(
+    val session = Session(
         userAuthentication.selectedProfile.name,
         userAuthentication.selectedProfile.id.toString(),
         userAuthentication.authenticatedToken,
         Optional.empty(),
         Optional.empty(),
         Session.AccountType.MOJANG
-    ) to authenticationService.createMinecraftSessionService()
+    )
+    val sessionService = authenticationService.createMinecraftSessionService()
+
+    var profileKeys = ProfileKeys.MISSING
+    runCatching {
+        // todo: fix support for altening (Failed to create profile keys for ... due to Status: 401)
+        val userAuthenticationService = YggdrasilUserApiService(session.accessToken,
+            mc.authenticationService.proxy, environment)
+        profileKeys = ProfileKeys.create(userAuthenticationService, session, mc.runDirectory.toPath())
+    }.onFailure {
+        logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
+    }
+
+    return Triple(session, sessionService, profileKeys)
 }
 
 fun MinecraftSessionService.loginMojang(email: String, password: String) =
@@ -78,14 +106,8 @@ fun MinecraftSessionService.loginMojang(email: String, password: String) =
 fun MinecraftSessionService.loginAltening(account: String) =
     login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
 
-fun MinecraftSessionService.loginCracked(username: String) = Session(
-    username,
-    MojangApi.getUUID(username),
-    "-",
-    Optional.empty(),
-    Optional.empty(),
-    Session.AccountType.LEGACY
-)
+fun MinecraftSessionService.loginCracked(username: String) =
+    login(username, "", YggdrasilEnvironment.PROD.environment)
 
 /**
  * Account Generator environments

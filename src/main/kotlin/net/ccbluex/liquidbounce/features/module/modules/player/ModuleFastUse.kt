@@ -26,7 +26,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.item.MilkBucketItem
 import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -108,41 +111,30 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        var usedTimer = false
-
         val repeatable = repeatable {
-            if (usedTimer) {
-                mc.timer.timerSpeed = 1F
-                usedTimer = false
-            }
-
             if (!player.isUsingItem) {
                 return@repeatable
             }
 
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
                 if (player.isUsingItem) {
-                    mc.timer.timerSpeed = 1.22f
-                    usedTimer = true
+                    Timer.requestTimerSpeed(1.22F, Priority.IMPORTANT_FOR_USAGE)
                 }
             }
         }
 
         val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (noMove) {
-                if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
-                    if (player.isUsingItem) {
-                        event.movement.x = 0.0
-                        event.movement.y = 0.0
-                        event.movement.z = 0.0
-                    }
+            if (!noMove) {
+                return@handler
+            }
+
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
+                if (player.isUsingItem) {
+                    event.movement.x = 0.0
+                    event.movement.y = 0.0
+                    event.movement.z = 0.0
                 }
             }
-        }
-
-        override fun disable() {
-            mc.timer.timerSpeed = 1F
-            usedTimer = false
         }
     }
 
@@ -154,20 +146,12 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         val timer by float("Timer", 1f, 0.1f..5f)
         val speed by int("Speed", 2, 1..35)
 
-        var usedTimer = false
-
         val repeatable = repeatable {
-            if (usedTimer) {
-                mc.timer.timerSpeed = 1F
-                usedTimer = false
-            }
-
             if (!player.isUsingItem) {
                 return@repeatable
             }
 
-            mc.timer.timerSpeed = timer
-            usedTimer = true
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
 
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
                 if (player.isUsingItem) {
@@ -190,11 +174,6 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                     }
                 }
             }
-        }
-
-        override fun disable() {
-            mc.timer.timerSpeed = 1F
-            usedTimer = false
         }
     }
 }

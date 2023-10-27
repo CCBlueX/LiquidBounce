@@ -133,14 +133,14 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     .minByOrNull { it.center.squaredDistanceTo(landingPosition.pos) }
 
                 if (bestBox != null) {
-                    renderEnvironment(matrixStack) {
+                    renderEnvironmentForWorld(matrixStack) {
                         withColor(Color4b(0, 160, 255, 150)) {
                             drawSideBox(bestBox, landingPosition.side)
                         }
                     }
                 }
             } else if (landingPosition is EntityHitResult) {
-                renderEnvironment(matrixStack) {
+                renderEnvironmentForWorld(matrixStack) {
                     val vec = landingPosition.entity
                         .interpolateCurrentPosition(event.partialTicks)
 
@@ -313,7 +313,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             currTicks++
         }
 
-        renderEnvironment(matrixStack) {
+        renderEnvironmentForWorld(matrixStack) {
             withColor(color) {
                 drawLineStrip(*lines.toTypedArray())
             }

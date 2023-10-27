@@ -41,6 +41,8 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.shape.VoxelShapes
 import org.apache.commons.lang3.RandomUtils
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Fly module
@@ -50,7 +52,8 @@ import org.apache.commons.lang3.RandomUtils
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, Verus, Enderpearl))
+    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524,
+        Sentinel27thOct))
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -111,7 +114,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
-    private object Verus : Choice("Verus") {
+    private object VerusOld : Choice("VerusOld") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -212,4 +215,47 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             return false
         }
     }
+
+    /**
+     * @anticheat Spartan
+     * @anticheatVersion phase 524
+     * @testedOn minecraft.vagdedes.com
+     * @note spartan flags less if your motion is stable, that's why we use PlayerMoveEvent
+     */
+    private object Spartan524 : Choice("Spartan524") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val moveHandler = handler<PlayerMoveEvent> { event ->
+            val yaw = Math.toRadians(player.yaw.toDouble())
+            event.movement.x = -sin(yaw) * 0.28
+            event.movement.y = 0.0
+            event.movement.z = cos(yaw) * 0.28
+        }
+    }
+
+    /**
+     * @anticheat Sentinel
+     * @anticheatVersion 27.10.2023
+     * @testedOn cubecraft.net
+     *
+     * @note Tested in SkyWars and EggWars, works fine and no automatic ban.
+     * @note This is a very simple fly, it's not the best, but it's not bad either.
+     * Bypasses Sentinel's fly check and is a little faster. Might can be improved.
+     * This fly does not require any disabler.
+     */
+    private object Sentinel27thOct : Choice("Sentinel27thOct") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            player.velocity.y = 0.2
+            player.strafe(speed = 0.34)
+            wait(4)
+        }
+
+    }
+
 }

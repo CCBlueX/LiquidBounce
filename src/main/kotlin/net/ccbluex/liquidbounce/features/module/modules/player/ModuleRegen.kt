@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
@@ -38,19 +40,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
     private val noAir by boolean("NoAir", false)
     private val potionEffect by boolean("PotionEffect", false)
 
-    var resetTimer = false
-
-    override fun disable() {
-        mc.timer.timerSpeed = 1F
-        resetTimer = false
-    }
-
     val repeatable = repeatable {
-        if (resetTimer) {
-            mc.timer.timerSpeed = 1F
-            resetTimer = false
-        }
-
         if ((!noAir && player.isOnGround) && !player.abilities.creativeMode && player.health > 0 && player.health < health) {
             if (potionEffect && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
                 return@repeatable
@@ -64,8 +54,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
             }
 
-            mc.timer.timerSpeed = timer
-            resetTimer = true
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
         }
     }
 }

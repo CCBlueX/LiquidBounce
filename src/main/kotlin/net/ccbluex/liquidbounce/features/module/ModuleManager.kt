@@ -29,11 +29,14 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.render.*
+import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
@@ -116,6 +119,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNotifier,
             ModuleSpammer,
             ModuleTeams,
+            ModuleAutoChatGame,
             ModuleDebugRecorder,
 
             // Movement
@@ -199,6 +203,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrueSight,
             ModuleXRay,
             ModuleDebug,
+            ModuleMinimap,
 
             // World
             ModuleAutoDisable,
@@ -213,7 +218,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlowBreak,
             ModuleProjectilePuncher,
             ModuleScaffold,
-            ModuleTimer
+            ModuleTimer,
+            ModuleNuker
         )
 
         builtin.apply {

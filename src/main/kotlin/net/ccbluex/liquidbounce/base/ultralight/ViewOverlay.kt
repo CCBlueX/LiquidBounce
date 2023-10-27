@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.base.ultralight.js.UltralightJsContext
 import net.ccbluex.liquidbounce.base.ultralight.theme.Page
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.longedSize
+import net.ccbluex.liquidbounce.utils.client.sizeLong
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -55,7 +55,7 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
 
     init {
         // Setup view
-        val (width, height) = mc.window.longedSize
+        val (width, height) = mc.window.sizeLong
         val viewConfig = UltralightViewConfig()
             .isTransparent(true)
             .initialDeviceScale(1.0)
@@ -88,7 +88,7 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
         ultralightPage = page
         logger.debug("Successfully loaded page ${page.name} from ${page.viewableFile}")
 
-        val (width, height) = mc.window.longedSize
+        val (width, height) = mc.window.sizeLong
 
         // Fix black screen issue
         resize(width, height)

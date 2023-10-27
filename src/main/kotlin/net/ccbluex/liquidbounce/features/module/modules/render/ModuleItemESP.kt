@@ -64,7 +64,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            renderEnvironment(matrixStack) {
+            renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
 

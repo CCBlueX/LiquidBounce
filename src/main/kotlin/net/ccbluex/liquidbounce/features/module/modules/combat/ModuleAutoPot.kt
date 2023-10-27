@@ -26,12 +26,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.clickHotbarOrOffhand
-import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
-import net.ccbluex.liquidbounce.utils.item.isHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.SplashPotionItem
@@ -52,29 +47,25 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
     val rotations = tree(RotationsConfigurable())
 
-    val repeatable =
-        repeatable {
-            if (player.isDead) {
-                return@repeatable
-            }
-            if (player.health >= health) {
-                return@repeatable
-            }
-
-            val potionSlot = findInventorySlot { isPotion(it) } ?: return@repeatable
-
-            if (isHotbarSlot(potionSlot)) {
-                if (!tryPot(potionSlot)) {
-                    return@repeatable
-                }
-
-                wait(delay)
-            } else {
-                tryToMoveSlotInHotbar(potionSlot)
-            }
-
+    val repeatable = repeatable {
+        if (player.isDead || player.health >= health) {
             return@repeatable
         }
+
+        val potionSlot = findInventorySlot { isPotion(it) } ?: return@repeatable
+
+        if (isHotbarSlot(potionSlot)) {
+            if (!tryPot(potionSlot)) {
+                return@repeatable
+            }
+
+            wait(delay)
+        } else {
+            tryToMoveSlotInHotbar(potionSlot)
+        }
+
+        return@repeatable
+    }
 
     private fun tryPot(foundPotSlot: Int): Boolean {
         val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
@@ -106,10 +97,12 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
             return
         }
 
-        val serverSlot = convertClientSlotToServerSlot(foundPotSlot, null)
+        val serverSlot = convertClientSlotToServerSlot(foundPotSlot)
 
         runWithOpenedInventory {
             interaction.clickSlot(0, serverSlot, 0, SlotActionType.QUICK_MOVE, player)
+
+            true
         }
     }
 

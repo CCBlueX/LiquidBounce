@@ -23,15 +23,16 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
  * Timer module
  *
  * Changes the speed of the entire game.
  */
-object ModuleTimer : Module("Timer", Category.WORLD) {
+object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
     private val normalSpeedTicks by int("NormalSpeedTicks", 20, 1..500)
@@ -41,27 +42,28 @@ object ModuleTimer : Module("Timer", Category.WORLD) {
     private var currentTimerState: TimerState = TimerState.NormalSpeed
 
     val repeatable = repeatable {
-        if (!onMove || player.moving) {
-            when (currentTimerState) {
-                TimerState.NormalSpeed -> {
-                    mc.timer.timerSpeed = normalSpeed
-                    wait(normalSpeedTicks)
-                    currentTimerState = TimerState.BoostSpeed
-                }
-
-                TimerState.BoostSpeed -> {
-                    mc.timer.timerSpeed = boostSpeed
-                    wait(boostSpeedTicks)
-                    currentTimerState = TimerState.NormalSpeed
-                }
-            }
-        } else {
-            mc.timer.timerSpeed = 1f
+        if (onMove && !player.moving) {
+            return@repeatable
         }
+
+        when (currentTimerState) {
+            TimerState.NormalSpeed -> {
+                Timer.requestTimerSpeed(normalSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = normalSpeedTicks)
+                wait(normalSpeedTicks)
+                currentTimerState = TimerState.BoostSpeed
+            }
+
+            TimerState.BoostSpeed -> {
+                Timer.requestTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = boostSpeedTicks)
+                wait(boostSpeedTicks)
+                currentTimerState = TimerState.NormalSpeed
+            }
+        }
+
+        return@repeatable
     }
 
     override fun disable() {
-        mc.timer.timerSpeed = 1f
         currentTimerState = TimerState.NormalSpeed
     }
 
