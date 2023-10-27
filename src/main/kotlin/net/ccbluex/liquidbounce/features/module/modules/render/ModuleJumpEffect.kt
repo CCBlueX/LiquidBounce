@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.utils.client.Curves
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.util.math.Vec3d
@@ -24,6 +25,8 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
     private val innerColor by color("InnerColor", Color4b.BLUE.alpha(0))
     private val outerColor by color("OuterColor", Color4b.BLUE)
     private val rainbow by boolean("Rainbow", false)
+
+    private val animCurve by curve("AnimCurve", Curves.LINEAR)
 
     private val hueOffsetAnim by int("hueOffsetAnim", 0, 0..360)
 
@@ -42,7 +45,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             circles.forEach {
-                val progress = (it.right + event.partialTicks) / lifetime
+                val progress = animCurve.at((it.right + event.partialTicks) / lifetime)
                 withPosition(it.left) {
                     drawGradientCircle(
                         endRadius.endInclusive * progress,
@@ -55,6 +58,10 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
         }
 
     }
+
+//    private fun curve(t: Float) =
+//        t * t * t
+
 
     private fun animateColor(baseColor: Color4b, progress: Float): Color4b {
         val color = baseColor.alpha((baseColor.a * (1 - progress)).toInt())
