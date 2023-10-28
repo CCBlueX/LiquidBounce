@@ -38,7 +38,7 @@ import net.minecraft.util.Vec3
 import java.awt.Color
 import kotlin.math.roundToInt
 
-object Nuker : Module("Nuker", ModuleCategory.WORLD) {
+object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false) {
 
     /**
      * OPTIONS
@@ -70,7 +70,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Block hit delay
-        if (blockHitDelay > 0 && !FastBreak.state) {
+        if (blockHitDelay > 0 && !FastBreak.handleEvents()) {
             blockHitDelay--
             return
         }

@@ -522,7 +522,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             var distance = thePlayer.getDistanceToEntityBox(entity)
-            if (Backtrack.state) {
+            if (Backtrack.handleEvents()) {
                 val trackedDistance = Backtrack.getNearestTrackedDistance(entity)
 
                 if (distance > trackedDistance) {
@@ -653,7 +653,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             // Critical Effect
             if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(
                     Potion.blindness
-                ) && thePlayer.ridingEntity == null || Criticals.state && Criticals.msTimer.hasTimePassed(Criticals.delay) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb
+                ) && thePlayer.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(Criticals.delay) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb
             ) thePlayer.onCriticalHit(target)
 
             // Enchant Effect
@@ -882,5 +882,5 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         get() = targetMode
 
     val isBlockingChestAura
-        get() = state && target != null
+        get() = handleEvents() && target != null
 }

@@ -160,6 +160,8 @@
         "module.fucker.description": "破坏周围的指定的方块。(别名：IDNuker)",
         
         "module.fullbright.description": "让你在黑暗中看清一切。",
+
+        "module.gamedetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
         
         "module.ghost.description": "允许你在死亡后四处走动并与环境互动。",
         

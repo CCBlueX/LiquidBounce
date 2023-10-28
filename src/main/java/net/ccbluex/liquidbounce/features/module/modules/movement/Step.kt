@@ -24,7 +24,7 @@ import net.minecraft.stats.StatList
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Step : Module("Step", ModuleCategory.MOVEMENT) {
+object Step : Module("Step", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
     /**
      * OPTIONS
@@ -145,13 +145,13 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
         val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
-        if (moduleManager[Phase::class.java].state) {
+        if (moduleManager[Phase::class.java].handleEvents()) {
             event.stepHeight = 0F
             return
         }
 
         // Some fly modes should disable step
-        if (Fly.state && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+        if (Fly.handleEvents() && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
             return

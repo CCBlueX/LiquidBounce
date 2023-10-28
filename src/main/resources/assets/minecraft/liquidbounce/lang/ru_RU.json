@@ -160,6 +160,8 @@
         "module.fucker.description": "Ломает выбранные блоки вокруг. (IDNuker)",
         
         "module.fullbright.description": "Освещает мир вокруг вас.",
+
+        "module.gamedetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
         
         "module.ghost.description": "Позволяет ходить и взаимодействовать с окружающей средой после смерти.",
         

@@ -29,7 +29,7 @@ import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER) {
+object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER, gameDetecting = false) {
     val info by BoolValue("Info", false)
 
     private val colorRainbow by BoolValue("Rainbow", false)

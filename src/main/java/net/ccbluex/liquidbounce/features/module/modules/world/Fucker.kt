@@ -97,7 +97,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
-        if (event.eventState != EventState.POST || noHit && KillAura.state && KillAura.target != null) {
+        if (event.eventState != EventState.POST || noHit && KillAura.handleEvents() && KillAura.target != null) {
             return
         }
 

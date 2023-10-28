@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S03PacketTimeUpdate
 import net.minecraft.network.play.server.S2BPacketChangeGameState
 
-object Ambience : Module("Ambience", ModuleCategory.RENDER) {
+object Ambience : Module("Ambience", ModuleCategory.RENDER, gameDetecting = false) {
 
     private val timeMode by ListValue("Mode", arrayOf("None", "Normal", "Custom"), "Custom")
     private val weatherMode by ListValue("WeatherMode", arrayOf("None", "Sun", "Rain", "Thunder"), "None")

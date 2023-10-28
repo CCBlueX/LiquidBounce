@@ -59,7 +59,7 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
             return false
 
         // Check if anti bot is enabled
-        if (!state)
+        if (!handleEvents())
             return false
 
         // Anti Bot checks

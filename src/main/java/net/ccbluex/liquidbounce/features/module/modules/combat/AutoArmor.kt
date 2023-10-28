@@ -196,11 +196,11 @@ object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 		)
 	}
 
-	fun canEquipFromChest() = state && hotbar && !notInContainers
+	fun canEquipFromChest() = handleEvents() && hotbar && !notInContainers
 
 	private suspend fun shouldOperate(onlyHotbar: Boolean = false): Boolean {
 		while (true) {
-			if (!state)
+			if (!handleEvents())
 				return false
 
 			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)

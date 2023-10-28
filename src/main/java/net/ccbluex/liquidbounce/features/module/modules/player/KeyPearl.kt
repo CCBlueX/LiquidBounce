@@ -22,7 +22,7 @@ import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 
-object KeyPearl : Module("KeyPearl", ModuleCategory.PLAYER, subjective = true) {
+object KeyPearl : Module("KeyPearl", ModuleCategory.PLAYER, subjective = true, gameDetecting = false) {
 
     private val mouse by BoolValue("Mouse", false)
     private val mouseButtonValue = ListValue("MouseButton", arrayOf("Left", "Right", "Middle", "MouseButton4", "MouseButton5"), "Middle") { mouse }

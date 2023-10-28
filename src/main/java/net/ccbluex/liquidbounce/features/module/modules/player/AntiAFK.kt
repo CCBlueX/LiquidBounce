@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 
-object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER) {
+object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER, gameDetecting = false) {
 
     private val swingDelayTimer = MSTimer()
     private val delayTimer = MSTimer()

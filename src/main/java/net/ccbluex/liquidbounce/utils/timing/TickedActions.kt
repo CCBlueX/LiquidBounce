@@ -10,6 +10,9 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.CoroutineUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.item.ItemStack
 import java.util.concurrent.CopyOnWriteArrayList
 
 object TickedActions : Listenable {
@@ -50,4 +53,42 @@ object TickedActions : Listenable {
     fun onWorld(event: WorldEvent) = actions.clear()
 
     override fun handleEvents() = true
+
+    class TickScheduler(val module: Module) : MinecraftInstance() {
+        fun schedule(id: Int, allowDuplicates: Boolean = false, action: () -> Unit) =
+            schedule(id, module, allowDuplicates, action)
+
+        fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: ((ItemStack?) -> Unit)? = null) =
+            schedule(slot, module, allowDuplicates) {
+                val newStack = mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
+                action?.invoke(newStack)
+            }
+
+        operator fun plusAssign(action: () -> Unit) {
+            schedule(-1, module, true, action)
+        }
+
+        // Schedule actions to be executed in following ticks, one each tick
+        // Thread is frozen until all actions were executed (suitable for coroutines)
+        fun scheduleAndSuspend(vararg actions: () -> Unit) =
+            actions.forEach {
+                this += it
+                CoroutineUtils.waitUntil(::isEmpty)
+            }
+
+        fun scheduleAndSuspend(id: Int = -1, allowDuplicates: Boolean = true, action: () -> Unit) {
+            schedule(id, module, allowDuplicates, action)
+            CoroutineUtils.waitUntil(::isEmpty)
+        }
+
+        // Checks if id click is scheduled: if (id in TickScheduler)
+        operator fun contains(id: Int) = isScheduled(id, module)
+
+        fun clear() = clear(module)
+
+        val size
+            get() = size(module)
+
+        fun isEmpty() = isEmpty(module)
+    }
 }

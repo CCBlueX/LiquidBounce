@@ -116,6 +116,7 @@ object ModuleManager : Listenable {
             Freeze,
             Fucker,
             Fullbright,
+            GameDetector,
             Ghost,
             GhostHand,
             GodMode,
