@@ -60,6 +60,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private val delayVelocity by BoolValue("DelayVelocity", false) { backtrackMode == "Modern" }
     private val delayExplosion by BoolValue("DelayExplosion", false) { backtrackMode == "Modern" }
     private val allPackets by BoolValue("AllPackets", false) { backtrackMode == "Modern" }
+    private val excludeSpecial by BoolValue("ExcludeSpecial", true) { backtrackMode == "Modern" && allPackets}
 
     // ESP
     private val rainbow by BoolValue("Rainbow", true) { backtrackMode == "Modern" }
@@ -151,9 +152,19 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     }
                 }
 
-                if (event.eventType == EventState.RECEIVE && allPackets && packet !is S29PacketSoundEffect && packet !is S0CPacketSpawnPlayer) {
-                    event.cancelEvent()
-                    packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
+                if (event.eventType == EventState.RECEIVE && allPackets) {
+                    if (excludeSpecial) {
+                        if (packet !is S29PacketSoundEffect && packet !is S0CPacketSpawnPlayer && packet !is S02PacketChat && packet !is S0BPacketAnimation && packet !is S2APacketParticles && packet !is S06PacketUpdateHealth){
+                            event.cancelEvent()
+                            packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
+                        }
+                    }
+                    else {
+                        event.cancelEvent()
+                        packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
+                    }
+
+                    
                 }
 
                 if (!shouldBacktrack()) clearPackets()
