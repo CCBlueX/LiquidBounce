@@ -47,7 +47,7 @@ import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 
 /**
- * NoFall modulen
+ * NoFall module
  *
  * Protects you from taking fall damage.
  */
