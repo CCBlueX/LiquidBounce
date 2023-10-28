@@ -165,6 +165,22 @@ object RenderUtils : MinecraftInstance() {
         resetCaps()
     }
 
+    fun drawBacktrackBox(axisAlignedBB: AxisAlignedBB, color: Color) {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_BLEND)
+        glLineWidth(2f)
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_DEPTH_TEST)
+        glDepthMask(false)
+        glColor(color.red, color.green, color.blue, 90)
+        drawFilledBox(axisAlignedBB)
+        glColor4f(1f, 1f, 1f, 1f)
+        glEnable(GL_TEXTURE_2D)
+        glEnable(GL_DEPTH_TEST)
+        glDepthMask(true)
+        glDisable(GL_BLEND)
+    }
+
     fun drawAxisAlignedBB(axisAlignedBB: AxisAlignedBB, color: Color) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
