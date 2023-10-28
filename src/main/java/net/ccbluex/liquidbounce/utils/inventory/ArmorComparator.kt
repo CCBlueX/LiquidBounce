@@ -126,4 +126,6 @@ class ArmorSet(private vararg val armorPairs: Pair<Int?, ItemStack>?) : Iterable
 	operator fun get(index: Int) = armorPairs.getOrNull(index)
 }
 
+operator fun ArmorSet?.contains(stack: ItemStack) = this?.contains(stack) ?: true
+
 private val NULL_LIST = listOf<Pair<Int?, ItemStack>?>(null)
