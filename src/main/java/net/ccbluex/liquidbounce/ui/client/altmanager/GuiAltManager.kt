@@ -417,7 +417,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         fun loadActiveGenerators() {
             try {
                 // Read versions json from cloud
-                val jsonElement = JsonParser().parse(get("$CLIENT_CLOUD/generators.json"))
+                val (response, _) = get("$CLIENT_CLOUD/generators.json")
+                val jsonElement = JsonParser().parse(response)
 
                 // Check json is valid object
                 if (jsonElement.isJsonObject) {

@@ -165,8 +165,8 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         try {
             val jsonParser = JsonParser()
 
-            val gitHubContributors = PRETTY_GSON.fromJson(get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors"), Array<GitHubContributor>::class.java)
-            val additionalInformation = jsonParser.parse(get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json")).asJsonObject
+            val gitHubContributors = PRETTY_GSON.fromJson(get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors").first, Array<GitHubContributor>::class.java)
+            val additionalInformation = jsonParser.parse(get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json").first).asJsonObject
 
             val credits = mutableListOf<Credit>()
 
@@ -212,8 +212,10 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
             for (credit in credits) {
                 try {
-                    requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET").use {
-                        credit.avatar = CustomTexture(ImageIO.read(it))
+                    requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET").let { (stream, code) ->
+                        stream.use {
+                            credit.avatar = CustomTexture(ImageIO.read(it))
+                        }
                     }
                 } catch (_: Exception) {
 

@@ -47,7 +47,12 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
                         // Load settings and apply them
                         val settings = if (args[2].startsWith("http")) {
-                            get(args[2])
+                            val (text, code) = get(args[2])
+                            if (code != 200) {
+                                error(text)
+                            }
+
+                            text
                         } else {
                             ClientApi.requestSettingsScript(args[2])
                         }

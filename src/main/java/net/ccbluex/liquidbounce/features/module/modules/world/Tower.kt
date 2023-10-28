@@ -37,7 +37,7 @@ import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.init.Blocks.air
 import net.minecraft.item.ItemBlock
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C03PacketPlayer.*
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.stats.StatList
 import net.minecraft.util.BlockPos
@@ -49,13 +49,14 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.truncate
 
+
 object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
     /**
      * OPTIONS
      */
     private val mode by ListValue(
         "Mode",
-        arrayOf("Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"),
+        arrayOf("Jump", "MotionJump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"),
         "Motion"
     )
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
@@ -69,8 +70,8 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
     private val timer by FloatValue("Timer", 1f, 0.01f..10f)
 
     // Jump mode
-    private val jumpMotion by FloatValue("JumpMotion", 0.42f, 0.3681289f..0.79f) { mode == "Jump" }
-    private val jumpDelay by IntegerValue("JumpDelay", 0, 0..20) { mode == "Jump" }
+    private val jumpMotion by FloatValue("JumpMotion", 0.42f, 0.3681289f..0.79f) { mode == "MotionJump" }
+    private val jumpDelay by IntegerValue("JumpDelay", 0, 0..20) { mode == "MotionJump" || mode == "Jump" }
 
     // ConstantMotion
     private val constantMotion by FloatValue("ConstantMotion", 0.42f, 0.1f..1f) { mode == "ConstantMotion" }
@@ -161,7 +162,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         when (mode.lowercase()) {
             "jump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelay)) {
                 fakeJump()
-                thePlayer.motionY = jumpMotion.toDouble()
+                thePlayer.jump()
+            } else if (!thePlayer.onGround) {
+                thePlayer.isAirBorne = false
                 tickTimer.reset()
             }
 
@@ -170,6 +173,13 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 thePlayer.motionY = 0.42
             } else if (thePlayer.motionY < 0.1) {
                 thePlayer.motionY = -0.3
+            }
+
+            // Old Name (Jump)
+            "motionjump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelay)) {
+                fakeJump()
+                thePlayer.motionY = jumpMotion.toDouble()
+                tickTimer.reset()
             }
 
             "motiontp" -> if (thePlayer.onGround) {
