@@ -404,24 +404,6 @@ fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float,
 
     val points = circlePoints()
 
-    (0 until 40).forEach {
-        val p = points[it]
-        val next = points[(it + 1) % 40]
-//        drawGradientQuad(
-//            listOf(
-//                next * outerRadius,
-//                p * outerRadius,
-//                p * innerRadius,
-//                next * innerRadius,
-//            ),
-//            listOf(
-//                outerColor4b,
-//                outerColor4b,
-//                innerColor4b,
-//                innerColor4b
-//            ))
-    }
-
     with(bufferBuilder){
         begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
 
