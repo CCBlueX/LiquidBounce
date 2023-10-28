@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.misc.GameDetector
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -82,6 +83,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     companion object {
         val spacedModules by BoolValue("SpacedModules", false)
+        val inactiveStyle by ListValue("InactiveModulesStyle", arrayOf("Normal", "Color", "Hide"), "Color")
+            { GameDetector.state }
     }
 
     private var x2 = 0
@@ -92,6 +95,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private lateinit var tagSuffix: String
 
     private var modules = emptyList<Module>()
+
+    private val inactiveColor = Color(255, 255, 255, 100).rgb
 
     init {
         updateTagDetails()
@@ -125,19 +130,22 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         val delta = deltaTime
 
         for (module in moduleManager.modules) {
-            if (!module.inArray || (!module.state && module.slide == 0F)) continue
+            val shouldShow = (module.inArray && module.state && (inactiveStyle != "Hide" || module.isActive))
 
-            // TODO
+            if (!shouldShow && module.slide <= 0f)
+                continue
+
             val displayString = getDisplayString(module)
 
             val width = font.getStringWidth(displayString)
 
-            if (module.state) {
+            // If modules become inactive because they only work when in game, animate them as if they got disabled
+            if (shouldShow) {
                 if (module.slide < width) {
                     module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
                     module.slideStep += delta / 4F
                 }
-            } else if (module.slide > 0) {
+            } else {
                 module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
                 module.slideStep -= delta / 4F
             }
@@ -147,49 +155,61 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         }
 
         // Draw arraylist
-        val customColor = Color(textRed, textGreen, textBlue, 1).rgb
+        val textCustomColor = Color(textRed, textGreen, textBlue, 1).rgb
         val rectCustomColor = Color(rectRed, rectGreen, rectBlue, rectAlpha).rgb
         val backgroundCustomColor = Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).rgb
         val textSpacer = textHeight + space
 
-        when (side.horizontal) {
-            Horizontal.RIGHT, Horizontal.MIDDLE -> {
-                modules.forEachIndexed { index, module ->
-                    val displayString = getDisplayString(module)
+        val rainbowOffset = System.currentTimeMillis() % 10000 / 10000F
+        val rainbowX = if (rainbowX == 0f) 0f else 1f / rainbowX
+        val rainbowY = if (rainbowY == 0f) 0f else 1f / rainbowY
 
+
+        modules.forEachIndexed { index, module ->
+            val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
+                    if (side.vertical == Vertical.DOWN) index + 1 else index
+
+            val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
+
+            val markAsInactive = inactiveStyle == "Color" && !module.isActive
+
+            val displayString = getDisplayString(module)
+
+            when (side.horizontal) {
+                Horizontal.RIGHT, Horizontal.MIDDLE -> {
                     val xPos = -module.slide - 2
-                    val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
-                            if (side.vertical == Vertical.DOWN) index + 1 else index
-                    val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
-                    RainbowShader.begin(backgroundMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
                         drawRect(xPos - if (rectMode == "Right") 5 else 2, yPos, if (rectMode == "Right") -3F else 0F, yPos + textHeight,
                             when (backgroundMode) {
-                                "Rainbow" -> 0xFF shl 24
+                                "Rainbow" -> 0
                                 "Random" -> moduleColor
                                 else -> backgroundCustomColor
                             }
                         )
                     }
 
-                    resetColor()
-                    RainbowFontShader.begin(textColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowFontShader.begin(!markAsInactive && textColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
                         font.drawString(displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY,
-                            when (textColorMode) {
+                            if (markAsInactive) inactiveColor
+                            else when (textColorMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
-                                else -> customColor
-                            }, textShadow
+                                else -> textCustomColor
+                            },
+                            textShadow
                         )
                     }
 
                     if (rectMode != "None") {
-                        RainbowShader.begin(rectColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-                            val rectColor = when (rectColorMode) {
-                                "Rainbow" -> 0
-                                "Random" -> moduleColor
-                                else -> rectCustomColor
-                            }
+                        RainbowShader.begin(!markAsInactive && rectColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
+                            val rectColor =
+                                if (markAsInactive) inactiveColor
+                                else when (rectColorMode) {
+                                    "Rainbow" -> 0
+                                    "Random" -> moduleColor
+                                    else -> rectCustomColor
+                                }
 
                             when (rectMode) {
                                 "Left" -> drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
@@ -198,19 +218,12 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         }
                     }
                 }
-            }
 
-            Horizontal.LEFT -> {
-                modules.forEachIndexed { index, module ->
-                    val displayString = getDisplayString(module)
-
+                Horizontal.LEFT -> {
                     val width = font.getStringWidth(displayString)
                     val xPos = -(width - module.slide) + if (rectMode == "Left") 5 else 2
-                    val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
-                            if (side.vertical == Vertical.DOWN) index + 1 else index
-                    val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
-                    RainbowShader.begin(backgroundMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
                         drawRect(0F, yPos, xPos + width + if (rectMode == "Right") 5 else 2, yPos + textHeight,
                             when (backgroundMode) {
                                 "Rainbow" -> 0
@@ -220,24 +233,27 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         )
                     }
 
-                    resetColor()
-                    RainbowFontShader.begin(textColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowFontShader.begin(!markAsInactive && textColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
                         font.drawString(displayString, xPos, yPos + textY,
-                            when (textColorMode) {
+                            if (markAsInactive) inactiveColor
+                            else when (textColorMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
-                                else -> customColor
-                            }, textShadow
+                                else -> textCustomColor
+                            },
+                            textShadow
                         )
                     }
 
-                    RainbowShader.begin(rectColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowShader.begin(!markAsInactive && rectColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
                         if (rectMode != "None") {
-                            val rectColor = when (rectColorMode) {
-                                "Rainbow" -> 0
-                                "Random" -> moduleColor
-                                else -> rectCustomColor
-                            }
+                            val rectColor =
+                                if (markAsInactive) inactiveColor
+                                else when (rectColorMode) {
+                                    "Rainbow" -> 0
+                                    "Random" -> moduleColor
+                                    else -> rectCustomColor
+                                }
 
                             when (rectMode) {
                                 "Left" -> drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
@@ -248,6 +264,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                 }
             }
         }
+
 
         // Draw border
         if (mc.currentScreen is GuiHudDesigner) {
@@ -272,6 +289,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     }
                 }
             }
+
             y2 = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) * modules.size
 
             return Border(0F, 0F, x2 - 7F, y2 - if (side.vertical == Vertical.DOWN) 1F else 0F)
@@ -284,7 +302,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     override fun updateElement() {
         modules = moduleManager.modules
-                .filter { it.inArray && it.slide > 0 }
-                .sortedBy { -font.getStringWidth(getDisplayString(it)) }
+            .filter { it.inArray && it.slide > 0 }
+            .sortedBy { -font.getStringWidth(getDisplayString(it)) }
     }
 }
