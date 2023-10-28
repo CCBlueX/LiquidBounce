@@ -265,7 +265,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (backtrackMode == "Modern") clearPackets(false)
     }
 
-    @EventTarget
     override fun onEnable() {
         target = null
         realX = 0.0
@@ -273,7 +272,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         realZ = 0.0
     }
 
-    @EventTarget
     override fun onDisable() {
         if (backtrackMode == "Modern") clearPackets()
     }
