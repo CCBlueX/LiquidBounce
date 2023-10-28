@@ -60,10 +60,11 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
                 }
                 "switchitem" -> {
                     when (event.eventState) {
-                        EventState.PRE -> sendPackets(
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem % 8 + 1),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
-                        )
+                        EventState.PRE -> {
+                            serverSlot = (serverSlot + 1) % 9
+                            serverSlot = currentItem
+                        }                          
+
 
                         else -> {}
                     }
@@ -110,10 +111,11 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
                 "switchitem" -> {
                     when (event.eventState) {
-                        EventState.PRE -> sendPackets(
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem % 8 + 1),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
-                        )
+                        EventState.PRE -> {
+                            serverSlot = (serverSlot + 1) % 9
+                            serverSlot = currentItem
+                        }                          
+
 
                         else -> {}
                     }
