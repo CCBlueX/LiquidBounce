@@ -20,15 +20,14 @@ import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.tuple.MutablePair
 
 object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
-    private val endRadius by floatRange("EndRadius", 0.4F..0.9F, 0.1F..3F)
+    private val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
 
-    private val innerColor by color("InnerColor", Color4b.BLUE.alpha(0))
-    private val outerColor by color("OuterColor", Color4b.BLUE)
-    private val rainbow by boolean("Rainbow", false)
+    private val innerColor by color("InnerColor", Color4b(0, 255, 4, 0))
+    private val outerColor by color("OuterColor", Color4b(0, 255, 4, 89))
 
-    private val animCurve by curve("AnimCurve", Curves.LINEAR)
+    private val animCurve by curve("AnimCurve", Curves.EASE_OUT)
 
-    private val hueOffsetAnim by int("hueOffsetAnim", 0, 0..360)
+    private val hueOffsetAnim by int("hueOffsetAnim", 63, -360..360)
 
     private val lifetime by int("Lifetime", 10, 1..30)
 
@@ -58,9 +57,6 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
         }
 
     }
-
-//    private fun curve(t: Float) =
-//        t * t * t
 
 
     private fun animateColor(baseColor: Color4b, progress: Float): Color4b {
