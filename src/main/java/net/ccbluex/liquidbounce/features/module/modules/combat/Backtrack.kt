@@ -46,7 +46,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     // newgen
-    private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance", 3.0f, 0.0f..3.0f) {
+    private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance", 3.0f, 0.0f..3.5f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minDistance)
         override fun isSupported() = backtrackMode == "Modern"
     }
@@ -155,6 +155,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     event.cancelEvent()
                     packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
                 }
+
+                if (!shouldBacktrack()) clearPackets()
             }
         }     
     }
@@ -163,7 +165,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     fun onTick(event: TickEvent) {
         if (backtrackMode == "Modern") {
             if (shouldBacktrack()) handlePackets()
-            else clearPackets()
         }
         
     }
