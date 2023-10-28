@@ -69,7 +69,7 @@ function createBundle() {
             // Check if theme has public folder to copy
             if (fs.existsSync(path.join(folder, "public"))) {
                 // Add contents of the public folder to the zip archive
-                archive.directory(path.join(folder, "public"), path.join(folder, "public"));
+                archive.directory(path.join(folder, "public"), path.join(folder));
                 log(`Added public folder from ${folder} to archive`);
             } else {
                 log(`Folder ${folder} has no public folder`);
