@@ -272,7 +272,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        if (backtrackMode == "Modern") clearPackets(false)
+        if (backtrackMode == "Modern") clearPackets()
     }
 
     override fun onEnable() {
