@@ -32,7 +32,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5"), "None")
+    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5", "SwitchItem"), "None")
 
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
@@ -58,7 +58,16 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
                 "aac5" -> {
                     sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
                 }
+                "switchitem" -> {
+                    when (event.eventState) {
+                        EventState.PRE -> sendPackets(
+                            C09PacketHeldItemChange(thePlayer.inventory.currentItem % 8 + 1),
+                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                        )
 
+                        else -> {}
+                    }
+                }
                 else -> {
                     return
                 }
