@@ -21,10 +21,10 @@ import java.awt.Font
 class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocation("textures/font/ascii.png"), mc.textureManager, false) {
 
     val fontHeight: Int
-    var defaultFont = AWTFontRenderer(font)
-    private var boldFont = AWTFontRenderer(font.deriveFont(Font.BOLD))
-    private var italicFont = AWTFontRenderer(font.deriveFont(Font.ITALIC))
-    private var boldItalicFont = AWTFontRenderer(font.deriveFont(Font.BOLD or Font.ITALIC))
+    val defaultFont = AWTFontRenderer(font)
+    private val boldFont = AWTFontRenderer(font.deriveFont(Font.BOLD))
+    private val italicFont = AWTFontRenderer(font.deriveFont(Font.ITALIC))
+    private val boldItalicFont = AWTFontRenderer(font.deriveFont(Font.BOLD or Font.ITALIC))
 
     val height
         get() = defaultFont.height / 2

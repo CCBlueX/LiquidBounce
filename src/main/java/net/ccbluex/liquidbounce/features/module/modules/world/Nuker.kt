@@ -62,7 +62,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false) {
     private var currentBlock: BlockPos? = null
     private var blockHitDelay = 0
 
-    private var nukeTimer = TickTimer()
+    private val nukeTimer = TickTimer()
     private var nukedCount = 0
 
     var currentDamage = 0F

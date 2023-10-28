@@ -21,7 +21,7 @@ abstract class Shader : MinecraftInstance {
     var programId = 0
         private set
     
-    private var uniformsMap = mutableMapOf<String, Int>()
+    private val uniformsMap = mutableMapOf<String, Int>()
 
     constructor(fragmentShader: String) {
         val vertexShaderID: Int

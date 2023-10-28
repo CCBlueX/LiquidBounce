@@ -85,7 +85,6 @@ object ModuleManager : Listenable {
             Blink,
             BlockESP,
             BlockOverlay,
-            BlockWalk,
             BowAimbot,
             Breadcrumbs,
             BufferSpeed,

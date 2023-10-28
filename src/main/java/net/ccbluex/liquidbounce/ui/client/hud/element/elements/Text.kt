@@ -70,13 +70,13 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private var green by IntegerValue("Green", 255, 0..255) { !rainbow && alpha > 0 }
     private var blue by IntegerValue("Blue", 255, 0..255) { !rainbow && alpha > 0 }
 
-    private var backgroundAlpha by IntegerValue("BackgroundAlpha", 0, 0..255)
-    private var backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
-    private var backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
-    private var backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
+    private val backgroundAlpha by IntegerValue("BackgroundAlpha", 0, 0..255)
+    private val backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
+    private val backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
+    private val backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
 
     private var shadow by BoolValue("Shadow", true)
-    private var font by FontValue("Font", Fonts.font40)
+    private val font by FontValue("Font", Fonts.font40)
 
     private var editMode = false
     private var editTicks = 0

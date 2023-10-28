@@ -24,7 +24,7 @@ object Zoot : Module("Zoot", ModuleCategory.PLAYER) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (noAir && !thePlayer.onGround)
+        if (noAir && !serverOnGround)
             return
 
         if (badEffects) {
@@ -32,7 +32,7 @@ object Zoot : Module("Zoot", ModuleCategory.PLAYER) {
 
             if (effect != null) {
                 repeat(effect.duration / 20) {
-                    sendPacket(C03PacketPlayer(thePlayer.onGround))
+                    sendPacket(C03PacketPlayer(serverOnGround))
                 }
             }
         }
@@ -40,7 +40,7 @@ object Zoot : Module("Zoot", ModuleCategory.PLAYER) {
 
         if (fire && !thePlayer.capabilities.isCreativeMode && thePlayer.isBurning) {
             repeat(9) {
-                sendPacket(C03PacketPlayer(thePlayer.onGround))
+                sendPacket(C03PacketPlayer(serverOnGround))
             }
         }
     }

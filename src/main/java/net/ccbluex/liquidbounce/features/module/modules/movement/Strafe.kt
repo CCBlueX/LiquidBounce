@@ -17,10 +17,10 @@ import kotlin.math.sin
 
 object Strafe : Module("Strafe", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
-    private var strength by FloatValue("Strength", 0.5F, 0F..1F)
-    private var noMoveStop by BoolValue("NoMoveStop", false)
-    private var onGroundStrafe by BoolValue("OnGroundStrafe", false)
-    private var allDirectionsJump by BoolValue("AllDirectionsJump", false)
+    private val strength by FloatValue("Strength", 0.5F, 0F..1F)
+    private val noMoveStop by BoolValue("NoMoveStop", false)
+    private val onGroundStrafe by BoolValue("OnGroundStrafe", false)
+    private val allDirectionsJump by BoolValue("AllDirectionsJump", false)
 
     private var wasDown = false
     private var jump = false
