@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import de.florianmichael.viafabricplus.protocolhack.ProtocolHack
 import net.raphimc.vialoader.util.VersionEnum
 
 // Only runs once
@@ -32,10 +31,17 @@ val usesViaFabricPlus = runCatching {
 
 val isOldCombat: Boolean
     get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (!usesViaFabricPlus) {
             return@runCatching false
         }
 
-        // Throws an exception if the protocol hack is not loaded - but this should never happen
-        ProtocolHack.getTargetVersion().isOlderThanOrEqualTo(VersionEnum.r1_8)
+        val clazz = Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
+        val method = clazz.getMethod("getTargetVersion")
+        val version = method.invoke(null) as VersionEnum
+
+        // Check if the version is older or equal than 1.8
+        return version.isOlderThanOrEqualTo(VersionEnum.r1_8)
+    }.onFailure {
+        logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
