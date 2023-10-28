@@ -388,34 +388,62 @@ private fun circlePoints() =
 fun RenderEnvironment.drawCircle(center: Vec3,radius: Float) {
 
 }
+//private fun vertexByPositionColor {
+//    vertex()
+//}
 
 fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float, outerColor4b: Color4b, innerColor4b: Color4b) {
-//    val matrix = matrixStack.peek().positionMatrix
-//    val tessellator = RenderSystem.renderThreadTesselator()
-//    val bufferBuilder = tessellator.buffer
 
-    // Set the shader to the position program
-//    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position and color program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
 
     val points = circlePoints()
 
     (0 until 40).forEach {
         val p = points[it]
         val next = points[(it + 1) % 40]
-        drawGradientQuad(
-            listOf(
-                next * outerRadius,
-                p * outerRadius,
-                p * innerRadius,
-                next * innerRadius,
-            ),
-            listOf(
-                outerColor4b,
-                outerColor4b,
-                innerColor4b,
-                innerColor4b
-            ))
+//        drawGradientQuad(
+//            listOf(
+//                next * outerRadius,
+//                p * outerRadius,
+//                p * innerRadius,
+//                next * innerRadius,
+//            ),
+//            listOf(
+//                outerColor4b,
+//                outerColor4b,
+//                innerColor4b,
+//                innerColor4b
+//            ))
     }
+
+    with(bufferBuilder){
+        begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
+
+        (0 .. 40).forEach {
+            val p = points[it % 40]
+            val outerP = p * outerRadius
+            val innerP = p * innerRadius
+
+            vertex(matrix, outerP.x, outerP.y, outerP.z)
+                .color(outerColor4b.toRGBA())
+                .next()
+            vertex(matrix, innerP.x, innerP.y, innerP.z)
+                .color(innerColor4b.toRGBA())
+                .next()
+        }
+
+
+
+    }
+    tessellator.draw()
+
+
 
 }
 
