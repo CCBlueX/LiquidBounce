@@ -142,7 +142,16 @@ processResources {
 
 // The following code will include the theme into the build
 
-tasks.register('makeTheme', Exec) {
+tasks.register('npmInstallTheme', Exec) {
+    workingDir file('src-theme')
+    commandLine 'npm', 'i'
+    doLast {
+        println 'Successfully installed dependencies for theme'
+    }
+}
+
+tasks.register('bundleTheme', Exec) {
+    dependsOn 'npmInstallTheme'
     workingDir file('src-theme')
     commandLine 'node', 'bundle.js'
     doLast {
@@ -158,7 +167,7 @@ sourceSets {
     }
 }
 
-processResources.dependsOn makeTheme
+processResources.dependsOn bundleTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
