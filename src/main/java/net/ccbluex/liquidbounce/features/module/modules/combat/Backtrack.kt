@@ -153,8 +153,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
 
                 if (event.eventType == EventState.RECEIVE && allPackets) {
+                    val isSpecialPacket = packet is S29PacketSoundEffect || packet is S0CPacketSpawnPlayer || packet is S02PacketChat || packet is S0BPacketAnimation || packet is S2APacketParticles || packet is S06PacketUpdateHealth
+
                     if (excludeSpecial) {
-                        if (packet !is S29PacketSoundEffect && packet !is S0CPacketSpawnPlayer && packet !is S02PacketChat && packet !is S0BPacketAnimation && packet !is S2APacketParticles && packet !is S06PacketUpdateHealth){
+                        if (!isSpecialPacket){
                             event.cancelEvent()
                             packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
                         }
