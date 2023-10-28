@@ -58,7 +58,10 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
-    maven { url = 'https://repo.viaversion.com/' }
+    maven {
+        name = 'ViaVersion'
+        url = 'https://repo.viaversion.com/'
+    }
 
     maven {
         name = "modrinth"
@@ -79,8 +82,9 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    modImplementation 'com.viaversion:viaversion:4.7.1-SNAPSHOT'
-    modImplementation 'com.github.FlorianMichael:ViaLoadingBase:4.4.8'
+    implementation ("de.florianmichael:viafabricplus:2.9.5") {
+        transitive = false
+    }
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"

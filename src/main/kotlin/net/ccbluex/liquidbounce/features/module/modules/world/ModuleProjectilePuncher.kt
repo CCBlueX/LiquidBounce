@@ -26,8 +26,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -140,14 +139,14 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         EventManager.callEvent(AttackEvent(entity))
 
         // Swing before attacking (on 1.8)
-        if (swing && protocolVersion == MC_1_8) {
+        if (swing && isOldCombat) {
             player.swingHand(Hand.MAIN_HAND)
         }
 
         network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
 
         // Swing after attacking (on 1.9+)
-        if (swing && protocolVersion != MC_1_8) {
+        if (swing && !isOldCombat) {
             player.swingHand(Hand.MAIN_HAND)
         }
 
