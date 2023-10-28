@@ -40,7 +40,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
+object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting = false) {
     private val colorMode by ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
 
     private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }

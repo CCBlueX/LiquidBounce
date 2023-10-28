@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.*
@@ -49,33 +50,31 @@ import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.START_SNEAKING
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.STOP_SNEAKING
 import net.minecraft.util.*
+import net.minecraft.world.WorldSettings
+import net.minecraftforge.event.ForgeEventFactory
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import javax.vecmath.Color3f
 import kotlin.math.*
 
-object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
-    private val mode by ListValue(
-        "Mode",
-        arrayOf("Normal", "Rewinside", "Expand", "Telly", "GodBridge"),
-        "Normal"
-    )
+object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameDetecting = false) {
+
+    private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand", "Telly", "GodBridge"), "Normal")
 
     // Expand
     private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false) { mode == "Expand" }
     private val expandLength by IntegerValue("ExpandLength", 1, 1..6) { mode == "Expand" }
 
     // Placeable delay
-    private val placeDelayValue: BoolValue = object : BoolValue("PlaceDelay", true) {
-        override fun isSupported() = mode != "GodBridge"
-    }
+    private val placeDelayValue = BoolValue("PlaceDelay", true) { mode != "GodBridge" }
 
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0..1000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
@@ -178,18 +177,15 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     }
 
     // Eagle
-    private val eagleValue: ListValue = object : ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") {
-        override fun isSupported() = mode != "GodBridge"
-    }
+    private val eagleValue = ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") { mode != "GodBridge" }
 
     val eagle by eagleValue
 
     private val eagleSpeed by FloatValue("EagleSpeed", 0.3f, 0.3f..1.0f) { eagleValue.isSupported() && eagle != "Off" }
     val eagleSprint by BoolValue("EagleSprint", false) { eagleValue.isSupported() && eagle == "Normal" }
     private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10) { eagleValue.isSupported() && eagle != "Off" }
-    private val edgeDistance by FloatValue(
-        "EagleEdgeDistance", 0f, 0f..0.5f
-    ) { eagleValue.isSupported() && eagle != "Off" }
+    private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f)
+        { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
     private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized", "GodBridge"), "Normal")
@@ -217,11 +213,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotationMode != "Off"
     }
 
-    private val angleThresholdUntilReset by FloatValue(
-        "AngleThresholdUntilReset",
-        5f,
-        0.1f..180f
-    ) { rotationMode != "Off" }
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+        { rotationMode != "Off" }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -251,21 +244,15 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Safety
     private val sameY by BoolValue("SameY", false) { mode != "GodBridge" }
-    private val safeWalk: BoolValue = object : BoolValue("SafeWalk", true) {
-        override fun isSupported() = mode != "GodBridge"
-    }
+    private val safeWalkValue = BoolValue("SafeWalk", true) { mode != "GodBridge" }
 
-    private val airSafe by BoolValue("AirSafe", false) { safeWalk.isActive() }
+    private val airSafe by BoolValue("AirSafe", false) { safeWalkValue.isActive() }
 
     // Visuals
     private val counterDisplay by BoolValue("Counter", true, subjective = true)
     private val mark by BoolValue("Mark", false, subjective = true)
     private val trackCPS by BoolValue("TrackCPS", false, subjective = true)
-    private val safetyLines by BoolValue(
-        "SafetyLines",
-        false,
-        subjective = true
-    ) { isGodBridgeEnabled }
+    private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { isGodBridgeEnabled }
 
     // Target placement
     private var placeRotation: PlaceRotation? = null
@@ -292,10 +279,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Downwards
     private val shouldGoDown
-        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && mode !in arrayOf(
-            "GodBridge",
-            "Telly"
-        ) && blocksAmount > 1
+        get() = down && !sameY
+                && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
+                && mode !in arrayOf("GodBridge", "Telly")
+                && blocksAmount > 1
 
     // Current rotation
     private val currRotation
@@ -306,9 +293,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // GodBridge
     private var blocksPlacedUntilJump = 0
+
     private val isManualJumpOptionActive
         get() = mode == "GodBridge" && !jumpAutomatically
+
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
+
     private val isGodBridgeEnabled
         get() = mode == "GodBridge" || mode == "Normal" && rotationMode == "GodBridge"
 
@@ -334,6 +324,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     @EventTarget
     private fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
+
+        if (mc.playerController.currentGameType == WorldSettings.GameType.SPECTATOR)
+            return
 
         mc.timer.timerSpeed = timer
 
@@ -617,10 +610,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (!delayTimer.hasTimePassed() || shouldKeepLaunchPosition && launchY - 1 != placeInfo.vec3.yCoord.toInt())
             return
 
-        var itemStack = player.inventoryContainer.getSlot(serverSlot + 36).stack
+        var stack = player.inventoryContainer.getSlot(serverSlot + 36).stack
 
         //TODO: blacklist more blocks than only bushes
-        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || itemStack.stackSize <= 0 || sortByHighestAmount) {
+        if (stack == null || stack.item !is ItemBlock || (stack.item as ItemBlock).block is BlockBush || stack.stackSize <= 0 || sortByHighestAmount) {
             val blockSlot = if (sortByHighestAmount) {
                 InventoryUtils.findLargestBlockStackInHotbar() ?: return
             } else {
@@ -637,42 +630,16 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
                 "spoof", "switch" -> serverSlot = blockSlot - 36
             }
-            itemStack = player.inventoryContainer.getSlot(blockSlot).stack
+            stack = player.inventoryContainer.getSlot(blockSlot).stack
         }
 
-        if (mc.playerController.onPlayerRightClick(
-                player, world, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3
-            )
-        ) {
-            delayTimer.reset()
-
-            if (player.onGround) {
-                player.motionX *= speedModifier
-                player.motionZ *= speedModifier
-            }
-
-            if (swing) {
-                player.swingItem()
-            } else {
-                sendPacket(C0APacketAnimation())
-            }
-
-            if (isManualJumpOptionActive) {
-                blocksPlacedUntilJump++
-            }
-
-            updatePlacedBlocksForTelly()
-        } else {
-            if (mc.playerController.sendUseItem(player, world, itemStack)) {
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
-            }
-        }
+        tryToPlaceBlock(stack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)
 
         if (autoBlock == "Switch")
             serverSlot = player.inventory.currentItem
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
-        switchBlockNextTickIfPossible(itemStack)
+        switchBlockNextTickIfPossible(stack)
 
         if (trackCPS) {
             CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
@@ -715,26 +682,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        if (mc.playerController.onPlayerRightClick(
-                player, world, stack, raytrace.blockPos, raytrace.sideHit, raytrace.hitVec
-            )
-        ) {
-            if (swing) {
-                player.swingItem()
-            } else {
-                sendPacket(C0APacketAnimation())
-            }
-
-            if (isManualJumpOptionActive) {
-                blocksPlacedUntilJump++
-            }
-
-            updatePlacedBlocksForTelly()
-        } else {
-            if (mc.playerController.sendUseItem(player, world, stack)) {
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
-            }
-        }
+        tryToPlaceBlock(stack, raytrace.blockPos, raytrace.sideHit, raytrace.hitVec, attempt = true)
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         switchBlockNextTickIfPossible(stack)
@@ -775,7 +723,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onMove(event: MoveEvent) {
         val player = mc.thePlayer ?: return
 
-        if (!safeWalk.isActive() || shouldGoDown) {
+        if (!safeWalkValue.isActive() || shouldGoDown) {
             return
         }
 
@@ -1219,6 +1167,84 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         blocksUntilAxisChange++
+    }
+
+    private fun tryToPlaceBlock(stack: ItemStack, hitPos: BlockPos, side: EnumFacing, hitVec: Vec3, attempt: Boolean = false): Boolean {
+        val (facingX, facingY, facingZ) = (hitVec - hitPos.toVec()).toFloatTriple()
+        val hitState = getState(hitPos)
+        val item = stack.item
+        val prevSize = stack.stackSize
+
+        // Adjusted mc.playerController.onPlayerRightClick() that sends correct stack in its C08
+        val clickedSuccessfully = run {
+            if (item !is ItemBlock)
+                return@run false
+
+            if (!mc.theWorld.worldBorder.contains(hitPos))
+                return@run false
+
+            if (!item.canPlaceBlockOnSide(mc.theWorld, hitPos, side, mc.thePlayer, stack))
+                return@run false
+
+            sendPacket(
+                C08PacketPlayerBlockPlacement(hitPos, side.index, stack, facingX, facingY, facingZ)
+            )
+
+            if (!mc.thePlayer.isSneaking && hitState?.block?.onBlockActivated(mc.theWorld, hitPos, hitState, mc.thePlayer,
+                    side, facingX, facingY, facingZ) == true)
+                return@run true
+
+            val prevMetadata = stack.metadata
+
+            stack.onItemUse(mc.thePlayer, mc.theWorld, hitPos, side, facingX, facingY, facingZ).also {
+                if (mc.playerController.isInCreativeMode) {
+                    stack.itemDamage = prevMetadata
+                    stack.stackSize = prevSize
+                }
+            }
+        }
+
+        if (clickedSuccessfully) {
+            if (!attempt) {
+                delayTimer.reset()
+
+                if (mc.thePlayer.onGround) {
+                    mc.thePlayer.motionX *= speedModifier
+                    mc.thePlayer.motionZ *= speedModifier
+                }
+            }
+
+            if (swing) mc.thePlayer.swingItem()
+            else sendPacket(C0APacketAnimation())
+
+            if (isManualJumpOptionActive)
+                blocksPlacedUntilJump++
+
+            updatePlacedBlocksForTelly()
+
+            if (stack.stackSize <= 0) {
+                mc.thePlayer.inventory.mainInventory[serverSlot] = null
+                ForgeEventFactory.onPlayerDestroyItem(mc.thePlayer, stack)
+            } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
+                mc.entityRenderer.itemRenderer.resetEquippedProgress()
+
+        } else {
+            // Adjusted mc.playerController.sendUseItem() that sends correct stack in its C08
+            sendPacket(C08PacketPlayerBlockPlacement(stack))
+            val newStack = stack.useItemRightClick(mc.theWorld, mc.thePlayer)
+
+            if (newStack != stack || newStack.stackSize != prevSize) {
+                if (newStack.stackSize <= 0) {
+                    mc.thePlayer.inventory.mainInventory[serverSlot] = null
+                    ForgeEventFactory.onPlayerDestroyItem(mc.thePlayer, newStack)
+                } else
+                    mc.thePlayer.inventory.mainInventory[serverSlot] = newStack
+
+                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+            }
+        }
+
+        return clickedSuccessfully
     }
 
     /**

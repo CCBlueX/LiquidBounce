@@ -229,7 +229,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 	private suspend fun shouldOperate(): Boolean {
 		while (true) {
-			if (!state)
+			if (!handleEvents())
 				return false
 
 			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
@@ -317,6 +317,8 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 			is ItemBucket -> isUsefulBucket(stack, stacks, entityStacksMap)
 
+			is ItemFlintAndSteel -> isUsefulLighter(stack, stacks, entityStacksMap)
+
 			in THROWABLE_ITEMS -> isUsefulThrowable(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 
 			else -> false
@@ -327,7 +329,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 		val item = stack?.item ?: return false
 
 		return when (item) {
-			is ItemArmor -> getBestArmorSet(stacks, entityStacksMap)?.contains(stack) ?: true
+			is ItemArmor -> stack in getBestArmorSet(stacks, entityStacksMap)
 
 			is ItemTool -> {
 				val blockType = when (item) {
@@ -365,6 +367,50 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		// Only keep helpful potions and, if 'onlyGoodPotions' is disabled, also splash harmful potions
 		return !isHarmful || (!onlyGoodPotions && isSplash)
+	}
+
+	private fun isUsefulLighter(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
+		val item = stack?.item ?: return false
+
+		if (item !is ItemFlintAndSteel) return false
+
+		val index = stacks.indexOf(stack)
+
+		val isSorted = canBeSortedTo(index, item, stacks.size)
+
+		if (isSorted) return true
+
+		val stacksToIterate = stacks.toMutableList()
+
+		var distanceSqToItem = .0
+
+		if (!entityStacksMap.isNullOrEmpty()) {
+			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			stacksToIterate += entityStacksMap.keys
+		}
+
+		return stacksToIterate.withIndex().none { (otherIndex, otherStack) ->
+			if (otherStack == stack)
+				return@none false
+
+			val otherItem = otherStack?.item ?: return@none false
+
+			if (otherItem !is ItemFlintAndSteel)
+				return@none false
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
+
+			// Only when both items are dropped on ground
+			if (index == otherIndex) {
+				val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@none false
+
+				return distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+			}
+
+			canBeSortedTo(otherIndex, otherItem, stacks.size)
+					|| otherStack.totalDurability > stack.totalDurability || otherIndex > index
+		}
 	}
 
 	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean, strictlyBest: Boolean): Boolean {
@@ -450,16 +496,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		val isSorted = canBeSortedTo(index, stack!!.item, stacks.size)
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
+		val betterCount = stacksToIterate.withIndex().count { (otherIndex, otherStack) ->
 			if (otherStack == stack || !isSuitableBlock(otherStack))
 				return@count false
 
@@ -509,16 +555,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		val isSorted = canBeSortedTo(index, item, stacks.size)
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
+		val betterCount = stacksToIterate.withIndex().count { (otherIndex, otherStack) ->
 			if (otherStack == stack)
 				return@count false
 
@@ -567,16 +613,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		if (isSorted) return true
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		return iteratedStacks.withIndex().none { (otherIndex, otherStack) ->
+		return stacksToIterate.withIndex().none { (otherIndex, otherStack) ->
 			if (otherStack == stack)
 				return@none false
 
@@ -608,16 +654,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		val isSorted = canBeSortedTo(index, item, stacks.size)
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		iteratedStacks.forEachIndexed { otherIndex, otherStack ->
+		stacksToIterate.forEachIndexed { otherIndex, otherStack ->
 			val otherItem = otherStack?.item ?: return@forEachIndexed
 
 			// Check if items aren't the same instance but are the same type
@@ -683,7 +729,7 @@ private val ITEMS_WHITELIST = arrayOf(
 
 private val THROWABLE_ITEMS = arrayOf(Items.egg, Items.snowball)
 
-private val NEGATIVE_EFFECT_IDS = arrayOf(
+val NEGATIVE_EFFECT_IDS = arrayOf(
 	Potion.moveSlowdown.id, Potion.digSlowdown.id, Potion.harm.id, Potion.confusion.id, Potion.blindness.id,
 	Potion.hunger.id, Potion.weakness.id, Potion.poison.id, Potion.wither.id,
 )

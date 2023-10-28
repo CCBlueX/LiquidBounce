@@ -83,7 +83,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
     private suspend fun shouldOperate(): Boolean {
         while (true) {
-            if (!state)
+            if (!handleEvents())
                 return false
 
             if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
@@ -106,7 +106,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     }
 
     suspend fun stealFromChest() {
-        if (!state)
+        if (!handleEvents())
             return
 
         val thePlayer = mc.thePlayer ?: return
@@ -229,13 +229,13 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                 // If stack can be merged without occupying any additional slot, do not take stack limits into account
                 // TODO: player could theoretically already have too many stacks in inventory before opening the chest so no more should even get merged
                 // TODO: if it can get merged but would also need another slot, it could simulate 2 clicks, one which maxes out the stack in inventory and second that puts excess items back
-                if (InventoryCleaner.state && !isStackUseful(stack, stacks, noLimits = canFullyMerge))
+                if (InventoryCleaner.handleEvents() && !isStackUseful(stack, stacks, noLimits = canFullyMerge))
                     return@mapIndexedNotNull null
 
                 var sortableTo: Int? = null
 
                 // If stack can get merged, do not try to sort it, normal shift + left-click will merge it
-                if (!canMerge && InventoryCleaner.state && InventoryCleaner.sort) {
+                if (!canMerge && InventoryCleaner.handleEvents() && InventoryCleaner.sort) {
                     for (hotbarIndex in 0..8) {
                         if (sortBlacklist[hotbarIndex])
                             continue

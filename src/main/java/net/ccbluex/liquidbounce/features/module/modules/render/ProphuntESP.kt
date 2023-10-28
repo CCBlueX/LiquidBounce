@@ -23,7 +23,7 @@ import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.BlockPos
 import java.awt.Color
 
-object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
+object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER, gameDetecting = false) {
     val blocks = mutableMapOf<BlockPos, Long>()
 
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")

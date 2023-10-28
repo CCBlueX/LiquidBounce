@@ -53,7 +53,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
-        if (!state || FreeCam.state) return
+        if (FreeCam.state) return
 
         if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
                 fromBounds(

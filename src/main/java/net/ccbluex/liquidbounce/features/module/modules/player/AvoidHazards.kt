@@ -15,6 +15,7 @@ object AvoidHazards : Module("AvoidHazards", ModuleCategory.WORLD) {
     private val lava by BoolValue("Lava", true)
     private val water by BoolValue("Water", true)
     private val plate by BoolValue("PressurePlate", true)
+    private val snow by BoolValue("Snow", true)
 
     @EventTarget
     fun onBlockBB(e: BlockBBEvent) {
@@ -24,6 +25,8 @@ object AvoidHazards : Module("AvoidHazards", ModuleCategory.WORLD) {
             Blocks.fire -> if (!fire) return
 
             Blocks.web -> if (!cobweb) return
+
+            Blocks.snow -> if (!snow) return
 
             Blocks.cactus -> if (!cactus) return
 

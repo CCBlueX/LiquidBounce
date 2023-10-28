@@ -160,6 +160,8 @@
         "module.fucker.description": "Унищожава избрани блокове около вас. (иввестен още като IDNuker)",
         
         "module.fullbright.description": "Озарява света около вас.",
+
+        "module.gamedetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
         
         "module.ghost.description": "Позволява ви да се разхождате с вашата среда, след като умрете.",
         

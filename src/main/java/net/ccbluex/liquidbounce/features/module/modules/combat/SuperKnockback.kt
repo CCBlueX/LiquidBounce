@@ -151,7 +151,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
         }
     }
 
-    fun shouldBlockInput() = state && mode == "WTap" && blockInput
+    fun shouldBlockInput() = handleEvents() && mode == "WTap" && blockInput
 
     override val tag
         get() = mode

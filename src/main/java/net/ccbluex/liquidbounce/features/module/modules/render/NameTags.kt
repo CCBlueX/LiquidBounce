@@ -309,7 +309,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     }
 
     fun shouldRenderNameTags(entity: Entity) =
-        state && entity is EntityLivingBase && (ESP.state && ESP.renderNameTags || isSelected(entity, false) && (!isBot(
+        state && entity is EntityLivingBase && (ESP.handleEvents() && ESP.renderNameTags || isSelected(entity, false) && (!isBot(
             entity
         ) || bot))
 }

@@ -220,7 +220,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             target.posZ + (if (predict) (target.posZ - target.prevPosZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevPosZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
 
-        var velocity = if (FastBow.state) 1f else player.itemInUseDuration / 20f
+        var velocity = if (FastBow.handleEvents()) 1f else player.itemInUseDuration / 20f
         velocity = min((velocity * velocity + velocity * 2) / 3, 1f)
 
         val rotation = Rotation(

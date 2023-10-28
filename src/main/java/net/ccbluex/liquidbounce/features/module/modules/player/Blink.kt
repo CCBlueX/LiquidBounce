@@ -27,7 +27,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object Blink : Module("Blink", ModuleCategory.PLAYER) {
+object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
     private val packets = mutableListOf<Packet<*>>()
     private var fakePlayer: EntityOtherPlayerMP? = null

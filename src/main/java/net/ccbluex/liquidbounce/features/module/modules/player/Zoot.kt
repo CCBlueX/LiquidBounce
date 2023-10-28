@@ -9,6 +9,8 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.serverOnGround
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -24,31 +26,27 @@ object Zoot : Module("Zoot", ModuleCategory.PLAYER) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (noAir && !thePlayer.onGround)
+        if (noAir && !serverOnGround)
             return
 
         if (badEffects) {
-            val effect = thePlayer.activePotionEffects.maxByOrNull { it.duration }
+
+            val effect = thePlayer.activePotionEffects
+                .filter { it.potionID in NEGATIVE_EFFECT_IDS }
+                .maxByOrNull { it.duration }
 
             if (effect != null) {
                 repeat(effect.duration / 20) {
-                    sendPacket(C03PacketPlayer(thePlayer.onGround))
+                    sendPacket(C03PacketPlayer(serverOnGround))
                 }
             }
         }
 
 
-        if (fire && !thePlayer.capabilities.isCreativeMode && thePlayer.isBurning) {
+        if (fire && mc.playerController.gameIsSurvivalOrAdventure() && thePlayer.isBurning) {
             repeat(9) {
-                sendPacket(C03PacketPlayer(thePlayer.onGround))
+                sendPacket(C03PacketPlayer(serverOnGround))
             }
         }
     }
-
-    // TODO: Check current potion
-    private fun hasBadEffect() = mc.thePlayer.isPotionActive(Potion.hunger) || mc.thePlayer.isPotionActive(Potion.moveSlowdown) ||
-            mc.thePlayer.isPotionActive(Potion.digSlowdown) || mc.thePlayer.isPotionActive(Potion.harm) ||
-            mc.thePlayer.isPotionActive(Potion.confusion) || mc.thePlayer.isPotionActive(Potion.blindness) ||
-            mc.thePlayer.isPotionActive(Potion.weakness) || mc.thePlayer.isPotionActive(Potion.wither) || mc.thePlayer.isPotionActive(Potion.poison)
-
 }

@@ -75,7 +75,7 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
 
         try {
             entityStacksMap.forEach { (stack, entity) ->
-                val isUseful = InventoryCleaner.state && InventoryCleaner.highlightUseful
+                val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful
                         && InventoryCleaner.isStackUseful(stack, stacks, entityStacksMap)
 
                 // If ItemESP is disabled, only render boxes on useful items
@@ -89,5 +89,5 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
         }
     }
 
-    override fun handleEvents() = state || (InventoryCleaner.state && InventoryCleaner.highlightUseful)
+    override fun handleEvents() = super.handleEvents() || (InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful)
 }

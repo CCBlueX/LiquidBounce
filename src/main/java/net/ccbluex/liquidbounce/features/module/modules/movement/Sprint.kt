@@ -19,7 +19,7 @@ import net.minecraft.potion.Potion
 import net.minecraft.util.MovementInput
 import kotlin.math.abs
 
-object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
+object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false) {
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
     val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }

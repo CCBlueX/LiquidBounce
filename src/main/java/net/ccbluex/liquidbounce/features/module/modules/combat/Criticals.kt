@@ -48,7 +48,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
             if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
                 thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
-                Fly.state || !msTimer.hasTimePassed(delay)
+                Fly.handleEvents() || !msTimer.hasTimePassed(delay)
             )
                 return
 

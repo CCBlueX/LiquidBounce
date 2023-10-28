@@ -25,7 +25,7 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
+object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
     private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "AAC5", "SwitchItem"), "None")
 
