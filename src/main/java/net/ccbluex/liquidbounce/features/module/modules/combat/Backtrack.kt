@@ -164,12 +164,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     else {
                         event.cancelEvent()
                         packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                    }
-
-                    
+                    }   
                 }
-
-                if (!shouldBacktrack()) clearPackets()
             }
         }     
     }
@@ -178,6 +174,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     fun onTick(event: TickEvent) {
         if (backtrackMode == "Modern") {
             if (shouldBacktrack()) handlePackets()
+            else clearPackets()
         }
         
     }
