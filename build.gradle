@@ -144,9 +144,9 @@ processResources {
 
 tasks.register('makeTheme', Exec) {
     workingDir file('src-theme')
-    commandLine 'python', 'build.py'
+    commandLine 'node', 'bundle.js'
     doLast {
-        println 'Successfully exported theme.zip'
+        println 'Successfully attached theme to build'
     }
 }
 
