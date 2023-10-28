@@ -13,17 +13,35 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockLadder
 import net.minecraft.block.BlockVine
+import net.minecraft.network.play.client.*
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
 
     val mode by ListValue("Mode",
-            arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")
-    private val speed by FloatValue("Speed", 0.2872F, 0.01F..5F) { mode == "Vanilla" }
+            arrayOf("Vanilla", "Delay", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")
+    private val speed by FloatValue("Speed", 1F, 0.01F..5F) { mode == "Vanilla" }
+
+    // Delay mode | Separated Vanilla & Delay speed value
+    private val climbspeed by FloatValue("Speed", 1F, 0.01F..10F) { mode == "Delay"}
+    private val tickDelay by IntegerValue("TickDelay", 10, 1..20) { mode == "Delay" }
+
+
+    private val climbDelay = tickDelay
+    private var climbCount = 0
+
+    private fun playerClimb() {
+        mc.thePlayer.motionY = 0.0
+        mc.thePlayer.isInWeb = true
+        mc.thePlayer.onGround = true
+
+        mc.thePlayer.isInWeb = false
+    }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
@@ -37,6 +55,30 @@ object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
                 event.y = speed.toDouble()
                 thePlayer.motionY = 0.0
             }
+
+            mode == "Delay" && thePlayer.isCollidedHorizontally &&
+                    thePlayer.isOnLadder -> {
+
+                if (climbCount >= climbDelay) {
+
+                        event.y = climbspeed.toDouble()
+                        playerClimb()
+
+                        val currentpos: C03PacketPlayer =
+                            C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true)
+                        mc.thePlayer.sendQueue.addToSendQueue(currentpos)
+
+                        climbCount = 0
+
+                    } else {
+                        thePlayer.posY = thePlayer.prevPosY
+
+                        playerClimb()
+                        climbCount += 1
+
+                }
+            }
+
 
             mode == "AAC3.0.0" && thePlayer.isCollidedHorizontally -> {
                 var x = 0.0
