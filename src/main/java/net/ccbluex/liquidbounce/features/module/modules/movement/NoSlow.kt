@@ -21,9 +21,9 @@ import net.minecraft.item.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 
 object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
@@ -48,6 +48,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
         val heldItem = thePlayer.heldItem ?: return
+        val currentItem = thePlayer.inventory.currentItem
 
         if (!isMoving) {
             return
