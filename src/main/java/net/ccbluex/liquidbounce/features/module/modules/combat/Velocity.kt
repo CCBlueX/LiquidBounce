@@ -11,6 +11,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.PacketUtils.realMotionX
+import net.ccbluex.liquidbounce.utils.PacketUtils.realMotionY
+import net.ccbluex.liquidbounce.utils.PacketUtils.realMotionZ
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -75,7 +78,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     /**
      * VALUES
      */
-    private var velocityTimer = MSTimer()
+    private val velocityTimer = MSTimer()
     private var hasReceivedVelocity = false
 
     // SmoothReverse
@@ -163,7 +166,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                         thePlayer.onGround = true
 
                     // Reduce Y
-                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducer && !Speed.state)
+                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducer && !Speed.handleEvents())
                         thePlayer.motionY -= 0.014999993
                 }
 
@@ -289,31 +292,54 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     private fun handleVelocity(event: PacketEvent) {
         val packet = event.packet
 
-        if (horizontal + vertical == 0f)
-            return event.cancelEvent()
-
         if (packet is S12PacketEntityVelocity) {
-            packet.motionX = (packet.motionX * horizontal).toInt()
-            packet.motionY = (packet.motionY * vertical).toInt()
-            packet.motionZ = (packet.motionZ * horizontal).toInt()
+            // Always cancel event and handle motion from here
+            event.cancelEvent()
 
-            if (limitMaxMotionValue.get()) {
-                val distXZ = sqrt((packet.motionX * packet.motionX + packet.motionZ * packet.motionZ).toDouble()) / 8000.0
-                val distY = packet.motionY / 8000.0
-                val maxYMotion = maxYMotion + 0.00075
+            if (horizontal == 0f && vertical == 0f)
+                return
 
-                if (distXZ > maxXZMotion) {
-                    val ratioXZ = maxXZMotion / distXZ
+            // Don't modify player's motionXZ when horizontal value is 0
+            if (horizontal != 0f) {
+                var motionX = packet.realMotionX
+                var motionZ = packet.realMotionZ
 
-                    packet.motionX = (packet.motionX * ratioXZ).toInt()
-                    packet.motionZ = (packet.motionZ * ratioXZ).toInt()
+                if (limitMaxMotionValue.get()) {
+                    val distXZ = sqrt(motionX * motionX + motionZ * motionZ)
+
+                    if (distXZ > maxXZMotion) {
+                        val ratioXZ = maxXZMotion / distXZ
+
+                        motionX *= ratioXZ
+                        motionZ *= ratioXZ
+                    }
                 }
 
-                if (distY > maxYMotion) {
-                    packet.motionY = (packet.motionY * maxYMotion / distY).toInt()
-                }
+                mc.thePlayer.motionX = motionX
+                mc.thePlayer.motionZ = motionZ
+            }
+
+            // Don't modify player's motionY when vertical value is 0
+            if (vertical != 0f) {
+                var motionY = packet.realMotionY
+
+                if (limitMaxMotionValue.get())
+                    motionY = motionY.coerceAtMost(maxYMotion + 0.00075)
+
+                mc.thePlayer.motionY = motionY
             }
         } else if (packet is S27PacketExplosion) {
+            // Don't cancel explosions, modify them, they could change blocks in the world
+            if (horizontal != 0f && vertical != 0f) {
+                packet.field_149152_f = 0f
+                packet.field_149153_g = 0f
+                packet.field_149159_h = 0f
+
+                return
+            }
+
+            // Unlike with S12PacketEntityVelocity explosion packet motions get added to player motion, doesn't replace it
+            // Velocity might behave a bit differently, especially LimitMaxMotion
             packet.field_149152_f *= horizontal // motionX
             packet.field_149153_g *= vertical // motionY
             packet.field_149159_h *= horizontal // motionZ
