@@ -112,7 +112,8 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 /**
  * Always targets the point with the nearest rotation angle to the current rotation angle
  */
-class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfiguration, val optimalLine: Line?) : FaceTargetPositionFactory() {
+class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfiguration, val optimalLine: Line?) :
+    FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         val trimmedFace = super.trimFaceToConfigRanges(face, config).offset(Vec3d.of(targetPos))
 
@@ -120,7 +121,13 @@ class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfigu
 
         val targetFace = getTargetFace(player, trimmedFace, face) ?: trimmedFace
 
-        return NearestRotationTargetPositionFactory(this.config).producePositionOnFace(targetFace.offset(Vec3d.of(targetPos).negate()), targetPos)
+        return NearestRotationTargetPositionFactory(this.config).producePositionOnFace(
+            targetFace.offset(
+                Vec3d.of(
+                    targetPos
+                ).negate()
+            ), targetPos
+        )
     }
 
     private fun getTargetFace(

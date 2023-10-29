@@ -52,8 +52,12 @@ import kotlin.math.sin
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524,
-        Sentinel27thOct))
+    private val modes = choices(
+        "Mode", Vanilla, arrayOf(
+            Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524,
+            Sentinel27thOct
+        )
+    )
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
