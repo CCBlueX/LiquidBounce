@@ -21,9 +21,9 @@ import net.minecraft.item.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 
 object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
@@ -32,7 +32,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5"), "None")
+    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5", "SwitchItem"), "None")
 
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
@@ -48,6 +48,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
         val heldItem = thePlayer.heldItem ?: return
+        val currentItem = thePlayer.inventory.currentItem
 
         if (!isMoving) {
             return
@@ -58,7 +59,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                 "aac5" -> {
                     sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
                 }
+                "switchitem" -> {
+                    when (event.eventState) {
+                        EventState.PRE -> {
+                            serverSlot = (serverSlot + 1) % 9
+                            serverSlot = currentItem
+                        }                          
 
+
+                        else -> {}
+                    }
+                }
                 else -> {
                     return
                 }
@@ -101,10 +112,11 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
                 "switchitem" -> {
                     when (event.eventState) {
-                        EventState.PRE -> sendPackets(
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem % 8 + 1),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
-                        )
+                        EventState.PRE -> {
+                            serverSlot = (serverSlot + 1) % 9
+                            serverSlot = currentItem
+                        }                          
+
 
                         else -> {}
                     }

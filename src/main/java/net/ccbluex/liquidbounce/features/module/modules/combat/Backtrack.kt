@@ -108,7 +108,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             "modern" -> {
-
+                if (mc.thePlayer.ticksExisted <= 20) return
+                
                 when (packet) {
                     is S32PacketConfirmTransaction -> {
                         if (pingSpoof) {
