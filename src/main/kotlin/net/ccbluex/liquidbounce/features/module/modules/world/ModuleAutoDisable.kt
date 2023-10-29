@@ -32,14 +32,14 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
- * AutoFarm module
+ * AutoDisable module
  *
- * Automatically farms stuff for you.
+ * Automatically disables modules, when special event happens.
  */
 object ModuleAutoDisable : Module("AutoDisable", Category.WORLD) {
     val listOfModules = arrayListOf<Module>(ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura)
-    val onFlag by boolean("OnFlag", false)
-    val onDeath by boolean("OnDeath", false)
+    private val onFlag by boolean("OnFlag", false)
+    private val onDeath by boolean("OnDeath", false)
 
     val worldChangesHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket && onFlag) {
@@ -52,9 +52,13 @@ object ModuleAutoDisable : Module("AutoDisable", Category.WORLD) {
     }
 
     fun autoDisabled(reason: String) {
-        listOfModules.forEach {
-            it.enabled = false
+        listOfModules.filter { it.enabled }.let {
+            if (it.isNotEmpty()) {
+                it.forEach {
+                    it.enabled = false
+                }
+                notification("Notifier", "Disabled modules due to $reason", NotificationEvent.Severity.INFO)
+            }
         }
-        notification("Notifier", "Disabled modules due to $reason", NotificationEvent.Severity.INFO)
     }
 }

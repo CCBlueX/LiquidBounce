@@ -28,9 +28,14 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.block.Block
 import net.minecraft.block.FluidBlock
 import net.minecraft.item.Items
@@ -54,8 +59,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private val modes = choices(
         "Mode", Vanilla, arrayOf(
-            Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524,
-            Sentinel27thOct
+            Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524, Sentinel27thOct, VerusDamage
         )
     )
 
@@ -262,4 +266,49 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
+    private object VerusDamage : Choice("VerusDamage") {
+
+        val ticks by int("ticks", 20, 0..100)
+        val timer1 by float("Timer", 1f, 0.01f..5f)
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        var failedDamage = false
+        var gotDamage = false
+        override fun enable() {
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+        }
+
+        val failRepeatable = repeatable {
+            if (!gotDamage) {
+                wait { 20 }
+                if (!gotDamage) failedDamage = true
+            } else {
+                Timer.requestTimerSpeed(timer1, Priority.IMPORTANT_FOR_USAGE)
+            }
+        }
+        val repeatable = repeatable {
+            waitUntil { player.hurtTime > 0 || failedDamage }
+            if (failedDamage) {
+                chat("Failed to self-damage".asText())
+                return@repeatable
+            }
+            gotDamage = true
+            repeat(ticks) {
+                player.strafe(speed = Vanilla.horizontalSpeed.toDouble())
+                player.velocity.y = 0.0
+                wait(1)
+                if (!enabled)
+                    return@repeat
+            }
+            enabled = false
+        }
+
+        override fun disable() {
+            player.zeroXZ()
+        }
+    }
 }

@@ -51,6 +51,10 @@ public class MixinClientPlayNetworkHandler {
     @Final
     private ClientConnection connection;
 
+    @Shadow
+    @Final
+    private MinecraftClient client;
+
     @Inject(method = "onChunkData", at = @At("RETURN"))
     private void injectChunkLoadEvent(final ChunkDataS2CPacket packet, final CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.getX(), packet.getZ()));
@@ -119,7 +123,7 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onHealthUpdate", at = @At("RETURN"))
     private void injectHealthUpdate(HealthUpdateS2CPacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new HealthUpdateEvent(packet.getHealth(), packet.getFood(), packet.getSaturation()));
+        EventManager.INSTANCE.callEvent(new HealthUpdateEvent(packet.getHealth(), packet.getFood(), packet.getSaturation(), client.player.getHealth()));
         if (packet.getHealth() == 0) {
             EventManager.INSTANCE.callEvent(new DeathEvent());
         }

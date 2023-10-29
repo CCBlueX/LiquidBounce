@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.client.input.Input
+import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -96,11 +97,9 @@ fun findEdgeCollision(from: Vec3d, to: Vec3d, currentPos: BlockPos = from.toBloc
     // As long as the player moves inside this box, everything is ok.
     val blockSafetyArea = Box(currentPos).expand(0.3, 1.0, 0.3)
 
-    val pointWhereLineLeavesBlock = blockSafetyArea.raycast(to, from).getOrNull()
+    val pointWhereLineLeavesBlock = blockSafetyArea.raycast(to, from).getOrNull() ?: return null
 
     // The checked line ends within this block. No edge collisions where found
-    if (pointWhereLineLeavesBlock == null)
-        return null
 
     return findEdgeCollision(
         from = pointWhereLineLeavesBlock,
@@ -109,6 +108,10 @@ fun findEdgeCollision(from: Vec3d, to: Vec3d, currentPos: BlockPos = from.toBloc
     )
 }
 
+fun ClientPlayerEntity.zeroXZ() {
+    this.velocity.x = 0.0
+    this.velocity.z = 0.0
+}
 fun getFallOfBox(currentPos: BlockPos): Box {
     var minX = 0.0
     var minZ = 0.0

@@ -153,7 +153,7 @@ class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
 // Entity events bound to client-user entity
 @Nameable("healthUpdate")
-class HealthUpdateEvent(health: Float, food: Int, saturation: Float) : Event()
+class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float, val previousHealth: Float) : Event()
 
 @Nameable("death")
 class DeathEvent : Event()
