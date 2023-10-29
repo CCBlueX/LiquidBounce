@@ -25,7 +25,7 @@ object Timer : Listenable {
      * Requests a timer speed change. If another module requests with a higher priority,
      * the other module is prioritized.
      */
-    fun requestTimerSpeed(timerSpeed: Float, priority: Priority, resetAfterTicks: Int = 2) {
+    fun requestTimerSpeed(timerSpeed: Float, priority: Priority, resetAfterTicks: Int = 1) {
         requestHandler.request(RequestHandler.Request(resetAfterTicks, priority.priority, timerSpeed))
     }
 }
