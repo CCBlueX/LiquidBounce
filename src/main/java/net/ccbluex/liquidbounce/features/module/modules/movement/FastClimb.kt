@@ -28,7 +28,7 @@ object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
     private val speed by FloatValue("Speed", 1F, 0.01F..5F) { mode == "Vanilla" }
 
     // Delay mode | Separated Vanilla & Delay speed value
-    private val climbspeed by FloatValue("Speed", 1F, 0.01F..10F) { mode == "Delay"}
+    private val climbspeed by FloatValue("ClimbSpeed", 1F, 0.01F..5F) { mode == "Delay"}
     private val tickDelay by IntegerValue("TickDelay", 10, 1..20) { mode == "Delay" }
 
 
