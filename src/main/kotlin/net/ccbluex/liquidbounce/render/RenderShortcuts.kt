@@ -379,16 +379,14 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
     tessellator.draw()
 
 }
-private fun circlePoints(): List<Vec3> {
-    val numPoints = 40
-    val step = 2 * PI / numPoints
-    val points = ArrayList<Vec3>(numPoints)
-    for (index in 0 until numPoints) {
-        val theta = step * index
-        points.add(Vec3(cos(theta), 0.0, sin(theta)))
+
+val circleRes = 40
+// using a val instead of a function for better performance
+val circlePoints =
+    (0..circleRes).map {
+        val theta = 2 * PI * it / circleRes
+        Vec3(cos(theta), 0.0, sin(theta))
     }
-    return points
-}
 
 
 
@@ -403,6 +401,15 @@ fun RenderEnvironment.drawCircle(center: Vec3,radius: Float) {
 //    vertex()
 //}
 
+
+/**
+ * Function to draw a circle of the size [outerRadius] with a cutout of size [innerRadius]
+ *
+ * @param outerRadius The radius of the circle
+ * @param innerRadius The radius inside the circle (the cutout)
+ * @param outerColor4b The color of outside the circle, blending into [innerColor4b]
+ * @param innerColor4b The color of the inside of the circle, blending into [outerColor4b]
+ */
 fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float, outerColor4b: Color4b, innerColor4b: Color4b) {
 
 
@@ -413,13 +420,13 @@ fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float,
     // Set the shader to the position and color program
     RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
 
-    val points = circlePoints()
+
 
     with(bufferBuilder) {
         begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
 
-        for (i in 0..40) {
-            val p = points[i % 40]
+        // Using a for loop instead of foreach because we need to loop through it one more time to get a full circle
+        for (p in circlePoints) {
             val outerP = p * outerRadius
             val innerP = p * innerRadius
 
@@ -430,6 +437,7 @@ fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float,
                 .color(innerColor4b.toRGBA())
                 .next()
         }
+
 
 
 
