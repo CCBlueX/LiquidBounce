@@ -25,7 +25,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
     private val hueOffsetAnim by int("hueOffsetAnim", 63, -360..360)
 
-    private val lifetime by int("Lifetime", 10, 1..30)
+    private val lifetime by int("Lifetime", 15, 1..30)
 
     private var circles = arrayListOf<MutablePair<Vec3, Long>>()
 
