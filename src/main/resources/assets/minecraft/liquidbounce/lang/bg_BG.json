@@ -161,7 +161,7 @@
         
         "module.fullbright.description": "Озарява света около вас.",
 
-        "module.gamedetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
+        "module.gameDetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
         
         "module.ghost.description": "Позволява ви да се разхождате с вашата среда, след като умрете.",
         
