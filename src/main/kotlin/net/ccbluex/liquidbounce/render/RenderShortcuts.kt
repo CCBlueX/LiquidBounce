@@ -411,7 +411,6 @@ fun RenderEnvironment.drawGradientCircle(
     with(bufferBuilder) {
         begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
 
-        // Using a for loop instead of foreach because we need to loop through it one more time to get a full circle
         for (p in circlePoints) {
             val outerP = p * outerRadius
             val innerP = p * innerRadius
