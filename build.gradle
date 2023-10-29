@@ -17,6 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
@@ -150,8 +152,12 @@ processResources {
 // The following code will include the theme into the build
 
 tasks.register('npmInstallTheme', Exec) {
+    String npm = 'npm';
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        npm = 'npm.cmd'
+    }
     workingDir file('src-theme')
-    commandLine 'npm', 'i'
+    commandLine npm, 'i'
     doLast {
         println 'Successfully installed dependencies for theme'
     }
