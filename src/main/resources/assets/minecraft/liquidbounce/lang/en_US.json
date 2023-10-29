@@ -163,7 +163,7 @@
         
         "module.fullbright.description": "Brightens up the world around you.",
 
-        "module.gamedetector.description": "Detects if you are in an ongoing game.",
+        "module.gameDetector.description": "Detects if you are in an ongoing game.",
         
         "module.ghost.description": "Allows you to walk around and interact with your environment after dying.",
         
