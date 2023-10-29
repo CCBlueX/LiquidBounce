@@ -159,7 +159,7 @@
 
         "module.fullbright.description": "Ilumina o mundo ao seu redor.",
 
-        "module.gamedetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
+        "module.gameDetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
 
         "module.ghost.description": "Permite que você ande e interaja com o ambiente após morrer.",
 
