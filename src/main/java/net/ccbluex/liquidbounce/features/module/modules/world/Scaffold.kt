@@ -176,6 +176,20 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameD
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxJumpTicks.get())
     }
 
+    private val allowClutching by BoolValue("AllowClutching", true) { mode !in arrayOf("Telly", "Expand") }
+
+    private val horizontalClutchBlocks: IntegerValue = object : IntegerValue("HorizontalClutchBlocks", 3, 1..5) {
+        override fun isSupported() = allowClutching && mode !in arrayOf("Telly", "Expand")
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
+    }
+
+    private val verticalClutchBlocks: IntegerValue = object : IntegerValue("VerticalClutchBlocks", 2, 1..3) {
+        override fun isSupported() = allowClutching && mode !in arrayOf("Telly", "Expand")
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
+    }
+
     // Eagle
     private val eagleValue = ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") { mode != "GodBridge" }
 
@@ -185,7 +199,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameD
     val eagleSprint by BoolValue("EagleSprint", false) { eagleValue.isSupported() && eagle == "Normal" }
     private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10) { eagleValue.isSupported() && eagle != "Off" }
     private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f)
-        { eagleValue.isSupported() && eagle != "Off" }
+    { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
     private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized", "GodBridge"), "Normal")
@@ -214,7 +228,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameD
     }
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
-        { rotationMode != "Off" }
+    { rotationMode != "Off" }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -280,9 +294,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameD
     // Downwards
     private val shouldGoDown
         get() = down && !sameY
-                && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
-                && mode !in arrayOf("GodBridge", "Telly")
-                && blocksAmount > 1
+            && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
+            && mode !in arrayOf("GodBridge", "Telly")
+            && blocksAmount > 1
 
     // Current rotation
     private val currRotation
@@ -580,7 +594,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameD
             return
         }
 
-        val (f, g) = if (mode == "Telly") 5 to 3 else 1 to 1
+        val (f, g) = if (mode == "Telly") 5 to 3 else if (allowClutching) horizontalClutchBlocks.get() to verticalClutchBlocks.get() else 1 to 1
 
         (-f..f).flatMap { x ->
             (0 downTo -g).flatMap { y ->
@@ -1169,7 +1183,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameD
         blocksUntilAxisChange++
     }
 
-    private fun tryToPlaceBlock(stack: ItemStack, hitPos: BlockPos, side: EnumFacing, hitVec: Vec3, attempt: Boolean = false): Boolean {
+    private fun tryToPlaceBlock(
+        stack: ItemStack,
+        hitPos: BlockPos,
+        side: EnumFacing,
+        hitVec: Vec3,
+        attempt: Boolean = false
+    ): Boolean {
         val (facingX, facingY, facingZ) = (hitVec - hitPos.toVec()).toFloatTriple()
         val hitState = getState(hitPos)
         val item = stack.item
@@ -1190,8 +1210,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, gameD
                 C08PacketPlayerBlockPlacement(hitPos, side.index, stack, facingX, facingY, facingZ)
             )
 
-            if (!mc.thePlayer.isSneaking && hitState?.block?.onBlockActivated(mc.theWorld, hitPos, hitState, mc.thePlayer,
-                    side, facingX, facingY, facingZ) == true)
+            if (!mc.thePlayer.isSneaking && hitState?.block?.onBlockActivated(
+                    mc.theWorld, hitPos, hitState, mc.thePlayer,
+                    side, facingX, facingY, facingZ
+                ) == true
+            )
                 return@run true
 
             val prevMetadata = stack.metadata
