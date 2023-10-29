@@ -362,44 +362,28 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
     // Set the shader to the position program
     RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
 
-    with(bufferBuilder){
+    with(bufferBuilder) {
         begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR)
 
         if (vertices.size == 4 && colors.size == 4) {
             vertices.forEachIndexed { index, (x, y, z) ->
                 val color4b = colors[index]
-                vertex(matrix, x, y, z).color(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f).next()
+                vertex(matrix, x, y, z).color(color4b.toRGBA())
+                    .next()
             }
-        } else {
-            throw RuntimeException("length of lists are incorrect")
         }
-
 
     }
     tessellator.draw()
-
 }
 
-val circleRes = 40
+const val CIRCLE_RES = 40
 // using a val instead of a function for better performance
 val circlePoints =
-    (0..circleRes).map {
-        val theta = 2 * PI * it / circleRes
+    (0..CIRCLE_RES).map {
+        val theta = 2 * PI * it / CIRCLE_RES
         Vec3(cos(theta), 0.0, sin(theta))
     }
-
-
-
-
-
-
-
-fun RenderEnvironment.drawCircle(center: Vec3,radius: Float) {
-
-}
-//private fun vertexByPositionColor {
-//    vertex()
-//}
 
 
 /**
@@ -407,11 +391,15 @@ fun RenderEnvironment.drawCircle(center: Vec3,radius: Float) {
  *
  * @param outerRadius The radius of the circle
  * @param innerRadius The radius inside the circle (the cutout)
- * @param outerColor4b The color of outside the circle, blending into [innerColor4b]
- * @param innerColor4b The color of the inside of the circle, blending into [outerColor4b]
+ * @param outerColor4b The color of the outer edges
+ * @param innerColor4b The color of the inner edges
  */
-fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float, outerColor4b: Color4b, innerColor4b: Color4b) {
-
+fun RenderEnvironment.drawGradientCircle(
+    outerRadius: Float,
+    innerRadius: Float,
+    outerColor4b: Color4b,
+    innerColor4b: Color4b
+) {
 
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
@@ -419,8 +407,6 @@ fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float,
 
     // Set the shader to the position and color program
     RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
-
-
 
     with(bufferBuilder) {
         begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
@@ -438,14 +424,8 @@ fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float,
                 .next()
         }
 
-
-
-
     }
     tessellator.draw()
-
-
-
 }
 
 
