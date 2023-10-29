@@ -18,7 +18,7 @@ enum class Curves(override val choiceName: String, override val at: (Float) -> F
         1 - (1 - t) * (1 - t)
     }),
     Ease_IN_OUT ("EaseInOut", { t ->
-        2 * (1 - t) * t * t + t * t * t
+        2 * (1 - t) * t * t + t * t
     })
 }
 
