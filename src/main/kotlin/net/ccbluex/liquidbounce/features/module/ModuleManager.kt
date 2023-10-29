@@ -206,6 +206,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleXRay,
             ModuleDebug,
             ModuleMinimap,
+            ModuleScoreboard,
 
             // World
             ModuleAutoDisable,

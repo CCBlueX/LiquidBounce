@@ -97,13 +97,10 @@
     <ID>MatchingDeclarationName:RenderShortcuts.kt$RenderEnvironment</ID>
     <ID>MaxLineLength:ArmorComparator.kt$ArmorComparator$return 1 - 20.0f.coerceAtMost((defensePoints / 5.0f).coerceAtLeast(defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f</ID>
     <ID>MaxLineLength:CleanupPlan.kt$if</ID>
-    <ID>MaxLineLength:ClientUtils.kt$val comparableProtocolVersion = Class.forName("de.florianmichael.vialoadingbase.model.ComparableProtocolVersion")</ID>
     <ID>MaxLineLength:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("The command is marked as not executable (hub), but no handler was specified")</ID>
     <ID>MaxLineLength:CommandItemRename.kt$CommandItemRename$mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))</ID>
     <ID>MaxLineLength:ConfigSystem.kt$ConfigSystem$)</ID>
     <ID>MaxLineLength:Cosmetics.kt$Cosmetics$*</ID>
-    <ID>MaxLineLength:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$class</ID>
-    <ID>MaxLineLength:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$return NearestRotationTargetPositionFactory(this.config).producePositionOnFace(targetFace.offset(Vec3d.of(targetPos).negate()), targetPos)</ID>
     <ID>MaxLineLength:FontRenderer.kt$FontRenderer$tasks.add(VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, TexturedPrimitiveShader, indexBuffer = indexBuffer, texture = glyphPages[style]!!.texture, state = GlRenderState(texture2d = true, depthTest = false)))</ID>
     <ID>MaxLineLength:GlfwInputAdapter.kt$GlfwInputAdapter$.</ID>
     <ID>MaxLineLength:GlyphPage.kt$GlyphPage.Companion$(sqrt(glyphsToRender.sumByDouble { it.glyphMetrics.bounds2D.width * it.glyphMetrics.bounds2D.height } * 1.2) * 1.125).toInt()</ID>
@@ -128,7 +125,6 @@
     <ID>MaxLineLength:ModuleBlink.kt$ModuleBlink$if</ID>
     <ID>MaxLineLength:ModuleBlink.kt$ModuleBlink$val firstPositionPacket = (packets.firstOrNull { it is PlayerMoveC2SPacket &amp;&amp; it.changePosition } ?: return@repeatable) as PlayerMoveC2SPacket</ID>
     <ID>MaxLineLength:ModuleChestAura.kt$ModuleChestAura$// if (CloseInstantlyOptions.enabled &amp;&amp; !closeInstantlyTimeout.hasElapsed(CloseInstantlyOptions.timeout.toLong())) {</ID>
-    <ID>MaxLineLength:ModuleChestStealer.kt$ModuleChestStealer$interaction.clickSlot(screen.screenHandler.syncId, convertClientSlotToServerSlot(slotId, screen), 1, SlotActionType.THROW, player)</ID>
     <ID>MaxLineLength:ModuleChestStealer.kt$ModuleChestStealer$return titleString == Text.translatable("container.chest").string || titleString == Text.translatable("container.chestDouble").string</ID>
     <ID>MaxLineLength:ModuleClickGui.kt$ModuleClickGui$object</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$!player.isInLava &amp;&amp; !player.isTouchingWater &amp;&amp; !player.isClimbing &amp;&amp; !player.hasNoGravity()</ID>
@@ -140,7 +136,6 @@
     <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.NCP$if</ID>
     <ID>MaxLineLength:ModuleFly.kt$ModuleFly.Enderpearl$if</ID>
     <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*&gt;) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$(!cooldown || player.getAttackCooldownProgress(0.0f) &gt;= 1.0f) &amp;&amp; (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() &gt; 0.25 * 0.25)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$entity != null &amp;&amp; !entity.isRemoved &amp;&amp; (!FailSwing.LimitRange.enabled || entity.boxedDistanceTo(player) &lt;= reach)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$if</ID>
@@ -177,8 +172,6 @@
     <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$return item is BowItem &amp;&amp; player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem</ID>
     <ID>MaxLineLength:ModuleTrigger.kt$ModuleTrigger$condition = { (!cooldown || player.getAttackCooldownProgress(0.0f) &gt;= 1.0f) &amp;&amp; isWeaponSelected() &amp;&amp; !ModuleCriticals.shouldWaitForCrit() }</ID>
     <ID>MaxLineLength:ModuleVehicleFly.kt$ModuleVehicleFly$vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)</ID>
-    <ID>MaxLineLength:ModuleVehicleOneHit.kt$ModuleVehicleOneHit$if (protocolVersion == MC_1_8) network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking)) else player.swingHand(Hand.MAIN_HAND)</ID>
-    <ID>MaxLineLength:ModuleVehicleOneHit.kt$ModuleVehicleOneHit$if (protocolVersion == MC_1_8) player.swingHand(Hand.MAIN_HAND) else network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))</ID>
     <ID>MaxLineLength:ModuleVelocity.kt$ModuleVelocity$if</ID>
     <ID>MaxLineLength:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
     <ID>MaxLineLength:Region.kt$Region$return pos.from.x &gt;= this.from.x &amp;&amp; pos.to.x &lt;= this.to.x &amp;&amp; pos.from.y &gt;= this.from.y &amp;&amp; pos.to.y &lt;= this.to.y &amp;&amp; pos.from.z &gt;= this.from.z &amp;&amp; pos.to.z &lt;= this.to.z</ID>
@@ -187,7 +180,6 @@
     <ID>MaxLineLength:RenderEngine.kt$RenderEngine$* Contains the MVP matrix used by MC for the current frame. Always initialized when [LiquidBounceRenderEvent] is dispatched.</ID>
     <ID>MaxLineLength:RenderEngine.kt$RenderEngine$logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}.")</ID>
     <ID>MaxLineLength:RenderingFlags.kt$RenderingFlags$*</ID>
-    <ID>MaxLineLength:SessionExtensions.kt$private</ID>
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$// h += (0.05 * (this.getStatusEffect(StatusEffects.LEVITATION).getAmplifier() + 1).toDouble() - g.y) * 0.2</ID>
     <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$// if (this.horizontalCollision &amp;&amp; this.doesNotCollide(vec3d2.x, vec3d2.y + 0.6 - this.getY() + e, vec3d2.z)) {</ID>
@@ -231,7 +223,6 @@
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>NewLineAtEndOfFile:CleanupPlan.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlan.kt</ID>
-    <ID>NewLineAtEndOfFile:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
     <ID>NewLineAtEndOfFile:Face.kt$net.ccbluex.liquidbounce.utils.math.geometry.Face.kt</ID>
     <ID>NewLineAtEndOfFile:ItemCategorization.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization.kt</ID>
     <ID>NewLineAtEndOfFile:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
@@ -267,7 +258,6 @@
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
     <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*&gt;) ?: emptyArray&lt;String&gt;()).map { it as String } .toTypedArray())</ID>
     <ID>SwallowedException:BrowserFileSystem.kt$BrowserFileSystem$e: InvalidPathException</ID>
-    <ID>SwallowedException:ClientUtils.kt$e: ClassNotFoundException</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>SwallowedException:MojangApi.kt$MojangApi$e: Exception</ID>
@@ -292,7 +282,6 @@
     <ID>TooGenericExceptionCaught:Chat.kt$Chat$throwable: Throwable</ID>
     <ID>TooGenericExceptionCaught:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$e: Throwable</ID>
     <ID>TooGenericExceptionCaught:ClientUpdate.kt$ClientUpdate$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:ClientUtils.kt$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CommandManager.kt$CommandExecutor$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CommandManager.kt$CommandManager$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CommandValue.kt$CommandValue$e: Exception</ID>
@@ -303,8 +292,6 @@
     <ID>TooGenericExceptionCaught:MojangApi.kt$MojangApi$e: Exception</ID>
     <ID>TooGenericExceptionCaught:Script.kt$Script$throwable: Throwable</ID>
     <ID>TooGenericExceptionCaught:Shaders.kt$Shaders$e: Exception</ID>
-    <ID>TooGenericExceptionThrown:ClientUtils.kt$throw Error("Failed to retrieve protocol version from ViaVersion", e)</ID>
-    <ID>TooGenericExceptionThrown:ClientUtils.kt$throw Error("Failed to setup protocol version loading from ViaVersion", e)</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:Chat.kt$Chat : ToggleableConfigurable</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>

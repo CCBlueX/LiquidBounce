@@ -17,6 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import org.apache.tools.ant.taskdefs.condition.Os
+
 plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
@@ -58,7 +60,10 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
-    maven { url = 'https://repo.viaversion.com/' }
+    maven {
+        name = 'ViaVersion'
+        url = 'https://repo.viaversion.com/'
+    }
 
     maven {
         name = "modrinth"
@@ -79,8 +84,12 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    modImplementation 'com.viaversion:viaversion:4.7.1-SNAPSHOT'
-    modImplementation 'com.github.FlorianMichael:ViaLoadingBase:4.4.8'
+    implementation "com.viaversion:viaversion:4.8.1"
+    implementation "net.raphimc:ViaLoader:2.2.10"
+    // 2.9.5 requires Minecraft 1.20.2 - we are currently on 1.20.1
+    //  modImplementation ("de.florianmichael:viafabricplus:2.9.5") {
+    //      transitive = false
+    // }
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
@@ -142,11 +151,24 @@ processResources {
 
 // The following code will include the theme into the build
 
-tasks.register('makeTheme', Exec) {
+tasks.register('npmInstallTheme', Exec) {
+    String npm = 'npm';
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        npm = 'npm.cmd'
+    }
     workingDir file('src-theme')
-    commandLine 'python', 'build.py'
+    commandLine npm, 'i'
     doLast {
-        println 'Successfully exported theme.zip'
+        println 'Successfully installed dependencies for theme'
+    }
+}
+
+tasks.register('bundleTheme', Exec) {
+    dependsOn 'npmInstallTheme'
+    workingDir file('src-theme')
+    commandLine 'node', 'bundle.js'
+    doLast {
+        println 'Successfully attached theme to build'
     }
 }
 
@@ -158,7 +180,7 @@ sourceSets {
     }
 }
 
-processResources.dependsOn makeTheme
+processResources.dependsOn bundleTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
