@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.client.Curve
 import net.ccbluex.liquidbounce.utils.client.Curves
 import net.minecraft.block.Block
 import net.minecraft.item.Item

@@ -354,7 +354,7 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
     tessellator.draw()
 }
 
-fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>){
+fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
@@ -379,11 +379,22 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
     tessellator.draw()
 
 }
-private fun circlePoints() =
-    (0 until 40).map {
-        val theta = 2 * PI * it / 40
-        Vec3(cos(theta), 0.0, sin(theta))
+private fun circlePoints(): List<Vec3> {
+    val numPoints = 40
+    val step = 2 * PI / numPoints
+    val points = ArrayList<Vec3>(numPoints)
+    for (index in 0 until numPoints) {
+        val theta = step * index
+        points.add(Vec3(cos(theta), 0.0, sin(theta)))
     }
+    return points
+}
+
+
+
+
+
+
 
 fun RenderEnvironment.drawCircle(center: Vec3,radius: Float) {
 
@@ -404,11 +415,11 @@ fun RenderEnvironment.drawGradientCircle(outerRadius: Float, innerRadius: Float,
 
     val points = circlePoints()
 
-    with(bufferBuilder){
+    with(bufferBuilder) {
         begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
 
-        (0 .. 40).forEach {
-            val p = points[it % 40]
+        for (i in 0..40) {
+            val p = points[i % 40]
             val outerP = p * outerRadius
             val innerP = p * innerRadius
 
