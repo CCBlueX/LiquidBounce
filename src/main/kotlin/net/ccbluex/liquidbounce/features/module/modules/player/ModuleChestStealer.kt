@@ -43,6 +43,7 @@ import kotlin.math.ceil
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)
+    var closeDelay by intRange("CloseDelay", 1..10, 0..200)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
 
@@ -101,7 +102,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             return@handler
         }
 
-        if (sortedItemsToCollect.isEmpty()) {
+        if (sortedItemsToCollect.isEmpty() && !waitForCloseTimer()) {
             player.closeHandledScreen()
         }
     }
@@ -118,7 +119,13 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             if (stillRequiredSpace <= 0)
                 return false
 
-            interaction.clickSlot(screen.screenHandler.syncId, convertClientSlotToServerSlot(slotId, screen), 1, SlotActionType.THROW, player)
+            interaction.clickSlot(
+                screen.screenHandler.syncId,
+                convertClientSlotToServerSlot(slotId, screen),
+                1,
+                SlotActionType.THROW,
+                player
+            )
 
             this.lastSlot = slotId
 
@@ -179,6 +186,17 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         return false
     }
 
+    private fun waitForCloseTimer(): Boolean {
+        val time = closeDelay.random()
+
+        if (time == 0) {
+            return true
+        }
+
+        timer.waitFor(time.toLong())
+        return false
+    }
+
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
      */
@@ -196,10 +214,12 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 player
             )
 
-            cleanupPlan.remapSlots(hashMapOf(
-                Pair(hotbarSwap.from, hotbarSwap.to),
-                Pair(hotbarSwap.to, hotbarSwap.from)
-            ))
+            cleanupPlan.remapSlots(
+                hashMapOf(
+                    Pair(hotbarSwap.from, hotbarSwap.to),
+                    Pair(hotbarSwap.to, hotbarSwap.from)
+                )
+            )
 
             if (!waitForTimer())
                 return true
