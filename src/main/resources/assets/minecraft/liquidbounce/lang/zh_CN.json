@@ -161,7 +161,7 @@
         
         "module.fullbright.description": "让你在黑暗中看清一切。",
 
-        "module.gamedetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
+        "module.gameDetector.description": "检测你是否在一场已经开始的游戏中。",
         
         "module.ghost.description": "允许你在死亡后四处走动并与环境互动。",
         
