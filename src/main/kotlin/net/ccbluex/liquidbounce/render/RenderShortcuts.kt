@@ -355,7 +355,7 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
 }
 
 fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
-    require(vertices.size == 4 && colors.size == 4) { "lists must have exactly 4" }
+    require(vertices.size == 4 && colors.size == 4) { "lists must have exactly 4 elements" }
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
@@ -366,14 +366,11 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
     with(bufferBuilder) {
         begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR)
 
-
         vertices.forEachIndexed { index, (x, y, z) ->
             val color4b = colors[index]
             vertex(matrix, x, y, z).color(color4b.toRGBA())
                 .next()
         }
-
-
     }
     tessellator.draw()
 }
@@ -423,7 +420,6 @@ fun RenderEnvironment.drawGradientCircle(
                 .color(innerColor4b.toRGBA())
                 .next()
         }
-
     }
     tessellator.draw()
 }
