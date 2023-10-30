@@ -32,7 +32,6 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
     val repeatable = repeatable {
         circles.forEach { it.right += 1 }
         circles.removeIf { it.getRight() >= lifetime }
-
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
