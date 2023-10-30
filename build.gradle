@@ -121,6 +121,9 @@ dependencies {
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
     implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
+    // https://mvnrepository.com/artifact/io.netty/netty-codec-socks
+    implementation 'io.netty:netty-codec-socks:4.1.82.Final'
+
 
     implementation 'com.vdurmont:semver4j:3.1.0'
 
@@ -253,6 +256,7 @@ shadowJar {
         include(dependency('org.graalvm.js:js:23.0.1'))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
+        include(dependency('io.netty:netty-codec-socks'))
         include(dependency('com.vdurmont:semver4j:3.1.0'))
     }
 }
