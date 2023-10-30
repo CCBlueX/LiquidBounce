@@ -265,6 +265,12 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
+    /**
+     * @anticheat Verus
+     * @anticheatVersion b3896
+     * @testedOn eu.loyisa.cn
+     * @note it gives you ~2 flags for damage
+     */
     private object VerusDamage : Choice("VerusDamage") {
 
         override val parent: ChoiceConfigurable

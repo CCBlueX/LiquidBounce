@@ -266,6 +266,11 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         }
     }
 
+    /**
+     * @anticheat Vulcan
+     * @anticheatVersion 2.7.7
+     * @testedOn eu.loyisa.cn
+     */
     object Vulcan : Choice("Vulcan") {
         override val parent: ChoiceConfigurable
             get() = modes
@@ -280,6 +285,12 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         }
     }
 
+
+    /**
+     * @anticheat Verus
+     * @anticheatVersion b3896
+     * @testedOn eu.loyisa.cn
+     */
     object Verus : Choice("Verus") {
         override val parent: ChoiceConfigurable
             get() = modes
