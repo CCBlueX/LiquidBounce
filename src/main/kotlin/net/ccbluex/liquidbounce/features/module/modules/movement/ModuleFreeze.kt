@@ -34,6 +34,8 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
+    private val disableOnFlag by boolean("DisableOnFlag", true)
+
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Set motion to zero
         event.movement.x = 0.0
@@ -43,7 +45,7 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
     val packetHandler = handler<PacketEvent> { event ->
         if (mc.world != null && event.origin == TransferOrigin.RECEIVE) {
-            if (event.packet is PlayerPositionLookS2CPacket) {
+            if (event.packet is PlayerPositionLookS2CPacket && disableOnFlag) {
                 enabled = false
 
                 return@handler
