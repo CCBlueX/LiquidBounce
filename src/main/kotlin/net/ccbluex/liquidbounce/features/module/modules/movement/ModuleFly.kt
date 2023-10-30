@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -268,13 +267,13 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private object VerusDamage : Choice("VerusDamage") {
 
-        val ticks by int("ticks", 20, 0..100)
-        val timer1 by float("Timer", 1f, 0.01f..5f)
         override val parent: ChoiceConfigurable
             get() = modes
 
-        var failedDamage = false
+        var flyTicks = 0
+        var shouldStop = false
         var gotDamage = false
+
         override fun enable() {
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
             network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z, false))
@@ -285,29 +284,29 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         val failRepeatable = repeatable {
             if (!gotDamage) {
                 wait { 20 }
-                if (!gotDamage) failedDamage = true
-            } else {
-                Timer.requestTimerSpeed(timer1, Priority.IMPORTANT_FOR_USAGE)
+                if (!gotDamage) {
+                    chat("Failed to self-damage")
+                    shouldStop = true
+                }
             }
         }
         val repeatable = repeatable {
-            waitUntil { player.hurtTime > 0 || failedDamage }
-            if (failedDamage) {
-                chat("Failed to self-damage".asText())
+            if (player.hurtTime > 0)
+                gotDamage = true
+            if (!gotDamage) {
                 return@repeatable
             }
-            gotDamage = true
-            repeat(ticks) {
-                player.strafe(speed = Vanilla.horizontalSpeed.toDouble())
-                player.velocity.y = 0.0
-                wait(1)
-                if (!enabled)
-                    return@repeat
+            if (++flyTicks > 20 || shouldStop) {
+                enabled = false
+                return@repeatable
             }
-            enabled = false
+            player.strafe(speed = 9.95)
+            player.velocity.y = 0.0
+            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE)
         }
 
         override fun disable() {
+            flyTicks = 0
             player.zeroXZ()
         }
     }

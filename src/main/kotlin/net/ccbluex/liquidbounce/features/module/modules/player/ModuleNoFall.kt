@@ -35,18 +35,15 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.block.Blocks
-import net.minecraft.block.FluidBlock
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3i
-import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
 
 /**
@@ -59,7 +56,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     private val modes = choices(
         "Mode", SpoofGround, arrayOf(
-            SpoofGround, NoGround, Packet, MLG, Spartan524Flag, Vulcan
+            SpoofGround, NoGround, Packet, MLG, Spartan524Flag, Vulcan, Verus
         )
     )
 
@@ -269,20 +266,30 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         }
     }
 
-
     object Vulcan : Choice("Vulcan") {
-        val test by boolean("test", false)
-        val test1 by float("test", 3.25f, 0f..10f)
         override val parent: ChoiceConfigurable
             get() = modes
+
         val packetHandler = handler<PacketEvent> {
             val packet = it.packet
-            if (packet is PlayerMoveC2SPacket && player.fallDistance > test1) {
+            if (packet is PlayerMoveC2SPacket && player.fallDistance > 7.0) {
                 packet.onGround = true
                 player.fallDistance = 0f
-                if (test) {
-                    player.velocity.y = 0.0
-                }
+                player.velocity.y = 0.0
+            }
+        }
+    }
+
+    object Verus : Choice("Verus") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> {
+            val packet = it.packet
+            if (packet is PlayerMoveC2SPacket && player.fallDistance > 3.35) {
+                packet.onGround = true
+                player.fallDistance = 0f
+                player.velocity.y = 0.0
             }
         }
     }
