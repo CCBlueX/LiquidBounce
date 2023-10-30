@@ -324,9 +324,6 @@
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupSpecial()</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent&gt; { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent&gt; { reconnect() }</ID>
-    <ID>UnusedPrivateProperty:Events.kt$HealthUpdateEvent$food: Int</ID>
-    <ID>UnusedPrivateProperty:Events.kt$HealthUpdateEvent$health: Float</ID>
-    <ID>UnusedPrivateProperty:Events.kt$HealthUpdateEvent$saturation: Float</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$delta: Float</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseX: Int</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseY: Int</ID>

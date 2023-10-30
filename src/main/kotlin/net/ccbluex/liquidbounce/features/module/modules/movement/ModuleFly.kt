@@ -28,9 +28,13 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.block.Block
 import net.minecraft.block.FluidBlock
 import net.minecraft.item.Items
@@ -54,8 +58,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private val modes = choices(
         "Mode", Vanilla, arrayOf(
-            Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524,
-            Sentinel27thOct
+            Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524, Sentinel27thOct, VerusDamage
         )
     )
 
@@ -262,4 +265,55 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
+    /**
+     * @anticheat Verus
+     * @anticheatVersion b3896
+     * @testedOn eu.loyisa.cn
+     * @note it gives you ~2 flags for damage
+     */
+    private object VerusDamage : Choice("VerusDamage") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        var flyTicks = 0
+        var shouldStop = false
+        var gotDamage = false
+
+        override fun enable() {
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+        }
+
+        val failRepeatable = repeatable {
+            if (!gotDamage) {
+                wait { 20 }
+                if (!gotDamage) {
+                    chat("Failed to self-damage")
+                    shouldStop = true
+                }
+            }
+        }
+        val repeatable = repeatable {
+            if (player.hurtTime > 0)
+                gotDamage = true
+            if (!gotDamage) {
+                return@repeatable
+            }
+            if (++flyTicks > 20 || shouldStop) {
+                enabled = false
+                return@repeatable
+            }
+            player.strafe(speed = 9.95)
+            player.velocity.y = 0.0
+            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE)
+        }
+
+        override fun disable() {
+            flyTicks = 0
+            player.zeroXZ()
+        }
+    }
 }

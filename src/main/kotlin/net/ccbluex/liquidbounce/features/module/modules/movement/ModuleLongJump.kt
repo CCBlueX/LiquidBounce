@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.enforced
 import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
@@ -78,8 +79,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
 
         val moveHandler = handler<PlayerMoveEvent> {
             if (!player.moving && jumped) {
-                player.velocity.x = 0.0
-                player.velocity.z = 0.0
+                player.zeroXZ()
             }
         }
     }
