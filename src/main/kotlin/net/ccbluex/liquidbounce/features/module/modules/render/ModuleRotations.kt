@@ -79,14 +79,13 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     fun shouldSendCustomRotation(): Boolean {
         val special = arrayOf(ModuleDerp).any { it.enabled }
 
-        return RotationManager.currentRotation != null || special
+        return enabled && (RotationManager.currentRotation != null || special)
     }
 
     /**
      * Display case-represented rotations
      */
     fun displayRotations(): Rotation {
-
         val server = RotationManager.serverRotation
         val current = RotationManager.currentRotation
 
