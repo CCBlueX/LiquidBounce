@@ -40,6 +40,7 @@ import net.minecraft.util.shape.VoxelShape
 import kotlin.math.abs
 import kotlin.math.sqrt
 
+@Suppress("LongParameterList")
 class SimulatedPlayer(
     private val player: PlayerEntity,
     var input: SimulatedPlayerInput,
