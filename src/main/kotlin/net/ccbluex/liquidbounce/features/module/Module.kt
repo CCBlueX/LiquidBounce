@@ -37,6 +37,7 @@ import org.lwjgl.glfw.GLFW
 /**
  * A module also called 'hack' can be enabled and handle events
  */
+@Suppress("LongParameterList")
 open class Module(
     name: String, // name parameter in configurable
     @Exclude val category: Category, // module category
