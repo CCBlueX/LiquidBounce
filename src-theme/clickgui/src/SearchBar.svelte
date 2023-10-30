@@ -16,7 +16,9 @@
             return;
         }
 
-        filteredModules = modules.filter(module => module.name.toLowerCase().includes(value.toLowerCase()));
+        filteredModules = modules
+        .filter(module => module.name.toLowerCase().includes(value.toLowerCase()))
+        .sort((a, b) => a.name.toLowerCase().indexOf(value.toLowerCase()) - b.name.toLowerCase().indexOf(value.toLowerCase()));
     };
 
     function isElementVisible(container, element) {
