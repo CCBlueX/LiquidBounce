@@ -32,8 +32,10 @@ import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.minecraft.block.Blocks
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3i
 
 /**
@@ -44,7 +46,7 @@ import net.minecraft.util.math.Vec3i
 
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
-    private val modes = choices("Mode", Box, arrayOf(Box))
+    private val modes = choices("Mode", Box, arrayOf(Box, Plane))
 
     var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
     var verticalDistance by int("VerticalScanDistance", 16, 4..100)
@@ -89,6 +91,112 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             }
         }
 
+    }
+
+    private object Plane: Choice("Plane") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val outline by boolean("Outline", true)
+
+        val glowHeightSetting: Float by float("GlowHeight", 0.7f, 0f..1f)
+
+
+        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
+            val markedBlocks = holes.entries
+
+            renderEnvironmentForWorld(matrixStack) {
+                withDisabledCull {
+                    for ((pos, quality) in markedBlocks) {
+                        val vec3 = Vec3(pos)
+
+                        val baseColor = quality.baseColor
+                        val transparentColor = quality.baseColor.alpha(0)
+                        val outlineColor = quality.outlineColor
+
+                        val glowHeight = glowHeightSetting.toDouble()
+
+                        withPosition(vec3) {
+                            withColor(baseColor) {
+                                drawSideBox(box, Direction.DOWN)
+                            }
+                            if(outline) {
+                                withColor(outlineColor) {
+                                    drawSideBox(box, Direction.DOWN, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+
+                                }
+                            }
+
+
+
+                            drawGradientQuad(
+                                listOf(
+                                    Vec3(box.minX, 0.0, box.minZ),
+                                    Vec3(box.minX, glowHeight, box.minZ),
+                                    Vec3(box.maxX, glowHeight, box.minZ),
+                                    Vec3(box.maxX, 0.0, box.minZ),
+                                ),
+                                listOf(
+                                    baseColor,
+                                    transparentColor,
+                                    transparentColor,
+                                    baseColor
+                                )
+                            )
+                            drawGradientQuad(
+                                listOf(
+                                    Vec3(box.maxX, 0.0, box.minZ),
+                                    Vec3(box.maxX, glowHeight, box.minZ),
+                                    Vec3(box.maxX, glowHeight, box.maxZ),
+                                    Vec3(box.maxX, 0.0, box.maxZ),
+                                ),
+                                listOf(
+                                    baseColor,
+                                    transparentColor,
+                                    transparentColor,
+                                    baseColor
+                                )
+                            )
+                            drawGradientQuad(
+                                listOf(
+                                    Vec3(box.maxX, 0.0, box.maxZ),
+                                    Vec3(box.maxX, glowHeight, box.maxZ),
+                                    Vec3(box.minX, glowHeight, box.maxZ),
+                                    Vec3(box.minX, 0.0, box.maxZ),
+                                ),
+                                listOf(
+                                    baseColor,
+                                    transparentColor,
+                                    transparentColor,
+                                    baseColor
+                                )
+                            )
+                            drawGradientQuad(
+                                listOf(
+                                    Vec3(box.minX, 0.0, box.maxZ),
+                                    Vec3(box.minX, glowHeight, box.maxZ),
+                                    Vec3(box.minX, glowHeight, box.minZ),
+                                    Vec3(box.minX, 0.0, box.minZ),
+                                ),
+                                listOf(
+                                    baseColor,
+                                    transparentColor,
+                                    transparentColor,
+                                    baseColor
+
+                                )
+                            )
+                        }
+
+
+
+                    }
+                }
+            }
+        }
     }
 
     val movementHandler = handler<PlayerTickEvent> { event ->
