@@ -15,87 +15,87 @@ import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
-import net.minecraft.network.play.INetHandlerPlayClient
 import net.minecraft.network.play.server.*
 import net.minecraft.util.AxisAlignedBB
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import org.lwjgl.opengl.GL11.*
-import net.minecraft.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.utils.timing.MSTimer
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
-    public val backtrackMode by ListValue("Mode", arrayOf("Legacy", "Modern"), "Modern")
+    val mode by ListValue("Mode", arrayOf("Legacy", "Modern"), "Modern")
 
     private val delay by object : IntegerValue("Delay", 80, 0..700) {
         override fun onChange(oldValue: Int, newValue: Int): Int {
-            if (backtrackMode == "Modern") {
+            if (mode == "Modern") {
                 clearPackets()
-            }       
+            }
 
             return newValue
         }
     }
 
     // Modern
-    public val modernMode by ListValue("BacktrackStyle", arrayOf("Pulse", "Smooth"), "Smooth") { backtrackMode == "Modern" }
+    private val style by ListValue("Style", arrayOf("Pulse", "Smooth"), "Smooth") { mode == "Modern" }
 
     private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance", 3.0f, 0.0f..3.5f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minDistance)
-        override fun isSupported() = backtrackMode == "Modern"
+        override fun isSupported() = mode == "Modern"
     }
     private val maxDistance by maxDistanceValue
     private val minDistance by object : FloatValue("MinDistance", 2.0f, 0.0f..3.0f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxDistance)
-        override fun isSupported() = backtrackMode == "Modern"
+        override fun isSupported() = mode == "Modern"
     }
 
-    private val pingSpoof by BoolValue("PingSpoof", false) { backtrackMode == "Modern" }
-    private val delayVelocity by BoolValue("DelayVelocity", false) { backtrackMode == "Modern" }
-    private val delayExplosion by BoolValue("DelayExplosion", false) { backtrackMode == "Modern" }
-    private val allPackets by BoolValue("AllPackets", false) { backtrackMode == "Modern" }
-    private val excludeSpecial by BoolValue("ExcludeSpecial", true) { backtrackMode == "Modern" && allPackets}
-
     // ESP
-    private val rainbow by BoolValue("Rainbow", true) { backtrackMode == "Modern" }
-    private val red by IntegerValue("R", 0, 0..255) { !rainbow && backtrackMode == "Modern" }
-    private val green by IntegerValue("G", 255, 0..255) { !rainbow && backtrackMode == "Modern"}
-    private val blue by IntegerValue("B", 0, 0..255) { !rainbow && backtrackMode == "Modern"}
+    private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" }
+    private val red by IntegerValue("R", 0, 0..255) { !rainbow && mode == "Modern" }
+    private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" }
+    private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" }
 
     private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
+
     private var target: Entity? = null
     private var realX = 0.0
     private var realY = 0.0
     private var realZ = 0.0
+
     private var globalTimer = MSTimer()
 
     // Legacy
-    private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20) { backtrackMode == "Legacy" }
+    private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20) { mode == "Legacy" }
 
     private val backtrackedPlayer = mutableMapOf<UUID, MutableList<BacktrackData>>()
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
+        val world = mc.theWorld ?: return
+
         val packet = event.packet
-        
-        if (mc.thePlayer == null) {
-            return
-        }
-        when (backtrackMode.lowercase()) {
+
+        when (mode.lowercase()) {
             "legacy" -> {
                 when (packet) {
                     // Check if packet is a spawn player packet
                     is S0CPacketSpawnPlayer -> {
                         // Insert first backtrack data
-                        addBacktrackData(packet.player, packet.x / 32.0, packet.y / 32.0, packet.z / 32.0, System.currentTimeMillis())
+                        addBacktrackData(
+                            packet.player,
+                            packet.x / 32.0,
+                            packet.y / 32.0,
+                            packet.z / 32.0,
+                            System.currentTimeMillis()
+                        )
                     }
                 }
 
@@ -111,35 +111,20 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             "modern" -> {
-                if (mc.thePlayer.ticksExisted <= 20) return
-                
+                // Prevent cancelling packets when not needed
+                if (packetQueue.isEmpty() && !shouldBacktrack()) {
+                    return
+                }
+
                 when (packet) {
-                    is S32PacketConfirmTransaction -> {
-                        if (pingSpoof) {
-                            event.cancelEvent()
-                            packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                        }
-                        return
-                    }
-
-                    is S12PacketEntityVelocity -> {
-                        if (delayVelocity) {
-                            event.cancelEvent()
-                            packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                        }
-                        return
-                    }
-
-                    is S27PacketExplosion -> {
-                        if (delayExplosion) {
-                            event.cancelEvent()
-                            packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                        }
+                    is S32PacketConfirmTransaction, is S00PacketKeepAlive, is S12PacketEntityVelocity, is S27PacketExplosion, is S19PacketEntityStatus, is S18PacketEntityTeleport, is S1CPacketEntityMetadata, is S20PacketEntityProperties -> {
+                        event.cancelEvent()
+                        packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
                         return
                     }
 
                     is S14PacketEntity -> {
-                        if (packet.getEntity(mc.theWorld) == target) {
+                        if (packet.getEntity(world) == target) {
                             realX += packet.func_149062_c().toDouble()
                             realY += packet.func_149061_d().toDouble()
                             realZ += packet.func_149064_e().toDouble()
@@ -148,47 +133,21 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                         packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
                         return
                     }
-
-                    is S19PacketEntityStatus -> {
-                        event.cancelEvent()
-                        packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                        return
-                    }
-                }
-
-                if (event.eventType == EventState.RECEIVE && allPackets) {
-                    val isSpecialPacket = packet is S29PacketSoundEffect || packet is S0CPacketSpawnPlayer || packet is S02PacketChat || packet is S0BPacketAnimation || packet is S2APacketParticles || packet is S06PacketUpdateHealth
-
-                    if (excludeSpecial) {
-                        if (!isSpecialPacket){
-                            event.cancelEvent()
-                            packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                        }
-                    }
-                    else {
-                        event.cancelEvent()
-                        packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                    }   
                 }
             }
-        }     
+        }
     }
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        if (backtrackMode == "Modern") {
-            when (modernMode.lowercase()) {
-                "smooth" -> {
-                    if (shouldBacktrack()) handlePackets()
-                    else clearPackets()
-                }
-                "pulse" -> {
-                    if (!shouldBacktrack() || (shouldBacktrack() && globalTimer.hasTimePassed(delay))) {
-                        clearPackets()
-                    }                 
-                }
-            }        
-        }        
+        if (mode == "Modern") {
+            if (shouldBacktrack() && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+                handlePackets()
+            } else {
+                clearPackets()
+                globalTimer.reset()
+            }
+        }
     }
 
     @EventTarget
@@ -198,7 +157,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        when (backtrackMode.lowercase()) {
+        when (mode.lowercase()) {
             "legacy" -> {
                 val color = Color.RED
 
@@ -245,9 +204,12 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 val timer = mc.timer
 
                 target?.let {
-                    val x = it.lastTickPosX + (it.posX - it.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
-                    val y = it.lastTickPosY + (it.posY - it.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
-                    val z = it.lastTickPosZ + (it.posZ - it.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+                    val x =
+                        it.lastTickPosX + (it.posX - it.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
+                    val y =
+                        it.lastTickPosY + (it.posY - it.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
+                    val z =
+                        it.lastTickPosZ + (it.posZ - it.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
                     val axisAlignedBB = it.entityBoundingBox.offset(-it.posX, -it.posY, -it.posZ).offset(x, y, z)
 
                     drawBacktrackBox(
@@ -263,14 +225,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
             }
         }
-
-
-        
     }
 
     @EventTarget
     fun onEntityMove(event: EntityMovementEvent) {
-        if (backtrackMode == "Legacy") {
+        if (mode == "Legacy") {
             val entity = event.movedEntity
 
             // Check if entity is a player
@@ -279,57 +238,57 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 addBacktrackData(entity.uniqueID, entity.posX, entity.posY, entity.posZ, System.currentTimeMillis())
             }
         }
-
     }
-    
+
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        if (backtrackMode == "Modern") clearPackets()
+        // Clear packets on disconnect only
+        if (mode == "Modern" && event.worldClient == null) {
+            clearPackets()
+        }
     }
 
     override fun onEnable() {
-        target = null
-        realX = 0.0
-        realY = 0.0
-        realZ = 0.0
-        globalTimer.reset()
+        reset()
     }
 
     override fun onDisable() {
-        if (backtrackMode == "Modern") clearPackets()
+        if (mode == "Modern") {
+            clearPackets()
+        }
     }
 
     private fun handlePackets() {
-        val filtered = packetQueue.filter { 
+        val filtered = packetQueue.filter {
             it.value.first <= System.currentTimeMillis()
         }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (packet in filtered) {
             handlePacket(packet)
+
             if (packet is S14PacketEntity && packet.getEntity(mc.theWorld) == target) {
                 realX -= packet.func_149062_c().toDouble()
                 realY -= packet.func_149061_d().toDouble()
                 realZ -= packet.func_149064_e().toDouble()
             }
+
             packetQueue.remove(packet)
         }
     }
 
     private fun clearPackets(handlePackets: Boolean = true) {
-        target = null
         if (handlePackets) {
             val filtered = packetQueue.entries.sortedBy { it.value.second }.map { it.key }
-    
+
             for (packet in filtered) {
                 handlePacket(packet)
                 packetQueue.remove(packet)
             }
+        } else {
+            packetQueue.clear()
         }
-        else packetQueue.clear()
-        
-        realX = 0.0
-        realY = 0.0
-        realZ = 0.0
+
+        reset()
     }
 
     private fun addBacktrackData(id: UUID, x: Double, y: Double, z: Double, time: Long) {
@@ -381,13 +340,13 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
      * This function will loop through the backtrack data of an entity.
      */
     fun loopThroughBacktrackData(entity: Entity, action: () -> Boolean) {
-        if (!Backtrack.state || entity !is EntityPlayer || Backtrack.backtrackMode == "Modern") {
+        if (!Backtrack.state || entity !is EntityPlayer || mode == "Modern") {
             return
         }
 
         val backtrackDataArray = getBacktrackData(entity.uniqueID) ?: return
         val entityPosition = entity.positionVector
-        val prevPosition = Triple(entity.prevPosX, entity.prevPosY, entity.prevPosZ)
+        val (prevX, prevY, prevZ) = Triple(entity.prevPosX, entity.prevPosY, entity.prevPosZ)
 
         // This will loop through the backtrack data. We are using reversed() to loop through the data from the newest to the oldest.
         for (backtrackData in backtrackDataArray.reversed()) {
@@ -401,7 +360,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
 
         // Reset position
-        val (prevX, prevY, prevZ) = prevPosition
         entity.prevPosX = prevX
         entity.prevPosY = prevY
         entity.prevPosZ = prevZ
@@ -409,12 +367,19 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         entity.setPosition(entityPosition.xCoord, entityPosition.yCoord, entityPosition.zCoord)
     }
 
-
     val color
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
-    private fun shouldBacktrack(): Boolean {
-        return (target != null) && (!target!!.isDead) && (mc.thePlayer.getDistanceToBox(target!!.hitBox) in minDistance..maxDistance) && (mc.thePlayer.ticksExisted > 20)
+    private fun shouldBacktrack() =
+        target != null && !target!!.isDead && mc.thePlayer.getDistanceToBox(target!!.hitBox) in minDistance..maxDistance && (mc.thePlayer?.ticksExisted
+            ?: 0) > 20
+
+    private fun reset() {
+        target = null
+        realX = 0.0
+        realY = 0.0
+        realZ = 0.0
+        globalTimer.reset()
     }
 }
 
