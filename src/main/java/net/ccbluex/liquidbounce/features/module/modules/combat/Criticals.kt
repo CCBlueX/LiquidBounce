@@ -26,7 +26,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
     val mode by ListValue(
         "Mode",
-        arrayOf("Packet", "NCPPacket", "VerusJump", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"),
+        arrayOf("Packet", "NCPPacket", "VerusJump", "AACJump", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"),
         "Packet"
     )
 
@@ -87,6 +87,14 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                     thePlayer.onGround = false
                     thePlayer.posY = thePlayer.prevPosY
                     verusJump()
+                }
+
+                "aacjump" -> {
+                    verusJump()
+                    if (!thePlayer.onGround) {
+                        thePlayer.motionY = -0.01
+                        thePlayer.posY = thePlayer.prevPosY
+                    }
                 }
 
                 "blocksmc" -> {
