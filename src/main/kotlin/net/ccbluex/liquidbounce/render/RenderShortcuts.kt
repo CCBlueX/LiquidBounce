@@ -351,6 +351,12 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
     tessellator.draw()
 }
 
+/**
+ * Function to render a gradient quad using specified [vertices] and [colors]
+ *
+ * @param vertices The four vectors to draw the quad
+ * @param colors The colors for the vertices
+ */
 fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
     require(vertices.size == 4 && colors.size == 4) { "lists must have exactly 4 elements" }
     val matrix = matrixStack.peek().positionMatrix
