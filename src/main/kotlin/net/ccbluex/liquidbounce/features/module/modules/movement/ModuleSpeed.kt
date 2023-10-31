@@ -20,15 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.entity.MovementType
 
 /**
@@ -41,7 +40,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices(
         "Mode", SpeedYPort, arrayOf(
-            Verus, SpeedYPort, LegitHop, Custom, Spartan524
+            Verus, SpeedYPort, LegitHop, Custom, Spartan524, Spartan524GroundTimer
         )
     )
 
@@ -146,8 +145,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
         override fun enable() {
             if (resetHorizontalSpeed) {
-                player.velocity.x = 0.0
-                player.velocity.z = 0.0
+                player.zeroXZ()
             }
 
             if (resetVerticalSpeed) player.velocity.y = 0.0
@@ -173,7 +171,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
             when {
                 player.isOnGround -> {
-                    player.strafe(speed = 0.84)
+                    player.strafe(speed = 0.83)
                     player.velocity.y = 0.16
                 }
             }
@@ -181,9 +179,30 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         }
 
         override fun enable() {
-            player.velocity.x = 0.0
-            player.velocity.z = 0.0
+            player.zeroXZ()
             player.velocity.y = 0.0
+        }
+    }
+
+    /**
+     * @anticheat Spartan
+     * @anticheatVersion phase 524
+     * @testedOn minecraft.vagdedes.com
+     * @note it will flag you for jumping
+     */
+    private object Spartan524GroundTimer : Choice("Spartan524GroundTimer") {
+        val additionalTicks by int("AdditionalTicks", 2, 1..10)
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = handler<PlayerTickEvent> {
+            repeat(additionalTicks) {
+                player.tickMovement()
+            }
+        }
+
+        val jumpEvent = handler<PlayerJumpEvent> { event ->
+            event.cancelEvent()
         }
     }
 }

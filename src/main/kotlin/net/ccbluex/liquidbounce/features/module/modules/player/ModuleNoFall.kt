@@ -56,7 +56,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     private val modes = choices(
         "Mode", SpoofGround, arrayOf(
-            SpoofGround, NoGround, Packet, MLG, Spartan524Flag
+            SpoofGround, NoGround, Packet, MLG, Spartan524Flag, Vulcan, Verus
         )
     )
 
@@ -266,4 +266,42 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         }
     }
 
+    /**
+     * @anticheat Vulcan
+     * @anticheatVersion 2.7.7
+     * @testedOn eu.loyisa.cn
+     */
+    object Vulcan : Choice("Vulcan") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> {
+            val packet = it.packet
+            if (packet is PlayerMoveC2SPacket && player.fallDistance > 7.0) {
+                packet.onGround = true
+                player.fallDistance = 0f
+                player.velocity.y = 0.0
+            }
+        }
+    }
+
+
+    /**
+     * @anticheat Verus
+     * @anticheatVersion b3896
+     * @testedOn eu.loyisa.cn
+     */
+    object Verus : Choice("Verus") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> {
+            val packet = it.packet
+            if (packet is PlayerMoveC2SPacket && player.fallDistance > 3.35) {
+                packet.onGround = true
+                player.fallDistance = 0f
+                player.velocity.y = 0.0
+            }
+        }
+    }
 }

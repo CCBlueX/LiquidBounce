@@ -40,6 +40,7 @@ import net.minecraft.util.shape.VoxelShape
 import kotlin.math.abs
 import kotlin.math.sqrt
 
+@Suppress("LongParameterList")
 class SimulatedPlayer(
     private val player: PlayerEntity,
     var input: SimulatedPlayerInput,
@@ -52,6 +53,7 @@ class SimulatedPlayer(
     private var fallDistance: Float,
     private var jumpingCooldown: Int,
     private var isJumping: Boolean,
+    private var isFallFlying: Boolean,
     private var onGround: Boolean,
     private var horizontalCollision: Boolean,
     private var verticalCollision: Boolean
@@ -72,9 +74,10 @@ class SimulatedPlayer(
                 player.fallDistance,
                 player.jumpingCooldown,
                 player.jumping,
+                player.isFallFlying,
                 player.isOnGround,
                 player.horizontalCollision,
-                player.verticalCollision
+                player.verticalCollision,
             )
         }
         fun fromOtherPlayer(player: PlayerEntity, input: SimulatedPlayerInput): SimulatedPlayer {
@@ -91,9 +94,10 @@ class SimulatedPlayer(
                 player.fallDistance,
                 player.jumpingCooldown,
                 player.jumping,
+                player.isFallFlying,
                 player.isOnGround,
                 player.horizontalCollision,
-                player.verticalCollision
+                player.verticalCollision,
             )
         }
     }
@@ -110,6 +114,7 @@ class SimulatedPlayer(
 
         this.isJumping = this.input.jumping
 
+
         val d: Vec3d = this.velocity
 
         var h = d.x
@@ -124,6 +129,9 @@ class SimulatedPlayer(
         }
         if (abs(d.z) < 0.003) {
             j = 0.0
+        }
+        if(onGround) {
+            this.isFallFlying = false
         }
 
         this.velocity = Vec3d(h, i, j)
@@ -140,7 +148,6 @@ class SimulatedPlayer(
                 this.swimUpward(FluidTags.LAVA)
             } else if ((this.onGround || bl && k <= swimHeight) && jumpingCooldown == 0) {
                 this.jump()
-
                 jumpingCooldown = 10
             }
         }
@@ -212,7 +219,7 @@ class SimulatedPlayer(
 //                this.setVelocity(f.x, 0.3, f.z)
 //            }
 //        } else
-        if (this.isFallFlying()) {
+        if (this.isFallFlying) {
             var k: Double
             var e: Vec3d = this.velocity
             if (e.y > -0.5) {
@@ -256,7 +263,7 @@ class SimulatedPlayer(
 //            } else {
 //                h = if (this.pos.y > this.world.getBottomY().toDouble()) -0.1 else 0.0
 //            }
-            velocity = Vec3d(g.x * f.toDouble(), g.y * 0.98, g.z * f.toDouble())
+            velocity = Vec3d(g.x * f.toDouble(), (g.y - d) * 0.98, g.z * f.toDouble())
         }
     }
 
@@ -299,22 +306,28 @@ class SimulatedPlayer(
             this.pos += adjustedMovement
         }
 
-        this.horizontalCollision = !MathHelper.approximatelyEquals(
-            movement.x,
-            adjustedMovement.x
-        ) || !MathHelper.approximatelyEquals(movement.z, adjustedMovement.z)
+        val xCollision = !MathHelper.approximatelyEquals(movement.x, adjustedMovement.x)
+        val zCollision = !MathHelper.approximatelyEquals(movement.z, adjustedMovement.z)
+
+        this.horizontalCollision = xCollision || zCollision
         this.verticalCollision = movement.y != adjustedMovement.y
 
         onGround = verticalCollision && movement.y < 0.0
 
-        val vec3d2: Vec3d = this.velocity
 
-        if (movement.x != adjustedMovement.x) {
-            this.velocity = Vec3d(0.0, vec3d2.y, vec3d2.z)
+        val vec3d2: Vec3d = this.velocity
+//        if(onGround) {
+//            this.velocity = Vec3d(vec3d2.x, vec3d2.y.coerceAtLeast(0.0), vec3d2.z)
+//        }
+
+        if (horizontalCollision || verticalCollision) {
+            this.velocity = Vec3d(
+                if (xCollision) 0.0 else vec3d2.x,
+                if (onGround) 0.0 else vec3d2.y,
+                if (zCollision) 0.0 else vec3d2.z
+            )
         }
-        if (movement.z != adjustedMovement.z) {
-            this.velocity = Vec3d(vec3d2.x, vec3d2.y, 0.0)
-        }
+
     }
 
     //
@@ -380,14 +393,16 @@ class SimulatedPlayer(
         return vec3d
     }
 
-    private fun isFallFlying(): Boolean = !this.onGround
-
     private fun onLanding() {
         this.fallDistance = 0.0f
     }
 
     fun jump() {
-        this.velocity += Vec3d(0.0, this.getJumpVelocity().toDouble() + this.getJumpBoostVelocityModifier(), 0.0)
+        this.velocity += Vec3d(
+            0.0,
+            this.getJumpVelocity().toDouble() + this.getJumpBoostVelocityModifier() - this.velocity.y,
+            0.0
+        )
 
         if (this.isSprinting()) {
             val f: Float = this.yaw.toRadians()

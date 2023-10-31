@@ -25,7 +25,6 @@
     <ID>CyclomaticComplexMethod:CleanupPlan.kt$fun createCleanupPlan(otherScreen: GenericContainerScreen? = null): InventoryCleanupPlan</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String&gt;, List&lt;Int&gt;&gt;, commandIdx: Int, isNewParameter: Boolean )</ID>
-    <ID>CyclomaticComplexMethod:CommandConfig.kt$CommandConfig$fun createCommand(): Command</ID>
     <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$fun execute(cmd: String)</ID>
     <ID>CyclomaticComplexMethod:ConfigSystem.kt$ConfigSystem$fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement)</ID>
     <ID>CyclomaticComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
@@ -68,6 +67,7 @@
     <ID>LongMethod:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandLocalConfig.kt$CommandLocalConfig$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandManager.kt$CommandManager$fun execute(cmd: String)</ID>
     <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>LongMethod:CpuViewRenderer.kt$CpuViewRenderer$override fun render(view: UltralightView, context: DrawContext)</ID>
@@ -82,11 +82,9 @@
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( x0: Float, x: Float, y: Float, z: Float, color: Color4b, through: Boolean )</ID>
     <ID>LongParameterList:Mat4.kt$Mat4.Companion$( left: Float, top: Float, right: Float, bottom: Float, nearPlane: Float, farPlane: Float )</ID>
-    <ID>LongParameterList:Module.kt$Module$( name: String, // name parameter in configurable @Exclude val category: Category, // module category bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind state: Boolean = false, // default state @Exclude val disableActivation: Boolean = false, // disable activation hide: Boolean = false, // default hide @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world )</ID>
     <ID>LongParameterList:ModuleTrajectories.kt$ModuleTrajectories$( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack )</ID>
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T&gt;?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
-    <ID>LongParameterList:SimulatedPlayer.kt$SimulatedPlayer$( private val player: PlayerEntity, var input: SimulatedPlayerInput, override var pos: Vec3d, var velocity: Vec3d, private val yaw: Float, private val pitch: Float, private var sprinting: Boolean, private var fallDistance: Float, private var jumpingCooldown: Int, private var isJumping: Boolean, private var onGround: Boolean, private var horizontalCollision: Boolean, private var verticalCollision: Boolean )</ID>
     <ID>LongParameterList:VertexFormatRenderTask.kt$VertexFormatRenderTask$(private val vertexFormat: VertexFormat, internal val type: PrimitiveType, val shaderHandler: ShaderHandler&lt;T&gt;, private val indexBuffer: IndexBuffer? = null, private val perInstance: VertexFormat? = null, private val texture: Texture? = null, private val state: GlRenderState = GlRenderState(), private val shaderData: T? = null)</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
@@ -304,8 +302,8 @@
     <ID>UnusedParameter:AccountManager.kt$AccountManager$error: JavascriptObject</ID>
     <ID>UnusedParameter:AccountManager.kt$AccountManager$success: JavascriptObject</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
-    <ID>UnusedParameter:CommandConfig.kt$CommandConfig$begin: String</ID>
     <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -&gt; Boolean = { true }</ID>
+    <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -&gt; Boolean = { true }</ID>
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
     <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$mods: Int</ID>
     <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$window: Long</ID>
@@ -324,9 +322,6 @@
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupSpecial()</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent&gt; { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent&gt; { reconnect() }</ID>
-    <ID>UnusedPrivateProperty:Events.kt$HealthUpdateEvent$food: Int</ID>
-    <ID>UnusedPrivateProperty:Events.kt$HealthUpdateEvent$health: Float</ID>
-    <ID>UnusedPrivateProperty:Events.kt$HealthUpdateEvent$saturation: Float</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$delta: Float</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseX: Int</ID>
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseY: Int</ID>

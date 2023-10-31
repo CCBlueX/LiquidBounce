@@ -227,12 +227,17 @@ object ConfigSystem {
                             for (choice in value.choices) {
                                 runCatching {
                                     val choiceElement = choices[choice.name]
+                                        ?: error("Choice ${choice.name} not found")
 
                                     deserializeConfigurable(choice, choiceElement)
-                                }.onFailure { it.printStackTrace() }
+                                }.onFailure {
+                                    logger.error("Unable to deserialize choice ${choice.name}", it)
+                                }
                             }
                         }
-                    }.onFailure { it.printStackTrace() }
+                    }.onFailure {
+                        logger.error("Unable to deserialize configurable ${value.name}", it)
+                    }
 
                     deserializeConfigurable(value, currentElement)
                 } else {
@@ -240,10 +245,14 @@ object ConfigSystem {
 
                     runCatching {
                         value.deserializeFrom(gson, currentElement["value"])
-                    }.onFailure { it.printStackTrace() }
+                    }.onFailure {
+                        logger.error("Unable to deserialize value ${value.name}", it)
+                    }
                 }
 
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure {
+            logger.error("Unable to deserialize configurable ${configurable.name}", it)
+        }
     }
 }
