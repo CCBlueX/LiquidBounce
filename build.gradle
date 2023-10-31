@@ -122,7 +122,7 @@ dependencies {
     // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
     implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-codec-socks
-    implementation 'io.netty:netty-codec-socks:4.1.82.Final'
+    implementation 'io.netty:netty-codec-socks:4.1.100.Final'
 
 
     implementation 'com.vdurmont:semver4j:3.1.0'
