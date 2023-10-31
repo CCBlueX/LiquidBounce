@@ -46,7 +46,7 @@ import net.minecraft.util.math.Vec3i
 
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
-    private val modes = choices("Mode", Box, arrayOf(Box, Plane))
+    private val modes = choices("Mode", Box, arrayOf(Box, GlowingPlane))
 
     var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
     var verticalDistance by int("VerticalScanDistance", 16, 4..100)
@@ -93,7 +93,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     }
 
-    private object Plane: Choice("Plane") {
+    private object GlowingPlane: Choice("GlowingPlane") {
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -130,7 +130,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                                 }
                             }
 
-
+                            if(glowHeight == 0.0) {
+                                return@withPosition
+                            }
 
                             drawGradientQuad(
                                 listOf(
@@ -190,8 +192,6 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                                 )
                             )
                         }
-
-
 
                     }
                 }
