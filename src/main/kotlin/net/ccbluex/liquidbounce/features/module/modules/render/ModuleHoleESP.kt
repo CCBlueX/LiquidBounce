@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.block.Blocks
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
@@ -99,7 +100,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
         val outline by boolean("Outline", true)
 
-        val glowHeightSetting: Float by float("GlowHeight", 0.7f, 0f..1f)
+        val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
+
+        val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
 
 
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -112,10 +115,16 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                 withDisabledCull {
                     for ((pos, quality) in markedBlocks) {
                         val vec3 = Vec3(pos)
+                        val distanceFade =
+                            if(distanceFade == 0f)
+                                1f
+                            else
+                                ((1 - player.pos.distanceTo(pos.toCenterPos()) / horizontalDistance) / distanceFade)
+                                .coerceIn(0.0, 1.0).toFloat()
 
-                        val baseColor = quality.baseColor
-                        val transparentColor = quality.baseColor.alpha(0)
-                        val outlineColor = quality.outlineColor
+                        val baseColor = quality.baseColor.alpha((quality.baseColor.a * distanceFade).toInt())
+                        val transparentColor = baseColor.alpha(0)
+                        val outlineColor = quality.outlineColor.alpha((quality.outlineColor.a * distanceFade).toInt())
 
                         val glowHeight = glowHeightSetting.toDouble()
 

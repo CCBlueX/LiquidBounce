@@ -358,6 +358,11 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, drawMode: DrawMode 
         vertices.forEach { (x, y, z) ->
             vertex(matrix, x, y, z).next()
         }
+
+        if(drawMode == DrawMode.DEBUG_LINE_STRIP){
+            vertex(matrix, vertices[0].x, vertices[0].y, vertices[0].z).next()
+
+        }
     }
 
     // Draw the outlined box
