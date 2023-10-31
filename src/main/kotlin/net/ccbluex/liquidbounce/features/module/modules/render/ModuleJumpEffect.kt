@@ -23,7 +23,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
     private val animCurve by curve("AnimCurve", Curves.EASE_OUT)
 
-    private val hueOffsetAnim by int("hueOffsetAnim", 63, -360..360)
+    private val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
 
     private val lifetime by int("Lifetime", 15, 1..30)
 
