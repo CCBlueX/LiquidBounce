@@ -46,7 +46,7 @@ import net.minecraft.util.math.Vec3i
 
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
-    private val modes = choices("Mode", Box, arrayOf(Box, GlowingPlane))
+    private val modes = choices("Mode", GlowingPlane, arrayOf(Box, GlowingPlane))
 
     var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
     var verticalDistance by int("VerticalScanDistance", 16, 4..100)
