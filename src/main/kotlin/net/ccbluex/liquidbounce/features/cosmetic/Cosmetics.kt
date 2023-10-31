@@ -68,6 +68,7 @@ object Cosmetics {
 
                     // Check if the cape is cached
                     if (cachedCapes.containsKey(name)) {
+                        LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
                         response.response(cachedCapes[name]!!)
                         return@refreshCapeCarriers
                     }
@@ -75,6 +76,8 @@ object Cosmetics {
                     // Request cape texture
                     val nativeImageBackedTexture = requestCape(url)
                         ?: return@refreshCapeCarriers
+
+                    LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
 
                     // Register cape texture
                     val capeTexture =
@@ -86,9 +89,7 @@ object Cosmetics {
                     // Return cape texture
                     response.response(capeTexture)
                 }
-            }.onSuccess {
-                LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
-            } // .onFailure not needed, because most people don't have a cape.
+            }
         }
     }
 
