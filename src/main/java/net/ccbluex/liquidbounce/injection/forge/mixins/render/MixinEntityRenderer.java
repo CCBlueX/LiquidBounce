@@ -66,14 +66,14 @@ public abstract class MixinEntityRenderer {
 
     @Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
     private void injectHurtCameraEffect(CallbackInfo callbackInfo) {
-        if (NoHurtCam.INSTANCE.getState()) {
+        if (NoHurtCam.INSTANCE.handleEvents()) {
             callbackInfo.cancel();
         }
     }
 
     @Inject(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Vec3;distanceTo(Lnet/minecraft/util/Vec3;)D"), cancellable = true)
     private void cameraClip(float partialTicks, CallbackInfo callbackInfo) {
-        if (CameraClip.INSTANCE.getState()) {
+        if (CameraClip.INSTANCE.handleEvents()) {
             callbackInfo.cancel();
 
             Entity entity = mc.getRenderViewEntity();
@@ -139,14 +139,14 @@ public abstract class MixinEntityRenderer {
 
     @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = At.Shift.BEFORE))
     private void setupCameraViewBobbingBefore(final CallbackInfo callbackInfo) {
-        if (Tracers.INSTANCE.getState()) {
+        if (Tracers.INSTANCE.handleEvents()) {
             glPushMatrix();
         }
     }
 
     @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = At.Shift.AFTER))
     private void setupCameraViewBobbingAfter(final CallbackInfo callbackInfo) {
-        if (Tracers.INSTANCE.getState()) {
+        if (Tracers.INSTANCE.handleEvents()) {
             glPopMatrix();
         }
     }
@@ -163,8 +163,8 @@ public abstract class MixinEntityRenderer {
 
             final Reach reach = Reach.INSTANCE;
 
-            double d0 = reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
-            mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReach() : d0, p_getMouseOver_1_);
+            double d0 = reach.handleEvents() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
+            mc.objectMouseOver = entity.rayTrace(reach.handleEvents() ? reach.getBuildReach() : d0, p_getMouseOver_1_);
             double d1 = d0;
             Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
             boolean flag = false;
@@ -179,7 +179,7 @@ public abstract class MixinEntityRenderer {
                 d1 = mc.objectMouseOver.hitVec.distanceTo(vec3);
             }
 
-            if (reach.getState()) {
+            if (reach.handleEvents()) {
                 final MovingObjectPosition movingObjectPosition = entity.rayTrace(reach.getBuildReach(), p_getMouseOver_1_);
 
                 if (movingObjectPosition != null) d1 = movingObjectPosition.hitVec.distanceTo(vec3);
@@ -230,7 +230,7 @@ public abstract class MixinEntityRenderer {
                 }
             }
 
-            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.getState() ? reach.getCombatReach() : 3)) {
+            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.handleEvents() ? reach.getCombatReach() : 3)) {
                 pointedEntity = null;
                 mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, Objects.requireNonNull(vec33), null, new BlockPos(vec33));
             }

@@ -190,7 +190,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
             // Destroy block
             action == "Destroy" || areSurroundings -> {
                 // Auto Tool
-                if (AutoTool.state) {
+                if (AutoTool.handleEvents()) {
                     AutoTool.switchSlot(currentPos)
                 }
 

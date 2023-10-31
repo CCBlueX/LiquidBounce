@@ -22,7 +22,7 @@ public class MixinBlockSoulSand {
     private void onEntityCollidedWithBlock(CallbackInfo callbackInfo) {
         final NoSlow noSlow = NoSlow.INSTANCE;
 
-        if (noSlow.getState() && noSlow.getSoulsand())
+        if (noSlow.handleEvents() && noSlow.getSoulsand())
             callbackInfo.cancel();
     }
 }

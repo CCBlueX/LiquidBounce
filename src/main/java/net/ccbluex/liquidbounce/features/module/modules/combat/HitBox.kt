@@ -38,9 +38,9 @@ object HitBox : Module("HitBox", ModuleCategory.COMBAT) {
 
                 if (isBot(entity)) {
                     return botSize
-                } else if (entity.isClientFriend() && !NoFriends.state) {
+                } else if (entity.isClientFriend() && !NoFriends.handleEvents()) {
                     return friendSize
-                } else if (Teams.state && Teams.isInYourTeam(entity)) {
+                } else if (Teams.handleEvents() && Teams.isInYourTeam(entity)) {
                     return teamMateSize
                 }
 

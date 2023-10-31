@@ -6,6 +6,7 @@
 
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
+import akka.actor.Kill
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -45,7 +46,7 @@ class Target : Element() {
     override fun drawElement(): Border {
         val target = KillAura.target
 
-        if (target is EntityPlayer) {
+        if (KillAura.handleEvents() && target is EntityPlayer) {
             val targetHealth = target.health + if (absorption) target.absorptionAmount else 0f
 
             if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||

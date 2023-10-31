@@ -42,7 +42,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getTargets() && EntityUtils.INSTANCE.isSelected(entity, false)) {
+        if (chams.handleEvents() && chams.getTargets() && EntityUtils.INSTANCE.isSelected(entity, false)) {
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(1f, -1000000F);
         }
@@ -52,7 +52,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getTargets() && EntityUtils.INSTANCE.isSelected(entity, false)) {
+        if (chams.handleEvents() && chams.getTargets() && EntityUtils.INSTANCE.isSelected(entity, false)) {
             glPolygonOffset(1f, 1000000F);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
@@ -72,7 +72,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void renderModel(T p_renderModel_1_, float p_renderModel_2_, float p_renderModel_3_, float p_renderModel_4_, float p_renderModel_5_, float p_renderModel_6_, float p_renderModel_7_, CallbackInfo ci) {
         boolean visible = !p_renderModel_1_.isInvisible();
         final TrueSight trueSight = TrueSight.INSTANCE;
-        boolean semiVisible = !visible && (!p_renderModel_1_.isInvisibleToPlayer(mc.thePlayer) || (trueSight.getState() && trueSight.getEntities()));
+        boolean semiVisible = !visible && (!p_renderModel_1_.isInvisibleToPlayer(mc.thePlayer) || (trueSight.handleEvents() && trueSight.getEntities()));
 
         if (visible || semiVisible) {
             if (!bindEntityTexture(p_renderModel_1_)) {
@@ -89,7 +89,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
             }
 
             final ESP esp = ESP.INSTANCE;
-            if (esp.getState() && EntityUtils.INSTANCE.isSelected(p_renderModel_1_, false)) {
+            if (esp.handleEvents() && EntityUtils.INSTANCE.isSelected(p_renderModel_1_, false)) {
                 boolean fancyGraphics = mc.gameSettings.fancyGraphics;
                 mc.gameSettings.fancyGraphics = false;
 

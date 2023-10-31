@@ -366,7 +366,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
         if (counterDisplay) {
             glPushMatrix()
 
-            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null)
+            if (BlockOverlay.handleEvents() && BlockOverlay.info && BlockOverlay.currentBlock != null)
                 glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"

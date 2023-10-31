@@ -208,7 +208,7 @@ public abstract class MixinMinecraft {
     private void clickMouse(CallbackInfo callbackInfo) {
         CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.LEFT);
 
-        if (AutoClicker.INSTANCE.getState()) {
+        if (AutoClicker.INSTANCE.handleEvents()) {
             leftClickCounter = 0;
         }
     }
@@ -223,7 +223,7 @@ public abstract class MixinMinecraft {
         CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.RIGHT);
 
         final FastPlace fastPlace = FastPlace.INSTANCE;
-        if (!fastPlace.getState()) return;
+        if (!fastPlace.handleEvents()) return;
 
         // Don't spam-click when the player isn't holding blocks
         if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
@@ -257,7 +257,7 @@ public abstract class MixinMinecraft {
     private void sendClickBlockToController(boolean leftClick) {
         if (!leftClick) leftClickCounter = 0;
 
-        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.getState())) {
+        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
             if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 BlockPos blockPos = objectMouseOver.getBlockPos();
 
@@ -269,7 +269,7 @@ public abstract class MixinMinecraft {
                     effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
                     thePlayer.swingItem();
                 }
-            } else if (!AbortBreaking.INSTANCE.getState()) {
+            } else if (!AbortBreaking.INSTANCE.handleEvents()) {
                 playerController.resetBlockRemoving();
             }
         }

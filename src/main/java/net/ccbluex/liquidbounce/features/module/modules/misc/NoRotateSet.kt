@@ -17,5 +17,5 @@ object NoRotateSet : Module("NoRotateSet", ModuleCategory.MISC, gameDetecting = 
     private val ignoreOnSpawn by BoolValue("IgnoreOnSpawn", false)
     val affectServerRotation by BoolValue("AffectServerRotation", true)
 
-    fun shouldModify(player: EntityPlayer) = state && (!ignoreOnSpawn || player.ticksExisted != 0)
+    fun shouldModify(player: EntityPlayer) = handleEvents() && (!ignoreOnSpawn || player.ticksExisted != 0)
 }

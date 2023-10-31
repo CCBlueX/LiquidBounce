@@ -34,7 +34,7 @@ object Fullbright : Module("Fullbright", ModuleCategory.RENDER, gameDetecting = 
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
-        if (state || XRay.state) {
+        if (state || XRay.handleEvents()) {
             when (mode.lowercase()) {
                 "gamma" -> when {
                     mc.gameSettings.gammaSetting <= 100f -> mc.gameSettings.gammaSetting++

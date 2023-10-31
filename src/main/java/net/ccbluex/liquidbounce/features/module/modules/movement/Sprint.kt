@@ -58,7 +58,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
     fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
         val player = mc.thePlayer ?: return
 
-        if (Scaffold.state) {
+        if (Scaffold.handleEvents()) {
             if (!Scaffold.sprint) {
                 player.isSprinting = false
                 return
@@ -68,7 +68,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             }
         }
 
-        if (state) {
+        if (handleEvents()) {
             player.isSprinting = !shouldStopSprinting(movementInput, isUsingItem)
 
             if (player.isSprinting && allDirections && mode != "Legit") {
@@ -107,7 +107,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             return true
         }
 
-        if ((usingItem || isLegitModeActive) && !NoSlow.state && isUsingItem) {
+        if ((usingItem || isLegitModeActive) && !NoSlow.handleEvents() && isUsingItem) {
             return true
         }
 
@@ -123,7 +123,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             return false
         }
 
-        val threshold = if ((!usingItem || NoSlow.state) && isUsingItem) 0.2 else 0.8
+        val threshold = if ((!usingItem || NoSlow.handleEvents()) && isUsingItem) 0.2 else 0.8
         val playerForwardInput = player.movementInput.moveForward
 
         if (!checkServerSide) {

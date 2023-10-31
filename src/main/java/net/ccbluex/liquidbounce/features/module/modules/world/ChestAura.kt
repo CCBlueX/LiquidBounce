@@ -67,7 +67,7 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
     fun onMotion(event: MotionEvent) {
         val player = mc.thePlayer ?: return
 
-        if (Blink.state || KillAura.isBlockingChestAura || event.eventState != EventState.POST) {
+        if (Blink.handleEvents() || KillAura.isBlockingChestAura || event.eventState != EventState.POST) {
             return
         }
 

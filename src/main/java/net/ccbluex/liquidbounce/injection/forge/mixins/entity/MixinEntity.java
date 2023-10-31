@@ -188,13 +188,13 @@ public abstract class MixinEntity {
     private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
         final HitBox hitBox = HitBox.INSTANCE;
 
-        if (hitBox.getState())
+        if (hitBox.handleEvents())
             callbackInfoReturnable.setReturnValue(0.1F + hitBox.determineSize((Entity) (Object) this));
     }
 
     @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
     private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo) {
-        if (NoPitchLimit.INSTANCE.getState()) {
+        if (NoPitchLimit.INSTANCE.handleEvents()) {
             callbackInfo.cancel();
 
             prevRotationYaw = rotationYaw;
@@ -218,14 +218,14 @@ public abstract class MixinEntity {
 
     @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
     private void isInWater(final CallbackInfoReturnable<Boolean> cir) {
-        if (NoFluid.INSTANCE.getState() && NoFluid.INSTANCE.getWater()) {
+        if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getWater()) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "isInLava", at = @At("HEAD"), cancellable = true)
     private void isInLava(final CallbackInfoReturnable<Boolean> cir) {
-        if (NoFluid.INSTANCE.getState() && NoFluid.INSTANCE.getLava()) {
+        if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getLava()) {
             cir.setReturnValue(false);
         }
     }

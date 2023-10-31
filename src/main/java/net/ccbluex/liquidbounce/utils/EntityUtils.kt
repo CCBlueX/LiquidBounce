@@ -35,12 +35,12 @@ object EntityUtils : MinecraftInstance() {
                         if (isBot(entity))
                             return false
 
-                        if (entity.isClientFriend() && !NoFriends.state)
+                        if (entity.isClientFriend() && !NoFriends.handleEvents())
                             return false
 
                         if (entity.isSpectator) return false
 
-                        return !Teams.state || !Teams.isInYourTeam(entity)
+                        return !Teams.handleEvents() || !Teams.isInYourTeam(entity)
                     }
                     return true
                 }
