@@ -36,7 +36,9 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
-import java.nio.Buffer
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Data class representing the rendering environment.
@@ -116,6 +118,7 @@ fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> 
  *
  * @param lines The vectors representing the lines.
  */
+
 fun RenderEnvironment.drawLines(vararg lines: Vec3) {
     drawLines(*lines, mode = DrawMode.DEBUG_LINES)
 }
@@ -347,6 +350,86 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
     // Draw the outlined box
     tessellator.draw()
 }
+
+/**
+ * Function to render a gradient quad using specified [vertices] and [colors]
+ *
+ * @param vertices The four vectors to draw the quad
+ * @param colors The colors for the vertices
+ */
+fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
+    require(vertices.size == 4 && colors.size == 4) { "lists must have exactly 4 elements" }
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    with(bufferBuilder) {
+        begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR)
+
+        vertices.forEachIndexed { index, (x, y, z) ->
+            val color4b = colors[index]
+            vertex(matrix, x, y, z).color(color4b.toRGBA())
+                .next()
+        }
+    }
+    tessellator.draw()
+}
+
+const val CIRCLE_RES = 40
+// using a val instead of a function for better performance
+val circlePoints =
+    (0..CIRCLE_RES).map {
+        val theta = 2 * PI * it / CIRCLE_RES
+        Vec3(cos(theta), 0.0, sin(theta))
+    }
+
+
+/**
+ * Function to draw a circle of the size [outerRadius] with a cutout of size [innerRadius]
+ *
+ * @param outerRadius The radius of the circle
+ * @param innerRadius The radius inside the circle (the cutout)
+ * @param outerColor4b The color of the outer edges
+ * @param innerColor4b The color of the inner edges
+ */
+fun RenderEnvironment.drawGradientCircle(
+    outerRadius: Float,
+    innerRadius: Float,
+    outerColor4b: Color4b,
+    innerColor4b: Color4b
+) {
+
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position and color program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    with(bufferBuilder) {
+        begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
+
+        for (p in circlePoints) {
+            val outerP = p * outerRadius
+            val innerP = p * innerRadius
+
+            vertex(matrix, outerP.x, outerP.y, outerP.z)
+                .color(outerColor4b.toRGBA())
+                .next()
+            vertex(matrix, innerP.x, innerP.y, innerP.z)
+                .color(innerColor4b.toRGBA())
+                .next()
+        }
+    }
+    tessellator.draw()
+}
+
+
+
+
 
 /**
  * Function to draw an outlined box using the specified [box].

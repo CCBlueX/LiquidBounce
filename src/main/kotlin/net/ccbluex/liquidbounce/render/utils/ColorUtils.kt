@@ -44,3 +44,10 @@ fun rainbow(): Color4b {
 
     return Color4b(currentColor)
 }
+
+fun shiftHue(color4b: Color4b, shift: Int): Color4b {
+    val hsb = Color.RGBtoHSB(color4b.r, color4b.g, color4b.b, null)
+    val shiftedColor = Color(Color.HSBtoRGB((hsb[0] + shift.toFloat() / 360) % 1F, hsb[1], hsb[2]))
+
+    return Color4b(shiftedColor).alpha(color4b.a)
+}
