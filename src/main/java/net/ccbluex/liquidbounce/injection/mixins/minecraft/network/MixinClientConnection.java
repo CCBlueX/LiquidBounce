@@ -58,17 +58,14 @@ public class MixinClientConnection {
      * @param packet                packet to receive
      * @param callbackInfo          callback
      */
-    @Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
-    private void hookReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo callbackInfo) {
+    @Inject(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V",
+            at = @At("HEAD"), cancellable = true, require = 1)
+    private void hookReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet,
+                                     CallbackInfo callbackInfo) {
         final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
-
-        // Filter out client-side packets. Only happens in Single-player
-        if (packet.getClass().getSimpleName().contains("S2C")) {
-            EventManager.INSTANCE.callEvent(event);
-
-            if (event.isCancelled())
-                callbackInfo.cancel();
-        }
+        EventManager.INSTANCE.callEvent(event);
+        if (event.isCancelled())
+            callbackInfo.cancel();
     }
 
     /**
