@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.utils
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.client.chat
 import java.awt.Color
 
 object ColorUtils {
