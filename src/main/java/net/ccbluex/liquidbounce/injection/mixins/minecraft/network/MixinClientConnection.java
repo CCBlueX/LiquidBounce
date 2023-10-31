@@ -27,13 +27,19 @@ import net.ccbluex.liquidbounce.event.TransferOrigin;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkSide;
 import net.minecraft.network.packet.Packet;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientConnection.class)
 public class MixinClientConnection {
+
+    @Shadow
+    @Final
+    private NetworkSide side;
 
     /**
      * Handle sending packets
@@ -62,10 +68,15 @@ public class MixinClientConnection {
             at = @At("HEAD"), cancellable = true, require = 1)
     private void hookReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet,
                                      CallbackInfo callbackInfo) {
-        final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
-        EventManager.INSTANCE.callEvent(event);
-        if (event.isCancelled())
-            callbackInfo.cancel();
+        // Only handle clientbound packets
+        if (side == NetworkSide.CLIENTBOUND) {
+            final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
+            EventManager.INSTANCE.callEvent(event);
+
+            if (event.isCancelled()) {
+                callbackInfo.cancel();
+            }
+        }
     }
 
     /**
