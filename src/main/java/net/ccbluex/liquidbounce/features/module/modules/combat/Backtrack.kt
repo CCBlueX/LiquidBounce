@@ -29,6 +29,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import org.lwjgl.opengl.GL11.*
 import net.minecraft.entity.player.EntityPlayer
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
@@ -38,14 +39,15 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Int, newValue: Int): Int {
             if (backtrackMode == "Modern") {
                 clearPackets()
-                packetQueue.clear()
             }       
 
             return newValue
         }
     }
 
-    // newgen
+    // Modern
+    public val modernMode by ListValue("BacktrackStyle", arrayOf("Pulse", "Smooth"), "Smooth") { backtrackMode == "Modern" }
+
     private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance", 3.0f, 0.0f..3.5f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minDistance)
         override fun isSupported() = backtrackMode == "Modern"
@@ -73,6 +75,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private var realX = 0.0
     private var realY = 0.0
     private var realZ = 0.0
+    private var globalTimer = MSTimer()
 
     // Legacy
     private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20) { backtrackMode == "Legacy" }
@@ -174,10 +177,18 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     @EventTarget
     fun onTick(event: TickEvent) {
         if (backtrackMode == "Modern") {
-            if (shouldBacktrack()) handlePackets()
-            else clearPackets()
-        }
-        
+            when (modernMode.lowercase()) {
+                "smooth" -> {
+                    if (shouldBacktrack()) handlePackets()
+                    else clearPackets()
+                }
+                "pulse" -> {
+                    if (!shouldBacktrack() || (shouldBacktrack() && globalTimer.hasTimePassed(delay))) {
+                        clearPackets()
+                    }                 
+                }
+            }        
+        }        
     }
 
     @EventTarget
@@ -281,6 +292,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         realX = 0.0
         realY = 0.0
         realZ = 0.0
+        globalTimer.reset()
     }
 
     override fun onDisable() {
@@ -314,6 +326,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
         else packetQueue.clear()
+        
         realX = 0.0
         realY = 0.0
         realZ = 0.0
