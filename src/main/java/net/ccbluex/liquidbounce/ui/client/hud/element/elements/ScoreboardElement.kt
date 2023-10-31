@@ -58,7 +58,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border? {
-        if (NoScoreboard.state)
+        if (NoScoreboard.handleEvents())
             return null
 
         val fontRenderer = font

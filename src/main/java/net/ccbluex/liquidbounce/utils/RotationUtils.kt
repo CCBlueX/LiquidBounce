@@ -202,14 +202,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     /**
-     * Face target with bow
+     * Face trajectory of arrow by default, can be used for calculating other trajectories (eggs, snowballs)
+     * by specifying `gravity` and `velocity` parameters
      *
      * @param target      your enemy
-     * @param silent      client side rotations
      * @param predict     predict new enemy position
      * @param predictSize predict size of predict
+     * @param gravity     how much gravity does the projectile have, arrow by default
+     * @param velocity    with what velocity will the projectile be released, velocity for arrow is calculated when null
      */
-    fun faceBow(target: Entity, predict: Boolean, predictSize: Float, onSuccess: (rotation: Rotation) -> Unit) {
+    fun faceTrajectory(target: Entity, predict: Boolean, predictSize: Float, gravity: Float = 0.05f, velocity: Float? = null): Rotation {
         val player = mc.thePlayer
 
         val posX =
@@ -220,15 +222,18 @@ object RotationUtils : MinecraftInstance(), Listenable {
             target.posZ + (if (predict) (target.posZ - target.prevPosZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevPosZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
 
-        var velocity = if (FastBow.handleEvents()) 1f else player.itemInUseDuration / 20f
-        velocity = min((velocity * velocity + velocity * 2) / 3, 1f)
+        var velocity = velocity
+        if (velocity == null) {
+            velocity = if (FastBow.handleEvents()) 1f else player.itemInUseDuration / 20f
+            velocity = ((velocity * velocity + velocity * 2) / 3).coerceAtMost(1f)
+        }
 
-        val rotation = Rotation(
+        val gravityModifier = 0.12f * gravity
+
+        return Rotation(
             atan2(posZ, posX).toDegreesF() - 90f,
-            -atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)).toDegreesF()
+            -atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - gravityModifier * (gravityModifier * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (gravityModifier * posSqrt)).toDegreesF()
         )
-
-        onSuccess(rotation)
     }
 
     /**

@@ -21,7 +21,7 @@ public class MixinRenderEntityItem {
     private void injectChamsPre(CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getItems()) {
+        if (chams.handleEvents() && chams.getItems()) {
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(1f, -1000000F);
         }
@@ -31,7 +31,7 @@ public class MixinRenderEntityItem {
     private void injectChamsPost(CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getItems()) {
+        if (chams.handleEvents() && chams.getItems()) {
             glPolygonOffset(1f, 1000000F);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }

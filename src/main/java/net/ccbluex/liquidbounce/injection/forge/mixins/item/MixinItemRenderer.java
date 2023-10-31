@@ -115,7 +115,7 @@ public abstract class MixinItemRenderer {
                         final Animations animations = Animations.INSTANCE;
                         final Animation animation;
 
-                        if (animations.getState()) {
+                        if (animations.handleEvents()) {
                             animation = animations.getAnimation();
                         } else { // Use 1.7 animation
                             animation = animations.getDefaultAnimation();
@@ -132,7 +132,7 @@ public abstract class MixinItemRenderer {
             } else {
                 final Animations animations = Animations.INSTANCE;
 
-                if (!animations.getState() || !animations.getOddSwing()) {
+                if (!animations.handleEvents() || !animations.getOddSwing()) {
                     doItemUsedTransformations(f1);
                 }
 
@@ -153,7 +153,7 @@ public abstract class MixinItemRenderer {
     @Redirect(method = "renderFireInFirstPerson", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"))
     private void renderFireInFirstPerson(float p_color_0_, float p_color_1_, float p_color_2_, float p_color_3_) {
         final AntiBlind antiBlind = AntiBlind.INSTANCE;
-        if (p_color_3_ != 1F && antiBlind.getState()) {
+        if (p_color_3_ != 1F && antiBlind.handleEvents()) {
             GlStateManager.color(p_color_0_, p_color_1_, p_color_2_, antiBlind.getFireEffect());
         } else {
             GlStateManager.color(p_color_0_, p_color_1_, p_color_2_, p_color_3_);

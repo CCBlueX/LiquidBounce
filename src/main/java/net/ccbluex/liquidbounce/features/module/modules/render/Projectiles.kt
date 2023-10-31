@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.ccbluex.liquidbounce.utils.inventory.isSplashPotion
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -63,38 +64,48 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
         val size: Float
 
         // Check items
-        if (item is ItemBow) {
-            if (!thePlayer.isUsingItem)
-                return
+        when (item) {
+            is ItemBow -> {
+                if (!thePlayer.isUsingItem)
+                    return
 
-            isBow = true
-            gravity = 0.05F
-            size = 0.3F
+                isBow = true
+                gravity = 0.05F
+                size = 0.3F
 
-            // Calculate power of bow
-            var power = thePlayer.itemInUseDuration / 20f
-            power = (power * power + power * 2F) / 3F
-            if (power < 0.1F)
-                return
+                // Calculate power of bow
+                var power = thePlayer.itemInUseDuration / 20f
+                power = (power * power + power * 2F) / 3F
+                if (power < 0.1F)
+                    return
 
-            if (power > 1F)
-                power = 1F
+                if (power > 1F)
+                    power = 1F
 
-            motionFactor = power * 3F
-        } else if (item is ItemFishingRod) {
-            gravity = 0.04F
-            size = 0.25F
-            motionSlowdown = 0.92F
-        } else if (item is ItemPotion && heldStack.isSplashPotion()) {
-            gravity = 0.05F
-            size = 0.25F
-            motionFactor = 0.5F
-        } else {
-            if (item !is ItemSnowball && item !is ItemEnderPearl && item !is ItemEgg)
-                return
+                motionFactor = power * 3F
+            }
 
-            gravity = 0.03F
-            size = 0.25F
+            is ItemFishingRod -> {
+                gravity = 0.04F
+                size = 0.25F
+                motionSlowdown = 0.92F
+            }
+
+            is ItemPotion -> {
+                if (!heldStack.isSplashPotion())
+                    return
+
+                gravity = 0.05F
+                size = 0.25F
+                motionFactor = 0.5F
+            }
+
+            is ItemSnowball, is ItemEnderPearl, is ItemEgg -> {
+                gravity = 0.03F
+                size = 0.25F
+            }
+
+            else -> return
         }
 
         // Yaw and pitch of player
@@ -110,9 +121,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
 
         // Motions
         var motionX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
-        var motionY = -sin(
-            (pitch + if (item is ItemPotion && heldStack.isSplashPotion()) -20 else 0).toRadians()
-        ) * if (isBow) 1.0 else 0.4
+        var motionY = -sin((pitch + if (item is ItemPotion) -20 else 0).toRadians()) * if (isBow) 1.0 else 0.4
         var motionZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
         val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
@@ -137,19 +146,15 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
         disableGlCap(GL_DEPTH_TEST, GL_ALPHA_TEST, GL_TEXTURE_2D)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-        when (colorMode.lowercase()) {
-            "custom" -> {
-                glColor(Color(colorRed, colorGreen, colorBlue, 255))
-            }
+        glColor(
+            when (colorMode.lowercase()) {
+                "bowpower" -> interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10)
 
-            "bowpower" -> {
-                glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
-            }
+                "rainbow" -> ColorUtils.rainbow()
 
-            "rainbow" -> {
-                glColor(ColorUtils.rainbow())
+                else -> Color(colorRed, colorGreen, colorBlue, 255)
             }
-        }
+        )
         glLineWidth(2f)
 
         worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)

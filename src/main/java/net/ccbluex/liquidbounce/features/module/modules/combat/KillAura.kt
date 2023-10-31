@@ -286,6 +286,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         mc.thePlayer ?: return
         mc.theWorld ?: return
 
+        if (!handleEvents())
+            return
+        
         updateTarget()
     }
 
@@ -596,9 +599,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (targetPlayer && entity is EntityPlayer) {
                 if (entity.isSpectator || isBot(entity)) return false
 
-                if (entity.isClientFriend() && !NoFriends.state) return false
+                if (entity.isClientFriend() && !NoFriends.handleEvents()) return false
 
-                return !Teams.state || !Teams.isInYourTeam(entity)
+                return !Teams.handleEvents() || !Teams.isInYourTeam(entity)
             }
 
             return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal()
@@ -760,7 +763,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     ).isNotEmpty())
                 }
 
-            if (raycast && raycastedEntity != null && raycastedEntity is EntityLivingBase && (NoFriends.state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend()))) {
+            if (raycast && raycastedEntity != null && raycastedEntity is EntityLivingBase && (NoFriends.handleEvents() || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend()))) {
                 val prevHurtTime = currentTarget!!.hurtTime
                 currentTarget = raycastedEntity
                 currentTarget!!.hurtTime = prevHurtTime
@@ -826,7 +829,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Check if run should be cancelled
      */
     private val cancelRun
-        inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer) || Blink.state || FreeCam.state || (noConsumeAttack == "NoRotation" && isConsumingItem())
+        inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer) || Blink.handleEvents() || FreeCam.handleEvents() || (noConsumeAttack == "NoRotation" && isConsumingItem())
 
     /**
      * Check if [entity] is alive

@@ -48,7 +48,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
     private void getFovModifier(CallbackInfoReturnable<Float> callbackInfoReturnable) {
         final NoFOV fovModule = NoFOV.INSTANCE;
 
-        if (fovModule.getState()) {
+        if (fovModule.handleEvents()) {
             float newFOV = fovModule.getFov();
 
             if (!isUsingItem()) {
@@ -73,7 +73,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
     private void getSkin(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable) {
         final NameProtect nameProtect = NameProtect.INSTANCE;
 
-        if (nameProtect.getState() && nameProtect.getSkinProtect()) {
+        if (nameProtect.handleEvents() && nameProtect.getSkinProtect()) {
             if (!nameProtect.getAllPlayers() && !Objects.equals(getGameProfile().getName(), mc.thePlayer.getGameProfile().getName()))
                 return;
 

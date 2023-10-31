@@ -94,7 +94,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
             }
 
             final Sprint sprint = Sprint.INSTANCE;
-            if (sprint.getState() && sprint.getAllDirections() && sprint.getJumpDirections()) {
+            if (sprint.handleEvents() && sprint.getAllDirections() && sprint.getJumpDirections()) {
                 fixedYaw += MathExtensionsKt.toDegreesF(MovementUtils.INSTANCE.getDirection()) - this.rotationYaw;
             }
 
@@ -108,19 +108,19 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
     private void headLiving(CallbackInfo callbackInfo) {
-        if (NoJumpDelay.INSTANCE.getState()) jumpTicks = 0;
+        if (NoJumpDelay.INSTANCE.handleEvents()) jumpTicks = 0;
     }
 
     @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
     private void onJumpSection(CallbackInfo callbackInfo) {
-        if (AirJump.INSTANCE.getState() && isJumping && jumpTicks == 0) {
+        if (AirJump.INSTANCE.handleEvents() && isJumping && jumpTicks == 0) {
             jump();
             jumpTicks = 10;
         }
 
         final LiquidWalk liquidWalk = LiquidWalk.INSTANCE;
 
-        if (liquidWalk.getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getMode().equals("Swim")) {
+        if (liquidWalk.handleEvents() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getMode().equals("Swim")) {
             updateAITick();
         }
     }
@@ -136,7 +136,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     private void isPotionActive(Potion p_isPotionActive_1_, final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final AntiBlind antiBlind = AntiBlind.INSTANCE;
 
-        if ((p_isPotionActive_1_ == Potion.confusion || p_isPotionActive_1_ == Potion.blindness) && antiBlind.getState() && antiBlind.getConfusionEffect())
+        if ((p_isPotionActive_1_ == Potion.confusion || p_isPotionActive_1_ == Potion.blindness) && antiBlind.handleEvents() && antiBlind.getConfusionEffect())
             callbackInfoReturnable.setReturnValue(false);
     }
 

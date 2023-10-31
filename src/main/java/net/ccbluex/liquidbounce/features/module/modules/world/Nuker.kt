@@ -151,7 +151,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false) {
                 attackedBlocks += blockPos
 
                 // Call auto tool
-                if (AutoTool.state)
+                if (AutoTool.handleEvents())
                     AutoTool.switchSlot(blockPos)
 
                 // Start block breaking

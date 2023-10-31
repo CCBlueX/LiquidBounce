@@ -92,7 +92,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
         canBoost = true
         teleported = false
 
-        if (state) {
+        if (handleEvents()) {
             modeModule.onJump(event)
         }
     }
