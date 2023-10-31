@@ -23,7 +23,10 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.io.HttpClient.request
+import net.minecraft.util.Formatting
 import org.apache.commons.lang3.RandomStringUtils
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 
 /**
  * LiquidBounce Client API
@@ -134,8 +137,12 @@ data class AutoSettings(
     val contributors: String,
     @SerializedName("status_type") val statusType: AutoSettingsStatusType,
     @SerializedName("status_date") var statusDate: String
-)
+) {
 
+    val dateFormatted: String
+        get() = DateFormat.getDateInstance().format(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(date))
+
+}
 /**
  * Settings type
  *
@@ -153,18 +160,18 @@ enum class AutoSettingsType(val displayName: String) {
 /**
  * Status of the settings will allow you to know when if it is bypassing or not
  */
-enum class AutoSettingsStatusType(val displayName: String) {
+enum class AutoSettingsStatusType(val displayName: String, val formatting: Formatting) {
     @SerializedName("NotBypassing")
-    NOT_BYPASSING("Not Bypassing"),
+    NOT_BYPASSING("Not Bypassing", Formatting.RED),
 
     @SerializedName("Bypassing")
-    BYPASSING("Bypassing"),
+    BYPASSING("Bypassing", Formatting.GREEN),
 
     @SerializedName("Undetectable")
-    UNDETECTABLE("Undetectable"),
+    UNDETECTABLE("Undetectable", Formatting.BLUE),
 
     @SerializedName("Unknown")
-    UNKNOWN("Unknown")
+    UNKNOWN("Unknown", Formatting.GOLD)
 }
 
 /**
