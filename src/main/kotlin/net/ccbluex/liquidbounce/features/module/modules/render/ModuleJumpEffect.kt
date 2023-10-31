@@ -62,8 +62,8 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
         return shiftHue(color, (hueOffsetAnim * progress).toInt())
     }
 
-    val onJump = handler<PlayerJumpEvent> { event ->
-        // Add new circle when the player jumps
+    val onJump = handler<PlayerJumpEvent> { _ ->
+        // Adds new circle when the player jumps
         circles.add(MutablePair(Vec3(player.pos), 0L))
     }
 
