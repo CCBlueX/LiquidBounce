@@ -31,7 +31,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
     
     private var updatePos = false
 
-    private fun parseX(value: Int = x): Int {
+    fun parseX(value: Int = x): Int {
         if (!panelsForcedInBoundaries)
             return value
 

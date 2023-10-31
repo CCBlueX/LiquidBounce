@@ -220,6 +220,12 @@ object ClickGui : GuiScreen() {
     private fun handleScroll(wheel: Int) {
         if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
             scale += wheel * 0.0001f
+
+            for (panel in panels) {
+                panel.x = panel.parseX()
+                panel.y = panel.parseY()
+            }
+
         } else if (scrolls) {
             for (panel in panels) panel.y = panel.parseY(panel.y + wheel / 10)
         }
