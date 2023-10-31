@@ -190,6 +190,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleJumpEffect,
             ModuleMobOwners,
             ModuleMurderMystery,
+            ModuleAttackEffects,
 
             // ModuleNametags,
             ModuleNoBob,
