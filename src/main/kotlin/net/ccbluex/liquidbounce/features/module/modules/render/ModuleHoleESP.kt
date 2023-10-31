@@ -38,6 +38,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3i
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * HoleESP module
@@ -57,6 +59,8 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     val holes = HashMap<BlockPos, HoleQuality>()
     val movableRegionScanner = MovableRegionScanner()
 
+    val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
+
     private object Box : Choice("Box") {
 
         override val parent: ChoiceConfigurable
@@ -73,9 +77,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 for ((pos, quality) in markedBlocks) {
                     val vec3 = Vec3(pos)
-
-                    val baseColor = quality.baseColor
-                    val outlineColor = quality.outlineColor
+                    val fade = calculateFade(pos)
+                    val baseColor =  applyFade(quality.baseColor, fade)
+                    val outlineColor = applyFade(quality.outlineColor, fade)
 
                     withPosition(vec3) {
                         withColor(baseColor) {
@@ -102,7 +106,6 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
         val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
 
-        val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
 
 
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -115,16 +118,12 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                 withDisabledCull {
                     for ((pos, quality) in markedBlocks) {
                         val vec3 = Vec3(pos)
-                        val distanceFade =
-                            if(distanceFade == 0f)
-                                1f
-                            else
-                                ((1 - player.pos.distanceTo(pos.toCenterPos()) / horizontalDistance) / distanceFade)
-                                .coerceIn(0.0, 1.0).toFloat()
+                        val fade = calculateFade(pos)
 
-                        val baseColor = quality.baseColor.alpha((quality.baseColor.a * distanceFade).toInt())
+
+                        val baseColor = applyFade(quality.baseColor, fade)
                         val transparentColor = baseColor.alpha(0)
-                        val outlineColor = quality.outlineColor.alpha((quality.outlineColor.a * distanceFade).toInt())
+                        val outlineColor = applyFade(quality.outlineColor, fade)
 
                         val glowHeight = glowHeightSetting.toDouble()
 
@@ -211,6 +210,24 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     val movementHandler = handler<PlayerTickEvent> { event ->
         this.updateScanRegion()
     }
+
+    private fun calculateFade(pos: BlockPos) =
+        if(distanceFade == 0f)
+            1f
+        else
+            ((1 - max(
+                (player.pos.y - pos.y) / verticalDistance,
+                player.pos.distanceTo(pos.toCenterPos()) / horizontalDistance
+            ))
+                / distanceFade)
+            .coerceIn(0.0, 1.0).toFloat()
+
+    private fun applyFade(baseColor: Color4b, fade: Float) =
+        if(fade == 1f)
+            baseColor
+        else
+            baseColor.alpha((baseColor.a * fade).toInt())
+
 
     private fun flatten(pos: BlockPos): BlockPos {
         if (!this.flattenMovement) {
