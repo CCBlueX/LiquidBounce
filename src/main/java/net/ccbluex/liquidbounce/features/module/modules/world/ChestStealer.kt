@@ -59,8 +59,6 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     private val noMoveAir by InventoryManager.noMoveAirValue
     private val noMoveGround by InventoryManager.noMoveGroundValue
 
-    private val noCompass by BoolValue("NoCompass", true)
-
     private val chestTitle by BoolValue("ChestTitle", true)
 
     private val randomSlot by BoolValue("RandomSlot", true)
@@ -114,10 +112,6 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         val screen = mc.currentScreen ?: return
 
         if (screen !is GuiChest || !shouldOperate())
-            return
-
-        // Check if player isn't holding a compass and browsing navigation gui
-        if (noCompass && thePlayer.heldItem?.item == Items.compass)
             return
 
         // Check if chest isn't a custom gui
