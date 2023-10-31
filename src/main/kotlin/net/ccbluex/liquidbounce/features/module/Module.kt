@@ -48,8 +48,12 @@ open class Module(
     @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world
 ) : Listenable, Configurable(name) {
 
-    val valueEnabled = boolean("Enabled", state)
-        .doNotInclude()
+    val valueEnabled = boolean("Enabled", state).also {
+        // Might not include the enabled state of the module depending on the category
+        if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
+            doNotInclude()
+        }
+    }
 
     // Module options
     var enabled by valueEnabled.listen { new ->
