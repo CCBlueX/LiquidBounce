@@ -73,7 +73,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val mode by ListValue(
         "Mode", modes, "Vanilla"
     )
-    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f, subjective = true) {
+    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..10f, subjective = true) {
         mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan")
     }
     private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true) {
