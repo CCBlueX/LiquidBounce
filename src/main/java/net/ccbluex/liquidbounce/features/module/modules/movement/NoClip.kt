@@ -16,7 +16,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object NoClip : Module("NoClip", ModuleCategory.MOVEMENT) {
-    val speed by FloatValue("Speed", 0.5f, 0f..10f)
+val speed by FloatValue("Speed", 0.5f, 0f..10f)
 
     override fun onDisable() {
         mc.thePlayer?.noClip = false
