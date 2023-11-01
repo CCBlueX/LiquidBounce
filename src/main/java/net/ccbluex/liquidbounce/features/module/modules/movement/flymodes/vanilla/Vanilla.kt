@@ -39,7 +39,7 @@ object Vanilla : FlyMode("Vanilla") {
 		}
 
         thePlayer.onGround = false
-        mc.thePlayer.isInWeb = false
+        thePlayer.isInWeb = false
 
         thePlayer.capabilities.isFlying = false
 
