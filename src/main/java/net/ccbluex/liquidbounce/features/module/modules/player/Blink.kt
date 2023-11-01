@@ -37,7 +37,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     private var fakePlayer: EntityOtherPlayerMP? = null
     private val positions = mutableListOf<Vec3>()
     private val pulse by BoolValue("Pulse", false)
-    private val fakePlayerMenu by BoolValue("FakePlayer", false)
+    private val fakePlayerMenu by BoolValue("FakePlayer", true)
     private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
     private val mode by ListValue("Mode", arrayOf("Sent", "Received", "Both"), "Sent")
     private val pulseTimer = MSTimer()
