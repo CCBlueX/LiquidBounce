@@ -54,9 +54,9 @@ class SimulatedPlayer(
     private var jumpingCooldown: Int,
     private var isJumping: Boolean,
     private var isFallFlying: Boolean,
-    private var onGround: Boolean,
-    private var horizontalCollision: Boolean,
-    private var verticalCollision: Boolean
+    var onGround: Boolean,
+    var horizontalCollision: Boolean,
+    var verticalCollision: Boolean
 ) : PlayerSimulation {
     companion object {
         fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {

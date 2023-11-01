@@ -55,7 +55,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         val slot = findHotbarSlot(Items.LAVA_BUCKET) ?: return@repeatable
 
         for (enemy in targetTracker.enemies()) {
-            if (enemy.squaredBoxedDistanceTo(player) > 6.0 * 6.0) {
+            if (enemy.squaredBoxedDistanceTo(player) !in 1.0..6.0 * 6.0) {
                 continue
             }
 
