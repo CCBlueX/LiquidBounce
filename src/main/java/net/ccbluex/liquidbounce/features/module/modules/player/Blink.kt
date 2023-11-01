@@ -65,31 +65,31 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
         when (mode.lowercase()) {
             "sent" -> {
-			    if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
                     handlePackets(*packetsReceived.toTypedArray())
                     packetsReceived.clear()
                 }
-			    if (event.eventType == EventState.SEND) {
+                if (event.eventType == EventState.SEND) {
                     event.cancelEvent()
                     packets += packet
                 }
             }
             "received" -> {
-			    if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
                     event.cancelEvent()
                     packetsReceived += packet
                 }
-			    if (event.eventType == EventState.SEND) {
+                if (event.eventType == EventState.SEND) {
                     sendPackets(*packets.toTypedArray(), triggerEvents = false)
                     packets.clear()
                 }
             }
             "both" -> {
-			    if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
                     event.cancelEvent()
                     packetsReceived += packet
                 }
-			    if (event.eventType == EventState.SEND) {
+                if (event.eventType == EventState.SEND) {
                     event.cancelEvent()
                     packets += packet
                 }
@@ -105,12 +105,12 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
         when (mode.lowercase()) {
             "sent" -> {
-			    handlePackets(*packetsReceived.toTypedArray())
-			    packetsReceived.clear()
+                handlePackets(*packetsReceived.toTypedArray())
+                packetsReceived.clear()
             }
             "received" -> {
-			    sendPackets(*packets.toTypedArray(), triggerEvents = false)
-			    packets.clear()
+                sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                packets.clear()
             }
         }
 
