@@ -326,6 +326,13 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         holes.clear()
     }
 
+
+    override fun loadedConfig() {
+        if(!enabled) return
+        WorldChangeNotifier.subscribe(InvalidationHook)
+        println("init has been run on hole esp ${this.enabled}")
+    }
+
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {
         override fun invalidate(region: Region, rescan: Boolean) {
             // Check if the region intersects. Otherwise, calling region.intersection would be unsafe
