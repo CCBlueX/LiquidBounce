@@ -189,7 +189,7 @@ object ModuleManager : Listenable {
             TNTBlock,
             TNTESP,
             Teams,
-            TickBase,
+            TickRange,
             Timer,
             Tower,
             Tracers,
