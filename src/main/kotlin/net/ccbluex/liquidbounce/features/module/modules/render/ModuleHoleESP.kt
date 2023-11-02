@@ -20,18 +20,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
-import net.ccbluex.liquidbounce.utils.block.Region
-import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
@@ -314,13 +312,15 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     override fun enable() {
         this.movableRegionScanner.clearRegion()
-
+//        ChunkScanner.subscribe(BlockTracker)
         updateScanRegion()
 
         WorldChangeNotifier.subscribe(InvalidationHook)
     }
 
     override fun disable() {
+//        ChunkScanner.unsubscribe(BlockTracker)
+
         WorldChangeNotifier.unsubscribe(InvalidationHook)
 
         holes.clear()
@@ -328,10 +328,11 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {
         override fun invalidate(region: Region, rescan: Boolean) {
-            // Check if the region intersects. Otherwise calling region.intersection would be unsafe
+            // Check if the region intersects. Otherwise, calling region.intersection would be unsafe
             if (!region.intersects(movableRegionScanner.currentRegion)) {
                 return
             }
+
 
             val intersection = region.intersection(movableRegionScanner.currentRegion)
 
