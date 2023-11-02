@@ -330,7 +330,6 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     override fun loadedConfig() {
         if(!enabled) return
         WorldChangeNotifier.subscribe(InvalidationHook)
-        println("init has been run on hole esp ${this.enabled}")
     }
 
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {
