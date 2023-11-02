@@ -37,6 +37,7 @@ import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.max
 import kotlin.math.min
@@ -215,9 +216,10 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         if(distanceFade == 0f)
             1f
         else
+
             ((1 - max(
                 (player.pos.y - pos.y) / verticalDistance,
-                player.pos.distanceTo(pos.toCenterPos()) / horizontalDistance
+                Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
             ))
                 / distanceFade)
             .coerceIn(0.0, 1.0).toFloat()
