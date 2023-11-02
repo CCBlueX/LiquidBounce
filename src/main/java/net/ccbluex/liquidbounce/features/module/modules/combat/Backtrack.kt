@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
-import net.minecraft.network.play.server.*
+import net.minecraft.network.play.server.S0CPacketSpawnPlayer
+import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -116,23 +117,16 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     return
                 }
 
-                when (packet) {
-                    is S32PacketConfirmTransaction, is S00PacketKeepAlive, is S12PacketEntityVelocity, is S27PacketExplosion, is S19PacketEntityStatus, is S18PacketEntityTeleport, is S1CPacketEntityMetadata, is S20PacketEntityProperties -> {
-                        event.cancelEvent()
-                        packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                        return
+                // Cancel every received packet to avoid possible server synchronization issues from random causes.
+                if (event.eventType == EventState.RECEIVE) {
+                    if (packet is S14PacketEntity && packet.getEntity(world) == target) {
+                        realX += packet.func_149062_c().toDouble()
+                        realY += packet.func_149061_d().toDouble()
+                        realZ += packet.func_149064_e().toDouble()
                     }
 
-                    is S14PacketEntity -> {
-                        if (packet.getEntity(world) == target) {
-                            realX += packet.func_149062_c().toDouble()
-                            realY += packet.func_149061_d().toDouble()
-                            realZ += packet.func_149064_e().toDouble()
-                        }
-                        event.cancelEvent()
-                        packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
-                        return
-                    }
+                    event.cancelEvent()
+                    packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
                 }
             }
         }
