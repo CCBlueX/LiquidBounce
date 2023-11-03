@@ -64,7 +64,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null)
+        if (mc.thePlayer == null || mc.thePlayer.isDead)
             return
 
         when (packet) {
@@ -85,7 +85,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                 }
             }
             "received" -> {
-                if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0 && mc.thePlayer.ticksExisted > 10) {
                     event.cancelEvent()
                     packetsReceived += packet
                 }
@@ -95,7 +95,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                 }
             }
             "both" -> {
-                if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0 && mc.thePlayer.ticksExisted > 10) {
                     event.cancelEvent()
                     packetsReceived += packet
                 }
@@ -122,6 +122,10 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         val thePlayer = mc.thePlayer ?: return
 
         positions += thePlayer.positionVector
+
+        if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+            blink()
+        }
 
         when (mode.lowercase()) {
             "sent" -> {
@@ -216,4 +220,6 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         positions += pos.addVector(.0, thePlayer.eyeHeight / 2.0, .0)
         positions += pos
     }
+
+    fun blinkingSend() = handleEvents() && (mode == "Sent" || mode == "Both")
 }

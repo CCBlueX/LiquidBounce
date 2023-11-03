@@ -9,6 +9,7 @@ import io.netty.buffer.Unpooled;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NoRotateSet;
+import net.ccbluex.liquidbounce.features.module.modules.player.Blink;
 import net.ccbluex.liquidbounce.features.special.ClientFixes;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.PacketUtils;
@@ -134,7 +135,9 @@ public abstract class MixinNetHandlerPlayClient {
 
     @Redirect(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkManager;sendPacket(Lnet/minecraft/network/Packet;)V"))
     private void injectNoRotateSetAndAntiServerRotationOverride(NetworkManager instance, Packet p_sendPacket_1_) {
-        PacketUtils.sendPacket(p_sendPacket_1_, false);
+        Blink module2 = Blink.INSTANCE;
+        boolean shouldTrigger = module2.blinkingSend();
+        PacketUtils.sendPacket(p_sendPacket_1_, shouldTrigger);
 
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         NoRotateSet module = NoRotateSet.INSTANCE;
