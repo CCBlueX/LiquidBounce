@@ -307,7 +307,7 @@
         
         "module.teleport.description": "Allows you to teleport around.",
 
-        "module.tickRange.description": "Allows you to manipulate ticks to gain advantage against other players.",
+        "module.timerRange.description": "Allows you to manipulate ticks to gain advantage against other players.",
 
         "module.timer.description": "Changes the speed of the entire game.",
         
