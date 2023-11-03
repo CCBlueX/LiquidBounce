@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.EntityLivingBase
 
-object TickRange : Module("TickBase", ModuleCategory.COMBAT) {
+object TimerRange : Module("TickBase", ModuleCategory.COMBAT) {
 
     private var playerTicks = 0
 
