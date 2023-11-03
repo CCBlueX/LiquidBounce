@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 
 object ScaffoldEagleFeature : ToggleableConfigurable(ModuleScaffold, "Eagle", false) {
-    private val blocksToEagle by int("BlocksToEagle", 1, 0..10)
+    private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
 
     private val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..1.3f)
 
