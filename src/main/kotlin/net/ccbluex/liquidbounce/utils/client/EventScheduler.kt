@@ -32,9 +32,6 @@ object EventScheduler : Listenable {
 
     private val actions = CopyOnWriteArrayList<ScheduleInfo>()
 
-    /**
-     * Event names in [event] MUST follow the name that is paired with each event.
-     */
     fun schedule(
         module: Module,
         eventClass: KClass<out Event>,
