@@ -25,7 +25,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'org.jlleitschuh.gradle.ktlint' version '11.5.1'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id "io.gitlab.arturbosch.detekt" version "1.23.1"
+    id "io.gitlab.arturbosch.detekt" version "1.23.3"
     id "com.github.node-gradle.node" version "7.0.1"
 }
 
