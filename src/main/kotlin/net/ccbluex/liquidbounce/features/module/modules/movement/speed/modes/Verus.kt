@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -23,7 +24,7 @@ object Verus : Choice("Verus") {
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
 
-    val repeatable = repeatable {
+    val tickJumpHandler = handler<TickJumpEvent> {
         if (player.isOnGround && player.moving) {
             player.jump()
             player.velocity.x *= 1.1

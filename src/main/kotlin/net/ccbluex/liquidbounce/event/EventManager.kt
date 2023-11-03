@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.reflect.full.findAnnotation
@@ -71,6 +72,7 @@ object EventManager {
         PlayerVelocityStrafe::class,
         PlayerStrideEvent::class,
         PlayerSafeWalkEvent::class,
+        TickJumpEvent::class,
         CancelBlockBreakingEvent::class,
         PlayerStepEvent::class,
         FluidPushEvent::class,
@@ -132,6 +134,8 @@ object EventManager {
         val target = registry[event.javaClass] ?: return event
 
         for (eventHook in target) {
+            EventScheduler.process(event)
+
             if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents()) {
                 continue
             }

@@ -197,6 +197,9 @@ class PlayerStepEvent(var height: Float) : Event()
 @Nameable("fluidPush")
 class FluidPushEvent : CancellableEvent()
 
+@Nameable("tickJump")
+class TickJumpEvent : Event()
+
 // Network events
 
 @Nameable("pipeline")

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.event.TickJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
@@ -178,7 +179,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     /**
      * Fall flying using modified-rotation
      */
-    @Redirect(method = "travel", at  = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
+    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
     private float hookModifyFallFlyingPitch(LivingEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
@@ -194,7 +195,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     /**
      * Fall flying using modified-rotation
      */
-    @Redirect(method = "travel", at  = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;"))
+    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookModifyFallFlyingRotationVector(LivingEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
@@ -205,5 +206,19 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         return rotation.getRotationVec();
+    }
+
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 2))
+    private void hookTickJumpEvent(CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        // No need to call event if player is already jumping.
+        if (this.jumping) {
+            return;
+        }
+
+        EventManager.INSTANCE.callEvent(new TickJumpEvent());
     }
 }
