@@ -83,6 +83,18 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
     }
 
     /**
+     * TODO: Remove this once waiting ticks on a non repeatable sequence is fixed
+     */
+    suspend fun waitTicks(ticks: Int) {
+        var elapsedTicks = 0
+
+        while (elapsedTicks != ticks) {
+            elapsedTicks++
+            sync()
+        }
+    }
+
+    /**
      * Waits for the amount of ticks that is retrieved via [ticksToWait]
      */
     suspend fun wait(ticksToWait: () -> Int) {

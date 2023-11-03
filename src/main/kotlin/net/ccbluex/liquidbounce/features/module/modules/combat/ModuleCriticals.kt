@@ -72,7 +72,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if(WhenSprinting.unSprint && player.isSprinting) {
+            if (WhenSprinting.unSprint && player.isSprinting) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 player.isSprinting = false
             }
@@ -101,7 +101,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val optimizeForCooldown by boolean("OptimizeForCooldown", true)
 
-        val tickHandler = handler<PlayerTickEvent> {
+        val tickHandler = handler<TickJumpEvent> {
             if (!enabled) return@handler
 
             if (!canCrit(player, true)) {
@@ -252,6 +252,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         canCrit(player, ignoreOnGround) &&
             ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f &&
             (!ModuleCriticals.player.isSprinting || ignoreSprint)
+
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
 

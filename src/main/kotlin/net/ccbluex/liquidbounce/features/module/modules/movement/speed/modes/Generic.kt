@@ -2,6 +2,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.TickJumpEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -77,20 +79,21 @@ object LegitHop : Choice("LegitHop") {
         get() = ModuleSpeed.modes
 
     private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
+
     // Avoids running into edges which loses speed
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
-    val repeatable = repeatable {
+    val tickJumpHandler = handler<TickJumpEvent> {
         if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f)) {
-            return@repeatable
+            return@handler
         }
 
         if (!player.isOnGround || !player.moving) {
-            return@repeatable
+            return@handler
         }
 
         if (avoidEdgeBump && SpeedAntiCornerBump.shouldDelayJump()) {
-            return@repeatable
+            return@handler
         }
 
         player.jump()

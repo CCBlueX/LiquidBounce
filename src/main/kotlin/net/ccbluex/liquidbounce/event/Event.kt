@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.utils.client.Nameable
+import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
+
 /**
  * A callable event
  */
@@ -51,3 +55,5 @@ open class CancellableEvent : Event() {
 enum class EventState(val stateName: String) {
     PRE("PRE"), POST("POST")
 }
+
+fun KClass<out Event>.name(): String = this.findAnnotation<Nameable>()!!.name
