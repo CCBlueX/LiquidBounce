@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id 'fabric-loom'
@@ -26,6 +26,7 @@ plugins {
     id 'org.jlleitschuh.gradle.ktlint' version '11.5.1'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
     id "io.gitlab.arturbosch.detekt" version "1.23.1"
+    id "com.github.node-gradle.node" version "7.0.1"
 }
 
 ktlint {
@@ -154,25 +155,37 @@ processResources {
 
 // The following code will include the theme into the build
 
-tasks.register('npmInstallTheme', Exec) {
-    String npm = 'npm';
-    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        npm = 'npm.cmd'
-    }
-    workingDir file('src-theme')
-    commandLine npm, 'i'
+tasks.register('npmInstallTheme', NpmTask) {
+    workingDir = file('src-theme')
+    args = ['i']
     doLast {
         println 'Successfully installed dependencies for theme'
     }
+
+    // Incremental stuff
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
+    outputs.dir("src-theme/node_modules")
 }
 
-tasks.register('bundleTheme', Exec) {
+tasks.register('bundleTheme', NodeTask) {
     dependsOn 'npmInstallTheme'
-    workingDir file('src-theme')
-    commandLine 'node', 'bundle.js'
+    workingDir = file('src-theme')
+    script = file('src-theme/bundle.js')
     doLast {
         println 'Successfully attached theme to build'
     }
+
+    // Incremental stuff
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
+    inputs.dir(fileTree("src-theme/altmanager/").exclude("**/build"))
+    inputs.dir(fileTree("src-theme/clickgui/").exclude("**/build"))
+    inputs.dir(fileTree("src-theme/customize/").exclude("**/build"))
+    inputs.dir(fileTree("src-theme/hud/").exclude("**/build"))
+    inputs.dir(fileTree("src-theme/proxymanager/").exclude("**/build"))
+    inputs.dir(fileTree("src-theme/shared_res/").exclude("**/build"))
+    inputs.dir(fileTree("src-theme/splashscreen/").exclude("**/build"))
+    inputs.dir(fileTree("src-theme/title/").exclude("**/build"))
+    outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 
 sourceSets {
@@ -232,9 +245,9 @@ java {
 }
 
 compileKotlin {
-    kotlinOptions {
+    compilerOptions {
         suppressWarnings = true
-        jvmTarget = 17
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
@@ -274,4 +287,5 @@ tasks.register('copyZipInclude', Copy) {
     into 'build/libs/zip'
 }
 
+sourcesJar.dependsOn bundleTheme
 build.dependsOn copyZipInclude
