@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -94,6 +95,16 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                     packets += packet
                 }
             }
+        }
+    }
+
+    @EventTarget
+    fun onWorld(event: WorldEvent) {
+        // Clear packets on disconnect only
+        if (event.worldClient == null) {
+            packets.clear()
+		    packetsReceived.clear()
+            positions.clear()
         }
     }
 
