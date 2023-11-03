@@ -27,6 +27,9 @@ import net.minecraft.network.Packet
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.status.client.C01PacketPing
+import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -63,6 +66,12 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
         if (mc.thePlayer == null)
             return
+
+        when (packet) {
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing -> {
+                return
+            }
+        }
 
         when (mode.lowercase()) {
             "sent" -> {
@@ -176,7 +185,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         sendPackets(*packets.toTypedArray(), triggerEvents = false)
 
         packets.clear()
-		packetsReceived.clear()
+        packetsReceived.clear()
         positions.clear()
 
         // Remove fake player
