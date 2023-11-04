@@ -6,23 +6,30 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.PacketUtils.handlePackets
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.status.client.C01PacketPing
+import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -30,11 +37,15 @@ import java.awt.Color
 object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
     private val packets = mutableListOf<Packet<*>>()
+    private val packetsReceived = mutableListOf<Packet<*>>()
     private var fakePlayer: EntityOtherPlayerMP? = null
     private val positions = mutableListOf<Vec3>()
     private val pulse by BoolValue("Pulse", false)
+    private val fakePlayerMenu by BoolValue("FakePlayer", true)
     private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
+    private val mode by ListValue("Mode", arrayOf("Sent", "Received", "Both"), "Sent")
     private val pulseTimer = MSTimer()
+    private var isCleaning = 0
 
     override fun onEnable() {
         pulseTimer.reset()
@@ -53,17 +64,56 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null)
+        if (mc.thePlayer == null || mc.thePlayer.isDead)
             return
 
         when (packet) {
-            is C04PacketPlayerPosition, is C06PacketPlayerPosLook, is C08PacketPlayerBlockPlacement,
-            is C0APacketAnimation, is C0BPacketEntityAction, is C02PacketUseEntity -> {
-                event.cancelEvent()
-                packets += packet
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing -> {
+                return
             }
+        }
 
-            is C03PacketPlayer -> event.cancelEvent()
+        when (mode.lowercase()) {
+            "sent" -> {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
+                    handlePackets(*packetsReceived.toTypedArray())
+                    packetsReceived.clear()
+                }
+                if (event.eventType == EventState.SEND) {
+                    event.cancelEvent()
+                    packets += packet
+                }
+            }
+            "received" -> {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0 && mc.thePlayer.ticksExisted > 10) {
+                    event.cancelEvent()
+                    packetsReceived += packet
+                }
+                if (event.eventType == EventState.SEND) {
+                    sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                    packets.clear()
+                }
+            }
+            "both" -> {
+                if (event.eventType == EventState.RECEIVE && isCleaning == 0 && mc.thePlayer.ticksExisted > 10) {
+                    event.cancelEvent()
+                    packetsReceived += packet
+                }
+                if (event.eventType == EventState.SEND) {
+                    event.cancelEvent()
+                    packets += packet
+                }
+            }
+        }
+    }
+
+    @EventTarget
+    fun onWorld(event: WorldEvent) {
+        // Clear packets on disconnect only
+        if (event.worldClient == null) {
+            packets.clear()
+		    packetsReceived.clear()
+            positions.clear()
         }
     }
 
@@ -72,6 +122,21 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         val thePlayer = mc.thePlayer ?: return
 
         positions += thePlayer.positionVector
+
+        if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+            blink()
+        }
+
+        when (mode.lowercase()) {
+            "sent" -> {
+                handlePackets(*packetsReceived.toTypedArray())
+                packetsReceived.clear()
+            }
+            "received" -> {
+                sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                packets.clear()
+            }
+        }
 
         if (pulse && pulseTimer.hasTimePassed(pulseDelay)) {
             blink()
@@ -115,12 +180,16 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     }
 
     override val tag
-        get() = packets.size.toString()
+        get() = (packets.size + packetsReceived.size).toString()
 
     private fun blink() {
+        isCleaning = 1
+        handlePackets(*packetsReceived.toTypedArray())
+        isCleaning = 0
         sendPackets(*packets.toTypedArray(), triggerEvents = false)
 
         packets.clear()
+        packetsReceived.clear()
         positions.clear()
 
         // Remove fake player
@@ -131,6 +200,8 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     }
 
     private fun addFakePlayer() {
+        if (!fakePlayerMenu) return
+
         val thePlayer = mc.thePlayer ?: return
 
         val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
@@ -149,4 +220,6 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         positions += pos.addVector(.0, thePlayer.eyeHeight / 2.0, .0)
         positions += pos
     }
+
+    fun blinkingSend() = handleEvents() && (mode == "Sent" || mode == "Both")
 }

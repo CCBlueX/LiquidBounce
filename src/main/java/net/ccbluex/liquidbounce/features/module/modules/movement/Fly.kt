@@ -73,7 +73,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val mode by ListValue(
         "Mode", modes, "Vanilla"
     )
-    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f, subjective = true) {
+    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..10f, subjective = true) {
         mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan")
     }
     private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true) {
@@ -117,7 +117,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla" && mode != "Rewinside" && mode != "Collide" && mode != "Jump") {
+        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside" && mode != "Collide" && mode != "Jump") {
             if (mode == "CubeCraft") thePlayer.stopXZ()
             else thePlayer.stop()
         }
@@ -185,7 +185,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     fun handleVanillaKickBypass() {
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
-        val ground = calculateGround()
+        val ground = calculateGround() + 0.5
         run {
             var posY = mc.thePlayer.posY
             while (posY > ground) {
@@ -208,7 +208,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     // TODO: Make better and faster calculation lol
     private fun calculateGround(): Double {
         val playerBoundingBox = mc.thePlayer.entityBoundingBox
-        var blockHeight = 1.0
+        var blockHeight = 0.05
         var ground = mc.thePlayer.posY
         while (ground > 0.0) {
             val customBox = AxisAlignedBB.fromBounds(

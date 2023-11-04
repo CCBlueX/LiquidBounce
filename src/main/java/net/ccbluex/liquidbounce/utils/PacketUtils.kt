@@ -59,6 +59,9 @@ object PacketUtils : MinecraftInstance() {
     fun sendPackets(vararg packets: Packet<*>, triggerEvents: Boolean = true) =
         packets.forEach { sendPacket(it, triggerEvents) }
 
+    fun handlePackets(vararg packets: Packet<*>) =
+        packets.forEach { handlePacket(it) }
+
     fun handlePacket(packet: Packet<*>?) =
         runCatching { (packet as Packet<INetHandlerPlayClient>).processPacket(mc.netHandler) }
 

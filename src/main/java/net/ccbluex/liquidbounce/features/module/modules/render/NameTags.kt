@@ -281,10 +281,10 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val scoreboard = if (entity is EntityPlayer) entity.worldScoreboard else null
         val objective = scoreboard?.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))
 
-        val name = objective?.objective?.displayName
+        val name = objective?.objective?.displayName?.lowercase()
 
         val shouldPredictHealth =
-            predictHealth && entity is EntityPlayer && name.equals("§c❤")
+            predictHealth && entity is EntityPlayer && (name?.endsWith("❤") == true || name?.endsWith("hp") == true || name?.endsWith("health") == true)
 
         var scoreboardHealth = objective?.scorePoints?.toFloat()
 
