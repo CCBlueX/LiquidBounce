@@ -41,8 +41,8 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
 
         init {
             // Register the known events
-            for ((name, eventClass) in EventManager.mappedEvents) {
-                EVENT_MAP[name] = eventClass.java
+            for (eventClass in ALL_EVENT_CLASSES) {
+                EVENT_MAP[eventClass.liquidBounceEventJsName] = eventClass.java
             }
 
             // Register view related events
@@ -117,9 +117,7 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
      */
     fun _unregisterEvents() {
         for ((clazz, hooks) in this._registeredEvents) {
-            for (hook in hooks) {
-                EventManager.unregisterEventHook(clazz, hook)
-            }
+            EventManager.unregisterEventHooks(clazz, hooks)
         }
 
         this._registeredEvents.clear()

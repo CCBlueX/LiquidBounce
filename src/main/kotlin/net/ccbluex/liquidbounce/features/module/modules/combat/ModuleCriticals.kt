@@ -22,10 +22,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
@@ -33,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWal
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
-import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
@@ -48,44 +44,35 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
-    /**
-     * Should criticals be active or passive?
-     */
-    private object ActiveOption : ToggleableConfigurable(this, "Active", true) {
-
-        val modes = choices("Mode", PacketCrit) {
-            arrayOf(
-                NoneChoice(it), PacketCrit, JumpCrit
-            )
-        }
+    val modes = choices("Mode", PacketCrit) {
+        arrayOf(
+            NoneChoice(it), PacketCrit, JumpCrit
+        )
     }
 
     private object PacketCrit : Choice("Packet") {
 
-//        private val whenSprinting by boolean("WhenSprinting", true)
-
-        private object whenSprinting: ToggleableConfigurable(ActiveOption.module, "WhenSprinting", true) {
-            // TODO: Check if a un sprint is even needed.
-            //  Even when sprinting it is possible to crit,
-            //  as long as you have done a knockback hit since you've began sprinting
+        private object WhenSprinting : ToggleableConfigurable(ModuleCriticals, "WhenSprinting", true) {
             val unSprint by boolean("UnSprint", false)
         }
+
         init {
-            tree(whenSprinting)
+            tree(WhenSprinting)
         }
+
         override val parent: ChoiceConfigurable
-            get() = ActiveOption.modes
+            get() = modes
 
         val attackHandler = handler<AttackEvent> { event ->
-            if (!ActiveOption.enabled || event.enemy !is LivingEntity) {
+            if (!enabled || event.enemy !is LivingEntity) {
                 return@handler
             }
 
-            if (!canCritNow(player, true, whenSprinting.enabled)) {
+            if (!canCritNow(player, true, WhenSprinting.enabled)) {
                 return@handler
             }
 
-            if(whenSprinting.unSprint && player.isSprinting) {
+            if (WhenSprinting.unSprint && player.isSprinting) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 player.isSprinting = false
             }
@@ -101,9 +88,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     private object JumpCrit : Choice("Jump") {
 
         override val parent: ChoiceConfigurable
-            get() = ActiveOption.modes
+            get() = modes
 
-        // There are diffrent possible jump heights to crit enemy
+        // There are different possible jump heights to crit enemy
         //   Hop: 0.1 (like in Wurst-Client)
         //   LowJump: 0.3425 (for some weird AAC version)
         //
@@ -114,8 +101,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val optimizeForCooldown by boolean("OptimizeForCooldown", true)
 
-        val tickHandler = handler<PlayerTickEvent> {
-            if (!ActiveOption.enabled) return@handler
+        val tickHandler = handler<TickJumpEvent> {
+            if (!enabled) return@handler
 
             if (!canCrit(player, true)) {
                 return@handler
@@ -130,8 +117,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             if (player.isOnGround) {
                 // Simulate player jumping and send jump stat increment
                 player.jump()
-                // Jump upwards specific height, increment not needed because it has already been sent by jump function
-                player.upwards(height, increment = false)
+            }
+        }
+
+        val onJump = handler<PlayerJumpEvent> { event ->
+            // Only change if there is nothing affecting the default motion (like a honey block)
+            if (event.motion == 0.42f) {
+                event.motion = height
             }
         }
 
@@ -211,7 +203,6 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     init {
         tree(VisualsConfigurable)
-        tree(ActiveOption)
     }
 
     /**
@@ -261,6 +252,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         canCrit(player, ignoreOnGround) &&
             ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f &&
             (!ModuleCriticals.player.isSprinting || ignoreSprint)
+
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
 

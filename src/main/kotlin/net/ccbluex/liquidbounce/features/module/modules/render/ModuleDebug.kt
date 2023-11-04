@@ -19,13 +19,17 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.MovementInputEvent
 import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -38,6 +42,48 @@ import java.awt.Color
  */
 
 object ModuleDebug : Module("Debug", Category.RENDER) {
+
+    object RenderSimulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
+        private val ticksToPredict by int("TicksToPredict", 20, 5..100)
+        private val simLines = mutableListOf<Vec3>()
+        val tickRep =
+            handler<MovementInputEvent> { event ->
+                // We aren't actually where we are because of blink.
+                // So this module shall not cause any disturbance in that case.
+                if (ModuleBlink.enabled) {
+                    return@handler
+                }
+
+                simLines.clear()
+
+                val world = world
+
+                val input =
+                    SimulatedPlayer.SimulatedPlayerInput(
+                        event.directionalInput,
+                        player.input.jumping,
+                        player.isSprinting
+                    )
+
+                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+
+                repeat(ticksToPredict) {
+                    simulatedPlayer.tick()
+                    simLines.add(Vec3(simulatedPlayer.pos))
+                }
+            }
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            renderEnvironmentForWorld(event.matrixStack) {
+                withColor(Color4b.BLUE) {
+                    drawLineStrip(lines = simLines.toTypedArray())
+                }
+            }
+        }
+    }
+    init {
+        tree(RenderSimulatedPlayer)
+    }
+
     private val debuggedGeometry = hashMapOf<DebuggedGeometryOwner, DebuggedGeometry>()
 
 

@@ -34,8 +34,6 @@ import java.net.URL
  */
 object Cosmetics {
 
-    private const val CAPES_API = "https://api.liquidbounce.net/api/v1/cape/uuid/%s"
-
     /**
      * Cached capes
      *
@@ -62,30 +60,36 @@ object Cosmetics {
     fun loadPlayerCape(player: GameProfile, response: ReturnCapeTexture) {
         Util.getMainWorkerExecutor().execute {
             runCatching {
-                val uuid = player.id.toString()
+                val uuid = player.id
 
-                // Check if the cape is cached
-                if (cachedCapes.containsKey(uuid)) {
-                    response.response(cachedCapes[uuid]!!)
-                    return@execute
+                CapeService.refreshCapeCarriers {
+                    // Get url of cape from cape service
+                    val (name, url) = CapeService.getCapeDownload(uuid) ?: return@refreshCapeCarriers
+
+                    // Check if the cape is cached
+                    if (cachedCapes.containsKey(name)) {
+                        LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
+                        response.response(cachedCapes[name]!!)
+                        return@refreshCapeCarriers
+                    }
+
+                    // Request cape texture
+                    val nativeImageBackedTexture = requestCape(url)
+                        ?: return@refreshCapeCarriers
+
+                    LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
+
+                    // Register cape texture
+                    val capeTexture =
+                        mc.textureManager.registerDynamicTexture("liquidbounce-$name", nativeImageBackedTexture)
+
+                    // Cache cape texture
+                    cachedCapes[name] = capeTexture
+
+                    // Return cape texture
+                    response.response(capeTexture)
                 }
-
-                // Request cape texture
-                val nativeImageBackedTexture = requestCape(String.format(CAPES_API, uuid))
-                    ?: return@execute
-
-                // Register cape texture
-                val capeTexture =
-                    mc.textureManager.registerDynamicTexture("liquidbounce-$uuid", nativeImageBackedTexture)
-
-                // Cache cape texture
-                cachedCapes[uuid] = capeTexture
-
-                // Return cape texture
-                response.response(capeTexture)
-            }.onSuccess {
-                LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
-            } // .onFailure not needed, because most people don't have a cape.
+            }
         }
     }
 

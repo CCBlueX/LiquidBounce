@@ -485,15 +485,17 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             SimulatePlacementAttempts.failedAttemptsOnly -> {
                 !canPlaceOnFace
             }
+
             sameY -> {
                 context.blockPos.y == startY - 1 && (hitResult.side != Direction.UP || !canPlaceOnFace)
             }
+
             else -> {
                 val isTargetUnderPlayer = context.blockPos.y <= player.blockY - 1
                 val isTowering =
                     context.blockPos.y == player.blockY - 1 &&
-                        canPlaceOnFace &&
-                        context.side == Direction.UP
+                            canPlaceOnFace &&
+                            context.side == Direction.UP
 
                 isTargetUnderPlayer && !isTowering
             }

@@ -36,6 +36,7 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
 
     object Left : ToggleableConfigurable(this, "Left", true) {
         val cps by intRange("CPS", 5..8, 1..20)
+        val cooldown by boolean("Cooldown", true)
     }
 
     object Right : ToggleableConfigurable(this, "Right", false) {
@@ -60,7 +61,8 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
 
     val tickHandler = repeatable {
         Left.let {
-            repeat(cpsScheduler.clicks({ it.enabled && attack && shouldTargetBlock }, it.cps)) {
+            repeat(cpsScheduler.clicks({ it.enabled && attack && shouldTargetBlock &&
+                (!it.cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) }, it.cps)) {
                 KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
             }
         }

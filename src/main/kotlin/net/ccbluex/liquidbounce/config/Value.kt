@@ -59,6 +59,13 @@ open class Value<T : Any>(
     private val listeners = mutableListOf<ValueListener<T>>()
 
     /**
+     * If true, value will not be included in generated public config
+     */
+    @Exclude
+    var doNotInclude = false
+        private set
+
+    /**
      * Support for delegated properties
      * example:
      *  var autoaim by boolean(name = "autoaim", default = true)
@@ -102,6 +109,11 @@ open class Value<T : Any>(
 
     fun listen(listener: ValueListener<T>): Value<T> {
         listeners += listener
+        return this
+    }
+
+    fun doNotInclude(): Value<T> {
+        doNotInclude = true
         return this
     }
 

@@ -67,10 +67,6 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
         currentTimerState = TimerState.NormalSpeed
     }
 
-    val disconnectHandler = handler<WorldDisconnectEvent> {
-        enabled = false
-    }
-
     enum class TimerState {
         NormalSpeed, BoostSpeed
     }

@@ -25,12 +25,9 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
+import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.minecraft.client.network.ClientPlayerEntity
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
@@ -175,14 +172,14 @@ fun Entity.attack(swing: Boolean) {
     EventManager.callEvent(AttackEvent(this))
 
     // Swing before attacking (on 1.8)
-    if (swing && protocolVersion == MC_1_8) {
+    if (swing && isOldCombat) {
         player.swingHand(Hand.MAIN_HAND)
     }
 
     network.sendPacket(PlayerInteractEntityC2SPacket.attack(this, player.isSneaking))
 
     // Swing after attacking (on 1.9+)
-    if (swing && protocolVersion != MC_1_8) {
+    if (swing && !isOldCombat) {
         player.swingHand(Hand.MAIN_HAND)
     }
 }

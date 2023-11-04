@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.TickJumpEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Cus
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.enforced
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.util.Hand
@@ -68,12 +70,14 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             get() = modes
 
         val repeatable = repeatable {
-
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
-                    if (player.isOnGround) {
-                        player.jump()
-                    }
+                    EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
+                        // Make sure player is on ground
+                        if (player.isOnGround) {
+                            player.jump()
+                        }
+                    })
                 }
 
                 1 -> {
@@ -143,13 +147,19 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 player.swingHand(Hand.MAIN_HAND)
             }
         }
+
         val repeatable = repeatable {
             if (move) {
                 mc.options.forwardKey.isPressed = true
             }
 
             if (jump && player.isOnGround) {
-                player.jump()
+                EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
+                    // Make sure player is on ground
+                    if (player.isOnGround) {
+                        player.jump()
+                    }
+                })
             }
 
             if (Rotate.enabled) {

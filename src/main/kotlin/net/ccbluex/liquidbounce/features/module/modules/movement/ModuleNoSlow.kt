@@ -19,6 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,6 +31,8 @@ import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -41,27 +46,63 @@ import net.minecraft.util.math.Direction
 object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     private object Block : ToggleableConfigurable(this, "Blocking", true) {
+
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
 
-        val packet by boolean("Packet", true)
+        val modes = choices("Choice", Reuse) {
+            arrayOf(NoneChoice(it), Reuse, Rehold)
+        }
 
-        val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-            if (packet && player.isBlocking) {
-                when (event.state) {
-                    EventState.PRE -> network.sendPacket(
-                        PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                            BlockPos.ORIGIN,
-                            Direction.DOWN
+        object Reuse : Choice("Reuse") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isBlocking) {
+                    when (event.state) {
+                        EventState.PRE -> network.sendPacket(
+                            PlayerActionC2SPacket(
+                                PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                                BlockPos.ORIGIN,
+                                Direction.DOWN
+                            )
                         )
-                    )
 
-                    EventState.POST -> interaction.sendSequencedPacket(world) { sequence ->
-                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                        EventState.POST -> interaction.sendSequencedPacket(world) { sequence ->
+                            PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                        }
                     }
                 }
             }
+
+
+        }
+
+        object Rehold : Choice("Rehold") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isBlocking && player.activeHand == Hand.MAIN_HAND) {
+                    when (event.state) {
+                        EventState.PRE -> {
+                            network.sendPacket(UpdateSelectedSlotC2SPacket((0..8).random()))
+                        }
+
+                        EventState.POST -> {
+                            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                            interaction.sendSequencedPacket(world) { sequence ->
+                                PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                            }
+                        }
+                    }
+                }
+            }
+
+
         }
 
     }

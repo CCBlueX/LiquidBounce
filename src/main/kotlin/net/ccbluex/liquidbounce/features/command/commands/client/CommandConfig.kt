@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.api.AutoSettings
 import net.ccbluex.liquidbounce.api.ClientApi.requestSettingsList
 import net.ccbluex.liquidbounce.api.ClientApi.requestSettingsScript
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -27,11 +28,24 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.io.HttpClient.get
+import net.minecraft.text.Text
 
 object CommandConfig {
+
+    private var cachedSettingsList: Array<AutoSettings>? = null
+
+    init {
+        runCatching {
+            cachedSettingsList = requestSettingsList()
+        }.onFailure {
+            logger.error("Failed to load settings list from API", it)
+        }
+    }
+
     fun createCommand(): Command {
         return CommandBuilder
             .begin("config")
@@ -47,62 +61,30 @@ object CommandConfig {
                             .required()
                             .build()
                     )
-                    .parameter(
-                        ParameterBuilder
-                            .begin<String>("online")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .optional()
-                            .build()
-                    )
                     .handler { command, args ->
                         val name = args[0] as String
 
-                        @Suppress("SENSELESS_COMPARISON")
-                        val state =
-                            if (args[1] != null) {
-                                args[1].toString().lowercase()
-                            } else {
-                                "local"
-                            }
+                        // Get online config from external source
                         if (name.startsWith("http")) {
                             get(name).runCatching {
-                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                    ConfigSystem.autoConfigGson)
                             }.onFailure {
-                                chat(regular(command.result("failedToLoadOnline", variable(name))))
+                                chat(regular(command.result("failedToLoad", variable(name))))
                             }.onSuccess {
-                                chat(regular(command.result("loadedOnline", variable(name))))
+                                chat(regular(command.result("loaded", variable(name))))
                             }
                             return@handler
                         }
-                        when (state) {
-                            "local" -> {
-                                ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
-                                    if (!exists()) {
-                                        chat(regular(command.result("notFoundLocal", variable(name))))
-                                        return@handler
-                                    }
 
-                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
-                                }.onFailure {
-                                    chat(regular(command.result("failedToLoadLocal", variable(name))))
-                                }.onSuccess {
-                                    chat(regular(command.result("loadedLocal", variable(name))))
-                                }
-                            }
-
-                            "online" -> {
-                                requestSettingsScript(name).runCatching {
-                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
-                                }.onFailure {
-                                    chat(regular(command.result("failedToLoadOnline", variable(name))))
-                                }.onSuccess {
-                                    chat(regular(command.result("loadedOnline", variable(name))))
-                                }
-                            }
-
-                            else -> {
-                                chat(regular(command.result("unresolvedName", variable(name))))
-                            }
+                        // Get online config from API
+                        requestSettingsScript(name).runCatching {
+                            ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                ConfigSystem.autoConfigGson)
+                        }.onFailure {
+                            chat(regular(command.result("failedToLoad", variable(name))))
+                        }.onSuccess {
+                            chat(regular(command.result("loaded", variable(name))))
                         }
                     }
                     .build()
@@ -110,95 +92,40 @@ object CommandConfig {
             .subcommand(
                 CommandBuilder
                     .begin("list")
-                    .parameter(
-                        ParameterBuilder
-                            .begin<String>("online")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .optional()
-                            .build()
-                    )
                     .handler { command, args ->
-
-                        @Suppress("SENSELESS_COMPARISON")
-                        val state =
-                            if (args[0] != null) {
-                                args[0].toString().lowercase()
-                            } else {
-                                "local"
+                        runCatching {
+                            chat(regular(command.result("loading")))
+                            (cachedSettingsList ?: requestSettingsList()).forEach {
+                                chat(
+                                    regular("§a${it.name}"),
+                                    regular(" (id: "),
+                                    variable(it.settingId),
+                                    regular(", updated on ${it.dateFormatted}, status: "),
+                                    Text.literal(it.statusType.displayName).styled {
+                                            style -> style.withFormatting(it.statusType.formatting)
+                                    },
+                                    regular(")")
+                                )
                             }
-                        when (state) {
-                            "local" -> {
-                                chat("§cSettings:")
-                                for (files in ConfigSystem.userConfigsFolder.listFiles()!!) {
-                                    chat(regular(files.name))
-                                }
-                            }
-
-                            "online" -> {
-                                chat(regular("Loading settings..."))
-                                requestSettingsList().forEach {
-                                    chat(regular("> ${it.settingId}"))
-                                    chat("Last updated: ${it.date}")
-                                    chat("Status: ${it.statusType.displayName}")
-                                }
-                            }
-                        }
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("create")
-                    .alias("new", "save", "store")
-                    .parameter(
-                        ParameterBuilder
-                            .begin<String>("name")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith(this::autoComplete)
-                            .required()
-                            .build()
-                    )
-                    .parameter(
-                        ParameterBuilder
-                            .begin<Boolean>("overwrite")
-                            .optional()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val name = args[0] as String
-                        val overwrite = (args.getOrNull(1) as? String ?: "false").equals("true", true)
-
-                        ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
-                            if (exists()) {
-                                if (!overwrite) {
-                                    chat(regular(command.result("alreadyExists", variable(name))))
-                                    return@handler
-                                } else {
-                                    delete()
-                                }
-                            }
-
-                            if (!exists()) {
-                                createNewFile()
-                            }
-
-                            // TODO: Fix module states being stored
-
-                            // Store the config
-                            ConfigSystem.serializeConfigurable(ModuleManager.modulesConfigurable, writer())
                         }.onFailure {
-                            chat(regular(command.result("failedToCreate", variable(name))))
-                        }.onSuccess {
-                            chat(regular(command.result("created", variable(name))))
+                            chat(regular("§cFailed to load settings list from API"))
                         }
                     }
                     .build()
             )
+//            .subcommand(
+//                CommandBuilder
+//                    .begin("share")
+//                    .handler { command, args ->
+//                        // todo: implement share command
+//                    }
+//                    .build()
+//            )
             .build()
     }
 
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
-        return emptyList()
+        return cachedSettingsList?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
     }
 
 }

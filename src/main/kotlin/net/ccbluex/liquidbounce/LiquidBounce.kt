@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.cosmetic.CapeService
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
@@ -134,6 +135,7 @@ object LiquidBounce : Listenable {
             // Load config system from disk
             ConfigSystem.load()
 
+            // Check for newest version
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
             }
@@ -141,6 +143,22 @@ object LiquidBounce : Listenable {
             // Refresh local IP info
             logger.info("Refreshing local IP info...")
             IpInfoApi.refreshLocalIpInfo()
+
+            // Login into known token if not empty
+            if (CapeService.knownToken.isNotBlank()) {
+                runCatching {
+                    CapeService.login(CapeService.knownToken)
+                }.onFailure {
+                    logger.error("Failed to login into known cape token.", it)
+                }.onSuccess {
+                    logger.info("Successfully logged in into known cape token.")
+                }
+            }
+
+            // Refresh cape service
+            CapeService.refreshCapeCarriers {
+                logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
+            }
 
             // Connect to chat server
             Chat.connectAsync()

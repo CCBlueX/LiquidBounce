@@ -35,6 +35,7 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
     private val delay by intRange("Delay", 12..14, 0..300)
     private val message by text("Message",
         "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}")
+        .doNotInclude()
     // todo: add back when textArray is supported
     // private val messages by textArray(
     //    "Messages",
@@ -44,6 +45,7 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
     //    )
     //)
     private val customFormatter by boolean("CustomFormatter", false)
+        .doNotInclude()
 
     val repeatable = repeatable {
         val text = if (customFormatter) {

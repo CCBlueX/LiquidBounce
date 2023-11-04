@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.Curves
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 
@@ -113,7 +114,9 @@ open class Configurable(
     protected fun textArray(name: String, default: MutableList<String>) =
         value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
 
-    protected fun curve(name: String, default: Array<Float>) = value(name, default, ValueType.CURVE)
+    protected fun curve(name: String, default: Curves) =
+        ChooseListValue(name, default, Curves.values()).apply { this@Configurable.value.add(this) }
+
 
     protected fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 

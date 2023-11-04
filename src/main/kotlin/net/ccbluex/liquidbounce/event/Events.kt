@@ -22,6 +22,7 @@ import io.netty.channel.ChannelPipeline
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.ForcedState
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.Block
@@ -38,6 +39,79 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
+import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
+
+/**
+ * Contains all classes of events. Used to create lookup tables ahead of time
+ */
+val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
+    GameTickEvent::class,
+    BlockChangeEvent::class,
+    ChunkLoadEvent::class,
+    ChunkUnloadEvent::class,
+    WorldDisconnectEvent::class,
+    GameRenderEvent::class,
+    WorldRenderEvent::class,
+    EngineRenderEvent::class,
+    OverlayRenderEvent::class,
+    ScreenRenderEvent::class,
+    WindowResizeEvent::class,
+    WindowFocusEvent::class,
+    MouseButtonEvent::class,
+    MouseScrollEvent::class,
+    MouseCursorEvent::class,
+    KeyboardKeyEvent::class,
+    KeyboardCharEvent::class,
+    InputHandleEvent::class,
+    MovementInputEvent::class,
+    KeyEvent::class,
+    MouseRotationEvent::class,
+    KeyBindingEvent::class,
+    AttackEvent::class,
+    SessionEvent::class,
+    ScreenEvent::class,
+    ChatSendEvent::class,
+    ChatReceiveEvent::class,
+    UseCooldownEvent::class,
+    BlockShapeEvent::class,
+    BlockBreakingProgressEvent::class,
+    BlockVelocityMultiplierEvent::class,
+    BlockSlipperinessMultiplierEvent::class,
+    EntityMarginEvent::class,
+    HealthUpdateEvent::class,
+    DeathEvent::class,
+    PlayerTickEvent::class,
+    PlayerMovementTickEvent::class,
+    PlayerNetworkMovementTickEvent::class,
+    PlayerPushOutEvent::class,
+    PlayerMoveEvent::class,
+    PlayerJumpEvent::class,
+    PlayerUseMultiplier::class,
+    PlayerVelocityStrafe::class,
+    PlayerStrideEvent::class,
+    PlayerSafeWalkEvent::class,
+    CancelBlockBreakingEvent::class,
+    PlayerStepEvent::class,
+    FluidPushEvent::class,
+    TickJumpEvent::class,
+    PipelineEvent::class,
+    PacketEvent::class,
+    ClientStartEvent::class,
+    ClientShutdownEvent::class,
+    ValueChangedEvent::class,
+    ToggleModuleEvent::class,
+    NotificationEvent::class,
+    ClientChatMessageEvent::class,
+    ClientChatErrorEvent::class,
+    StateUpdateEvent::class
+)
+
+/**
+ * Retrieves the name that the event is supposed to be associated with in JavaScript.
+ */
+val KClass<out Event>.liquidBounceEventJsName: String
+    get() = this.findAnnotation<Nameable>()!!.name
 
 // Game events
 
@@ -153,7 +227,7 @@ class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
 // Entity events bound to client-user entity
 @Nameable("healthUpdate")
-class HealthUpdateEvent(health: Float, food: Int, saturation: Float) : Event()
+class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float, val previousHealth: Float) : Event()
 
 @Nameable("death")
 class DeathEvent : Event()
@@ -197,6 +271,9 @@ class PlayerStepEvent(var height: Float) : Event()
 @Nameable("fluidPush")
 class FluidPushEvent : CancellableEvent()
 
+@Nameable("tickJump")
+class TickJumpEvent : Event()
+
 // Network events
 
 @Nameable("pipeline")
@@ -238,3 +315,8 @@ class ClientChatMessageEvent(val user: User, val message: String, val chatGroup:
 
 @Nameable("clientChatError")
 class ClientChatErrorEvent(val error: String) : Event()
+
+@Nameable("stateUpdate")
+class StateUpdateEvent : Event() {
+    val state: ForcedState = ForcedState()
+}

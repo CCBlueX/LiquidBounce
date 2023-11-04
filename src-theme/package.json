@@ -4,7 +4,8 @@
   "description": "Default theme of the minecraft hacked-client LiquidBounce",
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w"
+    "dev": "rollup -c -w",
+    "bundle": "node bundle.js"
   },
   "repository": "github:CCBlueX/LiquidBounce",
   "author": "CCBlueX",
@@ -23,5 +24,8 @@
     "sass": "^1.62.1",
     "serve-handler": "^6.1.5",
     "svelte-preprocess": "^5.0.3"
+  },
+  "dependencies": {
+    "archiver": "^6.0.1"
   }
 }
