@@ -74,6 +74,7 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
     RenderSystem.disableBlend()
     RenderSystem.enableDepthTest()
+    RenderSystem.enableCull()
 }
 
 fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: RenderEnvironment.() -> Unit) {
@@ -96,8 +97,9 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
     with(matrixStack) {
         push()
         translate(pos.x, pos.y, pos.z)
-        draw()
-        pop()
+        try { draw() }
+        finally { pop() }
+
     }
 }
 
@@ -109,8 +111,20 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
  */
 fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
     RenderSystem.setShaderColor(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f)
-    draw()
-    RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
+    try { draw() }
+    finally { RenderSystem.setShaderColor(1f, 1f, 1f, 1f) }
+}
+
+/**
+ * Extension function to disable cull
+ * Good for rendering faces that should be visible from both sides
+ *
+ * @param draw The block of code to be executed with cull disabled.
+ */
+fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
+    RenderSystem.disableCull()
+    try { draw() }
+    finally { RenderSystem.enableCull() }
 }
 
 /**
@@ -288,8 +302,9 @@ fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Ve
  *
  * @param box The bounding box of the side.
  * @param side The direction of the side.
+ * @param onlyOutline Determines if the function only should draw the outline of the [side] or only fill it in
  */
-fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
+fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolean = false){
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
@@ -299,8 +314,12 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
 
     // Draw the vertices of the box
     with(bufferBuilder) {
-        // Begin drawing lines with position format
-        begin(DrawMode.QUADS, VertexFormats.POSITION)
+        // Begin drawing lines or quads with position format
+        begin(
+            if (onlyOutline) DrawMode.DEBUG_LINE_STRIP
+                else DrawMode.QUADS,
+            VertexFormats.POSITION
+        )
 
         // Draw the vertices of the box
         val vertices = when (side) {
@@ -344,6 +363,11 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
 
         vertices.forEach { (x, y, z) ->
             vertex(matrix, x, y, z).next()
+        }
+
+        if(onlyOutline){
+            vertex(matrix, vertices[0].x, vertices[0].y, vertices[0].z).next()
+
         }
     }
 

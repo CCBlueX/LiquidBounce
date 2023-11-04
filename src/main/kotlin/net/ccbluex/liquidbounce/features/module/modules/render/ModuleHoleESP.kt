@@ -32,9 +32,9 @@ import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.minecraft.block.Blocks
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3i
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.util.math.*
+import kotlin.math.max
 
 /**
  * HoleESP module
@@ -44,7 +44,7 @@ import net.minecraft.util.math.Vec3i
 
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
-    private val modes = choices("Mode", Box, arrayOf(Box))
+    private val modes = choices("Mode", GlowingPlane, arrayOf(BoxChoice, GlowingPlane))
 
     var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
     var verticalDistance by int("VerticalScanDistance", 16, 4..100)
@@ -54,7 +54,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     val holes = HashMap<BlockPos, HoleQuality>()
     val movableRegionScanner = MovableRegionScanner()
 
-    private object Box : Choice("Box") {
+    val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
+
+    private object BoxChoice : Choice("Box") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -70,9 +72,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 for ((pos, quality) in markedBlocks) {
                     val vec3 = Vec3(pos)
-
-                    val baseColor = quality.baseColor
-                    val outlineColor = quality.outlineColor
+                    val fade = calculateFade(pos)
+                    val baseColor =  applyFade(quality.baseColor, fade)
+                    val outlineColor = applyFade(quality.outlineColor, fade)
 
                     withPosition(vec3) {
                         withColor(baseColor) {
@@ -91,9 +93,134 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     }
 
+    private object GlowingPlane: Choice("GlowingPlane") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val outline by boolean("Outline", true)
+
+        val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
+
+
+
+        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
+            val markedBlocks = holes.entries
+
+            val glowHeight = glowHeightSetting.toDouble()
+            renderEnvironmentForWorld(matrixStack) {
+                withDisabledCull {
+                    for ((pos, quality) in markedBlocks) {
+                        val vec3 = Vec3(pos)
+                        val fade = calculateFade(pos)
+
+                        val baseColor = applyFade(quality.baseColor, fade)
+                        val transparentColor = baseColor.alpha(0)
+                        val outlineColor = applyFade(quality.outlineColor, fade)
+
+                        withPosition(vec3) {
+                            withColor(baseColor) {
+                                drawSideBox(box, Direction.DOWN)
+                            }
+                            if(outline) {
+                                withColor(outlineColor) {
+                                    drawSideBox(box, Direction.DOWN, onlyOutline = true)
+
+                                }
+                            }
+                            drawGradientSides(this, glowHeight, baseColor, transparentColor, box)
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    private fun drawGradientSides(
+        renderEnvironment: RenderEnvironment,
+        height: Double,
+        baseColor: Color4b,
+        topColor: Color4b,
+        box: Box) {
+
+        if(height == 0.0)
+            return
+
+        val vertexColors =
+            listOf(
+                baseColor,
+                topColor,
+                topColor,
+                baseColor
+            )
+
+        with (renderEnvironment) {
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.minX, 0.0, box.minZ),
+                    Vec3(box.minX, height, box.minZ),
+                    Vec3(box.maxX, height, box.minZ),
+                    Vec3(box.maxX, 0.0, box.minZ),
+                ),
+                vertexColors
+            )
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.maxX, 0.0, box.minZ),
+                    Vec3(box.maxX, height, box.minZ),
+                    Vec3(box.maxX, height, box.maxZ),
+                    Vec3(box.maxX, 0.0, box.maxZ),
+                ),
+                vertexColors
+            )
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.maxX, 0.0, box.maxZ),
+                    Vec3(box.maxX, height, box.maxZ),
+                    Vec3(box.minX, height, box.maxZ),
+                    Vec3(box.minX, 0.0, box.maxZ),
+                ),
+                vertexColors
+            )
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.minX, 0.0, box.maxZ),
+                    Vec3(box.minX, height, box.maxZ),
+                    Vec3(box.minX, height, box.minZ),
+                    Vec3(box.minX, 0.0, box.minZ),
+                ),
+                vertexColors
+            )
+        }
+    }
+
     val movementHandler = handler<PlayerTickEvent> { event ->
         this.updateScanRegion()
     }
+
+    private fun calculateFade(pos: BlockPos): Float {
+        if (distanceFade == 0f)
+            return 1f
+
+        val verticalDistanceFraction = (player.pos.y - pos.y) / verticalDistance
+        val horizontalDistanceFraction =
+            Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
+
+        val fade = (1 - max(verticalDistanceFraction, horizontalDistanceFraction)) / distanceFade
+
+        return fade.coerceIn(0.0, 1.0).toFloat()
+    }
+
+    private fun applyFade(baseColor: Color4b, fade: Float) =
+        if(fade == 1f)
+            baseColor
+        else
+            baseColor.alpha((baseColor.a * fade).toInt())
+
 
     private fun flatten(pos: BlockPos): BlockPos {
         if (!this.flattenMovement) {
@@ -177,25 +304,29 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
     override fun enable() {
+        WorldChangeNotifier.subscribe(InvalidationHook)
+
         this.movableRegionScanner.clearRegion()
 
         updateScanRegion()
 
-        WorldChangeNotifier.subscribe(InvalidationHook)
     }
 
     override fun disable() {
         WorldChangeNotifier.unsubscribe(InvalidationHook)
-
         holes.clear()
     }
 
+
+
+
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {
         override fun invalidate(region: Region, rescan: Boolean) {
-            // Check if the region intersects. Otherwise calling region.intersection would be unsafe
+            // Check if the region intersects. Otherwise, calling region.intersection would be unsafe
             if (!region.intersects(movableRegionScanner.currentRegion)) {
                 return
             }
+
 
             val intersection = region.intersection(movableRegionScanner.currentRegion)
 
