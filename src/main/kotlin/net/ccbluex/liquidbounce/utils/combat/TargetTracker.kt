@@ -37,9 +37,6 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
 
     val fov by float("FOV", 180f, 0f..180f)
     val priority by enumChoice("Priority", defaultPriority, PriorityEnum.values())
-    val lockOnTarget by boolean("LockOnTarget", false)
-    val sortOut by boolean("SortOut", true)
-    val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
 
     /**
      * Update should be called to always pick the best target out of the current world context
