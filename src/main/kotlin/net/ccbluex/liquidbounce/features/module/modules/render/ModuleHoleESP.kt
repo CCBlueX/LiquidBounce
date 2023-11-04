@@ -44,7 +44,7 @@ import kotlin.math.max
 
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
-    private val modes = choices("Mode", GlowingPlane, arrayOf(Box, GlowingPlane))
+    private val modes = choices("Mode", GlowingPlane, arrayOf(BoxChoice, GlowingPlane))
 
     var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
     var verticalDistance by int("VerticalScanDistance", 16, 4..100)
@@ -56,7 +56,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
 
-    private object Box : Choice("Box") {
+    private object BoxChoice : Choice("Box") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -147,7 +147,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         height: Double,
         baseColor: Color4b,
         topColor: Color4b,
-        box: net.minecraft.util.math.Box) {
+        box: Box) {
 
         if(height == 0.0) { return }
 
