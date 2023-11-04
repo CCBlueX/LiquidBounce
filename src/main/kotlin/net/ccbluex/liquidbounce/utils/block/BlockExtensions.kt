@@ -42,6 +42,7 @@ fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance
 /**
  * Search blocks around the player in a cuboid
  */
+@Supress("NestedBlockDepth")
 inline fun searchBlocksInCuboid(
     a: Int,
     filter: (BlockPos, BlockState) -> Boolean,
@@ -68,6 +69,7 @@ inline fun searchBlocksInCuboid(
     return blocks
 }
 
+@Supress("NestedBlockDepth")
 inline fun forEachBlockPosBetween(
     from: BlockPos,
     to: BlockPos,
@@ -85,6 +87,7 @@ inline fun forEachBlockPosBetween(
 /**
  * Search blocks around the player in a specific [radius]
  */
+@Supress("NestedBlockDepth")
 inline fun searchBlocksInRadius(
     radius: Float,
     filter: (BlockPos, BlockState) -> Boolean,
@@ -145,6 +148,7 @@ fun isBlockAtPosition(
 /**
  * Check if [box] intersects with bounding box of specified blocks
  */
+@Supress("NestedBlockDepth")
 fun collideBlockIntersects(
     box: Box,
     isCorrectBlock: (Block?) -> Boolean,
