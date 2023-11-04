@@ -147,7 +147,8 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         topColor: Color4b,
         box: Box) {
 
-        if(height == 0.0) { return }
+        if(height == 0.0)
+            return
 
         val vertexColors =
             listOf(
@@ -201,17 +202,17 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         this.updateScanRegion()
     }
 
-    private fun calculateFade(pos: BlockPos) =
-        if(distanceFade == 0f)
-            1f
-        else
+    private fun calculateFade(pos: BlockPos): Float {
+        if (distanceFade == 0f)
+            return 1f
 
-            ((1 - max(
-                (player.pos.y - pos.y) / verticalDistance,
-                Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
-            ))
-                / distanceFade)
-            .coerceIn(0.0, 1.0).toFloat()
+        val verticalDistanceFraction = (player.pos.y - pos.y) / verticalDistance
+        val horizontalDistanceFraction = Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
+
+        val fade = (1 - max(verticalDistanceFraction, horizontalDistanceFraction)) / distanceFade
+
+        return fade.coerceIn(0.0, 1.0).toFloat()
+    }
 
     private fun applyFade(baseColor: Color4b, fade: Float) =
         if(fade == 1f)
@@ -304,13 +305,11 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     override fun enable() {
         this.movableRegionScanner.clearRegion()
         updateScanRegion()
-
         WorldChangeNotifier.subscribe(InvalidationHook)
     }
 
     override fun disable() {
         WorldChangeNotifier.unsubscribe(InvalidationHook)
-
         holes.clear()
     }
 
