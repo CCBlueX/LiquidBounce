@@ -303,15 +303,12 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     override fun enable() {
         this.movableRegionScanner.clearRegion()
-//        ChunkScanner.subscribe(BlockTracker)
         updateScanRegion()
 
         WorldChangeNotifier.subscribe(InvalidationHook)
     }
 
     override fun disable() {
-//        ChunkScanner.unsubscribe(BlockTracker)
-
         WorldChangeNotifier.unsubscribe(InvalidationHook)
 
         holes.clear()
