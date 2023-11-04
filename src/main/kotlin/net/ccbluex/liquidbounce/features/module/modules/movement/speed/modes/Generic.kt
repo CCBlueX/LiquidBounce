@@ -83,7 +83,6 @@ object LegitHop : Choice("LegitHop") {
     private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
     // Avoids running into edges which loses speed
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
-    private val avoidJumpToDeath by boolean("AvoidJumpToDeath", false)
 
     val tickJumpHandler = handler<TickJumpEvent> {
         if (!player.isOnGround || !player.moving) {
@@ -106,27 +105,8 @@ object LegitHop : Choice("LegitHop") {
             return true
         }
 
-        if (avoidJumpToDeath && SpeedPreventDeadlyJump.wouldJumpToDeath()) {
-            return true
-        }
         return false
     }
-
-    val injectSafeWalk = handler<MovementInputEvent> {
-        if (mc.options.jumpKey.isPressed) {
-            return@handler
-        }
-
-        val wouldFallToDeath = SpeedPreventDeadlyJump.wouldFallToDeath(
-            SpeedPreventDeadlyJump.createSimulatedPlayer(player),
-            ticksToWaitForFall = 1
-        )
-
-        if (wouldFallToDeath && SpeedPreventDeadlyJump.wouldJumpToDeath()) {
-            it.directionalInput = DirectionalInput.NONE
-        }
-    }
-
 
     val injectMovementEnforcement = repeatable {
         if (!player.isOnGround) {
