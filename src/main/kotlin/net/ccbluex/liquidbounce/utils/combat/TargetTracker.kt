@@ -21,11 +21,9 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 
@@ -48,8 +46,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
         val world = mc.world ?: return emptyList()
 
         var entities = world.entities.filter {
-            it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it) &&
-                (!ModuleMurderMystery.enabled || (it is AbstractClientPlayerEntity && ModuleMurderMystery.shouldAttack(it)))
+            it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it)
         }
 
         entities = when (priority) {
