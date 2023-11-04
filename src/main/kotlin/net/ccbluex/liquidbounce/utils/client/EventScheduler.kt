@@ -18,50 +18,75 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.event.ALL_EVENT_CLASSES
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.name
 import net.ccbluex.liquidbounce.features.module.Module
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.reflect.KClass
 
 /**
  * Useful for sending actions to other events.
  */
 object EventScheduler : Listenable {
 
-    private val actions = CopyOnWriteArrayList<ScheduleInfo>()
+    /**
+     * Maps the event class to the scheduled tasks that currently wait for it.
+     */
+    private val eventActionsMap: Map<Class<out Event>, CopyOnWriteArrayList<ScheduleInfo>>
 
-    fun schedule(
-        module: Module,
-        eventClass: KClass<out Event>,
-        id: Int,
-        allowDuplicates: Boolean = true,
-        action: (Event) -> Unit
-    ): Boolean {
-        if (allowDuplicates || !isScheduled(id, module)) {
-            actions += ScheduleInfo(module, eventClass, id, action)
-            return true
-        }
-
-        return false
+    init {
+        eventActionsMap = ALL_EVENT_CLASSES.associate { Pair(it.java, CopyOnWriteArrayList<ScheduleInfo>()) }
     }
 
-    fun isScheduled(id: Int, module: Module) = actions.any { it.module == module && it.id == id }
-
-    fun clear(module: Module) = actions.removeIf { it.module == module }
-
     /**
-     * TODO: Find a proper way to detect events
+     * Schedules a task on the next moment an event is called.
+     *
+     * @param uniqueId Allows the caller to specify a unique id for the event. If an event is already scheduled for
+     * that event with the same module and id, the task will not be scheduled again.
+     * @return Whether the task was scheduled. A reason why a schedule failed is the `uniqueId` param
+     * or the event does not exist.
      */
-    fun process(event: Event) {
-        // Each to their own events
-        for (action in actions) {
-            // All events have an annotation paired with them. Shouldn't cause exceptions
-            if (event::class.name() == action.eventClass.name()) {
-                action.action(event)
-                actions.remove(action)
+    fun schedule(
+        module: Module,
+        eventClass: Class<out Event>,
+        uniqueId: Int? = null,
+        action: (Event) -> Unit
+    ): Boolean {
+        val scheduledEvents = eventActionsMap[eventClass] ?: return false
+
+        if (uniqueId != null) {
+            val alreadyScheduled = scheduledEvents.any { it.module == module && it.id == uniqueId }
+
+            if (alreadyScheduled) {
+                return false
             }
+        }
+
+        scheduledEvents.add(ScheduleInfo(module, uniqueId, action))
+
+        return true
+    }
+
+
+    fun clear(module: Module) {
+        for (value in eventActionsMap.values) {
+            value.removeIf { it.module == module }
+        }
+    }
+
+    fun process(event: Event) {
+        val scheduledTasks = eventActionsMap[event.javaClass] ?: return
+
+        // DON'T CHANGE THIS! This prevents a race condition. I know it looks silly, but it prevents problems.
+        scheduledTasks.removeIf { scheduledTask ->
+            // The removeIf function gives us no guarantee that the predicate is executed only once...
+            if (!scheduledTask.discarded) {
+                scheduledTask.action(event)
+
+                scheduledTask.discarded = true
+            }
+
+            true
         }
     }
 
@@ -69,8 +94,8 @@ object EventScheduler : Listenable {
 
     data class ScheduleInfo(
         val module: Module,
-        val eventClass: KClass<out Event>,
-        val id: Int,
-        val action: (Event) -> Unit
+        val id: Int?,
+        val action: (Event) -> Unit,
+        var discarded: Boolean = false
     )
 }

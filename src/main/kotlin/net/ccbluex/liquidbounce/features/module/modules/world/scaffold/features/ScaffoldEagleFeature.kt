@@ -1,10 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.StateUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
-import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 
 object ScaffoldEagleFeature : ToggleableConfigurable(ModuleScaffold, "Eagle", false) {

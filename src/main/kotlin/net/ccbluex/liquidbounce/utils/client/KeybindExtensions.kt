@@ -9,6 +9,9 @@ val KeyBinding.pressedOnKeyboard
 var KeyBinding.enforced: Boolean?
     get() =
         when (this) {
+            mc.options.jumpKey -> {
+                TickStateManager.enforcedState.enforceJump
+            }
             mc.options.forwardKey -> {
                 TickStateManager.enforcedState.enforceForward
             }
@@ -30,6 +33,9 @@ var KeyBinding.enforced: Boolean?
         }
     set(value) {
         when (this) {
+            mc.options.jumpKey -> {
+                TickStateManager.enforcedState.enforceJump = value
+            }
             mc.options.forwardKey -> {
                 TickStateManager.enforcedState.enforceForward = value
             }

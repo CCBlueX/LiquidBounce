@@ -72,7 +72,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val repeatable = repeatable {
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
-                    EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class, 0, false, action = {
+                    EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
                         // Make sure player is on ground
                         if (player.isOnGround) {
                             player.jump()
@@ -154,7 +154,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
 
             if (jump && player.isOnGround) {
-                EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class, 0, false, action = {
+                EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
                     // Make sure player is on ground
                     if (player.isOnGround) {
                         player.jump()

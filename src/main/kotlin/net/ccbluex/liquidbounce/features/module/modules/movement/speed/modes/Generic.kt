@@ -2,18 +2,20 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.MovementInputEvent
 import net.ccbluex.liquidbounce.event.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedPreventDeadlyJump
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.downwards
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.entity.upwards
+import net.ccbluex.liquidbounce.utils.client.enforced
+import net.ccbluex.liquidbounce.utils.client.moveKeys
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 
 
@@ -79,24 +81,58 @@ object LegitHop : Choice("LegitHop") {
         get() = ModuleSpeed.modes
 
     private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
-
     // Avoids running into edges which loses speed
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
+    private val avoidJumpToDeath by boolean("AvoidJumpToDeath", false)
 
     val tickJumpHandler = handler<TickJumpEvent> {
-        if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f)) {
-            return@handler
-        }
-
         if (!player.isOnGround || !player.moving) {
             return@handler
         }
 
-        if (avoidEdgeBump && SpeedAntiCornerBump.shouldDelayJump()) {
+        // We want the player to be able to jump if he wants to
+        if (!mc.options.jumpKey.isPressed && doOptimizationsPreventJump())
             return@handler
-        }
 
         player.jump()
     }
 
+    private fun doOptimizationsPreventJump(): Boolean {
+        if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f)) {
+            return true
+        }
+
+        if (avoidEdgeBump && SpeedAntiCornerBump.shouldDelayJump()) {
+            return true
+        }
+
+        if (avoidJumpToDeath && SpeedPreventDeadlyJump.wouldJumpToDeath()) {
+            return true
+        }
+        return false
+    }
+
+    val injectSafeWalk = handler<MovementInputEvent> {
+        if (mc.options.jumpKey.isPressed) {
+            return@handler
+        }
+
+        val wouldFallToDeath = SpeedPreventDeadlyJump.wouldFallToDeath(
+            SpeedPreventDeadlyJump.createSimulatedPlayer(player),
+            ticksToWaitForFall = 1
+        )
+
+        if (wouldFallToDeath && SpeedPreventDeadlyJump.wouldJumpToDeath()) {
+            it.directionalInput = DirectionalInput.NONE
+        }
+    }
+
+
+    val injectMovementEnforcement = repeatable {
+        if (!player.isOnGround) {
+            return@repeatable
+        }
+
+        mc.options.jumpKey.enforced = false
+    }
 }

@@ -85,7 +85,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         }
 
         if (dodgePlan.shouldJump && AllowRotationChange.allowJump && player.isOnGround) {
-            EventScheduler.schedule(this, TickJumpEvent::class, 0, action = {
+            EventScheduler.schedule(this, TickJumpEvent::class.java, 0, action = {
                 // Make sure player is on ground
                 if (player.isOnGround) {
                     player.jump()
