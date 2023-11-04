@@ -20,26 +20,21 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.minecraft.block.BlockState
+import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
+import net.ccbluex.liquidbounce.utils.block.Region
+import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.minecraft.block.Blocks
-import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.VertexFormat
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
 import kotlin.math.max
-import kotlin.math.min
 
 /**
  * HoleESP module
@@ -147,7 +142,12 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         }
     }
 
-    private fun drawGradientSides(renderEnvironment: RenderEnvironment, height: Double, baseColor: Color4b, topColor: Color4b, box: net.minecraft.util.math.Box) {
+    private fun drawGradientSides(
+        renderEnvironment: RenderEnvironment,
+        height: Double,
+        baseColor: Color4b,
+        topColor: Color4b,
+        box: net.minecraft.util.math.Box) {
 
         if(height == 0.0) { return }
 
