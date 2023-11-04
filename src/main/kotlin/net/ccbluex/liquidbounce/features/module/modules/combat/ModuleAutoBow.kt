@@ -23,9 +23,7 @@ import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -39,6 +37,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.item.BowItem
+import net.minecraft.item.TridentItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Box
@@ -46,7 +45,6 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.*
 
 /**
@@ -110,10 +108,10 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             handler<GameTickEvent> {
                 val player = mc.player ?: return@handler
 
-                val currentItem = player.activeItem
+                val currentItem = player.activeItem?.item
 
                 // Should check if player is using bow
-                if (currentItem?.item !is BowItem) {
+                if (currentItem !is BowItem && currentItem !is TridentItem) {
                     return@handler
                 }
 
@@ -216,7 +214,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 targetTracker.lockedOnTarget = null
 
                 // Should check if player is using bow
-                if (player.activeItem?.item !is BowItem) {
+                val activeItem = player.activeItem?.item
+                if (activeItem !is BowItem && activeItem !is TridentItem) {
                     return@handler
                 }
 
