@@ -210,9 +210,9 @@
     <ID>MemberNameEqualsClassName:ModuleStorageESP.kt$ModuleStorageESP.Box$// todo: use box of block, not hardcoded private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.FastClimb.Motion$private val motion by float("Motion", 0.2872F, 0.1f..0.5f)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.IceSpeed.Motion$val motion by float("Motion", 0.5f, 0.2f..1.5f)</ID>
-    <ID>NestedBlockDepth:BlockExtensions.kt$fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -&gt; Boolean): Boolean</ID>
-    <ID>NestedBlockDepth:BlockExtensions.kt$inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -&gt; Boolean): List&lt;Pair&lt;BlockPos, BlockState&gt;&gt;</ID>
-    <ID>NestedBlockDepth:BlockExtensions.kt$inline fun searchBlocksInRadius( radius: Float, filter: (BlockPos, BlockState) -&gt; Boolean ): List&lt;Pair&lt;BlockPos, BlockState&gt;&gt;</ID>
+    <ID>NestedBlockDepth:BlockExtensions.kt$fun collideBlockIntersects( box: Box, isCorrectBlock: (Block?) -&gt; Boolean, ): Boolean</ID>
+    <ID>NestedBlockDepth:BlockExtensions.kt$inline fun searchBlocksInCuboid( a: Int, filter: (BlockPos, BlockState) -&gt; Boolean, ): List&lt;Pair&lt;BlockPos, BlockState&gt;&gt;</ID>
+    <ID>NestedBlockDepth:BlockExtensions.kt$inline fun searchBlocksInRadius( radius: Float, filter: (BlockPos, BlockState) -&gt; Boolean, ): List&lt;Pair&lt;BlockPos, BlockState&gt;&gt;</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CleanupPlan.kt$fun createCleanupPlan(otherScreen: GenericContainerScreen? = null): InventoryCleanupPlan</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
