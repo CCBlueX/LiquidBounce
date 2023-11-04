@@ -66,7 +66,23 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Attack speed
     private val cps by intRange("CPS", 5..8, 1..20)
-    private val cooldown by boolean("Cooldown", true)
+
+    object Cooldown : ToggleableConfigurable(this, "Cooldown", true) {
+
+        private val rangeCooldown by floatRange("CooldownRange", 0.9f..1f, 0f..1f)
+
+        var nextCooldown = rangeCooldown.random()
+            private set
+
+        val readyToAttack: Boolean
+            get() = !this.enabled || player.getAttackCooldownProgress(0.0f) >= cooldown.nextCooldown
+
+        fun newCooldown() {
+            nextCooldown = rangeCooldown.random()
+        }
+
+    }
+    val cooldown = tree(Cooldown)
 
     // Range
     private val range by float("Range", 4.2f, 1f..8f)
@@ -272,7 +288,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
-                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) &&
+                cooldown.readyToAttack &&
                     (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)
                     && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
                     !raycastedEntity.wouldBlockHit(player))
@@ -323,6 +339,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     // Attack enemy
                     attackEntity(raycastedEntity)
                 }
+                cooldown.newCooldown()
 
                 // Make sure to block again
                 if (blocking) {
