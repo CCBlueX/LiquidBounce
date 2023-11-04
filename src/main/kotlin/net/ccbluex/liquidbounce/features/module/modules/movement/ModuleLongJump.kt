@@ -105,7 +105,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         val fallDistance by float("FallDistanceToJump", 0.42f, 0f..2f)
         val ticks by int("TicksToWork", 10, 3..500)
 
-        val repeatable = repeatable {
+        val tickJumpHandler = sequenceHandler<TickJumpEvent> {
             if (arrowBoost <= arrowsToShoot) {
                 mc.options.useKey.isPressed = true
                 RotationManager.aimAt(
@@ -124,23 +124,26 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
                 mc.options.useKey.isPressed = false
                 if (player.isUsingItem) interaction.stopUsingItem(player)
                 shotArrows = 0f
-                wait { 5 }
+                waitTicks(5)
                 player.jump()
                 player.strafe(speed = speed.toDouble())
-                wait { ticks }
+                waitTicks(5)
                 arrowBoost = 0f
             }
         }
 
-        val movementRepeatable = repeatable {
-            if (arrowBoost <= arrowsToShoot) return@repeatable
+        // what, why two events here?
+        val tickHandler = handler<TickJumpEvent> {
+            if (arrowBoost <= arrowsToShoot) return@handler
             if (player.fallDistance >= fallDistance) {
                 player.jump()
                 player.fallDistance = 0f
             }
         }
+
         val velocityHandler = handler<PacketEvent> {
             val packet = it.packet
+
             if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && shotArrows > 0.0) {
                 shotArrows--
                 arrowBoost++
@@ -153,7 +156,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         }
     }
 
-    val repeatable = repeatable {
+    val tickHandler = handler<TickJumpEvent> {
         if (jumped) {
             if (player.isOnGround || player.abilities.flying) {
                 if (autoDisable && boosted) enabled = false

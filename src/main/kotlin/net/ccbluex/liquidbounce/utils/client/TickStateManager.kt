@@ -33,11 +33,8 @@ object TickStateManager : Listenable {
     }
 }
 
-class StateUpdateEvent : Event() {
-    val state: ForcedState = ForcedState()
-}
-
 class ForcedState {
+    var enforceJump: Boolean? = null
     var enforceEagle: Boolean? = null
     var enforceLeft: Boolean? = null
     var enforceRight: Boolean? = null

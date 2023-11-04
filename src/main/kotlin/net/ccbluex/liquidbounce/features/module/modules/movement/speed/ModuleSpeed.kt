@@ -16,36 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-package net.ccbluex.liquidbounce.features.module.modules.movement
-
-import net.ccbluex.liquidbounce.event.TickJumpEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Custom
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.LegitHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spartan524
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spartan524GroundTimer
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedYPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Verus
 
 /**
- * Parkour module
+ * Speed module
  *
- * Automatically jumps at the very edge of a block.
+ * Allows you to move faster.
  */
 
-object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
+object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
-    val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
-
-    val tickJumpHandler = handler<TickJumpEvent> {
-        val shouldJump = player.moving &&
-            player.isOnGround &&
-            !player.isSneaking &&
-            !mc.options.sneakKey.isPressed &&
-            !mc.options.jumpKey.isPressed &&
-            player.isCloseToEdge(edgeDistance.toDouble())
-
-        if (shouldJump) {
-            player.jump()
-        }
-    }
+    val modes = choices(
+        "Mode", SpeedYPort, arrayOf(
+            Verus, SpeedYPort, LegitHop, Custom, Spartan524, Spartan524GroundTimer
+        )
+    )
 }
