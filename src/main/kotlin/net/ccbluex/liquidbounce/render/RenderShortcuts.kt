@@ -97,8 +97,9 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
     with(matrixStack) {
         push()
         translate(pos.x, pos.y, pos.z)
-        draw()
-        pop()
+        try { draw() }
+        finally { pop() }
+
     }
 }
 
@@ -110,8 +111,8 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
  */
 fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
     RenderSystem.setShaderColor(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f)
-    draw()
-    RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
+    try { draw() }
+    finally { RenderSystem.setShaderColor(1f, 1f, 1f, 1f) }
 }
 
 /**
@@ -122,8 +123,8 @@ fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> 
  */
 fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
     RenderSystem.disableCull()
-    draw()
-    RenderSystem.enableCull()
+    try { draw() }
+    finally { RenderSystem.enableCull() }
 }
 
 /**
