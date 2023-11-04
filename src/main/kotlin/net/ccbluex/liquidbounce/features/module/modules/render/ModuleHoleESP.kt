@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
+import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -109,22 +110,21 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
+
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val markedBlocks = holes.entries
 
+            val glowHeight = glowHeightSetting.toDouble()
             renderEnvironmentForWorld(matrixStack) {
                 withDisabledCull {
                     for ((pos, quality) in markedBlocks) {
                         val vec3 = Vec3(pos)
                         val fade = calculateFade(pos)
 
-
                         val baseColor = applyFade(quality.baseColor, fade)
                         val transparentColor = baseColor.alpha(0)
                         val outlineColor = applyFade(quality.outlineColor, fade)
-
-                        val glowHeight = glowHeightSetting.toDouble()
 
                         withPosition(vec3) {
                             withColor(baseColor) {
@@ -136,73 +136,66 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
                                 }
                             }
+                            drawGradientSides(this, glowHeight, baseColor, transparentColor, box)
 
-                            if(glowHeight == 0.0) {
-                                return@withPosition
-                            }
 
-                            drawGradientQuad(
-                                listOf(
-                                    Vec3(box.minX, 0.0, box.minZ),
-                                    Vec3(box.minX, glowHeight, box.minZ),
-                                    Vec3(box.maxX, glowHeight, box.minZ),
-                                    Vec3(box.maxX, 0.0, box.minZ),
-                                ),
-                                listOf(
-                                    baseColor,
-                                    transparentColor,
-                                    transparentColor,
-                                    baseColor
-                                )
-                            )
-                            drawGradientQuad(
-                                listOf(
-                                    Vec3(box.maxX, 0.0, box.minZ),
-                                    Vec3(box.maxX, glowHeight, box.minZ),
-                                    Vec3(box.maxX, glowHeight, box.maxZ),
-                                    Vec3(box.maxX, 0.0, box.maxZ),
-                                ),
-                                listOf(
-                                    baseColor,
-                                    transparentColor,
-                                    transparentColor,
-                                    baseColor
-                                )
-                            )
-                            drawGradientQuad(
-                                listOf(
-                                    Vec3(box.maxX, 0.0, box.maxZ),
-                                    Vec3(box.maxX, glowHeight, box.maxZ),
-                                    Vec3(box.minX, glowHeight, box.maxZ),
-                                    Vec3(box.minX, 0.0, box.maxZ),
-                                ),
-                                listOf(
-                                    baseColor,
-                                    transparentColor,
-                                    transparentColor,
-                                    baseColor
-                                )
-                            )
-                            drawGradientQuad(
-                                listOf(
-                                    Vec3(box.minX, 0.0, box.maxZ),
-                                    Vec3(box.minX, glowHeight, box.maxZ),
-                                    Vec3(box.minX, glowHeight, box.minZ),
-                                    Vec3(box.minX, 0.0, box.minZ),
-                                ),
-                                listOf(
-                                    baseColor,
-                                    transparentColor,
-                                    transparentColor,
-                                    baseColor
-
-                                )
-                            )
                         }
 
                     }
                 }
             }
+        }
+    }
+
+    private fun drawGradientSides(renderEnvironment: RenderEnvironment, height: Double, baseColor: Color4b, topColor: Color4b, box: net.minecraft.util.math.Box) {
+
+        if(height == 0.0) { return }
+
+        val vertexColors =
+            listOf(
+                baseColor,
+                topColor,
+                topColor,
+                baseColor
+            )
+
+        with (renderEnvironment) {
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.minX, 0.0, box.minZ),
+                    Vec3(box.minX, height, box.minZ),
+                    Vec3(box.maxX, height, box.minZ),
+                    Vec3(box.maxX, 0.0, box.minZ),
+                ),
+                vertexColors
+            )
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.maxX, 0.0, box.minZ),
+                    Vec3(box.maxX, height, box.minZ),
+                    Vec3(box.maxX, height, box.maxZ),
+                    Vec3(box.maxX, 0.0, box.maxZ),
+                ),
+                vertexColors
+            )
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.maxX, 0.0, box.maxZ),
+                    Vec3(box.maxX, height, box.maxZ),
+                    Vec3(box.minX, height, box.maxZ),
+                    Vec3(box.minX, 0.0, box.maxZ),
+                ),
+                vertexColors
+            )
+            drawGradientQuad(
+                listOf(
+                    Vec3(box.minX, 0.0, box.maxZ),
+                    Vec3(box.minX, height, box.maxZ),
+                    Vec3(box.minX, height, box.minZ),
+                    Vec3(box.minX, 0.0, box.minZ),
+                ),
+                vertexColors
+            )
         }
     }
 
