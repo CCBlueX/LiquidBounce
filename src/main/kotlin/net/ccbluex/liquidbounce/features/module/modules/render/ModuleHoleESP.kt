@@ -207,7 +207,8 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             return 1f
 
         val verticalDistanceFraction = (player.pos.y - pos.y) / verticalDistance
-        val horizontalDistanceFraction = Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
+        val horizontalDistanceFraction =
+            Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
 
         val fade = (1 - max(verticalDistanceFraction, horizontalDistanceFraction)) / distanceFade
 
