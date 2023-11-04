@@ -135,9 +135,6 @@ object LiquidBounce : Listenable {
             // Load config system from disk
             ConfigSystem.load()
 
-            // Initializing things that depend on module values
-            ModuleManager.forEach { it.loadedConfig() }
-
             // Check for newest version
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")

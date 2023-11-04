@@ -304,9 +304,12 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
     override fun enable() {
-        this.movableRegionScanner.clearRegion()
-        updateScanRegion()
         WorldChangeNotifier.subscribe(InvalidationHook)
+
+        this.movableRegionScanner.clearRegion()
+
+        updateScanRegion()
+
     }
 
     override fun disable() {
@@ -315,10 +318,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
 
-    override fun loadedConfig() {
-        if(!enabled) return
-        WorldChangeNotifier.subscribe(InvalidationHook)
-    }
+
 
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {
         override fun invalidate(region: Region, rescan: Boolean) {

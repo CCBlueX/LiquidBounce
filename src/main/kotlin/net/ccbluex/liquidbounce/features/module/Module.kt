@@ -142,13 +142,6 @@ open class Module(
     open fun init() {}
 
     /**
-     * Called when the config has been loaded.
-     *
-     * Useful for initializing things that depend on the values of the module
-     */
-    open fun loadedConfig() {}
-
-    /**
      * Events should be handled when module is enabled
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
