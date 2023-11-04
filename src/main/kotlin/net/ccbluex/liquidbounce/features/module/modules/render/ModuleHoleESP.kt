@@ -127,13 +127,11 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                             }
                             if(outline) {
                                 withColor(outlineColor) {
-                                    drawSideBox(box, Direction.DOWN, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+                                    drawSideBox(box, Direction.DOWN, onlyOutline = true)
 
                                 }
                             }
                             drawGradientSides(this, glowHeight, baseColor, transparentColor, box)
-
-
                         }
 
                     }

@@ -302,8 +302,9 @@ fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Ve
  *
  * @param box The bounding box of the side.
  * @param side The direction of the side.
+ * @param onlyOutline Determines if the function only should draw the outline of the [side] or only fill it in
  */
-fun RenderEnvironment.drawSideBox(box: Box, side: Direction, drawMode: DrawMode = DrawMode.QUADS) {
+fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolean = false){
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
@@ -313,8 +314,12 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, drawMode: DrawMode 
 
     // Draw the vertices of the box
     with(bufferBuilder) {
-        // Begin drawing lines with position format
-        begin(drawMode, VertexFormats.POSITION)
+        // Begin drawing lines or quads with position format
+        begin(
+            if (onlyOutline) DrawMode.DEBUG_LINE_STRIP
+                else DrawMode.QUADS,
+            VertexFormats.POSITION_COLOR
+        )
 
         // Draw the vertices of the box
         val vertices = when (side) {
@@ -360,7 +365,7 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, drawMode: DrawMode 
             vertex(matrix, x, y, z).next()
         }
 
-        if(drawMode == DrawMode.DEBUG_LINE_STRIP){
+        if(onlyOutline){
             vertex(matrix, vertices[0].x, vertices[0].y, vertices[0].z).next()
 
         }
