@@ -12,7 +12,6 @@
     <ID>ComplexCondition:ModuleKillAura.kt$ModuleKillAura$rotation != null &amp;&amp; target != null &amp;&amp; target.boxedDistanceTo(player) &lt;= range &amp;&amp; facingEnemy( target, rotation, range.toDouble(), wallRange.toDouble() )</ID>
     <ID>ComplexCondition:ModuleLiquidWalk.kt$ModuleLiquidWalk.NoCheatPlus$!player.input.sneaking &amp;&amp; !player.isTouchingWater &amp;&amp; standingOnWater() &amp;&amp; !collideBlockIntersects( detectionBox ) { it !is FluidBlock }</ID>
     <ID>ComplexCondition:ModuleLongJump.kt$ModuleLongJump$autoJump &amp;&amp; player.isOnGround &amp;&amp; player.moving &amp;&amp; mode.activeChoice != NCPBow</ID>
-    <ID>ComplexCondition:ModuleParkour.kt$ModuleParkour$player.moving &amp;&amp; player.isOnGround &amp;&amp; !player.isSneaking &amp;&amp; !mc.options.sneakKey.isPressed &amp;&amp; !mc.options.jumpKey.isPressed</ID>
     <ID>ComplexCondition:ModuleRegen.kt$ModuleRegen$(!noAir &amp;&amp; player.isOnGround) &amp;&amp; !player.abilities.creativeMode &amp;&amp; player.health &gt; 0 &amp;&amp; player.health &lt; health</ID>
     <ID>ComplexCondition:ModuleSuperKnockback.kt$ModuleSuperKnockback.Packet$enemy is LivingEntity &amp;&amp; enemy.hurtTime &lt;= hurtTime &amp;&amp; chance &gt; Random.nextInt( 0, 99 ) &amp;&amp; !ModuleCriticals.wouldCrit()</ID>
     <ID>ComplexCondition:ModuleTimerRange.kt$ModuleTimerRange$(balanceTimer &gt; 0 || balanceChange &gt; 0) &amp;&amp; (balanceTimer &lt; timerBalanceLimit * 2 || balanceChange &lt; 0)</ID>
@@ -37,6 +36,7 @@
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:SimulatedPlayer.kt$SimulatedPlayer$override fun tick()</ID>
+    <ID>CyclomaticComplexMethod:TargetTracker.kt$TargetTracker$fun enemies(enemyConf: EnemyConfigurable = globalEnemyConfigurable): Iterable&lt;Entity&gt;</ID>
     <ID>CyclomaticComplexMethod:VertexFormat.kt$DelegatedVertexFormatComponent$operator fun setValue(thisRef: Any?, property: KProperty&lt;*&gt;, value: T)</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyDefaultConstructor:DefaultVertexFormats.kt$PositionColorUVVertexFormat$()</ID>
@@ -149,7 +149,6 @@
     <ID>MaxLineLength:ModuleNametags.kt$ModuleNametags$if (pingValue &amp;&amp; entity is PlayerEntity) (if (ping &gt; 200) "§c" else if (ping &gt; 100) "§e" else "§a") + ping + "ms §7" else ""</ID>
     <ID>MaxLineLength:ModuleNoFall.kt$ModuleNoFall.MLG$if</ID>
     <ID>MaxLineLength:ModuleNoWeb.kt$ModuleNoWeb$notification("Compatibility error", "NoWeb is incompatible with AvoidHazards", NotificationEvent.Severity.ERROR)</ID>
-    <ID>MaxLineLength:ModuleParkour.kt$ModuleParkour$if</ID>
     <ID>MaxLineLength:ModuleRegen.kt$ModuleRegen$if</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else AdvancedRotation.DEFAULT_Y_RANGE.toDouble()</ID>
@@ -187,6 +186,7 @@
     <ID>MaxLineLength:Tabs.kt$Tabs$createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")</ID>
     <ID>MaxLineLength:TargetFinding.kt$fun</ID>
     <ID>MaxLineLength:TargetFinding.kt$private</ID>
+    <ID>MaxLineLength:TargetTracker.kt$TargetTracker$(!ModuleMurderMystery.enabled || (it is AbstractClientPlayerEntity &amp;&amp; ModuleMurderMystery.shouldAttack(it)))</ID>
     <ID>MaxLineLength:TargetTracker.kt$TargetTracker$PriorityEnum.HURT_TIME -&gt; entities.sortedBy { if (it is LivingEntity) it.hurtTime else 0 }</ID>
     <ID>MaxLineLength:UltralightEngine.kt$UltralightEngine$get() = viewOverlays.find { it is ScreenViewOverlay &amp;&amp; mc.currentScreen == it.screen &amp;&amp; it.state == ViewOverlayState.VISIBLE }</ID>
     <ID>MaxLineLength:UltralightJsClient.kt$UltralightJsClient.MinecraftSession$if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) &amp;&amp; mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"</ID>
@@ -207,7 +207,6 @@
     <ID>MaxLineLength:WeightedSwordItem.kt$WeightedSwordItem.Companion$return</ID>
     <ID>MaxLineLength:WeightedToolItem.kt$WeightedToolItem.Companion$(o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)</ID>
     <ID>MemberNameEqualsClassName:ModuleBlockESP.kt$ModuleBlockESP.Box$// todo: use box of block, not hardcoded private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
-    <ID>MemberNameEqualsClassName:ModuleHoleESP.kt$ModuleHoleESP.Box$private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
     <ID>MemberNameEqualsClassName:ModuleStorageESP.kt$ModuleStorageESP.Box$// todo: use box of block, not hardcoded private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.FastClimb.Motion$private val motion by float("Motion", 0.2872F, 0.1f..0.5f)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.IceSpeed.Motion$val motion by float("Motion", 0.5f, 0.2f..1.5f)</ID>
