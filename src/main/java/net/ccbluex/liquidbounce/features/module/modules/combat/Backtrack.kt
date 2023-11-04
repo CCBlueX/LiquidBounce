@@ -159,8 +159,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
+        val module = Blink
         if (mode == "Modern") {
-            if (shouldBacktrack() && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+            if (!(module.blinkingReceive()) && shouldBacktrack() && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
                 handlePackets()
             } else {
                 clearPackets()
