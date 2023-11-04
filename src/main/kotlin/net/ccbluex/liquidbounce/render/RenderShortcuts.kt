@@ -318,7 +318,7 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
         begin(
             if (onlyOutline) DrawMode.DEBUG_LINE_STRIP
                 else DrawMode.QUADS,
-            VertexFormats.POSITION_COLOR
+            VertexFormats.POSITION
         )
 
         // Draw the vertices of the box
