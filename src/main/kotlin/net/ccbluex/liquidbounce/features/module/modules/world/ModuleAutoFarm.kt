@@ -213,18 +213,27 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private var invHadSpace = false
 
     private var farmLandBlocks = hashSetOf<Vec3d>()
-    val velocityHandler = handler<PlayerVelocityStrafe> { event ->
-        chat("movementInput: ${event.movementInput} Speed: ${event.speed}")
+//    val velocityHandler = handler<PlayerVelocityStrafe> { event ->
+//        if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
+//            return@handler
+//        }
+//
+//        RotationManager.currentRotation?.let { rotation ->
+//            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed, rotation.yaw)
+//        }
+//
+////        Vec3d vec3d = Entity.movementInputToVelocity(movementInput, speed, this.getYaw());
+////        this.setVelocity(this.getVelocity().add(vec3d));
+//    }
+
+    val moveInputHandler = handler<PlayerMoveInputEvent> { event ->
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
             return@handler
         }
 
-        RotationManager.currentRotation?.let { rotation ->
-            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed, rotation.yaw)
-        }
+        event.forward = 1f
 
-//        Vec3d vec3d = Entity.movementInputToVelocity(movementInput, speed, this.getYaw());
-//        this.setVelocity(this.getVelocity().add(vec3d));
+        player.isSprinting = true
     }
 
     val networkTickHandler = repeatable { _ ->
@@ -447,7 +456,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 state,
                 range = range.toDouble(),
                 wallsRange = wallRange.toDouble()
-            ) ?: continue // We don't have a free angle at the block? Well let me see the next.
+            ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
 
             // set currentTarget to the new target
             this.currentTarget = pos

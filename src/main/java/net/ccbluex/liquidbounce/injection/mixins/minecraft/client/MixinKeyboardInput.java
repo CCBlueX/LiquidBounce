@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.MovementInputEvent;
+import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.event.PlayerMoveInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -103,8 +105,11 @@ public class MixinKeyboardInput extends MixinInput {
         float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
         float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
 
-        this.movementSideways = Math.round(newX);
-        this.movementForward = Math.round(newZ);
+        final PlayerMoveInputEvent MoveInputEvent = new PlayerMoveInputEvent(Math.round(newZ), Math.round(newX));
+        EventManager.INSTANCE.callEvent(MoveInputEvent);
+
+        this.movementSideways = MoveInputEvent.getSideways();
+        this.movementForward = MoveInputEvent.getForward();
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;sneakKey:Lnet/minecraft/client/option/KeyBinding;", shift = At.Shift.AFTER))
