@@ -52,9 +52,6 @@ val ClientPlayerEntity.moving
 
 
 fun ClientPlayerEntity.isCloseToEdge(distance: Double = 0.1): Boolean {
-    if (!this.pos.add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
-        return true
-
     val alpha = (this.directionYaw + 90.0F).toRadians()
 
     val from = this.pos + Vec3d(0.0, -0.1, 0.0)

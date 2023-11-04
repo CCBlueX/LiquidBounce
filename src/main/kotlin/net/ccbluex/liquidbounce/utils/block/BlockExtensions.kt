@@ -36,12 +36,16 @@ fun BlockPos.getState() = mc.world?.getBlockState(this)
 fun BlockPos.getBlock() = getState()?.block
 
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
+
 fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
 
 /**
  * Search blocks around the player in a cuboid
  */
-inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+inline fun searchBlocksInCuboid(
+    a: Int,
+    filter: (BlockPos, BlockState) -> Boolean,
+): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
     val thePlayer = mc.player ?: return blocks
@@ -64,12 +68,26 @@ inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -> Boolea
     return blocks
 }
 
+inline fun forEachBlockPosBetween(
+    from: BlockPos,
+    to: BlockPos,
+    action: (BlockPos) -> Unit,
+) {
+    for (x in from.x..to.x) {
+        for (y in from.y..to.y) {
+            for (z in from.z..to.z) {
+                action(BlockPos(x, y, z))
+            }
+        }
+    }
+}
+
 /**
  * Search blocks around the player in a specific [radius]
  */
 inline fun searchBlocksInRadius(
     radius: Float,
-    filter: (BlockPos, BlockState) -> Boolean
+    filter: (BlockPos, BlockState) -> Boolean,
 ): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
@@ -107,7 +125,10 @@ fun BlockPos.canStandOn(): Boolean {
 /**
  * Check if [box] is reaching of specified blocks
  */
-fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
+fun isBlockAtPosition(
+    box: Box,
+    isCorrectBlock: (Block?) -> Boolean,
+): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
             val block = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble()).getBlock()
@@ -124,7 +145,10 @@ fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
 /**
  * Check if [box] intersects with bounding box of specified blocks
  */
-fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
+fun collideBlockIntersects(
+    box: Box,
+    isCorrectBlock: (Block?) -> Boolean,
+): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
             val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
@@ -163,15 +187,19 @@ fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
     }
 }
 
-fun BlockState.canBeReplacedWith(pos: BlockPos, usedStack: ItemStack): Boolean {
-    val placementContext = ItemPlacementContext(
-        mc.player,
-        Hand.MAIN_HAND,
-        usedStack,
-        BlockHitResult(Vec3d.of(pos), Direction.UP, pos, false)
-    )
+fun BlockState.canBeReplacedWith(
+    pos: BlockPos,
+    usedStack: ItemStack,
+): Boolean {
+    val placementContext =
+        ItemPlacementContext(
+            mc.player,
+            Hand.MAIN_HAND,
+            usedStack,
+            BlockHitResult(Vec3d.of(pos), Direction.UP, pos, false),
+        )
 
     return canReplace(
-        placementContext
+        placementContext,
     )
 }

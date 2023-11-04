@@ -1,27 +1,27 @@
 package net.ccbluex.liquidbounce.utils.movement
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.forEachBlockPosBetween
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.EntityPose
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.jvm.optionals.getOrNull
 import kotlin.math.atan2
-import kotlin.math.sqrt
 
 data class DirectionalInput(
     val forwards: Boolean,
     val backwards: Boolean,
     val left: Boolean,
-    val right: Boolean
+    val right: Boolean,
 ) {
     constructor(input: Input) : this(input.pressingForward, input.pressingBack, input.pressingLeft, input.pressingRight)
 
@@ -31,13 +31,6 @@ data class DirectionalInput(
     }
 }
 
-val HORIZONTAL_DIRECTIONS: Array<Direction> = arrayOf(
-    Direction.NORTH,
-    Direction.EAST,
-    Direction.SOUTH,
-    Direction.WEST,
-)
-
 /**
  * Returns the yaw difference the position is from the player position
  *
@@ -45,7 +38,7 @@ val HORIZONTAL_DIRECTIONS: Array<Direction> = arrayOf(
  */
 fun getDegreesRelativeToView(
     positionRelativeToPlayer: Vec3d,
-    yaw: Float = RotationManager.currentRotation?.yaw ?: mc.player!!.yaw
+    yaw: Float = RotationManager.currentRotation?.yaw ?: mc.player!!.yaw,
 ): Float {
     val optimalYaw =
         atan2(-positionRelativeToPlayer.x, positionRelativeToPlayer.z).toFloat()
@@ -57,7 +50,7 @@ fun getDegreesRelativeToView(
 fun getDirectionalInputForDegrees(
     directionalInput: DirectionalInput,
     dgs: Float,
-    deadAngle: Float = 20.0F
+    deadAngle: Float = 20.0F,
 ): DirectionalInput {
     var forwards = directionalInput.forwards
     var backwards = directionalInput.backwards
@@ -79,57 +72,105 @@ fun getDirectionalInputForDegrees(
     return DirectionalInput(forwards, backwards, left, right)
 }
 
-fun findEdgeCollision(from: Vec3d, to: Vec3d, currentPos: BlockPos = from.toBlockPos()): Vec3d? {
-    if (!currentPos.canStandOn()) {
-        // If the line enters this box, the player would fall of this block
-        val fallOfBox = getFallOfBox(currentPos)
+fun findEdgeCollision(
+    from: Vec3d,
+    to: Vec3d,
+    allowedDropDown: Float = 0.5F,
+): Vec3d? {
+    val boundingBoxes = collectCollisionBoundingBoxes(from, to, allowedDropDown)
 
-        val locationWherePlayerFallsOf = fallOfBox.raycast(
-            to.add(to.subtract(from).normalize().multiply(sqrt(2.0))),
-            from
-        ).getOrNull()
+    var currentFrom = from
 
-        if (locationWherePlayerFallsOf != null) {
-            return locationWherePlayerFallsOf
+    val lineVec = to.subtract(from)
+    val extendedFrom = from - lineVec * 1000.0
+    val extendedTo = to + lineVec * 1000.0
+
+    while (true) {
+        val boxesContainingFrom = boundingBoxes.filter { it.contains(currentFrom) }
+
+        // If there is no bounding box containing from, we would fall off
+        if (boxesContainingFrom.isEmpty()) {
+            return currentFrom
+        }
+
+        // If there is a bounding box that contains from and to, we won't collide with an edge
+        if (boxesContainingFrom.any { it.contains(to) }) {
+            return null
+        }
+
+        currentFrom =
+            boxesContainingFrom.map {
+                val res = it.raycast(extendedTo, extendedFrom)
+
+                // This ray-cast should never fail.
+                res.orElseThrow { IllegalArgumentException("Raycast failed. This should be impossible.") }
+            }.minBy { it.squaredDistanceTo(to) }
+
+        boundingBoxes.removeAll(boxesContainingFrom)
+    }
+}
+
+private fun collectCollisionBoundingBoxes(
+    from: Vec3d,
+    to: Vec3d,
+    allowedDropDown: Float,
+): ArrayList<Box> {
+    val playerDims = mc.player!!.getDimensions(EntityPose.STANDING)
+
+    val fromBox: Box = playerDims.getBoxAt(from)
+    val toBox: Box = playerDims.getBoxAt(to)
+
+    val unionBox = fromBox.union(toBox)
+
+    val fromBlockPos =
+        BlockPos.ofFloored(
+            unionBox.minX - 0.3 - 1.0E-7,
+            unionBox.minY - allowedDropDown - 1.0E-7,
+            unionBox.minZ - 0.3 - 1.0E-7,
+        )
+    val toBlockPos =
+        BlockPos.ofFloored(
+            unionBox.maxX + 0.3 + 1.0E-7,
+            unionBox.minY + 1.0E-7,
+            unionBox.maxZ + 0.3 + 1.0E-7,
+        )
+
+    val lineVec = to.subtract(from)
+    val extendedFrom = from - lineVec * 1000.0
+    val extendedTo = to + lineVec * 1000.0
+
+    val foundBoxes = ArrayList<Box>()
+
+    val world = mc.world!!
+
+    forEachBlockPosBetween(fromBlockPos, toBlockPos) { pos ->
+        val state = world.getBlockState(pos)
+
+        val collisionShape = state.getCollisionShape(world, pos)
+
+        for (boundingBox in collisionShape.boundingBoxes) {
+            val adjustedBox =
+                Box(
+                    boundingBox.minX - 0.3,
+                    boundingBox.minY - 1.0,
+                    boundingBox.minZ - 0.3,
+                    boundingBox.maxX + 0.3,
+                    boundingBox.maxY + allowedDropDown + 0.05,
+                    boundingBox.maxZ + 0.3,
+                ).offset(pos)
+
+            if (adjustedBox.raycast(extendedFrom, extendedTo) == null) {
+                continue
+            }
+
+            foundBoxes.add(adjustedBox)
         }
     }
 
-    // As long as the player moves inside this box, everything is ok.
-    val blockSafetyArea = Box(currentPos).expand(0.3, 1.0, 0.3)
-
-    val pointWhereLineLeavesBlock = blockSafetyArea.raycast(to, from).getOrNull() ?: return null
-
-    // The checked line ends within this block. No edge collisions where found
-
-    return findEdgeCollision(
-        from = pointWhereLineLeavesBlock,
-        to = to,
-        currentPos = pointWhereLineLeavesBlock.toBlockPos()
-    )
+    return foundBoxes
 }
 
 fun ClientPlayerEntity.zeroXZ() {
     this.velocity.x = 0.0
     this.velocity.z = 0.0
-}
-fun getFallOfBox(currentPos: BlockPos): Box {
-    var minX = 0.0
-    var minZ = 0.0
-    var maxX = 1.0
-    var maxZ = 1.0
-
-    if (currentPos.add(1, 0, 0).canStandOn()) {
-        maxX = 0.7
-    }
-    if (currentPos.add(-1, 0, 0).canStandOn()) {
-        minX = 0.3
-    }
-    if (currentPos.add(0, 0, 1).canStandOn()) {
-        maxZ = 0.7
-    }
-    if (currentPos.add(0, 0, -1).canStandOn()) {
-        minZ = 0.3
-    }
-
-    return Box(Vec3d.of(currentPos).add(minX, 0.0, minZ), Vec3d.of(currentPos).add(maxX, 1.5, maxZ))
 }
