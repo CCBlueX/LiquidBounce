@@ -101,8 +101,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val optimizeForCooldown by boolean("OptimizeForCooldown", true)
 
+        val checkKillaura by boolean("CheckKillaura", false)
+        val checkTrigger by boolean("CheckTrigger", false)
+
         val tickHandler = handler<TickJumpEvent> {
             if (!enabled) return@handler
+
+            if(!ModuleKillAura.enabled)
 
             if (!canCrit(player, true)) {
                 return@handler
