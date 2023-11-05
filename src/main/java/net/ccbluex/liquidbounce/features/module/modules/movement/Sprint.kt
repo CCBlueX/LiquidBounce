@@ -22,7 +22,7 @@ import kotlin.math.abs
 object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false) {
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
-    val sprintRegardless by BoolValue("SprintRegardless", true) 
+    val independantOnSprintKey by BoolValue("IndependantOnSprintKeyPress", true) 
 
     val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
 
@@ -60,7 +60,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
     fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
         val player = mc.thePlayer ?: return
 
-        if (!sprintRegardless && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown)
+        if (!independantOnSprintKey && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown)
             return
 
         if (Scaffold.handleEvents()) {
