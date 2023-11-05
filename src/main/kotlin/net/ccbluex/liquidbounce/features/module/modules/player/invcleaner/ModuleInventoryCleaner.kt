@@ -34,6 +34,7 @@ import net.minecraft.screen.slot.SlotActionType
  */
 
 object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
+
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
 
     val maxBlocks by int("MaxBlocks", 512, 0..3000)
