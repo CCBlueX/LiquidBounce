@@ -138,10 +138,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                         clearPackets()
                         return
                     }
-                    
-                    is S02PacketChat -> {
-                        return
-                    }
+
                     is S29PacketSoundEffect -> {
                         if (!packet.getSoundName().contains("player.game.hurt") && !packet.getSoundName().contains("entity.player.hurt")) return
                     }
