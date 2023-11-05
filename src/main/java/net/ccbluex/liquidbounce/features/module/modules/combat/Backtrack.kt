@@ -29,6 +29,7 @@ import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S40PacketDisconnect
 import net.minecraft.network.play.server.S06PacketUpdateHealth
+import net.minecraft.network.play.server.S29PacketSoundEffect
 import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
@@ -136,6 +137,13 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
                         clearPackets()
                         return
+                    }
+                    
+                    is S02PacketChat -> {
+                        return
+                    }
+                    is S29PacketSoundEffect -> {
+                        if (!packet.getSoundName().contains("player.game.hurt") && !packet.getSoundName().contains("entity.player.hurt")) return
                     }
                     // Flush on own death
                     is S06PacketUpdateHealth -> {
