@@ -22,7 +22,7 @@ import kotlin.math.abs
 object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false) {
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
-    val onlyIfSprintKey by BoolValue("RequiresSprintKeyToBePressed", true) 
+    val onlyIfSprintKey by BoolValue("DoNothingIfNotPressingSprintKey", true) 
 
     val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
 
