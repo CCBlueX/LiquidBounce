@@ -144,11 +144,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     val vec = landingPosition.entity
                         .interpolateCurrentPosition(event.partialTicks)
 
-                    withPosition(vec) {
-                        withColor(Color4b(255, 0, 0, 100)) {
-                            drawSolidBox(landingPosition.entity.box)
-                        }
+                    withColor(Color4b(255, 0, 0, 100)) {
+                        drawSolidBox(landingPosition.entity.box)
                     }
+
                 }
             }
         }
