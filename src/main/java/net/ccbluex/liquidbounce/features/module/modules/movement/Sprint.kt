@@ -22,6 +22,8 @@ import kotlin.math.abs
 object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false) {
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
+    val onlyIfSprintKey by BoolValue("OnlyIfSprintKey", true) 
+
     val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
 
     val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
@@ -45,6 +47,8 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
 
     private val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
 
+    private val strictMode by BoolValue("StrictMode", false) { mode == "Vanilla" }
+
     private val checkServerSideGround by BoolValue(
         "CheckServerSideOnlyGround",
         false
@@ -57,6 +61,9 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
 
     fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
         val player = mc.thePlayer ?: return
+
+        if (onlyIfSprintKey && !player.isSprinting)
+            return
 
         if (Scaffold.handleEvents()) {
             if (!Scaffold.sprint) {
@@ -71,7 +78,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
         if (handleEvents()) {
             player.isSprinting = !shouldStopSprinting(movementInput, isUsingItem)
 
-            if (player.isSprinting && allDirections && mode != "Legit") {
+            if (player.isSprinting && allDirections && mode != "Legit" && !strictMode) {
                 if (!allDirectionsLimitSpeedGround || mc.thePlayer.onGround) {
                     mc.thePlayer.motionX *= allDirectionsLimitSpeed
                     mc.thePlayer.motionZ *= allDirectionsLimitSpeed
@@ -115,7 +122,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             return true
         }
 
-        if (isLegitModeActive) {
+        if (strictMode || isLegitModeActive) {
             return modifiedForward < 0.8
         }
 
