@@ -27,6 +27,7 @@ import net.minecraft.network.Packet
 import net.minecraft.network.play.server.S0CPacketSpawnPlayer
 import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.S40PacketDisconnect
 import net.minecraft.network.play.server.S06PacketUpdateHealth
 import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
@@ -126,8 +127,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
 
                 when (packet) {
-                    // Flush on teleport
-                    is S08PacketPlayerPosLook -> {
+                    // Flush on teleport or disconnect
+                    is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
                         clearPackets()
                         return
                     }
@@ -138,7 +139,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             return
                         }
                     }
-                    // Insert checks that check for if S13PacketDestroyEntities and target is a part of them then set target to null and clearPackets()
+                    // Insert checks that check for if S13PacketDestroyEntities and target is a part of the entities deleted then set target to null and clearPackets()
                     // Insert checks that check for if S1CPacketEntityMetadata and entity is target and in that metadata, health is set to 0 or less then set target to null and clearPackets()
                 }
 
