@@ -129,7 +129,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     return
                 }
 
-                if (packet is S29PacketSoundEffect || packet is S02PacketChat || packet is S0BPacketAnimation || packet is S2APacketParticles || packet is S06PacketUpdateHealth) return
+                if (packet is S29PacketSoundEffect || packet is S02PacketChat || packet is S0BPacketAnimation || packet is S2APacketParticles) return
 
                 when (packet) {
                     // Flush on teleport
