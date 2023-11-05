@@ -27,6 +27,8 @@ import net.minecraft.network.Packet
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.play.server.S02PacketChat
+import net.minecraft.network.play.server.S40PacketDisconnect
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.status.client.C00PacketServerQuery
@@ -67,7 +69,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
             return
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing -> {
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
                 return
             }
         }
