@@ -232,7 +232,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
      */
     private fun createCleanupPlan(screen: GenericContainerScreen): InventoryCleanupPlan {
-        val cleanupPlan = if (!enabled) {
+        val cleanupPlan = if (!ModuleInventoryCleaner.enabled) {
             val usefulItems = screen.screenHandler.slots
                 .filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
                 .map { PLAYER_INVENTORY_SIZE + it.id }
