@@ -43,22 +43,25 @@ object ModuleTeams : Module("Teams", Category.MISC) {
             return false
         }
 
-        val thePlayer = mc.player ?: return false
-
-        if (scoreboard && thePlayer.isTeammate(entity)) {
+        if (scoreboard && player.isTeammate(entity)) {
             return true
         }
 
-        val displayName = thePlayer.displayName
+        val displayName = player.displayName
+        val entityDisplayName = entity.displayName
 
-        if (gommeSW && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.string.replace("§r", "")
-            val clientName = displayName.string.replace("§r", "")
+        if (displayName == null || entityDisplayName == null) {
+            return false
+        }
 
-            if (targetName.length < 2 || clientName.length < 2) {
-                return false
-            }
+        val targetName = entityDisplayName.string.replace("§r", "")
+        val clientName = displayName.string.replace("§r", "")
 
+        if (targetName.length < 2 || clientName.length < 2) {
+            return false
+        }
+
+        if (gommeSW) {
             if (targetName.startsWith("T") && clientName.startsWith("T")) {
                 if (targetName[1].isDigit() && clientName[1].isDigit()) {
                     return targetName[1] == clientName[1]
@@ -66,14 +69,7 @@ object ModuleTeams : Module("Teams", Category.MISC) {
             }
         }
 
-        if (color && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.string.replace("§r", "")
-            val clientName = displayName.string.replace("§r", "")
-
-            if (targetName.length < 2 || clientName.length < 2) {
-                return false
-            }
-
+        if (color && entity.displayName != null) {
             return targetName.startsWith("§${clientName[1]}")
         }
 
