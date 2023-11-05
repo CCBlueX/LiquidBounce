@@ -73,6 +73,9 @@ class EnemyConfigurable : Configurable("Enemies") {
     // Dead entities should NOT be considered as an enemy - but this is useful to bypass anti-cheats
     var dead by boolean("Dead", false)
 
+    // Sleeping entities should NOT be considered as an enemy
+    var sleeping by boolean("Sleeping", false)
+
     // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
     var friends by boolean("Friends", false)
 
@@ -90,6 +93,11 @@ class EnemyConfigurable : Configurable("Enemies") {
     fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
         // Check if the enemy is living and not dead (or ignore being dead)
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
+            // Check if enemy is sleeping (or ignore being sleeping)
+            if (suspect.isSleeping && !sleeping) {
+                return false
+            }
+
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
                 if (attackable && !teamMates && ModuleTeams.isInClientPlayersTeam(suspect)) {
