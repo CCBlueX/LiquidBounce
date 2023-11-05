@@ -216,7 +216,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         if(!JumpCrit.checkKillaura && !JumpCrit.checkTrigger)
             return true
 
-        return (!ModuleKillAura.enabled || !JumpCrit.checkKillaura) && (!ModuleTrigger.enabled || !JumpCrit.checkTrigger)
+        return (ModuleKillAura.enabled && JumpCrit.checkKillaura) || (ModuleTrigger.enabled && JumpCrit.checkTrigger)
     }
 
 
