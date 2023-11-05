@@ -28,6 +28,10 @@ import net.minecraft.network.play.server.S0CPacketSpawnPlayer
 import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S06PacketUpdateHealth
+import net.minecraft.network.play.server.S29PacketSoundEffect
+import net.minecraft.network.play.server.S02PacketChat
+import net.minecraft.network.play.server.S0BPacketAnimation
+import net.minecraft.network.play.server.S2APacketParticles
 import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
