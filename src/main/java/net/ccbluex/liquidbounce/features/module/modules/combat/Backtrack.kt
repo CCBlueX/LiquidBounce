@@ -133,6 +133,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     is S02PacketChat -> {
                         return
                     }
+
                     // Flush on teleport or disconnect
                     is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
                         clearPackets()
