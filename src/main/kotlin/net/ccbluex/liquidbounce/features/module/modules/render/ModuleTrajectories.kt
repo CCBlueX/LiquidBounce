@@ -141,7 +141,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 }
             } else if (landingPosition is EntityHitResult) {
                 renderEnvironmentForWorld(matrixStack) {
-                    val vec = landingPosition.entity
+                    landingPosition.entity
                         .interpolateCurrentPosition(event.partialTicks)
 
                     withColor(Color4b(255, 0, 0, 100)) {
