@@ -47,8 +47,6 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
 
     private val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
 
-    private val strictMode by BoolValue("StrictMode", false) { mode == "Vanilla" }
-
     private val checkServerSideGround by BoolValue(
         "CheckServerSideOnlyGround",
         false
@@ -62,7 +60,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
     fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
         val player = mc.thePlayer ?: return
 
-        if (onlyIfSprintKey && !player.isSprinting)
+        if (onlyIfSprintKey && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown)
             return
 
         if (Scaffold.handleEvents()) {
@@ -122,7 +120,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             return true
         }
 
-        if (strictMode || isLegitModeActive) {
+        if (isLegitModeActive) {
             return modifiedForward < 0.8
         }
 
