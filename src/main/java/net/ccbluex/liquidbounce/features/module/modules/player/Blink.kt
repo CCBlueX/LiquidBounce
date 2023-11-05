@@ -45,7 +45,6 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
     private val mode by ListValue("Mode", arrayOf("Sent", "Received", "Both"), "Sent")
     private val pulseTimer = MSTimer()
-    private var isCleaning = 0
 
     override fun onEnable() {
         pulseTimer.reset()
@@ -75,7 +74,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
         when (mode.lowercase()) {
             "sent" -> {
-                if (event.eventType == EventState.RECEIVE && isCleaning == 0) {
+                if (event.eventType == EventState.RECEIVE) {
                     handlePackets(*packetsReceived.toTypedArray())
                     packetsReceived.clear()
                 }
@@ -85,7 +84,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                 }
             }
             "received" -> {
-                if (event.eventType == EventState.RECEIVE && isCleaning == 0 && mc.thePlayer.ticksExisted > 10) {
+                if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
                     event.cancelEvent()
                     packetsReceived += packet
                 }
@@ -95,7 +94,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                 }
             }
             "both" -> {
-                if (event.eventType == EventState.RECEIVE && isCleaning == 0 && mc.thePlayer.ticksExisted > 10) {
+                if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
                     event.cancelEvent()
                     packetsReceived += packet
                 }
@@ -183,9 +182,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         get() = (packets.size + packetsReceived.size).toString()
 
     private fun blink() {
-        isCleaning = 1
         handlePackets(*packetsReceived.toTypedArray())
-        isCleaning = 0
         sendPackets(*packets.toTypedArray(), triggerEvents = false)
 
         packets.clear()
@@ -222,4 +219,5 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     }
 
     fun blinkingSend() = handleEvents() && (mode == "Sent" || mode == "Both")
+    fun blinkingReceive() = handleEvents() && (mode == "Received" || mode == "Both")
 }

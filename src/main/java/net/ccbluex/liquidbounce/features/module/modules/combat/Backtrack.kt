@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.Blink;
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePacket
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToBox
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
@@ -25,6 +26,8 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.S0CPacketSpawnPlayer
 import net.minecraft.network.play.server.S14PacketEntity
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.S06PacketUpdateHealth
 import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -84,6 +87,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
         val packet = event.packet
 
+        val module = Blink
+
+        if (module.blinkingReceive())
+            return
+
         when (mode.lowercase()) {
             "legacy" -> {
                 when (packet) {
@@ -117,6 +125,23 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     return
                 }
 
+                when (packet) {
+                    // Flush on teleport
+                    is S08PacketPlayerPosLook -> {
+                        clearPackets()
+                        return
+                    }
+                    // Flush on own death
+                    is S06PacketUpdateHealth -> {
+                        if (packet.getHealth() <= 0) {
+                            clearPackets()
+                            return
+                        }
+                    }
+                    // Insert checks that check for if S13PacketDestroyEntities and target is a part of them then set target to null and clearPackets()
+                    // Insert checks that check for if S1CPacketEntityMetadata and entity is target and in that metadata, health is set to 0 or less then set target to null and clearPackets()
+                }
+
                 // Cancel every received packet to avoid possible server synchronization issues from random causes.
                 if (event.eventType == EventState.RECEIVE) {
                     if (packet is S14PacketEntity && packet.getEntity(world) == target) {
@@ -134,8 +159,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
+        val module = Blink
         if (mode == "Modern") {
-            if (shouldBacktrack() && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+            if (!(module.blinkingReceive()) && shouldBacktrack() && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
                 handlePackets()
             } else {
                 clearPackets()
@@ -146,6 +172,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
+        // Clear every packets, start again on enemy change
+        if (target != event.targetEntity) {
+            clearPackets()
+        }
+
         target = event.targetEntity
     }
 
@@ -238,7 +269,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     fun onWorld(event: WorldEvent) {
         // Clear packets on disconnect only
         if (mode == "Modern" && event.worldClient == null) {
-            clearPackets()
+            clearPackets(false)
         }
     }
 
