@@ -29,6 +29,7 @@ import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S40PacketDisconnect
 import net.minecraft.network.play.server.S06PacketUpdateHealth
+import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -127,6 +128,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
 
                 when (packet) {
+                    // Ignore chat packets
+                    is S02PacketChat -> {
+                        return
+                    }
                     // Flush on teleport or disconnect
                     is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
                         clearPackets()
