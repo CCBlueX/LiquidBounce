@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.WindowFocusEvent;
 import net.ccbluex.liquidbounce.event.WindowResizeEvent;
+import net.ccbluex.liquidbounce.features.misc.HideClient;
 import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.Window;
 import net.minecraft.resource.InputSupplier;
@@ -65,6 +66,10 @@ public class MixinWindow {
      */
     @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Icons;getIcons(Lnet/minecraft/resource/ResourcePack;)Ljava/util/List;"))
     private List<InputSupplier<InputStream>> setupIcon(Icons instance, ResourcePack resourcePack) throws IOException {
+        if (HideClient.INSTANCE.isHidingNow()) {
+            return instance.getIcons(resourcePack);
+        }
+
         LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
 
         // Find client icons

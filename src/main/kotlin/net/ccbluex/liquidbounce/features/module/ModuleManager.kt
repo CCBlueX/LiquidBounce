@@ -123,6 +123,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoChatGame,
             ModuleDebugRecorder,
             ModuleCapeTransfer,
+            ModuleHideClient,
 
             // Movement
             ModuleAirJump,

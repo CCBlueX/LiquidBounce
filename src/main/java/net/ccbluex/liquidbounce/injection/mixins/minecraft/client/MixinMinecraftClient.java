@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.features.misc.HideClient;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
@@ -123,6 +124,10 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "getWindowTitle", at = @At("HEAD"), cancellable = true)
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
+        if (HideClient.INSTANCE.isHidingNow()) {
+            return;
+        }
+
         LiquidBounce.INSTANCE.getLogger().debug("Modifying window title");
 
         StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
