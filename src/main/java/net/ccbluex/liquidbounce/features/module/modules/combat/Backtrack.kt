@@ -35,7 +35,6 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
