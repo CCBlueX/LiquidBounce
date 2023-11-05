@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
 import net.ccbluex.liquidbounce.utils.client.isOldCombat
@@ -69,7 +70,7 @@ class EnemyConfigurable : Configurable("Enemies") {
     // Invisible entities should be also considered as an enemy
     var invisible by boolean("Invisible", true)
 
-    // Dead entities should be also considered as an enemy to bypass modern anti cheat techniques
+    // Dead entities should NOT be considered as an enemy - but this is useful to bypass anti-cheats
     var dead by boolean("Dead", false)
 
     // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
@@ -102,6 +103,11 @@ class EnemyConfigurable : Configurable("Enemies") {
                     }
 
                     if (suspect is AbstractClientPlayerEntity) {
+                        if (ModuleFocus.enabled && (attackable || !ModuleFocus.combatFocus)
+                            && !ModuleFocus.isInFocus(suspect)) {
+                            return false
+                        }
+
                         if (attackable && ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(suspect)) {
                             return false
                         }

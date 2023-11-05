@@ -2,6 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
+    <ID>ComplexCondition:CombatExtensions.kt$EnemyConfigurable$ModuleFocus.enabled &amp;&amp; (attackable || !ModuleFocus.combatFocus) &amp;&amp; !ModuleFocus.isInFocus(suspect)</ID>
     <ID>ComplexCondition:Command.kt$Command$offset == 0 &amp;&amp; isNewParameter || offset == 1 &amp;&amp; !isNewParameter</ID>
     <ID>ComplexCondition:GlfwInputAdapter.kt$GlfwInputAdapter$(action == GLFW_PRESS || action == GLFW_REPEAT) &amp;&amp; (key == GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_TAB)</ID>
     <ID>ComplexCondition:ModuleAutoWeapon.kt$ModuleAutoWeapon$stack.isNothing() || (!player.isCreative &amp;&amp; stack.damage &gt;= (stack.maxDamage - 2) &amp;&amp; ignoreDurability) || (stack.getEnchantment( KNOCKBACK ) != 0 &amp;&amp; ignoreKnockback)</ID>
