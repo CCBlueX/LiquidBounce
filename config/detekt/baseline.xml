@@ -18,6 +18,7 @@
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
     <ID>ComplexCondition:ModuleVelocity.kt$ModuleVelocity$(packet is EntityVelocityUpdateS2CPacket &amp;&amp; packet.id == player.id || packet is ExplosionS2CPacket) &amp;&amp; it.original &amp;&amp; Delayed.enabled</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
+    <ID>ComplexCondition:SimulatedPlayer.kt$SimulatedPlayer$(horizontalCollision || this.isJumping) &amp;&amp; ( this.isClimbing() || pos.toBlockPos().getState() ?.isOf(Blocks.POWDER_SNOW) == true &amp;&amp; PowderSnowBlock.canWalkOnPowderSnow(player) )</ID>
     <ID>ComplexCondition:SimulatedPlayer.kt$SimulatedPlayer$(this.onGround || bl &amp;&amp; k &lt;= swimHeight) &amp;&amp; jumpingCooldown == 0</ID>
     <ID>ComplexCondition:SimulatedPlayer.kt$SimulatedPlayer$this.player.stepHeight &gt; 0.0f &amp;&amp; bl4 &amp;&amp; (bl || bl3)</ID>
     <ID>CyclomaticComplexMethod:Chat.kt$Chat$internal fun onClientError(packet: ClientErrorPacket)</ID>
@@ -36,7 +37,7 @@
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:SimulatedPlayer.kt$SimulatedPlayer$override fun tick()</ID>
-    <ID>CyclomaticComplexMethod:TargetTracker.kt$TargetTracker$fun enemies(enemyConf: EnemyConfigurable = globalEnemyConfigurable): Iterable&lt;Entity&gt;</ID>
+    <ID>CyclomaticComplexMethod:SimulatedPlayer.kt$SimulatedPlayer$private fun travel(movementInput: Vec3d)</ID>
     <ID>CyclomaticComplexMethod:VertexFormat.kt$DelegatedVertexFormatComponent$operator fun setValue(thisRef: Any?, property: KProperty&lt;*&gt;, value: T)</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyDefaultConstructor:DefaultVertexFormats.kt$PositionColorUVVertexFormat$()</ID>
@@ -54,12 +55,6 @@
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _fireViewClose(): Boolean</ID>
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _unregisterEvents()</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
-    <ID>FunctionOnlyReturningConstant:SimulatedPlayer.kt$SimulatedPlayer$private fun getFluidHeight(tags: TagKey&lt;Fluid&gt;): Double</ID>
-    <ID>FunctionOnlyReturningConstant:SimulatedPlayer.kt$SimulatedPlayer$private fun getJumpBoostVelocityModifier(): Float</ID>
-    <ID>FunctionOnlyReturningConstant:SimulatedPlayer.kt$SimulatedPlayer$private fun getJumpVelocity(): Float</ID>
-    <ID>FunctionOnlyReturningConstant:SimulatedPlayer.kt$SimulatedPlayer$private fun getSwimHeight(): Double</ID>
-    <ID>FunctionOnlyReturningConstant:SimulatedPlayer.kt$SimulatedPlayer$private fun isInLava(): Boolean</ID>
-    <ID>FunctionOnlyReturningConstant:SimulatedPlayer.kt$SimulatedPlayer$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandConfig.kt$CommandConfig$fun createCommand(): Command</ID>
@@ -76,6 +71,7 @@
     <ID>LongMethod:GlyphPage.kt$GlyphPage.Companion$fun create(chars: Iterable&lt;Char&gt;, font: Font): GlyphPage</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
+    <ID>LongMethod:SimulatedPlayer.kt$SimulatedPlayer$private fun travel(movementInput: Vec3d)</ID>
     <ID>LongParameterList:AbstractFontRenderer.kt$AbstractFontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean = false, z: Float = 0.0f, scale: Float = 1.0f )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String&gt;, val parameters: Array&lt;Parameter&lt;*&gt;&gt;, val subcommands: Array&lt;Command&gt;, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
@@ -178,15 +174,12 @@
     <ID>MaxLineLength:RenderEngine.kt$RenderEngine$logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}.")</ID>
     <ID>MaxLineLength:RenderingFlags.kt$RenderingFlags$*</ID>
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
-    <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$// h += (0.05 * (this.getStatusEffect(StatusEffects.LEVITATION).getAmplifier() + 1).toDouble() - g.y) * 0.2</ID>
-    <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$// if (this.horizontalCollision &amp;&amp; this.doesNotCollide(vec3d2.x, vec3d2.y + 0.6 - this.getY() + e, vec3d2.z)) {</ID>
     <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$if</ID>
     <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer.SimulatedPlayerInput$return "SimulatedPlayerInput(forwards={${this.pressingForward}}, backwards={${this.pressingBack}}, left={${this.pressingLeft}}, right={${this.pressingRight}}, jumping={${this.jumping}}, sprinting=$sprinting, slowDown=$slowDown)"</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$// it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")</ID>
     <ID>MaxLineLength:TargetFinding.kt$fun</ID>
     <ID>MaxLineLength:TargetFinding.kt$private</ID>
-    <ID>MaxLineLength:TargetTracker.kt$TargetTracker$(!ModuleMurderMystery.enabled || (it is AbstractClientPlayerEntity &amp;&amp; ModuleMurderMystery.shouldAttack(it)))</ID>
     <ID>MaxLineLength:TargetTracker.kt$TargetTracker$PriorityEnum.HURT_TIME -&gt; entities.sortedBy { if (it is LivingEntity) it.hurtTime else 0 }</ID>
     <ID>MaxLineLength:UltralightEngine.kt$UltralightEngine$get() = viewOverlays.find { it is ScreenViewOverlay &amp;&amp; mc.currentScreen == it.screen &amp;&amp; it.state == ViewOverlayState.VISIBLE }</ID>
     <ID>MaxLineLength:UltralightJsClient.kt$UltralightJsClient.MinecraftSession$if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) &amp;&amp; mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"</ID>
@@ -210,15 +203,13 @@
     <ID>MemberNameEqualsClassName:ModuleStorageESP.kt$ModuleStorageESP.Box$// todo: use box of block, not hardcoded private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.FastClimb.Motion$private val motion by float("Motion", 0.2872F, 0.1f..0.5f)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.IceSpeed.Motion$val motion by float("Motion", 0.5f, 0.2f..1.5f)</ID>
-    <ID>NestedBlockDepth:BlockExtensions.kt$fun collideBlockIntersects( box: Box, isCorrectBlock: (Block?) -&gt; Boolean, ): Boolean</ID>
-    <ID>NestedBlockDepth:BlockExtensions.kt$inline fun searchBlocksInCuboid( a: Int, filter: (BlockPos, BlockState) -&gt; Boolean, ): List&lt;Pair&lt;BlockPos, BlockState&gt;&gt;</ID>
-    <ID>NestedBlockDepth:BlockExtensions.kt$inline fun searchBlocksInRadius( radius: Float, filter: (BlockPos, BlockState) -&gt; Boolean, ): List&lt;Pair&lt;BlockPos, BlockState&gt;&gt;</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CleanupPlan.kt$fun createCleanupPlan(otherScreen: GenericContainerScreen? = null): InventoryCleanupPlan</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions&gt;</ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
+    <ID>NestedBlockDepth:SimulatedPlayer.kt$SimulatedPlayer$private fun updateMovementInFluid(tag: TagKey&lt;Fluid&gt;, speed: Double): Boolean</ID>
     <ID>NewLineAtEndOfFile:CleanupPlan.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlan.kt</ID>
     <ID>NewLineAtEndOfFile:Face.kt$net.ccbluex.liquidbounce.utils.math.geometry.Face.kt</ID>
     <ID>NewLineAtEndOfFile:ItemCategorization.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization.kt</ID>
@@ -313,7 +304,6 @@
     <ID>UnusedParameter:RenderEngine.kt$RenderEngine$layer: Int</ID>
     <ID>UnusedParameter:RenderEngine.kt$RenderEngine$task: Array&lt;RenderTask&gt;</ID>
     <ID>UnusedParameter:RenderEngine.kt$RenderEngine$task: RenderTask</ID>
-    <ID>UnusedParameter:SimulatedPlayer.kt$SimulatedPlayer$tags: TagKey&lt;Fluid&gt;</ID>
     <ID>UnusedParameter:SimulatedPlayer.kt$SimulatedPlayer$water: TagKey&lt;Fluid&gt;?</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupExploits()</ID>
