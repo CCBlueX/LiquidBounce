@@ -37,6 +37,9 @@ inline operator fun Vec3d.minus(other: Vec3d): Vec3d {
 inline operator fun Vec3d.times(scalar: Double): Vec3d {
     return this.multiply(scalar)
 }
+inline operator fun Vec3d.component1(): Double = this.x
+inline operator fun Vec3d.component2(): Double = this.y
+inline operator fun Vec3d.component3(): Double = this.z
 
 fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
 

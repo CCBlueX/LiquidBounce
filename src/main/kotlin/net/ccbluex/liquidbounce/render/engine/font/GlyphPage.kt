@@ -19,8 +19,9 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.render.engine.Texture
 import net.ccbluex.liquidbounce.render.engine.UV2s
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.NativeImageBackedTexture
 import org.lwjgl.opengl.GL11
 import java.awt.*
 import java.awt.font.FontRenderContext
@@ -90,7 +91,12 @@ data class Glyph(
     val advanceY: Float
 )
 
-class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: Float, val ascent: Float) {
+class GlyphPage(
+    val texture: NativeImageBackedTexture,
+    val glyphs: Map<Char, Glyph>,
+    val height: Float,
+    val ascent: Float
+) {
 
     companion object {
         /**
@@ -98,7 +104,7 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
          *
          * *Only* request this field's value from a thread with an OpenGL context
          */
-        val maxTextureSize = lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        private val maxTextureSize = lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
             // As specified in the OpenGL reference, GL_MAX_TEXTURE_SIZE must be at least 1024.
             // If it is less than that, an error occurred, the 1024 is just a failsafe.
             max(GL11.glGetInteger(GL11.GL_MAX_TEXTURE_SIZE), 1024)
@@ -141,8 +147,11 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
             val maxTextureSize = maxTextureSize.value
 
             // The suggested width of the atlas, determined by a simple heuristic, capped by the maximal texture size
+            val totalArea =
+                glyphsToRender.sumOf { it.glyphMetrics.bounds2D.width * it.glyphMetrics.bounds2D.height }
+
             val suggestedAtlasWidth = min(
-                (sqrt(glyphsToRender.sumByDouble { it.glyphMetrics.bounds2D.width * it.glyphMetrics.bounds2D.height } * 1.2) * 1.125).toInt(),
+                (sqrt(totalArea) * 1.232).toInt(),
                 maxTextureSize
             )
 
@@ -153,6 +162,88 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
                 TODO("Implement multiple atlases.")
             }
 
+            val (atlas, fontMetrics) = renderAtlas(atlasDimensions, font, glyphsToRender)
+
+            val glyphs = glyphsToRender.map { createGlyphFromGenerationInfo(it, atlasDimensions) }
+
+            val map = HashMap<Char, Glyph>(glyphs.size)
+
+            for (glyph in glyphs) {
+                map[glyph.char] = glyph
+            }
+
+            val nativeImage = createNativeImage(atlas)
+
+            return GlyphPage(
+                NativeImageBackedTexture(nativeImage),
+                map,
+                fontMetrics.height.toFloat(),
+                fontMetrics.ascent.toFloat()
+            )
+        }
+
+        private fun createNativeImage(atlas: BufferedImage): NativeImage {
+            val nativeImage = NativeImage(NativeImage.Format.RGBA, atlas.width, atlas.height, false)
+
+            // Fuck Minecraft native image
+            for (x in 0 until atlas.width) {
+                for (y in 0 until atlas.height) {
+                    nativeImage.setColor(x, y, atlas.getRGB(x, y))
+                }
+            }
+
+            return nativeImage
+        }
+
+        private fun createGlyphFromGenerationInfo(
+            it: CharacterGenerationInfo,
+            atlasDimensions: Dimension
+        ): Glyph {
+            val atlasLocation = if (it.glyphMetrics.isWhitespace) {
+                null
+            } else {
+                val x = it.atlasLocation.x.toFloat()
+                val y = it.atlasLocation.y.toFloat()
+
+                BoundingBox2f(
+                    x,
+                    y,
+                    (x + ceil(it.glyphMetrics.bounds2D.width.toFloat()) + 1.0f),
+                    (y + ceil(it.glyphMetrics.bounds2D.height.toFloat()) + 1.0f)
+                )
+            }
+
+            // Precalculate the reciprocal values to make the thing faster
+            val textureWidthMultiplier = 1.0f / atlasDimensions.width.toFloat()
+            val textureHeightMultiplier = 1.0f / atlasDimensions.height.toFloat()
+
+            return Glyph(
+                it.c,
+                it.glyphMetrics.isWhitespace,
+                atlasLocation?.let { bb ->
+                    BoundingBox2s(
+                        BoundingBox2f(
+                            bb.xMin * textureWidthMultiplier,
+                            bb.yMin * textureHeightMultiplier,
+                            bb.xMax * textureWidthMultiplier,
+                            bb.yMax * textureHeightMultiplier
+                        )
+                    )
+                },
+                atlasLocation?.let { bb -> bb.xMax - bb.xMin } ?: 0.0f,
+                atlasLocation?.let { bb -> bb.yMax - bb.yMin } ?: 0.0f,
+                BoundingBox2f(it.glyphMetrics.bounds2D),
+                false, // TODO Find this out
+                it.glyphMetrics.advanceX,
+                it.glyphMetrics.advanceY
+            )
+        }
+
+        private fun renderAtlas(
+            atlasDimensions: Dimension,
+            font: Font,
+            glyphsToRender: List<CharacterGenerationInfo>
+        ): Pair<BufferedImage, FontMetrics> {
             // Allocate the atlas texture
             val atlas = BufferedImage(atlasDimensions.width, atlasDimensions.height, BufferedImage.TYPE_INT_ARGB)
             val atlasGraphics = atlas.createGraphics()
@@ -184,59 +275,8 @@ class GlyphPage(val texture: Texture, val glyphs: Map<Char, Glyph>, val height: 
 
             atlasGraphics.dispose()
 
-            val glyphs = glyphsToRender.map {
-                val atlasLocation = if (it.glyphMetrics.isWhitespace) {
-                    null
-                } else {
-                    val x = it.atlasLocation.x.toFloat()
-                    val y = it.atlasLocation.y.toFloat()
-
-                    BoundingBox2f(
-                        x,
-                        y,
-                        (x + ceil(it.glyphMetrics.bounds2D.width.toFloat()) + 1.0f),
-                        (y + ceil(it.glyphMetrics.bounds2D.height.toFloat()) + 1.0f)
-                    )
-                }
-
-                // Precalculate the reciprocal values to make the thing faster
-                val textureWidthMultiplier = 1.0f / atlasDimensions.width.toFloat()
-                val textureHeightMultiplier = 1.0f / atlasDimensions.height.toFloat()
-
-                Glyph(
-                    it.c,
-                    it.glyphMetrics.isWhitespace,
-                    atlasLocation?.let { bb ->
-                        BoundingBox2s(
-                            BoundingBox2f(
-                                bb.xMin * textureWidthMultiplier,
-                                bb.yMin * textureHeightMultiplier,
-                                bb.xMax * textureWidthMultiplier,
-                                bb.yMax * textureHeightMultiplier
-                            )
-                        )
-                    },
-                    atlasLocation?.let { bb -> bb.xMax - bb.xMin } ?: 0.0f,
-                    atlasLocation?.let { bb -> bb.yMax - bb.yMin } ?: 0.0f,
-                    BoundingBox2f(it.glyphMetrics.bounds2D),
-                    false, // TODO Find this out
-                    it.glyphMetrics.advanceX,
-                    it.glyphMetrics.advanceY
-                )
-            }
-
-            val map = HashMap<Char, Glyph>(glyphs.size)
-
-            for (glyph in glyphs) {
-                map[glyph.char] = glyph
-            }
-
-            return GlyphPage(
-                Texture(atlas),
-                map,
-                atlasGraphics.fontMetrics.height.toFloat(),
-                atlasGraphics.fontMetrics.ascent.toFloat()
-            )
+            val fontMetrics = atlasGraphics.fontMetrics
+            return Pair(atlas, fontMetrics)
         }
 
         /**

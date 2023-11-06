@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -118,9 +117,6 @@ object LiquidBounce : Listenable {
             InventoryTracker
             Tabs
             Chat
-
-            // Initialize the render engine
-            RenderEngine.init()
 
             // Load up a web platform
             UltralightEngine.init()

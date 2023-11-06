@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.RenderTask
 
 abstract class AbstractFontRenderer {
     abstract val size: Float
@@ -49,9 +48,8 @@ abstract class AbstractFontRenderer {
     ): Float
 
     /**
-     * Packs all the pending operations into [RenderTask]s
      */
-    abstract fun commit(): Array<RenderTask>
+    abstract fun commit(): Nothing
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
