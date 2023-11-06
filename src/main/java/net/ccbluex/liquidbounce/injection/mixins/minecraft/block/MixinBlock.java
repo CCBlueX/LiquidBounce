@@ -21,15 +21,21 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 import net.ccbluex.liquidbounce.event.BlockSlipperinessMultiplierEvent;
 import net.ccbluex.liquidbounce.event.BlockVelocityMultiplierEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockView;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Set;
@@ -47,6 +53,12 @@ public class MixinBlock {
         Set<Block> blocks = module.getBlocks();
         callback.setReturnValue(blocks.contains(state.getBlock()));
         callback.cancel();
+    }
+
+    @Inject(method = "afterBreak", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
+    private void hookExhaustionAfterBlockBreak(World world, PlayerEntity player, BlockPos pos, BlockState state, BlockEntity blockEntity, ItemStack tool, CallbackInfo ci) {
+        if (ModuleAntiHunger.INSTANCE.getAfterBlockBreaking())
+            ci.cancel();
     }
 
     /**

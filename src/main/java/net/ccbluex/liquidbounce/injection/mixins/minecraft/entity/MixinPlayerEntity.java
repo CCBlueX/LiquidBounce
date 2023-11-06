@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
@@ -33,7 +34,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -62,6 +65,33 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         final PlayerStrideEvent event = new PlayerStrideEvent(strideForce);
         EventManager.INSTANCE.callEvent(event);
         return event.getStrideForce();
+    }
+
+
+    @Inject(method = "applyDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
+    private void hookExhaustionAfterDamage(DamageSource source, float amount, CallbackInfo ci) {
+        if (ModuleAntiHunger.INSTANCE.getDamageApply()) ci.cancel();
+    }
+
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
+    private void hookExhaustionAfterAttack(Entity target, CallbackInfo ci) {
+        if (ModuleAntiHunger.INSTANCE.getAfterAttack()) ci.cancel();
+    }
+
+    @Inject(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
+    private void hookExhaustionAfterJump(CallbackInfo ci) {
+        if (ModuleAntiHunger.INSTANCE.getAfterJump()) ci.cancel();
+    }
+
+    @Inject(method = "increaseTravelMotionStats", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
+    private void hookMoveExhaustion(double dx, double dy, double dz, CallbackInfo ci) {
+        if (ModuleAntiHunger.INSTANCE.getMode().getActiveChoice() == ModuleAntiHunger.Always.INSTANCE) ci.cancel();
+    }
+
+    @Inject(method = "increaseTravelMotionStats", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
+    private void hookSprintingExhaustion(double dx, double dy, double dz, CallbackInfo ci) {
+        // we sacrifice sprinting statistic, since nobody cares about it
+        if (ModuleAntiHunger.INSTANCE.getMode().getActiveChoice() == ModuleAntiHunger.Sprinting.INSTANCE) ci.cancel();
     }
 
     /**

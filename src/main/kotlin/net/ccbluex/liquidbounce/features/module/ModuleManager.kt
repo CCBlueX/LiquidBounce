@@ -86,6 +86,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
             // Exploit
             ModuleAbortBreaking,
+            ModuleAntiHunger,
             ModuleAntiReducedDebugInfo,
             ModuleAntiVanish,
             ModuleClip,
