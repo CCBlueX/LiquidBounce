@@ -179,7 +179,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         1,
         0..5
     ) { autoBlock != "Off" && smartAutoBlock }
-    private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock != "Off" && releaseAutoBlock }
+    private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
 
     // Turn Speed
     private val maxTurnSpeedValue = object : FloatValue("MaxTurnSpeed", 180f, 0f..180f) {
