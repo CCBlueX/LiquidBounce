@@ -141,12 +141,11 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true) {
         autoBlock !in arrayOf(
             "Off",
-            "Fake",
-            "Vanilla"
+            "Fake"
         )
     }
-    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock !in arrayOf("Off", "Fake", "Vanilla") && releaseAutoBlock }
-    private val interactAutoBlock by BoolValue("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake", "Vanilla") }
+    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
+    private val interactAutoBlock by BoolValue("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake") }
 
     // AutoBlock conditions
     private val smartAutoBlock by BoolValue("SmartAutoBlock", false) { autoBlock != "Off" }
