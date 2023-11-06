@@ -88,10 +88,13 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         if (ModuleAntiHunger.INSTANCE.getMode().getActiveChoice() == ModuleAntiHunger.Always.INSTANCE) ci.cancel();
     }
 
-    @Inject(method = "increaseTravelMotionStats", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
-    private void hookSprintingExhaustion(double dx, double dy, double dz, CallbackInfo ci) {
+    @Redirect(method = "increaseTravelMotionStats", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
+    private boolean hookSprintingExhaustion(PlayerEntity instance) {
         // we sacrifice sprinting statistic, since nobody cares about it
-        if (ModuleAntiHunger.INSTANCE.getMode().getActiveChoice() == ModuleAntiHunger.Sprinting.INSTANCE) ci.cancel();
+        if (ModuleAntiHunger.INSTANCE.getMode().getActiveChoice() == ModuleAntiHunger.Sprinting.INSTANCE)
+            return false;
+        else
+            return isSprinting();
     }
 
     /**

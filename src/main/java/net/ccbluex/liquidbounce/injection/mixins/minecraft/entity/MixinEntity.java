@@ -60,6 +60,8 @@ public abstract class MixinEntity {
     @Shadow
     public abstract boolean isPlayer();
 
+    @Shadow public abstract boolean isSprinting();
+
     /**
      * Hook entity margin modification event
      */
