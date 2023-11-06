@@ -48,6 +48,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
     private val positions = ConcurrentHashMap<Vec3, Pair<Long, Long>>()
     private val delay by IntegerValue("Delay", 550, 0..1000)
+    private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)
     private val resetTimer = MSTimer()
 
     override fun onEnable() {
@@ -65,7 +66,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead || !resetTimer.hasTimePassed(750))
+        if (mc.thePlayer == null || mc.thePlayer.isDead || !resetTimer.hasTimePassed(recoilTime))
             return
 
         if (event.isCancelled)
@@ -128,7 +129,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             return
         }
 
-        if (mc.thePlayer.isDead || !resetTimer.hasTimePassed(750))
+        if (mc.thePlayer.isDead || !resetTimer.hasTimePassed(recoilTime))
             return
 
         positions[thePlayer.positionVector] = System.currentTimeMillis() + delay to System.nanoTime()
