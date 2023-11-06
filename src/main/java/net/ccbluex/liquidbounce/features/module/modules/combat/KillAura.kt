@@ -142,6 +142,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         autoBlock !in arrayOf(
             "Off",
             "Fake"
+            "Vanilla"
         )
     }
     private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock != "Off" && releaseAutoBlock }
