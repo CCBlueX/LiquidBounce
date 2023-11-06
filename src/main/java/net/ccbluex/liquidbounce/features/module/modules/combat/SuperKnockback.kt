@@ -43,6 +43,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
     val onlyMoveForward by BoolValue("OnlyMoveForward", true) { onlyMove }
 
     private var ticks = 0
+    private var forceSprintState = 0
     private val timer = MSTimer()
 
     // WTap
@@ -117,11 +118,17 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
         if (mode == "SprintTap") {
             if (ticks == 2) {
                 mc.thePlayer.isSprinting = false
-            } else if (ticks == 1 && mc.thePlayer.movementInput.moveForward > 0.8) {
-                mc.thePlayer.isSprinting = true
+                forceSprintState = 2
+                ticks--
+            } else if (ticks == 1) {
+                if (mc.thePlayer.movementInput.moveForward > 0.8) {
+                    mc.thePlayer.isSprinting = true
+                }
+                forceSprintState = 1
+                ticks--
+            } else {
+                forceSprintState = 0
             }
-
-            ticks--
         }
     }
 
@@ -155,4 +162,8 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
 
     override val tag
         get() = mode
+
+
+    fun breakSprint() = handleEvents() && forceSprintState == 2 && mode == "SprintTap"
+    fun startSprint() = handleEvents() && forceSprintState == 1 && mode == "SprintTap"
 }
