@@ -103,6 +103,7 @@ object ModuleManager : Listenable {
             Derp,
             ESP,
             Eagle,
+            FakeLag,
             FastBow,
             FastBreak,
             FastClimb,

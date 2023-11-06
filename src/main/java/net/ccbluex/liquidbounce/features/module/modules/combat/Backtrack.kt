@@ -95,6 +95,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (module.blinkingReceive())
             return
 
+        if (event.isCancelled)
+            return
+
         when (mode.lowercase()) {
             "legacy" -> {
                 when (packet) {
