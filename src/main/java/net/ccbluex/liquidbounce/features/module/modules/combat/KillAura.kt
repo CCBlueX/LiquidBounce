@@ -141,7 +141,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true) {
         autoBlock !in arrayOf(
             "Off",
-            "Fake"
+            "Fake",
             "Vanilla"
         )
     }
