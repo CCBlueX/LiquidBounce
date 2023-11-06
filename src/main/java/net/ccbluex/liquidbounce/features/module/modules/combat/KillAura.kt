@@ -145,7 +145,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             "Vanilla"
         )
     }
-    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock !in arrayOf("Off", "Vanilla") && releaseAutoBlock }
+    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock !in arrayOf("Off", "Fake", "Vanilla") && releaseAutoBlock }
     private val interactAutoBlock by BoolValue("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake", "Vanilla") }
 
     // AutoBlock conditions
