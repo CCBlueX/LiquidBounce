@@ -137,7 +137,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val keepSprint by BoolValue("KeepSprint", true)
 
     // AutoBlock
-    private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
+    private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake", "Vanilla"), "Packet")
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true) {
         autoBlock !in arrayOf(
             "Off",
