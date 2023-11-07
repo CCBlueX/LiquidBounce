@@ -420,6 +420,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         realZ = 0.0
         globalTimer.reset()
     }
+
+    override val tag
+        get() = if (shouldBacktrack()) delay.toString() else "0"
 }
 
 data class BacktrackData(val x: Double, val y: Double, val z: Double, val time: Long)
