@@ -136,6 +136,8 @@
         
         "module.eagle.description": "Makes you eagle (aka. FastBridge).",
         
+        "module.fakeLag.description": "Lags you behind server side until first hit.",
+        
         "module.fastBreak.description": "Permite que tu quebres blocos mais rápido.",
         
         "module.fastClimb.description": "Allows you to climb up ladders and vines faster.",

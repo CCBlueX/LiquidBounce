@@ -137,6 +137,8 @@
 
         "module.eagle.description": "Faz você ser como uma águia (também conhecido como FastBridge).",
 
+        "module.fakeLag.description": "Lags you behind server side until first hit.",
+
         "module.fastBreak.description": "Permite que você quebre blocos mais rapidamente.",
 
         "module.fastClimb.description": "Permite que você suba escadas e cipós mais rapidamente.",

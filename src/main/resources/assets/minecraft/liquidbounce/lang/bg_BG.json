@@ -139,6 +139,8 @@
         
         "module.eagle.description": "Прави те орел (известен още като FastBridge).",
         
+        "module.fakeLag.description": "Lags you behind server side until first hit.",
+        
         "module.fastBreak.description": "Позволява ви да нарушавате блокове по-бързо.",
         
         "module.fastClimb.description": "Позволява ви да се изкачвате по стълбите и лозите по-бързо.",
