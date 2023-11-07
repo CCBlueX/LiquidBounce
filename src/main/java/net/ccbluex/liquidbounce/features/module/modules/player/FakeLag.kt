@@ -201,13 +201,13 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     }
 
     private fun handlePackets() {
-        val filtered = packetQueue.filter { entry -> entry.value.second <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
+        val filtered = packetQueue.filter { entry -> entry.value.first <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (packet in filtered) {
             sendPacket(packet, false)
             packetQueue.remove(packet)
         }
-        val filtered2 = positions.filter { entry -> entry.value.second <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
+        val filtered2 = positions.filter { entry -> entry.value.first <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (position in filtered2) {
             positions.remove(position)

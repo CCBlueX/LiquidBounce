@@ -300,7 +300,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     private fun handlePackets() {
-        val filtered = packetQueue.filter { entry -> entry.value.second <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
+        val filtered = packetQueue.filter { entry -> entry.value.first <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (packet in filtered) {
             handlePacket(packet)
