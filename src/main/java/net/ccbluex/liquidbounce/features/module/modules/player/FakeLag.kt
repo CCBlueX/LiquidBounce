@@ -123,13 +123,13 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
         val thePlayer = mc.thePlayer ?: return
 
         val module = Blink
-        if (module.blinkingSend())
+        if (module.blinkingSend() || mc.thePlayer.isDead)
         {
             blink()
             return
         }
 
-        if (mc.thePlayer.isDead || !resetTimer.hasTimePassed(recoilTime))
+        if (!resetTimer.hasTimePassed(recoilTime))
             return
 
         positions[thePlayer.positionVector] = System.currentTimeMillis() + delay to System.nanoTime()
