@@ -129,3 +129,5 @@ accessible method net/minecraft/item/BlockItem getPlacementState (Lnet/minecraft
 accessible field net/minecraft/entity/Entity dimensions Lnet/minecraft/entity/EntityDimensions;
 accessible field net/minecraft/entity/Entity fluidHeight Lit/unimi/dsi/fastutil/objects/Object2DoubleMap;
 accessible field net/minecraft/entity/Entity submergedFluidTag Ljava/util/Set;
+
+accessible field net/minecraft/entity/TrackedPosition pos Lnet/minecraft/util/math/Vec3d;

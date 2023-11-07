@@ -36,6 +36,7 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
@@ -229,6 +230,11 @@ public abstract class MixinMinecraftClient {
         if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Inject(method = "setWorld", at = @At("HEAD"))
+    private void hookWorldChangeEvent(ClientWorld world, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 
     /**

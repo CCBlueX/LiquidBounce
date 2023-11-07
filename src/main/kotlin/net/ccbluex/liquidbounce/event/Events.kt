@@ -32,6 +32,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType
 import net.minecraft.network.packet.Packet
@@ -104,7 +105,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     NotificationEvent::class,
     ClientChatMessageEvent::class,
     ClientChatErrorEvent::class,
-    StateUpdateEvent::class
+    StateUpdateEvent::class,
+    WorldChangeEvent::class
 )
 
 /**
@@ -130,6 +132,9 @@ class ChunkUnloadEvent(val x: Int, val z: Int) : Event()
 
 @Nameable("worldDisconnect")
 class WorldDisconnectEvent : Event()
+
+@Nameable("worldChange")
+class WorldChangeEvent(val world: ClientWorld?) : Event()
 
 @Nameable("gameRender")
 class GameRenderEvent : Event()
