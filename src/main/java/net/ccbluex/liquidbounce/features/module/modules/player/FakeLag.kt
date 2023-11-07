@@ -66,7 +66,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead || !resetTimer.hasTimePassed(recoilTime))
+        if (mc.thePlayer == null || mc.thePlayer.isDead)
             return
 
         if (event.isCancelled)
@@ -103,6 +103,9 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
                 }
             }
         }
+
+        if (!resetTimer.hasTimePassed(recoilTime))
+            return
 
         if (event.eventType == EventState.SEND) {
             event.cancelEvent()
