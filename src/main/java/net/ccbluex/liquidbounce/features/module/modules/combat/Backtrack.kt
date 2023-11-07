@@ -166,7 +166,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     }
 
                     event.cancelEvent()
-                    packetQueue[packet] = System.currentTimeMillis() + delay to System.nanoTime()
+                    packetQueue[packet] = System.currentTimeMillis() to System.nanoTime()
                 }
             }
         }
@@ -300,9 +300,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     private fun handlePackets() {
-        val filtered = packetQueue.filter {
-            it.value.first <= System.currentTimeMillis()
-        }.entries.sortedBy { it.value.second }.map { it.key }
+        val filtered = packetQueue.filter { entry -> entry.value.first <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (packet in filtered) {
             handlePacket(packet)
