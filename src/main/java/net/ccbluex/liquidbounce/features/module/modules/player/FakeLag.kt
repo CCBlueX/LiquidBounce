@@ -108,6 +108,11 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
         if (!resetTimer.hasTimePassed(recoilTime))
             return
 
+        if (packet is C03PacketPlayer && packet.isMoving) {
+            val packetPos = Vec3(packet.x, packet.y, packet.z)
+            positions[packetPos] = System.currentTimeMillis() to System.nanoTime()
+        }
+
         if (event.eventType == EventState.SEND) {
             event.cancelEvent()
             packetQueue[packet] = System.currentTimeMillis() to System.nanoTime()
@@ -135,8 +140,6 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
 
         if (!resetTimer.hasTimePassed(recoilTime))
             return
-
-        positions[thePlayer.positionVector] = System.currentTimeMillis() to System.nanoTime()
 
         handlePackets()
     }
