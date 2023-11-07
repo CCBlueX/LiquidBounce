@@ -86,6 +86,10 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                 if (event.eventType == EventState.SEND) {
                     event.cancelEvent()
                     packets += packet
+                    if (packet is C03PacketPlayer && packet.isMoving) {
+                        val packetPos = Vec3(packet.x, packet.y, packet.z)
+                        positions += packetPos
+                    }
                 }
             }
             "received" -> {
@@ -106,6 +110,10 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                 if (event.eventType == EventState.SEND) {
                     event.cancelEvent()
                     packets += packet
+                    if (packet is C03PacketPlayer && packet.isMoving) {
+                        val packetPos = Vec3(packet.x, packet.y, packet.z)
+                        positions += packetPos
+                    }
                 }
             }
         }
@@ -124,8 +132,6 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
-
-        positions += thePlayer.positionVector
 
         if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
             blink()
@@ -218,9 +224,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         fakePlayer = faker
 
         // Add positions indicating a blink start
-        val pos = thePlayer.positionVector
-        positions += pos.addVector(.0, thePlayer.eyeHeight / 2.0, .0)
-        positions += pos
+        // val pos = thePlayer.positionVector
+        // positions += pos.addVector(.0, thePlayer.eyeHeight / 2.0, .0)
+        // positions += pos
     }
 
     fun blinkingSend() = handleEvents() && (mode == "Sent" || mode == "Both")
