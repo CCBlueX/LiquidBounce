@@ -422,7 +422,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     override val tag
-        get() = if (shouldBacktrack()) delay.toString() else "0"
+        get() = if (shouldBacktrack()) delay.toString() + " ms" else "0 ms"
 }
 
 data class BacktrackData(val x: Double, val y: Double, val z: Double, val time: Long)
