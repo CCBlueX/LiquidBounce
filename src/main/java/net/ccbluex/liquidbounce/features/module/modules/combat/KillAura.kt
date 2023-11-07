@@ -144,7 +144,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             "Fake"
         )
     }
-    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock != "Off" && releaseAutoBlock }
+    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
     private val interactAutoBlock by BoolValue("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake") }
 
     // AutoBlock conditions
@@ -179,7 +179,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         1,
         0..5
     ) { autoBlock != "Off" && smartAutoBlock }
-    private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock != "Off" && releaseAutoBlock }
+    private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
 
     // Turn Speed
     private val maxTurnSpeedValue = object : FloatValue("MaxTurnSpeed", 180f, 0f..180f) {
@@ -829,7 +829,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Check if run should be cancelled
      */
     private val cancelRun
-        inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer) || Blink.handleEvents() || FreeCam.handleEvents() || (noConsumeAttack == "NoRotation" && isConsumingItem())
+        inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer) || FreeCam.handleEvents() || (noConsumeAttack == "NoRotation" && isConsumingItem())
 
     /**
      * Check if [entity] is alive

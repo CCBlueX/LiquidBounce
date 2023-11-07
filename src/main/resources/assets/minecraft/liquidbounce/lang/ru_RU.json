@@ -139,6 +139,8 @@
         
         "module.eagle.description": "Не даёт упасть когда строитесь (FastBridge).",
         
+        "module.fakeLag.description": "UNTRANSLATED: Lags you behind server side until first hit.",
+        
         "module.fastBreak.description": "Позволяет ломать блоки быстрее.",
         
         "module.fastClimb.description": "Позволяет забираться по лестницам/листве быстрее.",

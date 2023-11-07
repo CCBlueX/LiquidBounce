@@ -95,6 +95,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (module.blinkingReceive())
             return
 
+        if (event.isCancelled)
+            return
+
         when (mode.lowercase()) {
             "legacy" -> {
                 when (packet) {
@@ -173,7 +176,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     fun onTick(event: TickEvent) {
         val module = Blink
         if (mode == "Modern") {
-            if (!(module.blinkingReceive()) && shouldBacktrack() && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+            val theTarget = target
+            if (!(module.blinkingReceive()) && shouldBacktrack() && theTarget != null && mc.thePlayer.getDistance(theTarget.posX + realX / 32.0, theTarget.posY + realY / 32.0, theTarget.posZ + realZ / 32.0) <= 6f && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
                 handlePackets()
             } else {
                 clearPackets()

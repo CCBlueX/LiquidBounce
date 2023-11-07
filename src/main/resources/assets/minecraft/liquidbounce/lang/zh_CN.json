@@ -139,6 +139,8 @@
         
         "module.eagle.description": "到方块边缘自动潜行。(别名：FastBridge)",
         
+        "module.fakeLag.description": "UNTRANSLATED: Lags you behind server side until first hit.",
+        
         "module.fastBreak.description": "允许你更快地破坏方块。",
         
         "module.fastClimb.description": "允许你更快地爬梯子和藤蔓。",
