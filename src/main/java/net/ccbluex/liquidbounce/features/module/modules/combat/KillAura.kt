@@ -137,7 +137,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val keepSprint by BoolValue("KeepSprint", true)
 
     // AutoBlock
-    private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake", "Vanilla"), "Packet")
+    private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true) {
         autoBlock !in arrayOf(
             "Off",
@@ -344,7 +344,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     fun onUpdate(event: UpdateEvent) {
         if (clickOnly && !mc.gameSettings.keyBindAttack.isKeyDown) return
 
-        if (blockStatus && autoBlock in arrayOf("Packet", "Vanilla") && releaseAutoBlock && !ignoreTickRule) {
+        if (blockStatus && autoBlock == "Packet" && releaseAutoBlock && !ignoreTickRule) {
             clicks = 0
             stopBlocking()
             return

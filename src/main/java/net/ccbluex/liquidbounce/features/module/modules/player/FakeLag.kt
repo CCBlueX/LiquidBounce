@@ -37,6 +37,7 @@ import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.status.client.C00PacketServerQuery
+import net.minecraft.item.EnumAction
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -126,7 +127,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
         val thePlayer = mc.thePlayer ?: return
 
         val module = Blink
-        if (module.blinkingSend() || mc.thePlayer.isDead)
+        if (module.blinkingSend() || mc.thePlayer.isDead || thePlayer.isUsingItem)
         {
             blink()
             return
@@ -216,4 +217,5 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             positions.remove(position)
         }
     }
+
 }
