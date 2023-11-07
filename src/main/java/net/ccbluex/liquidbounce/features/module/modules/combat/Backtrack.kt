@@ -70,7 +70,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" }
     private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" }
 
-    private val packetQueue = ConcurrentHashMap<Packet<*>, Long>()
+    private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
 
     private var target: Entity? = null
     private var realX = 0.0
@@ -166,7 +166,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     }
 
                     event.cancelEvent()
-                    packetQueue[packet] = System.currentTimeMillis()
+                    packetQueue[packet] = System.currentTimeMillis() to System.nanoTime()
                 }
             }
         }
@@ -300,7 +300,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     private fun handlePackets() {
-        val filtered = packetQueue.filter { entry -> entry.value <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value }.map { it.key }
+        val filtered = packetQueue.filter { entry -> entry.value.second <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (packet in filtered) {
             handlePacket(packet)
@@ -317,7 +317,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private fun clearPackets(handlePackets: Boolean = true) {
         if (handlePackets) {
-            val filtered = packetQueue.entries.sortedBy { it.value }.map { it.key }
+            val filtered = packetQueue.entries.sortedBy { it.value.second }.map { it.key }
 
             for (packet in filtered) {
                 handlePacket(packet)

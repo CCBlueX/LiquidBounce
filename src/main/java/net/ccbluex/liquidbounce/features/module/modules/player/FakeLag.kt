@@ -46,8 +46,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false) {
 
-    private val packetQueue = ConcurrentHashMap<Packet<*>, Long>()
-    private val positions = ConcurrentHashMap<Vec3, Long>()
+    private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
+    private val positions = ConcurrentHashMap<Vec3, Pair<Long, Long>>()
     private val delay by IntegerValue("Delay", 550, 0..1000)
     private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)
     private val resetTimer = MSTimer()
@@ -110,7 +110,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
 
         if (event.eventType == EventState.SEND) {
             event.cancelEvent()
-            packetQueue[packet] = System.currentTimeMillis()
+            packetQueue[packet] = System.currentTimeMillis() to System.nanoTime()
         }
     }
 
@@ -136,7 +136,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
         if (!resetTimer.hasTimePassed(recoilTime))
             return
 
-        positions[thePlayer.positionVector] = System.currentTimeMillis()
+        positions[thePlayer.positionVector] = System.currentTimeMillis() to System.nanoTime()
 
         handlePackets()
     }
@@ -147,7 +147,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             if (Breadcrumbs.colorRainbow) rainbow()
             else Color(Breadcrumbs.colorRed, Breadcrumbs.colorGreen, Breadcrumbs.colorBlue)
 
-        val filtered = positions.entries.sortedBy { it.value }.map { it.key }
+        val filtered = positions.entries.sortedBy { it.value.second }.map { it.key }
 
         val module = Blink
 
@@ -188,7 +188,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     private fun blink(handlePackets: Boolean = true) {
         if (handlePackets) {
             resetTimer.reset()
-            val filtered = packetQueue.entries.sortedBy { it.value }.map { it.key }
+            val filtered = packetQueue.entries.sortedBy { it.value.second }.map { it.key }
 
             for (packet in filtered) {
                 sendPacket(packet, false)
@@ -201,13 +201,13 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     }
 
     private fun handlePackets() {
-        val filtered = packetQueue.filter { entry -> entry.value <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value }.map { it.key }
+        val filtered = packetQueue.filter { entry -> entry.value.second <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (packet in filtered) {
             sendPacket(packet, false)
             packetQueue.remove(packet)
         }
-        val filtered2 = positions.filter { entry -> entry.value <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value }.map { it.key }
+        val filtered2 = positions.filter { entry -> entry.value.second <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
 
         for (position in filtered2) {
             positions.remove(position)
