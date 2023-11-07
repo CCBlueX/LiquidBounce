@@ -144,7 +144,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     }
 
                     is S29PacketSoundEffect -> {
-                        if (!packet.getSoundName().contains("player.game.hurt") && !packet.getSoundName().contains("entity.player.hurt")) return
+                        if (packet.getSoundName().contains("player.game.hurt") && packet.getSoundName().contains("entity.player.hurt")) return
                     }
                     // Flush on own death
                     is S06PacketUpdateHealth -> {
