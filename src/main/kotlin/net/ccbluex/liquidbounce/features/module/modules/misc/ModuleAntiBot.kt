@@ -342,8 +342,11 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
     /**
      * Check if player might be a bot
      */
-    fun isBot(player: PlayerEntity): Boolean {
+    fun isBot(player: Entity): Boolean {
         if (!enabled) {
+            return false
+        }
+        if (player !is PlayerEntity) {
             return false
         }
 

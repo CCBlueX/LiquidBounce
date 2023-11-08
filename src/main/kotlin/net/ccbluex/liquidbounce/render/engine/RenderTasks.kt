@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.utils.math.Mat4
+import net.minecraft.client.render.Tessellator
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.lwjgl.opengl.GL11
@@ -97,6 +98,8 @@ data class UV2s(val u: Short, val v: Short) {
         return arrayOf((u.toInt() and 0xFFFF) / 65535.0f, (v.toInt() and 0xFFFF) / 65535.0f)
     }
 }
+
+data class UV2f(val u: Float, val v: Float)
 
 data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     companion object {

@@ -19,8 +19,18 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
+import net.ccbluex.liquidbounce.render.RenderBufferBuilder
+import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.VertexInputType
+import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.*
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.util.math.Vec3d
+import org.joml.Matrix4f
 import java.awt.Font
 import java.util.*
 import kotlin.math.max
@@ -56,7 +66,7 @@ class FontRenderer(
      *
      * [Font.BOLD] | [Font.ITALIC] -> 3 (Can be null)
      */
-    private val glyphPages: Array<GlyphPage?>,
+    val glyphPages: Array<GlyphPage?>,
     override val size: Float
 ) : AbstractFontRenderer() {
 
@@ -106,6 +116,18 @@ class FontRenderer(
          *
          * It generates glyph pages for all possible styles.
          */
+        fun createFontRenderer(name: String, size: Int): FontRenderer {
+            return FontRenderer(
+                Array(4) { style -> GlyphPage.create('\u0000'..'\u00FF', Font(name, style, size)) },
+                size.toFloat()
+            )
+        }
+
+        /**
+         * Creates a FontRenderer that can render every ASCII character.
+         *
+         * It generates glyph pages for all possible styles.
+         */
         fun createFontRendererWithStyles(font: Font, vararg styles: Int): FontRenderer {
             return FontRenderer(
                 Array(4) { style ->
@@ -134,7 +156,7 @@ class FontRenderer(
 
     override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
-            this.commit()
+//            this.commit()
 
             throw IllegalStateException("Can't begin a build a new batch when there are pending operations.")
         }
@@ -411,8 +433,62 @@ class FontRenderer(
 
     }
 
-    override fun commit(): Nothing {
-        TODO("Not yet implemented")
+    override fun commit(
+        env: RenderEnvironment,
+        buffers: FontRendererBuffers,
+    ) {
+        val renderTasks = this.cache.renderedGlyphs.groupByTo(TreeMap<Int, MutableList<RenderedGlyph>>()) { it.style }
+
+        for ((style, glyphs) in renderTasks) {
+            val textBuilder = buffers.textBuffers[style]
+
+            for (glyph in glyphs) {
+                val color = glyph.color
+                val atlasLocation = glyph.glyph.atlasLocation!!
+
+                textBuilder.drawQuad(
+                    env,
+                    Vec3d(glyph.x1.toDouble(), glyph.y1.toDouble(), glyph.z.toDouble()),
+                    atlasLocation.min,
+                    Vec3d(glyph.x2.toDouble(), glyph.y2.toDouble(), glyph.z.toDouble()),
+                    atlasLocation.max,
+                    color
+                )
+            }
+        }
+
+        if (this.cache.lines.isNotEmpty()) {
+            for (line in this.cache.lines) {
+                buffers.lineBufferBuilder.drawLine(env, line.p1, line.p2, line.color)
+            }
+        }
+
+        this.cache.lines.clear()
+        this.cache.renderedGlyphs.clear()
     }
 
+}
+
+
+class FontRendererBuffers {
+    companion object {
+        private val TEXT_TESSELATORS = Array(5) { Tessellator(0xA00000) }
+    }
+
+    val textBuffers = Array(4) { RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, TEXT_TESSELATORS[it + 1]) }
+    val lineBufferBuilder = RenderBufferBuilder(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.PosColor, TEXT_TESSELATORS[0])
+
+    fun draw(renderer: FontRenderer) {
+        this.textBuffers.forEachIndexed { style, it ->
+            val tex = renderer.glyphPages[style]!!.texture
+
+            RenderSystem.bindTexture(tex.glId)
+
+            RenderSystem.setShaderTexture(0, tex.glId)
+
+            it.draw()
+        }
+
+        this.lineBufferBuilder.draw()
+    }
 }

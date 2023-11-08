@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.render.engine.UV2s
+import net.ccbluex.liquidbounce.render.engine.UV2f
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import org.lwjgl.opengl.GL11
@@ -44,13 +44,13 @@ data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val 
     )
 }
 
-data class BoundingBox2s(val min: UV2s, val max: UV2s) {
+data class BoundingBox2s(val min: UV2f, val max: UV2f) {
     constructor(rect: BoundingBox2f) : this(
-        UV2s(
+        UV2f(
             rect.xMin,
             rect.yMin
         ),
-        UV2s(
+        UV2f(
             rect.xMax,
             rect.yMax
         )
@@ -97,7 +97,6 @@ class GlyphPage(
     val height: Float,
     val ascent: Float
 ) {
-
     companion object {
         /**
          * The max width and height a texture can have.
@@ -173,9 +172,13 @@ class GlyphPage(
             }
 
             val nativeImage = createNativeImage(atlas)
+            val texture = NativeImageBackedTexture(nativeImage)
+
+            texture.bindTexture()
+            texture.image!!.upload(0, 0, 0, 0, 0, nativeImage.width, nativeImage.height, true, false)
 
             return GlyphPage(
-                NativeImageBackedTexture(nativeImage),
+                texture,
                 map,
                 fontMetrics.height.toFloat(),
                 fontMetrics.ascent.toFloat()

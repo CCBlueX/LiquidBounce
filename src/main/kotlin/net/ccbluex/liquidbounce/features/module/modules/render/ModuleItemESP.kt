@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
@@ -64,21 +65,27 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
+            val boxesRenderer = RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.Pos, RenderBufferBuilder.TESSELATOR_A)
+            val outlinesRenderer = RenderBufferBuilder(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.Pos, RenderBufferBuilder.TESSELATOR_B)
+
             renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
                     withPosition(pos) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
-
-                        withColor(outlineColor) {
-                            drawOutlinedBox(box)
-                        }
+                        boxesRenderer.drawBox(this, box)
+                        // This can still be optimized since there will be a lot of useless matrix muls...
+                        outlinesRenderer.drawBox(this, box)
                     }
                 }
 
+                withColor(baseColor) {
+                    boxesRenderer.draw()
+                }
+
+                withColor(outlineColor) {
+                    outlinesRenderer.draw()
+                }
             }
         }
 

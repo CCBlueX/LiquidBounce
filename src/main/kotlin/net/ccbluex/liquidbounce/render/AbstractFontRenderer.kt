@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import org.joml.Matrix4f
 
 abstract class AbstractFontRenderer {
     abstract val size: Float
@@ -41,7 +43,7 @@ abstract class AbstractFontRenderer {
         text: String,
         x0: Float,
         y0: Float,
-        defaultColor: Color4b,
+        defaultColor: Color4b = Color4b.WHITE,
         shadow: Boolean = false,
         z: Float = 0.0f,
         scale: Float = 1.0f
@@ -49,7 +51,10 @@ abstract class AbstractFontRenderer {
 
     /**
      */
-    abstract fun commit(): Nothing
+    abstract fun commit(
+        env: RenderEnvironment,
+        buffers: FontRendererBuffers
+    )
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
