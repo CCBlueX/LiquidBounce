@@ -183,7 +183,8 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             wait(Pulse.delay)
             blink()
         } else if (evadeArrows) {
-            val firstPositionPacket = (packets.firstOrNull { it is PlayerMoveC2SPacket && it.changePosition } ?: return@repeatable) as PlayerMoveC2SPacket
+            val firstPositionPacket = (packets.firstOrNull { it is PlayerMoveC2SPacket && it.changePosition }
+                ?: return@repeatable) as PlayerMoveC2SPacket
 
             if (getInflictedHit(Vec3d(firstPositionPacket.x, firstPositionPacket.y, firstPositionPacket.z)) == null) {
                 return@repeatable

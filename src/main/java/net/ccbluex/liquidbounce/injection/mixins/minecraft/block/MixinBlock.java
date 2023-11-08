@@ -55,11 +55,6 @@ public class MixinBlock {
         callback.cancel();
     }
 
-    @Inject(method = "afterBreak", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
-    private void hookExhaustionAfterBlockBreak(World world, PlayerEntity player, BlockPos pos, BlockState state, BlockEntity blockEntity, ItemStack tool, CallbackInfo ci) {
-        if (ModuleAntiHunger.INSTANCE.getAfterBlockBreaking())
-            ci.cancel();
-    }
 
     /**
      * Hook velocity multiplier event

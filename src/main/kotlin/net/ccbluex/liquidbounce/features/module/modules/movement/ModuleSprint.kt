@@ -18,9 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.Sprint.requestSprintState
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.util.math.MathHelper
 
 /**
@@ -56,5 +59,11 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
             (if (player.isOnGround) stopOnGround else stopOnAir) && !shouldSprintOmnidirectionally() && RotationManager.activeConfigurable?.fixVelocity == false && !hasForwardMovement
 
         return enabled && preventSprint
+    }
+    
+    val repeatable = repeatable { 
+        if (!shouldPreventSprint()) {
+            requestSprintState(true, Priority.NORMAL)
+        }
     }
 }

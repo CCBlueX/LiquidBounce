@@ -67,36 +67,6 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return event.getStrideForce();
     }
 
-
-    @Inject(method = "applyDamage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
-    private void hookExhaustionAfterDamage(DamageSource source, float amount, CallbackInfo ci) {
-        if (ModuleAntiHunger.INSTANCE.getDamageApply()) ci.cancel();
-    }
-
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
-    private void hookExhaustionAfterAttack(Entity target, CallbackInfo ci) {
-        if (ModuleAntiHunger.INSTANCE.getAfterAttack()) ci.cancel();
-    }
-
-    @Inject(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
-    private void hookExhaustionAfterJump(CallbackInfo ci) {
-        if (ModuleAntiHunger.INSTANCE.getAfterJump()) ci.cancel();
-    }
-
-    @Inject(method = "increaseTravelMotionStats", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addExhaustion(F)V"))
-    private void hookMoveExhaustion(double dx, double dy, double dz, CallbackInfo ci) {
-        if (ModuleAntiHunger.INSTANCE.getMode().getActiveChoice() == ModuleAntiHunger.Always.INSTANCE) ci.cancel();
-    }
-
-    @Redirect(method = "increaseTravelMotionStats", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSprinting()Z"))
-    private boolean hookSprintingExhaustion(PlayerEntity instance) {
-        // we sacrifice sprinting statistic, since nobody cares about it
-        if (ModuleAntiHunger.INSTANCE.getMode().getActiveChoice() == ModuleAntiHunger.Sprinting.INSTANCE)
-            return false;
-        else
-            return isSprinting();
-    }
-
     /**
      * Hook silent inventory feature
      */

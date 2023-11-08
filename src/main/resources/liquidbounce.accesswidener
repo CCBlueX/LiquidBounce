@@ -82,6 +82,9 @@ mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacke
 mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityY I
 mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityZ I
 
+accessible field net/minecraft/network/packet/c2s/play/ClientCommandC2SPacket mode Lnet/minecraft/network/packet/c2s/play/ClientCommandC2SPacket/Mode;
+mutable field net/minecraft/network/packet/c2s/play/ClientCommandC2SPacket mode Lnet/minecraft/network/packet/c2s/play/ClientCommandC2SPacket/Mode;
+
 accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityX F
 accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityY F
 accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityZ F
