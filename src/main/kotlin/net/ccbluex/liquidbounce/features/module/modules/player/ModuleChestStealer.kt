@@ -87,7 +87,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size, screen)
 
-        val sortedItemsToCollect = this.selectionMode.processor(itemsToCollect)
+        val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
 
         for (slotId in sortedItemsToCollect) {
             val hasFreeSpace = (0..35).any { player.inventory.getStack(it).isNothing() }
@@ -106,7 +106,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             lastTime = System.currentTimeMillis()
             mc.interactionManager!!.clickSlot(screen.screenHandler.syncId, slotId, 0, SlotActionType.QUICK_MOVE, player)
 
-            this.lastSlot = slotId
+            lastSlot = slotId
 
             if (waitForTimer())
                 continue
