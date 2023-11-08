@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.minecraft.block.BlockBush
 import net.minecraft.init.Blocks
 import net.minecraft.item.Item
@@ -49,6 +50,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 _serverOpenInventory = value
             }
         }
+
+    var serverOpenContainer = false
 
     // Backing fields
     private var _serverSlot = 0
@@ -154,6 +157,13 @@ object InventoryUtils : MinecraftInstance(), Listenable {
             is C0DPacketCloseWindow, is S2EPacketCloseWindow, is S2DPacketOpenWindow -> {
                 isFirstInventoryClick = false
                 _serverOpenInventory = false
+                serverOpenContainer = false
+
+                if (packet is S2DPacketOpenWindow) {
+                    if (packet.guiId == "minecraft:chest" || packet.guiId == "minecraft:container")
+                        serverOpenContainer = true
+                } else
+                    ChestAura.tileTarget = null
             }
 
             is C09PacketHeldItemChange -> {

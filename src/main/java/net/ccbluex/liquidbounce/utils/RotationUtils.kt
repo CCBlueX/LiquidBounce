@@ -100,7 +100,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     override fun handleEvents() = true
 
-    private var keepLength = 0
+    var keepLength = 0
 
     var strafe = false
     var strict = false
@@ -499,6 +499,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
             eyes + (getVectorForRotation(rotation) * reach.toDouble())
         )
     }
+
+    fun performRayTrace(blockPos: BlockPos, vec: Vec3, eyes: Vec3 = mc.thePlayer.eyes) =
+        mc.theWorld?.let {
+            blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec)
+        }
 
     fun syncRotations() {
         val player = mc.thePlayer ?: return

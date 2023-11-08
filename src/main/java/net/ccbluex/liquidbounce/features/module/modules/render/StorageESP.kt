@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
+import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedTileEntities
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
@@ -49,8 +49,8 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
 
     private fun getColor(tileEntity: TileEntity): Color? {
         return when {
-            chest && tileEntity is TileEntityChest && tileEntity.pos !in clickedBlocks -> Color(0, 66, 255)
-            enderChest && tileEntity is TileEntityEnderChest && tileEntity.pos !in clickedBlocks -> Color.MAGENTA
+            chest && tileEntity is TileEntityChest && tileEntity !in clickedTileEntities -> Color(0, 66, 255)
+            enderChest && tileEntity is TileEntityEnderChest && tileEntity !in clickedTileEntities -> Color.MAGENTA
             furnace && tileEntity is TileEntityFurnace -> Color.BLACK
             dispenser && tileEntity is TileEntityDispenser -> Color.BLACK
             hopper && tileEntity is TileEntityHopper -> Color.GRAY
