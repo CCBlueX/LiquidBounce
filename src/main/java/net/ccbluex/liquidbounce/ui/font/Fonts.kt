@@ -37,7 +37,7 @@ object Fonts : MinecraftInstance() {
     @FontDetails(fontName = "Roboto Bold", fontSize = 180)
     lateinit var fontBold180: GameFontRenderer
 
-    private val CUSTOM_FONT_RENDERERS = HashMap<FontInfo, FontRenderer>()
+    private val CUSTOM_FONT_RENDERERS = hashMapOf<FontInfo, FontRenderer>()
 
     fun loadFonts() {
         val l = System.currentTimeMillis()

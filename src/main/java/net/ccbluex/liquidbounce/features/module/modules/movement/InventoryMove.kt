@@ -29,10 +29,12 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
     private val noMoveAir by InventoryManager.noMoveAirValue
     private val noMoveGround by InventoryManager.noMoveGroundValue
 
-    // If player violates nomove check and inventory is open, close inventory and reopen it when still
-    private val silentlyCloseAndReopen by BoolValue("SilentlyCloseAndReopen", false) { noMove && (noMoveAir || noMoveGround) }
-    // Reopen closed inventory just before a click (could flag for clicking too fast after opening inventory)
-    private val reopenOnClick by BoolValue("ReopenOnClick", false) { silentlyCloseAndReopen && noMove && (noMoveAir || noMoveGround) }
+        // If player violates nomove check and inventory is open, close inventory and reopen it when still
+        private val silentlyCloseAndReopen by BoolValue("SilentlyCloseAndReopen", false)
+            { noMove && (noMoveAir || noMoveGround) }
+            // Reopen closed inventory just before a click (could flag for clicking too fast after opening inventory)
+            private val reopenOnClick by BoolValue("ReopenOnClick", false)
+                { silentlyCloseAndReopen && noMove && (noMoveAir || noMoveGround) }
 
     private val affectedBindings = arrayOf(
         mc.gameSettings.keyBindForward,

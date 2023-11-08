@@ -154,6 +154,7 @@ object ModuleManager : Listenable {
             NoPitchLimit,
             NoRotateSet,
             NoScoreboard,
+            NoSlotSet,
             NoSlow,
             NoSlowBreak,
             NoSwing,

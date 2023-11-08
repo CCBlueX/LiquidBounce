@@ -19,13 +19,12 @@ import net.minecraft.network.play.server.S2BPacketChangeGameState
 object Ambience : Module("Ambience", ModuleCategory.RENDER, gameDetecting = false) {
 
     private val timeMode by ListValue("Mode", arrayOf("None", "Normal", "Custom"), "Custom")
+        private val customWorldTime by IntegerValue("Time", 19000, 0..24000) { timeMode == "Custom" }
+        private val changeWorldTimeSpeed by IntegerValue("TimeSpeed", 150, 10..500) { timeMode == "Normal" }
+
     private val weatherMode by ListValue("WeatherMode", arrayOf("None", "Sun", "Rain", "Thunder"), "None")
-
-    private val customWorldTime by IntegerValue("Time", 19000, 0..24000) { timeMode == "Custom" }
-
-    private val changeWorldTimeSpeed by IntegerValue("TimeSpeed", 150, 10..500) { timeMode == "Normal" }
-
-    private val weatherStrength by FloatValue("WeatherStrength", 1f, 0f..1f) { weatherMode == "Rain" || weatherMode == "Thunder" }
+        private val weatherStrength by FloatValue("WeatherStrength", 1f, 0f..1f)
+            { weatherMode == "Rain" || weatherMode == "Thunder" }
 
     private var i = 0L
 

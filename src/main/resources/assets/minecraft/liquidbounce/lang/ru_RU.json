@@ -234,6 +234,8 @@
         "module.noRotateSet.description": "Не даёт серверу поворачивать вашу голову.",
         
         "module.noScoreboard.description": "Убирает табло с информацией.",
+
+        "module.noSlotSet.description": "Не даёт серверу менять ваш слот.",
         
         "module.noSlow.description": "Убирает эффекты замедления, вызванные песком души и использованием предметов.",
         

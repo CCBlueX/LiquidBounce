@@ -13,6 +13,7 @@ import net.minecraft.nbt.JsonToNBT
 import net.minecraft.util.ResourceLocation
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.math.roundToInt
 
 object ItemUtils : MinecraftInstance() {
     /**
@@ -89,8 +90,15 @@ val ItemStack.durability
     get() = maxDamage - itemDamage
 
 // Calculates how much estimated durability does the item have thanks to its unbreaking level
-val ItemStack.totalDurability
-    get() = durability * (getEnchantmentLevel(Enchantment.unbreaking) + 1)
+val ItemStack.totalDurability: Int
+    get() {
+        // See https://minecraft.fandom.com/wiki/Unbreaking?oldid=2326887
+        val multiplier =
+            if (item is ItemArmor) 1 / (0.6 + (0.4 / (getEnchantmentLevel(Enchantment.unbreaking) + 1)))
+            else getEnchantmentLevel(Enchantment.unbreaking) + 1.0
+
+        return (multiplier * durability).roundToInt()
+    }
 
 val ItemStack.enchantments: Map<Enchantment, Int>
     get() {

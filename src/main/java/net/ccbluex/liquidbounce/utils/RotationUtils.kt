@@ -100,7 +100,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     override fun handleEvents() = true
 
-    private var keepLength = 0
+    var keepLength = 0
 
     var strafe = false
     var strict = false
@@ -110,8 +110,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     var currentRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
-
-    var keepCurrentRotation = false
 
     // (The priority, the active check and the original rotation)
     var setbackRotation: MutableTriple<Rotation, Boolean, Rotation>? = null
@@ -243,7 +241,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict predict new location of your body
      * @return rotation
      */
-    fun toRotation(vec: Vec3, predict: Boolean, fromEntity: Entity = mc.thePlayer): Rotation {
+    fun toRotation(vec: Vec3, predict: Boolean = false, fromEntity: Entity = mc.thePlayer): Rotation {
         val eyesPos = fromEntity.eyes
         if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
 
@@ -351,9 +349,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param entity your entity
      * @return difference between rotation
      */
-    fun getRotationDifference(entity: Entity) = getRotationDifference(
-        toRotation(getCenter(entity.hitBox), true), Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
-    )
+    fun getRotationDifference(entity: Entity) =
+        getRotationDifference(
+            toRotation(getCenter(entity.hitBox), true),
+            mc.thePlayer.rotation
+        )
 
     /**
      * Calculate difference between two rotations
@@ -499,6 +499,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
             eyes + (getVectorForRotation(rotation) * reach.toDouble())
         )
     }
+
+    fun performRayTrace(blockPos: BlockPos, vec: Vec3, eyes: Vec3 = mc.thePlayer.eyes) =
+        mc.theWorld?.let {
+            blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec)
+        }
 
     fun syncRotations() {
         val player = mc.thePlayer ?: return

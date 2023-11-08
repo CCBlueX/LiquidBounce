@@ -234,6 +234,8 @@
         "module.noRotateSet.description": "防止服务器旋转你的头。",
         
         "module.noScoreboard.description": "隐藏记分板。",
+
+        "module.noSlotSet.description": "防止服务器更改你的物品栏。",
         
         "module.noSlow.description": "消除灵魂沙和使用物品造成的减速效果。",
         

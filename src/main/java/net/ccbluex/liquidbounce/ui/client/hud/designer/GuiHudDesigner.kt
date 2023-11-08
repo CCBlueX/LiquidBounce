@@ -39,9 +39,8 @@ class GuiHudDesigner : GuiScreen() {
 
         if (wheel != 0) {
             for (element in HUD.elements) {
-                if (element.isInBorder(mouseX / element.scale - element.renderX,
-                                mouseY / element.scale - element.renderY)) {
-                    element.scale = element.scale + if (wheel > 0) 0.05f else -0.05f
+                if (element.isInBorder(mouseX / element.scale - element.renderX, mouseY / element.scale - element.renderY)) {
+                    element.scale += if (wheel > 0) 0.05f else -0.05f
                     break
                 }
             }

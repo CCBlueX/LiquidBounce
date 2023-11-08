@@ -15,21 +15,10 @@ import net.minecraft.util.EnumParticleTypes
 
 object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
 
-    private val particle by ListValue(
-        "Particle", arrayOf(
-            "None",
-            "Blood",
-            "Lighting",
-            "Fire",
-            "Heart",
-            "Water",
-            "Smoke",
-            "Magic",
-            "Crits"
-        ), "Blood"
-    )
+    private val particle by ListValue("Particle",
+        arrayOf("None", "Blood", "Lighting", "Fire", "Heart", "Water", "Smoke", "Magic", "Crits"), "Blood")
 
-    private val amount by IntegerValue("ParticleAmount", 5, 1..20) { particle != "None" }
+        private val amount by IntegerValue("ParticleAmount", 5, 1..20) { particle != "None" }
 
     private val sound by ListValue("Sound", arrayOf("None", "Hit", "Orb"), "Hit")
 

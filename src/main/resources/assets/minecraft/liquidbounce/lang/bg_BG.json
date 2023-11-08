@@ -234,6 +234,8 @@
         "module.noRotateSet.description": "Предотвратява сървъра да върти главата ви.",
         
         "module.noScoreboard.description": "Деактивира таблото.",
+
+        "module.noSlotSet.description": "Предотвратява сървъра да променя слотовете ви.",
         
         "module.noSlow.description": "Отменя ефектите на бавността, причинени от пясък на душите и използване на предмети.",
         

@@ -23,7 +23,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
     /**
      * Set rotations to [player]
      */
-    fun toPlayer(player: EntityPlayer) {
+    fun toPlayer(player: EntityPlayer = mc.thePlayer) {
         if (yaw.isNaN() || pitch.isNaN() || pitch > 90 || pitch < -90) return
 
         fixedSensitivity()

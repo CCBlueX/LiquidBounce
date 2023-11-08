@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.ccbluex.liquidbounce.utils.inventory.isSplashPotion
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -43,10 +42,9 @@ import kotlin.math.sqrt
 
 object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting = false) {
     private val colorMode by ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
-
-    private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }
-    private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
+        private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }
+        private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
+        private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {

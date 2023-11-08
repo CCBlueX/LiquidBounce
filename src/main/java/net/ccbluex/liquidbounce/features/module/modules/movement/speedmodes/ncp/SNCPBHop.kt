@@ -58,7 +58,7 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
         if (mc.thePlayer.onGround && isMoving) level = 2
         if (round(mc.thePlayer.posY - mc.thePlayer.posY.toInt().toDouble()) == round(0.138)) {
             mc.thePlayer.motionY -= 0.08
-            event.y = event.y - 0.09316090325960147
+            event.y -= 0.09316090325960147
             mc.thePlayer.posY -= 0.09316090325960147
         }
         if (level == 1 && isMoving) {

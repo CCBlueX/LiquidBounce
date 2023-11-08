@@ -38,15 +38,18 @@ import java.awt.Color
 
 object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
-    private val packets = mutableListOf<Packet<*>>()
-    private val packetsReceived = mutableListOf<Packet<*>>()
-    private var fakePlayer: EntityOtherPlayerMP? = null
-    private val positions = mutableListOf<Vec3>()
+	private val mode by ListValue("Mode", arrayOf("Sent", "Received", "Both"), "Sent")
+
     private val pulse by BoolValue("Pulse", false)
+		private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
+
     private val fakePlayerMenu by BoolValue("FakePlayer", true)
-    private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
-    private val mode by ListValue("Mode", arrayOf("Sent", "Received", "Both"), "Sent")
+
     private val pulseTimer = MSTimer()
+	private val packets = mutableListOf<Packet<*>>()
+	private val packetsReceived = mutableListOf<Packet<*>>()
+	private var fakePlayer: EntityOtherPlayerMP? = null
+	private val positions = mutableListOf<Vec3>()
 
     override fun onEnable() {
         pulseTimer.reset()

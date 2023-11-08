@@ -231,6 +231,8 @@
 
         "module.noScoreboard.description": "Desativa o ScoreBoard.",
 
+        "module.noSlotSet.description": "Impede que o servidor altere seu slot.",
+
         "module.noSlow.description": "Cancela os efeitos de lentidão causados Por Areia da Alma e uso de itens.",
 
         "module.noSlowBreak.description": "Remove o atraso de quebrar blocos.",

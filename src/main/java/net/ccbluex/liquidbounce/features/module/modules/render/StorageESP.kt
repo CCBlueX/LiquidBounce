@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
+import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedTileEntities
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
@@ -33,10 +33,10 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
     private val mode by
         ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "Glow", "2D", "WireFrame"), "Outline")
 
-    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
-    private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
-    private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
-    private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+        private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
+        private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+        private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+        private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
     private val chest by BoolValue("Chest", true)
     private val enderChest by BoolValue("EnderChest", true)
@@ -49,8 +49,8 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
 
     private fun getColor(tileEntity: TileEntity): Color? {
         return when {
-            chest && tileEntity is TileEntityChest && tileEntity.pos !in clickedBlocks -> Color(0, 66, 255)
-            enderChest && tileEntity is TileEntityEnderChest && tileEntity.pos !in clickedBlocks -> Color.MAGENTA
+            chest && tileEntity is TileEntityChest && tileEntity !in clickedTileEntities -> Color(0, 66, 255)
+            enderChest && tileEntity is TileEntityEnderChest && tileEntity !in clickedTileEntities -> Color.MAGENTA
             furnace && tileEntity is TileEntityFurnace -> Color.BLACK
             dispenser && tileEntity is TileEntityDispenser -> Color.BLACK
             hopper && tileEntity is TileEntityHopper -> Color.GRAY

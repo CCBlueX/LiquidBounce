@@ -24,11 +24,11 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
 
     private val mode by ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
 
-    private val noMove by BoolValue("NoMove", false)
+        private val delay by IntegerValue("CustomDelay", 0, 0..300) { mode == "Custom" }
+        private val customSpeed by IntegerValue("CustomSpeed", 2, 1..35) { mode == "Custom" }
+        private val customTimer by FloatValue("CustomTimer", 1.1f, 0.5f..2f) { mode == "Custom" }
 
-    private val delay by IntegerValue("CustomDelay", 0, 0..300) { mode == "Custom" }
-    private val customSpeed by IntegerValue("CustomSpeed", 2, 1..35) { mode == "Custom" }
-    private val customTimer by FloatValue("CustomTimer", 1.1f, 0.5f..2f) { mode == "Custom" }
+    private val noMove by BoolValue("NoMove", false)
 
     private val msTimer = MSTimer()
     private var usedTimer = false

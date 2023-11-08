@@ -70,15 +70,12 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     private val modes = flyModes.map { it.modeName }.toTypedArray()
 
-    val mode by ListValue(
-        "Mode", modes, "Vanilla"
-    )
-    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..10f, subjective = true) {
-        mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan")
-    }
-    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true) {
-        mode in arrayOf("Vanilla", "SmoothVanilla")
-    }
+    val mode by ListValue("Mode", modes, "Vanilla")
+
+    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..10f, subjective = true)
+        { mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan") }
+    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true)
+        { mode in arrayOf("Vanilla", "SmoothVanilla") }
     val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
     // AAC
@@ -89,8 +86,10 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     // Hypixel
     val hypixelBoost by BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
-    val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 50..2000) { mode == "Hypixel" && hypixelBoost }
-    val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0.1f..5f) { mode == "Hypixel" && hypixelBoost }
+    val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 50..2000)
+        { mode == "Hypixel" && hypixelBoost }
+    val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0.1f..5f)
+        { mode == "Hypixel" && hypixelBoost }
 
     // Other
     val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
@@ -99,6 +98,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
+
     var startY = 0.0
         private set
 

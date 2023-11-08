@@ -6,9 +6,12 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.NoSlotSet
+import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.minecraft.block.BlockBush
 import net.minecraft.init.Blocks
 import net.minecraft.item.Item
@@ -46,6 +49,9 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 _serverOpenInventory = value
             }
         }
+
+    var serverOpenContainer = false
+        private set
 
     // Backing fields
     private var _serverSlot = 0
@@ -151,6 +157,13 @@ object InventoryUtils : MinecraftInstance(), Listenable {
             is C0DPacketCloseWindow, is S2EPacketCloseWindow, is S2DPacketOpenWindow -> {
                 isFirstInventoryClick = false
                 _serverOpenInventory = false
+                serverOpenContainer = false
+
+                if (packet is S2DPacketOpenWindow) {
+                    if (packet.guiId == "minecraft:chest" || packet.guiId == "minecraft:container")
+                        serverOpenContainer = true
+                } else
+                    ChestAura.tileTarget = null
             }
 
             is C09PacketHeldItemChange -> {
@@ -162,7 +175,22 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 else _serverSlot = packet.slotId
             }
 
-            is S09PacketHeldItemChange -> _serverSlot = packet.heldItemHotbarIndex
+            is S09PacketHeldItemChange -> {
+                if (_serverSlot == packet.heldItemHotbarIndex)
+                    return
+
+                val prevSlot = _serverSlot
+
+                _serverSlot = packet.heldItemHotbarIndex
+
+                if (NoSlotSet.handleEvents()) {
+                    TickedActions.TickScheduler(NoSlotSet) += {
+                        serverSlot = prevSlot
+                    }
+
+                    event.cancelEvent()
+                }
+            }
         }
     }
 
@@ -170,6 +198,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     fun onWorld(event: WorldEvent) {
         // Prevents desync
         _serverOpenInventory = false
+        _serverSlot = 0
+        serverOpenContainer = false
     }
 
     override fun handleEvents() = true

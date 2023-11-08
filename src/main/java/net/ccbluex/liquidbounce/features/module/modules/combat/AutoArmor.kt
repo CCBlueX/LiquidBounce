@@ -8,12 +8,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner.canBeRepairedWithOther
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.inventory.ArmorComparator.getBestArmorSet
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduled
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduledInLastLoop
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
@@ -48,17 +49,17 @@ object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 
 	// When swapping armor pieces, it grabs the better one, drags and swaps it with equipped one and drops the equipped one (no time of having no armor piece equipped)
 	// Has to make more clicks, works slower
-	private val smartSwap by BoolValue("SmartSwap", true)
+	val smartSwap by BoolValue("SmartSwap", true)
 
 	private val noMove by InventoryManager.noMoveValue
 	private val noMoveAir by InventoryManager.noMoveAirValue
 	private val noMoveGround by InventoryManager.noMoveGroundValue
 
 	private val hotbar by BoolValue("Hotbar", true)
-	// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan
-	private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
-	// Prevents AutoArmor from hotbar equipping while any screen is open
-	private val notInContainers by BoolValue("NotInContainers", false) { hotbar }
+		// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan
+		private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
+		// Prevents AutoArmor from hotbar equipping while any screen is open
+		private val notInContainers by BoolValue("NotInContainers", false) { hotbar }
 
 	suspend fun equipFromHotbar() {
 		if (!shouldOperate(onlyHotbar = true))
@@ -79,6 +80,9 @@ object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 			val hotbarIndex = index?.toHotbarIndex(stacks.size) ?: continue
 
 			if (index in TickScheduler || armorType + 5 in TickScheduler)
+				continue
+
+			if (!stack.hasItemAgePassed(minItemAge))
 				continue
 
 			val armorPos = getArmorPosition(stack) - 1
@@ -144,6 +148,11 @@ object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 				continue
 
 			if (!stack.hasItemAgePassed(minItemAge))
+				continue
+
+			// Don't equip if it can be repaired with other armor piece, wait for the repair to happen first
+			// Armor piece will then get equipped right after the repair
+			if (canBeRepairedWithOther(stack, stacks))
 				continue
 
 			when (stacks[armorType + 5]) {
@@ -228,6 +237,10 @@ object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 	}
 
 	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
+		// Wait for NoMove or cancel click
+		if (!shouldOperate())
+			return
+
 		if (simulateInventory || invOpen)
 			serverOpenInventory = true
 
@@ -240,7 +253,7 @@ object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 
 		TickScheduler.scheduleClick(slot, button, mode, allowDuplicates)
 
-		hasScheduled = true
+		hasScheduledInLastLoop = true
 
 		delay(randomDelay(minDelay, maxDelay).toLong())
 	}

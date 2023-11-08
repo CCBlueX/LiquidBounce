@@ -17,8 +17,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 object Rotations : Module("Rotations", ModuleCategory.RENDER, gameDetecting = false) {
 
     private val realistic by BoolValue("Realistic", true)
-
-    private val body by BoolValue("Body", true) { !realistic }
+        private val body by BoolValue("Body", true) { !realistic }
 
     var prevHeadPitch = 0f
     var headPitch = 0f

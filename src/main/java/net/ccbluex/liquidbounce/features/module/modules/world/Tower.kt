@@ -62,8 +62,10 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val swing by BoolValue("Swing", true, subjective = true)
     private val stopWhenBlockAbove by BoolValue("StopWhenBlockAbove", false)
+
     private val rotations by BoolValue("Rotations", true)
-    private val keepRotation by BoolValue("KeepRotation", false) { rotations }
+        private val keepRotation by BoolValue("KeepRotation", false) { rotations }
+
     private val onJump by BoolValue("OnJump", false)
     private val matrix by BoolValue("Matrix", false)
     private val placeMode by ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post") { mode != "Packet" }
@@ -275,15 +277,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
         }
 
         // Place block
-        if (mc.playerController.onPlayerRightClick(
-                thePlayer, mc.theWorld!!, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3
-            )
-        ) {
-            if (swing) {
-                thePlayer.swingItem()
-            } else {
-                sendPacket(C0APacketAnimation())
-            }
+        if (thePlayer.onPlayerRightClick(placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3, itemStack)) {
+            if (swing) thePlayer.swingItem()
+            else sendPacket(C0APacketAnimation())
         }
 
         if (autoBlock == "Switch")
@@ -349,8 +345,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
         placeRotation ?: return false
 
         if (rotations) {
-            setTargetRotation(placeRotation.rotation)
-            lockRotation = placeRotation.rotation
+            val fixedSensitivityRotation = placeRotation.rotation.fixedSensitivity()
+            setTargetRotation(fixedSensitivityRotation)
+            lockRotation = fixedSensitivityRotation
         }
         placeInfo = placeRotation.placeInfo
         return true

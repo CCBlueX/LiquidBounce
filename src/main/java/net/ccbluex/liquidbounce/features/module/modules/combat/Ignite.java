@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
+import net.ccbluex.liquidbounce.utils.extensions.PlayerExtensionKt;
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.timing.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
@@ -73,7 +74,8 @@ public class Ignite extends Module {
                        !(getBlock(blockPos) instanceof BlockAir))
                    continue;
 
-               RotationUtils.INSTANCE.setKeepCurrentRotation(true);
+               // Probably used to prevent rotation changes while igniting
+               RotationUtils.INSTANCE.setKeepLength(RotationUtils.INSTANCE.getKeepLength() + 1);
 
                InventoryUtils.INSTANCE.setServerSlot(fireInHotbar - 36);
 
@@ -97,7 +99,7 @@ public class Ignite extends Module {
                                    MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
                            mc.thePlayer.onGround));
 
-                   mc.playerController.sendUseItem(thePlayer, theWorld, itemStack);
+                   PlayerExtensionKt.sendUseItem(thePlayer, itemStack);
                } else {
                    for (final EnumFacing side : EnumFacing.values()) {
                        final BlockPos neighbor = blockPos.offset(side);
@@ -120,15 +122,14 @@ public class Ignite extends Module {
                                        MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
                                mc.thePlayer.onGround));
 
-                       if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor,
-                               side.getOpposite(), new Vec3(side.getDirectionVec()))) {
+                       if (PlayerExtensionKt.onPlayerRightClick(thePlayer, neighbor, side.getOpposite(),
+                               new Vec3(side.getDirectionVec()), itemStack)) {
                            thePlayer.swingItem();
                            break;
                        }
                    }
                }
 
-               RotationUtils.INSTANCE.setKeepCurrentRotation(false);
                sendPackets(
                        new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem),
                        new C05PacketPlayerLook(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, mc.thePlayer.onGround)

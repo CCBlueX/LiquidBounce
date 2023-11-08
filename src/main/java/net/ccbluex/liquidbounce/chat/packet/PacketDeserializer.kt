@@ -18,7 +18,7 @@ import java.lang.reflect.Type
  */
 class PacketDeserializer : JsonDeserializer<Packet> {
 
-    private val packetRegistry = HashMap<String, Class<out Packet>>()
+    private val packetRegistry = hashMapOf<String, Class<out Packet>>()
 
     /**
      * Register packet

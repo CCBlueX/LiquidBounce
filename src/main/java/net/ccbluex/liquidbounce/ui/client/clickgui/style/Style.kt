@@ -24,14 +24,14 @@ abstract class Style : MinecraftInstance() {
             return field
         }
 
-    internal abstract fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
-    internal abstract fun drawHoverText(mouseX: Int, mouseY: Int, text: String)
-    internal abstract fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
-    internal abstract fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean
+    abstract fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
+    abstract fun drawHoverText(mouseX: Int, mouseY: Int, text: String)
+    abstract fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
+    abstract fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean
 
-    internal fun clickSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1f))
+    fun clickSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1f))
 
-    internal fun showSettingsSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.bow"), 1f))
+    fun showSettingsSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.bow"), 1f))
 
     protected fun round(v: Float): Float {
         var bigDecimal = BigDecimal(v.toString())

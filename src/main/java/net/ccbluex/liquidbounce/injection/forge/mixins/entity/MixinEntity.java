@@ -200,8 +200,8 @@ public abstract class MixinEntity {
             prevRotationYaw = rotationYaw;
             prevRotationPitch = rotationPitch;
 
-            rotationYaw += yaw * 0.15;
-            rotationPitch -= pitch * 0.15;
+            rotationYaw += (float) (yaw * 0.15);
+            rotationPitch -= (float) (pitch * 0.15);
         }
     }
 

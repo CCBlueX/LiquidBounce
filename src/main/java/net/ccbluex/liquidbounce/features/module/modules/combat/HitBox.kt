@@ -19,15 +19,17 @@ import net.minecraft.entity.player.EntityPlayer
 
 object HitBox : Module("HitBox", ModuleCategory.COMBAT) {
 
-    val targetPlayers by BoolValue("TargetPlayers", true)
-    val playerSize by FloatValue("PlayerSize", 0.4F, 0F..1F) { targetPlayers }
-    val friendSize by FloatValue("FriendSize", 0.4F, 0F..1F) { targetPlayers }
-    val teamMateSize by FloatValue("TeamMateSize", 0.4F, 0F..1F) { targetPlayers }
-    val botSize by FloatValue("BotSize", 0.4F, 0F..1F) { targetPlayers }
-    val targetMobs by BoolValue("TargetMobs", false)
-    val mobSize by FloatValue("MobSize", 0.4F, 0F..1F) { targetMobs }
-    val targetAnimals by BoolValue("TargetAnimals", false)
-    val animalSize by FloatValue("AnimalSize", 0.4F, 0F..1F) { targetAnimals }
+    private val targetPlayers by BoolValue("TargetPlayers", true)
+        private val playerSize by FloatValue("PlayerSize", 0.4F, 0F..1F) { targetPlayers }
+        private val friendSize by FloatValue("FriendSize", 0.4F, 0F..1F) { targetPlayers }
+        private val teamMateSize by FloatValue("TeamMateSize", 0.4F, 0F..1F) { targetPlayers }
+        private val botSize by FloatValue("BotSize", 0.4F, 0F..1F) { targetPlayers }
+
+    private val targetMobs by BoolValue("TargetMobs", false)
+        private val mobSize by FloatValue("MobSize", 0.4F, 0F..1F) { targetMobs }
+
+    private val targetAnimals by BoolValue("TargetAnimals", false)
+        private val animalSize by FloatValue("AnimalSize", 0.4F, 0F..1F) { targetAnimals }
 
     fun determineSize(entity: Entity): Float {
         return when (entity) {

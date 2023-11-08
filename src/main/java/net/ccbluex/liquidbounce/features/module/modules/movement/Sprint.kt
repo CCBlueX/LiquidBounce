@@ -25,35 +25,22 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
 
     val onlyOnSprintPress by BoolValue("OnlyOnSprintPress", false) 
 
-    val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
+        val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
+        val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
 
-    val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
+        private val allDirectionsLimitSpeed by FloatValue("AllDirectionsLimitSpeed", 1f, 0.75f..1f)
+            { mode == "Vanilla" && allDirections }
+        private val allDirectionsLimitSpeedGround by BoolValue("AllDirectionsLimitSpeedOnlyGround", true)
+            { mode == "Vanilla" && allDirections }
 
-    private val allDirectionsLimitSpeed by FloatValue(
-        "AllDirectionsLimitSpeed",
-        1f,
-        0.75f..1f
-    ) { mode == "Vanilla" && allDirections }
+        private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
+        private val usingItem by BoolValue("UsingItem", false) { mode == "Vanilla" }
+        private val inventory by BoolValue("Inventory", false) { mode == "Vanilla" }
+        private val food by BoolValue("Food", true) { mode == "Vanilla" }
 
-    private val allDirectionsLimitSpeedGround by BoolValue(
-        "AllDirectionsLimitSpeedOnlyGround",
-        true
-    ) { mode == "Vanilla" && allDirections }
-
-    private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
-
-    private val usingItem by BoolValue("UsingItem", false) { mode == "Vanilla" }
-
-    private val food by BoolValue("Food", true) { mode == "Vanilla" }
-
-    private val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
-
-    private val checkServerSideGround by BoolValue(
-        "CheckServerSideOnlyGround",
-        false
-    ) { mode == "Vanilla" && checkServerSide }
-
-    private val inventory by BoolValue("Inventory", false) { mode == "Vanilla" }
+        private val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
+        private val checkServerSideGround by BoolValue("CheckServerSideOnlyGround", false)
+            { mode == "Vanilla" && checkServerSide }
 
     override val tag
         get() = mode
@@ -84,9 +71,9 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             player.isSprinting = !shouldStopSprinting(movementInput, isUsingItem)
 
             if (player.isSprinting && allDirections && mode != "Legit") {
-                if (!allDirectionsLimitSpeedGround || mc.thePlayer.onGround) {
-                    mc.thePlayer.motionX *= allDirectionsLimitSpeed
-                    mc.thePlayer.motionZ *= allDirectionsLimitSpeed
+                if (!allDirectionsLimitSpeedGround || player.onGround) {
+                    player.motionX *= allDirectionsLimitSpeed
+                    player.motionZ *= allDirectionsLimitSpeed
                 }
             }
         }

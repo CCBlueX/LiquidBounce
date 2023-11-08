@@ -38,7 +38,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
     private val delay by IntegerValue("Delay", 500, 500..1000)
 
     private val openInventory by BoolValue("OpenInv", false)
-    private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
+        private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
 
     private val groundDistance by FloatValue("GroundDistance", 2F, 0F..5F)
     private val mode by ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")

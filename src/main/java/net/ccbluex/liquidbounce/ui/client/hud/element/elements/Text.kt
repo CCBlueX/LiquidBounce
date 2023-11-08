@@ -62,18 +62,18 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private var displayString by TextValue("DisplayText", "")
 
     private val rainbow by BoolValue("Rainbow", false)
-    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { rainbow }
-    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { rainbow }
+        private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { rainbow }
+        private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { rainbow }
 
-    private var alpha by IntegerValue("Alpha", 255, 0..255) { !rainbow }
-    private var red by IntegerValue("Red", 255, 0..255) { !rainbow && alpha > 0 }
-    private var green by IntegerValue("Green", 255, 0..255) { !rainbow && alpha > 0 }
-    private var blue by IntegerValue("Blue", 255, 0..255) { !rainbow && alpha > 0 }
+        private var alpha by IntegerValue("Alpha", 255, 0..255) { !rainbow }
+            private var red by IntegerValue("Red", 255, 0..255) { !rainbow && alpha > 0 }
+            private var green by IntegerValue("Green", 255, 0..255) { !rainbow && alpha > 0 }
+            private var blue by IntegerValue("Blue", 255, 0..255) { !rainbow && alpha > 0 }
 
     private val backgroundAlpha by IntegerValue("BackgroundAlpha", 0, 0..255)
-    private val backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
-    private val backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
-    private val backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
+        private val backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
+        private val backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
+        private val backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
 
     private var shadow by BoolValue("Shadow", true)
     private val font by FontValue("Font", Fonts.font40)
@@ -119,12 +119,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "ping" -> return thePlayer.getPing()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
-                "yaw" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw)
-                "pitch" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch)
-                "yawint" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationYaw).toInt()
-                "pitchint" -> return DECIMAL_FORMAT.format(mc.thePlayer.rotationPitch).toInt()
+                "yaw" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw)
+                "pitch" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch)
+                "yawint" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw).toInt()
+                "pitchint" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch).toInt()
                 "food" -> return thePlayer.foodStats.foodLevel
-                "onground" -> return mc.thePlayer.onGround
+                "onground" -> return thePlayer.onGround
             }
         }
 

@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.cos
 import kotlin.math.sin
@@ -26,24 +28,7 @@ val speed by FloatValue("Speed", 0.5f, 0f..10f)
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-		if (isMoving) {
-			val dir = direction;
-			
-			val xDir = -sin(dir) * speed
-			val zDir = cos(dir) * speed
-			
-			event.x = xDir
-			event.z = zDir
-			thePlayer.motionX = xDir * 0.9
-			thePlayer.motionZ = zDir * 0.9
-		}
-		else
-		{
-			event.x = 0.0
-			event.z = 0.0
-			thePlayer.motionX = 0.0
-			thePlayer.motionZ = 0.0
-		}
+	    strafe(speed, stopWhenNoInput = true, event)
 
         thePlayer.noClip = true
         thePlayer.onGround = false

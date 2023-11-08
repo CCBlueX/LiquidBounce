@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.renderer.GlStateManager.resetColor
 import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
@@ -43,18 +42,17 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     private val rectMode by ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
     private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow") { rectMode != "None" }
-    
-    private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
-    private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
-    private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
-    private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
-    private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
+        private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
+        private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
+        private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
+        private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
+        private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
 
     private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
-    private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
-    private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
-    private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
-    private val backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255) { backgroundMode == "Custom" }
+        private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
+        private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
+        private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
+        private val backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255) { backgroundMode == "Custom" }
 
     private fun isColorModeUsed(value: String) = textColorMode == value || rectMode == value || backgroundMode == value
     private val saturation by FloatValue("Random-Saturation", 0.9f, 0f..1f) { isColorModeUsed("Random") }
@@ -63,16 +61,16 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { isColorModeUsed("Rainbow") }
 
     private val tags by BoolValue("Tags", true)
-    private val tagsStyle by object : ListValue("TagsStyle", arrayOf("[]", "()", "<>", "-", "|", "Space"), "Space") {
-        override fun isSupported() = tags
+        private val tagsStyle by object : ListValue("TagsStyle", arrayOf("[]", "()", "<>", "-", "|", "Space"), "Space") {
+            override fun isSupported() = tags
 
-        // onUpdate - updates tag onInit and onChanged
-        override fun onUpdate(value: String) = updateTagDetails()
-    }
-    private val tagsArrayColor by object : BoolValue("TagsArrayColor", false) {
-        override fun isSupported() = tags
-        override fun onUpdate(value: Boolean) = updateTagDetails()
-    }
+            // onUpdate - updates tag onInit and onChanged
+            override fun onUpdate(value: String) = updateTagDetails()
+        }
+        private val tagsArrayColor by object : BoolValue("TagsArrayColor", false) {
+            override fun isSupported() = tags
+            override fun onUpdate(value: Boolean) = updateTagDetails()
+        }
 
     private val font by FontValue("Font", Fonts.font40)
     private val textShadow by BoolValue("ShadowText", true)

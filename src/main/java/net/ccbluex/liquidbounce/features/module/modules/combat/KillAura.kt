@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
-import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
 import net.ccbluex.liquidbounce.utils.CooldownHelper.resetLastAttackedTicks
@@ -138,48 +137,47 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
     // AutoBlock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
-    private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true) {
-        autoBlock !in arrayOf(
-            "Off",
-            "Fake"
-        )
-    }
-    private val ignoreTickRule by BoolValue("IgnoreTickRule", false) { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
-    private val interactAutoBlock by BoolValue("InteractAutoBlock", true) { autoBlock !in arrayOf("Off", "Fake") }
+        private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true)
+                { autoBlock !in arrayOf("Off", "Fake") }
+            private val ignoreTickRule by BoolValue("IgnoreTickRule", false)
+                { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
+            private val blockRate by IntegerValue("BlockRate", 100, 1..100)
+                { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
 
-    // AutoBlock conditions
-    private val smartAutoBlock by BoolValue("SmartAutoBlock", false) { autoBlock != "Off" }
 
-    // Ignore all blocking conditions, except for block rate, when standing still
-    private val forceBlock by BoolValue("ForceBlockWhenStill", true) { autoBlock != "Off" && smartAutoBlock }
+        private val interactAutoBlock by BoolValue("InteractAutoBlock", true)
+            { autoBlock !in arrayOf("Off", "Fake") }
 
-    // Don't block if target isn't holding a sword or an axe
-    private val checkWeapon by BoolValue("CheckEnemyWeapon", true) { autoBlock != "Off" && smartAutoBlock }
+        // AutoBlock conditions
+        private val smartAutoBlock by BoolValue("SmartAutoBlock", false) { autoBlock != "Off" }
 
-    // TODO: Make block range independent from attack range
-    private var blockRange by object : FloatValue("BlockRange", range, 1f..8f) {
-        override fun isSupported() = autoBlock != "Off" && smartAutoBlock
+            // Ignore all blocking conditions, except for block rate, when standing still
+            private val forceBlock by BoolValue("ForceBlockWhenStill", true)
+                { autoBlock != "Off" && smartAutoBlock }
 
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(this@KillAura.range)
-    }
+            // Don't block if target isn't holding a sword or an axe
+            private val checkWeapon by BoolValue("CheckEnemyWeapon", true)
+                { autoBlock != "Off" && smartAutoBlock }
 
-    // Don't block when you can't get damaged
-    private val maxOwnHurtTime by IntegerValue("MaxOwnHurtTime", 3, 0..10) { autoBlock != "Off" && smartAutoBlock }
+            // TODO: Make block range independent from attack range
+            private var blockRange by object : FloatValue("BlockRange", range, 1f..8f) {
+                override fun isSupported() = autoBlock != "Off" && smartAutoBlock
 
-    // Don't block if target isn't looking at you
-    private val maxDirectionDiff by FloatValue(
-        "MaxOpponentDirectionDiff",
-        60f,
-        30f..180f
-    ) { autoBlock != "Off" && smartAutoBlock }
+                override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(this@KillAura.range)
+            }
 
-    // Don't block if target is swinging an item and therefore cannot attack
-    private val maxSwingProgress by IntegerValue(
-        "MaxOpponentSwingProgress",
-        1,
-        0..5
-    ) { autoBlock != "Off" && smartAutoBlock }
-    private val blockRate by IntegerValue("BlockRate", 100, 1..100) { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
+            // Don't block when you can't get damaged
+            private val maxOwnHurtTime by IntegerValue("MaxOwnHurtTime", 3, 0..10)
+                { autoBlock != "Off" && smartAutoBlock }
+
+            // Don't block if target isn't looking at you
+            private val maxDirectionDiff by FloatValue("MaxOpponentDirectionDiff", 60f, 30f..180f)
+                { autoBlock != "Off" && smartAutoBlock }
+
+            // Don't block if target is swinging an item and therefore cannot attack
+            private val maxSwingProgress by IntegerValue("MaxOpponentSwingProgress", 1, 0..5)
+                { autoBlock != "Off" && smartAutoBlock }
+
 
     // Turn Speed
     private val maxTurnSpeedValue = object : FloatValue("MaxTurnSpeed", 180f, 0f..180f) {
@@ -196,9 +194,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     // Raycast
     private val raycastValue = BoolValue("RayCast", true) { !maxTurnSpeedValue.isMinimal() }
     private val raycast by raycastValue
-
-    private val raycastIgnored by BoolValue("RayCastIgnored", false) { raycastValue.isActive() }
-    private val livingRaycast by BoolValue("LivingRayCast", true) { raycastValue.isActive() }
+        private val raycastIgnored by BoolValue("RayCastIgnored", false) { raycastValue.isActive() }
+        private val livingRaycast by BoolValue("LivingRayCast", true) { raycastValue.isActive() }
 
     // Bypass
     // AAC value also modifies target selection a bit, not just rotations, but it is minor
@@ -215,15 +212,15 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
     private val micronizedValue = BoolValue("Micronized", true) { !maxTurnSpeedValue.isMinimal() }
     private val micronized by micronizedValue
-
-    private val micronizedStrength by FloatValue("MicronizedStrength", 0.8f, 0.2f..2f) { micronizedValue.isActive() }
+        private val micronizedStrength by FloatValue("MicronizedStrength", 0.8f, 0.2f..2f)
+            { micronizedValue.isActive() }
 
     // Rotations
     private val silentRotationValue = BoolValue("SilentRotation", true) { !maxTurnSpeedValue.isMinimal() }
     private val silentRotation by silentRotationValue
-    private val rotationStrafe by ListValue(
-        "Strafe", arrayOf("Off", "Strict", "Silent"), "Off"
-    ) { silentRotationValue.isActive() }
+        private val rotationStrafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
+            { silentRotationValue.isActive() }
+
     private val randomCenter by BoolValue("RandomCenter", true) { !maxTurnSpeedValue.isMinimal() }
     private val outborder by BoolValue("Outborder", false) { !maxTurnSpeedValue.isMinimal() }
     private val fov by FloatValue("FOV", 180f, 0f..180f)
@@ -231,26 +228,26 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     // Predict
     private val predictValue = BoolValue("Predict", true) { !maxTurnSpeedValue.isMinimal() }
     private val predict by predictValue
+        private val maxPredictSizeValue = object : FloatValue("MaxPredictSize", 1f, 0.1f..5f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minPredictSize)
 
-    private val maxPredictSizeValue = object : FloatValue("MaxPredictSize", 1f, 0.1f..5f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minPredictSize)
+            override fun isSupported() = predictValue.isActive()
+        }
 
-        override fun isSupported() = predictValue.isActive()
-    }
-    private val maxPredictSize by maxPredictSizeValue
+        private val maxPredictSize by maxPredictSizeValue
+        private val minPredictSize: Float by object : FloatValue("MinPredictSize", 1f, 0.1f..5f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxPredictSize)
 
-    private val minPredictSize: Float by object : FloatValue("MinPredictSize", 1f, 0.1f..5f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxPredictSize)
-
-        override fun isSupported() = predictValue.isActive() && !maxPredictSizeValue.isMinimal()
-    }
+            override fun isSupported() = predictValue.isActive() && !maxPredictSizeValue.isMinimal()
+        }
 
     // Bypass
     private val failRate by IntegerValue("FailRate", 0, 0..99)
     private val fakeSwing by BoolValue("FakeSwing", true) { swing }
     private val noInventoryAttack by BoolValue("NoInvAttack", false, subjective = true)
+        private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500, subjective = true)
+            { noInventoryAttack }
     private val noConsumeAttack by ListValue("NoConsumeAttack", arrayOf("Off", "NoHits", "NoRotation"), "Off", subjective = true)
-    private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500, subjective = true) { noInventoryAttack }
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
@@ -846,16 +843,15 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 if (smartAutoBlock) {
                     if (!isMoving && forceBlock) return true
 
-                    if (checkWeapon && (currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe)) return false
+                    if (checkWeapon && (currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe))
+                        return false
 
                     if (mc.thePlayer.hurtTime > maxOwnHurtTime) return false
 
                     val rotationToPlayer = toRotation(getCenter(mc.thePlayer.hitBox), true, currentTarget!!)
 
-                    if (getRotationDifference(
-                            rotationToPlayer, currentTarget!!.rotation
-                        ) > maxDirectionDiff
-                    ) return false
+                    if (getRotationDifference(rotationToPlayer, currentTarget!!.rotation) > maxDirectionDiff)
+                        return false
 
                     if (currentTarget!!.swingProgressInt > maxSwingProgress) return false
 

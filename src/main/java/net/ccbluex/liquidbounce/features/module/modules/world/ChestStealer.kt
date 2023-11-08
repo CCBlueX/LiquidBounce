@@ -32,7 +32,6 @@ import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.init.Blocks
-import net.minecraft.init.Items
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0DPacketCloseWindow
@@ -136,6 +135,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
             run scheduler@ {
                 itemsToSteal.forEachIndexed { index, (slot, stack, sortableTo) ->
+                    // Wait for NoMove or cancel click
                     if (!shouldOperate()) {
                         TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
                         return
@@ -209,13 +209,16 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                 if (index in TickScheduler) return@mapIndexedNotNull null
 
-                val mergableCount = mc.thePlayer.inventory.mainInventory.sumOf {
-                    if (it?.isItemEqual(stack) == true) it.maxStackSize - it.stackSize
+                val mergeableCount = mc.thePlayer.inventory.mainInventory.sumOf { otherStack ->
+                    otherStack ?: return@sumOf 0
+
+                    if (otherStack.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stack, otherStack))
+                        otherStack.maxStackSize - otherStack.stackSize
                     else 0
                 }
 
-                val canMerge = mergableCount > 0
-                val canFullyMerge = mergableCount >= stack.stackSize
+                val canMerge = mergeableCount > 0
+                val canFullyMerge = mergeableCount >= stack.stackSize
 
                 // Clicking this item wouldn't take it from chest or merge it
                 if (!canMerge && spaceInInventory <= 0) return@mapIndexedNotNull null
@@ -293,9 +296,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val packet = event.packet
-
-        when (packet) {
+        when (val packet = event.packet) {
             is C0DPacketCloseWindow, is S2DPacketOpenWindow, is S2EPacketCloseWindow -> {
                 receivedId = null
                 progress = null
