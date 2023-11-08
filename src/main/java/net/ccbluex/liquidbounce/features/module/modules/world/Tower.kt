@@ -277,15 +277,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
         }
 
         // Place block
-        if (mc.playerController.onPlayerRightClick(
-                thePlayer, mc.theWorld!!, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3
-            )
-        ) {
-            if (swing) {
-                thePlayer.swingItem()
-            } else {
-                sendPacket(C0APacketAnimation())
-            }
+        if (thePlayer.onPlayerRightClick(placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3, itemStack)) {
+            if (swing) thePlayer.swingItem()
+            else sendPacket(C0APacketAnimation())
         }
 
         if (autoBlock == "Switch")

@@ -1178,59 +1178,28 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     private fun tryToPlaceBlock(
         stack: ItemStack,
-        hitPos: BlockPos,
+        clickPos: BlockPos,
         side: EnumFacing,
         hitVec: Vec3,
         attempt: Boolean = false
     ): Boolean {
-        val (facingX, facingY, facingZ) = (hitVec - hitPos.toVec()).toFloatTriple()
-        val hitState = getState(hitPos)
-        val item = stack.item
+        val thePlayer = mc.thePlayer ?: return false
+
         val prevSize = stack.stackSize
 
-        // Adjusted mc.playerController.onPlayerRightClick() that sends correct stack in its C08
-        val clickedSuccessfully = run {
-            if (item !is ItemBlock)
-                return@run false
-
-            if (!mc.theWorld.worldBorder.contains(hitPos))
-                return@run false
-
-            if (!item.canPlaceBlockOnSide(mc.theWorld, hitPos, side, mc.thePlayer, stack))
-                return@run false
-
-            sendPacket(
-                C08PacketPlayerBlockPlacement(hitPos, side.index, stack, facingX, facingY, facingZ)
-            )
-
-            if (!mc.thePlayer.isSneaking && hitState?.block?.onBlockActivated(
-                    mc.theWorld, hitPos, hitState, mc.thePlayer,
-                    side, facingX, facingY, facingZ
-                ) == true
-            )
-                return@run true
-
-            val prevMetadata = stack.metadata
-
-            stack.onItemUse(mc.thePlayer, mc.theWorld, hitPos, side, facingX, facingY, facingZ).also {
-                if (mc.playerController.isInCreativeMode) {
-                    stack.itemDamage = prevMetadata
-                    stack.stackSize = prevSize
-                }
-            }
-        }
+        val clickedSuccessfully = thePlayer.onPlayerRightClick(clickPos, side, hitVec, stack)
 
         if (clickedSuccessfully) {
             if (!attempt) {
                 delayTimer.reset()
 
-                if (mc.thePlayer.onGround) {
-                    mc.thePlayer.motionX *= speedModifier
-                    mc.thePlayer.motionZ *= speedModifier
+                if (thePlayer.onGround) {
+                    thePlayer.motionX *= speedModifier
+                    thePlayer.motionZ *= speedModifier
                 }
             }
 
-            if (swing) mc.thePlayer.swingItem()
+            if (swing) thePlayer.swingItem()
             else sendPacket(C0APacketAnimation())
 
             if (isManualJumpOptionActive)
@@ -1239,25 +1208,14 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             updatePlacedBlocksForTelly()
 
             if (stack.stackSize <= 0) {
-                mc.thePlayer.inventory.mainInventory[serverSlot] = null
-                ForgeEventFactory.onPlayerDestroyItem(mc.thePlayer, stack)
+                thePlayer.inventory.mainInventory[serverSlot] = null
+                ForgeEventFactory.onPlayerDestroyItem(thePlayer, stack)
             } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
         } else {
-            // Adjusted mc.playerController.sendUseItem() that sends correct stack in its C08
-            sendPacket(C08PacketPlayerBlockPlacement(stack))
-            val newStack = stack.useItemRightClick(mc.theWorld, mc.thePlayer)
-
-            if (newStack != stack || newStack.stackSize != prevSize) {
-                if (newStack.stackSize <= 0) {
-                    mc.thePlayer.inventory.mainInventory[serverSlot] = null
-                    ForgeEventFactory.onPlayerDestroyItem(mc.thePlayer, newStack)
-                } else
-                    mc.thePlayer.inventory.mainInventory[serverSlot] = newStack
-
+            if (thePlayer.sendUseItem(stack))
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
-            }
         }
 
         return clickedSuccessfully

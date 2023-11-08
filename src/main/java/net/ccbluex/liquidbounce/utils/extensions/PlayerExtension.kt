@@ -7,8 +7,11 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.entity.Entity
@@ -22,8 +25,14 @@ import net.minecraft.entity.passive.EntityBat
 import net.minecraft.entity.passive.EntitySquid
 import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
+import net.minecraftforge.event.ForgeEventFactory
 
 /**
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
@@ -114,4 +123,78 @@ fun EntityPlayerSP.stopXZ() {
 fun EntityPlayerSP.stop() {
     stopXZ()
     motionY = 0.0
+}
+
+// Modified mc.playerController.onPlayerRightClick() that sends correct stack in its C08
+fun EntityPlayerSP.onPlayerRightClick(
+    clickPos: BlockPos, side: EnumFacing, clickVec: Vec3,
+    stack: ItemStack? = inventory.mainInventory[serverSlot]
+): Boolean {
+    if (clickPos !in worldObj.worldBorder)
+        return false
+
+    val (facingX, facingY, facingZ) = (clickVec - clickPos.toVec()).toFloatTriple()
+
+    val sendClick = {
+        sendPacket(C08PacketPlayerBlockPlacement(clickPos, side.index, stack, facingX, facingY, facingZ))
+        true
+    }
+
+    // If player is a spectator, send click and return true
+    if (mc.playerController.isSpectator)
+        return sendClick()
+
+    val item = stack?.item
+
+    if (item?.onItemUseFirst(stack, this, worldObj, clickPos, side, facingX, facingY, facingZ) == true)
+        return true
+
+    val blockState = getState(clickPos)
+
+    // If click had activated a block, send click and return true
+    if ((!isSneaking || item == null || item.doesSneakBypassUse(worldObj, clickPos, this))
+        && blockState?.block?.onBlockActivated(worldObj, clickPos, blockState, this, side, facingX, facingY, facingZ) == true)
+            return sendClick()
+
+    if (item is ItemBlock && !item.canPlaceBlockOnSide(worldObj, clickPos, side, this, stack))
+        return false
+
+    sendClick()
+
+    if (stack == null)
+        return false
+
+    val prevMetadata = stack.metadata
+    val prevSize = stack.stackSize
+
+    return stack.onItemUse(this, worldObj, clickPos, side, facingX, facingY, facingZ).also {
+        if (mc.playerController.isInCreativeMode) {
+            stack.itemDamage = prevMetadata
+            stack.stackSize = prevSize
+        } else if (stack.stackSize <= 0) {
+            ForgeEventFactory.onPlayerDestroyItem(this, stack)
+        }
+    }
+}
+
+// Modified mc.playerController.sendUseItem() that sends correct stack in its C08
+fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
+    if (mc.playerController.isSpectator)
+        return false
+
+    sendPacket(C08PacketPlayerBlockPlacement(stack))
+
+    val prevSize = stack.stackSize
+
+    val newStack = stack.useItemRightClick(worldObj, this)
+
+    return if (newStack != stack || newStack.stackSize != prevSize) {
+        if (newStack.stackSize <= 0) {
+            mc.thePlayer.inventory.mainInventory[serverSlot] = null
+            ForgeEventFactory.onPlayerDestroyItem(mc.thePlayer, newStack)
+        } else
+            mc.thePlayer.inventory.mainInventory[serverSlot] = newStack
+
+        true
+    } else false
 }

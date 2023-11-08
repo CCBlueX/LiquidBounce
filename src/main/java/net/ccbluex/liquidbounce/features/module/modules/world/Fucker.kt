@@ -253,18 +253,9 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
             // Use block
             action == "Use" -> {
-                if (controller.onPlayerRightClick(
-                        player,
-                        world,
-                        player.heldItem,
-                        currentPos,
-                        raytrace.sideHit,
-                        raytrace.hitVec
-                    )
-                ) {
-                    if (swing) {
-                        player.swingItem()
-                    }
+                if (player.onPlayerRightClick(currentPos, raytrace.sideHit, raytrace.hitVec, player.heldItem)) {
+                    if (swing) player.swingItem()
+                    else sendPacket(C0APacketAnimation())
 
                     blockHitDelay = 4
                     currentDamage = 0F
