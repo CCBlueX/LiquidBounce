@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.m
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.ncp.NCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Hycraft
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Redesky
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Buzz
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.value.BoolValue
