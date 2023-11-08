@@ -8,11 +8,15 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.Blink;
+import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePacket
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToBox
+import net.ccbluex.liquidbounce.utils.realMotionX
+import net.ccbluex.liquidbounce.utils.realMotionY
+import net.ccbluex.liquidbounce.utils.realMotionZ
+import net.ccbluex.liquidbounce.utils.realX
+import net.ccbluex.liquidbounce.utils.realY
+import net.ccbluex.liquidbounce.utils.realZ
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -36,6 +40,9 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
+import net.minecraft.network.play.server.S13PacketDestroyEntities
+import net.minecraft.network.play.server.S18PacketEntityTeleport
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
@@ -73,9 +80,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
 
     private var target: Entity? = null
-    private var realX = 0.0
-    private var realY = 0.0
-    private var realZ = 0.0
+    private var offsetX = 0.0
+    private var offsetY = 0.0
+    private var offsetZ = 0.0
 
     private var globalTimer = MSTimer()
 
@@ -84,15 +91,15 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private val backtrackedPlayer = mutableMapOf<UUID, MutableList<BacktrackData>>()
 
+    private val nonDelayedSoundSubstrings = arrayOf("game.player.hurt", "game.player.die")
+
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val world = mc.theWorld ?: return
 
         val packet = event.packet
 
-        val module = Blink
-
-        if (module.blinkingReceive())
+        if (Blink.blinkingReceive())
             return
 
         if (event.isCancelled)
@@ -106,9 +113,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                         // Insert first backtrack data
                         addBacktrackData(
                             packet.player,
-                            packet.x / 32.0,
-                            packet.y / 32.0,
-                            packet.z / 32.0,
+                            packet.realX,
+                            packet.realY,
+                            packet.realZ,
                             System.currentTimeMillis()
                         )
                     }
@@ -127,15 +134,12 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
             "modern" -> {
                 // Prevent cancelling packets when not needed
-                if (packetQueue.isEmpty() && !shouldBacktrack()) {
+                if (packetQueue.isEmpty() && !shouldBacktrack())
                     return
-                }
 
                 when (packet) {
                     // Ignore chat packets
-                    is S02PacketChat -> {
-                        return
-                    }
+                    is S02PacketChat -> return
 
                     // Flush on teleport or disconnect
                     is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
@@ -143,26 +147,38 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                         return
                     }
 
-                    is S29PacketSoundEffect -> {
-                        if (packet.getSoundName().contains("player.game.hurt") && packet.getSoundName().contains("entity.player.hurt")) return
-                    }
+                    is S29PacketSoundEffect -> if (nonDelayedSoundSubstrings in packet.soundName) return
+
                     // Flush on own death
-                    is S06PacketUpdateHealth -> {
-                        if (packet.getHealth() <= 0) {
+                    is S06PacketUpdateHealth ->
+                        if (packet.health <= 0) {
                             clearPackets()
                             return
                         }
-                    }
-                    // Insert checks that check for if S13PacketDestroyEntities and target is a part of the entities deleted then set target to null and clearPackets()
+
+                    is S13PacketDestroyEntities ->
+                        if (target != null && target!!.entityId in packet.entityIDs) {
+                            clearPackets()
+                            return
+                        }
+
                     // Insert checks that check for if S1CPacketEntityMetadata and entity is target and in that metadata, health is set to 0 or less then set target to null and clearPackets()
+                    // ^ what if server spoofs target's health to 0?
                 }
 
                 // Cancel every received packet to avoid possible server synchronization issues from random causes.
                 if (event.eventType == EventState.RECEIVE) {
                     if (packet is S14PacketEntity && packet.getEntity(world) == target) {
-                        realX += packet.func_149062_c().toDouble()
-                        realY += packet.func_149061_d().toDouble()
-                        realZ += packet.func_149064_e().toDouble()
+                        offsetX += packet.realMotionX
+                        offsetY += packet.realMotionY
+                        offsetZ += packet.realMotionZ
+                    }
+
+                    // If target is teleported, update offsets
+                    if (packet is S18PacketEntityTeleport && packet.entityId == target?.entityId) {
+                        offsetX = packet.realX - target!!.posX
+                        offsetY = packet.realY - target!!.posY
+                        offsetZ = packet.realZ - target!!.posZ
                     }
 
                     event.cancelEvent()
@@ -174,24 +190,27 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        val module = Blink
-        if (mode == "Modern") {
-            val theTarget = target
-            if (!(module.blinkingReceive()) && shouldBacktrack() && theTarget != null && mc.thePlayer.getDistance(theTarget.posX + realX / 32.0, theTarget.posY + realY / 32.0, theTarget.posZ + realZ / 32.0) <= 6f && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
-                handlePackets()
-            } else {
-                clearPackets()
-                globalTimer.reset()
-            }
+        if (mode != "Modern")
+            return
+
+        val target = target
+
+        if (target != null && !Blink.blinkingReceive() && shouldBacktrack()
+            && mc.thePlayer.getDistance(target.posX + offsetX, target.posY + offsetY, target.posZ + offsetZ) <= 6f
+            && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
+        ) {
+            handlePackets()
+        } else {
+            clearPackets()
+            globalTimer.reset()
         }
     }
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        // Clear every packets, start again on enemy change
-        if (target != event.targetEntity) {
+        // Clear all packets, start again on enemy change
+        if (target != event.targetEntity)
             clearPackets()
-        }
 
         target = event.targetEntity
     }
@@ -237,9 +256,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             "modern" -> {
-                if (!shouldBacktrack()) {
+                if (!shouldBacktrack())
                     return
-                }
 
                 val renderManager = mc.renderManager
                 val timer = mc.timer
@@ -261,7 +279,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             axisAlignedBB.maxX,
                             axisAlignedBB.maxY,
                             axisAlignedBB.maxZ
-                        ).offset(realX / 32.0, realY / 32.0, realZ / 32.0), color
+                        ).offset(offsetX, offsetY, offsetZ), color
                     )
                 }
             }
@@ -289,9 +307,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
     }
 
-    override fun onEnable() {
-        reset()
-    }
+    override fun onEnable() = reset()
 
     override fun onDisable() {
         if (mode == "Modern") {
@@ -306,9 +322,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             handlePacket(packet)
 
             if (packet is S14PacketEntity && packet.getEntity(mc.theWorld) == target) {
-                realX -= packet.func_149062_c().toDouble()
-                realY -= packet.func_149061_d().toDouble()
-                realZ -= packet.func_149064_e().toDouble()
+                offsetX -= packet.realMotionX
+                offsetY -= packet.realMotionY
+                offsetZ -= packet.realMotionZ
             }
 
             packetQueue.remove(packet)
@@ -350,11 +366,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
     }
 
-    fun getBacktrackData(id: UUID) = backtrackedPlayer[id]
+    private fun getBacktrackData(id: UUID) = backtrackedPlayer[id]
 
-    fun removeBacktrackData(id: UUID) {
-        backtrackedPlayer.remove(id)
-    }
+    private fun removeBacktrackData(id: UUID) = backtrackedPlayer.remove(id)
 
     /**
      * This function will return the nearest tracked range of an entity.
@@ -379,9 +393,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
      * This function will loop through the backtrack data of an entity.
      */
     fun loopThroughBacktrackData(entity: Entity, action: () -> Boolean) {
-        if (!Backtrack.state || entity !is EntityPlayer || mode == "Modern") {
+        if (!Backtrack.state || entity !is EntityPlayer || mode == "Modern")
             return
-        }
 
         val backtrackDataArray = getBacktrackData(entity.uniqueID) ?: return
         val entityPosition = entity.positionVector
@@ -410,14 +423,16 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     private fun shouldBacktrack() =
-        target != null && !target!!.isDead && mc.thePlayer.getDistanceToBox(target!!.hitBox) in minDistance..maxDistance && (mc.thePlayer?.ticksExisted
-            ?: 0) > 20
+        target?.let {
+            !it.isDead && (mc.thePlayer?.ticksExisted ?: 0) > 20
+                && mc.thePlayer.getDistanceToEntityBox(it) in minDistance..maxDistance
+        } ?: false
 
     private fun reset() {
         target = null
-        realX = 0.0
-        realY = 0.0
-        realZ = 0.0
+        offsetX = 0.0
+        offsetY = 0.0
+        offsetZ = 0.0
         globalTimer.reset()
     }
 }
