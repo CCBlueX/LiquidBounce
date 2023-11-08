@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
@@ -27,16 +28,27 @@ object MovementUtils : MinecraftInstance(), Listenable {
     val hasMotion
         get() = mc.thePlayer?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
 
-    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false) =
+    @JvmOverloads
+    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null) =
         mc.thePlayer?.run {
             if (!isMoving) {
-                if (stopWhenNoInput)
+                if (stopWhenNoInput) {
+                    moveEvent?.zeroXZ()
                     stopXZ()
+                }
 
                 return@run
             }
 
             val yaw = direction
+            val x = -sin(yaw) * speed
+            val z = cos(yaw) * speed
+
+            if (moveEvent != null) {
+                moveEvent.x = x
+                moveEvent.z = z
+            }
+
             motionX = -sin(yaw) * speed
             motionZ = cos(yaw) * speed
         }

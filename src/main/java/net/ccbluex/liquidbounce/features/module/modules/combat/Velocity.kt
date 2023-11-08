@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
-import net.ccbluex.liquidbounce.utils.PacketUtils.realMotionX
-import net.ccbluex.liquidbounce.utils.PacketUtils.realMotionY
-import net.ccbluex.liquidbounce.utils.PacketUtils.realMotionZ
+import net.ccbluex.liquidbounce.utils.realMotionX
+import net.ccbluex.liquidbounce.utils.realMotionY
+import net.ccbluex.liquidbounce.utils.realMotionZ
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue

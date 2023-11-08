@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.entity.boss.IBossDisplayData
 import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.potion.Potion
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 
 object GameDetector: Module("GameDetector", ModuleCategory.MISC, gameDetecting = false) {
     // Check if player's gamemode is Survival or Adventure
@@ -99,15 +100,4 @@ object GameDetector: Module("GameDetector", ModuleCategory.MISC, gameDetecting =
     }
 
     override fun handleEvents() = true
-
-    /**
-     * Checks if a nullable String converted to lowercase contains any of the given lowercase substrings.
-     * It returns true if at least one substring is found, false otherwise.
-     * @param substrings an array of Strings to look for in the nullable String
-     * @return true if any substring is found, false otherwise
-     */
-    private operator fun String?.contains(substrings: Array<String>): Boolean {
-        val lowerCaseString = this?.lowercase() ?: return false
-        return substrings.any { it in lowerCaseString }
-    }
 }

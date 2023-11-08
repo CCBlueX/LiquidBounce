@@ -35,4 +35,15 @@ object StringUtils {
 
         return stringBuilder.toString()
     }
+
+    /**
+     * Checks if a nullable String converted to lowercase contains any of the given lowercase substrings.
+     * It returns true if at least one substring is found, false otherwise.
+     * @param substrings an array of Strings to look for in the nullable String
+     * @return true if any substring is found, false otherwise
+     */
+    operator fun String?.contains(substrings: Array<String>): Boolean {
+        val lowerCaseString = this?.lowercase() ?: return false
+        return substrings.any { it in lowerCaseString }
+    }
 }
