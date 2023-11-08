@@ -351,8 +351,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
         placeRotation ?: return false
 
         if (rotations) {
-            setTargetRotation(placeRotation.rotation)
-            lockRotation = placeRotation.rotation
+            val fixedSensitivityRotation = placeRotation.rotation.fixedSensitivity()
+            setTargetRotation(fixedSensitivityRotation)
+            lockRotation = fixedSensitivityRotation
         }
         placeInfo = placeRotation.placeInfo
         return true

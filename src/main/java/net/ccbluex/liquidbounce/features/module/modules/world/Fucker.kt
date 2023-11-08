@@ -182,7 +182,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         val targetRotation = if (rotations) {
             currentRotation ?: player.rotation
         } else {
-            toRotation(currentPos.getVec(), false)
+            toRotation(currentPos.getVec(), false).fixedSensitivity()
         }
 
         val raytrace = performRaytrace(currentPos, targetRotation, range) ?: return

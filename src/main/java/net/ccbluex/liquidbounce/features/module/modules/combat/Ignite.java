@@ -129,7 +129,6 @@ public class Ignite extends Module {
                    }
                }
 
-               RotationUtils.INSTANCE.setKeepCurrentRotation(false);
                sendPackets(
                        new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem),
                        new C05PacketPlayerLook(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, mc.thePlayer.onGround)

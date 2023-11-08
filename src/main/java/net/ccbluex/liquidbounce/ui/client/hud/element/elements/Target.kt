@@ -36,7 +36,6 @@ import kotlin.math.pow
 class Target : Element() {
 
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
-    private val absorption by BoolValue("Absorption", false)
     private val absorption by BoolValue("Absorption", true)
 
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))

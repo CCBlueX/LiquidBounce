@@ -85,7 +85,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
                 setTargetRotation(
                     limitAngleChange(
                         currentRotation ?: player.rotation,
-                        toRotation(nearestPoint, true),
+                        toRotation(nearestPoint, true).fixedSensitivity(),
                         nextFloat(minTurnSpeed, maxTurnSpeed)
                     ),
                     strafe = this.strafe,
