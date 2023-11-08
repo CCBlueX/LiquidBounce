@@ -23,10 +23,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.EventScheduler
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.combat.countEnemies
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
@@ -45,6 +43,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     private val delay by int("Delay", 550, 0..1000)
+
+    // if there is many player
+    private val maxEnemiesToStop by int("MaxEnemiesToStop", 2, 2..10)
     private val recoilTime by int("RecoilTime", 750, 0..2000)
 
     private val packetQueue = CopyOnWriteArrayList<ModulePingSpoof.DelayData>()
@@ -78,6 +79,10 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
         val packet = event.packet
 
+        if (!shouldLag()) {
+            blink()
+            return@handler
+        }
         when (packet) {
             is HandshakeC2SPacket,
             is QueryRequestC2SPacket,
@@ -103,8 +108,8 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
                 if (packet.id == player.id
                     &&
                     (packet.velocityX != 0 ||
-                        packet.velocityY != 0 ||
-                        packet.velocityZ != 0)
+                            packet.velocityY != 0 ||
+                            packet.velocityZ != 0)
                 ) {
                     blink()
                     return@handler
@@ -211,6 +216,10 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         }
 
         positions.clear()
+    }
+
+    private fun shouldLag(): Boolean {
+        return world.countEnemies(0f..4f) >= maxEnemiesToStop
     }
 
     data class PositionData(val vec: Vec3d, val delay: Long, val registration: Long)

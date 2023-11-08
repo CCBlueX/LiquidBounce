@@ -112,7 +112,8 @@ class EnemyConfigurable : Configurable("Enemies") {
 
                     if (suspect is AbstractClientPlayerEntity) {
                         if (ModuleFocus.enabled && (attackable || !ModuleFocus.combatFocus)
-                            && !ModuleFocus.isInFocus(suspect)) {
+                            && !ModuleFocus.isInFocus(suspect)
+                        ) {
                             return false
                         }
 
@@ -165,6 +166,26 @@ fun ClientWorld.findEnemy(
         .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
         .filter { (_, distance) -> distance in squaredRange }
         .minByOrNull { (_, distance) -> distance } ?: return null
+
+    return bestTarget
+}
+
+/**
+ * Find the best enemy in the current world in a specific range.
+ */
+fun ClientWorld.countEnemies(
+    range: ClosedFloatingPointRange<Float>,
+    player: Entity = mc.player!!,
+    enemyConf: EnemyConfigurable = globalEnemyConfigurable
+): Int {
+    val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
+
+    val bestTarget =
+        getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
+            .filter { it.shouldBeAttacked(enemyConf) }
+            .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
+            .filter { (_, distance) -> distance in squaredRange }
+            .count()
 
     return bestTarget
 }
