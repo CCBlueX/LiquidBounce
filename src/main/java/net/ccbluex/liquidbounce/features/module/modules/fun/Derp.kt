@@ -16,7 +16,7 @@ object Derp : Module("Derp", ModuleCategory.FUN, subjective = true) {
 
     private val headless by BoolValue("Headless", false)
     private val spinny by BoolValue("Spinny", false)
-    private val increment by FloatValue("Increment", 1F, 0F..50F) { spinny }
+        private val increment by FloatValue("Increment", 1F, 0F..50F) { spinny }
 
     private var currentSpin = 0F
 

@@ -25,11 +25,14 @@ import net.minecraft.network.play.server.S14PacketEntity
 object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
 
     private val tab by BoolValue("Tab", true)
-    private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }
+        private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }
+
     private val entityID by BoolValue("EntityID", true)
     private val color by BoolValue("Color", false)
+
     private val livingTime by BoolValue("LivingTime", false)
-    private val livingTimeTicks by IntegerValue("LivingTimeTicks", 40, 1..200) { livingTime }
+        private val livingTimeTicks by IntegerValue("LivingTimeTicks", 40, 1..200) { livingTime }
+
     private val ground by BoolValue("Ground", true)
     private val air by BoolValue("Air", false)
     private val invalidGround by BoolValue("InvalidGround", true)
@@ -42,8 +45,9 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
     private val needHit by BoolValue("NeedHit", false)
     private val duplicateInWorld by BoolValue("DuplicateInWorld", false)
     private val duplicateInTab by BoolValue("DuplicateInTab", false)
+
     private val alwaysInRadius by BoolValue("AlwaysInRadius", false)
-    private val alwaysRadius by FloatValue("AlwaysInRadiusBlocks", 20f, 5f..30f) { alwaysInRadius }
+        private val alwaysRadius by FloatValue("AlwaysInRadiusBlocks", 20f, 5f..30f) { alwaysInRadius }
 
     private val groundList = mutableListOf<Int>()
     private val airList = mutableListOf<Int>()

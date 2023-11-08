@@ -38,25 +38,22 @@ import kotlin.math.min
 
 object ESP : Module("ESP", ModuleCategory.RENDER) {
 
-    val mode by ListValue(
-        "Mode",
-        arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "Glow"),
-        "Box"
-    )
+    val mode by ListValue("Mode",
+        arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "Glow"), "Box")
 
-    val outlineWidth by FloatValue("Outline-Width", 3f, 0.5f..5f) { mode == "Outline" }
+        val outlineWidth by FloatValue("Outline-Width", 3f, 0.5f..5f) { mode == "Outline" }
 
-    val wireframeWidth by FloatValue("WireFrame-Width", 2f, 0.5f..5f) { mode == "WireFrame" }
+        val wireframeWidth by FloatValue("WireFrame-Width", 2f, 0.5f..5f) { mode == "WireFrame" }
 
-    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
-    private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
-    private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
-    private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+        private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
+        private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+        private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+        private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
     private val colorRainbow by BoolValue("Rainbow", false)
-    private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
-    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
+        private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
+        private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
+        private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
     private val colorTeam by BoolValue("Team", false)
     private val bot by BoolValue("Bots", true)

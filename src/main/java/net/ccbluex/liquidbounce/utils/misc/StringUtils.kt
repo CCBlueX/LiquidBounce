@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils.misc
 
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import java.util.*
 
 @SideOnly(Side.CLIENT)
 object StringUtils {

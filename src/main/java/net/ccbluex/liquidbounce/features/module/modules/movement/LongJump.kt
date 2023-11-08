@@ -44,11 +44,10 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
 
     private val modes = longJumpModes.map { it.modeName }.toTypedArray()
 
-    val mode by ListValue(
-        "Mode", modes, "NCP"
-    )
-    val ncpBoost by FloatValue("NCPBoost", 4.25f, 1f..10f) { mode == "NCP" }
-    val autoJump by BoolValue("AutoJump", false)
+    val mode by ListValue("Mode", modes, "NCP")
+        val ncpBoost by FloatValue("NCPBoost", 4.25f, 1f..10f) { mode == "NCP" }
+
+    private val autoJump by BoolValue("AutoJump", false)
 
     var jumped = false
     var canBoost = false

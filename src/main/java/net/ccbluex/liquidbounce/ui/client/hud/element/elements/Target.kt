@@ -6,7 +6,6 @@
 
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import akka.actor.Kill
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -36,10 +35,11 @@ import kotlin.math.pow
 @ElementInfo(name = "Target")
 class Target : Element() {
 
-    private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
     private val absorption by BoolValue("Absorption", false)
+    private val absorption by BoolValue("Absorption", true)
 
+    private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private var easingHealth = 0F
     private var lastTarget: Entity? = null
 

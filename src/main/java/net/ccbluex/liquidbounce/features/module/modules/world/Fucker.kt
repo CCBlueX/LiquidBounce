@@ -21,10 +21,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
-import net.ccbluex.liquidbounce.utils.extensions.eyes
-import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.extensions.getVec
-import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -33,6 +30,7 @@ import net.minecraft.block.Block
 import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
+import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import java.awt.Color
@@ -46,28 +44,31 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private val block by BlockValue("Block", 26)
     private val throughWalls by ListValue("ThroughWalls", arrayOf("None", "Raycast", "Around"), "None")
     private val range by FloatValue("Range", 5F, 1F..7F)
+
     private val action by ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
-    private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
+    private val surroundings by BoolValue("Surroundings", true)
+        private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
+
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
     private val swing by BoolValue("Swing", true)
-    private val surroundings by BoolValue("Surroundings", true)
     private val noHit by BoolValue("NoHit", false)
+
     private val rotations by BoolValue("Rotations", true)
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
-    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+        private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
 
-        override fun isSupported() = rotations
-    }
-    private val maxTurnSpeed by maxTurnSpeedValue
+            override fun isSupported() = rotations
+        }
+        private val maxTurnSpeed by maxTurnSpeedValue
 
-    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+        private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
 
-        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
-    }
+            override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
+        }
 
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+        private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
     /**
      * VALUES

@@ -28,10 +28,10 @@ import kotlin.math.atan
 class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
 
     private val yawMode by ListValue("Yaw", arrayOf("Player", "Animation", "Custom"), "Animation")
-    private val customYaw by FloatValue("CustomYaw", 0F, -180F..180F) { yawMode == "Custom" }
+        private val customYaw by FloatValue("CustomYaw", 0F, -180F..180F) { yawMode == "Custom" }
 
     private val pitchMode by ListValue("Pitch", arrayOf("Player", "Custom"), "Player")
-    private val customPitch by FloatValue("CustomPitch", 0F, -90F..90F) { pitchMode == "Custom" }
+        private val customPitch by FloatValue("CustomPitch", 0F, -90F..90F) { pitchMode == "Custom" }
 
     private var rotate = 0F
     private var rotateDirection = false

@@ -58,13 +58,13 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
     private val borderStrength by FloatValue("Border Strength", 2F, 1F..5F)
 
     private val borderRainbow by BoolValue("Border Rainbow", false)
-    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { borderRainbow }
-    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { borderRainbow }
+        private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { borderRainbow }
+        private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { borderRainbow }
 
-    private val borderRed by IntegerValue("Border Red", 0, 0..255) { !borderRainbow }
-    private val borderGreen by IntegerValue("Border Green", 0, 0..255) { !borderRainbow }
-    private val borderBlue by IntegerValue("Border Blue", 0, 0..255) { !borderRainbow }
-    private val borderAlpha by IntegerValue("Border Alpha", 150, 0..255) { !borderRainbow }
+        private val borderRed by IntegerValue("Border Red", 0, 0..255) { !borderRainbow }
+        private val borderGreen by IntegerValue("Border Green", 0, 0..255) { !borderRainbow }
+        private val borderBlue by IntegerValue("Border Blue", 0, 0..255) { !borderRainbow }
+        private val borderAlpha by IntegerValue("Border Alpha", 150, 0..255) { !borderRainbow }
 
     private var fovMarkerVertexBuffer: VertexBuffer? = null
     private var lastFov = 0f

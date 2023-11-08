@@ -32,9 +32,9 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     private val blockLimit by IntegerValue("BlockLimit", 256, 0..2056)
 
     private val colorRainbow by BoolValue("Rainbow", false)
-    private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
-    private val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
-    private val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
+        private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
+        private val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
+        private val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
 
     private val searchTimer = MSTimer()
     private val posList = mutableListOf<BlockPos>()

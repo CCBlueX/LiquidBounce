@@ -39,8 +39,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
-    val mode by ListValue("Mode", arrayOf("Legacy", "Modern"), "Modern")
-
     private val delay by object : IntegerValue("Delay", 80, 0..700) {
         override fun onChange(oldValue: Int, newValue: Int): Int {
             if (mode == "Modern") {
@@ -51,24 +49,26 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
     }
 
-    // Modern
-    private val style by ListValue("Style", arrayOf("Pulse", "Smooth"), "Smooth") { mode == "Modern" }
+    val mode by ListValue("Mode", arrayOf("Legacy", "Modern"), "Modern")
 
-    private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance", 3.0f, 0.0f..3.5f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minDistance)
-        override fun isSupported() = mode == "Modern"
-    }
-    private val maxDistance by maxDistanceValue
-    private val minDistance by object : FloatValue("MinDistance", 2.0f, 0.0f..3.0f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxDistance)
-        override fun isSupported() = mode == "Modern"
-    }
+        // Modern
+        private val style by ListValue("Style", arrayOf("Pulse", "Smooth"), "Smooth") { mode == "Modern" }
 
-    // ESP
-    private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" }
-    private val red by IntegerValue("R", 0, 0..255) { !rainbow && mode == "Modern" }
-    private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" }
-    private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" }
+        private val maxDistanceValue: FloatValue = object : FloatValue("MaxDistance", 3.0f, 0.0f..3.5f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minDistance)
+            override fun isSupported() = mode == "Modern"
+        }
+        private val maxDistance by maxDistanceValue
+        private val minDistance by object : FloatValue("MinDistance", 2.0f, 0.0f..3.0f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxDistance)
+            override fun isSupported() = mode == "Modern"
+        }
+
+        // ESP
+        private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" }
+            private val red by IntegerValue("R", 0, 0..255) { !rainbow && mode == "Modern" }
+            private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" }
+            private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" }
 
     private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
 

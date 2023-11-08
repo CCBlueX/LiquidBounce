@@ -19,7 +19,7 @@ import net.minecraft.util.BlockPos
 object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
 
     private val mode by ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
-    private val longJump by BoolValue("LongJump", false) { mode.startsWith("AAC") }
+        private val longJump by BoolValue("LongJump", false) { mode.startsWith("AAC") }
 
     private var canJump = false
 

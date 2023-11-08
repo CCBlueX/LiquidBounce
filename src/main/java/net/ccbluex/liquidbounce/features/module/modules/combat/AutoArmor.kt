@@ -55,10 +55,10 @@ object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT) {
 	private val noMoveGround by InventoryManager.noMoveGroundValue
 
 	private val hotbar by BoolValue("Hotbar", true)
-	// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan
-	private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
-	// Prevents AutoArmor from hotbar equipping while any screen is open
-	private val notInContainers by BoolValue("NotInContainers", false) { hotbar }
+		// Sacrifices 1 tick speed for complete undetectability, needed to bypass Vulcan
+		private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true) { hotbar }
+		// Prevents AutoArmor from hotbar equipping while any screen is open
+		private val notInContainers by BoolValue("NotInContainers", false) { hotbar }
 
 	suspend fun equipFromHotbar() {
 		if (!shouldOperate(onlyHotbar = true))

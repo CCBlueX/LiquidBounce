@@ -25,8 +25,11 @@ import org.lwjgl.input.Mouse
 object KeyPearl : Module("KeyPearl", ModuleCategory.PLAYER, subjective = true, gameDetecting = false) {
 
     private val mouse by BoolValue("Mouse", false)
-    private val mouseButtonValue = ListValue("MouseButton", arrayOf("Left", "Right", "Middle", "MouseButton4", "MouseButton5"), "Middle") { mouse }
-    private val keyName by TextValue("KeyName", "X") { !mouse }
+        private val mouseButtonValue = ListValue("MouseButton",
+            arrayOf("Left", "Right", "Middle", "MouseButton4", "MouseButton5"), "Middle") { mouse }
+
+        private val keyName by TextValue("KeyName", "X") { !mouse }
+
     private val noEnderPearlsMessage by BoolValue("NoEnderPearlsMessage", true)
 
     private var wasMouseDown = false

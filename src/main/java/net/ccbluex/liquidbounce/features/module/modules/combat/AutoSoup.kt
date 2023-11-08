@@ -33,7 +33,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
     private val health by FloatValue("Health", 15f, 0f..20f)
     private val delay by IntegerValue("Delay", 150, 0..500)
     private val openInventory by BoolValue("OpenInv", false)
-    private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
+        private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
     private val bowl by ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
 
     private val timer = MSTimer()

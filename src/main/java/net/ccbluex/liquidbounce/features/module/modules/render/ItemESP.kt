@@ -25,15 +25,15 @@ import java.awt.Color
 object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
 
-    private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
-    private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
-    private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
-    private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+        private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
+        private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+        private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+        private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
     private val colorRainbow by BoolValue("Rainbow", true)
-    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow }
-    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
-    private val colorBlue by IntegerValue("B", 0, 0..255) { !colorRainbow }
+        private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow }
+        private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
+        private val colorBlue by IntegerValue("B", 0, 0..255) { !colorRainbow }
 
     val color
         get() = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)

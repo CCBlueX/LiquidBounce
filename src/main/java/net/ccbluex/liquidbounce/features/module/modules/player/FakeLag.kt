@@ -52,10 +52,6 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)
     private val resetTimer = MSTimer()
 
-    override fun onEnable() {
-
-    }
-
     override fun onDisable() {
         if (mc.thePlayer == null)
             return

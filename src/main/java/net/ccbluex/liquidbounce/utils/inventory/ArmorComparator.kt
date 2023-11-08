@@ -10,7 +10,6 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
-import kotlin.math.ceil
 
 object ArmorComparator: MinecraftInstance() {
 	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {

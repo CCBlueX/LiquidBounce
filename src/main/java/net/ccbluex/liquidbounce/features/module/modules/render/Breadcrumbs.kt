@@ -20,9 +20,10 @@ import java.util.*
 
 object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
     val colorRainbow by BoolValue("Rainbow", false)
-    val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
-    val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
-    val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
+        val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
+        val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
+        val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
+
     private val positions = LinkedList<DoubleArray>()
 
     @EventTarget

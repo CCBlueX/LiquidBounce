@@ -22,16 +22,18 @@ object InventoryManager: MinecraftInstance() {
 
 	// Shared no move click values
 	val noMoveValue = BoolValue("NoMoveClicks", false)
-	val noMoveAirValue = BoolValue("NoClicksInAir", false) { noMoveValue.get() }
-	val noMoveGroundValue = BoolValue("NoClicksOnGround", true) { noMoveValue.get() }
+		val noMoveAirValue = BoolValue("NoClicksInAir", false) { noMoveValue.get() }
+		val noMoveGroundValue = BoolValue("NoClicksOnGround", true) { noMoveValue.get() }
 
 	// Shared values between AutoArmor and InventoryCleaner
 	val invOpenValue = BoolValue("InvOpen", false)
-	val simulateInventoryValue = BoolValue("SimulateInventory", true) { !invOpenValue.get() }
-	val autoCloseValue = BoolValue("AutoClose", false) { invOpenValue.get() }
+		val simulateInventoryValue = BoolValue("SimulateInventory", true) { !invOpenValue.get() }
+		val autoCloseValue = BoolValue("AutoClose", false) { invOpenValue.get() }
 
-	val startDelayValue = IntegerValue("StartDelay", 0, 0..500) { invOpenValue.get() || simulateInventoryValue.get() }
-	val closeDelayValue = IntegerValue("CloseDelay", 0, 0..500) { if (invOpenValue.get()) autoCloseValue.get() else simulateInventoryValue.get() }
+		val startDelayValue = IntegerValue("StartDelay", 0, 0..500)
+			{ invOpenValue.get() || simulateInventoryValue.get() }
+		val closeDelayValue = IntegerValue("CloseDelay", 0, 0..500)
+			{ if (invOpenValue.get()) autoCloseValue.get() else simulateInventoryValue.get() }
 
 	private lateinit var inventoryWorker: Job
 
