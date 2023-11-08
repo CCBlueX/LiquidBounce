@@ -32,12 +32,14 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
+import kotlin.math.cos
 
 /**
  * ProjectilePuncher module
@@ -96,16 +98,15 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
         for (entity in world.entities) {
-            if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
+            if (!shouldAttack(entity)) {
                 continue
             }
 
-            val distanceSquared = entity.squaredBoxedDistanceTo(player)
+            val nextTickFireballPosition = entity.pos.add(entity.pos.subtract(entity.prevPos))
 
+            val distanceSquared = entity.dimensions.getBoxAt(nextTickFireballPosition).squaredBoxedDistanceTo(player.eyes)
 
-            // Avoid fireball if its speed-predicted next position goes further than the normal distance.
-            // Useful in preventing the user from changing their own thrown fireball's direction
-            if (distanceSquared > rangeSquared || !shouldAttack(entity)) {
+            if (distanceSquared > rangeSquared) {
                 continue
             }
 
@@ -124,15 +125,15 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is FireballEntity)
-            return true
+        if (entity !is FireballEntity && entity !is ShulkerBulletEntity)
+            return false
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = entity.pos.subtract(player.pos)
+        val vecToPlayer = player.pos.subtract(entity.pos)
 
-        val dot = vecToPlayer.dotProduct(player.velocity)
+        val dot = vecToPlayer.dotProduct(entity.pos.subtract(entity.prevPos))
 
-        return dot > 0.0
+        return dot > -cos(Math.toRadians(30.0))
     }
 
     private fun attackEntity(entity: Entity) {
