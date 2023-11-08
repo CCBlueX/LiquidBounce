@@ -135,6 +135,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
             run scheduler@ {
                 itemsToSteal.forEachIndexed { index, (slot, stack, sortableTo) ->
+                    // Wait for NoMove or cancel click
                     if (!shouldOperate()) {
                         TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
                         return
@@ -208,13 +209,16 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                 if (index in TickScheduler) return@mapIndexedNotNull null
 
-                val mergableCount = mc.thePlayer.inventory.mainInventory.sumOf {
-                    if (it?.isItemEqual(stack) == true) it.maxStackSize - it.stackSize
+                val mergeableCount = mc.thePlayer.inventory.mainInventory.sumOf { otherStack ->
+                    otherStack ?: return@sumOf 0
+
+                    if (otherStack.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stack, otherStack))
+                        otherStack.maxStackSize - otherStack.stackSize
                     else 0
                 }
 
-                val canMerge = mergableCount > 0
-                val canFullyMerge = mergableCount >= stack.stackSize
+                val canMerge = mergeableCount > 0
+                val canFullyMerge = mergeableCount >= stack.stackSize
 
                 // Clicking this item wouldn't take it from chest or merge it
                 if (!canMerge && spaceInInventory <= 0) return@mapIndexedNotNull null

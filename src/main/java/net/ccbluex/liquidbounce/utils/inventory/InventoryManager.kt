@@ -37,7 +37,7 @@ object InventoryManager: MinecraftInstance() {
 
 	private lateinit var inventoryWorker: Job
 
-	var hasScheduled = false
+	var hasScheduledInLastLoop = false
 		set(value) {
 			// If hasScheduled gets set to true any time during the searching loop, inventory can be closed when the loop finishes.
 			if (value) canCloseInventory = true
@@ -71,7 +71,7 @@ object InventoryManager: MinecraftInstance() {
 		canCloseInventory = false
 
 		while (true) {
-			hasScheduled = false
+			hasScheduledInLastLoop = false
 
 			AutoArmor.equipFromInventory()
 
@@ -79,8 +79,11 @@ object InventoryManager: MinecraftInstance() {
 			 * InventoryCleaner actions
 			 */
 
+			// Repair useful equipment by merging in the crafting grid
+			InventoryCleaner.repairEquipment()
+
 			// Compact multiple small stacks into one to free up inventory space
-			InventoryCleaner.mergeInventoryStacks()
+			InventoryCleaner.mergeStacks()
 
 			// Sort hotbar (with useful items without even dropping bad items first)
 			InventoryCleaner.sortHotbar()
@@ -92,11 +95,11 @@ object InventoryManager: MinecraftInstance() {
 			// If no clicks were scheduled throughout any iteration (canCloseInventory == false), then it is null, to prevent closing inventory all the time
 			closingAction ?: return
 
-			// Prepare for exiting the inventory
+			// Prepare for closing the inventory
 			delay(closeDelayValue.get().toLong())
 
 			// Try to search through inventory one more time, only close when no actions were scheduled in current iteration
-			if (!hasScheduled) {
+			if (!hasScheduledInLastLoop) {
 				closingAction?.invoke()
 				return
 			}
@@ -104,22 +107,23 @@ object InventoryManager: MinecraftInstance() {
 	}
 
 	private val closingAction
-		get() =
+		get() = when {
 			// Check if any click was scheduled since inventory got open
-			if (!canCloseInventory) null
+			!canCloseInventory -> null
 
 			// Prevent any other container guis from getting closed
-			else if (mc.thePlayer?.openContainer?.windowId != 0) null
+			mc.thePlayer?.openContainer?.windowId != 0 -> null
 
 			// Check if open inventory should be closed
-			else if (mc.currentScreen is GuiInventory && invOpenValue.get() && autoCloseValue.get())
-				{ { mc.thePlayer?.closeScreen() } }
+			mc.currentScreen is GuiInventory && invOpenValue.get() && autoCloseValue.get() ->
+				({ mc.thePlayer?.closeScreen() })
 
 			// Check if simulated inventory should be closed
-			else if (simulateInventoryValue.get() && serverOpenInventory && mc.currentScreen == null)
-				{ { serverOpenInventory = false } }
+			mc.currentScreen !is GuiInventory && simulateInventoryValue.get() && serverOpenInventory ->
+				({ serverOpenInventory = false })
 
-			else null
+			else -> null
+		}
 
 	fun canClickInventory(closeWhenViolating: Boolean = false) =
 		if (noMoveValue.get() && isMoving && if (serverOnGround) noMoveGroundValue.get() else noMoveAirValue.get()) {
