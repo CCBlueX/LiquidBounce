@@ -98,8 +98,8 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
         if (packet is C03PacketPlayer) {
             if (glitch) {
                 val yaw = direction
-                packet.x = packet.x - sin(yaw) * 0.00000001
-                packet.z = packet.z + cos(yaw) * 0.00000001
+                packet.x -= sin(yaw) * 0.00000001
+                packet.z += cos(yaw) * 0.00000001
                 glitch = false
             }
         }

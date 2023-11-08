@@ -59,7 +59,7 @@ object HighJump : Module("HighJump", ModuleCategory.MOVEMENT) {
         if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
         when (mode.lowercase()) {
-            "vanilla" -> event.motion = event.motion * height
+            "vanilla" -> event.motion *= height
             "mineplex" -> event.motion = 0.47f
         }
     }

@@ -73,7 +73,8 @@ public class Ignite extends Module {
                        !(getBlock(blockPos) instanceof BlockAir))
                    continue;
 
-               RotationUtils.INSTANCE.setKeepCurrentRotation(true);
+               // Probably used to prevent rotation changes while igniting
+               RotationUtils.INSTANCE.setKeepLength(RotationUtils.INSTANCE.getKeepLength() + 1);
 
                InventoryUtils.INSTANCE.setServerSlot(fireInHotbar - 36);
 

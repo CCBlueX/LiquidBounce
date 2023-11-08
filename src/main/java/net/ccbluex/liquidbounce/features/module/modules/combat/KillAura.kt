@@ -846,16 +846,15 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 if (smartAutoBlock) {
                     if (!isMoving && forceBlock) return true
 
-                    if (checkWeapon && (currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe)) return false
+                    if (checkWeapon && (currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe))
+                        return false
 
                     if (mc.thePlayer.hurtTime > maxOwnHurtTime) return false
 
                     val rotationToPlayer = toRotation(getCenter(mc.thePlayer.hitBox), true, currentTarget!!)
 
-                    if (getRotationDifference(
-                            rotationToPlayer, currentTarget!!.rotation
-                        ) > maxDirectionDiff
-                    ) return false
+                    if (getRotationDifference(rotationToPlayer, currentTarget!!.rotation) > maxDirectionDiff)
+                        return false
 
                     if (currentTarget!!.swingProgressInt > maxSwingProgress) return false
 

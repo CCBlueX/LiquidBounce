@@ -857,7 +857,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             // Round the rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
             val yaw = round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f
 
-            arrayOf(45f, 135f).any { yaw == it } && player.movementInput.moveStrafe == 0f
+            floatArrayOf(45f, 135f).any { yaw == it } && player.movementInput.moveStrafe == 0f
         }
 
         for (side in EnumFacing.values().filter { !horizontalOnly || it.axis != EnumFacing.Axis.Y }) {
@@ -869,7 +869,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
             if (isGodBridgeEnabled) {
                 // Selection of these values only. Mostly used by Godbridgers.
-                val list = arrayOf(-135f, -45f, 45f, 135f)
+                val list = floatArrayOf(-135f, -45f, 45f, 135f)
 
                 // Selection of pitch values that should be OK in non-complex situations.
                 val pitchList = 55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
@@ -1040,7 +1040,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         return null
     }
 
-    fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
+    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
         val player = mc.thePlayer ?: return null
         val world = mc.theWorld ?: return null
 
@@ -1106,7 +1106,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
             // The target rotation will either be the module's placeRotation or a forced rotation (usually that's where the GodBridge mode aims)
             val targetRotation = run {
-                val yaw = arrayOf(-135f, -45f, 45f, 135f).minByOrNull {
+                val yaw = floatArrayOf(-135f, -45f, 45f, 135f).minByOrNull {
                     abs(getAngleDifference(it, MathHelper.wrapAngleTo180_float(currRotation.yaw)))
                 } ?: return
 

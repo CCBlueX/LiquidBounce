@@ -50,23 +50,21 @@ object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
         val thePlayer = mc.thePlayer ?: return
 
         when {
-            mode == "Vanilla" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isOnLadder -> {
+            mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
                 event.y = speed.toDouble()
                 thePlayer.motionY = 0.0
             }
 
-            mode == "Delay" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isOnLadder -> {
+            mode == "Delay" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
 
                 if (climbCount >= climbDelay) {
 
                         event.y = climbspeed.toDouble()
                         playerClimb()
 
-                        val currentpos: C03PacketPlayer =
-                            C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true)
-                        mc.thePlayer.sendQueue.addToSendQueue(currentpos)
+                        val currentPos = C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true)
+
+                        sendPacket(currentPos)
 
                         climbCount = 0
 
@@ -86,8 +84,8 @@ object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
 
                 when (thePlayer.horizontalFacing) {
                     EnumFacing.NORTH -> z = -0.99
-                    EnumFacing.EAST -> x = +0.99
-                    EnumFacing.SOUTH -> z = +0.99
+                    EnumFacing.EAST -> x = 0.99
+                    EnumFacing.SOUTH -> z = 0.99
                     EnumFacing.WEST -> x = -0.99
                     else -> {}
                 }
@@ -133,12 +131,12 @@ object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
                         var x = 0.0
                         var z = 0.0
 
-                        when(thePlayer.horizontalFacing) {
+                        when (thePlayer.horizontalFacing) {
                             EnumFacing.NORTH -> z = -1.0
-                            EnumFacing.EAST -> x = +1.0
-                            EnumFacing.SOUTH -> z = +1.0
+                            EnumFacing.EAST -> x = 1.0
+                            EnumFacing.SOUTH -> z = 1.0
                             EnumFacing.WEST -> x = -1.0
-                            else -> { }
+                            else -> {}
                         }
 
                         thePlayer.setPosition(thePlayer.posX + x, i.toDouble(), thePlayer.posZ + z)

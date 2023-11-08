@@ -18,7 +18,7 @@ import net.minecraft.item.ItemStack
 class HeadsTab : CreativeTabs("Heads") {
 
     // List of heads
-    private val heads = ArrayList<ItemStack>()
+    private val heads = arrayListOf<ItemStack>()
 
     /**
      * Constructor of heads tab

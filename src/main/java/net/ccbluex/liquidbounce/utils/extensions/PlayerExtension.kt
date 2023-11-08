@@ -75,9 +75,6 @@ val Entity.hitBox: AxisAlignedBB
 val Entity.eyes: Vec3
     get() = getPositionEyes(1f)
 
-/**
- * Setting yaw to a fixed sensitivity angle
- */
 
 fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
     if (yaw != null) fixedSensitivityYaw = yaw

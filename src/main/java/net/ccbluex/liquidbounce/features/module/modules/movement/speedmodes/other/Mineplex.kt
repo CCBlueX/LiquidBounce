@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other
 
-import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
@@ -38,12 +37,6 @@ object Mineplex : SpeedMode("Mineplex") {
         }
         val minimum = if (!wfg) 0.3999001f else 0f
         strafe(max(min(speed1, 2f), minimum))
-    }
-
-    override fun onMotion() {
-    }
-
-    override fun onMove(event: MoveEvent) {
     }
 
     override fun onDisable() {

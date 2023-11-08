@@ -329,7 +329,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun updateScreen() = searchField.updateCursorCounter()
 
-    private inner class GuiList constructor(prevGui: GuiScreen) :
+    private inner class GuiList(prevGui: GuiScreen) :
         GuiSlot(mc, prevGui.width, prevGui.height, 40, prevGui.height - 40, 30) {
 
         val accounts: List<MinecraftAccount>

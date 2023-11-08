@@ -84,9 +84,9 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             player.isSprinting = !shouldStopSprinting(movementInput, isUsingItem)
 
             if (player.isSprinting && allDirections && mode != "Legit") {
-                if (!allDirectionsLimitSpeedGround || mc.thePlayer.onGround) {
-                    mc.thePlayer.motionX *= allDirectionsLimitSpeed
-                    mc.thePlayer.motionZ *= allDirectionsLimitSpeed
+                if (!allDirectionsLimitSpeedGround || player.onGround) {
+                    player.motionX *= allDirectionsLimitSpeed
+                    player.motionZ *= allDirectionsLimitSpeed
                 }
             }
         }

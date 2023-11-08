@@ -201,7 +201,7 @@ object CapeService : Listenable, MinecraftInstance() {
 
             // Refresh cape carriers
             refreshCapeCarriers(force = true) {
-                LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
+                LOGGER.info("Successfully loaded ${capeCarriers.count()} cape carriers.")
             }
 
             capeUser.enabled = !capeUser.enabled

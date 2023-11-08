@@ -39,8 +39,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             return
         }
 
-        val value = module[args[1]]
-        when (value) {
+        when (val value = module[args[1]]) {
             null -> chatSyntax("$moduleName <$valueNames>")
 
             is BoolValue -> {

@@ -185,8 +185,8 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                         if (isNearBlock && !thePlayer.movementInput.jump) {
                             thePlayer.jump()
                             thePlayer.motionY = 0.08
-                            thePlayer.motionX = thePlayer.motionX * 0.99
-                            thePlayer.motionZ = thePlayer.motionX * 0.99
+                            thePlayer.motionX *= 0.99
+                            thePlayer.motionZ *= 0.99
                             down = true
                             return
                         }
@@ -234,8 +234,8 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
     private fun boost(boost: Float) {
         val thePlayer = mc.thePlayer
 
-        thePlayer.motionX = thePlayer.motionX * boost
-        thePlayer.motionZ = thePlayer.motionX * boost
+        thePlayer.motionX *= boost
+        thePlayer.motionZ *= boost
 
         speed = MovementUtils.speed.toDouble()
 

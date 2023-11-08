@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 class ScriptCommand(private val commandObject: JSObject) : Command(commandObject.getMember("name") as String,
         *ScriptUtils.convert(commandObject.getMember("aliases"), Array<String>::class.java) as Array<out String>) {
 
-    private val events = HashMap<String, JSObject>()
+    private val events = hashMapOf<String, JSObject>()
 
     /**
      * Called from inside the script to register a new event handler.

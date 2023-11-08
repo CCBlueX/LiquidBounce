@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
@@ -34,12 +35,12 @@ object SettingsUtils {
             val args = s.split(" ").toTypedArray()
 
             if (args.size <= 1) {
-                ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
+                displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
                 return@forEachIndexed
             }
 
             when (args[0]) {
-                "chat" -> ClientUtils.displayChatMessage(
+                "chat" -> displayChatMessage(
                     "§e${
                         translateAlternateColorCodes(
                             StringUtils.toCompleteString(
@@ -50,7 +51,7 @@ object SettingsUtils {
                     }"
                 )
 
-                "unchat" -> ClientUtils.displayChatMessage(
+                "unchat" -> displayChatMessage(
                     translateAlternateColorCodes(
                         StringUtils.toCompleteString(
                             args,
@@ -76,9 +77,9 @@ object SettingsUtils {
 
                         applyScript(settings)
                     }.onSuccess {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings §a§l$url§7.")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings §a§l$url§7.")
                     }.onFailure {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings §a§l$url§7.")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings §a§l$url§7.")
                     }
                 }
 
@@ -90,17 +91,17 @@ object SettingsUtils {
 
                 else -> {
                     if (args.size < 3) {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
                         return@forEachIndexed
                     }
 
                     val moduleName = args[0]
                     val valueName = args[1]
-                    var value = args[2]
+                    val value = args[2]
                     val module = moduleManager[moduleName]
 
                     if (module == null) {
-                        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l$moduleName§c does not exist!")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l$moduleName§c does not exist!")
                         return@forEachIndexed
                     }
 
@@ -119,19 +120,19 @@ object SettingsUtils {
     // Utility functions for setting target settings
     private fun setTargetSetting(setting: KMutableProperty0<Boolean>, args: Array<String>) {
         setting.set(args[1].equals("true", ignoreCase = true))
-        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${args[1]}§7.")
+        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${args[1]}§7.")
     }
 
     // Utility functions for setting toggles
     private fun setToggle(module: Module, value: String) {
         module.state = value.equals("true", ignoreCase = true)
-        ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()} §7was toggled §c§l${if (module.state) "on" else "off"}§7.")
+        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()} §7was toggled §c§l${if (module.state) "on" else "off"}§7.")
     }
 
     // Utility functions for setting binds
     private fun setBind(module: Module, value: String) {
         module.keyBind = Keyboard.getKeyIndex(value)
-        ClientUtils.displayChatMessage(
+        displayChatMessage(
             "§7[§3§lAutoSettings§7] §a§l${module.getName()} §7was bound to §c§l${
                 Keyboard.getKeyName(
                     module.keyBind
@@ -145,7 +146,7 @@ object SettingsUtils {
         val moduleValue = module[valueName]
 
         if (moduleValue == null) {
-            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l$valueName§c wasn't found in module §a§l${module.getName()}§c.")
+            displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l$valueName§c wasn't found in module §a§l${module.getName()}§c.")
             return
         }
 
@@ -158,9 +159,9 @@ object SettingsUtils {
                 is ListValue -> moduleValue.changeValue(value)
             }
 
-            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()}§7 value §8§l${moduleValue.name}§7 set to §c§l$value§7.")
+            displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()}§7 value §8§l${moduleValue.name}§7 set to §c§l$value§7.")
         } catch (e: Exception) {
-            ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${e.javaClass.name}§7(${e.message}) §cAn Exception occurred while setting §a§l$value§c to §a§l${moduleValue.name}§c in §a§l${module.getName()}§c.")
+            displayChatMessage("§7[§3§lAutoSettings§7] §a§l${e.javaClass.name}§7(${e.message}) §cAn Exception occurred while setting §a§l$value§c to §a§l${moduleValue.name}§c in §a§l${module.getName()}§c.")
         }
     }
 

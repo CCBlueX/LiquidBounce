@@ -127,8 +127,7 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC, subjective = tru
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val packet = event.packet
-        when (packet) {
+        when (val packet = event.packet) {
             is S02PacketChat, is S45PacketTitle -> {
                 // Don't respond to register / login prompts when failed once
                 if (!passwordValue.isSupported() || status == Status.STOPPED) return

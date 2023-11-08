@@ -105,11 +105,8 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
         val rotation = currentRotation ?: player.rotation
         val entity = target ?: return
 
-        if (!rotations && player.getDistanceToBox(entity.hitBox) <= range || isRotationFaced(
-                entity,
-                range.toDouble(),
-                rotation
-            )
+        if (!rotations && player.getDistanceToBox(entity.hitBox) <= range
+            || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 
