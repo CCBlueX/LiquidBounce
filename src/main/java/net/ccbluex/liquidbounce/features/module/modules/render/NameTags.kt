@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -94,10 +95,9 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
 
-            renderNameTag(
-                entity, if (clearNames) ColorUtils.stripColor(entity.displayName?.unformattedText ?: continue)
-                else (entity.displayName ?: continue).unformattedText
-            )
+            val name = entity.displayName.unformattedText ?: continue
+
+            renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
         }
 
         glPopMatrix()
@@ -107,7 +107,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         glColor4f(1F, 1F, 1F, 1F)
     }
 
-    private fun renderNameTag(entity: EntityLivingBase, tag: String) {
+    private fun renderNameTag(entity: EntityLivingBase, name: String) {
         val thePlayer = mc.thePlayer ?: return
 
         // Set fontrenderer local
@@ -142,13 +142,13 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val playerPing = if (entity is EntityPlayer) entity.getPing() else 0
         val playerDistance = thePlayer.getDistanceToEntity(entity)
 
-        val distanceText = if (distance) "§7${playerDistance.roundToInt()}m " else ""
+        val distanceText = if (distance) "§7${playerDistance.roundToInt()} m " else ""
         val pingText =
-            if (ping && entity is EntityPlayer) " §7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7]" else ""
-        val healthText = if (health) getHealthString(entity) else ""
+            if (ping && entity is EntityPlayer) "§7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7] " else ""
+        val healthText = if (health) " " + getHealthString(entity) else ""
         val botText = if (bot) " §c§lBot" else ""
 
-        val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
+        val text = "$distanceText$pingText$nameColor$name$healthText$botText"
 
         // Scale
         val scale = ((playerDistance / 4F).coerceAtLeast(1F) / 150F) * scale
@@ -215,7 +215,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         if (potion && entity is EntityPlayer) {
             val potions =
-                (entity.getActivePotionEffects() as Collection<PotionEffect>).map { Potion.potionTypes[it.potionID] }
+                entity.activePotionEffects.map { Potion.potionTypes[it.potionID] }
                     .filter { it.hasStatusIcon() }
             if (potions.isNotEmpty()) {
                 foundPotion = true
@@ -275,40 +275,9 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val prefix = if (healthPrefix) healthPrefixText else ""
         val suffix = if (healthSuffix) healthSuffixText else ""
 
-        val result = getHealth(entity)
+        val result = getHealth(entity, healthFromScoreboard, absorption)
 
-        return prefix + "§c " + (if (healthInInt) result.toInt() else decimalFormat.format(result)) + suffix
-    }
-
-    private fun getHealth(entity: EntityLivingBase): Float {
-        val scoreboard = if (entity is EntityPlayer) entity.worldScoreboard else null
-        val objective = scoreboard?.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))
-
-        val name = objective?.objective?.displayName?.lowercase()
-
-        val shouldPredictHealth =
-            predictHealth && entity is EntityPlayer && (name?.endsWith("❤") == true || name?.endsWith("hp") == true || name?.endsWith("health") == true)
-
-        var scoreboardHealth = objective?.scorePoints?.toFloat()
-
-        if ((scoreboardHealth ?: 0f) <= 0f) {
-            scoreboardHealth = 20f
-        }
-
-        val health = if (shouldPredictHealth) scoreboardHealth?.coerceAtMost(20f) ?: entity.health else entity.health
-        val absorption = if (this.absorption) {
-            val hp = scoreboardHealth ?: 0f
-
-            if (shouldPredictHealth && hp > 20) {
-                hp - 20
-            } else {
-                entity.absorptionAmount
-            }
-        } else {
-            0f
-        }
-
-        return health + absorption
+        return "§c$prefix${if (roundedHealth) result.roundToInt() else decimalFormat.format(result)}$suffix"
     }
 
     fun shouldRenderNameTags(entity: Entity) =
