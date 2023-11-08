@@ -8,45 +8,51 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.EntityLivingBase
-import kotlin.math.cos
-import kotlin.math.sin
-
 
 object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
     private var playerTicks = 0
-    private var tickBalance = 0f
 
+    private val rangeValue by FloatValue("Range", 3.5f, 1f..5f)
     private val ticksValue by IntegerValue("Ticks", 10, 1..20)
-    private val timerValue by FloatValue("Timer", 1f, 1f..40f)
+    private val timerValue by FloatValue("Timer", 1f, 0.01f..40f)
     private val chargedValue by FloatValue("Charged", 0.5f, 0.05f..1f)
 
-    private val thePlayer = mc.thePlayer
-
-    // Timer Reset
-    private fun resetTimer() {
+    private fun timerReset() {
         mc.timer.timerSpeed = 1f
     }
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-
         if (event.targetEntity is EntityLivingBase && playerTicks < 1) {
+            val targetEntity = event.targetEntity
+            val entityDistance = mc.thePlayer.getDistanceToEntityBox(targetEntity)
 
-            playerTicks = ticksValue
+            if (entityDistance <= rangeValue) {
+                playerTicks = ticksValue
 
+                val prevpos = mc.thePlayer.prevPosY
+                var currentpos = mc.thePlayer.posY
+
+                currentpos = prevpos
+
+                mc.timer.timerSpeed = 0f
+            } else {
+                timerReset()
+            }
         }
     }
 
     override fun onEnable() {
-        resetTimer()
+        timerReset()
     }
 
     override fun onDisable() {
-        resetTimer()
+        timerReset()
     }
 
     @EventTarget
@@ -61,40 +67,17 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             }
 
             if (playerSpeed >= 0) {
-                mc.timer.timerSpeed = playerSpeed + tickBalance
-                tickBalance = 0f
+                mc.timer.timerSpeed = playerSpeed
             } else {
-                tickBalance += playerSpeed
-                mc.timer.timerSpeed = 0f
+                val timerTicks = ticksValue - playerTicks
+                if (timerTicks > 0) {
+                    mc.timer.timerSpeed = (1f + timerTicks)
+                } else {
+                    mc.timer.timerSpeed = 0f
+                }
             }
 
             playerTicks--
-
-            if (!thePlayer.isEntityAlive) {
-                return
-            }
-
-            val onGround = thePlayer.onGround
-            val isTimerValue = playerSpeed == timerValue
-            val moveSpeed =
-                if (isTimerValue && onGround) 0.5 else if (isTimerValue) 0.2 else if (playerSpeed == chargedValue) 0.1 else 0.15
-            val strafeSpeed = if (isTimerValue) 0.3 else 0.1
-
-            val yawRadians = Math.toRadians(thePlayer.rotationYaw.toDouble())
-            val forwardMotion = -sin(yawRadians) * moveSpeed
-            val sidewaysMotion = cos(yawRadians) * moveSpeed
-
-            if (thePlayer.movementInput.moveStrafe != 0f) {
-                val strafeYaw = yawRadians + if (thePlayer.movementInput.moveStrafe < 0) Math.PI / 4 else -Math.PI / 4
-                val strafeForwardMotion = cos(strafeYaw) * strafeSpeed
-                val strafeSidewaysMotion = sin(strafeYaw) * strafeSpeed
-
-                thePlayer.motionX = forwardMotion + strafeForwardMotion
-                thePlayer.motionZ = sidewaysMotion + strafeSidewaysMotion
-            } else {
-                thePlayer.motionX = forwardMotion
-                thePlayer.motionZ = sidewaysMotion
-            }
         }
     }
 }
