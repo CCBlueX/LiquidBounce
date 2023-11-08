@@ -1,0 +1,205 @@
+*:focus {
+    outline: none;
+}
+
+* {
+    cursor: default !important;
+    font-family: "Montserrat", sans-serif;
+    user-select: none;
+    box-sizing: border-box;
+    color: white;
+}
+
+body {
+    background-image: url("img/background.png");
+    background-size: cover;
+    overflow: hidden;
+    margin : 3rem;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.head {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+#logo  {
+    float: left;
+}
+
+.container-sm {
+
+    padding: 1rem;
+    border-radius: 5px;
+    background: rgba(0,0,0);
+    border: thick none rgb(70, 119, 255);
+    border-bottom-style: solid;
+    width: 40vw;
+
+}
+
+.head-right {
+    float: right;
+    display: flex;
+    width: 9rem;
+}
+
+#box {
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 10, 0.62);
+    text-align: center;
+    padding: 0.8rem;
+}
+
+#box a span {
+    position: absolute;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+    color: white;
+    background: #000000;
+    z-index: 1;
+    visibility: hidden;
+    top: 1em;
+    left: 109.5em;
+    padding: 10px;
+    border-radius: 30px;
+}
+
+#box a:hover span {
+    visibility: visible;
+}
+
+.altmanager {
+    display: flex;
+    height: 100%;
+    width: 98%;
+    padding: 10px 2rem 10px 2rem;
+    margin: auto;
+    text-align: center;
+    background: #3FB8AF;
+}
+
+.searchbox {
+    float: left;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1em;
+    width: 100%;
+}
+#inputbox {
+    background: none;
+    border: none;
+    width: 100%;
+    height: 100%;
+    font-size: 1rem;
+}
+
+#test {
+    float: right;
+}
+
+#spacer {
+    width: 100%;
+    height: 10vh;
+}
+
+.avatar {
+    border-radius: 50px;
+    box-shadow: 3px 3px 6px #000;
+}
+
+#textbox {
+    width: 100%
+}
+
+.flag {
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    margin-left: -1.6em;
+    margin-bottom: 3.5em;
+    box-shadow: 3px 3px 6px #000
+}
+
+.footinit {
+    background-color: rgba(0, 0, 0, 0.68);
+    border-radius: 6px;
+    align-items: center;
+    column-gap: 30px;
+    font-size: 26px;
+    padding: 15px 35px;
+    position: absolute;
+    bottom: 20px;
+    text-align: right;
+    right: 20px;
+    margin-bottom: 10px;
+}
+
+.footinit2 {
+    background-color: rgba(0, 0, 0, 0.68);
+    border-radius: 6px;
+    align-items: center;
+    column-gap: 30px;
+    font-size: 26px;
+    padding: 15px 35px;
+    position: absolute;
+    bottom: 20px;
+    text-align: left;
+    left: 20px;
+    margin-bottom: 10px;
+}
+
+.butto {
+    height: 45px;
+    width: 155px;
+    font-size: 22px;
+    background-color: rgba(0, 0, 0, 0.68);
+    border-radius: 6px;
+    margin-right: 10px;
+    background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+    background-size: 200% 100%;
+    background-position: right bottom;
+    will-change: background-position;
+    transition: background-position .2s ease-out;
+}
+
+.butto:hover, .Button:hover {
+    background-position: left bottom
+}
+
+.Button {
+    background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+    background-size: 200% 100%;
+    background-position: right bottom;
+    will-change: background-position;
+    transition: background-position .2s ease-out;
+    margin-top: 30px;
+    width: 420px;
+    padding: 25px 35px;
+    border-radius: 6px;
+    align-items: center;
+    font-size: 26px;
+}
+
+
+Button {
+    border-radius: 6px;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.68);
+    width: 90px;
+    height: 30px;
+    color: white;
+    border: none;
+}
