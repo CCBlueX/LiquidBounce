@@ -234,6 +234,8 @@
         "module.noPitchLimit.description": "Allows you to rotate your head indefinitely in every direction..",
         
         "module.noRotateSet.description": "Prevents the server from rotating your head.",
+
+        "module.noSlotSet.description": "Prevents the server from changing your hotbar slot.",
         
         "module.noScoreboard.description": "Disables the scoreboard.",
         

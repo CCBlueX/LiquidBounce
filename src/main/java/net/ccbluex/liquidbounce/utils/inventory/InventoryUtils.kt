@@ -6,6 +6,9 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.NoSlotSet
+import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -162,7 +165,22 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                 else _serverSlot = packet.slotId
             }
 
-            is S09PacketHeldItemChange -> _serverSlot = packet.heldItemHotbarIndex
+            is S09PacketHeldItemChange -> {
+                if (_serverSlot == packet.heldItemHotbarIndex)
+                    return
+
+                val prevSlot = _serverSlot
+
+                _serverSlot = packet.heldItemHotbarIndex
+
+                if (NoSlotSet.handleEvents()) {
+                    TickedActions.TickScheduler(NoSlotSet) += {
+                        serverSlot = prevSlot
+                    }
+
+                    event.cancelEvent()
+                }
+            }
         }
     }
 
