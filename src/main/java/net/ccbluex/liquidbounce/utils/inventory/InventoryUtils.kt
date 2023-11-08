@@ -198,6 +198,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     fun onWorld(event: WorldEvent) {
         // Prevents desync
         _serverOpenInventory = false
+        _serverSlot = 0
+        serverOpenContainer = false
     }
 
     override fun handleEvents() = true
