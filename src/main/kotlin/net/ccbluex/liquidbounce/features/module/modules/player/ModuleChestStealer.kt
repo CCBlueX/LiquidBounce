@@ -43,16 +43,23 @@ import kotlin.math.ceil
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)
-    var closeDelay by intRange("CloseDelay", 1..10, 0..200)
+    var closeDelay by intRange("CloseDelay", 1..10, 0..2000)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
 
     private var lastSlot = 0
     private val timer = Chronometer()
 
+    private var shouldClose = false
+
     val repeatable = handler<WorldRenderEvent> {
         if (!timer.hasElapsed()) {
             return@handler
+        }
+
+        if(shouldClose) {
+            player.closeHandledScreen()
+            shouldClose = false
         }
 
         val screen = mc.currentScreen
@@ -102,7 +109,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             return@handler
         }
 
-        if (sortedItemsToCollect.isEmpty() && !waitForCloseTimer()) {
+        if (sortedItemsToCollect.isEmpty() && waitForCloseTimer()) {
             player.closeHandledScreen()
         }
     }
@@ -194,6 +201,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
 
         timer.waitFor(time.toLong())
+        shouldClose = true
         return false
     }
 
