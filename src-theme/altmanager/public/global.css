@@ -15,7 +15,7 @@
 body {
     background-size: cover;
     overflow: hidden;
-    margin: 3rem;
+    margin : 3rem;
     background-image: url("img/background.png");
     font-family: "Montserrat", sans-serif;
     user-select: none;
