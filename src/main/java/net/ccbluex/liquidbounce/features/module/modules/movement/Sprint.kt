@@ -42,34 +42,37 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
         private val checkServerSideGround by BoolValue("CheckServerSideOnlyGround", false)
             { mode == "Vanilla" && checkServerSide }
 
+    private var isSprinting = false
+
     override val tag
         get() = mode
 
     fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
         val player = mc.thePlayer ?: return
 
-        val module = SuperKnockback
-        if (module.breakSprint()) {
+        if (SuperKnockback.breakSprint()) {
             player.isSprinting = false
             return
         }
 
-        if (onlyOnSprintPress && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown && !module.startSprint())
+        if (onlyOnSprintPress && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown && !SuperKnockback.startSprint() && !isSprinting)
             return
 
         if (Scaffold.handleEvents()) {
             if (!Scaffold.sprint) {
                 player.isSprinting = false
+                isSprinting = false
                 return
             } else if (Scaffold.sprint && Scaffold.eagle == "Normal" && isMoving && player.onGround && Scaffold.eagleSneaking && Scaffold.eagleSprint) {
                 player.isSprinting = true
+                isSprinting = true
                 return
             }
         }
 
         if (handleEvents()) {
             player.isSprinting = !shouldStopSprinting(movementInput, isUsingItem)
-
+            isSprinting = player.isSprinting
             if (player.isSprinting && allDirections && mode != "Legit") {
                 if (!allDirectionsLimitSpeedGround || player.onGround) {
                     player.motionX *= allDirectionsLimitSpeed

@@ -49,8 +49,8 @@ object MovementUtils : MinecraftInstance(), Listenable {
                 moveEvent.z = z
             }
 
-            motionX = -sin(yaw) * speed
-            motionZ = cos(yaw) * speed
+            motionX = x
+            motionZ = z
         }
 
     fun forward(distance: Double) =

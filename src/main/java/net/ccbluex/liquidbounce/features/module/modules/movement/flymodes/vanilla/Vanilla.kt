@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
-import net.ccbluex.liquidbounce.utils.RotationUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import kotlin.math.cos
 import kotlin.math.sin

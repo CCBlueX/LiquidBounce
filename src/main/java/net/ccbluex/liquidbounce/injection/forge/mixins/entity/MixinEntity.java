@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
+import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
@@ -34,7 +35,7 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinEntity {
+public abstract class MixinEntity implements IMixinEntity {
 
     @Shadow
     public double posX;
@@ -44,6 +45,46 @@ public abstract class MixinEntity {
 
     @Shadow
     public double posZ;
+
+    private double trueX;
+
+    public double getTrueX() {
+        return trueX;
+    }
+
+    public void setTrueX(double x) {
+        this.trueX = x;
+    }
+
+    private double trueY;
+
+    public double getTrueY() {
+        return trueY;
+    }
+
+    public void setTrueY(double y) {
+        this.trueY = y;
+    }
+
+    private double trueZ;
+
+    public double getTrueZ() {
+        return trueZ;
+    }
+
+    public void setTrueZ(double z) {
+        this.trueZ = z;
+    }
+
+    private boolean truePos;
+
+    public boolean getTruePos() {
+        return truePos;
+    }
+
+    public void setTruePos(boolean set) {
+        this.truePos = set;
+    }
 
     @Shadow
     public abstract boolean isSprinting();
