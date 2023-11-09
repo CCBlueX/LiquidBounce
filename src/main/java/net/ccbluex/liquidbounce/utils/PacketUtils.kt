@@ -10,6 +10,7 @@ import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S0CPacketSpawnPlayer
+import net.minecraft.network.play.server.S0FPacketSpawnMob
 import net.minecraft.network.play.server.S0EPacketSpawnObject
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S14PacketEntity
@@ -106,6 +107,13 @@ val S0CPacketSpawnPlayer.realX
 val S0CPacketSpawnPlayer.realY
     get() = y / 32.0
 val S0CPacketSpawnPlayer.realZ
+    get() = z / 32.0
+
+val S0FPacketSpawnMob.realX
+    get() = x / 32.0
+val S0FPacketSpawnMob.realY
+    get() = y / 32.0
+val S0FPacketSpawnMob.realZ
     get() = z / 32.0
 
 val S18PacketEntityTeleport.realX

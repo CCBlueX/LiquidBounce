@@ -29,6 +29,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.S0CPacketSpawnPlayer
+import net.minecraft.network.play.server.S0FPacketSpawnMob
 import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S40PacketDisconnect
@@ -36,6 +37,7 @@ import net.minecraft.network.play.server.S06PacketUpdateHealth
 import net.minecraft.network.play.server.S29PacketSoundEffect
 import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.util.AxisAlignedBB
+import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
@@ -43,6 +45,7 @@ import java.util.LinkedHashMap
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.minecraft.network.play.server.S13PacketDestroyEntities
 import net.minecraft.network.play.server.S18PacketEntityTeleport
+import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
@@ -94,11 +97,46 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private val nonDelayedSoundSubstrings = arrayOf("game.player.hurt", "game.player.die")
 
-    @EventTarget
+    @EventTarget(ignoreCondition=true)
     fun onPacket(event: PacketEvent) {
-        val world = mc.theWorld ?: return
 
         val packet = event.packet
+
+        when (packet) {
+            is S0CPacketSpawnPlayer -> {
+                val entity = packet.player as IMixinEntity
+                entity.trueX = packet.realX
+                entity.trueY = packet.realY
+                entity.trueZ = packet.realZ
+            }
+            is S0FPacketSpawnMob -> {
+                val entity = mc.theWorld.loadedEntityList.find { it is EntityLivingBase && it.entityId == packet.entityID } as? IMixinEntity
+                entity?.apply {
+                    trueX = packet.realX
+                    trueY = packet.realY
+                    trueZ = packet.realZ
+                }
+            }
+            is S14PacketEntity -> {
+                val entity = packet.getEntity(mc.theWorld) as IMixinEntity
+                entity.trueX += packet.realMotionX
+                entity.trueY += packet.realMotionY
+                entity.trueZ += packet.realMotionZ
+            }
+            is S18PacketEntityTeleport -> {
+                val entity = mc.theWorld.loadedEntityList.find { it is EntityLivingBase && it.entityId == packet.entityId } as? IMixinEntity
+                entity?.apply {
+                    trueX = packet.realX
+                    trueY = packet.realY
+                    trueZ = packet.realZ
+                }
+            }
+        }
+
+        val world = mc.theWorld ?: return
+
+        if (!handleEvents())
+            return
 
         if (Blink.blinkingReceive())
             return
@@ -194,10 +232,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (mode != "Modern")
             return
 
-        val target = target
+        val target = target as IMixinEntity
 
         if (target != null && !Blink.blinkingReceive() && shouldBacktrack()
-            && mc.thePlayer.getDistance(target.posX + offsetX, target.posY + offsetY, target.posZ + offsetZ) <= 6f
+            && mc.thePlayer.getDistance(target.trueX, target.trueY, target.trueZ) <= 6f
             && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
         ) {
             handlePackets()
@@ -209,11 +247,14 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
+        if (event.targetEntity !is EntityLivingBase)
+            return
+
         // Clear all packets, start again on enemy change
         if (target != event.targetEntity)
             clearPackets()
 
-        target = event.targetEntity
+            target = event.targetEntity
     }
 
     @EventTarget
@@ -264,12 +305,13 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 val timer = mc.timer
 
                 target?.let {
+                    val targetEntity = target as IMixinEntity
                     val x =
-                        it.lastTickPosX + (it.posX - it.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
+                        targetEntity.trueX - renderManager.renderPosX
                     val y =
-                        it.lastTickPosY + (it.posY - it.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
+                        targetEntity.trueY - renderManager.renderPosY
                     val z =
-                        it.lastTickPosZ + (it.posZ - it.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+                        targetEntity.trueZ - renderManager.renderPosZ
                     val axisAlignedBB = it.entityBoundingBox.offset(-it.posX, -it.posY, -it.posZ).offset(x, y, z)
 
                     drawBacktrackBox(
@@ -280,7 +322,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             axisAlignedBB.maxX,
                             axisAlignedBB.maxY,
                             axisAlignedBB.maxZ
-                        ).offset(offsetX, offsetY, offsetZ), color
+                        ), color
                     )
                 }
             }
