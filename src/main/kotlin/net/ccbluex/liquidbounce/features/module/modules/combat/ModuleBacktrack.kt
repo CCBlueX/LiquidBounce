@@ -29,8 +29,6 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
-    val onlyEnemy by boolean("OnlyEnemy", true)
-
     val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
 
     var target: Entity? = null
@@ -130,7 +128,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 
-        if(onlyEnemy && !enemy.shouldBeAttacked())
+        if(!enemy.shouldBeAttacked())
             return@handler
 
         // Reset on enemy change
