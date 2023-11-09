@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.TrackedPosition
@@ -27,6 +28,8 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     val delay by int("Delay", 100, 0..1000)
 
     val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
+
+    val onlyEnemy by boolean("OnlyEnemy", true)
 
     val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
 
@@ -126,6 +129,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
+
+        if(onlyEnemy && !enemy.shouldBeAttacked())
+            return@handler
 
         // Reset on enemy change
         if (enemy != target) {
