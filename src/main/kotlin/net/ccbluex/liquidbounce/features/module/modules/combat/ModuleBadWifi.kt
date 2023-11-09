@@ -23,17 +23,13 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.EventScheduler
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.util.math.Vec3d
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * BadWifi module
@@ -47,8 +43,8 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     private val delay by int("Delay", 550, 0..1000)
     private val recoilTime by int("RecoilTime", 750, 0..2000)
 
-    private val packetQueue = CopyOnWriteArrayList<ModulePingSpoof.DelayData>()
-    private val positions = CopyOnWriteArrayList<PositionData>()
+    private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
+    private val positions = LinkedHashSet<PositionData>()
 
     private val resetTimer = Chronometer()
 
@@ -137,7 +133,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         if (event.origin == TransferOrigin.SEND) {
             event.cancelEvent()
 
-            packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis(), System.nanoTime()))
+            synchronized(packetQueue) {
+                packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
+            }
         }
     }
 
@@ -158,7 +156,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
             return@repeatable
         }
 
-        positions.add(PositionData(player.pos, System.currentTimeMillis(), System.nanoTime()))
+        synchronized(positions) {
+            positions.add(PositionData(player.pos, System.currentTimeMillis()))
+        }
 
         handlePackets()
     }
@@ -181,37 +181,42 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }*/
 
     private fun handlePackets() {
-        // Use removeIf on this too? But this one has to be sorted
-        val filteredPackets = packetQueue.filter {
-            it.delay <= System.currentTimeMillis() - delay
-        }.sortedBy { it.registration }
+        synchronized(packetQueue) {
+            packetQueue.removeIf {
+                if (it.delay <= System.currentTimeMillis() - delay) {
+                    sendPacketSilently(it.packet)
 
-        for (data in filteredPackets) {
-            sendPacketSilently(data.packet)
+                    return@removeIf true
+                }
 
-            packetQueue.remove(data)
+                false
+            }
         }
 
-        positions.removeIf { it.delay <= System.currentTimeMillis() - delay }
+        synchronized(positions) {
+            positions.removeIf { it.delay <= System.currentTimeMillis() - delay }
+        }
     }
 
     private fun blink(handlePackets: Boolean = true) {
-        if (handlePackets) {
-            resetTimer.reset()
+        synchronized(packetQueue) {
+            if (handlePackets) {
+                resetTimer.reset()
 
-            val filtered = packetQueue.sortedBy { it.registration }
+                packetQueue.removeIf {
+                    sendPacketSilently(it.packet)
 
-            for (data in filtered) {
-                sendPacketSilently(data.packet)
-
-                packetQueue.remove(data)
+                    true
+                }
+            } else {
+                packetQueue.clear()
             }
-        } else {
-            packetQueue.clear()
         }
 
-        positions.clear()
+        synchronized(positions) {
+            positions.clear()
+        }
     }
 
-    data class PositionData(val vec: Vec3d, val delay: Long, val registration: Long)
+    data class PositionData(val vec: Vec3d, val delay: Long)
 }
