@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
@@ -203,9 +204,23 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
+        renderTarget(matrixStack)
+
+
+        renderFailedHits(matrixStack)
+    }
+
+    private fun renderTarget(matrixStack: MatrixStack) {
+        val target = targetTracker.lockedOnTarget ?: return
+        renderEnvironmentForWorld(matrixStack) {
+            targetRenderer.render(this, target)
+        }
+    }
+
+    private fun renderFailedHits(matrixStack: MatrixStack) {
         if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
             failedHits.clear()
-            return@handler
+            return
         }
 
         failedHits.forEach { it.setRight(it.getRight() + 1) }

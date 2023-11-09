@@ -136,11 +136,10 @@ open class Configurable(
     protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
-    protected fun choices(module: Module, active: Choice, choices: Array<Choice>) =
+    protected fun choices(module: Module, name: String, active: Choice, choices: Array<Choice>) =
         ChoiceConfigurable(module, name, active) { choices }.apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: Choice, choices: Array<Choice>) =
-        choices(this, active, choices)
+
 
 
     protected fun Module.choices(name: String, active: Choice, choicesCallback: (ChoiceConfigurable) -> Array<Choice>) =

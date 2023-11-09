@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
@@ -154,6 +155,9 @@ open class Module(
             enabled = false
         }
     }
+
+    protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
+        choices(this, name, active, choices)
 
     /**
      * Returns if module is hidden. Hidden modules are not displayed in the module list.

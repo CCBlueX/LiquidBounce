@@ -24,6 +24,10 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
+import net.ccbluex.liquidbounce.render.utils.drawBoxSide
+import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 
 /**
@@ -35,7 +39,11 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
 //    val appearance by choises("Appearance", Motion, arrayOf(Motion, Clip))
 
-    val appearance by choices(module, Legacy, arrayOf(Legacy))
+    fun render(env: RenderEnvironment, entity: Entity) {
+        (appearance as TargetRenderAppearance).render(env, entity)
+    }
+
+    val appearance by choices(module, "Appearance", Legacy, arrayOf(Legacy))
 
     object Legacy : TargetRenderAppearance("Legacy") {
         override val parent: ChoiceConfigurable
@@ -47,7 +55,5 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 }
 
 abstract class TargetRenderAppearance(name: String):  Choice(name) {
-    open fun render(entity: Entity) {
-
-    }
+    open fun render(env: RenderEnvironment, entity: Entity) {}
 }
