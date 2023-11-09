@@ -57,14 +57,14 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER, gameDetecting 
             val iterator = blocks.entries.iterator()
 
             while (iterator.hasNext()) {
-                val entry = iterator.next()
+                val (pos, time) = iterator.next()
 
-                if (System.currentTimeMillis() - entry.value > 2000L) {
+                if (System.currentTimeMillis() - time > 2000L) {
                     iterator.remove()
                     continue
                 }
 
-                drawBlockBox(entry.key, color, mode == "Box")
+                drawBlockBox(pos, color, mode == "Box")
             }
         }
     }

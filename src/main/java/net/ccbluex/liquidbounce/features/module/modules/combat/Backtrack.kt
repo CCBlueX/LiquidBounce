@@ -39,10 +39,11 @@ import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
+import java.util.LinkedHashMap
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.minecraft.network.play.server.S13PacketDestroyEntities
 import net.minecraft.network.play.server.S18PacketEntityTeleport
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
@@ -77,7 +78,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" }
             private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" }
 
-    private val packetQueue = ConcurrentHashMap<Packet<*>, Pair<Long, Long>>()
+    private val packetQueue = LinkedHashMap<Packet<*>, Long>()
 
     private var target: Entity? = null
     private var offsetX = 0.0
@@ -182,7 +183,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     }
 
                     event.cancelEvent()
-                    packetQueue[packet] = System.currentTimeMillis() to System.nanoTime()
+                    packetQueue[packet] = System.currentTimeMillis()
                 }
             }
         }
@@ -315,11 +316,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
     }
 
-    private fun handlePackets() {
-        val filtered = packetQueue.filter { entry -> entry.value.first <= (System.currentTimeMillis() - delay) }.entries.sortedBy { it.value.second }.map { it.key }
-
-        for (packet in filtered) {
-            handlePacket(packet)
+    private fun handlePackets() =
+        packetQueue.forEach { (packet, timestamp) ->
+            if (timestamp > System.currentTimeMillis() - delay)
+                return@forEach
 
             if (packet is S14PacketEntity && packet.getEntity(mc.theWorld) == target) {
                 offsetX -= packet.realMotionX
@@ -327,21 +327,26 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 offsetZ -= packet.realMotionZ
             }
 
+            if (packet is S18PacketEntityTeleport && packet.entityId == target?.entityId) {
+                val deltaX = packet.realX - target!!.posX
+                val deltaY = packet.realY - target!!.posY
+                val deltaZ = packet.realZ - target!!.posZ
+
+                offsetX -= deltaX
+                offsetY -= deltaY
+                offsetZ -= deltaZ
+            }
+
+            handlePacket(packet)
+
             packetQueue.remove(packet)
         }
-    }
 
     private fun clearPackets(handlePackets: Boolean = true) {
-        if (handlePackets) {
-            val filtered = packetQueue.entries.sortedBy { it.value.second }.map { it.key }
+        if (handlePackets)
+            packetQueue.keys.forEach(::handlePacket)
 
-            for (packet in filtered) {
-                handlePacket(packet)
-                packetQueue.remove(packet)
-            }
-        } else {
-            packetQueue.clear()
-        }
+        packetQueue.clear()
 
         reset()
     }
@@ -406,9 +411,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             entity.prevPosX = backtrackData.x
             entity.prevPosY = backtrackData.y
             entity.prevPosZ = backtrackData.z
-            if (action()) {
+
+            if (action())
                 break
-            }
         }
 
         // Reset position
