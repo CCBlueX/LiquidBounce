@@ -101,13 +101,13 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     fun onPacket(event: PacketEvent) {
 
         val packet = event.packet
-
+	
         when (packet) {
             is S0CPacketSpawnPlayer -> {
-                val entity = packet.player as IMixinEntity
-                entity.trueX = packet.realX
-                entity.trueY = packet.realY
-                entity.trueZ = packet.realZ
+                val entity = packet.player as? IMixinEntity
+                entity?.trueX = packet.realX
+                entity?.trueY = packet.realY
+                entity?.trueZ = packet.realZ
             }
             is S0FPacketSpawnMob -> {
                 val entity = mc.theWorld.loadedEntityList.find { it is EntityLivingBase && it.entityId == packet.entityID } as? IMixinEntity
@@ -118,10 +118,12 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
             }
             is S14PacketEntity -> {
-                val entity = packet.getEntity(mc.theWorld) as IMixinEntity
-                entity.trueX += packet.realMotionX
-                entity.trueY += packet.realMotionY
-                entity.trueZ += packet.realMotionZ
+                val entity = packet.getEntity(mc.theWorld) as? IMixinEntity
+                entity?.let {
+                    it.trueX = (it.trueX + packet.realMotionX) ?: 0.0
+                    it.trueY = (it.trueY + packet.realMotionY) ?: 0.0
+                    it.trueZ = (it.trueZ + packet.realMotionZ) ?: 0.0
+                }
             }
             is S18PacketEntityTeleport -> {
                 val entity = mc.theWorld.loadedEntityList.find { it is EntityLivingBase && it.entityId == packet.entityId } as? IMixinEntity
