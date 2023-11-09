@@ -104,7 +104,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
             val nextTickFireballPosition = entity.pos.add(entity.pos.subtract(entity.prevPos))
 
-            val entitBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
+            val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
             val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyes)
 
             if (distanceSquared > rangeSquared) {
