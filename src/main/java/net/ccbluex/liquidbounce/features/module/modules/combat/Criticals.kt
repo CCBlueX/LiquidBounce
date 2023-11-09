@@ -33,7 +33,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
     val delay by IntegerValue("Delay", 0, 0..500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
-    private val customMotionY by FloatValue("Custom-Y", 0.2f, 0.01f..0.42f)
+    private val customMotionY by FloatValue("Custom-Y", 0.2f, 0.01f..0.42f) { mode.equals("CustomMotion") }
 
     val msTimer = MSTimer()
 
