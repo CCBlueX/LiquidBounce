@@ -61,6 +61,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxDistance)
         override fun isSupported() = mode == "Modern"
     }
+    private val smart by BoolValue("Smart", true) { mode == "Modern" }
 
     // ESP
     private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" }
@@ -238,13 +239,12 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (mode != "Modern")
             return
 
-        val target = target as? IMixinEntity
+        val target = target as? EntityLivingBase
+        val targetMixin = target as? IMixinEntity
+        val trueDist = targetMixin?.let {mc.thePlayer.getDistance(it.trueX, it.trueY, it.trueZ)} ?: 0.0
+        val dist = target?.let {mc.thePlayer.getDistance(it.posX, it.posY, it.posZ)} ?: 0.0
 
-        if (target != null && !Blink.blinkingReceive() && shouldBacktrack() && target.truePos && mc.thePlayer.getDistance(
-                target.trueX,
-                target.trueY,
-                target.trueZ
-            ) <= 6f && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
+        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos && trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
         ) {
             handlePackets()
         } else {
