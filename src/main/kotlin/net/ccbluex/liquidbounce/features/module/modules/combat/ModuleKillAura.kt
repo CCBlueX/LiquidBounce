@@ -204,16 +204,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        renderTarget(matrixStack)
+        renderTarget(matrixStack, event.partialTicks)
 
 
         renderFailedHits(matrixStack)
     }
 
-    private fun renderTarget(matrixStack: MatrixStack) {
+    private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
         val target = targetTracker.lockedOnTarget ?: return
         renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target)
+            targetRenderer.render(this, target, partialTicks)
         }
     }
 
