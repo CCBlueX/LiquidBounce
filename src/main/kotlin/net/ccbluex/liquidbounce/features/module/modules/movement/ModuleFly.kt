@@ -58,7 +58,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private val modes = choices(
         "Mode", Vanilla, arrayOf(
-            Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524, Sentinel27thOct, VerusDamage
+            Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524, Sentinel27thOct, VerusDamage, VulcanGlide
         )
     )
 
@@ -105,6 +105,30 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         }
 
     }
+
+    /**
+     * @anticheat Vulcan
+     * @anticheat Version 2.7.7
+     * @testedOn anticheat-test.com
+     * @note NA
+     */
+
+    private object VulcanGlide : Choice ("VulcanGlide") {
+
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            if (player.fallDistance > 0.1) {
+                if (player.age % 2 == 0) {
+                    player.velocity.y = -0.155
+                }
+            } else player.velocity.y = -0.1
+
+        }
+    }
+
 
     private object Jetpack : Choice("Jetpack") {
 
