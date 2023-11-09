@@ -83,39 +83,55 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         when (mode.lowercase()) {
             "sent" -> {
                 if (event.eventType == EventState.RECEIVE) {
-                    handlePackets(*packetsReceived.toTypedArray())
+                    synchronized(packetsReceived) {
+                        handlePackets(*packetsReceived.toTypedArray())
+                    }
                     packetsReceived.clear()
                 }
                 if (event.eventType == EventState.SEND) {
                     event.cancelEvent()
-                    packets += packet
+                    synchronized(packets) {
+                        packets += packet
+                    }
                     if (packet is C03PacketPlayer && packet.isMoving) {
                         val packetPos = Vec3(packet.x, packet.y, packet.z)
-                        positions += packetPos
+                        synchronized(positions) {
+                            positions += packetPos
+                        }
                     }
                 }
             }
             "received" -> {
                 if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
                     event.cancelEvent()
-                    packetsReceived += packet
+                    synchronized(packetsReceived) {
+                        packetsReceived += packet
+                    }
                 }
                 if (event.eventType == EventState.SEND) {
-                    sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                    synchronized(packets) {
+                        sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                    }
                     packets.clear()
                 }
             }
             "both" -> {
                 if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
                     event.cancelEvent()
-                    packetsReceived += packet
+                    synchronized(packetsReceived) {
+                        packetsReceived += packet
+                    }
                 }
                 if (event.eventType == EventState.SEND) {
                     event.cancelEvent()
-                    packets += packet
+                    synchronized(packets) {
+                        packets += packet
+                    }
                     if (packet is C03PacketPlayer && packet.isMoving) {
                         val packetPos = Vec3(packet.x, packet.y, packet.z)
-                        positions += packetPos
+                        synchronized(positions) {
+                            positions += packetPos
+                        }
                     }
                 }
             }
@@ -142,11 +158,15 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
         when (mode.lowercase()) {
             "sent" -> {
-                handlePackets(*packetsReceived.toTypedArray())
+                synchronized(packetsReceived) {
+                    handlePackets(*packetsReceived.toTypedArray())
+                }
                 packetsReceived.clear()
             }
             "received" -> {
-                sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                synchronized(packets) {
+                    sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                }
                 packets.clear()
             }
         }
@@ -196,8 +216,12 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
         get() = (packets.size + packetsReceived.size).toString()
 
     private fun blink() {
-        handlePackets(*packetsReceived.toTypedArray())
+        synchronized(packetsReceived) {
+            handlePackets(*packetsReceived.toTypedArray())
+        }
+        synchronized(packets) {
         sendPackets(*packets.toTypedArray(), triggerEvents = false)
+        }
 
         packets.clear()
         packetsReceived.clear()

@@ -106,9 +106,13 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             event.cancelEvent()
             if (packet is C03PacketPlayer && packet.isMoving) {
                 val packetPos = Vec3(packet.x, packet.y, packet.z)
-                positions[packetPos] = System.currentTimeMillis()
+                synchronized(positions) {
+                    positions[packetPos] = System.currentTimeMillis()
+                }
             }
-            packetQueue[packet] = System.currentTimeMillis()
+            synchronized(packetQueue) {
+                packetQueue[packet] = System.currentTimeMillis()
+            }
         }
     }
 
@@ -195,25 +199,29 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
         get() = packetQueue.size.toString()
 
     private fun blink(handlePackets: Boolean = true) {
-        if (handlePackets) {
-            resetTimer.reset()
+        synchronized(packetQueue) {
+            if (handlePackets) {
+                resetTimer.reset()
 
-            packetQueue.forEach { (packet) -> sendPacket(packet, false) }
+                packetQueue.forEach { (packet) -> sendPacket(packet, false) }
+            }
         }
-
         packetQueue.clear()
         positions.clear()
     }
 
     private fun handlePackets() {
-        packetQueue.entries.removeAll { (packet, timestamp) ->
-            if (timestamp <= System.currentTimeMillis() - delay) {
-                sendPacket(packet, false)
-                true
-            } else false
+        synchronized(packetQueue) {
+            packetQueue.entries.removeAll { (packet, timestamp) ->
+                if (timestamp <= System.currentTimeMillis() - delay) {
+                    sendPacket(packet, false)
+                    true
+                } else false
+            }
         }
-
-        positions.entries.removeAll { (_, timestamp) -> timestamp <= System.currentTimeMillis() - delay }
+        synchronized(positions) {
+            positions.entries.removeAll { (_, timestamp) -> timestamp <= System.currentTimeMillis() - delay }
+        }
     }
 
 }
