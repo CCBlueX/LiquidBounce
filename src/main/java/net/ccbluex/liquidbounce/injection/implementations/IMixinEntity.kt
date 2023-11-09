@@ -9,4 +9,5 @@ interface IMixinEntity {
 	var trueX: Double
 	var trueY: Double
 	var trueZ: Double
+	var truePos: Boolean
 }

@@ -92,6 +92,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
+                    truePos = true
                 }
             }
 
@@ -101,6 +102,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
+                    truePos = true
                 }
             }
 
@@ -119,6 +121,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
+                    truePos = true
                 }
             }
         }
@@ -204,14 +207,29 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
     }
 
-    @EventTarget
+    @EventTarget(ignoreCondition=true)
     fun onTick(event: UpdateEvent) {
+        for (entity in mc.theWorld.loadedEntityList) {
+            if (entity is EntityLivingBase) {
+                val entityMixin = entity as? IMixinEntity
+                if (entityMixin?.truePos == false) {
+                    entityMixin?.trueX = entity.posX
+                    entityMixin?.trueY = entity.posY
+                    entityMixin?.trueZ = entity.posZ
+                    entityMixin?.truePos = true
+                }
+            }
+        }
+
+        if (!handleEvents())
+            return
+
         if (mode != "Modern")
             return
 
         val target = target as? IMixinEntity
 
-        if (target != null && !Blink.blinkingReceive() && shouldBacktrack() && mc.thePlayer.getDistance(
+        if (target != null && !Blink.blinkingReceive() && shouldBacktrack() && target.truePos && mc.thePlayer.getDistance(
                 target.trueX,
                 target.trueY,
                 target.trueZ
@@ -284,24 +302,28 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
                 target?.let {
                     val targetEntity = target as IMixinEntity
-                    val x =
-                        targetEntity.trueX - renderManager.renderPosX
-                    val y =
-                        targetEntity.trueY - renderManager.renderPosY
-                    val z =
-                        targetEntity.trueZ - renderManager.renderPosZ
-                    val axisAlignedBB = it.entityBoundingBox.offset(-it.posX, -it.posY, -it.posZ).offset(x, y, z)
 
-                    drawBacktrackBox(
-                        AxisAlignedBB.fromBounds(
-                            axisAlignedBB.minX,
-                            axisAlignedBB.minY,
-                            axisAlignedBB.minZ,
-                            axisAlignedBB.maxX,
-                            axisAlignedBB.maxY,
-                            axisAlignedBB.maxZ
-                        ), color
-                    )
+                    if (targetEntity.truePos) {
+
+                        val x =
+                            targetEntity.trueX - renderManager.renderPosX
+                        val y =
+                            targetEntity.trueY - renderManager.renderPosY
+                        val z =
+                            targetEntity.trueZ - renderManager.renderPosZ
+                        val axisAlignedBB = it.entityBoundingBox.offset(-it.posX, -it.posY, -it.posZ).offset(x, y, z)
+
+                        drawBacktrackBox(
+                            AxisAlignedBB.fromBounds(
+                                axisAlignedBB.minX,
+                                axisAlignedBB.minY,
+                                axisAlignedBB.minZ,
+                                axisAlignedBB.maxX,
+                                axisAlignedBB.maxY,
+                                axisAlignedBB.maxZ
+                            ), color
+                        )
+                    }
                 }
             }
         }

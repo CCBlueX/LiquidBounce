@@ -76,6 +76,16 @@ public abstract class MixinEntity implements IMixinEntity {
         this.trueZ = z;
     }
 
+    private boolean truePos;
+
+    public boolean getTruePos() {
+        return truePos;
+    }
+
+    public void setTruePos(boolean set) {
+        this.truePos = set;
+    }
+
     @Shadow
     public abstract boolean isSprinting();
 
