@@ -179,7 +179,7 @@ class FontRenderer(
             len = drawInternal(text, x0 + 2.0f * scale, y0 + 2.0f * scale, Color4b(0, 0, 0, 150), true, seed, z, scale)
         }
 
-        return max(len, drawInternal(text, x0, y0, defaultColor, false, seed, z, scale))
+        return max(len, drawInternal(text, x0, y0, defaultColor, false, seed, z * 2.0F, scale))
     }
 
     /**

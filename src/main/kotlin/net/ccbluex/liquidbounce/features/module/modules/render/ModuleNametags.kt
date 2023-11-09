@@ -43,6 +43,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.RotationAxis
+import org.lwjgl.opengl.GL11
 import kotlin.math.roundToInt
 
 /**
@@ -52,7 +53,7 @@ import kotlin.math.roundToInt
  */
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
-    val fontRenderer = FontRenderer.createFontRenderer("Montserrat", 32)
+    val fontRenderer = FontRenderer.createFontRenderer("Montserrat", 43)
 
     private val health by boolean("Health", true)
     private val ping by boolean("Ping", true)
@@ -101,7 +102,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         val healthText = if (health && entity is LivingEntity) "§c${getHealth(entity).toInt()} HP" else ""
         val botText = if (bot) " §c§lBot" else ""
 
-        return "$distanceText$pingText$nameColor${entity.entityName} $healthText$botText"
+        return "$distanceText$pingText$nameColor${entity.displayName.string} $healthText$botText"
     }
 
     private fun getHealth(entity: LivingEntity): Float {
@@ -137,9 +138,9 @@ class NametagRenderer {
         pos: Vec3,
     ) {
         val camera = mc.gameRenderer.camera
-        val scale = ((camera.pos.distanceTo(pos.toVec3d()) / 4F).coerceAtLeast(1.0).toFloat() / 150.0F) * 0.7F * ModuleNametags.scale
+        val scale = ((camera.pos.distanceTo(pos.toVec3d()) / 4F).coerceAtLeast(1.0).toFloat() / 150.0F) * 0.4F * ModuleNametags.scale
 
-        val c = 32.0F
+        val c = 43.0F
 
         env.matrixStack.push()
         env.matrixStack.translate(pos.x, pos.y, pos.z)
@@ -151,13 +152,14 @@ class NametagRenderer {
             text,
             0.0F,
             0.0F,
-            shadow = true
+            shadow = true,
+            z = 0.1F
         )
-        env.matrixStack.translate(-x * 0.5F, -ModuleNametags.fontRenderer.height * 0.5F, 0.0F)
+        env.matrixStack.translate(-x * 0.5F, -ModuleNametags.fontRenderer.height * 0.5F, 0.00F)
 
         ModuleNametags.fontRenderer.commit(env, fontBuffers)
 
-        val q1 = Vec3(-0.1F * c, ModuleNametags.fontRenderer.height * -0.05F, 0.0F)
+        val q1 = Vec3(-0.0F * c, ModuleNametags.fontRenderer.height * -0.01F, 0.0F)
         val q2 = Vec3(x + 0.1F * c, ModuleNametags.fontRenderer.height * 1.01F, 0.0F)
 
         quadBuffers.drawQuad(env, q1, q2)
@@ -170,6 +172,9 @@ class NametagRenderer {
     }
 
     fun commit(env: RenderEnvironment) {
+        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_DEPTH_TEST)
+
         env.withColor(Color4b(0, 0, 0, 127)) {
             quadBuffers.draw()
         }
