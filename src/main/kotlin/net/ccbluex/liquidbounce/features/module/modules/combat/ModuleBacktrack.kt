@@ -20,8 +20,6 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import java.util.concurrent.CopyOnWriteArrayList
 
-@Suppress("detekt:all")
-
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val range by floatRange("Range", 1f..3f, 0f..6f)
@@ -77,6 +75,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                 position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
             } else {
                 (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
+            }
+            if (player.squaredDistanceTo(pos) <= player.squaredDistanceTo(target)) {
+                clear(true)
             }
 
             position?.setPos(pos)

@@ -44,7 +44,7 @@ import kotlin.math.ceil
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)
-    var closeDelay by intRange("CloseDelay", 1..10, 0..2000)
+    var closeDelay by intRange("CloseDelay", 0..1, 0..20)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
 
@@ -198,18 +198,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
 
         timer.waitFor(time.toLong())
-        return false
-    }
-
-    private fun waitForCloseTimer(): Boolean {
-        val time = closeDelay.random()
-
-        if (time == 0) {
-            return true
-        }
-
-        timer.waitFor(time.toLong())
-        shouldClose = true
         return false
     }
 
