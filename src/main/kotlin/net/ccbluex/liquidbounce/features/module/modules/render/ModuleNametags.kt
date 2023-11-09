@@ -98,7 +98,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         val distanceText = if (distance) "§7${playerDistance.roundToInt()}m" else ""
         val pingText =
             if (ping && entity is PlayerEntity) " §7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7] " else " "
-        val healthText = if (health && entity is LivingEntity) "§c ${getHealth(entity).toInt()} HP" else ""
+        val healthText = if (health && entity is LivingEntity) "§c${getHealth(entity).toInt()} HP" else ""
         val botText = if (bot) " §c§lBot" else ""
 
         return "$distanceText$pingText$nameColor${entity.entityName} $healthText$botText"
