@@ -101,16 +101,20 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     fun onPacket(event: PacketEvent) {
 
         val packet = event.packet
-	
+
+        val world = mc.theWorld ?: return
+
         when (packet) {
             is S0CPacketSpawnPlayer -> {
-                val entity = packet.player as? IMixinEntity
-                entity?.trueX = packet.realX
-                entity?.trueY = packet.realY
-                entity?.trueZ = packet.realZ
+                val entity = world.getEntityByID(packet.entityID) as? IMixinEntity
+                entity?.apply {
+                    trueX = packet.realX
+                    trueY = packet.realY
+                    trueZ = packet.realZ
+                }
             }
             is S0FPacketSpawnMob -> {
-                val entity = mc.theWorld.loadedEntityList.find { it is EntityLivingBase && it.entityId == packet.entityID } as? IMixinEntity
+                val entity = world.getEntityByID(packet.entityID) as? IMixinEntity
                 entity?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
@@ -118,7 +122,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
             }
             is S14PacketEntity -> {
-                val entity = packet.getEntity(mc.theWorld) as? IMixinEntity
+                val entity = packet.getEntity(world) as? IMixinEntity
                 entity?.let {
                     it.trueX = (it.trueX + packet.realMotionX) ?: 0.0
                     it.trueY = (it.trueY + packet.realMotionY) ?: 0.0
@@ -126,7 +130,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
             }
             is S18PacketEntityTeleport -> {
-                val entity = mc.theWorld.loadedEntityList.find { it is EntityLivingBase && it.entityId == packet.entityId } as? IMixinEntity
+                val entity = world.getEntityByID(packet.entityId) as? IMixinEntity
                 entity?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
@@ -134,8 +138,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
             }
         }
-
-        val world = mc.theWorld ?: return
 
         if (!handleEvents())
             return
@@ -234,10 +236,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (mode != "Modern")
             return
 
-        val target = target as IMixinEntity
+        val target = target as? IMixinEntity
 
         if (target != null && !Blink.blinkingReceive() && shouldBacktrack()
-            && mc.thePlayer.getDistance(target.trueX, target.trueY, target.trueZ) <= 6f
+            && mc.thePlayer.getDistance(target?.trueX, target?.trueY, target?.trueZ) <= 6f
             && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
         ) {
             handlePackets()
@@ -361,29 +363,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     private fun handlePackets() =
-        packetQueue.forEach { (packet, timestamp) ->
-            if (timestamp > System.currentTimeMillis() - delay)
-                return@forEach
-
-            if (packet is S14PacketEntity && packet.getEntity(mc.theWorld) == target) {
-                offsetX -= packet.realMotionX
-                offsetY -= packet.realMotionY
-                offsetZ -= packet.realMotionZ
-            }
-
-            if (packet is S18PacketEntityTeleport && packet.entityId == target?.entityId) {
-                val deltaX = packet.realX - target!!.posX
-                val deltaY = packet.realY - target!!.posY
-                val deltaZ = packet.realZ - target!!.posZ
-
-                offsetX -= deltaX
-                offsetY -= deltaY
-                offsetZ -= deltaZ
-            }
-
-            handlePacket(packet)
-
-            packetQueue.remove(packet)
+        packetQueue.entries.removeAll { (packet, timestamp) ->
+            if (timestamp <= System.currentTimeMillis() - delay) {
+                handlePacket(packet)
+                true
+            } else false
         }
 
     private fun clearPackets(handlePackets: Boolean = true) {
