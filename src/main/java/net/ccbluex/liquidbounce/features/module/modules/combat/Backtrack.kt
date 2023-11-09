@@ -107,8 +107,16 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             is S14PacketEntity -> {
-                val entity = packet.getEntity(world) as? IMixinEntity
+                val realEntity = packet.getEntity(world)
+                val entity = realEntity as? IMixinEntity
                 entity?.let {
+                    if (!it.truePos)
+                    {
+                        it.trueX = realEntity.posX
+                        it.trueY = realEntity.posY
+                        it.trueZ = realEntity.posZ
+                        it.truePos = true
+                    }
                     it.trueX = (it.trueX + packet.realMotionX)
                     it.trueY = (it.trueY + packet.realMotionY)
                     it.trueZ = (it.trueZ + packet.realMotionZ)
