@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.countEnemies
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
@@ -174,7 +173,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         synchronized(positions) {
             renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
-                    drawLineStrip(*makeLines(color, positions, event.partialTicks))
+                    drawLineStrip(*makeLines(positions, event.partialTicks))
                 }
             }
         }
@@ -224,7 +223,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     @JvmStatic
     internal fun makeLines(
-        color: Color4b, positions: LinkedHashSet<PositionData>, tickDelta: Float
+        positions: LinkedHashSet<PositionData>, tickDelta: Float
     ): Array<Vec3> {
         val mutableList = mutableListOf<Vec3>()
         positions.forEach {

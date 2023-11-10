@@ -67,9 +67,6 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                     }
                 }
             }
-            if (player.squaredDistanceTo(pos) <= player.squaredDistanceTo(target)) {
-                clear(true)
-            }
 
             it.cancelEvent()
 
@@ -81,6 +78,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                     (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
                 }
 
+                if (player.squaredDistanceTo(pos) <= player.squaredDistanceTo(target)) {
+                    clear(true)
+                }
                 position?.setPos(pos)
             }
 
@@ -129,7 +129,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 
-        if(!enemy.shouldBeAttacked())
+        if (!enemy.shouldBeAttacked())
             return@handler
 
         // Reset on enemy change
