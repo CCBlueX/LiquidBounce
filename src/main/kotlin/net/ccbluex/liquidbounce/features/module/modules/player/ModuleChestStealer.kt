@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Invent
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PLAYER_INVENTORY_SIZE
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -44,23 +43,21 @@ import kotlin.math.ceil
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)
-    var closeDelay by intRange("CloseDelay", 0..1, 0..20)
+    var closeDelay by intRange("CloseDelay", 1..10, 0..2000)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
 
-    private var lastTime = 0L
     private var lastSlot = 0
     private val timer = Chronometer()
 
     private var shouldClose = false
 
-    val repeatable = sequenceHandler<WorldRenderEvent> {
+    val repeatable = handler<WorldRenderEvent> {
         if (!timer.hasElapsed()) {
-            return@sequenceHandler
+            return@handler
         }
 
         if (shouldClose) {
-            wait(closeDelay.random())
             player.closeHandledScreen()
             shouldClose = false
         }
@@ -68,17 +65,17 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         val screen = mc.currentScreen
 
         if (screen !is GenericContainerScreen) {
-            return@sequenceHandler
+            return@handler
         }
         if (checkTitle && !isScreenTitleChest(screen)) {
-            return@sequenceHandler
+            return@handler
         }
 
         val cleanupPlan = createCleanupPlan(screen)
 
         // Quick swap items in hotbar (i.e. swords)
         if (performQuickSwaps(cleanupPlan, screen)) {
-            return@sequenceHandler
+            return@handler
         }
 
         val itemsToCollect = cleanupPlan.usefulItems
@@ -87,7 +84,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size, screen)
 
-        val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
+        val sortedItemsToCollect = this.selectionMode.processor(itemsToCollect)
 
         for (slotId in sortedItemsToCollect) {
             val hasFreeSpace = (0..35).any { player.inventory.getStack(it).isNothing() }
@@ -96,26 +93,23 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 val shouldReturn = makeSpace(cleanupPlan, 1, screen)
 
                 if (shouldReturn == true)
-                    return@sequenceHandler
+                    return@handler
 
                 if (shouldReturn != null)
                     stillRequiredSpace -= 1
             }
 
-            chat("Quick move ${System.currentTimeMillis() - lastTime}")
-            lastTime = System.currentTimeMillis()
             mc.interactionManager!!.clickSlot(screen.screenHandler.syncId, slotId, 0, SlotActionType.QUICK_MOVE, player)
 
-            lastSlot = slotId
+            this.lastSlot = slotId
 
             if (waitForTimer())
                 continue
 
-            return@sequenceHandler
+            return@handler
         }
 
-        if (sortedItemsToCollect.isEmpty()) {
-            wait(closeDelay.random())
+        if (sortedItemsToCollect.isEmpty() && waitForCloseTimer()) {
             player.closeHandledScreen()
         }
     }
@@ -132,8 +126,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             if (stillRequiredSpace <= 0)
                 return false
 
-            chat("Throwing ${System.currentTimeMillis() - lastTime}")
-            lastTime = System.currentTimeMillis()
             interaction.clickSlot(
                 screen.screenHandler.syncId,
                 convertClientSlotToServerSlot(slotId, screen),
@@ -201,6 +193,18 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         return false
     }
 
+    private fun waitForCloseTimer(): Boolean {
+        val time = closeDelay.random()
+
+        if (time == 0) {
+            return true
+        }
+
+        timer.waitFor(time.toLong())
+        shouldClose = true
+        return false
+    }
+
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
      */
@@ -210,8 +214,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 continue
             }
 
-            chat("Quick swap ${System.currentTimeMillis() - lastTime}")
-            lastTime = System.currentTimeMillis()
             interaction.clickSlot(
                 screen.screenHandler.syncId,
                 hotbarSwap.from - PLAYER_INVENTORY_SIZE,
