@@ -55,6 +55,9 @@ object SilentHotbar : Listenable {
         this.ticksSinceLastUpdate = 0
     }
 
+    fun canGetSlot() = mc.player != null
+
+
     fun resetSlot(requester: Any?) {
         if (this.hotbarState?.requester == requester) {
             this.hotbarState = null
