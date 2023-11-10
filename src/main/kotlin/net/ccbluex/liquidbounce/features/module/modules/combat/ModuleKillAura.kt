@@ -265,8 +265,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Did you ever send a rotation before?
         val rotation = RotationManager.currentRotation
 
-        if (CombatManager.shouldPauseCombat())
-            return@repeatable
+        if (CombatManager.shouldPauseCombat()) return@repeatable
 
         if (rotation != null && target != null && target.boxedDistanceTo(player) <= range && facingEnemy(
                 target, rotation, range.toDouble(), wallRange.toDouble()
@@ -289,11 +288,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
-                cooldown.readyToAttack &&
-                        (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)
-                        && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
-                        !raycastedEntity.wouldBlockHit(player))
-                        && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+                cooldown.readyToAttack && (!ModuleCriticals.shouldWaitForCrit() ||
+                        raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) &&
+                        (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
+                                !raycastedEntity.wouldBlockHit(
+                                    player
+                                )) && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
             }, cps)
 
             repeat(clicks) {
@@ -426,13 +426,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val box = target.box.offset(targetPrediction)
 
             val rotationPreference =
-                this.lastRotation
-                    ?.let { LeastDifferencePreference(it.rotation, basePoint = it.vec) }
+                this.lastRotation?.let { LeastDifferencePreference(it.rotation, basePoint = it.vec) }
                     ?: LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
 
             // find best spot
             val spot = raytraceBox(
-                eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble(),
+                eyes.add(playerPrediction),
+                box,
+                range = sqrt(scanRange),
+                wallsRange = wallRange.toDouble(),
                 rotationPreference = rotationPreference
             ) ?: continue
 
@@ -445,8 +447,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 val nextPoint = this.legitAimpointTracker.nextPoint(box, spot.vec, aimpointChange)
 
                 lastRotation = VecRotation(
-                    RotationManager.makeRotation(nextPoint.aimSpotWithoutNoise, eyes),
-                    nextPoint.aimSpotWithoutNoise
+                    RotationManager.makeRotation(nextPoint.aimSpotWithoutNoise, eyes), nextPoint.aimSpotWithoutNoise
                 )
 
                 nextPoint.aimSpot
