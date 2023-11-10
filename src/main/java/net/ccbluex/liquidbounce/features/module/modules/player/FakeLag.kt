@@ -77,7 +77,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
 
             // Flush on kb
             is S12PacketEntityVelocity -> {
-                if (mc.thePlayer.entityId == packet.entityID && (packet.motionY != 0 || packet.motionX != 0 || packet.motionZ != 0)) {
+                if (mc.thePlayer.entityId == packet.entityID) {
                     blink()
                     return
                 }
