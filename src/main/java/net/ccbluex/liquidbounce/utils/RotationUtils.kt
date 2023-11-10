@@ -300,7 +300,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             val dist = eyes.distanceTo(randomVec)
 
             if (dist <= distance && (throughWalls || isVisible(randomVec))) {
-                return VecRotation(randomVec, randomRotation)
+                return VecRotation(randomVec, randomRotation.fixedSensitivity())
             }
         }
 
