@@ -68,7 +68,11 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
                 size.toDouble(), height.toDouble(), size.toDouble()
             )
 
-            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
+            val pos =
+                entity.interpolateCurrentPosition(partialTicks) +
+                    Vec3(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
+
+
             with(env) {
                 withColor(color) {
                     withPosition(pos) {
