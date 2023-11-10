@@ -60,13 +60,15 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         val height by float("Height", 0.1f, 0.02f..2f)
 
         val color by color("Color", Color4b(0x007CFF64, true))
+
+        val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
             val box = Box(
                 -size.toDouble(), 0.0, -size.toDouble(),
                 size.toDouble(), height.toDouble(), size.toDouble()
             )
 
-            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3(0.0, entity.height.toDouble(), 0.0)
+            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
             with(env) {
                 withColor(color) {
                     withPosition(pos) {
