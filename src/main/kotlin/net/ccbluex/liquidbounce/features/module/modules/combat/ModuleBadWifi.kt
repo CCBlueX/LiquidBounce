@@ -56,7 +56,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     // if there is many player
     private val maxEnemiesToStop by int("MaxEnemiesToStop", 2, 2..10)
     private val recoilTime by int("RecoilTime", 750, 0..2000)
-
+    private val stopWhileUsingItem by boolean("StopWhileUsingItem", true)
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
     private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
@@ -90,7 +90,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
         val packet = event.packet
 
-        if (!shouldLag()) {
+        if (!shouldLag() || (player.isUsingItem && stopWhileUsingItem)) {
             blink()
             return@handler
         }
