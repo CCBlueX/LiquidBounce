@@ -9,10 +9,13 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
+import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePacket
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
@@ -58,6 +61,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxDistance)
         override fun isSupported() = mode == "Modern"
     }
+    private val smart by BoolValue("Smart", true) { mode == "Modern" }
 
     // ESP
     private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" }
@@ -235,13 +239,12 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (mode != "Modern")
             return
 
-        val target = target as? IMixinEntity
+        val target = target as? EntityLivingBase
+        val targetMixin = target as? IMixinEntity
+        val trueDist = targetMixin?.let {mc.thePlayer.getDistance(it.trueX, it.trueY, it.trueZ)} ?: 0.0
+        val dist = target?.let {mc.thePlayer.getDistance(it.posX, it.posY, it.posZ)} ?: 0.0
 
-        if (target != null && !Blink.blinkingReceive() && shouldBacktrack() && target.truePos && mc.thePlayer.getDistance(
-                target.trueX,
-                target.trueY,
-                target.trueZ
-            ) <= 6f && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
+        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos && trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
         ) {
             handlePackets()
         } else {
@@ -252,7 +255,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity !is EntityLivingBase)
+        if (!isEnemy(event.targetEntity))
             return
 
         // Clear all packets, start again on enemy change
@@ -412,6 +415,22 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private fun removeBacktrackData(id: UUID) = backtrackedPlayer.remove(id)
 
+    private fun isEnemy(entity: Entity?): Boolean {
+        if (entity is EntityLivingBase && entity != mc.thePlayer) {
+            if (entity is EntityPlayer) {
+                if (entity.isSpectator || isBot(entity)) return false
+
+                if (entity.isClientFriend() && !NoFriends.handleEvents()) return false
+
+                return !Teams.handleEvents() || !Teams.isInYourTeam(entity)
+            }
+
+            return true
+        }
+
+        return false
+    }
+
     /**
      * This function will return the nearest tracked range of an entity.
      */
@@ -466,7 +485,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private fun shouldBacktrack() =
         target?.let {
-            !it.isDead && (mc.thePlayer?.ticksExisted ?: 0) > 20
+            !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20
                 && mc.thePlayer.getDistanceToEntityBox(it) in minDistance..maxDistance
         } ?: false
 
