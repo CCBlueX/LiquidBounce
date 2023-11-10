@@ -24,10 +24,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val range by floatRange("Range", 1f..3f, 0f..6f)
     val delay by int("Delay", 100, 0..1000)
+    private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
-    val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
-
-    val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
+    private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
 
     var target: Entity? = null
 

@@ -19,12 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.math.BlockPos
 import kotlin.math.abs
 
@@ -37,7 +40,8 @@ import kotlin.math.abs
 object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
     private val maxFallDistance by int("MaxFallDistance", 10, 2..255)
     private val maxDistanceWithoutGround by float("MaxDistanceToSetback", 2.5f, 1f..30f)
-    private val indicator by boolean("Indicator", true)
+    private val mode = enumChoice("Mode", Mode.FLYFLAG, Mode.values())
+    //private val indicator by boolean("Indicator", true)
 
     private var detectedLocation: BlockPos? = null
     private var lastFound = 0F
@@ -53,38 +57,61 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
             return@repeatable
         }
 
-        val thePlayer = mc.player ?: return@repeatable
 
-        if (thePlayer.isOnGround && !BlockPos(player.blockPos.down()).getState()!!.isAir) {
-            prevX = thePlayer.prevX
-            prevY = thePlayer.prevY
-            prevZ = thePlayer.prevZ
+        if (player.isOnGround || !BlockPos(player.blockPos.down()).getState()!!.isAir) {
+            prevX = player.prevX
+            prevY = player.prevY
+            prevZ = player.prevZ
 
             actionTaken = false
         }
 
-        if (!thePlayer.isOnGround && !thePlayer.isHoldingOntoLadder && !thePlayer.isTouchingWater) {
+        if (!player.isOnGround && !player.isHoldingOntoLadder && !player.isTouchingWater) {
             val fallingPlayer = FallingPlayer(
                 player,
-                thePlayer.x,
-                thePlayer.y,
-                thePlayer.z,
-                thePlayer.velocity.x,
-                thePlayer.velocity.y,
-                thePlayer.velocity.z,
-                thePlayer.yaw
+                player.x,
+                player.y,
+                player.z,
+                player.velocity.x,
+                player.velocity.y,
+                player.velocity.z,
+                player.yaw
             )
 
             detectedLocation = fallingPlayer.findCollision(60)?.pos
 
-            if (detectedLocation != null && abs(thePlayer.y - detectedLocation!!.y) +
-                thePlayer.fallDistance <= maxFallDistance
+            if (detectedLocation != null && abs(player.y - detectedLocation!!.y) +
+                player.fallDistance <= maxFallDistance
             ) {
-                lastFound = thePlayer.fallDistance
+                lastFound = player.fallDistance
             }
 
-            if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround && !actionTaken) {
-                ModuleFreeze.enabled = true
+            if (player.fallDistance - lastFound > maxDistanceWithoutGround && !actionTaken) {
+
+                when (mode.value) {
+                    Mode.TELEPORTBACK -> {
+                        player.updatePosition(prevX, prevY, prevZ)
+                        player.velocity.y = 0.0
+                    }
+
+                    Mode.FLYFLAG -> {
+                        player.velocity.y += 0.1
+                    }
+
+                    Mode.ONGROUNDSPOOF -> network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
+
+                    Mode.MOTIONTELEPORTFLAG -> {
+                        player.updatePosition(player.x, player.y + 1f, player.z)
+                        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+                        player.velocity.y = 0.1
+
+                        player.strafe()
+                    }
+
+                    Mode.FREEZE -> {
+                        ModuleFreeze.enabled = true
+                    }
+                }
 
                 actionTaken = true
             }
@@ -98,12 +125,19 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
         prevZ = 0.0
     }
 
+    enum class Mode(override val choiceName: String) : NamedChoice {
+        FREEZE("Freeze"),
+        TELEPORTBACK("TeleportBack"),
+        FLYFLAG("FlyFlag"),
+        ONGROUNDSPOOF("OnGroundSpoof"),
+        MOTIONTELEPORTFLAG("MotionTeleport-Flag")
+    }
 //    @EventTarget
 //    fun onRender3D(event: Render3DEvent) {
-//        val thePlayer = mc.thePlayer ?: return
+//        val player = mc.player ?: return
 //
 //        if (detectedLocation == null || !indicator.get() ||
-//                thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
+//                player.fallDistance + (player.posY - (detectedLocation!!.y + 1)) < 3)
 //            return
 //
 //        val x = detectedLocation!!.x
@@ -134,7 +168,7 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
 //        GL11.glDepthMask(true)
 //        GL11.glDisable(GL11.GL_BLEND)
 //
-//        val fallDist = floor(thePlayer.fallDistance + (thePlayer.posY - (y + 0.5))).toInt()
+//        val fallDist = floor(player.fallDistance + (player.posY - (y + 0.5))).toInt()
 //
 //        RenderUtils.renderNameTag("${fallDist}m (~${max(0, fallDist - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 //
