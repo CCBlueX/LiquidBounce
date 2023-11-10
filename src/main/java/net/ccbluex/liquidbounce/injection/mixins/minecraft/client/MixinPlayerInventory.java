@@ -39,20 +39,21 @@ public class MixinPlayerInventory {
     /**
      * Modify slot, to drop item from according to server side information.
      *
-     * @param playerInventory inventory
-     */
-    @Redirect(method = "dropSelectedItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
-    private ItemStack hookItemDrop(PlayerInventory playerInventory) {
-        return player.getInventory().main.get(SilentHotbar.INSTANCE.getServersideSlot());
-    }
-
-    /**
-     * Modify slot, to drop item from according to server side information.
-     *
      * @param instance inventory
      */
     @Redirect(method = "dropSelectedItem", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
+    private int hookCustomSelectedSlotForDropping(PlayerInventory instance) {
+        return SilentHotbar.INSTANCE.getServersideSlot();
+    }
+
+    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
     private int hookCustomSelectedSlot(PlayerInventory instance) {
         return SilentHotbar.INSTANCE.getServersideSlot();
     }
+    @Redirect(method = "getMainHandStack", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
+    private int hookCustomSelectedSlotGetFunc(PlayerInventory instance) {
+        return SilentHotbar.INSTANCE.canGetSlot() ? SilentHotbar.INSTANCE.getServersideSlot() : instance.selectedSlot;
+    }
+
+
 }
