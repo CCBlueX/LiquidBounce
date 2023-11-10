@@ -57,7 +57,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             return@handler
         }
 
-        if(shouldClose) {
+        if (shouldClose) {
             player.closeHandledScreen()
             shouldClose = false
         }

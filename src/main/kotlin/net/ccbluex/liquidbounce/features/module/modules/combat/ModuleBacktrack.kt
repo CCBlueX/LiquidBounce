@@ -20,16 +20,13 @@ import net.minecraft.sound.SoundEvents
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
-@Suppress("detekt:all")
-
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val range by floatRange("Range", 1f..3f, 0f..6f)
     val delay by int("Delay", 100, 0..1000)
+    private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
-    val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
-
-    val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
+    private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
 
     var target: Entity? = null
 
@@ -80,6 +77,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                     (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
                 }
 
+                if (player.squaredDistanceTo(pos) <= player.squaredDistanceTo(target)) {
+                    clear(true)
+                }
                 position?.setPos(pos)
             }
 
@@ -128,7 +128,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 
-        if(!enemy.shouldBeAttacked())
+        if (!enemy.shouldBeAttacked())
             return@handler
 
         // Reset on enemy change
