@@ -35,13 +35,13 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.countEnemies
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.util.math.Vec3d
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * BadWifi module
@@ -60,8 +60,8 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
-    private val packetQueue = CopyOnWriteArrayList<ModulePingSpoof.DelayData>()
-    private val positions = CopyOnWriteArrayList<PositionData>()
+    private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
+    private val positions = LinkedHashSet<PositionData>()
 
     private val resetTimer = Chronometer()
 
@@ -137,7 +137,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         if (event.origin == TransferOrigin.SEND) {
             event.cancelEvent()
 
-            packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis(), System.nanoTime()))
+            synchronized(packetQueue) {
+                packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
+            }
         }
     }
 
@@ -158,7 +160,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
             return@repeatable
         }
 
-        positions.add(PositionData(player.pos, System.currentTimeMillis(), System.nanoTime()))
+        synchronized(positions) {
+            positions.add(PositionData(player.pos, System.currentTimeMillis()))
+        }
 
         handlePackets()
     }
@@ -177,36 +181,41 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }
 
     private fun handlePackets() {
-        // Use removeIf on this too? But this one has to be sorted
-        val filteredPackets = packetQueue.filter {
-            it.delay <= System.currentTimeMillis() - delay
-        }.sortedBy { it.registration }
+        synchronized(packetQueue) {
+            packetQueue.removeIf {
+                if (it.delay <= System.currentTimeMillis() - delay) {
+                    sendPacketSilently(it.packet)
 
-        for (data in filteredPackets) {
-            sendPacketSilently(data.packet)
+                    return@removeIf true
+                }
 
-            packetQueue.remove(data)
+                false
+            }
         }
 
-        positions.removeIf { it.delay <= System.currentTimeMillis() - delay }
+        synchronized(positions) {
+            positions.removeIf { it.delay <= System.currentTimeMillis() - delay }
+        }
     }
 
     private fun blink(handlePackets: Boolean = true) {
-        if (handlePackets) {
-            resetTimer.reset()
+        synchronized(packetQueue) {
+            if (handlePackets) {
+                resetTimer.reset()
 
-            val filtered = packetQueue.sortedBy { it.registration }
+                packetQueue.removeIf {
+                    sendPacketSilently(it.packet)
 
-            for (data in filtered) {
-                sendPacketSilently(data.packet)
-
-                packetQueue.remove(data)
+                    true
+                }
+            } else {
+                packetQueue.clear()
             }
-        } else {
-            packetQueue.clear()
         }
 
-        positions.clear()
+        synchronized(positions) {
+            positions.clear()
+        }
     }
 
     private fun shouldLag(): Boolean {
@@ -224,6 +233,6 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         mutableList += player.interpolateCurrentPosition(tickDelta)
         return mutableList.toTypedArray()
     }
-
-    data class PositionData(val vec: Vec3d, val delay: Long, val registration: Long)
+    
+    data class PositionData(val vec: Vec3d, val delay: Long)
 }

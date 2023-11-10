@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.TrackedPosition
@@ -18,7 +19,6 @@ import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import java.util.concurrent.CopyOnWriteArrayList
 
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
@@ -27,63 +27,65 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
-    val packetQueue = CopyOnWriteArrayList<ModulePingSpoof.DelayData>()
+    val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
 
     var target: Entity? = null
 
     var position: TrackedPosition? = null
 
     val packetHandler = handler<PacketEvent> {
-        if (it.origin != TransferOrigin.RECEIVE || it.isCancelled || packetQueue.isEmpty() && !shouldCancelPackets()) {
-            return@handler
-        }
-
-        val packet = it.packet
-
-        when (packet) {
-            // Ignore chat packets
-            is ChatMessageS2CPacket -> {
+        synchronized(packetQueue) {
+            if (it.origin != TransferOrigin.RECEIVE || it.isCancelled || packetQueue.isEmpty() && !shouldCancelPackets()) {
                 return@handler
             }
 
-            // Flush on teleport or disconnect
-            is PlayerPositionLookS2CPacket, is DisconnectS2CPacket -> {
-                clear(true)
-                return@handler
-            }
+            val packet = it.packet
 
-            is PlaySoundS2CPacket -> {
-                if (packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT) {
+            when (packet) {
+                // Ignore chat packets
+                is ChatMessageS2CPacket -> {
                     return@handler
                 }
-            }
 
-            // Flush on own death
-            is HealthUpdateS2CPacket -> {
-                if (packet.health <= 0) {
+                // Flush on teleport or disconnect
+                is PlayerPositionLookS2CPacket, is DisconnectS2CPacket -> {
                     clear(true)
                     return@handler
                 }
-            }
-        }
 
-        it.cancelEvent()
+                is PlaySoundS2CPacket -> {
+                    if (packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT) {
+                        return@handler
+                    }
+                }
 
-        // Update box position with these packets
-        if (packet is EntityS2CPacket && packet.getEntity(world) == target || packet is EntityPositionS2CPacket && packet.id == target?.id) {
-            val pos = if (packet is EntityS2CPacket) {
-                position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
-            } else {
-                (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
+                // Flush on own death
+                is HealthUpdateS2CPacket -> {
+                    if (packet.health <= 0) {
+                        clear(true)
+                        return@handler
+                    }
+                }
             }
             if (player.squaredDistanceTo(pos) <= player.squaredDistanceTo(target)) {
                 clear(true)
             }
 
-            position?.setPos(pos)
-        }
+            it.cancelEvent()
 
-        packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis(), System.nanoTime()))
+            // Update box position with these packets
+            if (packet is EntityS2CPacket && packet.getEntity(world) == target || packet is EntityPositionS2CPacket && packet.id == target?.id) {
+                val pos = if (packet is EntityS2CPacket) {
+                    position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
+                } else {
+                    (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
+                }
+
+                position?.setPos(pos)
+            }
+
+            packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
+        }
     }
 
 
@@ -127,6 +129,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 
+        if(!enemy.shouldBeAttacked())
+            return@handler
+
         // Reset on enemy change
         if (enemy != target) {
             clear()
@@ -147,14 +152,15 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     }
 
     private fun processPackets(clear: Boolean = false) {
-        val filtered = packetQueue.filter {
-            clear || it.delay <= System.currentTimeMillis() - delay
-        }.sortedBy { it.registration }
+        synchronized(packetQueue) {
+            packetQueue.removeIf {
+                if (clear || it.delay <= System.currentTimeMillis() - delay) {
+                    handlePacket(it.packet)
+                    return@removeIf true
+                }
 
-        for (data in filtered) {
-            handlePacket(data.packet)
-
-            packetQueue.remove(data)
+                false
+            }
         }
     }
 
@@ -162,7 +168,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         if (handlePackets && !clearOnly) {
             processPackets(true)
         } else if (clearOnly) {
-            packetQueue.clear()
+            synchronized(packetQueue) {
+                packetQueue.clear()
+            }
         }
 
         target = null
