@@ -65,22 +65,6 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     }
 
     /**
-     * Hook silent inventory feature
-     */
-//    @Redirect(method = "getEquippedStack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
-//    private ItemStack hookMainHandStack(PlayerInventory playerInventory) {
-//        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-//
-//        if ((Object) this != player) {
-//            return this.inventory.getMainHandStack();
-//        }
-//
-//        int slot = SilentHotbar.INSTANCE.getServersideSlot();
-//
-//        return PlayerInventory.isValidHotbarIndex(slot) ? player.getInventory().main.get(slot) : ItemStack.EMPTY;
-//    }
-
-    /**
      * Hook safe walk event
      */
     @Inject(method = "clipAtLedge", at = @At("HEAD"), cancellable = true)
