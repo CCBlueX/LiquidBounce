@@ -180,14 +180,14 @@ fun ClientWorld.countEnemies(
 ): Int {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
-    val bestTarget =
+    val enemiesCount =
         getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
             .filter { it.shouldBeAttacked(enemyConf) }
             .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
             .filter { (_, distance) -> distance in squaredRange }
             .count()
 
-    return bestTarget
+    return enemiesCount
 }
 
 fun ClientWorld.getEntitiesInCuboid(

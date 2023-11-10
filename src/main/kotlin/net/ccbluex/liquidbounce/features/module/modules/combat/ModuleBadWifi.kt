@@ -54,7 +54,6 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     private val delay by int("Delay", 550, 0..1000)
 
     // if there is many player
-    private val maxEnemiesToStop by int("MaxEnemiesToStop", 2, 2..10)
     private val recoilTime by int("RecoilTime", 750, 0..2000)
     private val stopWhileUsingItem by boolean("StopWhileUsingItem", true)
     private val color by color("Color", Color4b(255, 179, 72, 255))
@@ -90,7 +89,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
         val packet = event.packet
 
-        if (!shouldLag() || (player.isUsingItem && stopWhileUsingItem)) {
+        if (!shouldLag()) {
             blink()
             return@handler
         }
@@ -218,7 +217,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }
 
     private fun shouldLag(): Boolean {
-        return world.countEnemies(0f..4f) <= maxEnemiesToStop
+        return 0 < world.countEnemies(0f..8f) && (!player.isUsingItem || !stopWhileUsingItem)
     }
 
     @JvmStatic
