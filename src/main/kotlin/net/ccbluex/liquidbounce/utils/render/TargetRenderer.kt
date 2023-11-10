@@ -24,12 +24,16 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleDisabler
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSolidBox
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.render.utils.drawBoxSide
+import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -41,31 +45,33 @@ import net.minecraft.util.math.Vec3d
  */
 class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
-//    val appearance by enumChoice("Appearance", AppperanceEnum.LEGACY, AppperanceEnum.values())
+    val appearance = choices(module, "Mode", Legacy, arrayOf(Legacy))
 
-//    val appearance by choises("Appearance", Motion, arrayOf(Motion, Clip))
-
-
-    val appearance: ChoiceConfigurable? by choices(module, "Appearance", Legacy, arrayOf(Legacy))
     fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-        ((appearance.activeChoice).render(env, entity, partialTicks)
+        ((appearance.activeChoice) as TargetRenderAppearance).render(env, entity, partialTicks)
     }
 
-    object Legacy : Choice("Legacy") {
+    object Legacy : TargetRenderAppearance("Legacy") {
         override val parent: ChoiceConfigurable
             get() = this.parent
 
         val size by float("Size", 0.5f, 0.1f..2f)
 
         val height by float("Height", 0.1f, 0.02f..2f)
-        fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+
+        val color by color("Color", Color4b(0x007CFF64, true))
+        override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
             val box = Box(
-                -size.toDouble(), 0.0, size.toDouble(),
-                -size.toDouble(), height.toDouble(), size.toDouble()
+                -size.toDouble(), 0.0, -size.toDouble(),
+                size.toDouble(), height.toDouble(), size.toDouble()
             )
+
+            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3(0.0, entity.height.toDouble(), 0.0)
             with(env) {
-                withPosition(entity.interpolateCurrentPosition(partialTicks) + Vec3(0.0, entity.height.toDouble(), 0.0)) {
-                    drawSolidBox(box)
+                withColor(color) {
+                    withPosition(pos) {
+                        drawSolidBox(box)
+                    }
                 }
             }
         }
