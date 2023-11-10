@@ -123,6 +123,12 @@ class GlyphPage(
             lateinit var atlasLocation: Point
         }
 
+
+        /**
+         * Creates a glyph page containing all ASCII characters
+         */
+        fun createAscii(font: Font) = create('\u0000'..'\u00FF', font)
+
         /**
          * Creates a bitmap based
          */

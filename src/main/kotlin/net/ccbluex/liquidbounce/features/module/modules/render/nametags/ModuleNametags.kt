@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import net.minecraft.entity.Entity
 
 /**
@@ -38,8 +39,6 @@ import net.minecraft.entity.Entity
  */
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
-    val fontRenderer = FontRenderer.createFontRenderer("Montserrat", 43)
-
     val health by boolean("Health", true)
     val ping by boolean("Ping", true)
     val distance by boolean("Distance", false)
@@ -47,8 +46,11 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val border by boolean("Border", true)
     val scale by float("Scale", 2F, 1F..4F)
 
+    val fontRenderer: FontRenderer
+        get() = LiquidBounceFonts.DEFAULT_FONT
+
     val renderHandler =
-        handler<WorldRenderEvent> { event ->
+        handler<WorldRenderEvent>(priority = -100) { event ->
             val matrixStack = event.matrixStack
 
             renderEnvironmentForWorld(matrixStack) {

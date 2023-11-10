@@ -14,6 +14,10 @@ complexity:
     active: true
     threshold: 4
 
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+
 style:
   MagicNumber:
     active: false

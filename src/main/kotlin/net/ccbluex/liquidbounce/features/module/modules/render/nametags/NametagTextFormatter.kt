@@ -65,7 +65,7 @@ class NametagTextFormatter(private val entity: Entity) {
                     else -> "§a"
                 }
 
-            return " §7[" + coloringBasedOnPing + playerPing + "ms§7] "
+            return " §7[" + coloringBasedOnPing + playerPing + "ms§7]"
         }
 
     private val healthText: String

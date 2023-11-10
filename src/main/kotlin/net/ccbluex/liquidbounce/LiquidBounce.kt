@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
+import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import org.apache.logging.log4j.LogManager
 import kotlin.system.exitProcess
 
@@ -117,6 +118,8 @@ object LiquidBounce : Listenable {
             InventoryTracker
             Tabs
             Chat
+
+            LiquidBounceFonts
 
             // Load up a web platform
             UltralightEngine.init()

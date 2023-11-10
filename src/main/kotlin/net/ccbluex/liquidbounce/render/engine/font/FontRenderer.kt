@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.engine.*
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.Vec3d
-import org.joml.Matrix4f
 import java.awt.Font
 import java.util.*
 import kotlin.math.max

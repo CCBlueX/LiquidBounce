@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.RotationAxis
@@ -39,7 +40,7 @@ class NametagRenderer {
         val camera = mc.gameRenderer.camera
         val scale = calculateScale(camera, pos)
 
-        val c = 43.0F
+        val c = LiquidBounceFonts.DEFAULT_FONT_SIZE.toFloat()
 
         env.matrixStack.push()
         env.matrixStack.translate(pos.x, pos.y, pos.z)
@@ -59,8 +60,8 @@ class NametagRenderer {
 
         ModuleNametags.fontRenderer.commit(env, fontBuffers)
 
-        val q1 = Vec3(-0.0F * c, ModuleNametags.fontRenderer.height * -0.01F, 0.0F)
-        val q2 = Vec3(x + 0.1F * c, ModuleNametags.fontRenderer.height * 1.01F, 0.0F)
+        val q1 = Vec3(0.05F * c, ModuleNametags.fontRenderer.height * -0.01F, 0.0F)
+        val q2 = Vec3(x + 0.2F * c, ModuleNametags.fontRenderer.height * 1.01F, 0.0F)
 
         quadBuffers.drawQuad(env, q1, q2)
 
