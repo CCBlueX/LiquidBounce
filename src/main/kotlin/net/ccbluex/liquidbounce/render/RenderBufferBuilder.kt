@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList")
+
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.systems.RenderSystem
@@ -106,10 +108,22 @@ fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
 
     // Draw the vertices of the box
     with(bufferBuilder) {
-        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat()).texture(uv1.u, uv2.v).color(color.toRGBA()).next()
-        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat()).texture(uv2.u, uv2.v).color(color.toRGBA()).next()
-        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat()).texture(uv2.u, uv1.v).color(color.toRGBA()).next()
-        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat()).texture(uv1.u, uv1.v).color(color.toRGBA()).next()
+        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat())
+            .texture(uv1.u, uv2.v)
+            .color(color.toRGBA())
+            .next()
+        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat())
+            .texture(uv2.u, uv2.v)
+            .color(color.toRGBA())
+            .next()
+        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat())
+            .texture(uv2.u, uv1.v)
+            .color(color.toRGBA())
+            .next()
+        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat())
+            .texture(uv1.u, uv1.v)
+            .color(color.toRGBA())
+            .next()
     }
 }
 

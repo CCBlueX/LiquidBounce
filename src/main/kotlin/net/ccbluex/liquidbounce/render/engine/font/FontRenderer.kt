@@ -475,18 +475,21 @@ class FontRendererBuffers {
         private val TEXT_TESSELATORS = Array(5) { Tessellator(0xA00000) }
     }
 
-    val textBuffers = Array(4) { RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, TEXT_TESSELATORS[it + 1]) }
-    val lineBufferBuilder = RenderBufferBuilder(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.PosColor, TEXT_TESSELATORS[0])
+    val textBuffers = Array(4) {
+        RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, TEXT_TESSELATORS[it + 1])
+    }
+    val lineBufferBuilder =
+        RenderBufferBuilder(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.PosColor, TEXT_TESSELATORS[0])
 
     fun draw(renderer: FontRenderer) {
-        this.textBuffers.forEachIndexed { style, it ->
+        this.textBuffers.forEachIndexed { style, bufferBuilder ->
             val tex = renderer.glyphPages[style]!!.texture
 
             RenderSystem.bindTexture(tex.glId)
 
             RenderSystem.setShaderTexture(0, tex.glId)
 
-            it.draw()
+            bufferBuilder.draw()
         }
 
         this.lineBufferBuilder.draw()

@@ -65,8 +65,16 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            val boxesRenderer = RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.Pos, RenderBufferBuilder.TESSELATOR_A)
-            val outlinesRenderer = RenderBufferBuilder(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.Pos, RenderBufferBuilder.TESSELATOR_B)
+            val boxesRenderer = RenderBufferBuilder(
+                VertexFormat.DrawMode.QUADS,
+                VertexInputType.Pos,
+                RenderBufferBuilder.TESSELATOR_A
+            )
+            val outlinesRenderer = RenderBufferBuilder(
+                VertexFormat.DrawMode.DEBUG_LINES,
+                VertexInputType.Pos,
+                RenderBufferBuilder.TESSELATOR_B
+            )
 
             renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {

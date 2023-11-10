@@ -39,6 +39,7 @@ abstract class AbstractFontRenderer {
      * @param shadow Add a shadow to the font?
      * @return The width of the font, without considering the scaling
      */
+    @Suppress("LongParameterList")
     abstract fun draw(
         text: String,
         x0: Float,
