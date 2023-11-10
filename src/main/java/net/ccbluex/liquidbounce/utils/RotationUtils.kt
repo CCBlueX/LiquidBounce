@@ -284,14 +284,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
                 bb.minY + (bb.maxY - bb.minY) * (y * 0.3 + 1.0),
                 bb.minZ + (bb.maxZ - bb.minZ) * (z * 0.3 + 1.0)
             )
-            return VecRotation(vec3, toRotation(vec3, predict))
+            return VecRotation(vec3, toRotation(vec3, predict).fixedSensitivity())
         }
 
         val randomVec = Vec3(
             bb.minX + (bb.maxX - bb.minX) * x, bb.minY + (bb.maxY - bb.minY) * y, bb.minZ + (bb.maxZ - bb.minZ) * z
         )
 
-        val randomRotation = toRotation(randomVec, predict)
+        val randomRotation = toRotation(randomVec, predict).fixedSensitivity().fixedSensitivity()
 
         val eyes = mc.thePlayer.eyes
         var vecRotation: VecRotation? = null
@@ -313,7 +313,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                         bb.minZ + (bb.maxZ - bb.minZ) * z
                     )
 
-                    val rotation = toRotation(vec, predict)
+                    val rotation = toRotation(vec, predict).fixedSensitivity()
                     val vecDist = eyes.distanceTo(vec)
 
                     if (vecDist <= distance) {
@@ -336,7 +336,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             val dist = eyes.distanceTo(vec)
 
             if (dist <= distance && (throughWalls || isVisible(vec))) {
-                return VecRotation(vec, toRotation(vec, predict))
+                return VecRotation(vec, toRotation(vec, predict).fixedSensitivity())
             }
         }
 
