@@ -291,7 +291,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             bb.minX + (bb.maxX - bb.minX) * x, bb.minY + (bb.maxY - bb.minY) * y, bb.minZ + (bb.maxZ - bb.minZ) * z
         )
 
-        val randomRotation = toRotation(randomVec, predict).fixedSensitivity().fixedSensitivity()
+        val randomRotation = toRotation(randomVec, predict).fixedSensitivity()
 
         val eyes = mc.thePlayer.eyes
         var vecRotation: VecRotation? = null
