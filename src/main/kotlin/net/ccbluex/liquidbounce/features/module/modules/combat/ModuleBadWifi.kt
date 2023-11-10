@@ -224,7 +224,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     @JvmStatic
     internal fun makeLines(
-        color: Color4b, positions: CopyOnWriteArrayList<PositionData>, tickDelta: Float
+        color: Color4b, positions: LinkedHashSet<PositionData>, tickDelta: Float
     ): Array<Vec3> {
         val mutableList = mutableListOf<Vec3>()
         positions.forEach {
@@ -233,6 +233,6 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         mutableList += player.interpolateCurrentPosition(tickDelta)
         return mutableList.toTypedArray()
     }
-    
+
     data class PositionData(val vec: Vec3d, val delay: Long)
 }
