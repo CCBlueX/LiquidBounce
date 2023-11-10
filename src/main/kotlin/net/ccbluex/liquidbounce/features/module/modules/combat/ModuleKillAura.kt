@@ -82,6 +82,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
     }
+
     val cooldown = tree(Cooldown)
 
     // Range
@@ -289,10 +290,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
                 cooldown.readyToAttack &&
-                    (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)
-                    && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
-                    !raycastedEntity.wouldBlockHit(player))
-                    && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+                        (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)
+                        && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
+                        !raycastedEntity.wouldBlockHit(player))
+                        && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
             }, cps)
 
             repeat(clicks) {
