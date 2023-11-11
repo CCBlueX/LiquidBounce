@@ -118,9 +118,7 @@
     <ID>MaxLineLength:ModuleFly.kt$ModuleFly.Enderpearl$if</ID>
     <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*&gt;) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$entity != null &amp;&amp; !entity.isRemoved &amp;&amp; (!FailSwing.LimitRange.enabled || entity.boxedDistanceTo(player) &lt;= reach)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$if</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$return@repeat</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.NoCheatPlus$if</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.Vanilla$if</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))</ID>
@@ -231,6 +229,7 @@
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
     <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*&gt;) ?: emptyArray&lt;String&gt;()).map { it as String } .toTypedArray())</ID>
+    <ID>SpreadOperator:UltralightJsEvents.kt$UltralightJsEvents$(it.context.globalObject, *args)</ID>
     <ID>SwallowedException:BrowserFileSystem.kt$BrowserFileSystem$e: InvalidPathException</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
@@ -274,8 +273,6 @@
     <ID>TooManyFunctions:SimulatedPlayer.kt$SimulatedPlayer : PlayerSimulation</ID>
     <ID>TooManyFunctions:UltralightEngine.kt$UltralightEngine</ID>
     <ID>TooManyFunctions:ViewOverlay.kt$ViewOverlay</ID>
-    <ID>UnusedParameter:AccountManager.kt$AccountManager$error: JavascriptObject</ID>
-    <ID>UnusedParameter:AccountManager.kt$AccountManager$success: JavascriptObject</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
     <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -&gt; Boolean = { true }</ID>
     <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -&gt; Boolean = { true }</ID>
@@ -301,7 +298,6 @@
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseY: Int</ID>
     <ID>UnusedPrivateProperty:ModuleAutoFarm.kt$ModuleAutoFarm$val curr = currentTarget ?: return@repeatable</ID>
     <ID>UnusedPrivateProperty:ModuleBlink.kt$ModuleBlink$i</ID>
-    <ID>UnusedPrivateProperty:ModuleBugUp.kt$ModuleBugUp$private val indicator by boolean("Indicator", true)</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>

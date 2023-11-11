@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import com.google.gson.JsonObject
-import com.labymedia.ultralight.javascript.JavascriptObject
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
@@ -35,6 +34,8 @@ import me.liuli.elixir.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
+import net.ccbluex.liquidbounce.event.AltManagerUpdateEvent
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.util.ProfileKeys
@@ -120,21 +121,44 @@ object AccountManager : Configurable("Accounts") {
         ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
+    /**
+     * Cache microsoft login server
+     */
+    private var activeUrl: String? = null
+
     @RequiredByScript
-    fun newMicrosoftAccount(success: JavascriptObject, error: JavascriptObject) {
-        newMicrosoftAccount(success = { account ->
-            // TODO: fix this
-            // success.callAsFunction(null, JavascriptValue(account))
-        }, error = { errorString ->
-            // TODO: fix this
-            // error.callAsFunction(null, errorString)
-        })
+    fun newMicrosoftAccount() {
+        // Prevents you from starting multiple login attempts
+        val activeUrl = activeUrl
+        if (activeUrl != null) {
+            browseUrl(activeUrl)
+            return
+        }
+
+        runCatching {
+            newMicrosoftAccount(url = {
+                this.activeUrl = it
+
+                browseUrl(it)
+            }, success = { account ->
+                EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: ${account.name}"))
+                this.activeUrl = null
+            }, error = { errorString ->
+                EventManager.callEvent(AltManagerUpdateEvent(false, errorString))
+                this.activeUrl = null
+            })
+        }.onFailure {
+            logger.error("Failed to create new account", it)
+            EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+            this.activeUrl = null
+        }
     }
 
     /**
      * Create a new Microsoft Account using the OAuth2 flow which opens a browser window to authenticate the user
      */
-    fun newMicrosoftAccount(success: (account: MicrosoftAccount) -> Unit, error: (error: String) -> Unit) {
+    fun newMicrosoftAccount(url: (String) -> Unit, success: (account: MicrosoftAccount) -> Unit,
+                            error: (error: String) -> Unit) {
         MicrosoftAccount.buildFromOpenBrowser(object : MicrosoftAccount.OAuthHandler {
 
             /**
@@ -152,10 +176,15 @@ object AccountManager : Configurable("Accounts") {
             override fun authResult(account: MicrosoftAccount) {
                 // Yay, it worked! Callback with account.
                 logger.info("Logged in as new account ${account.name}")
-                success(account)
 
                 // Add account to list of accounts
                 accounts += account
+
+                runCatching {
+                    success(account)
+                }.onFailure {
+                    logger.error("Internal error", it)
+                }
 
                 // Store configurable
                 ConfigSystem.storeConfigurable(this@AccountManager)
@@ -165,7 +194,7 @@ object AccountManager : Configurable("Accounts") {
              * Called when the server has prepared the user for authentication
              */
             override fun openUrl(url: String) {
-                browseUrl(url)
+                url(url)
             }
 
         })
