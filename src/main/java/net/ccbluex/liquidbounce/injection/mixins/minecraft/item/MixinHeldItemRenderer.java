@@ -48,7 +48,8 @@ public abstract class MixinHeldItemRenderer {
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
         if (ModuleSwordBlock.INSTANCE.getEnabled() && hand == Hand.OFF_HAND && item.getItem() instanceof ShieldItem &&
-                player.getActiveItem() != null && player.getActiveItem().getItem() instanceof SwordItem) {
+                !player.getStackInHand(Hand.MAIN_HAND).isEmpty()
+                && player.getStackInHand(Hand.MAIN_HAND).getItem() instanceof SwordItem) {
             ci.cancel();
         }
     }

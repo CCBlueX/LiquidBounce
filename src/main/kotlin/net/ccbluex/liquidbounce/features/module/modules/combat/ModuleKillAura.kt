@@ -124,7 +124,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val onScanRange by boolean("OnScanRange", true)
 
         fun startBlocking() {
-            if (!enabled) {
+            if (!enabled || player.isBlocking) {
                 return
             }
 
@@ -133,11 +133,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 interaction.sendSequencedPacket(world) { sequence ->
                     PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
                 }
+                mc.options.useKey.isPressed = true
             } else if (canBlock(player.offHandStack)) {
                 player.setCurrentHand(Hand.OFF_HAND)
                 interaction.sendSequencedPacket(world) { sequence ->
                     PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
                 }
+                mc.options.useKey.isPressed = true
             }
         }
 
@@ -145,6 +147,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // We do not want the player to stop eating or else. Only when he blocks.
             if (player.isBlocking) {
                 player.stopUsingItem()
+                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                    BlockPos.ORIGIN, Direction.DOWN))
+                mc.options.useKey.isPressed = false
             }
         }
 
