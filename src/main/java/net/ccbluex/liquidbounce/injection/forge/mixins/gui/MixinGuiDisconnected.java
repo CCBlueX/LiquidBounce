@@ -9,9 +9,10 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.Agent;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
-import com.thealtening.AltService;
 import com.thealtening.api.TheAltening;
-import com.thealtening.api.data.AccountData;
+import com.thealtening.api.response.Account;
+import com.thealtening.api.retriever.BasicDataRetriever;
+import com.thealtening.auth.service.AlteningServiceType;
 import me.liuli.elixir.account.MinecraftAccount;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.SessionEvent;
@@ -80,11 +81,11 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
             case 3:
                 if (!GuiTheAltening.Companion.getApiKey().isEmpty()) {
                     final String apiKey = GuiTheAltening.Companion.getApiKey();
-                    final TheAltening theAltening = new TheAltening(apiKey);
+                    final BasicDataRetriever theAltening = TheAltening.newBasicRetriever(apiKey);
 
                     try {
-                        final AccountData account = theAltening.getAccountData();
-                        GuiAltManager.Companion.getAltService().switchService(AltService.EnumAltService.THEALTENING);
+                        final Account account = theAltening.getAccount();
+                        GuiAltManager.Companion.getAltService().updateService(AlteningServiceType.THEALTENING);
 
                         final YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(new YggdrasilAuthenticationService(Proxy.NO_PROXY, ""), Agent.MINECRAFT);
                         yggdrasilUserAuthentication.setUsername(account.getToken());

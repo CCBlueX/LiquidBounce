@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.ui.client.altmanager
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
-import com.thealtening.AltService
+import com.thealtening.auth.TheAlteningAuthentication
+import com.thealtening.auth.service.AlteningServiceType
 import me.liuli.elixir.account.CrackedAccount
 import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.account.MinecraftAccount
@@ -112,10 +113,9 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         )
         Fonts.font35.drawStringWithShadow(
             "§7Type: §a${
-                if (altService.currentService == AltService.EnumAltService.THEALTENING) "TheAltening" else if (isValidTokenOffline(
-                        mc.getSession().token
-                    )
-                ) "Premium" else "Cracked"
+                if (altService.service == AlteningServiceType.THEALTENING) "TheAltening"
+                else if (isValidTokenOffline(mc.getSession().token)) "Premium"
+                else "Cracked"
             }", 6f, 15f, 0xffffff
         )
         searchField.drawTextBox()
@@ -184,7 +184,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
             5 -> { // Random name button
                 status = "§aLogged into ${randomAccount().name}."
-                altService.switchService(AltService.EnumAltService.MOJANG)
+                altService.updateService(AlteningServiceType.MOJANG)
             }
 
             6 -> { // Direct login button
@@ -411,7 +411,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
     companion object {
 
-        val altService = AltService()
+        val altService: TheAlteningAuthentication = TheAlteningAuthentication.mojang {}
         private val activeGenerators = mutableMapOf<String, Boolean>()
 
         fun loadActiveGenerators() {
@@ -437,16 +437,14 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         fun login(
             minecraftAccount: MinecraftAccount, success: () -> Unit, error: (Exception) -> Unit, done: () -> Unit
         ) = thread(name = "LoginTask") {
-            if (altService.currentService != AltService.EnumAltService.MOJANG) {
-                try {
-                    altService.switchService(AltService.EnumAltService.MOJANG)
-                } catch (e: NoSuchFieldException) {
-                    error(e)
-                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
-                } catch (e: IllegalAccessException) {
-                    error(e)
-                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
-                }
+            try {
+                altService.updateService(AlteningServiceType.MOJANG)
+            } catch (e: NoSuchFieldException) {
+                error(e)
+                LOGGER.error("Something went wrong while trying to switch alt service.", e)
+            } catch (e: IllegalAccessException) {
+                error(e)
+                LOGGER.error("Something went wrong while trying to switch alt service.", e)
             }
 
             try {
