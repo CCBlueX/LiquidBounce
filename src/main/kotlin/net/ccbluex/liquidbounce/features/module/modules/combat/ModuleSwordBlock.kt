@@ -57,7 +57,8 @@ object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT) {
                     }
                 } else {
                     it.cancelEvent()
-                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, packet.sequence)) // We use the old sequence
+                    // We use the old sequence
+                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, packet.sequence))
                 }
             }
         }
