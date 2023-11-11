@@ -44,9 +44,11 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
+import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
+import net.minecraft.util.UseAction
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -113,15 +115,45 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val attackShielding by boolean("AttackShielding", false)
 
     private val whileUsingItem by boolean("WhileUsingItem", true)
+    private val whileBlocking by boolean("WhileBlocking", true)
 
-    object WhileBlocking : ToggleableConfigurable(this, "WhileBlocking", true) {
-        val blockingTicks by int("BlockingTicks", 0, 0..20)
+    object AutoBlock : ToggleableConfigurable(this, "AutoBlocking", true) {
+
+        fun startBlocking() {
+            if (!enabled) {
+                return
+            }
+
+            // Prefer usage of the offhand
+            if (canBlock(player.offHandStack)) {
+                player.setCurrentHand(Hand.OFF_HAND)
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
+                }
+            } else if (canBlock(player.mainHandStack)) {
+                player.setCurrentHand(Hand.MAIN_HAND)
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                }
+            }
+        }
+
+        fun stopBlocking() {
+            // We do not want the player to stop eating or else. Only when he blocks.
+            if (player.isBlocking) {
+                player.stopUsingItem()
+            }
+        }
+
+        private fun canBlock(itemStack: ItemStack)
+            = itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
+
     }
 
     private val legitAimingConfigurable = LegitAimpointTracker.LegitAimpointTrackerConfigurable(this)
 
     init {
-        tree(WhileBlocking)
+        tree(AutoBlock)
         tree(legitAimingConfigurable)
     }
 
@@ -193,6 +225,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     override fun disable() {
         targetTracker.cleanup()
         failedHits.clear()
+        AutoBlock.stopBlocking()
     }
 
     private var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
@@ -265,12 +298,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Did you ever send a rotation before?
         val rotation = RotationManager.currentRotation
 
-        if (CombatManager.shouldPauseCombat()) return@repeatable
+        if (target == null) {
+            AutoBlock.stopBlocking()
+        }
 
-        if (rotation != null && target != null && target.boxedDistanceTo(player) <= range && facingEnemy(
-                target, rotation, range.toDouble(), wallRange.toDouble()
-            )
-        ) {
+        if (CombatManager.shouldPauseCombat()) {
+            AutoBlock.stopBlocking()
+            return@repeatable
+        }
+
+        if (rotation != null && target != null && target.boxedDistanceTo(player) <= range
+            && facingEnemy(target, rotation, range.toDouble(), wallRange.toDouble())) {
             // Check if between enemy and player is another entity
             val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
                 when (raycast) {
@@ -296,71 +334,33 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                                 )) && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
             }, cps)
 
-            repeat(clicks) {
-                if (simulateInventoryClosing && isInInventoryScreen) {
-                    network.sendPacket(CloseHandledScreenC2SPacket(0))
-                }
+            if (clicks == 0) {
+                AutoBlock.startBlocking()
 
-                val blocking = player.isBlocking
-
-                if (blocking) {
-                    if (!WhileBlocking.enabled) {
-                        return@repeat // return if it's not allowed to attack while using blocking with a shield
-                    }
-                } else if (player.isUsingItem && !whileUsingItem) {
-                    return@repeat // return if it's not allowed to attack while the player is using another item that's not a shield
-                }
-
-                // Make sure to unblock now
-                if (blocking) {
-                    network.sendPacket(
-                        PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
-                        )
-                    )
-
-                    // Wait until the un-blocking delay time is up
-                    if (WhileBlocking.blockingTicks > 0) {
-                        mc.options.useKey.isPressed = false
-                        wait(WhileBlocking.blockingTicks)
-                    }
-                }
-                // Fail rate
-                if (failRate > 0 && failRate > Random.nextInt(100)) {
-                    // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
-                    if (swing) {
-                        player.swingHand(Hand.MAIN_HAND)
-                    } else {
-                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
-                    }
-
-                    // Notify the user about the failed hit
-                    notifyForFailedHit(raycastedEntity, rotation)
-                } else {
-                    // Attack enemy
-                    attackEntity(raycastedEntity)
-                }
-                cooldown.newCooldown()
-
-                // Make sure to block again
-                if (blocking) {
-                    // Wait until the blocking delay time is up
-                    if (WhileBlocking.blockingTicks > 0) {
-                        wait(WhileBlocking.blockingTicks)
-                    }
-
-                    interaction.sendSequencedPacket(world) { sequence ->
-                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
-                    }
-
-                    mc.options.useKey.isPressed = true
-                }
-
-                if (simulateInventoryClosing && isInInventoryScreen) {
-                    openInventorySilently()
-                }
+                return@repeatable
+            } else {
+                AutoBlock.stopBlocking()
             }
 
+            repeat(clicks) {
+                prepareAttackEnvironment {
+                    // Fail rate
+                    if (failRate > 0 && failRate > Random.nextInt(100)) {
+                        // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
+                        if (swing) {
+                            player.swingHand(Hand.MAIN_HAND)
+                        } else {
+                            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                        }
+
+                        // Notify the user about the failed hit
+                        notifyForFailedHit(raycastedEntity, rotation)
+                    } else {
+                        // Attack enemy
+                        attackEntity(raycastedEntity)
+                    }
+                }
+            }
             return@repeatable
         }
 
@@ -372,8 +372,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
 
-        val shouldSwing =
-            entity != null && !entity.isRemoved && (!FailSwing.LimitRange.enabled || entity.boxedDistanceTo(player) <= reach)
+        val shouldSwing = entity != null && !entity.isRemoved
+            && (!FailSwing.LimitRange.enabled || entity.boxedDistanceTo(player) <= reach)
 
         val chosenCPS = if (FailSwing.UseOwnCPS.enabled) FailSwing.UseOwnCPS.cps else cps
         val supposedRotation = rotation ?: player.rotation
@@ -385,10 +385,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }, chosenCPS)
 
         repeat(clicks) {
-            if (swing) {
-                player.swingHand(Hand.MAIN_HAND)
-            } else {
-                network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+            prepareAttackEnvironment {
+                if (swing) {
+                    player.swingHand(Hand.MAIN_HAND)
+                } else {
+                    network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                }
             }
         }
     }
@@ -464,6 +466,51 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 configurable = rotations
             )
             break
+        }
+    }
+
+    /**
+     * Prepare the environment for attacking an entity
+     *
+     * This means, we make sure we are not blocking, we are not using another item
+     * and we are not in an inventory screen depending on the configuration.
+     */
+    private fun prepareAttackEnvironment(attack: () -> Unit) {
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+
+        if (simulateInventoryClosing && isInInventoryScreen) {
+            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        }
+
+        if (player.isBlocking) {
+            if (!whileBlocking) {
+                return // return if it's not allowed to attack while using blocking with a shield
+            }
+        } else if (player.isUsingItem && !whileUsingItem) {
+            return // return if it's not allowed to attack while the player is using another item that's not a shield
+        }
+
+        // Make sure to unblock now
+        if (player.isBlocking) {
+            network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                BlockPos.ORIGIN, Direction.DOWN))
+        }
+
+        attack()
+        cooldown.newCooldown()
+
+        // Make sure to block again
+        if (player.isBlocking) {
+            interaction.sendSequencedPacket(world) { sequence ->
+                PlayerInteractItemC2SPacket(player.activeHand, sequence)
+            }
+
+            mc.options.useKey.isPressed = true
+        }
+
+        if (simulateInventoryClosing && isInInventoryScreen) {
+            openInventorySilently()
         }
     }
 
