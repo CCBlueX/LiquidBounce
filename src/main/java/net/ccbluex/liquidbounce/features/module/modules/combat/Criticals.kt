@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.EntityLivingBase
@@ -26,12 +27,13 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
     val mode by ListValue(
         "Mode",
-        arrayOf("Packet", "NCPPacket", "VerusJump", "AACJump", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"),
+        arrayOf("Packet", "NCPPacket", "VerusJump", "AACJump", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "CustomMotion", "Visual"),
         "Packet"
     )
 
     val delay by IntegerValue("Delay", 0, 0..500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
+    private val customMotionY by FloatValue("Custom-Y", 0.2f, 0.01f..0.42f) { mode == "CustomMotion" }
 
     val msTimer = MSTimer()
 
@@ -121,6 +123,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
                 "jump" -> thePlayer.motionY = 0.42
                 "lowjump" -> thePlayer.motionY = 0.3425
+                "custommotion" -> thePlayer.motionY = customMotionY.toDouble()
                 "visual" -> thePlayer.onCriticalHit(entity)
             }
 
