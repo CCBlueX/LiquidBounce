@@ -211,11 +211,8 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         }
     }
 
-    private fun shouldLag() = world.findEnemy(0f..rangeToStart) != null &&
-        (!player.isUsingItem || !stopWhileUsingItem) &&
-        mc.currentScreen == null &&
-        !player.isDead &&
-        !player.isUsingItem
+    private fun shouldLag() =
+        world.findEnemy(0f..rangeToStart) != null && (!player.isUsingItem || !stopWhileUsingItem) && mc.currentScreen == null && !player.isDead
 
     data class PositionData(val vec: Vec3d, val delay: Long)
 }
