@@ -13,8 +13,11 @@ import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.TrackedPosition
+import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
+import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.math.Box
@@ -22,15 +25,14 @@ import net.minecraft.util.math.Vec3d
 
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
-    val range by floatRange("Range", 1f..3f, 0f..6f)
-    val delay by int("Delay", 100, 0..1000)
+    private val range by floatRange("Range", 1f..3f, 0f..6f)
+    private val delay by int("Delay", 100, 0..1000)
     private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
     private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
 
-    var target: Entity? = null
-
-    var position: TrackedPosition? = null
+    private var target: Entity? = null
+    private var position: TrackedPosition? = null
 
     val packetHandler = handler<PacketEvent> {
         synchronized(packetQueue) {
@@ -41,8 +43,8 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
             val packet = it.packet
 
             when (packet) {
-                // Ignore chat packets
-                is ChatMessageS2CPacket -> {
+                // Ignore message-related packets
+                is ChatMessageC2SPacket, is GameMessageS2CPacket, is CommandExecutionC2SPacket -> {
                     return@handler
                 }
 
@@ -52,6 +54,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                     return@handler
                 }
 
+                // Ignore own hurt sounds
                 is PlaySoundS2CPacket -> {
                     if (packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT) {
                         return@handler
@@ -77,16 +80,18 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                     (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
                 }
 
-                if (player.squaredDistanceTo(pos) <= player.squaredDistanceTo(target)) {
-                    clear(true)
+                // Is the target's actual position closer than its tracked position?
+                if (player.squaredBoxedDistanceTo(pos!!) < player.squaredBoxedDistanceTo(target!!)) {
+                    // Process all packets. We want to be able to hit the enemy, not the opposite.
+                    processPackets(true)
                 }
+
                 position?.setPos(pos)
             }
 
             packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
         }
     }
-
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val entity = target ?: return@handler

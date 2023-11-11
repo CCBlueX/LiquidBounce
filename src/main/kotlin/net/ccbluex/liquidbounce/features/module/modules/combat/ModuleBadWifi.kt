@@ -29,16 +29,9 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.EventScheduler
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
-import net.ccbluex.liquidbounce.utils.combat.countEnemies
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.packet.c2s.play.*
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.util.math.Vec3d
 
@@ -52,8 +45,7 @@ import net.minecraft.util.math.Vec3d
 object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     private val delay by int("Delay", 550, 0..1000)
-
-    // if there is many player
+    private val rangeToStart by float("RangeToStart", 10f, 0f..30f)
     private val recoilTime by int("RecoilTime", 750, 0..2000)
     private val stopWhileUsingItem by boolean("StopWhileUsingItem", true)
     private val color by color("Color", Color4b(255, 179, 72, 255))
@@ -83,7 +75,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (player.isDead || event.isCancelled) {
+        if (event.isCancelled) {
             return@handler
         }
 
@@ -93,8 +85,10 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
             blink()
             return@handler
         }
+
         when (packet) {
-            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageS2CPacket, is DisconnectS2CPacket -> {
+            // Ignore message-related packets
+            is ChatMessageC2SPacket, is GameMessageS2CPacket, is CommandExecutionC2SPacket -> {
                 return@handler
             }
 
@@ -104,7 +98,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
                 return@handler
             }
 
-            // Flush on kb
+            // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
                 if (packet.id == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
                     blink()
@@ -112,6 +106,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
                 }
             }
 
+            // Flush on explosion
             is ExplosionS2CPacket -> {
                 if (packet.playerVelocityX != 0f || packet.playerVelocityY != 0f || packet.playerVelocityZ != 0f) {
                     blink()
@@ -149,7 +144,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }
 
     val tickHandler = repeatable {
-        if (player.isDead || player.isUsingItem) {
+        if (!shouldLag()) {
             blink()
             return@repeatable
         }
@@ -172,7 +167,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         synchronized(positions) {
             renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
-                    drawLineStrip(*makeLines(positions, event.partialTicks))
+                    drawLineStrip(*positions.map { Vec3(it.vec) }.toTypedArray())
                 }
             }
         }
@@ -216,21 +211,11 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         }
     }
 
-    private fun shouldLag(): Boolean {
-        return 0 < world.countEnemies(0f..8f) && (!player.isUsingItem || !stopWhileUsingItem)
-    }
-
-    @JvmStatic
-    internal fun makeLines(
-        positions: LinkedHashSet<PositionData>, tickDelta: Float
-    ): Array<Vec3> {
-        val mutableList = mutableListOf<Vec3>()
-        positions.forEach {
-            mutableList.add(Vec3(it.vec))
-        }
-        mutableList += player.interpolateCurrentPosition(tickDelta)
-        return mutableList.toTypedArray()
-    }
+    private fun shouldLag() = world.findEnemy(0f..rangeToStart) != null &&
+        (!player.isUsingItem || !stopWhileUsingItem) &&
+        mc.currentScreen == null &&
+        !player.isDead &&
+        !player.isUsingItem
 
     data class PositionData(val vec: Vec3d, val delay: Long)
 }
