@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.isOldCombat
+import net.minecraft.item.ShieldItem
 import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
@@ -49,10 +50,15 @@ object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT) {
             if (hand == Hand.MAIN_HAND && itemInHand.item is SwordItem) {
                 it.cancelEvent()
 
-                PlayerInteractItemC2SPacket(Hand.MAIN_HAND, packet.sequence) // We use the old sequence
-                // Until "now" we should get a shield from the server
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence) // This time we use a new sequence
+                val offHandItem = player.getStackInHand(Hand.OFF_HAND)
+                if (offHandItem?.item !is ShieldItem) {
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, packet.sequence) // We use the old sequence
+                    // Until "now" we should get a shield from the server
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence) // This time we use a new sequence
+                    }
+                } else {
+                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, packet.sequence) // We use the old sequence
                 }
             }
         }

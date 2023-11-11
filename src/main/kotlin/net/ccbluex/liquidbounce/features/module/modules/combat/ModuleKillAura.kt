@@ -124,16 +124,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 return
             }
 
-            // Prefer usage of the offhand
-            if (canBlock(player.offHandStack)) {
-                player.setCurrentHand(Hand.OFF_HAND)
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
-                }
-            } else if (canBlock(player.mainHandStack)) {
+            if (canBlock(player.mainHandStack)) {
                 player.setCurrentHand(Hand.MAIN_HAND)
                 interaction.sendSequencedPacket(world) { sequence ->
                     PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                }
+            } else if (canBlock(player.offHandStack)) {
+                player.setCurrentHand(Hand.OFF_HAND)
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
                 }
             }
         }

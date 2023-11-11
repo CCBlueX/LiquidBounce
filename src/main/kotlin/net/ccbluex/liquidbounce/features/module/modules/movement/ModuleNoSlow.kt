@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.block.HoneyBlock
 import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
+import net.minecraft.item.ShieldItem
+import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
@@ -60,19 +62,19 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                 get() = modes
 
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-                if (player.isBlocking) {
+                if (player.isBlocking || player.activeItem?.item is SwordItem) {
                     when (event.state) {
-                        EventState.PRE -> network.sendPacket(
-                            PlayerActionC2SPacket(
-                                PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                                BlockPos.ORIGIN,
-                                Direction.DOWN
+                        EventState.PRE -> {
+                            network.sendPacket(
+                                PlayerActionC2SPacket(
+                                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                                    BlockPos.ORIGIN,
+                                    Direction.DOWN
+                                )
                             )
-                        )
-
-                        EventState.POST -> interaction.sendSequencedPacket(world) { sequence ->
-                            PlayerInteractItemC2SPacket(player.activeHand, sequence)
                         }
+
+                        EventState.POST -> blockAgain()
                     }
                 }
             }
@@ -94,15 +96,35 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
                         EventState.POST -> {
                             network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-                            interaction.sendSequencedPacket(world) { sequence ->
-                                PlayerInteractItemC2SPacket(player.activeHand, sequence)
-                            }
+                            blockAgain()
                         }
                     }
                 }
             }
 
 
+        }
+
+        private fun blockAgain() {
+            val activeHand = player.activeHand
+            val itemInHand = player.activeItem
+
+            if (activeHand == Hand.MAIN_HAND && itemInHand.item is SwordItem) {
+                val offHandItem = player.getStackInHand(Hand.OFF_HAND)
+                if (offHandItem?.item !is ShieldItem) {
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                    }
+                }
+
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
+                }
+            } else if (player.activeItem.item is ShieldItem) {
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                }
+            }
         }
 
     }
