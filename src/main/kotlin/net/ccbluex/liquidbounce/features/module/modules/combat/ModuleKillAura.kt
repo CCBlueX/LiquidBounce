@@ -117,7 +117,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val whileUsingItem by boolean("WhileUsingItem", true)
     private val whileBlocking by boolean("WhileBlocking", true)
 
-    object AutoBlock : ToggleableConfigurable(this, "AutoBlocking", true) {
+    object AutoBlock : ToggleableConfigurable(this, "AutoBlocking", false) {
+
+        val tickOff by int("TickOff", 0, 0..5)
+        val tickOn by int("TickOn", 0, 0..5)
+        val onScanRange by boolean("OnScanRange", true)
 
         fun startBlocking() {
             if (!enabled) {
@@ -324,25 +328,23 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             // Attack enemy according to cps and cooldown
-            val clicks = cpsTimer.clicks(condition = {
+            val canAttack = {
                 cooldown.readyToAttack && (!ModuleCriticals.shouldWaitForCrit() ||
-                        raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) &&
-                        (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
-                                !raycastedEntity.wouldBlockHit(
-                                    player
-                                )) && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
-            }, cps)
+                    raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) &&
+                    (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
+                        !raycastedEntity.wouldBlockHit(
+                            player
+                        )) && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+            };
+            val clicks = cpsTimer.clicks(condition = canAttack, cps)
 
             if (clicks == 0) {
                 AutoBlock.startBlocking()
-
                 return@repeatable
-            } else {
-                AutoBlock.stopBlocking()
             }
 
-            repeat(clicks) {
-                prepareAttackEnvironment {
+            prepareAttackEnvironment {
+                repeat(clicks) {
                     // Fail rate
                     if (failRate > 0 && failRate > Random.nextInt(100)) {
                         // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
@@ -360,6 +362,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     }
                 }
             }
+
+            return@repeatable
+        } else if (target != null && rotation != null && AutoBlock.onScanRange) {
+            AutoBlock.startBlocking()
             return@repeatable
         }
 
@@ -383,8 +389,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             ) { true } == null
         }, chosenCPS)
 
-        repeat(clicks) {
-            prepareAttackEnvironment {
+        prepareAttackEnvironment {
+            repeat(clicks) {
                 if (swing) {
                     player.swingHand(Hand.MAIN_HAND)
                 } else {
@@ -474,7 +480,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      * This means, we make sure we are not blocking, we are not using another item
      * and we are not in an inventory screen depending on the configuration.
      */
-    private fun prepareAttackEnvironment(attack: () -> Unit) {
+    private suspend fun Sequence<DummyEvent>.prepareAttackEnvironment(attack: () -> Unit) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
@@ -494,22 +500,23 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         if (player.isBlocking) {
             network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
                 BlockPos.ORIGIN, Direction.DOWN))
+            if (AutoBlock.tickOff > 0) {
+                wait(AutoBlock.tickOff)
+            }
         }
 
         attack()
         cooldown.newCooldown()
 
-        // Make sure to block again
-        if (player.isBlocking) {
+        if (simulateInventoryClosing && isInInventoryScreen) {
+            openInventorySilently()
+        } else if (player.isBlocking) {
+            if (AutoBlock.tickOn > 0) {
+                wait(AutoBlock.tickOn)
+            }
             interaction.sendSequencedPacket(world) { sequence ->
                 PlayerInteractItemC2SPacket(player.activeHand, sequence)
             }
-
-            mc.options.useKey.isPressed = true
-        }
-
-        if (simulateInventoryClosing && isInInventoryScreen) {
-            openInventorySilently()
         }
     }
 
