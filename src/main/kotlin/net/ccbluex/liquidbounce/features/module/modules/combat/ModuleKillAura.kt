@@ -49,6 +49,7 @@ import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
+import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -122,6 +123,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val tickOff by int("TickOff", 0, 0..5)
         val tickOn by int("TickOn", 0, 0..5)
         val onScanRange by boolean("OnScanRange", true)
+        val interactWith by boolean("InteractWith", true)
+
+        var blockingStateEnforced = false
 
         fun startBlocking() {
             if (!enabled || player.isBlocking) {
@@ -129,28 +133,61 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             if (canBlock(player.mainHandStack)) {
-                player.setCurrentHand(Hand.MAIN_HAND)
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                if (interactWith) {
+                    interactWithFront()
                 }
-                mc.options.useKey.isPressed = true
+
+                interaction.interactItem(player, Hand.MAIN_HAND)
+                blockingStateEnforced = true
             } else if (canBlock(player.offHandStack)) {
-                player.setCurrentHand(Hand.OFF_HAND)
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
+                if (interactWith) {
+                    interactWithFront()
                 }
-                mc.options.useKey.isPressed = true
+
+                interaction.interactItem(player, Hand.OFF_HAND)
+                blockingStateEnforced = true
             }
         }
 
         fun stopBlocking() {
             // We do not want the player to stop eating or else. Only when he blocks.
-            if (player.isBlocking) {
-                player.stopUsingItem()
-                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    BlockPos.ORIGIN, Direction.DOWN))
-                mc.options.useKey.isPressed = false
+            if (player.isBlocking && !mc.options.useKey.isPressed) {
+                interaction.stopUsingItem(player)
             }
+            blockingStateEnforced = false
+        }
+
+        private fun interactWithFront() {
+            // Raycast using the current rotation and find a block or entity that should be interacted with
+
+            val rotationToTheServer = RotationManager.currentRotation ?: return
+
+            val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
+                when (raycast) {
+                    TRACE_NONE -> false
+                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                    TRACE_ALL -> true
+                }
+            })
+
+            if (entity != null) {
+                // Interact with entity
+                // Check if it makes use to interactAt the entity
+                // interaction.interactEntityAtLocation()
+                interaction.interactEntity(player, entity, Hand.MAIN_HAND)
+                return
+            }
+
+            val hitResult = raycast(
+                range.toDouble(), rotationToTheServer, includeFluids = false
+            ) ?: return
+
+            if (hitResult.type != HitResult.Type.BLOCK) {
+                return
+            }
+
+            // Interact with block
+            interaction.interactBlock(player, Hand.MAIN_HAND, hitResult)
         }
 
         private fun canBlock(itemStack: ItemStack)
@@ -317,27 +354,31 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (rotation != null && target != null && target.boxedDistanceTo(player) <= range
             && facingEnemy(target, rotation, range.toDouble(), wallRange.toDouble())) {
-            // Check if between enemy and player is another entity
-            val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
-                when (raycast) {
-                    TRACE_NONE -> false
-                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                    TRACE_ALL -> true
-                }
-            }) ?: target
+            val choosenEntity: Entity
+            if (raycast != TRACE_NONE) {
+                // Check if between enemy and player is another entity
+                choosenEntity = raytraceEntity(range.toDouble(), rotation, filter = {
+                    when (raycast) {
+                        TRACE_NONE -> false
+                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                        TRACE_ALL -> true
+                    }
+                }) ?: target
 
-            // Swap enemy if there is a better enemy
-            // todo: compare current target to locked target
-            if (raycastedEntity.shouldBeAttacked() && raycastedEntity != target) {
-                targetTracker.lock(raycastedEntity)
+                // Swap enemy if there is a better enemy (closer to the player crosshair)
+                if (choosenEntity.shouldBeAttacked() && choosenEntity != target) {
+                    targetTracker.lock(choosenEntity)
+                }
+            } else {
+                choosenEntity = target
             }
 
             // Attack enemy according to cps and cooldown
             val canAttack = {
                 cooldown.readyToAttack && (!ModuleCriticals.shouldWaitForCrit() ||
-                    raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) &&
-                    (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
-                        !raycastedEntity.wouldBlockHit(
+                    choosenEntity.velocity.lengthSquared() > 0.25 * 0.25) &&
+                    (attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
+                        !choosenEntity.wouldBlockHit(
                             player
                         )) && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
             };
@@ -360,10 +401,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         }
 
                         // Notify the user about the failed hit
-                        notifyForFailedHit(raycastedEntity, rotation)
+                        notifyForFailedHit(choosenEntity, rotation)
                     } else {
                         // Attack enemy
-                        attackEntity(raycastedEntity)
+                        attackEntity(choosenEntity)
                     }
                 }
             }
