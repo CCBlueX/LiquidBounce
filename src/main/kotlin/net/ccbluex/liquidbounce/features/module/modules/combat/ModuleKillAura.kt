@@ -589,6 +589,22 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             if (genericAttackDamage > 0.0f && magicAttackDamage > 0.0f) {
                 player.addEnchantedHitParticles(entity)
             }
+
+            val isCrit = ModuleCriticals.wouldCrit(true)
+
+            if (isCrit) {
+                world.playSound(
+                    null,
+                    entity.x,
+                    entity.y,
+                    entity.z,
+                    SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
+                    entity.soundCategory,
+                    1.0f,
+                    1.0f
+                )
+                player.addCritParticles(entity)
+            }
         } else {
             if (interaction.currentGameMode != GameMode.SPECTATOR) {
                 player.attack(entity)
