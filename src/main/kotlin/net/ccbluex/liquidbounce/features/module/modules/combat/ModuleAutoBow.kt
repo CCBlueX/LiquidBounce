@@ -83,6 +83,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val chargedRandom by floatRange("ChargedRandom", 0.0F..0.0F, -10.0F..10.0F)
         val delayBetweenShots by int("DelayBetweenShots", 0, 0..5000)
 
+        val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F)
         val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
 
         var currentChargeRandom: Int? = null
@@ -128,6 +129,19 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                     }
 
                     if (ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(hypotheticalHit)) {
+                        return@handler
+                    }
+                } else if (BowAimbotOptions.enabled) {
+                    if(BowAimbotOptions.targetTracker.lockedOnTarget == null) {
+                        return@handler
+                    }
+
+                    val targetRotation = RotationManager.targetRotation ?: return@handler
+
+                    val aimDifference = RotationManager.rotationDifference(RotationManager.currentRotation
+                        ?: player.rotation, targetRotation)
+
+                    if (aimDifference > aimThreshold) {
                         return@handler
                     }
                 }
