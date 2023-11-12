@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.base.ultralight.impl
 import com.labymedia.ultralight.plugin.filesystem.UltralightFileSystem
 import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import org.apache.tika.Tika
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -31,6 +32,8 @@ import java.nio.file.*
  * Ultralight browser file system
  */
 class BrowserFileSystem : UltralightFileSystem {
+    private val tika = Tika()
+
 
     // Dumb implementation of a counter, but this will probably always be enough...
     // unless you have 9,223,372,036,854,775,807 files open. Please reconsider your application then!
@@ -97,7 +100,7 @@ class BrowserFileSystem : UltralightFileSystem {
         }
         return try {
             // Retrieve the mime type and log it
-            val mimeType = Files.probeContentType(realPath)
+            val mimeType = tika.detect(realPath)
             log(false, "Mime type of %s is %s", path, mimeType)
             mimeType
         } catch (e: IOException) {
