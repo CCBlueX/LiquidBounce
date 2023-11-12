@@ -1,0 +1,17 @@
+.module {
+  color: var(--text-dimmed);
+  text-align: center;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 10px;
+  transition: ease background-color 0.2s, ease color 0.2s;
+  position: relative;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.36);
+  }
+
+  &[data-enabled="true"] {
+    color: var(--text);
+  }
+}

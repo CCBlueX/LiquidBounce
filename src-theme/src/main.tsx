@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import {RouterProvider, createHashRouter} from "react-router-dom";
 
 import Root from "./root.tsx";
 
@@ -18,8 +18,9 @@ import ProxyManager from "./routes/_menus/proxies.tsx";
 import ClickGUI from "./routes/clickgui.tsx";
 
 import "./globals.css";
+import ModMenu from "~/routes/modmenu.tsx";
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <Root />,
@@ -57,6 +58,10 @@ const router = createBrowserRouter([
         path: "/clickgui",
         element: <ClickGUI />,
       },
+      {
+        path: "/modmenu",
+        element: <ModMenu />,
+      }
     ],
   },
 ]);
