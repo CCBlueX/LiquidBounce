@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -36,26 +37,21 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
     private val message by text("Message",
         "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}")
         .doNotInclude()
-    // todo: add back when textArray is supported
-    // private val messages by textArray(
-    //    "Messages",
-    //    mutableListOf(
-    //        "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
-    //        "LiquidBounce: FREE and OPEN-SOURCE & 100% CUSTOMIZABLE"
-    //    )
-    //)
+    private val messageConverterMode by enumChoice("MessageConverter",
+        MessageConverterMode.LEET_CONVERTER, MessageConverterMode.values())
+        .doNotInclude()
     private val customFormatter by boolean("CustomFormatter", false)
         .doNotInclude()
 
     val repeatable = repeatable {
-        val text = if (customFormatter) {
+        val text = messageConverterMode.convert(if (customFormatter) {
             format(message)
         } else {
             "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " +
                 message.toCharArray().joinToString("") {
                     if (Random.nextBoolean()) it.uppercase() else it.lowercase()
                 }
-        }
+        })
 
         // Check if message text is command
         if (text.startsWith("/")) {
@@ -95,6 +91,36 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
     private fun String.insert(prefix: String, insert: Any): String {
         return substring(0, indexOf(prefix)) +
             insert.toString() + substring(indexOf(prefix) + prefix.length)
+    }
+
+    enum class MessageConverterMode(override val choiceName: String, val convert: (String) -> String) : NamedChoice {
+        NO_CONVERTER("None", { text ->
+            text
+        }),
+        LEET_CONVERTER("Leet", { text ->
+            text.map { char ->
+                when (char) {
+                    'o' -> '0'
+                    'l' -> '1'
+                    'e' -> '3'
+                    'a' -> '4'
+                    't' -> '7'
+                    's' -> 'Z'
+                    else -> char
+                }
+            }.joinToString("")
+        }),
+        RANDOM_CASE_CONVERTER("Random Case", { text ->
+            // Random case the whole string
+            text.map { char ->
+                if (Random.nextBoolean()) char.uppercase() else char.lowercase()
+            }.joinToString("")
+        }),
+        RANDOM_SPACE_CONVERTER("Random Space", { text ->
+            text.map { char ->
+                if (Random.nextBoolean()) "$char " else char.toString()
+            }.joinToString("")
+        }),
     }
 
 }
