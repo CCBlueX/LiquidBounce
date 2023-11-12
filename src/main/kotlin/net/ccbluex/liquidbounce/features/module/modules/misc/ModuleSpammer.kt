@@ -70,16 +70,31 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
         var formattedText = text
 
         while (formattedText.contains("%f"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%f")) + Random.nextFloat() + formattedText.substring(formattedText.indexOf("%f") + "%f".length)
+            formattedText = formattedText.insert("%f", Random.nextFloat())
         while (formattedText.contains("%i"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%i")) + Random.nextInt(10000) + formattedText.substring(formattedText.indexOf("%i") + "%i".length)
+            formattedText = formattedText.insert("%i", Random.nextInt(10000))
         while (formattedText.contains("%s"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%s")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%s") + "%s".length)
-        while (formattedText.contains("%ss"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%ss")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%ss") + "%ss".length)
-        while (formattedText.contains("%ls"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%ls")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%ls") + "%ls".length)
+            formattedText = formattedText.insert("%s", RandomStringUtils.randomAlphabetic((4..6).random()))
+
+        if (formattedText.contains("@a")) {
+            val playerList = mc.networkHandler?.playerList?.filter {
+                it?.profile?.name == player.gameProfile?.name
+            }
+
+            if (!playerList.isNullOrEmpty()) {
+                while (formattedText.contains("@a")) {
+                    formattedText = formattedText.insert("@a",
+                        playerList.randomOrNull()?.profile?.name ?: break)
+                }
+            }
+        }
 
         return formattedText
     }
+
+    private fun String.insert(prefix: String, insert: Any): String {
+        return substring(0, indexOf(prefix)) +
+            insert.toString() + substring(indexOf(prefix) + prefix.length)
+    }
+
 }
