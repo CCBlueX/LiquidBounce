@@ -153,7 +153,7 @@ tasks.register('npmInstallTheme', Exec) {
 tasks.register('bundleTheme', Exec) {
     dependsOn 'npmInstallTheme'
     workingDir file('src-theme')
-    commandLine 'node', 'bundle.js'
+    commandLine 'npm', 'run', 'build'
     doLast {
         println 'Successfully attached theme to build'
     }
