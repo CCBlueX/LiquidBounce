@@ -189,14 +189,12 @@
             document.getElementById('username').value = random();
         }
 
-        function successMicrosoft(microsoftAccount) {
-            console.log("Logged in with Microsoft");
-            document.getElementById('response').innerText = "Logged in with Microsoft";
-        }
+        function altManagerUpdate(event) {
+            let message = event.getMessage();
 
-        function errorMicrosoft(error) {
-            console.log(error);
-            document.getElementById('response').innerText = error;
+            console.log(message);
+            document.getElementById('response').innerText = message;
+            updateAccountList();
         }
 
         function updateAccountList() {
@@ -207,13 +205,11 @@
             accountsDiv.innerHTML = "";
 
             // Add all accounts
-            console.log(accounts);
             var i = 0;
+            console.log("Account List updating...")
             while (accounts.hasNext()) {
                 let account = accounts.next();
-                console.log(JSON.stringify(account));
-                console.log(account.getType());
-                console.log(account.getName());
+                console.log("Account " + i + ": " + account.getType() + " " + account.getName());
 
                 let row = document.createElement('tr');
                 let type = document.createElement('td');
@@ -278,8 +274,7 @@
         }
 
         function newMicrosoftAccount() {
-            client.getAccountManager().newMicrosoftAccount(successMicrosoft, errorMicrosoft);
-            updateAccountList();
+            client.getAccountManager().newMicrosoftAccount();
         }
 
         function generateAlteningAccount() {
@@ -307,6 +302,12 @@
             updateAccountList();
 
             document.getElementById('response').innerText = "Deleted account: " + account.getName();
+        }
+
+        try {
+            events.on("altManagerUpdate", altManagerUpdate);
+        } catch (e) {
+            console.error(e);
         }
     </script>
 </head>
@@ -350,7 +351,7 @@
                 This will open your browser to sign in to your Microsoft account.<br>
                 <br>
 
-                <button onclick="newMicrosoftAccount(successMicrosoft, errorMicrosoft)">
+                <button onclick="newMicrosoftAccount()">
                     Add
                 </button>
             </div>

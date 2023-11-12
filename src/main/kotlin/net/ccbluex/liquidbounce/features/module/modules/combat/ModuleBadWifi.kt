@@ -23,11 +23,15 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.packet.c2s.play.*
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.util.math.Vec3d
 
@@ -41,8 +45,11 @@ import net.minecraft.util.math.Vec3d
 object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     private val delay by int("Delay", 550, 0..1000)
+    private val rangeToStart by float("RangeToStart", 10f, 0f..30f)
     private val recoilTime by int("RecoilTime", 750, 0..2000)
-
+    private val stopWhileUsingItem by boolean("StopWhileUsingItem", true)
+    private val color by color("Color", Color4b(255, 179, 72, 255))
+    private val colorRainbow by boolean("Rainbow", false)
     private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
     private val positions = LinkedHashSet<PositionData>()
 
@@ -68,50 +75,40 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (player.isDead || event.isCancelled) {
+        if (event.isCancelled) {
             return@handler
         }
 
         val packet = event.packet
 
+        if (!shouldLag()) {
+            blink()
+            return@handler
+        }
+
         when (packet) {
-            is HandshakeC2SPacket,
-            is QueryRequestC2SPacket,
-            is QueryPingC2SPacket,
-            is ChatMessageS2CPacket,
-            is DisconnectS2CPacket -> {
+            // Ignore message-related packets
+            is ChatMessageC2SPacket, is GameMessageS2CPacket, is CommandExecutionC2SPacket -> {
                 return@handler
             }
 
             // Flush on doing action, getting action
-            is PlayerPositionLookS2CPacket,
-            is PlayerInteractBlockC2SPacket,
-            is PlayerActionC2SPacket,
-            is UpdateSignC2SPacket,
-            is PlayerInteractEntityC2SPacket,
-            is ResourcePackStatusC2SPacket -> {
+            is PlayerPositionLookS2CPacket, is PlayerInteractBlockC2SPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is PlayerInteractEntityC2SPacket, is ResourcePackStatusC2SPacket -> {
                 blink()
                 return@handler
             }
 
-            // Flush on kb
+            // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
-                if (packet.id == player.id
-                    &&
-                    (packet.velocityX != 0 ||
-                        packet.velocityY != 0 ||
-                        packet.velocityZ != 0)
-                ) {
+                if (packet.id == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
                     blink()
                     return@handler
                 }
             }
 
+            // Flush on explosion
             is ExplosionS2CPacket -> {
-                if (packet.playerVelocityX != 0f ||
-                    packet.playerVelocityY != 0f ||
-                    packet.playerVelocityZ != 0f
-                ) {
+                if (packet.playerVelocityX != 0f || packet.playerVelocityY != 0f || packet.playerVelocityZ != 0f) {
                     blink()
                     return@handler
                 }
@@ -147,7 +144,7 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }
 
     val tickHandler = repeatable {
-        if (player.isDead || player.isUsingItem) {
+        if (!shouldLag()) {
             blink()
             return@repeatable
         }
@@ -163,22 +160,18 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         handlePackets()
     }
 
-
-    // TODO: Add lines just like how Breadcrumbs module does it
-
-    /*
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-        val color = if (ModuleBreadcrumbs.colorRainbow) rainbow() else ModuleBreadcrumbs.color
+        val color = if (colorRainbow) rainbow() else color
 
-        synchronized(ModuleBreadcrumbs.positions) {
+        synchronized(positions) {
             renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
-                    drawLineStrip(*ModuleBreadcrumbs.makeLines(color, ModuleBreadcrumbs.positions, event.partialTicks))
+                    drawLineStrip(*positions.map { Vec3(it.vec) }.toTypedArray())
                 }
             }
         }
-    }*/
+    }
 
     private fun handlePackets() {
         synchronized(packetQueue) {
@@ -217,6 +210,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
             positions.clear()
         }
     }
+
+    private fun shouldLag() =
+        world.findEnemy(0f..rangeToStart) != null && (!player.isUsingItem || !stopWhileUsingItem) && mc.currentScreen == null && !player.isDead
 
     data class PositionData(val vec: Vec3d, val delay: Long)
 }

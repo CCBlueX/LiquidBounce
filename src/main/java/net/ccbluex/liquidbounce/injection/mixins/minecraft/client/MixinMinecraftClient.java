@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.misc.HideClient;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
@@ -34,6 +35,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
@@ -43,10 +45,7 @@ import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -194,6 +193,15 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "handleInputEvents", at = @At("RETURN"))
     private void hookHandleInputEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new InputHandleEvent());
+    }
+
+    /**
+     * Hook KillAura enforced blocking state
+     */
+    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z", ordinal = 2))
+    private boolean hookEnforcedBlockingState(KeyBinding instance) {
+        return (ModuleKillAura.INSTANCE.getEnabled() && ModuleKillAura.AutoBlock.INSTANCE.getEnabled()
+                && ModuleKillAura.AutoBlock.INSTANCE.getBlockingStateEnforced()) || instance.isPressed();
     }
 
     /**

@@ -106,7 +106,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ClientChatMessageEvent::class,
     ClientChatErrorEvent::class,
     StateUpdateEvent::class,
-    WorldChangeEvent::class
+    WorldChangeEvent::class,
+    AltManagerUpdateEvent::class
 )
 
 /**
@@ -325,3 +326,6 @@ class ClientChatErrorEvent(val error: String) : Event()
 class StateUpdateEvent : Event() {
     val state: ForcedState = ForcedState()
 }
+
+@Nameable("altManagerUpdate")
+class AltManagerUpdateEvent(val success: Boolean, val message: String) : Event()

@@ -2,26 +2,13 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>ComplexCondition:CombatExtensions.kt$EnemyConfigurable$ModuleFocus.enabled &amp;&amp; (attackable || !ModuleFocus.combatFocus) &amp;&amp; !ModuleFocus.isInFocus(suspect)</ID>
-    <ID>ComplexCondition:Command.kt$Command$offset == 0 &amp;&amp; isNewParameter || offset == 1 &amp;&amp; !isNewParameter</ID>
-    <ID>ComplexCondition:GlfwInputAdapter.kt$GlfwInputAdapter$(action == GLFW_PRESS || action == GLFW_REPEAT) &amp;&amp; (key == GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_TAB)</ID>
     <ID>ComplexCondition:ModuleAutoWeapon.kt$ModuleAutoWeapon$stack.isNothing() || (!player.isCreative &amp;&amp; stack.damage &gt;= (stack.maxDamage - 2) &amp;&amp; ignoreDurability) || (stack.getEnchantment( KNOCKBACK ) != 0 &amp;&amp; ignoreKnockback)</ID>
-    <ID>ComplexCondition:ModuleBadWifi.kt$ModuleBadWifi$event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket || event.packet is HandSwingC2SPacket || event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket</ID>
-    <ID>ComplexCondition:ModuleBadWifi.kt$ModuleBadWifi$mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND</ID>
     <ID>ComplexCondition:ModuleBlink.kt$ModuleBlink$packet is PlayerMoveC2SPacket || packet is PlayerInteractBlockC2SPacket || packet is HandSwingC2SPacket || packet is PlayerActionC2SPacket || packet is PlayerInteractEntityC2SPacket</ID>
-    <ID>ComplexCondition:ModuleFly.kt$ModuleFly.Enderpearl$event.origin == TransferOrigin.SEND &amp;&amp; event.packet is TeleportConfirmC2SPacket &amp;&amp; isABitAboveGround() &amp;&amp; threwPearl</ID>
-    <ID>ComplexCondition:ModuleKillAura.kt$ModuleKillAura$rotation != null &amp;&amp; target != null &amp;&amp; target.boxedDistanceTo(player) &lt;= range &amp;&amp; facingEnemy( target, rotation, range.toDouble(), wallRange.toDouble() )</ID>
-    <ID>ComplexCondition:ModuleLiquidWalk.kt$ModuleLiquidWalk.NoCheatPlus$!player.input.sneaking &amp;&amp; !player.isTouchingWater &amp;&amp; standingOnWater() &amp;&amp; !collideBlockIntersects( detectionBox ) { it !is FluidBlock }</ID>
-    <ID>ComplexCondition:ModuleLongJump.kt$ModuleLongJump$autoJump &amp;&amp; player.isOnGround &amp;&amp; player.moving &amp;&amp; mode.activeChoice != NCPBow</ID>
     <ID>ComplexCondition:ModuleRegen.kt$ModuleRegen$(!noAir &amp;&amp; player.isOnGround) &amp;&amp; !player.abilities.creativeMode &amp;&amp; player.health &gt; 0 &amp;&amp; player.health &lt; health</ID>
-    <ID>ComplexCondition:ModuleSuperKnockback.kt$ModuleSuperKnockback.Packet$enemy is LivingEntity &amp;&amp; enemy.hurtTime &lt;= hurtTime &amp;&amp; chance &gt; Random.nextInt( 0, 99 ) &amp;&amp; !ModuleCriticals.wouldCrit()</ID>
-    <ID>ComplexCondition:ModuleTimerRange.kt$ModuleTimerRange$(balanceTimer &gt; 0 || balanceChange &gt; 0) &amp;&amp; (balanceTimer &lt; timerBalanceLimit * 2 || balanceChange &lt; 0)</ID>
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
     <ID>ComplexCondition:ModuleVelocity.kt$ModuleVelocity$(packet is EntityVelocityUpdateS2CPacket &amp;&amp; packet.id == player.id || packet is ExplosionS2CPacket) &amp;&amp; it.original &amp;&amp; Delayed.enabled</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
     <ID>ComplexCondition:SimulatedPlayer.kt$SimulatedPlayer$(horizontalCollision || this.isJumping) &amp;&amp; ( this.isClimbing() || pos.toBlockPos().getState() ?.isOf(Blocks.POWDER_SNOW) == true &amp;&amp; PowderSnowBlock.canWalkOnPowderSnow(player) )</ID>
-    <ID>ComplexCondition:SimulatedPlayer.kt$SimulatedPlayer$(this.onGround || bl &amp;&amp; k &lt;= swimHeight) &amp;&amp; jumpingCooldown == 0</ID>
-    <ID>ComplexCondition:SimulatedPlayer.kt$SimulatedPlayer$this.player.stepHeight &gt; 0.0f &amp;&amp; bl4 &amp;&amp; (bl || bl3)</ID>
     <ID>CyclomaticComplexMethod:Chat.kt$Chat$internal fun onClientError(packet: ClientErrorPacket)</ID>
     <ID>CyclomaticComplexMethod:CleanupPlan.kt$fun createCleanupPlan(otherScreen: GenericContainerScreen? = null): InventoryCleanupPlan</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
@@ -115,8 +102,7 @@
     <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
     <ID>MaxLineLength:ModuleAutoTool.kt$ModuleAutoTool$(stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)))</ID>
     <ID>MaxLineLength:ModuleAutoWeapon.kt$ModuleAutoWeapon$if</ID>
-    <ID>MaxLineLength:ModuleBadWifi.kt$ModuleBadWifi$if</ID>
-    <ID>MaxLineLength:ModuleBadWifi.kt$ModuleBadWifi$world.entities.firstOrNull { it.squaredDistanceTo(currentPosition) &lt;= rangeSquared &amp;&amp; it.shouldBeAttacked() }</ID>
+    <ID>MaxLineLength:ModuleBacktrack.kt$ModuleBacktrack$if</ID>
     <ID>MaxLineLength:ModuleBlink.kt$ModuleBlink$if</ID>
     <ID>MaxLineLength:ModuleBlink.kt$ModuleBlink$val firstPositionPacket = (packets.firstOrNull { it is PlayerMoveC2SPacket &amp;&amp; it.changePosition } ?: return@repeatable) as PlayerMoveC2SPacket</ID>
     <ID>MaxLineLength:ModuleChestAura.kt$ModuleChestAura$// if (CloseInstantlyOptions.enabled &amp;&amp; !closeInstantlyTimeout.hasElapsed(CloseInstantlyOptions.timeout.toLong())) {</ID>
@@ -132,9 +118,7 @@
     <ID>MaxLineLength:ModuleFly.kt$ModuleFly.Enderpearl$if</ID>
     <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*&gt;) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$entity != null &amp;&amp; !entity.isRemoved &amp;&amp; (!FailSwing.LimitRange.enabled || entity.boxedDistanceTo(player) &lt;= reach)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$if</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$return@repeat</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.NoCheatPlus$if</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.Vanilla$if</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))</ID>
@@ -237,7 +221,6 @@
     <ID>NewLineAtEndOfFile:WeightedToolItem.kt$net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedToolItem.kt</ID>
     <ID>PrintStackTrace:BrowserFileSystem.kt$BrowserFileSystem$e</ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
-    <ID>PrintStackTrace:ModuleBadWifi.kt$ModuleBadWifi$e</ID>
     <ID>PrintStackTrace:ModuleBlink.kt$ModuleBlink$e</ID>
     <ID>ReturnCount:ArmorComparator.kt$ArmorComparator$override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int</ID>
     <ID>ReturnCount:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
@@ -246,6 +229,7 @@
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
     <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*&gt;) ?: emptyArray&lt;String&gt;()).map { it as String } .toTypedArray())</ID>
+    <ID>SpreadOperator:UltralightJsEvents.kt$UltralightJsEvents$(it.context.globalObject, *args)</ID>
     <ID>SwallowedException:BrowserFileSystem.kt$BrowserFileSystem$e: InvalidPathException</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
@@ -275,7 +259,6 @@
     <ID>TooGenericExceptionCaught:CommandManager.kt$CommandManager$e: Exception</ID>
     <ID>TooGenericExceptionCaught:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>TooGenericExceptionCaught:JsModule.kt$JsModule$throwable: Throwable</ID>
-    <ID>TooGenericExceptionCaught:ModuleBadWifi.kt$ModuleBadWifi$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ModuleBlink.kt$ModuleBlink$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>TooGenericExceptionCaught:MojangApi.kt$MojangApi$e: Exception</ID>
@@ -290,8 +273,6 @@
     <ID>TooManyFunctions:SimulatedPlayer.kt$SimulatedPlayer : PlayerSimulation</ID>
     <ID>TooManyFunctions:UltralightEngine.kt$UltralightEngine</ID>
     <ID>TooManyFunctions:ViewOverlay.kt$ViewOverlay</ID>
-    <ID>UnusedParameter:AccountManager.kt$AccountManager$error: JavascriptObject</ID>
-    <ID>UnusedParameter:AccountManager.kt$AccountManager$success: JavascriptObject</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
     <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -&gt; Boolean = { true }</ID>
     <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -&gt; Boolean = { true }</ID>
@@ -317,7 +298,6 @@
     <ID>UnusedPrivateProperty:Events.kt$ScreenRenderEvent$mouseY: Int</ID>
     <ID>UnusedPrivateProperty:ModuleAutoFarm.kt$ModuleAutoFarm$val curr = currentTarget ?: return@repeatable</ID>
     <ID>UnusedPrivateProperty:ModuleBlink.kt$ModuleBlink$i</ID>
-    <ID>UnusedPrivateProperty:ModuleBugUp.kt$ModuleBugUp$private val indicator by boolean("Indicator", true)</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>

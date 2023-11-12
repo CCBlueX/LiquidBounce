@@ -52,22 +52,40 @@
     </style>
 
     <script>
-        events.on("close", (event) => {
-            event.cancelEvent();
+        console.log("Splashscreen loaded");
 
-            view.state("transitioning");
+        // Do a few debugging things - this might help to figure out issues on the user-end
+        console.log("Debugging");
+        console.log("View Var: " + view);
+        console.log("Events Var: " + events);
 
-            document.getElementById("background")
-                .classList.add("background-fade-out");
+        try {
+            events.on("close", (event) => {
+                event.cancelEvent();
 
-            let logo = document.getElementById("logo");
-            logo.addEventListener("animationend", (ev) => {
-                if (ev.animationName === "fade") {
-                    view.state("end");
-                }
+                view.state("transitioning");
+
+                document.getElementById("background")
+                    .classList.add("background-fade-out");
+
+                let logo = document.getElementById("logo");
+                logo.addEventListener("animationend", (ev) => {
+                    if (ev.animationName === "fade") {
+                        view.state("end");
+                    }
+                });
+                logo.classList.add("fade-out");
             });
-            logo.classList.add("fade-out");
-        });
+        } catch (e) {
+            console.error("Error while setting up event listener: " + e);
+
+            // This is a fallback in case the event listener fails
+            try {
+                view.state("end");
+            } catch (e) {
+                console.error("Error while setting view state on fallback: " + e);
+            }
+        }
     </script>
 </head>
 
