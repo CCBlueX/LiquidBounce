@@ -456,7 +456,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private fun updateEnemySelection() {
         val rangeSquared = range * range
 
-        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
+        targetTracker.validateLock {
+            it.shouldBeAttacked() && it.squaredBoxedDistanceTo(player) <= rangeSquared
+        }
 
         val eyes = player.eyes
 
