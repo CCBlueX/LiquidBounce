@@ -79,13 +79,10 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                     (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
                 }
 
-                val processBackPackets =
-                    target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)
-
                 position?.setPos(pos)
 
                 // Is the target's actual position closer than its tracked position?
-                if (processBackPackets) {
+                if (target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)) {
                     // Process all packets. We want to be able to hit the enemy, not the opposite.
                     processPackets(true)
                     // And stop right here. No need to cancel further packets.
