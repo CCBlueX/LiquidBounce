@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimation;
+import net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
@@ -67,14 +68,22 @@ public abstract class MixinHeldItemRenderer {
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
         if (ModuleSwordBlock.INSTANCE.getEnabled() && item.getItem() instanceof SwordItem) {
-            matrices.translate(-0.1F, 0.05F, 0.0F);
+            // If is old combat we do not want to translate the item because ViaFabricPlus already does that
+            final boolean isOldCombat = ProtocolUtilKt.isOldCombat();
 
+            if (!isOldCombat) {
+                matrices.translate(-0.1F, 0.05F, 0.0F);
+            }
+
+            // But this is still needed - because ViaFabricPlus does not do that
             final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
             applySwingOffset(matrices, arm, swingProgress);
 
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-102.25f));
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(13.365f));
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(78.05f));
+            if (!isOldCombat) {
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-102.25f));
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(13.365f));
+                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(78.05f));
+            }
         }
     }
 

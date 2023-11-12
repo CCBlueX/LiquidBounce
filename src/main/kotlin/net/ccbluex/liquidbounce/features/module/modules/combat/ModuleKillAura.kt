@@ -342,7 +342,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Did you ever send a rotation before?
         val rotation = RotationManager.currentRotation
 
-        if (target == null) {
+        if (target == null || (!AutoBlock.onScanRange && target.boxedDistanceTo(player) > range)) {
             AutoBlock.stopBlocking()
         }
 
