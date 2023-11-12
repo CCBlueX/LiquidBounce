@@ -319,17 +319,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@handler
         }
 
-        // Killaura in spectator-mode is pretty useless, trust me.
-        if (player.isSpectator) {
-            targetTracker.cleanup()
-            return@handler
-        }
-
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        if (isInInventoryScreen && !ignoreOpenInventory) {
+        if ((isInInventoryScreen && !ignoreOpenInventory) || player.isSpectator) {
             // Cleanup current target tracker
             targetTracker.cleanup()
             return@handler
@@ -364,9 +358,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 // Check if between enemy and player is another entity
                 choosenEntity = raytraceEntity(range.toDouble(), rotation, filter = {
                     when (raycast) {
-                        TRACE_NONE -> false
                         TRACE_ONLYENEMY -> it.shouldBeAttacked()
                         TRACE_ALL -> true
+                        else -> false
                     }
                 }) ?: target
 
@@ -452,7 +446,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private val legitAimpointTracker = LegitAimpointTracker(legitAimingConfigurable)
-
     private var lastRotation: VecRotation? = null
 
     /**
