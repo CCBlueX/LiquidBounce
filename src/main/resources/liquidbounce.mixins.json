@@ -42,6 +42,8 @@
     "minecraft.gui.MixinScreen",
     "minecraft.gui.MixinSharedConstants",
     "minecraft.gui.MixinSplashOverlay",
+    "minecraft.gui.custom.MixinConnectScreen",
+    "minecraft.gui.custom.MixinDisconnectedScreen",
     "minecraft.item.MixinHeldItemRenderer",
     "minecraft.item.MixinItem",
     "minecraft.network.MixinClientConnection",

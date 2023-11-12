@@ -32,8 +32,10 @@ import kotlin.random.Random
  */
 object ModuleSpammer : Module("Spammer", Category.MISC) {
 
-    private val delay by intRange("Delay", 12..14, 0..20)
-    private val message by text("Message", "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}")
+    private val delay by intRange("Delay", 12..14, 0..300)
+    private val message by text("Message",
+        "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}")
+        .doNotInclude()
     // todo: add back when textArray is supported
     // private val messages by textArray(
     //    "Messages",
@@ -43,6 +45,7 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
     //    )
     //)
     private val customFormatter by boolean("CustomFormatter", false)
+        .doNotInclude()
 
     val repeatable = repeatable {
         val text = if (customFormatter) {
@@ -60,7 +63,7 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
         } else {
             network.sendChatMessage(text)
         }
-        wait(delay.random())
+        waitSeconds(delay.random()) // Delay in seconds (20 ticks per second)
     }
 
     private fun format(text: String): String {

@@ -64,9 +64,12 @@ object CommandConfig {
                             } else {
                                 "local"
                             }
+
+                        // Get online config from external source
                         if (name.startsWith("http")) {
                             get(name).runCatching {
-                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                    ConfigSystem.autoConfigGson)
                             }.onFailure {
                                 chat(regular(command.result("failedToLoadOnline", variable(name))))
                             }.onSuccess {
@@ -74,6 +77,8 @@ object CommandConfig {
                             }
                             return@handler
                         }
+
+                        // Load config from either local or online storage
                         when (state) {
                             "local" -> {
                                 ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
@@ -82,7 +87,8 @@ object CommandConfig {
                                         return@handler
                                     }
 
-                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                        ConfigSystem.autoConfigGson)
                                 }.onFailure {
                                     chat(regular(command.result("failedToLoadLocal", variable(name))))
                                 }.onSuccess {
@@ -92,7 +98,8 @@ object CommandConfig {
 
                             "online" -> {
                                 requestSettingsScript(name).runCatching {
-                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader())
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                        ConfigSystem.autoConfigGson)
                                 }.onFailure {
                                     chat(regular(command.result("failedToLoadOnline", variable(name))))
                                 }.onSuccess {
@@ -166,7 +173,8 @@ object CommandConfig {
                     )
                     .handler { command, args ->
                         val name = args[0] as String
-                        val overwrite = (args.getOrNull(1) as? String ?: "false").equals("true", true)
+                        val overwrite = (args.getOrNull(1) as? String ?: "false")
+                            .equals("true", true)
 
                         ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
                             if (exists()) {
@@ -182,10 +190,9 @@ object CommandConfig {
                                 createNewFile()
                             }
 
-                            // TODO: Fix module states being stored
-
                             // Store the config
-                            ConfigSystem.serializeConfigurable(ModuleManager.modulesConfigurable, writer())
+                            ConfigSystem.serializeConfigurable(ModuleManager.modulesConfigurable, writer(),
+                                ConfigSystem.autoConfigGson)
                         }.onFailure {
                             chat(regular(command.result("failedToCreate", variable(name))))
                         }.onSuccess {

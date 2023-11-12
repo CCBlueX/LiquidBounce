@@ -19,6 +19,9 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,6 +30,19 @@ import javax.annotation.Nullable;
 
 @Mixin(Screen.class)
 public abstract class MixinScreen {
+
+    @Shadow
+    protected abstract void remove(Element child);
+
+    @Shadow
+    protected TextRenderer textRenderer;
+    @Shadow
+    public int height;
+    @Shadow
+    public int width;
+
+    @Shadow
+    protected abstract <T extends Element & Drawable> T addDrawableChild(T drawableElement);
 
     @Shadow
     @Nullable

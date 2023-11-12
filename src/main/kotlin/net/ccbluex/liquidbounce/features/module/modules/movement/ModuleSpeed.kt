@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.timer
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.MovementType
@@ -42,10 +41,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices(
         "Mode", SpeedYPort, arrayOf(
-            Verus,
-            SpeedYPort,
-            LegitHop,
-            Custom
+            Verus, SpeedYPort, LegitHop, Custom, Spartan524
         )
     )
 
@@ -125,7 +121,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         private val resetHorizontalSpeed by boolean("ResetHorizontalSpeed", true)
         private val customStrafe by boolean("CustomStrafe", false)
         private val strafe by float("Strafe", 1f, 0.1f..10f)
-        private val verticalSpeed by float("VerticalSpeed", 0.42f, 0.1f..3f)
+        private val verticalSpeed by float("VerticalSpeed", 0.42f, 0.0f..3f)
         private val resetVerticalSpeed by boolean("ResetVerticalSpeed", true)
         private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
 
@@ -139,7 +135,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
             when {
                 player.isOnGround -> {
                     player.strafe(speed = horizontalSpeed.toDouble())
-                    player.velocity.y = verticalSpeed.toDouble()
+                    if (verticalSpeed > 0) player.velocity.y = verticalSpeed.toDouble()
                 }
 
                 customStrafe -> player.strafe(speed = strafe.toDouble())
@@ -158,4 +154,36 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         }
     }
 
+    /**
+     * @anticheat Spartan
+     * @anticheatVersion phase 524
+     * @testedOn minecraft.vagdedes.com
+     * @note it might flag a bit at the start, but then stops for some reason
+     */
+    private object Spartan524 : Choice("Spartan524") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            if (!player.moving) {
+                return@repeatable
+            }
+
+            Timer.requestTimerSpeed(1.1f, priority = Priority.IMPORTANT_FOR_USAGE)
+
+            when {
+                player.isOnGround -> {
+                    player.strafe(speed = 0.84)
+                    player.velocity.y = 0.16
+                }
+            }
+            player.strafe()
+        }
+
+        override fun enable() {
+            player.velocity.x = 0.0
+            player.velocity.z = 0.0
+            player.velocity.y = 0.0
+        }
+    }
 }

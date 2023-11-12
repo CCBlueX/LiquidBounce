@@ -78,6 +78,10 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
         this.wait { ticks }
     }
 
+    suspend fun waitSeconds(ticks: Int) {
+        this.wait { ticks * 20 }
+    }
+
     /**
      * Waits for the amount of ticks that is retrieved via [ticksToWait]
      */

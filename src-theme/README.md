@@ -47,8 +47,8 @@ CSS, contact us on our support@liquidbounce.net email or on GitHub (the faster w
 
 ## Building
 
-To build the themes, you need to have Node.js and Python installed.
-Then run `python build.py` to build the theme.
+To build the themes, you need to have Node.js installed.
+Then run `node bundle.py` to build the theme.
 
 ### Testing
 

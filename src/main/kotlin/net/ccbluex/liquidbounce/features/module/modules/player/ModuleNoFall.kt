@@ -47,7 +47,7 @@ import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 
 /**
- * NoFall modulen
+ * NoFall module
  *
  * Protects you from taking fall damage.
  */
@@ -56,7 +56,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     private val modes = choices(
         "Mode", SpoofGround, arrayOf(
-            SpoofGround, NoGround, Packet, MLG
+            SpoofGround, NoGround, Packet, MLG, Spartan524Flag
         )
     )
 
@@ -100,6 +100,26 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         val repeatable = repeatable {
             if (player.fallDistance > 2f) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
+            }
+        }
+
+    }
+
+    /**
+     * @anticheat Spartan
+     * @anticheatVersion phase 524
+     * @testedOn minecraft.vagdedes.com
+     * @note it gives you 6 flags for 50 blocks, which isn't enough to get kicked
+     */
+    private object Spartan524Flag : Choice("Spartan524Flag") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            if (player.fallDistance > 2f) {
+                network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
+                wait { 1 }
             }
         }
 
@@ -190,12 +210,14 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
                 interactionResult == ActionResult.FAIL -> {
                     return
                 }
+
                 interactionResult == ActionResult.PASS -> {
                     // Ok, we cannot place on the block, so let's just use the item in the direction
                     // without targeting a block (for buckets, etc.)
                     handlePass(hand, stack, onItemUseSuccess)
                     return
                 }
+
                 interactionResult.isAccepted -> {
                     val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
 

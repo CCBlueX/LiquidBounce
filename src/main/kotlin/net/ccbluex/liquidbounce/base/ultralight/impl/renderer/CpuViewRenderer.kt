@@ -54,7 +54,10 @@ class CpuViewRenderer : ViewRenderer {
     override fun render(view: UltralightView, context: DrawContext) {
         // As we are using the CPU renderer, draw with a bitmap (we did not set a custom surface)
         val surface = view.surface() as UltralightBitmapSurface
-        val bitmap = surface.bitmap()
+        // THE CRASH IS HERE
+        // Problematic frame:
+        // # C  [libUltralightCore.so+0x2cee6]  ultralight::BitmapSurface::bitmap()+0x16
+        // val bitmap = surface.bitmap()
         val width = view.width().toInt()
         val height = view.height().toInt()
 
@@ -64,6 +67,8 @@ class CpuViewRenderer : ViewRenderer {
         val dirtyBounds = surface.dirtyBounds()
 
         if (dirtyBounds.isValid) {
+            // this might fix the issue mentioned above
+            val bitmap = surface.bitmap()
             val imageData = bitmap.lockPixels()
 
             glPixelStorei(GL_UNPACK_SKIP_ROWS, 0)

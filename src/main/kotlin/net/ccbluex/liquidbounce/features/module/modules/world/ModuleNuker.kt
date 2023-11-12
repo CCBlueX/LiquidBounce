@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -62,7 +61,7 @@ import java.awt.Color
  *
  * Destroys blocks around you.
  */
-object ModuleNuker : Module("Nuker", Category.WORLD) {
+object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
     val mode = choices("Mode", OneByOne, arrayOf(OneByOne, Nuke))
 
@@ -245,7 +244,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
                     val (rotation, _) = raytrace
                     RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
 
-                    this.currentTarget = DestroyerTarget(pos, rotation)
+                    currentTarget = DestroyerTarget(pos, rotation)
                     return
                 }
             }
@@ -258,7 +257,72 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
         override val parent: ChoiceConfigurable
             get() = mode
 
-        private val nukeRange by float("Range", 5f, 1f..100f)
+        private val areaMode = choices("AreaMode", Sphere, arrayOf(Sphere, Floor))
+
+        abstract class AreaChoice(name: String) : Choice(name) {
+            abstract fun getBlocks(): List<Pair<BlockPos, BlockState>>
+        }
+
+        object Sphere : AreaChoice("Sphere") {
+
+            override val parent: ChoiceConfigurable
+                get() = areaMode
+
+            private val sphereRadius by float("Radius", 5f, 1f..50f)
+
+            override fun getBlocks() = searchTargets(sphereRadius)
+
+        }
+
+        object Floor : AreaChoice("Floor") {
+
+            override val parent: ChoiceConfigurable
+                get() = areaMode
+
+            private val startPosition by text("StartPosition", "0 0 0")
+            private val endPosition by text("EndPosition", "0 0 0")
+
+            private val topToBottom by boolean("TopToBottom", true)
+
+            override fun getBlocks(): List<Pair<BlockPos, BlockState>> {
+                val (startX, startY, startZ) = startPosition.split(" ").map { it.toInt() }
+                val (endX, endY, endZ) = endPosition.split(" ").map { it.toInt() }
+
+                // Create ranges from start position to end position, they might be flipped, so we need to use min/max
+                val xRange = minOf(startX, endX)..maxOf(startX, endX)
+                val yRange = minOf(startY, endY)..maxOf(startY, endY)
+                val zRange = minOf(startZ, endZ)..maxOf(startZ, endZ)
+
+                // Iterate through each Y range first, so we can as soon we find a block on the floor,
+                // we can skip the rest
+                // From top to bottom
+
+                // Check if [topToBottom] is enabled, if so reverse the range
+                for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
+                    val m = xRange.flatMap { x ->
+                        zRange.mapNotNull { z ->
+                            val pos = BlockPos(x, y, z)
+                            val state = pos.getState() ?: return@mapNotNull null
+
+                            if (!state.isAir && !blacklistedBlocks.contains(state.block) && !isOnPlatform(pos)) {
+                                pos to state
+                            } else {
+                                null
+                            }
+                        }
+                    }
+
+                    if (m.isNotEmpty()) {
+                        return m
+                    }
+                }
+
+                return emptyList()
+            }
+
+        }
+
+
         private val cps by intRange("CPS", 40..50, 1..200)
         private val doNotStop by boolean("DoNotStop", false)
 
@@ -270,7 +334,43 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
         private var sendOutPackets = 0
         private val packetChronometer = Chronometer()
 
+        private val highlightBlocks by boolean("HighlightBlocks", true)
+        private val highlightedBlocks = mutableListOf<BlockPos>()
+
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
+
+            renderEnvironmentForWorld(matrixStack) {
+                for (pos in highlightedBlocks) {
+                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                    val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+                    // Show red if block is air, green if not
+                    val base = if (pos.getState()?.isAir == true) {
+                        Color4b(255, 0, 0, 255)
+                    } else {
+                        Color4b(0, 255, 0, 255)
+                    }
+
+                    val baseColor = base.alpha(50)
+                    val outlineColor = base.alpha(100)
+
+                    withPosition(vec3) {
+                        withColor(baseColor) {
+                            drawSolidBox(box)
+                        }
+
+                        withColor(outlineColor) {
+                            drawOutlinedBox(box)
+                        }
+                    }
+                }
+            }
+        }
+
         val repeat = repeatable {
+            highlightedBlocks.clear()
+
             if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
                 wait { switchDelay }
                 return@repeatable
@@ -280,7 +380,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
                 return@repeatable
             }
 
-            val targets = searchTargets(nukeRange)
+            val areaChoice = areaMode.activeChoice as AreaChoice
+            val targets = areaChoice.getBlocks()
             if (targets.isEmpty()) {
                 return@repeatable
             }
@@ -288,6 +389,10 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
             val cps = cpsScheduler.clicks({ ModuleNuker.enabled }, cps)
 
             for ((pos, _) in targets.take(cps)) {
+                if (highlightBlocks) {
+                    highlightedBlocks += pos
+                }
+
                 network.sendPacket(
                     PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
                 )
@@ -307,7 +412,6 @@ object ModuleNuker : Module("Nuker", Category.WORLD) {
             }
 
             if (packetChronometer.hasElapsed(1000)) {
-                chat("[Nuker] Sent $sendOutPackets packets in the last second.")
                 sendOutPackets = 0
                 packetChronometer.reset()
             }
