@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.squareBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.TrackedPosition
@@ -70,8 +71,6 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                 }
             }
 
-            it.cancelEvent()
-
             // Update box position with these packets
             if (packet is EntityS2CPacket && packet.getEntity(world) == target || packet is EntityPositionS2CPacket && packet.id == target?.id) {
                 val pos = if (packet is EntityS2CPacket) {
@@ -80,14 +79,21 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
                     (packet as EntityPositionS2CPacket).let { vec -> Vec3d(vec.x, vec.y, vec.z) }
                 }
 
-                // Is the target's actual position closer than its tracked position?
-                if (player.squaredBoxedDistanceTo(pos!!) < player.squaredBoxedDistanceTo(target!!)) {
-                    // Process all packets. We want to be able to hit the enemy, not the opposite.
-                    processPackets(true)
-                }
+                val processBackPackets =
+                    target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)
 
                 position?.setPos(pos)
+
+                // Is the target's actual position closer than its tracked position?
+                if (processBackPackets) {
+                    // Process all packets. We want to be able to hit the enemy, not the opposite.
+                    processPackets(true)
+                    // And stop right here. No need to cancel further packets.
+                    return@handler
+                }
             }
+
+            it.cancelEvent()
 
             packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
         }
