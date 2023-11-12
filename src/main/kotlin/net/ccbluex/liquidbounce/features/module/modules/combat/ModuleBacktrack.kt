@@ -136,7 +136,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 
-        if (!enemy.shouldBeAttacked())
+        if (!shouldConsiderAsEnemy(enemy))
             return@handler
 
         // Reset on enemy change
@@ -184,6 +184,8 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         position = null
     }
 
-    private fun shouldCancelPackets() =
-        target != null && target!!.isAlive && target!!.boxedDistanceTo(player) in range && player.age > 10
+    private fun shouldConsiderAsEnemy(target: Entity) =
+        target.shouldBeAttacked() && target.boxedDistanceTo(player) in range && player.age > 10
+
+    private fun shouldCancelPackets() = target != null && target!!.isAlive && shouldConsiderAsEnemy(target!!)
 }
