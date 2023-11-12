@@ -595,11 +595,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             if (isCrit) {
                 world.playSound(
                     null,
-                    entity.x,
-                    entity.y,
-                    entity.z,
+                    player.x,
+                    player.y,
+                    player.z,
                     SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                    entity.soundCategory,
+                    player.soundCategory,
                     1.0f,
                     1.0f
                 )
