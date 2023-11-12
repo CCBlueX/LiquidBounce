@@ -315,8 +315,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE) {
+            return@handler
+        }
+
         // Killaura in spectator-mode is pretty useless, trust me.
-        if (it.state != EventState.PRE || player.isSpectator) {
+        if (player.isSpectator) {
+            targetTracker.cleanup()
             return@handler
         }
 
