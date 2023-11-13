@@ -22,10 +22,14 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoWeb
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoWeb.choices
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Box
@@ -43,6 +47,9 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
     }
 
     object Legacy : TargetRenderAppearance("Legacy") {
+
+        override val parent: ChoiceConfigurable
+            get() = this.parent
 
         private val size by float("Size", 0.5f, 0.1f..2f)
 
@@ -73,28 +80,52 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
     }
 
     object Circle : TargetRenderAppearance("Circle") {
+        override val parent: ChoiceConfigurable
+            get() = parent
 
         private val radius by float("Radius", 0.85f, 0.1f..2f)
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
             .listen { min(radius, it) }
 
-        private val height by float("Height", 0.1f, 0.02f..2f)
+        private val heightMode = choices(parent.module, "HeightMode", FeetHeight, arrayOf(FeetHeight, TopHeight))
 
         private val outerColor by color("Color", Color4b(0x64007CFF, true))
         private val innerColor by color("Color", Color4b(0x64007CFF, true))
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+            val pos =
+                entity.interpolateCurrentPosition(partialTicks) +
+                    Vec3(0.0, (heightMode.get() as HeightMode).getHeight(entity), 0.0)
+
             with(env) {
-                withPosition(entity.interpolateCurrentPosition(partialTicks)) {
+                withPosition(pos) {
                     drawGradientCircle(radius, innerRadius, outerColor, innerColor)
                 }
             }
         }
     }
 
+    object FeetHeight : HeightMode("Feet") { }
+
+    object TopHeight : HeightMode("Top") {
+        override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY
+    }
+
+    object realativeHeight : HeightMode("Realtive") {
+        private val heigth by float("Height", 0.5f, 0f..1f)
+
+        override fun getHeight(entity: Entity) = heigth.toDouble()
+    }
+
+
 }
 
 abstract class TargetRenderAppearance(name: String) : Choice(name) {
-    override val parent: ChoiceConfigurable
-        get() = this.parent
+
     open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {}
 }
+
+abstract class HeightMode(name: String) : Choice(name) {
+    open fun getHeight(entity: Entity) = 0.0
+}
+
+
