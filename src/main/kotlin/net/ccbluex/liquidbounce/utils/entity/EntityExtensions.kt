@@ -191,8 +191,8 @@ fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
     return pos.squaredDistanceTo(otherPos)
 }
 
-fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
-    return Vec3(
+fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
+    return Vec3d(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
         this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta

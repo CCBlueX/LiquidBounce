@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.event.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -26,11 +28,13 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
+import org.joml.Matrix4f
 
 /**
  * Nametags module
@@ -49,35 +53,76 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val fontRenderer: FontRenderer
         get() = LiquidBounceFonts.DEFAULT_FONT
 
-    val renderHandler =
-        handler<WorldRenderEvent>(priority = -100) { event ->
-            val matrixStack = event.matrixStack
+    private var mvMatrix: Matrix4f? = null
+    private var projectionMatrix: Matrix4f? = null
 
-            renderEnvironmentForWorld(matrixStack) {
+    val overlayRenderHandler =
+        handler<OverlayRenderEvent> { event ->
+            renderEnvironmentForGUI {
                 val nametagRenderer = NametagRenderer()
 
                 try {
-                    drawNametags(nametagRenderer, event.partialTicks)
+                    drawNametags(nametagRenderer, event.tickDelta)
                 } finally {
                     nametagRenderer.commit(this)
                 }
             }
         }
 
+    val renderHandler =
+        handler<WorldRenderEvent>(priority = -100) { event ->
+            val matrixStack = event.matrixStack
+
+            this.mvMatrix = Matrix4f(matrixStack.peek().positionMatrix)
+            this.projectionMatrix = RenderSystem.getProjectionMatrix()
+        }
+
     private fun RenderEnvironment.drawNametags(
         nametagRenderer: NametagRenderer,
         tickDelta: Float,
     ) {
+        val nametagsToRender = collectAndSortNametagsToRender(tickDelta)
+
+        nametagsToRender.forEachIndexed { index, (pos, nametagInfo) ->
+            // We want nametags that are closer to the player to be rendered above nametags that are further away.
+            val renderZ = index / nametagsToRender.size.toFloat()
+
+            nametagRenderer.drawNametag(
+                this,
+                nametagInfo,
+                Vec3(pos.x, pos.y, renderZ),
+            )
+        }
+    }
+
+    /**
+     * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
+     * add what should be rendered ([NametagInfo]). The nametags are sorted in order of rendering.
+     */
+    private fun collectAndSortNametagsToRender(tickDelta: Float): List<Pair<Vec3, NametagInfo>> {
+        val nametagsToRender = mutableListOf<Pair<Vec3, NametagInfo>>()
+
         for (entity in ModuleESP.findRenderedEntities()) {
             val nametagPos =
                 entity
                     .interpolateCurrentPosition(tickDelta)
-                    .add(Vec3(0.0F, entity.getEyeHeight(entity.pose) + 0.55F, 0.0F))
+                    .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
-            val text = NametagTextFormatter(entity).format()
+            val screenPos =
+                WorldToScreen.calculateScreenPos(
+                    nametagPos,
+                    mvMatrix!!,
+                    projectionMatrix!!,
+                ) ?: continue
 
-            nametagRenderer.drawNametag(this, text, nametagPos)
+            val nametagInfo = NametagInfo.createForEntity(entity)
+
+            nametagsToRender.add(Pair(screenPos, nametagInfo))
         }
+
+        nametagsToRender.sortByDescending { it.first.z }
+
+        return nametagsToRender
     }
 
     /**

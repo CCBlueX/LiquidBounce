@@ -143,7 +143,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 renderEnvironmentForWorld(matrixStack) {
                     val pos = landingPosition.entity
                                 .interpolateCurrentPosition(event.partialTicks)
-                                .toVec3d()
 
                     withColor(Color4b(255, 0, 0, 100)) {
                         drawSolidBox(landingPosition.entity.getDimensions(landingPosition.entity.pose)!!.getBoxAt(pos))

@@ -87,6 +87,7 @@ class RenderBufferBuilder<I: VertexInputType>(
         RenderSystem.setShader { vertexFormat.shaderProgram }
 
         tesselator.draw()
+        tesselator.buffer.reset()
     }
 
     companion object {
