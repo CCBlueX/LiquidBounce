@@ -280,6 +280,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     private var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
+
+    private var renderTarget: Entity? = null;
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
@@ -290,7 +292,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
-        val target = targetTracker.lockedOnTarget ?: return
+        val target = renderTarget ?: return
         renderEnvironmentForWorld(matrixStack) {
             targetRenderer.render(this, target, partialTicks)
         }
@@ -485,6 +487,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             rangeSquared.toDouble()
         }
 
+        renderTarget = null
+
         for (target in targetTracker.enemies()) {
             if (target.squaredBoxedDistanceTo(player) > scanRange) {
                 continue
@@ -509,6 +513,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 wallsRange = wallRange.toDouble(),
                 rotationPreference = rotationPreference
             ) ?: continue
+
+            renderTarget = target
 
             // lock on target tracker
             targetTracker.lock(target)
