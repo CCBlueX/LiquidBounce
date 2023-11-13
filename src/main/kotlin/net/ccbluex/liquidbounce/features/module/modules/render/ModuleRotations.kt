@@ -50,9 +50,11 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        if (!showRotationVector) {
+        if (!showRotationVector)
             return@handler
-        }
+        if(!shouldSendCustomRotation())
+            return@handler
+
 
         val serverRotation = RotationManager.serverRotation
         val camera = mc.gameRenderer.camera
@@ -74,7 +76,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     fun shouldDisplayRotations() = shouldSendCustomRotation() || ModuleFreeCam.shouldDisableRotations()
 
     /**
-     * Should we even send a rotation if we use freeCam
+     * Should we even send a rotation if we use freeCam?
      */
     fun shouldSendCustomRotation(): Boolean {
         val special = arrayOf(ModuleDerp).any { it.enabled }
