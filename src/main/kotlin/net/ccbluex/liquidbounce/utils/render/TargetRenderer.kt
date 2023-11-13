@@ -23,38 +23,34 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.drawSolidBox
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Box
+import kotlin.math.min
 
 /**
  * A target tracker to choose the best enemy to attack
  */
 class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
-    val appearance = choices(module, "Mode", Legacy, arrayOf(Legacy))
+    val appearance = choices(module, "Mode", Legacy, arrayOf(Legacy, Circle))
 
     fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
         ((appearance.activeChoice) as TargetRenderAppearance).render(env, entity, partialTicks)
     }
 
     object Legacy : TargetRenderAppearance("Legacy") {
-        override val parent: ChoiceConfigurable
-            get() = this.parent
 
-        val size by float("Size", 0.5f, 0.1f..2f)
+        private val size by float("Size", 0.5f, 0.1f..2f)
 
-        val height by float("Height", 0.1f, 0.02f..2f)
+        private val height by float("Height", 0.1f, 0.02f..2f)
 
-        val color by color("Color", Color4b(0x007CFF64, true))
+        private val color by color("Color", Color4b(0x64007CFF, true))
 
-        val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
+        private val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
             val box = Box(
                 -size.toDouble(), 0.0, -size.toDouble(),
@@ -76,8 +72,29 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         }
     }
 
+    object Circle : TargetRenderAppearance("Circle") {
+
+        private val radius by float("Radius", 0.85f, 0.1f..2f)
+        private val innerRadius by float("InnerRadius", 0f, 0f..2f)
+            .listen { min(radius, it) }
+
+        private val height by float("Height", 0.1f, 0.02f..2f)
+
+        private val outerColor by color("Color", Color4b(0x64007CFF, true))
+        private val innerColor by color("Color", Color4b(0x64007CFF, true))
+        override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+            with(env) {
+                withPosition(entity.interpolateCurrentPosition(partialTicks)) {
+                    drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                }
+            }
+        }
+    }
+
 }
 
-abstract class TargetRenderAppearance(name: String):  Choice(name) {
+abstract class TargetRenderAppearance(name: String) : Choice(name) {
+    override val parent: ChoiceConfigurable
+        get() = this.parent
     open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {}
 }
