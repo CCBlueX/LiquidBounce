@@ -201,6 +201,9 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
 }
 
 fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
+    if(this.age == 0)
+        return this.rotation
+
     return Rotation(
         this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
         this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
