@@ -40,16 +40,16 @@ import kotlin.math.min
  */
 class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
-    val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle()))
+    val appearance = choices(module, "Mode", Legacy, arrayOf(Legacy, Circle))
 
     fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
         ((appearance.activeChoice) as TargetRenderAppearance).render(env, entity, partialTicks)
     }
 
-    inner class Legacy : TargetRenderAppearance("Legacy") {
+    object Legacy : TargetRenderAppearance("Legacy") {
 
         override val parent: ChoiceConfigurable
-            get() = appearance
+            get() = this.parent
 
         private val size by float("Size", 0.5f, 0.1f..2f)
 
@@ -79,9 +79,9 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         }
     }
 
-    inner class Circle : TargetRenderAppearance("Circle") {
+    object Circle : TargetRenderAppearance("Circle") {
         override val parent: ChoiceConfigurable
-            get() = appearance
+            get() = this.parent
 
         private val radius by float("Radius", 0.85f, 0.1f..2f)
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
