@@ -46,8 +46,8 @@ import kotlin.math.sqrt
  * Configurable to configure the dynamic rotation engine
  */
 class RotationsConfigurable : Configurable("Rotations") {
-    val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
-    val fixVelocity by boolean("FixVelocity", true)
+    var turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
+    var fixVelocity by boolean("FixVelocity", true)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     val ticksUntilReset by int("TicksUntilReset", 5, 1..30)
     val silent by boolean("Silent", true)
