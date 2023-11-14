@@ -90,9 +90,10 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         private val outerColor by color("OuterColor", Color4b(0x64007CFF, true))
         private val innerColor by color("InnerColor", Color4b(0x64007CFF, true))
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+            val height = (heightMode.activeChoice as HeightMode).getHeight(entity)
             val pos =
                 entity.interpolateCurrentPosition(partialTicks).toVec3() +
-                    Vec3(0.0, 1.0, 0.0)
+                    Vec3(0.0, height, 0.0)
 
             with(env) {
                 withPosition(pos) {
