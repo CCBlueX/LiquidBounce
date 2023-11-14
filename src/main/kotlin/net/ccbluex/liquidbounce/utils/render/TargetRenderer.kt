@@ -39,7 +39,7 @@ import kotlin.math.min
  */
 class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
-    val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle(module)))
+    val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle(module), GlowingCircle(module)))
 
     fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
         ((appearance.activeChoice) as TargetRenderAppearance).render(env, entity, partialTicks)
@@ -86,7 +86,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
             .listen { min(radius, it) }
 
-        val heightMode = choices(
+        private val heightMode = choices(
             module,
             "HeightMode",
             { FeetHeight(it) },
@@ -109,6 +109,58 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
                 withPosition(pos) {
                     withDisabledCull {
                         drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                    }
+                    if(outline.enabled) {
+                        drawCircleOutline(radius, outline.color)
+                    }
+                }
+            }
+        }
+
+    }
+
+    inner class GlowingCircle(module: Module) : TargetRenderAppearance("GlowingCircle") {
+        override val parent: ChoiceConfigurable
+            get() = appearance
+
+        private val radius by float("Radius", 0.85f, 0.1f..2f)
+
+        private val heightMode = choices(
+            module,
+            "HeightMode",
+            { FeetHeight(it) },
+            { arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it)) }
+        )
+
+        private val color by color("OuterColor", Color4b(0x64007CFF, true))
+        private val glowColor by color("GlowColor", Color4b(0x64007CFF, true))
+
+        private val glowHeight by float("GlowHeight", 0.3f, -1f..1f)
+
+        private val outline = tree(Outline())
+
+
+        override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+            val height = (heightMode.activeChoice as HeightMode).getHeight(entity)
+            val pos =
+                entity.interpolateCurrentPosition(partialTicks).toVec3() +
+                    Vec3(0.0, height, 0.0)
+
+            with(env) {
+                withPosition(pos) {
+                    withDisabledCull {
+                        drawGradientCircle(
+                            radius,
+                            radius,
+                            color,
+                            glowColor,
+                            Vec3(0.0, glowHeight.toDouble(), 0.0))
+
+                        drawGradientCircle(
+                            radius,
+                            0f,
+                            color,
+                            color)
                     }
                     if(outline.enabled) {
                         drawCircleOutline(radius, outline.color)
