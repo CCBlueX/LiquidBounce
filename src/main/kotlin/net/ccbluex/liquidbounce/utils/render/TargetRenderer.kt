@@ -85,7 +85,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
             .listen { min(radius, it) }
 
-        private val heightMode = choices(module, "HeightMode", FeetHeight, arrayOf(FeetHeight, TopHeight))
+        private val heightMode = choices(module, "HeightMode", FeetHeight(), arrayOf(FeetHeight(), TopHeight(), RelativeHeight()))
 
         private val outerColor by color("OuterColor", Color4b(0x64007CFF, true))
         private val innerColor by color("InnerColor", Color4b(0x64007CFF, true))
@@ -102,31 +102,32 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
                 }
             }
         }
-    }
+        inner class FeetHeight : HeightMode("Feet") {
+            override val parent: ChoiceConfigurable
+                get() = heightMode
+        }
 
-    object FeetHeight : HeightMode("Feet") {
-        override val parent: ChoiceConfigurable
-            get() = this.parent
-    }
+        inner class TopHeight : HeightMode("Top") {
+            override val parent: ChoiceConfigurable
+                get() = heightMode
+            override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY
+        }
 
-    object TopHeight : HeightMode("Top") {
-        override val parent: ChoiceConfigurable
-            get() = this.parent
-        override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY
-    }
+        inner class RelativeHeight : HeightMode("Relative") {
+            override val parent: ChoiceConfigurable
+                get() = heightMode
 
-    object RelativeHeight : HeightMode("Relative", ) {
-        override val parent: ChoiceConfigurable
-            get() = this.parent
+            private val height by float("Height", 0.5f, 0f..1f)
 
-        private val height by float("Height", 0.5f, 0f..1f)
-
-        override fun getHeight(entity: Entity): Double {
-            val box = entity.box
-            val entityHeight = box.maxY - box.minY
-            return height * entityHeight
+            override fun getHeight(entity: Entity): Double {
+                val box = entity.box
+                val entityHeight = box.maxY - box.minY
+                return height * entityHeight
+            }
         }
     }
+
+
 
 
 }
