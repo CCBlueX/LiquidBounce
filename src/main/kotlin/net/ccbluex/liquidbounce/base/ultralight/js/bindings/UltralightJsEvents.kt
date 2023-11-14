@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 /**
  * Referenced by JS as `events`
  */
-class UltralightJsEvents(private val viewContextProvider: ContextProvider, val viewOverlay: ViewOverlay) : Listenable {
+class UltralightJsEvents(val viewContextProvider: ContextProvider, val viewOverlay: ViewOverlay) : Listenable {
 
     companion object {
 

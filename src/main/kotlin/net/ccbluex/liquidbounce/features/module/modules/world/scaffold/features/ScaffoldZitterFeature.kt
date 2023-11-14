@@ -4,12 +4,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
-import net.ccbluex.liquidbounce.utils.client.opposite
-import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.client.option.KeyBinding
 import kotlin.math.cos

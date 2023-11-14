@@ -33,6 +33,7 @@ import net.minecraft.entity.LivingEntity
 class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("Target") {
 
     var lockedOnTarget: Entity? = null
+        private set
     var maxDistanceSquared: Double = 0.0
 
     val fov by float("FOV", 180f, 0f..180f)

@@ -25,7 +25,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'org.jlleitschuh.gradle.ktlint' version '11.5.1'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id "io.gitlab.arturbosch.detekt" version "1.23.1"
+    id "io.gitlab.arturbosch.detekt" version "1.23.3"
     id "com.github.node-gradle.node" version "7.0.1"
 }
 
@@ -111,13 +111,15 @@ dependencies {
     implementation 'com.labymedia:ultralight-java-gpu:0.4.12'
     implementation 'com.labymedia:ultralight-java-glfw-opengl-util:0.4.12'
 
-    implementation 'org.graalvm.sdk:graal-sdk:23.0.1'
-    implementation 'org.graalvm.truffle:truffle-api:23.0.1'
-    implementation 'org.graalvm.js:js:23.0.1'
+    implementation 'org.graalvm.sdk:graal-sdk:23.0.2'
+    implementation 'org.graalvm.truffle:truffle-api:23.0.2'
+    implementation 'org.graalvm.js:js:23.0.2'
 
     runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
     runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
 
+    // https://mvnrepository.com/artifact/io.netty/netty-codec
+    implementation 'io.netty:netty-codec:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
@@ -264,9 +266,10 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
-        include(dependency('org.graalvm.sdk:graal-sdk:23.0.1'))
-        include(dependency('org.graalvm.truffle:truffle-api:23.0.1'))
-        include(dependency('org.graalvm.js:js:23.0.1'))
+        include(dependency('org.graalvm.sdk:graal-sdk:23.0.2'))
+        include(dependency('org.graalvm.truffle:truffle-api:23.0.2'))
+        include(dependency('org.graalvm.js:js:23.0.2'))
+        include(dependency('io.netty:netty-codec'))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
         include(dependency('io.netty:netty-codec-socks'))

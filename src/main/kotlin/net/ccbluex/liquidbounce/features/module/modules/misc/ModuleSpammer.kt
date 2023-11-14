@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -30,32 +31,27 @@ import kotlin.random.Random
  *
  * Spams the chat with a given message.
  */
-object ModuleSpammer : Module("Spammer", Category.MISC) {
+object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
 
     private val delay by intRange("Delay", 12..14, 0..300)
     private val message by text("Message",
         "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}")
         .doNotInclude()
-    // todo: add back when textArray is supported
-    // private val messages by textArray(
-    //    "Messages",
-    //    mutableListOf(
-    //        "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
-    //        "LiquidBounce: FREE and OPEN-SOURCE & 100% CUSTOMIZABLE"
-    //    )
-    //)
+    private val messageConverterMode by enumChoice("MessageConverter",
+        MessageConverterMode.LEET_CONVERTER, MessageConverterMode.values())
+        .doNotInclude()
     private val customFormatter by boolean("CustomFormatter", false)
         .doNotInclude()
 
     val repeatable = repeatable {
-        val text = if (customFormatter) {
+        val text = messageConverterMode.convert(if (customFormatter) {
             format(message)
         } else {
             "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " +
                 message.toCharArray().joinToString("") {
                     if (Random.nextBoolean()) it.uppercase() else it.lowercase()
                 }
-        }
+        })
 
         // Check if message text is command
         if (text.startsWith("/")) {
@@ -70,16 +66,61 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
         var formattedText = text
 
         while (formattedText.contains("%f"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%f")) + Random.nextFloat() + formattedText.substring(formattedText.indexOf("%f") + "%f".length)
+            formattedText = formattedText.insert("%f", Random.nextFloat())
         while (formattedText.contains("%i"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%i")) + Random.nextInt(10000) + formattedText.substring(formattedText.indexOf("%i") + "%i".length)
+            formattedText = formattedText.insert("%i", Random.nextInt(10000))
         while (formattedText.contains("%s"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%s")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%s") + "%s".length)
-        while (formattedText.contains("%ss"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%ss")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%ss") + "%ss".length)
-        while (formattedText.contains("%ls"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%ls")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%ls") + "%ls".length)
+            formattedText = formattedText.insert("%s", RandomStringUtils.randomAlphabetic((4..6).random()))
+
+        if (formattedText.contains("@a")) {
+            val playerList = mc.networkHandler?.playerList?.filter {
+                it?.profile?.name == player.gameProfile?.name
+            }
+
+            if (!playerList.isNullOrEmpty()) {
+                while (formattedText.contains("@a")) {
+                    formattedText = formattedText.insert("@a",
+                        playerList.randomOrNull()?.profile?.name ?: break)
+                }
+            }
+        }
 
         return formattedText
     }
+
+    private fun String.insert(prefix: String, insert: Any): String {
+        return substring(0, indexOf(prefix)) +
+            insert.toString() + substring(indexOf(prefix) + prefix.length)
+    }
+
+    enum class MessageConverterMode(override val choiceName: String, val convert: (String) -> String) : NamedChoice {
+        NO_CONVERTER("None", { text ->
+            text
+        }),
+        LEET_CONVERTER("Leet", { text ->
+            text.map { char ->
+                when (char) {
+                    'o' -> '0'
+                    'l' -> '1'
+                    'e' -> '3'
+                    'a' -> '4'
+                    't' -> '7'
+                    's' -> 'Z'
+                    else -> char
+                }
+            }.joinToString("")
+        }),
+        RANDOM_CASE_CONVERTER("Random Case", { text ->
+            // Random case the whole string
+            text.map { char ->
+                if (Random.nextBoolean()) char.uppercase() else char.lowercase()
+            }.joinToString("")
+        }),
+        RANDOM_SPACE_CONVERTER("Random Space", { text ->
+            text.map { char ->
+                if (Random.nextBoolean()) "$char " else char.toString()
+            }.joinToString("")
+        }),
+    }
+
 }

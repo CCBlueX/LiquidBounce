@@ -50,11 +50,13 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        if (!showRotationVector) {
+        if (!showRotationVector)
             return@handler
-        }
 
-        val serverRotation = RotationManager.serverRotation
+
+
+
+        val rotation = RotationManager.currentRotation ?: return@handler
         val camera = mc.gameRenderer.camera
 
         val eyeVector = Vec3(0.0, 0.0, 1.0)
@@ -63,7 +65,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             withColor(Color4b.WHITE) {
-                drawLineStrip(eyeVector, eyeVector + Vec3(serverRotation.rotationVec * 100.0))
+                drawLineStrip(eyeVector, eyeVector + Vec3(rotation.rotationVec * 100.0))
             }
         }
     }
@@ -74,7 +76,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     fun shouldDisplayRotations() = shouldSendCustomRotation() || ModuleFreeCam.shouldDisableRotations()
 
     /**
-     * Should we even send a rotation if we use freeCam
+     * Should we even send a rotation if we use freeCam?
      */
     fun shouldSendCustomRotation(): Boolean {
         val special = arrayOf(ModuleDerp).any { it.enabled }

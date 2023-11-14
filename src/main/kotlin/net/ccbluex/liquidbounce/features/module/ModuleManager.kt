@@ -86,6 +86,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTimerRange,
             ModuleTrigger,
             ModuleVelocity,
+            ModuleBacktrack,
+            ModuleSwordBlock,
 
             // Exploit
             ModuleAbortBreaking,
