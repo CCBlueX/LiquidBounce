@@ -259,8 +259,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             return
 
         // Clear all packets, start again on enemy change
-        if (target != event.targetEntity)
+        if (target != event.targetEntity) {
             clearPackets()
+            reset()
+        }
 
         target = event.targetEntity
     }
@@ -366,6 +368,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     override fun onDisable() {
         if (mode == "Modern") {
             clearPackets()
+            reset()
         }
     }
 
@@ -386,8 +389,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 packetQueue.keys.forEach(::handlePacket)
 
             packetQueue.clear()
-
-            reset()
         }
     }
 
