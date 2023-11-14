@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.base.ultralight.hooks
 
+import com.cinemamod.mcef.MCEF
 import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.js.bindings.UltralightJsPages
@@ -27,9 +28,11 @@ import net.ccbluex.liquidbounce.event.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
+import net.ccbluex.liquidbounce.mcef.BasicBrowser
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.TitleScreen
+import net.minecraft.text.Text
 
 object UltralightScreenHook : Listenable {
 
@@ -50,17 +53,18 @@ object UltralightScreenHook : Listenable {
             return@handler
         }
 
-        val screen = event.screen ?: if (mc.world != null) return@handler else TitleScreen()
-        val name = UltralightJsPages.get(screen)?.name ?: return@handler
-        val page = ThemeManager.page(name) ?: return@handler
-
-        val emptyScreen = EmptyScreen()
-        UltralightEngine.newScreenView(emptyScreen, adaptedScreen = screen, parentScreen = mc.currentScreen).apply {
-            loadPage(page)
+        if (!MCEF.isInitialized()) {
+            MCEF.initialize()
         }
 
-        mc.setScreen(emptyScreen)
-        event.cancelEvent()
+        val screen = event.screen
+        if (screen is TitleScreen) {
+            println("opening basic browser")
+            mc.setScreen(BasicBrowser(Text.literal("Browser")))
+            println("Screen: $screen")
+            event.cancelEvent()
+        }
+
     }
 
 }

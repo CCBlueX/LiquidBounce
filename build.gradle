@@ -70,6 +70,9 @@ repositories {
         name = "modrinth"
         url = "https://api.modrinth.com/maven"
     }
+    maven {
+        url = uri('https://mcef-download.cinemamod.com/repositories/releases')
+    }
 }
 
 dependencies {
@@ -110,6 +113,9 @@ dependencies {
     implementation 'com.labymedia:ultralight-java-databind:0.4.12'
     implementation 'com.labymedia:ultralight-java-gpu:0.4.12'
     implementation 'com.labymedia:ultralight-java-glfw-opengl-util:0.4.12'
+
+    implementation 'com.cinemamod:mcef:2.1.1-1.20.1'
+    modRuntimeOnly 'com.cinemamod:mcef:2.1.1-1.20.1'
 
     implementation 'org.graalvm.sdk:graal-sdk:23.0.2'
     implementation 'org.graalvm.truffle:truffle-api:23.0.2'
