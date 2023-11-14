@@ -22,15 +22,13 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoWeb
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoWeb.choices
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Box
 import kotlin.math.min
@@ -40,16 +38,16 @@ import kotlin.math.min
  */
 class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
-    val appearance = choices(module, "Mode", Legacy, arrayOf(Legacy, Circle))
+    val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle(module)))
 
     fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
         ((appearance.activeChoice) as TargetRenderAppearance).render(env, entity, partialTicks)
     }
 
-    object Legacy : TargetRenderAppearance("Legacy") {
+    inner class Legacy() : TargetRenderAppearance("Legacy") {
 
         override val parent: ChoiceConfigurable
-            get() = this.parent
+            get() = appearance
 
         private val size by float("Size", 0.5f, 0.1f..2f)
 
@@ -65,7 +63,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
             )
 
             val pos =
-                entity.interpolateCurrentPosition(partialTicks) +
+                entity.interpolateCurrentPosition(partialTicks).toVec3() +
                     Vec3(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
 
 
@@ -79,56 +77,66 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         }
     }
 
-    object Circle : TargetRenderAppearance("Circle") {
+    inner class Circle(module: Module) : TargetRenderAppearance("Circle") {
         override val parent: ChoiceConfigurable
-            get() = this.parent
+            get() = appearance
 
         private val radius by float("Radius", 0.85f, 0.1f..2f)
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
             .listen { min(radius, it) }
 
-//        private val heightMode = choices(parent.module, "HeightMode", FeetHeight, arrayOf(FeetHeight, TopHeight))
+        private val heightMode = choices(module, "HeightMode", FeetHeight, arrayOf(FeetHeight, TopHeight))
 
-        private val outerColor by color("Color", Color4b(0x64007CFF, true))
-        private val innerColor by color("Color", Color4b(0x64007CFF, true))
+        private val outerColor by color("OuterColor", Color4b(0x64007CFF, true))
+        private val innerColor by color("InnerColor", Color4b(0x64007CFF, true))
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
             val pos =
-                entity.interpolateCurrentPosition(partialTicks) +
+                entity.interpolateCurrentPosition(partialTicks).toVec3() +
                     Vec3(0.0, 1.0, 0.0)
 
             with(env) {
                 withPosition(pos) {
-                    drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                    withDisabledCull {
+                        drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                    }
                 }
             }
         }
     }
 
-//    object FeetHeight : HeightMode("Feet") { }
-//
-//    object TopHeight : HeightMode("Top") {
-//        override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY
-//    }
-//
-//    object realativeHeight : HeightMode("Realtive", ) {
-//        private val heigth by float("Height", 0.5f, 0f..1f)
-//
-//        override fun getHeight(entity: Entity) = heigth.toDouble()
-//    }
+    object FeetHeight : HeightMode("Feet") {
+        override val parent: ChoiceConfigurable
+            get() = this.parent
+    }
+
+    object TopHeight : HeightMode("Top") {
+        override val parent: ChoiceConfigurable
+            get() = this.parent
+        override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY
+    }
+
+    object RelativeHeight : HeightMode("Relative", ) {
+        override val parent: ChoiceConfigurable
+            get() = this.parent
+
+        private val height by float("Height", 0.5f, 0f..1f)
+
+        override fun getHeight(entity: Entity): Double {
+            val box = entity.box
+            val entityHeight = box.maxY - box.minY
+            return height * entityHeight
+        }
+    }
 
 
 }
 
 abstract class TargetRenderAppearance(name: String) : Choice(name) {
-
     open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {}
 }
 
-abstract class HeightMode(name: String, private val choiceConfigurable: ChoiceConfigurable) : Choice(name) {
-
-    override val parent: ChoiceConfigurable
-        get() = choiceConfigurable
-    open fun getHeight(entity: Entity) = 0.0
+abstract class HeightMode(name: String) : Choice(name) {
+    open fun getHeight(entity: Entity): Double = 0.0
 }
 
 
