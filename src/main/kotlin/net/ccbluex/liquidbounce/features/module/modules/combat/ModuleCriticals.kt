@@ -44,7 +44,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
-    val modes = choices("Mode", PacketCrit) {
+    val modes = choices("Mode", { PacketCrit }) {
         arrayOf(
             NoneChoice(it), PacketCrit, JumpCrit
         )

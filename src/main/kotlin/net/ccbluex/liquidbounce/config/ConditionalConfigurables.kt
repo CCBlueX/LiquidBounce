@@ -95,11 +95,12 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
 class ChoiceConfigurable(
     @Exclude val module: Module,
     name: String,
-    var activeChoice: Choice,
+    activeChoiceCallback: (ChoiceConfigurable) -> Choice,
     choicesCallback: (ChoiceConfigurable) -> Array<Choice>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
     val choices: Array<Choice>
+    var activeChoice: Choice
     val translationBaseKey: String
         get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
@@ -108,6 +109,7 @@ class ChoiceConfigurable(
 
     init {
         this.choices = choicesCallback(this)
+        this.activeChoice = activeChoiceCallback(this)
     }
 
     fun newState(state: Boolean) {
