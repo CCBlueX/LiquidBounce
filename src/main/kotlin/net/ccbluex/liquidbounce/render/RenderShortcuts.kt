@@ -25,6 +25,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
@@ -426,7 +427,8 @@ fun RenderEnvironment.drawGradientCircle(
     outerRadius: Float,
     innerRadius: Float,
     outerColor4b: Color4b,
-    innerColor4b: Color4b
+    innerColor4b: Color4b,
+    innerOffset: Vec3 = Vec3(0f, 0f, 0f)
 ) {
 
     val matrix = matrixStack.peek().positionMatrix
@@ -441,13 +443,41 @@ fun RenderEnvironment.drawGradientCircle(
 
         for (p in circlePoints) {
             val outerP = p * outerRadius
-            val innerP = p * innerRadius
+            val innerP = p * innerRadius + innerOffset
 
             vertex(matrix, outerP.x, outerP.y, outerP.z)
                 .color(outerColor4b.toRGBA())
                 .next()
             vertex(matrix, innerP.x, innerP.y, innerP.z)
                 .color(innerColor4b.toRGBA())
+                .next()
+        }
+    }
+    tessellator.draw()
+}
+
+/**
+ * Function to draw the outline of a circle of the size [radius]
+ *
+ * @param radius The radius
+ * @param color The color
+ */
+fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position and color program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    with(bufferBuilder) {
+        begin(DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR)
+
+        for (p in circlePoints) {
+            val point = p * radius
+
+            vertex(matrix, point.x, point.y, point.z)
+                .color(color4b.toRGBA())
                 .next()
         }
     }

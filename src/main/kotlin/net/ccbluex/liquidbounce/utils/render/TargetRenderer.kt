@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Box
+import java.awt.Color
 import kotlin.math.min
 
 /**
@@ -94,6 +95,10 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
         private val outerColor by color("OuterColor", Color4b(0x64007CFF, true))
         private val innerColor by color("InnerColor", Color4b(0x64007CFF, true))
+
+        private val outline = tree(Outline())
+
+
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
             val height = (heightMode.activeChoice as HeightMode).getHeight(entity)
             val pos =
@@ -105,22 +110,42 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
                     withDisabledCull {
                         drawGradientCircle(radius, innerRadius, outerColor, innerColor)
                     }
+                    if(outline.enabled) {
+                        drawCircleOutline(radius, outline.color)
+                    }
                 }
             }
         }
 
     }
 
+    inner class Outline : ToggleableConfigurable(module,"Outline", true) {
+        val color by color("Color", Color4b(0, 40, 255, 255))
+    }
+
     inner class FeetHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Feet") {
         override val parent: ChoiceConfigurable
             get() = choiceConfigurable
+
+        val offset: Float by float("Offset", 0f, -1f..1f)
+
+        override fun getHeight(entity: Entity): Double {
+            return offset.toDouble()
+        }
+
     }
 
     inner class TopHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Top") {
         override val parent: ChoiceConfigurable
             get() = choiceConfigurable
-        override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY
+
+        val offset by float("Offset", 0f, -1f..1f)
+        override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY + offset
     }
+
+    // Lets the user chose the height relative to the entity's height
+    // Use 1 for it to always be at the top of the entity
+    // Use 0 for it to always be at the feet of the entity
 
     inner class RelativeHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Relative") {
         override val parent: ChoiceConfigurable
