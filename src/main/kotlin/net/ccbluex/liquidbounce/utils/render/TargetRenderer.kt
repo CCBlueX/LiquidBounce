@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
 import java.awt.Color
 import kotlin.math.min
@@ -90,7 +91,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
             module,
             "HeightMode",
             { FeetHeight(it) },
-            { arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it)) }
+            { arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it), HealthHeight(it)) }
         )
 
         private val outerColor by color("OuterColor", Color4b(0x64007CFF, true))
@@ -129,7 +130,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
             module,
             "HeightMode",
             { FeetHeight(it) },
-            { arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it)) }
+            { arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it), HealthHeight(it)) }
         )
 
         private val color by color("OuterColor", Color4b(0x64007CFF, true))
@@ -209,6 +210,20 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
             val box = entity.box
             val entityHeight = box.maxY - box.minY
             return height * entityHeight
+        }
+    }
+
+    inner class HealthHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Health") {
+        override val parent: ChoiceConfigurable
+            get() = choiceConfigurable
+
+
+
+        override fun getHeight(entity: Entity): Double {
+            if(entity !is LivingEntity) return 0.0
+            val box = entity.box
+            val entityHeight = box.maxY - box.minY
+            return entity.health / entity.maxHealth * entityHeight
         }
     }
 
