@@ -45,7 +45,10 @@ import kotlin.math.sin
  *
  * @property matrixStack The matrix stack for rendering.
  */
-data class RenderEnvironment(val matrixStack: MatrixStack)
+data class RenderEnvironment(val matrixStack: MatrixStack) {
+    val currentMvpMatrix: Matrix4f
+        get() = matrixStack.peek().positionMatrix
+}
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -255,10 +258,10 @@ fun RenderEnvironment.drawQuad(pos1: Vec3d, pos2: Vec3d) {
         // Begin drawing lines with position format
         begin(DrawMode.QUADS, VertexFormats.POSITION)
 
-        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), 0.0F).next()
+        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat()).next()
+        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat()).next()
+        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat()).next()
+        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat()).next()
     }
 
 

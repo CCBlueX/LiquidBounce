@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import java.awt.Color
@@ -122,7 +123,7 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
                     ModuleMurderMystery.getColor(entity) ?: baseColor ?: continue
                 }
 
-                val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
 
                 withColor(color) {
                     drawLines(eyeVector, pos, Vec3(0f, entity.height, 0f))

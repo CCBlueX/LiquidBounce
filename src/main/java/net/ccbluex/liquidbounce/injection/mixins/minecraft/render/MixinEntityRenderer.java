@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNametags;
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
