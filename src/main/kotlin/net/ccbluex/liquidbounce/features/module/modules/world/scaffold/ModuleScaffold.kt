@@ -249,7 +249,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
 
             RotationManager.aimAt(
-                target.rotation,
+                if (this.aimMode.get() == AimMode.GODBRIDGE)
+                    Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
+                else target.rotation,
                 openInventory = ignoreOpenInventory,
                 configurable = rotationsConfigurable,
             )
