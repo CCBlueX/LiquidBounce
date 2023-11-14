@@ -108,6 +108,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModulePortalMenu,
             ModuleResourceSpoof,
             ModuleSleepWalker,
+            ModuleSpoofer,
             ModuleVehicleOneHit,
 
             // Fun
