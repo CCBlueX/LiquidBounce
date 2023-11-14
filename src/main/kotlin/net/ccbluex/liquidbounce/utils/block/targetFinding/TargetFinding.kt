@@ -20,6 +20,7 @@ enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
+    GODBRIDGE("Godbridge"),
     NEAREST_ROTATION("NearestRotation"),
 }
 
@@ -84,7 +85,7 @@ private fun findBestTargetPlanForTargetPosition(posToInvestigate: BlockPos, mode
  * @return null if it is impossible to target the block with the given parameters
  */
 fun getTargetPlanForPositionAndDirection(pos: BlockPos, direction: Direction, mode: BlockTargetingMode): BlockTargetPlan? {
-     when (mode) {
+    when (mode) {
         BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
             val currPos = pos.add(direction.opposite.vector)
             val currState = currPos.getState() ?: return null
@@ -217,12 +218,18 @@ data class BlockPlacementTarget(
     fun doesCrosshairTargetFullfitRequirements(crosshairTarget: BlockHitResult): Boolean {
         if (crosshairTarget.type != HitResult.Type.BLOCK)
             return false
-        if (crosshairTarget.blockPos != this.interactedBlockPos)
-            return false
-        if (crosshairTarget.side != this.direction)
-            return false
+//        if (crosshairTarget.blockPos != this.interactedBlockPos)
+//            return false
+//        if (crosshairTarget.blockPos.offset(crosshairTarget.side) != placedBlock)
+//            return false
+//        if (crosshairTarget.side != this.direction)
+//            return false
         if (crosshairTarget.pos.y < this.minPlacementY)
             return false
+//        if(crosshairTarget.pos.y > maxY)
+//            return false
+
+
 
         return true
     }
