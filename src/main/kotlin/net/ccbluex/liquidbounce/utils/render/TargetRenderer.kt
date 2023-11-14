@@ -126,7 +126,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         override val parent: ChoiceConfigurable
             get() = choiceConfigurable
 
-        private val height by float("Height", 0.5f, 0f..1f)
+        private val height by float("Height", 0.5f, -0.5f..1.5f)
 
         override fun getHeight(entity: Entity): Double {
             val box = entity.box
