@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.minecraft.block.Blocks
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.*
 import kotlin.math.max
 

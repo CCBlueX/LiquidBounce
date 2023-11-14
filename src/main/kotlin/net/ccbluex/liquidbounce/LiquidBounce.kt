@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -43,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
+import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import org.apache.logging.log4j.LogManager
 import org.lwjgl.util.tinyfd.TinyFileDialogs
 import kotlin.system.exitProcess
@@ -134,8 +134,7 @@ object LiquidBounce : Listenable {
             Tabs
             Chat
 
-            // Initialize the render engine
-            RenderEngine.init()
+            LiquidBounceFonts
 
             // Load up a web platform
             UltralightEngine.init()

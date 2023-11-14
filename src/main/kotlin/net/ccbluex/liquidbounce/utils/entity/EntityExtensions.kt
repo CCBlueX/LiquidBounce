@@ -189,11 +189,12 @@ fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
     return pos.squaredDistanceTo(otherPos)
 }
 
-fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
-    if(this.age == 0)
-        return Vec3(this.pos)
-
-    return Vec3(
+fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
+    if (this.age == 0) {
+        return this.pos
+    }
+  
+    return Vec3d(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
         this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta
@@ -201,8 +202,9 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
 }
 
 fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
-    if(this.age == 0)
+    if (this.age == 0) {
         return this.rotation
+    }
 
     return Rotation(
         this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
