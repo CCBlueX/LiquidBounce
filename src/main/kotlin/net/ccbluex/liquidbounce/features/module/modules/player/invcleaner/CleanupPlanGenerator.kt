@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
@@ -102,13 +103,18 @@ class CleanupPlanGenerator(
             if (hotbarSlotsToFill != null && currentStackCount < hotbarSlotsToFill.size) {
                 val hotbarSlotToFill = hotbarSlotsToFill[currentStackCount]
 
-                // Is the item already
-                if (filledInItemSlot != hotbarSlotToFill) {
-                    hotbarSwaps.add(InventorySwap(filledInItemSlot, hotbarSlotToFill))
-                }
+                // We don't need to move around equivalent items
+                val areStacksSame = ItemStack.areEqual(
+                    filledInItemSlot.itemStack,
+                    hotbarSlotToFill.itemStack
+                )
 
-                alreadyAllocatedItems.add(filledInItemSlot)
-                alreadyAllocatedItems.add(hotbarSlotToFill)
+                if (filledInItemSlot != hotbarSlotToFill && !areStacksSame) {
+                    hotbarSwaps.add(InventorySwap(filledInItemSlot, hotbarSlotToFill))
+
+                    alreadyAllocatedItems.add(filledInItemSlot)
+                    alreadyAllocatedItems.add(hotbarSlotToFill)
+                }
             }
 
             currentItemCount += filledInItem.itemStack.count
