@@ -104,6 +104,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val jumpFactor by float("jumpFactor", 0.7f, 0f..2f);
     private val aimMode = enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
 
     object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
@@ -319,7 +320,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
 
             if(
-                (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.1, 0.0).offset(player.velocity.multiply(0.5))).none()
+                (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.1, 0.0).offset(player.velocity.multiply(
+                    jumpFactor.toDouble()))).none()
                     && currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.3 > player.pos.y && player.isOnGround)
                 && player.isOnGround)
             {
