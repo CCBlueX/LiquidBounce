@@ -111,10 +111,10 @@ class CleanupPlanGenerator(
 
                 if (filledInItemSlot != hotbarSlotToFill && !areStacksSame) {
                     hotbarSwaps.add(InventorySwap(filledInItemSlot, hotbarSlotToFill))
-
-                    alreadyAllocatedItems.add(filledInItemSlot)
-                    alreadyAllocatedItems.add(hotbarSlotToFill)
                 }
+
+                alreadyAllocatedItems.add(filledInItemSlot)
+                alreadyAllocatedItems.add(hotbarSlotToFill)
             }
 
             currentItemCount += filledInItem.itemStack.count
