@@ -70,9 +70,6 @@ repositories {
         name = "modrinth"
         url = "https://api.modrinth.com/maven"
     }
-    maven {
-        url = uri('https://mcef-download.cinemamod.com/repositories/releases')
-    }
 }
 
 dependencies {
@@ -87,6 +84,8 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+
+    implementation "com.github.CCBlueX:mcef:1.20.1-SNAPSHOT"
 
     implementation "com.viaversion:viaversion:4.8.1"
     implementation "net.raphimc:ViaLoader:2.2.10"
@@ -113,9 +112,6 @@ dependencies {
     implementation 'com.labymedia:ultralight-java-databind:0.4.12'
     implementation 'com.labymedia:ultralight-java-gpu:0.4.12'
     implementation 'com.labymedia:ultralight-java-glfw-opengl-util:0.4.12'
-
-    implementation 'com.cinemamod:mcef:2.1.1-1.20.1'
-    modRuntimeOnly 'com.cinemamod:mcef:2.1.1-1.20.1'
 
     implementation 'org.graalvm.sdk:graal-sdk:23.0.2'
     implementation 'org.graalvm.truffle:truffle-api:23.0.2'
@@ -266,12 +262,9 @@ shadowJar {
     exclude 'native-binaries/*'
 
     dependencies {
-        include(dependency('com.labymedia:ultralight-java-base'))
-        include(dependency('com.labymedia:ultralight-java-databind'))
-        include(dependency('com.labymedia:ultralight-java-gpu'))
-        include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
-        include(dependency('com.thealtening.api:api'))
+        include(dependency('com.github.CCBlueX:mcef'))
         include(dependency('com.github.CCBlueX:Elixir'))
+        include(dependency('com.thealtening.api:api'))
         include(dependency('org.graalvm.sdk:graal-sdk:23.0.2'))
         include(dependency('org.graalvm.truffle:truffle-api:23.0.2'))
         include(dependency('org.graalvm.js:js:23.0.2'))

@@ -18,10 +18,6 @@
  */
 package net.ccbluex.liquidbounce
 
-import com.cinemamod.mcef.MCEF
-import com.cinemamod.mcef.MCEFDownloader
-import com.cinemamod.mcef.MCEFPlatform
-import com.cinemamod.mcef.internal.MCEFDownloadListener
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
@@ -49,8 +45,6 @@ import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import org.apache.logging.log4j.LogManager
 import org.lwjgl.util.tinyfd.TinyFileDialogs
-import java.io.File
-import java.io.IOException
 import kotlin.system.exitProcess
 
 /**
