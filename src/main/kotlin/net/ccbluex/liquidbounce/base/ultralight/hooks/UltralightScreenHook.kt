@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.base.ultralight.hooks
 
+import com.cinemamod.mcef.example.BrowserScreen
 import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.event.Listenable
@@ -25,6 +26,9 @@ import net.ccbluex.liquidbounce.event.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.screen.TitleScreen
+import net.minecraft.text.Text
 
 object UltralightScreenHook : Listenable {
 
@@ -32,6 +36,15 @@ object UltralightScreenHook : Listenable {
      * Handle opening new screens
      */
     val screenHandler = handler<ScreenEvent> { event ->
+
+
+        val screen = event.screen
+
+        if (screen is TitleScreen || screen == null) {
+            mc.setScreen(BrowserScreen(Text.literal("LiquidBounce"), "https://duckduckgo.com/"))
+            event.cancelEvent()
+        }
+
         UltralightEngine.cursorAdapter.unfocus()
 
         val activeView = UltralightEngine.inputAwareOverlay
@@ -45,7 +58,7 @@ object UltralightScreenHook : Listenable {
             return@handler
         }
 
-        val screen = event.screen
+
 
     }
 
