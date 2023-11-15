@@ -125,13 +125,16 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
             continue
         }
 
+        // Do we want to replace a block or place a block at a neighbor? This makes a difference as we would need to
+        // target the block in order to replace it. If there is no block at the target position yet, we need to target
+        // a neighboring block
         val targetMode = if (blockStateToInvestigate.isAir) {
             BlockTargetingMode.PLACE_AT_NEIGHBOR
         } else {
             BlockTargetingMode.REPLACE_EXISTING_BLOCK
         }
 
-        // Check if we can actually replace the block
+        // Check if we can actually replace the block?
         if (targetMode == BlockTargetingMode.REPLACE_EXISTING_BLOCK
             && !blockStateToInvestigate.canBeReplacedWith(posToInvestigate, options.stackToPlaceWith)
         )
@@ -142,15 +145,17 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
         val currPos = targetPlan.blockPosToInteractWith
 
-        val face = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
+        // We found the optimal block to place the block/face to place at. Now we need to find a point on the face.
+        // to rotate to
+        val pointOnFace = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
 
-        val rotation = RotationManager.makeRotation(face.point.add(Vec3d.of(currPos)), mc.player!!.eyes)
+        val rotation = RotationManager.makeRotation(pointOnFace.point.add(Vec3d.of(currPos)), mc.player!!.eyes)
 
         return BlockPlacementTarget(
             currPos,
             posToInvestigate,
             targetPlan.interactionDirection,
-            face.face.from.y + currPos.y,
+            pointOnFace.face.from.y + currPos.y,
             rotation
         )
     }

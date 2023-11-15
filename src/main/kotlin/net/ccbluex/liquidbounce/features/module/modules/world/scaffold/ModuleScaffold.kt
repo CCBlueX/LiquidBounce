@@ -211,6 +211,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
 
+            // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
             val priorityGetter: (Vec3i) -> Double =
                 if (optimalLine != null) {
                     { vec ->
@@ -232,6 +233,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             val target = currentTarget ?: return@handler
 
+            // Debug stuff
             if (optimalLine != null) {
                 val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
                 val a = optimalLine.getNearestPointTo(b)
