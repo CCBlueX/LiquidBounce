@@ -318,17 +318,26 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 return@repeatable
             }
 
+            if(
+                (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.1, 0.0).offset(player.velocity.multiply(0.5))).none()
+                    && currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.3 > player.pos.y && player.isOnGround)
+                && player.isOnGround)
+            {
+                TickStateManager.enforcedState.enforceJump = true
+            }
+
             // Is the target the crosshair points too well-adjusted to our target?
             if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
-                !isValidCrosshairTarget(currentCrosshairTarget) ||
-                currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.3 > player.pos.y) {
-                if(world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.1, 0.0).offset(player.velocity.multiply(0.5))).none() && player.isOnGround){
-//                    TickStateManager.enforcedState.enforceEagle = true
-//                    player.jump()
-                    TickStateManager.enforcedState.enforceJump = true
-                }
+                !isValidCrosshairTarget(currentCrosshairTarget)
+
+            ) {
+
                 return@repeatable
             }
+
+//            if (currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.3 > player.pos.y && player.isOnGround) {
+////                TickStateManager.enforcedState.enforceJump = true
+//            }
 
 
 
