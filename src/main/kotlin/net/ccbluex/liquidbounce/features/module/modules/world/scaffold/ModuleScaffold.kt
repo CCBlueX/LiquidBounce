@@ -49,10 +49,7 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.PositionFactoryConfigu
 import net.ccbluex.liquidbounce.utils.block.targetFinding.RandomTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetFinding.StabilizedRotationTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -314,18 +311,26 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 )
             }
 
+
+
+
             if (target == null || currentCrosshairTarget == null) {
                 return@repeatable
             }
 
             // Is the target the crosshair points too well-adjusted to our target?
             if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
-                !isValidCrosshairTarget(
-                    currentCrosshairTarget,
-                )
-            ) {
+                !isValidCrosshairTarget(currentCrosshairTarget) ||
+                currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.3 > player.pos.y) {
+                if(world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.1, 0.0).offset(player.velocity.multiply(0.5))).none() && player.isOnGround){
+//                    TickStateManager.enforcedState.enforceEagle = true
+//                    player.jump()
+                    TickStateManager.enforcedState.enforceJump = true
+                }
                 return@repeatable
             }
+
+
 
             var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
             val hasBlockInOffHand = isValidBlock(player.offHandStack)
