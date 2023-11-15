@@ -1,0 +1,149 @@
+package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
+
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.item.ItemStack
+import net.minecraft.screen.ScreenHandler
+import java.util.*
+
+/**
+ * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
+ */
+abstract class ItemSlot {
+    abstract val itemStack: ItemStack
+    abstract val slotType: ItemSlotType
+
+    /**
+     * Used for example for slot click packets
+     */
+    abstract fun getIdForServer(screen: GenericContainerScreen?): Int?
+
+    abstract override fun hashCode(): Int
+    abstract override fun equals(other: Any?): Boolean
+}
+
+class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
+    private val screen: GenericContainerScreen
+        get() = mc.currentScreen as GenericContainerScreen
+    override val itemStack: ItemStack
+        get() = this.screen.screenHandler.slots[this.slotInContainer].stack
+
+    override val slotType: ItemSlotType
+        get() = ItemSlotType.CONTAINER
+
+    override fun getIdForServer(screen: GenericContainerScreen?): Int = this.slotInContainer
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ContainerItemSlot
+
+        return slotInContainer == other.slotInContainer
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(this.javaClass, slotInContainer)
+    }
+}
+
+private fun GenericContainerScreen.itemCount() = this.screenHandler.rows * 9
+
+
+open class HotbarItemSlot(private val hotbarSlot: Int) : ItemSlot() {
+    override val itemStack: ItemStack
+        get() = mc.player!!.inventory.getStack(this.hotbarSlot)
+
+    override val slotType: ItemSlotType
+        get() = ItemSlotType.HOTBAR
+
+    open val hotbarSlotForServer: Int = hotbarSlot
+
+    override fun getIdForServer(screen: GenericContainerScreen?): Int? {
+        return if (screen == null) 36 + hotbarSlot else screen.itemCount() + 27 + this.hotbarSlot
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as HotbarItemSlot
+
+        return hotbarSlot == other.hotbarSlot
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(this.javaClass, hotbarSlot)
+    }
+}
+
+class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
+    override val itemStack: ItemStack
+        get() = mc.player!!.inventory.getStack(9 + this.inventorySlot)
+
+    override val slotType: ItemSlotType
+        get() = ItemSlotType.INVENTORY
+
+    override fun getIdForServer(screen: GenericContainerScreen?): Int {
+        return if (screen == null) 9 + inventorySlot else screen.itemCount() + this.inventorySlot
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as InventoryItemSlot
+
+        return inventorySlot == other.inventorySlot
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(this.javaClass, inventorySlot)
+    }
+}
+
+
+class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
+    override val itemStack: ItemStack
+        get() = mc.player!!.inventory.armor[this.armorType]
+
+    override val slotType: ItemSlotType
+        get() = ItemSlotType.ARMOR
+
+    override fun getIdForServer(screen: GenericContainerScreen?) = if (screen == null) 8 - this.armorType else null
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ArmorItemSlot
+
+        return armorType == other.armorType
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(this.javaClass, this.armorType)
+    }
+}
+
+
+object OffHandSlot : HotbarItemSlot(-1) {
+    override val itemStack: ItemStack
+        get() = mc.player!!.offHandStack
+
+    override val slotType: ItemSlotType
+        get() = ItemSlotType.OFFHAND
+
+    override val hotbarSlotForServer: Int = 40
+
+    override fun getIdForServer(screen: GenericContainerScreen?) = if (screen == null) 45 else null
+
+    override fun equals(other: Any?): Boolean {
+        return this === other
+    }
+
+    override fun hashCode(): Int {
+        return this.javaClass.hashCode()
+    }
+}

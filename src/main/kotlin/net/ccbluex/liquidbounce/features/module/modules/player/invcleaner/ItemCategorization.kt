@@ -83,68 +83,61 @@ enum class ItemSortChoice(
 }
 
 object ItemCategorization {
-    fun categorizeItem(
-        items: MutableList<WeightedItem>,
-        stack: ItemStack,
-        slotId: Int,
-    ) {
-        if (stack.isNothing()) {
-            return
+
+    /**
+     * Returns a list of facets an item represents. For example an axe is an axe, but also a sword:
+     * - (SANDSTONE_BLOCK, 64) => `[Block(SANDSTONE_BLOCK, 64)]`
+     * - (DIAMOND_AXE, 1) => `[Axe(DIAMOND_AXE, 1), Tool(DIAMOND_AXE, 1)]`
+     */
+    @Suppress("CyclomaticComplexMethod")
+    fun getItemFacets(slot: ItemSlot): Array<WeightedItem> {
+        if (slot.itemStack.isNothing()) {
+            return emptyArray()
         }
 
-        val item = stack.item
-
-        items.add(
-            when (item) {
-                is ArmorItem -> WeightedArmorItem(stack, slotId)
-                is SwordItem -> WeightedSwordItem(stack, slotId)
-                is BowItem -> WeightedBowItem(stack, slotId)
-                is CrossbowItem -> WeightedCrossbowItem(stack, slotId)
-                is ArrowItem -> WeightedArrowItem(stack, slotId)
-                is ToolItem -> {
-                    items.add(WeightedSwordItem(stack, slotId))
-
-                    WeightedToolItem(stack, slotId)
+        return when (val item = slot.itemStack.item) {
+            is ArmorItem -> arrayOf(WeightedArmorItem(slot))
+            is SwordItem -> arrayOf(WeightedSwordItem(slot))
+            is BowItem -> arrayOf(WeightedBowItem(slot))
+            is CrossbowItem -> arrayOf(WeightedCrossbowItem(slot))
+            is ArrowItem -> arrayOf(WeightedArrowItem(slot))
+            is ToolItem -> {
+                arrayOf(
+                    WeightedSwordItem(slot),
+                    WeightedToolItem(slot)
+                )
+            }
+            is FishingRodItem -> arrayOf(WeightedRodItem(slot))
+            is ShieldItem -> arrayOf(WeightedShieldItem(slot))
+            is BlockItem -> arrayOf(WeightedBlockItem(slot))
+            is MilkBucketItem -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 2)))
+            is BucketItem -> {
+                when (item.fluid) {
+                    is WaterFluid -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 0)))
+                    is LavaFluid -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 1)))
+                    else -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 3)))
                 }
-
-                is FishingRodItem -> WeightedRodItem(stack, slotId)
-                is ShieldItem -> WeightedShieldItem(stack, slotId)
-                is BlockItem -> WeightedBlockItem(stack, slotId)
-                is MilkBucketItem -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.BUCKET, 2))
-                is BucketItem -> {
-                    when (item.fluid) {
-                        is WaterFluid -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.BUCKET, 0))
-                        is LavaFluid -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.BUCKET, 1))
-                        else -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.BUCKET, 3))
-                    }
+            }
+            is EnderPearlItem -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.PEARL, 0)))
+            Items.GOLDEN_APPLE -> {
+                arrayOf(
+                    WeightedFoodItem(slot),
+                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0))
+                )
+            }
+            Items.ENCHANTED_GOLDEN_APPLE -> {
+                arrayOf(
+                    WeightedFoodItem(slot),
+                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0), 1)
+                )
+            }
+            else -> {
+                if (slot.itemStack.isFood) {
+                    arrayOf(WeightedFoodItem(slot))
+                } else {
+                    arrayOf(WeightedItem(slot))
                 }
-
-                is EnderPearlItem -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.PEARL, 0))
-                Items.GOLDEN_APPLE -> {
-                    items.add(WeightedFoodItem(stack, slotId))
-
-                    WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.GAPPLE, 0))
-                }
-
-                Items.ENCHANTED_GOLDEN_APPLE -> {
-                    items.add(WeightedFoodItem(stack, slotId))
-
-                    WeightedPrimitiveItem(
-                        stack,
-                        slotId,
-                        ItemCategory(ItemType.GAPPLE, 0),
-                        1,
-                    )
-                }
-
-                else -> {
-                    if (stack.isFood) {
-                        WeightedFoodItem(stack, slotId)
-                    } else {
-                        WeightedItem(stack, slotId)
-                    }
-                }
-            },
-        )
+            }
+        }
     }
 }
