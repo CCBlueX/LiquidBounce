@@ -15,37 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.base.ultralight.js.bindings
-
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.Configurable
+package net.ccbluex.liquidbounce.web.socket
 
 /**
- * Ultralight storage
- * a replacement for the JS LocalStorage
- **/
-object UltralightStorage : Configurable("storage") {
+ * A client websocket implementation.
+ * Allows the browser to communicate with the client. (e.g. for UIs)
+ *
+ * @see [https://tools.ietf.org/html/rfc6455]
+ */
+class ClientSocket {
 
-    var map by value("map", mutableMapOf<String, String>())
 
-    init {
-        ConfigSystem.root(this)
-    }
-
-    fun setItem(name: String, value: Boolean) {
-        setItem(name, value.toString())
-    }
-
-    fun setItem(name: String, value: Int) {
-        setItem(name, value.toString())
-    }
-
-    fun setItem(name: String, value: String) {
-        map[name] = value
-    }
-
-    fun getItem(name: String): String? = map[name]
 
 }

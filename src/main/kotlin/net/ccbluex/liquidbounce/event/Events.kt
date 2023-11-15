@@ -58,7 +58,6 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     OverlayRenderEvent::class,
     ScreenRenderEvent::class,
     WindowResizeEvent::class,
-    WindowFocusEvent::class,
     MouseButtonEvent::class,
     MouseScrollEvent::class,
     MouseCursorEvent::class,
@@ -155,9 +154,6 @@ class ScreenRenderEvent(val screen: Screen, val context: DrawContext, mouseX: In
 @Nameable("windowResize")
 class WindowResizeEvent(val window: Long, val width: Int, val height: Int) : Event()
 
-@Nameable("windowFocus")
-class WindowFocusEvent(val window: Long, val focused: Boolean) : Event()
-
 @Nameable("mouseButton")
 class MouseButtonEvent(val window: Long, val button: Int, val action: Int, val mods: Int) : Event()
 
@@ -168,10 +164,10 @@ class MouseScrollEvent(val window: Long, val horizontal: Double, val vertical: D
 class MouseCursorEvent(val window: Long, val x: Double, val y: Double) : Event()
 
 @Nameable("keyboardKey")
-class KeyboardKeyEvent(val window: Long, val keyCode: Int, val scancode: Int, val action: Int, val mods: Int) : Event()
+class KeyboardKeyEvent(val window: Long, val keyCode: Int, val scanCode: Int, val action: Int, val mods: Int) : Event()
 
 @Nameable("keyboardChar")
-class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
+class KeyboardCharEvent(val window: Long, val codePoint: Int, val modifiers: Int) : Event()
 
 // Input events
 @Nameable("inputHandle")

@@ -15,20 +15,30 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.base.ultralight.js.bindings
+package net.ccbluex.liquidbounce.web.browser.supports
 
-import net.ccbluex.liquidbounce.utils.client.browseUrl
+import net.ccbluex.liquidbounce.web.browser.BrowserType
+import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 
 /**
- * Referenced by JS as `utils`
+ * The browser interface which is used to create tabs and manage the browser backend.
+ * Due to different possible browser backends, this interface is used to abstract the browser backend.
  */
-object UltralightJsUtils {
+interface IBrowser {
 
-    /**
-     * Open link
-     */
-    fun browse(url: String) = browseUrl(url)
+    fun makeDependenciesAvailable()
+
+    fun initBrowserBackend()
+
+    fun shutdownBrowserBackend()
+
+    fun createTab(url: String): ITab
+
+    fun getTabs(): List<ITab>
+
+    fun getBrowserType(): BrowserType
 
 }

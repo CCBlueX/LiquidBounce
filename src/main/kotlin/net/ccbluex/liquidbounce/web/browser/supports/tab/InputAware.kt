@@ -15,31 +15,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
-package net.ccbluex.liquidbounce.base.ultralight.impl.renderer
 
-import com.labymedia.ultralight.UltralightView
-import com.labymedia.ultralight.config.UltralightViewConfig
-import net.minecraft.client.gui.DrawContext
+package net.ccbluex.liquidbounce.web.browser.supports.tab
 
-/**
- * Render Views
- */
-interface ViewRenderer {
+interface InputAware {
 
-    /**
-     * Setup [viewConfig]
-     */
-    fun setupConfig(viewConfig: UltralightViewConfig)
+    fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int)
 
-    /**
-     * Render view
-     */
-    fun render(view: UltralightView, context: DrawContext)
+    fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int)
 
-    /**
-     * Delete
-     */
-    fun delete()
+    fun mouseMoved(mouseX: Double, mouseY: Double)
+
+    fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double)
+
+    fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int)
+
+    fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int)
+
+    fun charTyped(char: Char, modifiers: Int)
 
 }

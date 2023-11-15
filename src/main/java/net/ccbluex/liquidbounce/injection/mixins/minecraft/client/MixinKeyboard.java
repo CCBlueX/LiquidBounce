@@ -45,8 +45,8 @@ public class MixinKeyboard {
      * Hook char event
      */
     @Inject(method = "onChar", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", shift = At.Shift.BEFORE))
-    private void hookKeyboardChar(long window, int i, int j, CallbackInfo callback) {
-        EventManager.INSTANCE.callEvent(new KeyboardCharEvent(window, i));
+    private void hookKeyboardChar(long window, int codePoint, int modifiers, CallbackInfo callback) {
+        EventManager.INSTANCE.callEvent(new KeyboardCharEvent(window, codePoint, modifiers));
     }
 
     /**
