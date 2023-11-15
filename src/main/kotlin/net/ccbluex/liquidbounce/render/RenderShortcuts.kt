@@ -385,7 +385,8 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
  * @param colors The colors for the vertices
  */
 fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
-    require(vertices.size == 4 && colors.size == 4) { "lists must have exactly 4 elements" }
+    require(vertices.size == colors.size) { "there must be a color for every vertex" }
+    require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
