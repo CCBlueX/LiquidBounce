@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.item.*
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
@@ -43,27 +46,29 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
 
-        val bestArmor = findBestArmorPiecesInInventory(player)
+        val bestArmor = findBestArmorPiecesInInventory()
+
+        val screen = mc.currentScreen as? GenericContainerScreen
 
         for ((index, armorPiece) in bestArmor.withIndex()) {
-            val isOnLastPiece = index == bestArmor.lastIndex
-
-            if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
+            if (!canOperate(player))
                 break
-            }
 
+            val isOnLastPiece = index == bestArmor.lastIndex
             val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
 
             if (armorPiece.isAlreadyEquipped || stackInArmor.item == Items.ELYTRA) {
                 continue
             }
 
+            val serverSlot = armorPiece.itemSlot.getIdForServer(screen) ?: continue
+
             val moveOccurred = if (!stackInArmor.isNothing()) {
                 // Clear current armor
-                move(armorPiece.inventorySlot, true)
+                move(ArmorItemSlot(armorPiece.entitySlotId).getIdForServer(null)!!, true)
             } else {
                 // Equip new armor
-                move(armorPiece.slot, false)
+                move(serverSlot, false)
             }
 
             if (moveOccurred) {
@@ -71,6 +76,8 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
                 if (!isOnLastPiece) {
                     wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
+
+                    return@repeatable
                 }
             }
         }
@@ -82,12 +89,23 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         locked = false
     }
 
-    private fun findBestArmorPiecesInInventory(player: ClientPlayerEntity): List<ArmorPiece> {
-        val armorPiecesGroupedBySlotId = (0..41).mapNotNull { slot ->
-            val stack = player.inventory.getStack(slot) ?: return@mapNotNull null
+    private fun canOperate(player: ClientPlayerEntity): Boolean {
+        if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
+            return false
+        }
+        // We cannot move items while in a different screen
+        if (player.currentScreenHandler.syncId != 0) {
+            return false
+        }
 
-            return@mapNotNull when (stack.item) {
-                is ArmorItem -> ArmorPiece(stack, slot)
+        return true
+    }
+
+    private fun findBestArmorPiecesInInventory(): List<ArmorPiece> {
+        val itemsInInventory = ModuleInventoryCleaner.findItemSlotsInInventory()
+        val armorPiecesGroupedBySlotId = itemsInInventory.mapNotNull { slot ->
+            return@mapNotNull when (slot.itemStack.item) {
+                is ArmorItem -> ArmorPiece(slot)
                 else -> null
             }
         }.groupBy(ArmorPiece::entitySlotId)
@@ -104,7 +122,6 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         clientSlot: Int,
         isObsolete: Boolean,
     ): Boolean {
-        val serverSlot = convertClientSlotToServerSlot(clientSlot)
         val isInventoryOpen = InventoryTracker.isInventoryOpenServerSide
 
         val canTryHotbarMove = !isObsolete && hotbar && !isInventoryOpen
@@ -121,7 +138,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             return false
         }
 
-        return tryConventionalMove(isInventoryOpen, isObsolete, serverSlot)
+        return tryConventionalMove(isInventoryOpen, isObsolete, clientSlot)
     }
 
     private fun tryConventionalMove(
