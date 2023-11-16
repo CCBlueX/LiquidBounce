@@ -100,7 +100,7 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     return 0
 }
 
-fun isHotbarSlot(slot: Int) = slot == 40 || slot in 0..8
+fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
 val ToolItem.type: Int
     get() = when (this) {

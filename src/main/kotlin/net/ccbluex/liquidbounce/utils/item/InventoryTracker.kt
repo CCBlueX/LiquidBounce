@@ -45,7 +45,7 @@ object InventoryTracker : Listenable {
         }
 
         // Only way to find out if screen is silently opened
-        if (packet is ClickSlotC2SPacket && !isInventoryOpenServerSide) {
+        if (packet is ClickSlotC2SPacket) {
             isInventoryOpenServerSide = true
         }
     }

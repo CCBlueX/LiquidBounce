@@ -39,6 +39,8 @@ import net.minecraft.screen.slot.SlotActionType
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    //private val startDelay by intRange("StartDelay", 1..2, 0..20)
+    //private val closeDelay by intRange("CloseDelay", 1..2, 0..20)
     private val hotbar by boolean("Hotbar", true)
 
     var locked = false
@@ -57,28 +59,34 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             val isOnLastPiece = index == bestArmor.lastIndex
             val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
 
-            if (armorPiece.isAlreadyEquipped || stackInArmor.item == Items.ELYTRA) {
+            if (armorPiece.isAlreadyEquipped || stackInArmor.item == Items.ELYTRA)
                 continue
-            }
 
-            val serverSlot = armorPiece.itemSlot.getIdForServer(screen) ?: continue
+            val inventorySlot = armorPiece.itemSlot.getIdForServer(screen) ?: continue
+            val armorPieceSlot = ArmorItemSlot(armorPiece.entitySlotId).getIdForServer(null) ?: continue
 
             val moveOccurred = if (!stackInArmor.isNothing()) {
                 // Clear current armor
-                move(ArmorItemSlot(armorPiece.entitySlotId).getIdForServer(null)!!, true)
+                move(armorPieceSlot, true)
             } else {
                 // Equip new armor
-                move(serverSlot, false)
+                move(inventorySlot, false)
             }
 
             if (moveOccurred) {
                 locked = true
 
+                // Is it on its way to the last piece?
                 if (!isOnLastPiece) {
+                    // Wait the requested delay, then continue. In case the user violates NoMove,
+                    // it immediately goes to the next loop, breaks it and then closes inventory if it's open
                     wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
 
-                    return@repeatable
+                    continue
                 }
+
+                // Close in the next tick, good anti-cheats will need this
+                return@repeatable
             }
         }
 
@@ -93,6 +101,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
             return false
         }
+
         // We cannot move items while in a different screen
         if (player.currentScreenHandler.syncId != 0) {
             return false
