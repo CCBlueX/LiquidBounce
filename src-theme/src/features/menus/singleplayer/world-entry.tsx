@@ -1,3 +1,5 @@
+import List from "../list";
+
 import { World } from "~/utils/types";
 
 type WorldEntryProps = {
@@ -6,7 +8,7 @@ type WorldEntryProps = {
 
 export default function WorldEntry({ world }: WorldEntryProps) {
   return (
-    <div className="flex space-x-4 items-center bg-black/40 py-4 px-5 rounded-md">
+    <List.Item layoutId={world.name}>
       {/* Server Icon Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Server Icon */}
@@ -27,6 +29,6 @@ export default function WorldEntry({ world }: WorldEntryProps) {
           {world.lastPlayed}
         </div>
       </div>
-    </div>
+    </List.Item>
   );
 }

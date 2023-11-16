@@ -12,7 +12,7 @@ body {
   background-color: #181a1b;
 }
 
-@media screen and (max-width: 1366px) {
+/*@media screen and (max-width: 1366px) {
   body {
     zoom: 0.7;
   }
@@ -30,6 +30,12 @@ body {
   }
 }
 
+@media screen and (max-height: 900px) {
+  body {
+    zoom: 0.6;
+  }
+}
+
 @media screen and (max-height: 700px) {
   body {
     zoom: 0.5;
@@ -40,4 +46,4 @@ body {
   body {
     zoom: 0.4;
   }
-}
+}*/

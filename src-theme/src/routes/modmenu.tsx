@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 
-import { useModules } from "~/features/clickgui/useModules";
+import { useModules } from "~/features/clickgui/use-modules";
 
 import styles from "./modmenu.module.css";
-import Tooltip from "~/components/Tooltip";
+import Tooltip from "~/components/tooltip";
 
 export default function ModMenu() {
   const { modulesByCategory, toggleModule } = useModules();
@@ -17,6 +17,7 @@ export default function ModMenu() {
 
   return (
     <div className={styles.wrapper}>
+      <img src="./background.png" className="absolute inset-0 w-full h-full -z-10" />
       <div className={styles.container}>
         <ul className={styles.categories}>
           {Object.keys(modulesByCategory).map((category) => (
@@ -29,7 +30,7 @@ export default function ModMenu() {
                 <button onClick={() => setActiveCategory(category)}>
                   <img
                     className={styles.categoryIcon}
-                    src={`/icons/${category.toLowerCase()}.svg`}
+                    src={`./icons/${category.toLowerCase()}.svg`}
                     aria-hidden="true"
                   />
                 </button>

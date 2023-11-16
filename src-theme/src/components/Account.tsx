@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ReactComponent as Pen } from "~/assets/icons/pen.svg";
 
 import styles from "./account.module.css";
-import Tooltip from "./Tooltip";
+import Tooltip from "./tooltip";
 
 export default function Account() {
   // TODO: Pull these from the client
@@ -22,7 +22,7 @@ export default function Account() {
         <Tooltip text="Change Location">
           <Link to="/proxies" className={styles.location}>
             <img
-              src={`/flags/${location}.svg`}
+              src={`./flags/${location}.svg`}
               alt="Location"
             />
           </Link>

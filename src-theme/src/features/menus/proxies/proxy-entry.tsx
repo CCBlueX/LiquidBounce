@@ -1,3 +1,5 @@
+import List from "../list";
+
 import { Proxy } from "~/utils/types";
 
 type ProxyEntryProps = {
@@ -6,12 +8,12 @@ type ProxyEntryProps = {
 
 export default function ProxyEntry({ proxy }: ProxyEntryProps) {
   return (
-    <div className="flex space-x-4 items-center bg-black/40 py-4 px-5 rounded-md">
+    <List.Item layoutId={[proxy.host, proxy.port, proxy.username].join(":")}>
       {/* Proxy Location Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Proxy Location */}
         <img
-          src={`/flags/${proxy.location}.svg`}
+          src={`./flags/${proxy.location}.svg`}
           alt="Proxy Location"
           className="rounded-full"
         />
@@ -31,6 +33,6 @@ export default function ProxyEntry({ proxy }: ProxyEntryProps) {
           {proxy.host}:{proxy.port}
         </div>
       </div>
-    </div>
+    </List.Item>
   );
 }

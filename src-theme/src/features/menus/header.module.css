@@ -1,0 +1,11 @@
+/* "h-[92px] bg-black/70 rounded-xl flex items-center space-x-10 px-8"> */
+.header {
+  height: 92px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  gap: 40px;
+}

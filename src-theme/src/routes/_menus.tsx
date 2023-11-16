@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 
+import Account from "~/components/account";
 import AnimatedOutlet from "~/components/AnimatedOutlet";
 
 import { ReactComponent as Logo } from "~/assets/logo.svg";
@@ -8,18 +9,17 @@ import { ReactComponent as Logo } from "~/assets/logo.svg";
 import background from "~/assets/background.png";
 
 import styles from "./_menus.module.css";
-import Account from "~/components/Account";
 
 export default function MenuWrapper() {
   const location = useLocation();
 
   return (
     <div className={styles.wrapper}>
-      <motion.img
+      <img
         src={background}
-        loading="eager"
+        aria-hidden="true"
         className={styles.background}
-        alt="background"
+        alt=""
       />
       <div className={styles.container}>
         <motion.header
@@ -34,7 +34,7 @@ export default function MenuWrapper() {
         </motion.header>
         <AnimatePresence mode="popLayout">
           <motion.main
-            className="flex flex-1"
+            className={styles.content}
             key={location.pathname}
             variants={{
               show: {},

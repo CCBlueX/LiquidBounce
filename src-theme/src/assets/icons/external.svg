@@ -1,21 +1,21 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_3227_96)">
-<mask id="mask0_3227_96" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="5" y="5" width="22" height="22">
-<path d="M27 5H5V27H27V5Z" fill="currentColor"/>
-</mask>
-<g mask="url(#mask0_3227_96)">
-<mask id="mask1_3227_96" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="5" y="5" width="22" height="22">
-<path d="M27 5H5V27H27V5Z" fill="currentColor"/>
-</mask>
-<g mask="url(#mask1_3227_96)">
-<path d="M26 5H18C17.7348 5 17.4804 5.10536 17.2929 5.29289C17.1053 5.48043 17 5.73478 17 6C17 6.26522 17.1053 6.51957 17.2929 6.70711C17.4804 6.89464 17.7348 7 18 7H23.586L13.293 17.293C13.1975 17.3852 13.1213 17.4956 13.0689 17.6176C13.0165 17.7396 12.9889 17.8708 12.9877 18.0036C12.9866 18.1364 13.0119 18.2681 13.0622 18.391C13.1124 18.5139 13.1867 18.6255 13.2806 18.7194C13.3745 18.8133 13.4861 18.8875 13.609 18.9378C13.7319 18.9881 13.8636 19.0134 13.9964 19.0123C14.1292 19.0111 14.2604 18.9835 14.3824 18.9311C14.5044 18.8787 14.6147 18.8025 14.707 18.707L25 8.414V14C25 14.2652 25.1053 14.5196 25.2929 14.7071C25.4804 14.8946 25.7348 15 26 15C26.2652 15 26.5196 14.8946 26.7071 14.7071C26.8946 14.5196 27 14.2652 27 14V6C27 5.73478 26.8946 5.48043 26.7071 5.29289C26.5196 5.10536 26.2652 5 26 5Z" fill="currentColor"/>
-<path d="M22 15C21.7348 15 21.4804 15.1054 21.2929 15.2929C21.1054 15.4804 21 15.7348 21 16V25H7V11H16C16.2652 11 16.5196 10.8946 16.7071 10.7071C16.8946 10.5196 17 10.2652 17 10C17 9.73478 16.8946 9.48043 16.7071 9.29289C16.5196 9.10536 16.2652 9 16 9H6C5.73478 9 5.48043 9.10536 5.29289 9.29289C5.10536 9.48043 5 9.73478 5 10V26C5 26.2652 5.10536 26.5196 5.29289 26.7071C5.48043 26.8946 5.73478 27 6 27H22C22.2652 27 22.5196 26.8946 22.7071 26.7071C22.8946 26.5196 23 26.2652 23 26V16C23 15.7348 22.8946 15.4804 22.7071 15.2929C22.5196 15.1054 22.2652 15 22 15Z" fill="currentColor"/>
-</g>
-</g>
-</g>
-<defs>
-<clipPath id="clip0_3227_96">
-<rect width="22" height="22" fill="currentColor" transform="translate(5 5)"/>
-</clipPath>
-</defs>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="22" height="22" viewBox="0 0 22 22">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_28" data-name="Rectangle 28" width="22" height="22" transform="translate(491 478)" fill="#fff"/>
+    </clipPath>
+  </defs>
+  <g id="Mask_Group_10" data-name="Mask Group 10" transform="translate(-491 -478)" clip-path="url(#clip-path)">
+    <g id="foreign" transform="translate(491 478)">
+      <g id="Group_70" data-name="Group 70">
+        <g id="Group_69" data-name="Group 69">
+          <path id="Path_34" data-name="Path 34" d="M21,0H13a1,1,0,1,0,0,2h5.586L8.293,12.293a1,1,0,1,0,1.414,1.414L20,3.414V9a1,1,0,1,0,2,0V1A1,1,0,0,0,21,0Z" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_72" data-name="Group 72">
+        <g id="Group_71" data-name="Group 71">
+          <path id="Path_35" data-name="Path 35" d="M17,10a1,1,0,0,0-1,1v9H2V6h9a1,1,0,1,0,0-2H1A1,1,0,0,0,0,5V21a1,1,0,0,0,1,1H17a1,1,0,0,0,1-1V11A1,1,0,0,0,17,10Z" fill="currentColor"/>
+        </g>
+      </g>
+    </g>
+  </g>
 </svg>

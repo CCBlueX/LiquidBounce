@@ -1,3 +1,5 @@
+import List from "../list";
+
 import type { Account } from "~/utils/types";
 
 type AccountEntryProps = {
@@ -6,7 +8,7 @@ type AccountEntryProps = {
 
 export default function AccountEntry({ account }: AccountEntryProps) {
   return (
-    <div className="flex space-x-4 items-center bg-black/40 py-4 px-5 rounded-md">
+    <List.Item layoutId={account.uuid}>
       {/* Account Head Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Account Head */}
@@ -29,6 +31,6 @@ export default function AccountEntry({ account }: AccountEntryProps) {
           {account.email}
         </div>
       </div>
-    </div>
+    </List.Item>
   );
 }

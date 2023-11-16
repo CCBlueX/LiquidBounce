@@ -1,23 +1,56 @@
-<svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_3227_125)">
-<mask id="mask0_3227_125" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="34" height="34">
-<path d="M34 0H0V34H34V0Z" fill="white"/>
-</mask>
-<g mask="url(#mask0_3227_125)">
-<path d="M2.162 26.2L0 34L7.8 31.838L2.162 26.2Z" fill="currentColor"/>
-<path d="M33.128 2.28L31.72 0.871998C31.1581 0.314461 30.3986 0.00160599 29.607 0.00160599C28.8154 0.00160599 28.0559 0.314461 27.494 0.871998L26.488 1.878L32.123 7.513L33.129 6.507C33.6867 5.9449 33.9996 5.18512 33.9994 4.39329C33.9992 3.60147 33.686 2.84183 33.128 2.28Z" fill="currentColor"/>
-<path d="M25.0786 3.28644L23.67 4.695L29.3049 10.3299L30.7135 8.92138L25.0786 3.28644Z" fill="currentColor"/>
-<path d="M25.7823 9.62575L7.09201 28.316L9.20485 30.4288L27.8951 11.7386L25.7823 9.62575Z" fill="currentColor"/>
-<path d="M22.2613 6.10375L3.57101 24.794L5.68385 26.9068L24.3741 8.21659L22.2613 6.10375Z" fill="currentColor"/>
-<path d="M32.1 22.948C31.4047 22.2514 30.5595 21.7228 29.6289 21.4026C28.6982 21.0823 27.7067 20.9788 26.73 21.1L24.039 18.409L18.404 24.044L21.1 26.735C20.8989 28.3687 21.328 30.0176 22.3 31.346L28.233 25.413L33.294 30.474C33.9159 29.2543 34.1354 27.869 33.9209 26.5168C33.7064 25.1647 33.0689 23.9153 32.1 22.948Z" fill="currentColor"/>
-<path d="M26.821 29.639L23.706 32.754C24.6741 33.4606 25.8192 33.885 27.014 33.98C28.2087 34.075 29.4065 33.8368 30.474 33.292L26.821 29.639Z" fill="currentColor"/>
-<path d="M3.526 0.707999L7.179 4.361L10.294 1.246C9.32591 0.539373 8.18085 0.114995 6.98607 0.0200196C5.79129 -0.0749556 4.59357 0.163191 3.526 0.707999Z" fill="currentColor"/>
-<path d="M12.9 7.265C13.1011 5.63131 12.672 3.9824 11.7 2.654L5.77001 8.587L0.709014 3.526C0.174061 4.57306 -0.0657314 5.74601 0.0153613 6.91901C0.096454 8.09201 0.495372 9.22081 1.16932 10.1843C1.84327 11.1478 2.76681 11.9096 3.84088 12.388C4.91494 12.8665 6.09899 13.0434 7.26601 12.9L9.95701 15.591L15.592 9.956L12.9 7.265Z" fill="currentColor"/>
-</g>
-</g>
-<defs>
-<clipPath id="clip0_3227_125">
-<rect width="34" height="34" fill="white"/>
-</clipPath>
-</defs>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="34" height="34" viewBox="0 0 34 34">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_7" data-name="Rectangle 7" width="34" height="34" transform="translate(38 28.011)" fill="#fff"/>
+    </clipPath>
+  </defs>
+  <g id="Mask_Group_7" data-name="Mask Group 7" transform="translate(-38 -28.011)" clip-path="url(#clip-path)">
+    <g id="customize" transform="translate(38 28.011)">
+      <g id="Group_52" data-name="Group 52">
+        <g id="Group_51" data-name="Group 51">
+          <path id="Path_25" data-name="Path 25" d="M2.162,26.2,0,34l7.8-2.162Z" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_54" data-name="Group 54">
+        <g id="Group_53" data-name="Group 53">
+          <path id="Path_26" data-name="Path 26" d="M33.128,2.28,31.72.872a3,3,0,0,0-4.226,0L26.488,1.878l5.635,5.635,1.006-1.006A3,3,0,0,0,33.128,2.28Z" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_56" data-name="Group 56">
+        <g id="Group_55" data-name="Group 55">
+          <rect id="Rectangle_41" data-name="Rectangle 41" width="1.992" height="7.969" transform="translate(23.67 4.695) rotate(-45)" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_58" data-name="Group 58">
+        <g id="Group_57" data-name="Group 57">
+          <rect id="Rectangle_42" data-name="Rectangle 42" width="26.432" height="2.988" transform="translate(7.092 28.316) rotate(-45)" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_60" data-name="Group 60">
+        <g id="Group_59" data-name="Group 59">
+          <rect id="Rectangle_43" data-name="Rectangle 43" width="26.432" height="2.988" transform="translate(3.571 24.794) rotate(-45)" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_62" data-name="Group 62">
+        <g id="Group_61" data-name="Group 61">
+          <path id="Path_27" data-name="Path 27" d="M32.1,22.948a6.463,6.463,0,0,0-5.37-1.848l-2.691-2.691-5.635,5.635L21.1,26.735a6.47,6.47,0,0,0,1.2,4.611l5.933-5.933,5.061,5.061A6.477,6.477,0,0,0,32.1,22.948Z" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_64" data-name="Group 64">
+        <g id="Group_63" data-name="Group 63">
+          <path id="Path_28" data-name="Path 28" d="M26.821,29.639l-3.115,3.115a6.482,6.482,0,0,0,6.768.538Z" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_66" data-name="Group 66">
+        <g id="Group_65" data-name="Group 65">
+          <path id="Path_29" data-name="Path 29" d="M3.526.708,7.179,4.361l3.115-3.115A6.482,6.482,0,0,0,3.526.708Z" fill="currentColor"/>
+        </g>
+      </g>
+      <g id="Group_68" data-name="Group 68">
+        <g id="Group_67" data-name="Group 67">
+          <path id="Path_30" data-name="Path 30" d="M12.9,7.265a6.47,6.47,0,0,0-1.2-4.611L5.77,8.587.709,3.526A6.476,6.476,0,0,0,7.266,12.9l2.691,2.691,5.635-5.635Z" fill="currentColor"/>
+        </g>
+      </g>
+    </g>
+  </g>
 </svg>

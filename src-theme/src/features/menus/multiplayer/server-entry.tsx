@@ -1,5 +1,8 @@
+import LatencyPill from "./latency-pill";
+
+import List from "../list";
+
 import { Server } from "~/utils/types";
-import LatencyPill from "./LatencyPill";
 
 type ServerEntryProps = {
   server: Server;
@@ -7,7 +10,7 @@ type ServerEntryProps = {
 
 export default function ServerEntry({ server }: ServerEntryProps) {
   return (
-    <div className="flex space-x-4 items-center bg-black/40 py-4 px-5 rounded-md">
+    <List.Item layoutId={server.name}>
       {/* Server Icon Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Server Icon */}
@@ -34,6 +37,6 @@ export default function ServerEntry({ server }: ServerEntryProps) {
         {/* Server MOTD */}
         <div className="text-white/50 text-xl font-semibold">{server.motd}</div>
       </div>
-    </div>
+    </List.Item>
   );
 }

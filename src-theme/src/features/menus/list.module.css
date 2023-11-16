@@ -1,0 +1,24 @@
+.list-container {
+  padding: 32px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  flex: 1 1 auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease-in-out;
+  background-color: rgba(0, 0, 0, 0.4);
+}

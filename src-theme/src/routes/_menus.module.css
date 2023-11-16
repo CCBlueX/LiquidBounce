@@ -19,11 +19,14 @@
 .container {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
 
   padding: 54px 72px;
-  flex: 1;
+  flex: 1 1 100%;
 
-  height: 100%;
+  gap: 80px;
+
+  zoom: var(--scale-factor);
 }
 
 .header {
@@ -31,9 +34,14 @@
   justify-content: space-between;
   align-items: center;
 
-  margin-bottom: 80px;
+  flex: 0 0 98px;
 }
 
 .logo {
   height: 98px;
+}
+
+.content {
+  display: flex;
+  flex: 1 1 auto;
 }

@@ -1,9 +1,10 @@
 import { SVGProps } from "react";
 import styles from "./button.module.css";
-import Tooltip from "./Tooltip";
+import Tooltip from "./tooltip";
 
 type ButtonProps = {
   variant?: "primary" | "ghost";
+  animated?: boolean;
   icon?: React.ElementType<SVGProps<SVGSVGElement>>;
   children?: React.ReactNode;
   tooltip?: string;

@@ -1,24 +1,76 @@
-import { motion } from "framer-motion";
 import Fuse from "fuse.js";
-import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 
-import AnimatedFooter from "~/components/AnimatedFooter";
-import Button from "~/components/Button";
+import Button from "~/components/button";
+import Combobox, { Option } from "~/components/combobox";
+import Switch from "~/components/switch";
 
-import Header from "~/features/singleplayer/Header";
-import WorldEntry from "~/features/singleplayer/WorldEntry";
+import Footer from "~/features/menus/footer";
+import Header from "~/features/menus/header";
+import Menu from "~/features/menus/menu";
+
+import WorldEntry from "~/features/menus/singleplayer/world-entry";
+import { useWorlds } from "~/features/menus/singleplayer/use-worlds";
 
 // Left Footer Buttons
 import { ReactComponent as Add } from "~/assets/icons/add.svg";
-
-// Right Footer Buttons
-import { ReactComponent as Back } from "~/assets/icons/back.svg";
-import { useWorlds } from "~/features/singleplayer/useWorlds";
+import List from "~/features/menus/list";
+import SearchBar from "~/features/menus/searchbar";
 
 export default function Singleplayer() {
   const { worlds } = useWorlds();
   const [search, setSearch] = useState("");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [gameModes, setGameModes] = useState<Option[]>([
+    {
+      label: "Survival",
+      value: "survival",
+    },
+    {
+      label: "Creative",
+      value: "creative",
+    },
+    {
+      label: "Adventure",
+      value: "adventure",
+    },
+    {
+      label: "Spectator",
+      value: "spectator",
+    },
+  ]);
+  const [difficulties, setDifficulties] = useState<Option[]>([
+    {
+      label: "Easy",
+      value: "easy",
+    },
+    {
+      label: "Normal",
+      value: "normal",
+    },
+    {
+      label: "Hard",
+      value: "hard",
+    },
+    {
+      label: "Peaceful",
+      value: "peaceful",
+    },
+  ]);
+  const [worldTypes, setWorldTypes] = useState<Option[]>([
+    {
+      label: "Default",
+      value: "default",
+    },
+    {
+      label: "Superflat",
+      value: "superflat",
+    },
+    {
+      label: "Large Biomes",
+      value: "large_biomes",
+    },
+  ]);
 
   const filteredWorlds = useMemo(() => {
     if (!search) return worlds;
@@ -31,54 +83,68 @@ export default function Singleplayer() {
   }, [search, worlds]);
 
   return (
-    <div className="flex flex-col space-y-8 flex-1 justify-between">
-      <motion.div
-        variants={{
-          show: {
-            x: 0,
-            opacity: 1,
-            transition: {
-              delay: 0.5,
-              duration: 0.5,
-              ease: "anticipate",
-            },
-          },
-          hide: {
-            x: "100%",
-            opacity: 0,
-            transition: {
-              duration: 1,
-              ease: "anticipate",
-            },
-          },
-        }}
-        initial="hide"
-        animate="show"
-        exit="hide"
-        className="flex flex-col space-y-8 flex-1"
-      >
-        <Header onSearch={setSearch} />
-        <motion.div className="py-4 px-8 bg-black/70 rounded-xl flex-1">
-          <div className="flex flex-col space-y-4">
-            {filteredWorlds.map((world) => (
-              <WorldEntry key={world.name} world={world} />
-            ))}
-          </div>
-        </motion.div>
-      </motion.div>
-      <AnimatedFooter className="flex justify-between items-center">
-        {/* Actions */}
-        <div className="h-[92px] bg-black/70 rounded-xl flex items-center space-x-8 px-8">
+    <Menu>
+      <Menu.Content>
+        <Header>
+          <SearchBar onChange={setSearch} />
+          <Switch value={favoritesOnly} onChange={setFavoritesOnly}>
+            Favorites Only
+          </Switch>
+          <Combobox
+            options={gameModes}
+            onToggle={(option) =>
+              setGameModes((prev) =>
+                prev.map((item) =>
+                  item.value === option.value
+                    ? { ...item, checked: !item.checked }
+                    : item
+                )
+              )
+            }
+          >
+            Game Mode
+          </Combobox>
+          <Combobox
+            options={difficulties}
+            onToggle={(option) =>
+              setDifficulties((prev) =>
+                prev.map((item) =>
+                  item.value === option.value
+                    ? { ...item, checked: !item.checked }
+                    : item
+                )
+              )
+            }
+          >
+            Difficulty
+          </Combobox>
+          <Combobox
+            options={worldTypes}
+            onToggle={(option) =>
+              setWorldTypes((prev) =>
+                prev.map((item) =>
+                  item.value === option.value
+                    ? { ...item, checked: !item.checked }
+                    : item
+                )
+              )
+            }
+          >
+            World Type
+          </Combobox>
+        </Header>
+        <List>
+          {filteredWorlds.map((world) => (
+            <WorldEntry key={world.name} world={world} />
+          ))}
+        </List>
+      </Menu.Content>
+      <Footer>
+        <Footer.Actions>
           <Button icon={Add}>Add</Button>
-        </div>
-
-        {/* Back Button */}
-        <div className="h-[92px] bg-black/70 rounded-xl flex items-center space-x-8 px-8">
-          <Link to="/title">
-            <Button icon={Back}>Back</Button>
-          </Link>
-        </div>
-      </AnimatedFooter>
-    </div>
+        </Footer.Actions>
+        <Footer.Back />
+      </Footer>
+    </Menu>
   );
 }
