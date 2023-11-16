@@ -18,16 +18,17 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.minecraft.item.ArmorItem
-import net.minecraft.item.ItemStack
 
-class ArmorPiece(val itemStack: ItemStack, val slot: Int) {
+class ArmorPiece(val itemSlot: ItemSlot) {
     val entitySlotId: Int
-        get() = (itemStack.item as ArmorItem).slotType.entitySlotId
+        get() = (itemSlot.itemStack.item as ArmorItem).slotType.entitySlotId
     val inventorySlot: Int
         get() = 36 + entitySlotId
     val isAlreadyEquipped: Boolean
-        get() = slot in 36..39
+        get() = itemSlot.slotType == ItemSlotType.ARMOR
     val isReachableByHand: Boolean
-        get() = isHotbarSlot(slot)
+        get() = itemSlot.slotType == ItemSlotType.HOTBAR
 }

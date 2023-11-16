@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.item.*
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
@@ -36,6 +39,8 @@ import net.minecraft.screen.slot.SlotActionType
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    //private val startDelay by intRange("StartDelay", 1..2, 0..20)
+    //private val closeDelay by intRange("CloseDelay", 1..2, 0..20)
     private val hotbar by boolean("Hotbar", true)
 
     var locked = false
@@ -43,35 +48,45 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
 
-        val bestArmor = findBestArmorPiecesInInventory(player)
+        val bestArmor = findBestArmorPiecesInInventory()
+
+        val screen = mc.currentScreen as? GenericContainerScreen
 
         for ((index, armorPiece) in bestArmor.withIndex()) {
-            val isOnLastPiece = index == bestArmor.lastIndex
-
-            if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
+            if (!canOperate(player))
                 break
-            }
 
+            val isOnLastPiece = index == bestArmor.lastIndex
             val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
 
-            if (armorPiece.isAlreadyEquipped || stackInArmor.item == Items.ELYTRA) {
+            if (armorPiece.isAlreadyEquipped || stackInArmor.item == Items.ELYTRA)
                 continue
-            }
+
+            val inventorySlot = armorPiece.itemSlot.getIdForServer(screen) ?: continue
+            val armorPieceSlot = ArmorItemSlot(armorPiece.entitySlotId).getIdForServer(null) ?: continue
 
             val moveOccurred = if (!stackInArmor.isNothing()) {
                 // Clear current armor
-                move(armorPiece.inventorySlot, true)
+                move(armorPieceSlot, true)
             } else {
                 // Equip new armor
-                move(armorPiece.slot, false)
+                move(inventorySlot, false)
             }
 
             if (moveOccurred) {
                 locked = true
 
+                // Is it on its way to the last piece?
                 if (!isOnLastPiece) {
+                    // Wait the requested delay, then continue. In case the user violates NoMove,
+                    // it immediately goes to the next loop, breaks it and then closes inventory if it's open
                     wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
+
+                    continue
                 }
+
+                // Close in the next tick, good anti-cheats will need this
+                return@repeatable
             }
         }
 
@@ -82,12 +97,24 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         locked = false
     }
 
-    private fun findBestArmorPiecesInInventory(player: ClientPlayerEntity): List<ArmorPiece> {
-        val armorPiecesGroupedBySlotId = (0..41).mapNotNull { slot ->
-            val stack = player.inventory.getStack(slot) ?: return@mapNotNull null
+    private fun canOperate(player: ClientPlayerEntity): Boolean {
+        if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
+            return false
+        }
 
-            return@mapNotNull when (stack.item) {
-                is ArmorItem -> ArmorPiece(stack, slot)
+        // We cannot move items while in a different screen
+        if (player.currentScreenHandler.syncId != 0) {
+            return false
+        }
+
+        return true
+    }
+
+    private fun findBestArmorPiecesInInventory(): List<ArmorPiece> {
+        val itemsInInventory = ModuleInventoryCleaner.findItemSlotsInInventory()
+        val armorPiecesGroupedBySlotId = itemsInInventory.mapNotNull { slot ->
+            return@mapNotNull when (slot.itemStack.item) {
+                is ArmorItem -> ArmorPiece(slot)
                 else -> null
             }
         }.groupBy(ArmorPiece::entitySlotId)
@@ -104,7 +131,6 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         clientSlot: Int,
         isObsolete: Boolean,
     ): Boolean {
-        val serverSlot = convertClientSlotToServerSlot(clientSlot)
         val isInventoryOpen = InventoryTracker.isInventoryOpenServerSide
 
         val canTryHotbarMove = !isObsolete && hotbar && !isInventoryOpen
@@ -121,7 +147,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             return false
         }
 
-        return tryConventionalMove(isInventoryOpen, isObsolete, serverSlot)
+        return tryConventionalMove(isInventoryOpen, isObsolete, clientSlot)
     }
 
     private fun tryConventionalMove(

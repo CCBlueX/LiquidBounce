@@ -1,13 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
-import net.minecraft.item.ItemStack
 
-class WeightedArmorItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-    private val armorPiece = ArmorPiece(itemStack, slot)
+class WeightedArmorItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
+    private val armorPiece = ArmorPiece(itemSlot)
 
     override val category: ItemCategory
         get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
