@@ -205,9 +205,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             reset()
                             return
                         }
-
-                    // Insert checks that check for if S1CPacketEntityMetadata and entity is target and in that metadata, health is set to 0 or less than set target to null and clearPackets()
-                    // ^ what if server spoofs target's health to 0?
+                    
                     is S1CPacketEntityMetadata ->
                         if (target != null && target!!.entityId == packet.entityId)
                         {
