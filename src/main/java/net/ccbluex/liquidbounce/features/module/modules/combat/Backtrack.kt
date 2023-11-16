@@ -8,9 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.Blink
-import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
+import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePacket
@@ -34,6 +34,7 @@ import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
+
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
@@ -201,11 +202,33 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     is S13PacketDestroyEntities ->
                         if (target != null && target!!.entityId in packet.entityIDs) {
                             clearPackets()
+                            reset()
                             return
                         }
 
                     // Insert checks that check for if S1CPacketEntityMetadata and entity is target and in that metadata, health is set to 0 or less than set target to null and clearPackets()
                     // ^ what if server spoofs target's health to 0?
+                    is S1CPacketEntityMetadata ->
+                        if (target != null && target!!.entityId == packet.entityId)
+                        {
+                            val meta = packet.func_149376_c()
+                            if (meta != null) {
+                                var i = 0
+                                while (meta.size > i) {
+                                    val dataValueId = meta.get(i).getDataValueId()
+                                    val objectValue = meta.get(i).getObject().toString().toDoubleOrNull()
+
+                                    if (dataValueId == 6) {
+                                        if (objectValue != null && objectValue <= 0.0) {
+                                            clearPackets()
+                                            reset()
+                                            return
+                                        }
+                                    }
+                                    i++
+                                }
+                            }
+                        }
                 }
 
                 // Cancel every received packet to avoid possible server synchronization issues from random causes.
