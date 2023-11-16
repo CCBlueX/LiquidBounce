@@ -219,7 +219,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                                     val objectValue = meta.get(i).getObject().toString().toDoubleOrNull()
 
                                     if (dataValueId == 6) {
-                                        if (objectValue != null && objectValue <= 0.0) {
+                                        if (objectValue != null && !objectValue.isNaN() && objectValue <= 0.0) {
                                             clearPackets()
                                             reset()
                                             return
