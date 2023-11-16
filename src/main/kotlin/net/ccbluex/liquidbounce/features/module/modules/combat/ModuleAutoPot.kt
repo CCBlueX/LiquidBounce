@@ -22,11 +22,14 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.item.*
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.SplashPotionItem
@@ -54,20 +57,22 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
         val potionSlot = findInventorySlot { isPotion(it) } ?: return@repeatable
 
-        if (isHotbarSlot(potionSlot)) {
-            if (!tryPot(potionSlot)) {
+        if (potionSlot is HotbarItemSlot) {
+            if (!tryUsePot(potionSlot)) {
                 return@repeatable
             }
 
             wait(delay)
         } else {
-            tryToMoveSlotInHotbar(potionSlot)
-        }
+            if (!tryToMoveSlotInHotbar(potionSlot)) {
+                return@repeatable
+            }
 
-        return@repeatable
+            wait(delay)
+        }
     }
 
-    private fun tryPot(foundPotSlot: Int): Boolean {
+    private fun tryUsePot(foundPotSlot: HotbarItemSlot): Boolean {
         val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
 
         val isCloseGround = player.y - (collisionBlock?.y ?: 0) <= tillGroundDistance
@@ -85,25 +90,32 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
             return false
         }
 
-        clickHotbarOrOffhand(foundPotSlot)
+        useHotbarSlotOrOffhand(foundPotSlot)
 
         return true
     }
 
-    private fun tryToMoveSlotInHotbar(foundPotSlot: Int) {
+    /**
+     * Moves the given slot to the hotbar if possible.
+     *
+     * @return true if a move occurred
+     */
+    private fun tryToMoveSlotInHotbar(foundPotSlot: ItemSlot): Boolean {
         val isSpaceInHotbar = (0..8).any { player.inventory.getStack(it).isNothing() }
 
         if (!isSpaceInHotbar) {
-            return
+            return false
         }
 
-        val serverSlot = convertClientSlotToServerSlot(foundPotSlot)
+        val serverSlotId = foundPotSlot.getIdForServerWithCurrentScreen() ?: return false
 
         runWithOpenedInventory {
-            interaction.clickSlot(0, serverSlot, 0, SlotActionType.QUICK_MOVE, player)
+            interaction.clickSlot(0, serverSlotId, 0, SlotActionType.QUICK_MOVE, player)
 
             true
         }
+
+        return true
     }
 
     private fun isPotion(stack: ItemStack): Boolean {

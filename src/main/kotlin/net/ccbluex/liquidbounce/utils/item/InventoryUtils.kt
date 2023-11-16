@@ -7,6 +7,11 @@ import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_
 import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -17,6 +22,21 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
 
+/**
+ * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
+ */
+val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
+    val hotbarItems = (0 until 9).map { HotbarItemSlot(it) }
+    val offHandItem = listOf(OffHandSlot)
+    val inventoryItems = (0 until 27).map { InventoryItemSlot(it) }
+    val armorItems = (0 until 4).map { ArmorItemSlot(it) }
+
+    return@run hotbarItems + offHandItem + inventoryItems + armorItems
+}
+
+fun findNonEmptySlotsInInventory(): List<ItemSlot> {
+    return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
+}
 
 fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = null): Int {
     if (screen == null) {
@@ -96,11 +116,17 @@ inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
     }
 }
 
-fun clickHotbarOrOffhand(item: Int) {
+fun useHotbarSlotOrOffhand(item: HotbarItemSlot) {
     // We assume whatever called this function passed the isHotBar check
-    when (val slot = convertServerSlotToClientSlot(item)) {
-        45 -> interactItem(Hand.OFF_HAND)
-        else -> interactItem(Hand.MAIN_HAND) { SilentHotbar.selectSlotSilently(null, slot, 1) }
+    when (item) {
+        OffHandSlot -> {
+            interactItem(Hand.OFF_HAND)
+        }
+        else -> {
+            interactItem(Hand.MAIN_HAND) {
+                SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, 1)
+            }
+        }
     }
 }
 

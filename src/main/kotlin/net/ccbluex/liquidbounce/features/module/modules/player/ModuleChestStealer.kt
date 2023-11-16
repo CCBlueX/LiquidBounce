@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.utils.item.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
@@ -132,7 +133,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         requiredSpace: Int,
         screen: GenericContainerScreen
     ): Boolean? {
-        val itemsInInv = ModuleInventoryCleaner.findItemSlotsInInventory()
+        val itemsInInv = findNonEmptySlotsInInventory()
         var stillRequiredSpace = requiredSpace
         val itemsToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
 
@@ -249,7 +250,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {
-            val availableItems = ModuleInventoryCleaner.findItemSlotsInInventory() + this.findItemsInContainer(screen)
+            val availableItems = findNonEmptySlotsInInventory() + this.findItemsInContainer(screen)
 
             CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
         }

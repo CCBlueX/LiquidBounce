@@ -22,7 +22,11 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.item.findNonEmptySlotsInInventory
+import net.ccbluex.liquidbounce.utils.item.isInInventoryScreen
+import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
@@ -80,7 +84,8 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         if (!canCurrentlyDoCleanup())
             return@repeatable
 
-        val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, findItemSlotsInInventory()).generatePlan()
+        val cleanupPlan =
+            CleanupPlanGenerator(cleanupTemplateFromSettings, findNonEmptySlotsInInventory()).generatePlan()
 
         var hasClickedOnce = false
 
@@ -96,8 +101,8 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             val fromServerId = hotbarSwap.from.getIdForServer(null) ?: continue
 
             if (tryRunActionInInventory {
-                executeAction(fromServerId, hotbarSwap.to.hotbarSlotForServer, SlotActionType.SWAP)
-            }) {
+                    executeAction(fromServerId, hotbarSwap.to.hotbarSlotForServer, SlotActionType.SWAP)
+                }) {
                 hasClickedOnce = true
 
                 cleanupPlan.remapSlots(
@@ -146,7 +151,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         }
 
         // It is important that we call findItemSlotsInInventory() here again, because the inventory has changed.
-        val itemsToThrowOut = findItemsToThrowOut(cleanupPlan, findItemSlotsInInventory())
+        val itemsToThrowOut = findItemsToThrowOut(cleanupPlan, findNonEmptySlotsInInventory())
 
         for (slot in itemsToThrowOut) {
             if (!canCurrentlyDoCleanup()) {
@@ -194,15 +199,6 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             isGreedy = isGreedy
         )
 
-    fun findItemSlotsInInventory(): List<ItemSlot> {
-        val hotbarItems = (0 until 9).mapNotNull { HotbarItemSlot(it).somethingOrNull() }
-        val offHandItem = listOfNotNull(OffHandSlot.somethingOrNull())
-        val inventoryItems = (0 until 27).mapNotNull { InventoryItemSlot(it).somethingOrNull() }
-        val armorItems = (0 until 4).mapNotNull { ArmorItemSlot(it).somethingOrNull() }
-
-        return hotbarItems + offHandItem + inventoryItems + armorItems
-    }
-
     fun findItemsToThrowOut(cleanupPlan: InventoryCleanupPlan, itemsInInv: List<ItemSlot>): List<ItemSlot> {
         return itemsInInv.filter { it !in cleanupPlan.usefulItems }
     }
@@ -248,11 +244,4 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
         return false
     }
-}
-
-private fun ItemSlot.somethingOrNull(): ItemSlot? {
-    if (this.itemStack.isEmpty)
-        return null
-
-    return this
 }
