@@ -220,7 +220,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     @EventTarget(ignoreCondition=true)
-    fun onTick(event: UpdateEvent) {
+    fun onTick(event: TickEvent) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity is EntityLivingBase) {
                 val entityMixin = entity as? IMixinEntity
@@ -232,24 +232,27 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 }
             }
         }
+    }
 
-        if (!handleEvents())
-            return
+    @EventTarget
+    fun onMotion(event: MotionEvent)
+    {
+        if (event.eventState == EventState.POST)
+        {
+            if (mode != "Modern")
+                return
 
-        if (mode != "Modern")
-            return
+            val target = target as? EntityLivingBase
+            val targetMixin = target as? IMixinEntity
+            val trueDist = targetMixin?.let {mc.thePlayer.getDistance(it.trueX, it.trueY, it.trueZ)} ?: 0.0
+            val dist = target?.let {mc.thePlayer.getDistance(it.posX, it.posY, it.posZ)} ?: 0.0
 
-        val target = target as? EntityLivingBase
-        val targetMixin = target as? IMixinEntity
-        val trueDist = targetMixin?.let {mc.thePlayer.getDistance(it.trueX, it.trueY, it.trueZ)} ?: 0.0
-        val dist = target?.let {mc.thePlayer.getDistance(it.posX, it.posY, it.posZ)} ?: 0.0
-
-        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos && trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
-        ) {
-            handlePackets()
-        } else {
-            clearPackets()
-            globalTimer.reset()
+            if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos && trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+                handlePackets()
+            } else {
+                clearPackets()
+                globalTimer.reset()
+            }
         }
     }
 
