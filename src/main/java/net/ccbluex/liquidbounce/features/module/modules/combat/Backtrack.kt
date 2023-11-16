@@ -205,7 +205,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             reset()
                             return
                         }
-                    
+
                     is S1CPacketEntityMetadata ->
                         if (target != null && target!!.entityId == packet.entityId)
                         {
@@ -226,7 +226,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                                     i++
                                 }
                             }
+                            return
                         }
+                    is S19PacketEntityStatus ->
+                        if (packet.getEntity(world).entityId == target!!.entityId)
+                            return
                 }
 
                 // Cancel every received packet to avoid possible server synchronization issues from random causes.
