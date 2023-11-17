@@ -231,9 +231,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             }
                             return
                         }
-                    is S19PacketEntityStatus ->
-                        if (packet.getEntity(world).entityId == target?.entityId)
+                    is S19PacketEntityStatus -> {
+                        if (packet.getEntity(world)?.entityId == target?.entityId)
                             return
+                    }
                 }
 
                 // Cancel every received packet to avoid possible server synchronization issues from random causes.
