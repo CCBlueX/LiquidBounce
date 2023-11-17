@@ -210,7 +210,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                         }
 
                     is S1CPacketEntityMetadata ->
-                        if (target != null && target?.entityId == packet.entityId)
+                        if (target?.entityId == packet.entityId)
                         {
                             val meta = packet.func_149376_c()
                             if (meta != null) {
