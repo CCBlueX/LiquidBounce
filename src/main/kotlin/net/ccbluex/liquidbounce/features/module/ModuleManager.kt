@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -84,6 +86,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTimerRange,
             ModuleTrigger,
             ModuleVelocity,
+            ModuleBacktrack,
+            ModuleSwordBlock,
 
             // Exploit
             ModuleAbortBreaking,
@@ -104,6 +108,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModulePortalMenu,
             ModuleResourceSpoof,
             ModuleSleepWalker,
+            ModuleSpoofer,
             ModuleVehicleOneHit,
 
             // Fun
@@ -123,6 +128,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoChatGame,
             ModuleDebugRecorder,
             ModuleCapeTransfer,
+            ModuleHideClient,
+            ModuleFocus,
 
             // Movement
             ModuleAirJump,
@@ -191,6 +198,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleMobOwners,
             ModuleMurderMystery,
             ModuleAttackEffects,
+            ModuleNametags,
 
             // ModuleNametags,
             ModuleNoBob,

@@ -432,6 +432,17 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     }
 
     fun isMurderer(entityPlayer: AbstractClientPlayerEntity) = murdererSkins.contains(entityPlayer.skinTexture.path)
+
+    fun shouldAttack(entityPlayer: AbstractClientPlayerEntity): Boolean {
+        if (modes.activeChoice == AssassinationMode) {
+            if (entityPlayer.gameProfile.id == currentAssasinationTarget || entityPlayer.gameProfile.id == currentAssasin) {
+                return true
+            }
+        }
+
+        return isMurderer(entityPlayer) || bowSkins.contains(entityPlayer.skinTexture.path)
+    }
+
     fun disallowsArrowDodge(): Boolean {
         if (!enabled) {
             return false

@@ -16,47 +16,54 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.minecraft.network.packet.Packet
+import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.util.math.Vec3d
-import java.util.concurrent.LinkedBlockingQueue
 
 /**
  * BadWifi module
  *
- * Holds back packets so as to prevent you from being hit by an enemy.
+ * Holds back packets to prevent you from being hit by an enemy.
  */
+@Suppress("detekt:all")
 
 object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
-    val maxPacketsInBuffer by intRange("MaxPacketsInBuffer", 20..30, 5..100)
-    val enemyRange by float("EnemyRange", 5.0f, 1.0f..10.0f)
+    private val delay by int("Delay", 550, 0..1000)
+    private val rangeToStart by float("RangeToStart", 10f, 0f..30f)
+    private val recoilTime by int("RecoilTime", 750, 0..2000)
+    private val stopWhileUsingItem by boolean("StopWhileUsingItem", true)
+    private val color by color("Color", Color4b(255, 179, 72, 255))
+    private val colorRainbow by boolean("Rainbow", false)
+    private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
+    private val positions = LinkedHashSet<PositionData>()
 
-    private val packets = LinkedBlockingQueue<Packet<*>>()
-    private var disablelogger = false
-    private var currentlyBlinking = false
-    private var currentMaxPackets: Int = 0
-
-    private var serverSidePosition: Vec3d? = null
+    private val resetTimer = Chronometer()
 
     override fun enable() {
         if (ModuleBlink.enabled) {
-            this.enabled = false
+            // Cannot disable on the moment it's enabled, so schedule module deactivation in the next few milliseconds.
+            EventScheduler.schedule(this, GameRenderEvent::class.java, action = {
+                this.enabled = false
+            })
 
             notification("Compatibility error", "BadWIFI is incompatible with Blink", NotificationEvent.Severity.ERROR)
         }
-
-        refreshMaxPackets()
     }
 
     override fun disable() {
@@ -67,90 +74,145 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         blink()
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
-        if (mc.player == null || disablelogger || !currentlyBlinking || event.origin != TransferOrigin.SEND) {
+    val packetHandler = handler<PacketEvent> { event ->
+        if (event.isCancelled) {
             return@handler
         }
 
-        if (event.packet is PlayerInteractEntityC2SPacket) {
+        val packet = event.packet
+
+        if (!shouldLag()) {
             blink()
-
             return@handler
         }
 
-        if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition) return@handler
+        when (packet) {
+            // Ignore message-related packets
+            is ChatMessageC2SPacket, is GameMessageS2CPacket, is CommandExecutionC2SPacket -> {
+                return@handler
+            }
 
-        if (event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket || event.packet is HandSwingC2SPacket || event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket) {
+            // Flush on doing action, getting action
+            is PlayerPositionLookS2CPacket, is PlayerInteractBlockC2SPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is PlayerInteractEntityC2SPacket, is ResourcePackStatusC2SPacket -> {
+                blink()
+                return@handler
+            }
+
+            // Flush on knockback
+            is EntityVelocityUpdateS2CPacket -> {
+                if (packet.id == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
+                    blink()
+                    return@handler
+                }
+            }
+
+            // Flush on explosion
+            is ExplosionS2CPacket -> {
+                if (packet.playerVelocityX != 0f || packet.playerVelocityY != 0f || packet.playerVelocityZ != 0f) {
+                    blink()
+                    return@handler
+                }
+            }
+
+            // Flush on damage
+            is HealthUpdateS2CPacket -> {
+                if (packet.health < player.health) {
+                    blink()
+                    return@handler
+                }
+            }
+        }
+
+        if (!resetTimer.hasElapsed(recoilTime.toLong())) {
+            return@handler
+        }
+
+        if (event.origin == TransferOrigin.SEND) {
             event.cancelEvent()
 
-            packets.add(event.packet)
+            synchronized(packetQueue) {
+                packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
+            }
         }
     }
 
-    val repeatable = repeatable {
-        val player = player
-        val rangeSquared = enemyRange * enemyRange
-
-        var currentPosition = if (currentlyBlinking) {
-            serverSidePosition
-        } else {
-            player.pos
+    val worldChangeHandler = handler<WorldChangeEvent> {
+        // Clear packets on disconnect only
+        if (it.world == null) {
+            blink(false)
         }
+    }
 
-        if (currentPosition == null) currentPosition = player.pos
-
-        val threat =
-            world.entities.firstOrNull { it.squaredDistanceTo(currentPosition) <= rangeSquared && it.shouldBeAttacked() }
-
-        if (threat != null && currentlyBlinking && threat.squaredDistanceTo(currentPosition) < threat.squaredDistanceTo(
-                player
-            )
-        ) {
+    val tickHandler = repeatable {
+        if (!shouldLag()) {
             blink()
+            return@repeatable
         }
 
-        if (threat == null && !currentlyBlinking) {
-            currentlyBlinking = true
-
-            serverSidePosition = player.pos
-
-            chat("START")
+        if (!resetTimer.hasElapsed(recoilTime.toLong())) {
+            return@repeatable
         }
 
-        disablelogger = true
+        synchronized(positions) {
+            positions.add(PositionData(player.pos, System.currentTimeMillis()))
+        }
 
-        runCatching {
-            while (packets.size > currentMaxPackets) {
-                network.sendPacket(packets.take())
+        handlePackets()
+    }
+
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+        val color = if (colorRainbow) rainbow() else color
+
+        synchronized(positions) {
+            renderEnvironmentForWorld(matrixStack) {
+                withColor(color) {
+                    drawLineStrip(*positions.map { Vec3(it.vec) }.toTypedArray())
+                }
+            }
+        }
+    }
+
+    private fun handlePackets() {
+        synchronized(packetQueue) {
+            packetQueue.removeIf {
+                if (it.delay <= System.currentTimeMillis() - delay) {
+                    sendPacketSilently(it.packet)
+
+                    return@removeIf true
+                }
+
+                false
             }
         }
 
-        disablelogger = false
+        synchronized(positions) {
+            positions.removeIf { it.delay <= System.currentTimeMillis() - delay }
+        }
     }
 
-    private fun blink() {
-        chat("BLINK")
+    private fun blink(handlePackets: Boolean = true) {
+        synchronized(packetQueue) {
+            if (handlePackets) {
+                resetTimer.reset()
 
-        try {
-            disablelogger = true
+                packetQueue.removeIf {
+                    sendPacketSilently(it.packet)
 
-            while (!packets.isEmpty()) {
-                network.sendPacket(packets.take())
+                    true
+                }
+            } else {
+                packetQueue.clear()
             }
-
-            disablelogger = false
-        } catch (e: Exception) {
-            e.printStackTrace()
-
-            disablelogger = false
         }
 
-        currentlyBlinking = false
-
-        refreshMaxPackets()
+        synchronized(positions) {
+            positions.clear()
+        }
     }
 
-    private fun refreshMaxPackets() {
-        currentMaxPackets = maxPacketsInBuffer.random()
-    }
+    private fun shouldLag() =
+        world.findEnemy(0f..rangeToStart) != null && (!player.isUsingItem || !stopWhileUsingItem) && mc.currentScreen == null && !player.isDead
+
+    data class PositionData(val vec: Vec3d, val delay: Long)
 }

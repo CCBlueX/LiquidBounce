@@ -33,13 +33,11 @@ import net.minecraft.entity.LivingEntity
 class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("Target") {
 
     var lockedOnTarget: Entity? = null
+        private set
     var maxDistanceSquared: Double = 0.0
 
     val fov by float("FOV", 180f, 0f..180f)
     val priority by enumChoice("Priority", defaultPriority, PriorityEnum.values())
-    val lockOnTarget by boolean("LockOnTarget", false)
-    val sortOut by boolean("SortOut", true)
-    val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
 
     /**
      * Update should be called to always pick the best target out of the current world context
@@ -48,8 +46,9 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
         val player = mc.player ?: return emptyList()
         val world = mc.world ?: return emptyList()
 
-        var entities =
-            world.entities.filter { it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it) }
+        var entities = world.entities.filter {
+            it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it)
+        }
 
         entities = when (priority) {
             PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health

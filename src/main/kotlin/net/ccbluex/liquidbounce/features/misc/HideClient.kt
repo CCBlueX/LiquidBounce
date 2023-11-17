@@ -15,39 +15,36 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.render.engine.utils
+package net.ccbluex.liquidbounce.features.misc
 
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.SharedConstants
+import net.minecraft.client.util.Icons
 
 /**
- * Provides a guard for IDs provided by OpenGL, which handles freeing of it
+ * Hides client feature
  *
- * @param deletionFunction A function that is called when the object should be deallocated
+ * This object is separate from the module because we do not want to initialize the module too early at start-up
  */
-abstract class GLIDGuard(val id: Int, val deletionFunction: (Int) -> Unit) {
+object HideClient {
+
     /**
-     * Was [delete] called?
+     * We need this variable because the module state will be updated after
      */
-    private var deleted = false
-
-    protected fun finalize() {
-        if (!deleted) {
-            val id = this.id
-
-            RenderEngine.runOnGlContext {
-                deletionFunction(id)
-            }
+    var isHidingNow = false
+        set(value) {
+            field = value
+            updateClient()
         }
-    }
 
-    fun delete() {
-        if (!deleted) {
-            deletionFunction(this.id)
-
-            deleted = false
-        }
+    private fun updateClient() {
+        mc.updateWindowTitle()
+        mc.window.setIcon(
+            mc.defaultResourcePack,
+            if (SharedConstants.getGameVersion().isStable) Icons.RELEASE else Icons.SNAPSHOT)
     }
 
 }

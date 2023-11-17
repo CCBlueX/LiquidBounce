@@ -15,15 +15,28 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.render.engine.memory
+package net.ccbluex.liquidbounce.features.module.modules.misc
 
-open class PositionColorVertexFormat : VertexFormat() {
-    var position by vec3(AttributeType.Position)
-    var color by color4b(AttributeType.Color)
-}
+import net.ccbluex.liquidbounce.features.misc.HideClient
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 
-class PositionColorUVVertexFormat() : PositionColorVertexFormat() {
-    var texturePosition by uv(AttributeType.Texture)
+/**
+ * Hides client
+ */
+object ModuleHideClient : Module("HideClient", Category.MISC) {
+
+    override fun enable() {
+        HideClient.isHidingNow = true
+        super.enable()
+    }
+
+    override fun disable() {
+        HideClient.isHidingNow = false
+        super.disable()
+    }
+
 }

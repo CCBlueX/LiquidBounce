@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.features.misc.HideClient;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
@@ -33,18 +35,17 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -123,6 +124,10 @@ public abstract class MixinMinecraftClient {
      */
     @Inject(method = "getWindowTitle", at = @At("HEAD"), cancellable = true)
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
+        if (HideClient.INSTANCE.isHidingNow()) {
+            return;
+        }
+
         LiquidBounce.INSTANCE.getLogger().debug("Modifying window title");
 
         StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
@@ -191,6 +196,15 @@ public abstract class MixinMinecraftClient {
     }
 
     /**
+     * Hook KillAura enforced blocking state
+     */
+    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z", ordinal = 2))
+    private boolean hookEnforcedBlockingState(KeyBinding instance) {
+        return (ModuleKillAura.INSTANCE.getEnabled() && ModuleKillAura.AutoBlock.INSTANCE.getEnabled()
+                && ModuleKillAura.AutoBlock.INSTANCE.getBlockingStateEnforced()) || instance.isPressed();
+    }
+
+    /**
      * Hook item use cooldown
      */
     @Inject(method = "doItemUse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;itemUseCooldown:I", shift = At.Shift.AFTER))
@@ -224,6 +238,11 @@ public abstract class MixinMinecraftClient {
         if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Inject(method = "setWorld", at = @At("HEAD"))
+    private void hookWorldChangeEvent(ClientWorld world, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 
     /**

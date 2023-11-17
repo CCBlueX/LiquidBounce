@@ -46,12 +46,15 @@ object ArmorComparator : Comparator<ArmorPiece> {
     private val OTHER_ENCHANTMENT_FACTORS = floatArrayOf(3.0f, 1.0f, 0.1f, 0.05f, 0.01f)
 
     override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int {
+        val o1ItemStack = o1.itemSlot.itemStack
+        val o2ItemStack = o2.itemSlot.itemStack
+
         // For damage reduction it is better if it is smaller, so it has to be inverted
         // The decimal values have to be rounded since in double math equals is inaccurate
         // For example 1.03 - 0.41 = 0.6200000000000001 and (1.03 - 0.41) == 0.62 would be false
-        val compare = round(getThresholdedDamageReduction(o2.itemStack).toDouble(), 3).compareTo(
+        val compare = round(getThresholdedDamageReduction(o2ItemStack).toDouble(), 3).compareTo(
             round(
-                getThresholdedDamageReduction(o1.itemStack).toDouble(),
+                getThresholdedDamageReduction(o1ItemStack).toDouble(),
                 3
             )
         )
@@ -59,20 +62,20 @@ object ArmorComparator : Comparator<ArmorPiece> {
         // If both armor pieces have the exact same damage, compare enchantments
         if (compare == 0) {
             val otherEnchantmentCmp = round(
-                getEnchantmentThreshold(o1.itemStack).toDouble(),
+                getEnchantmentThreshold(o1ItemStack).toDouble(),
                 3
-            ).compareTo(round(getEnchantmentThreshold(o2.itemStack).toDouble(), 3))
+            ).compareTo(round(getEnchantmentThreshold(o2ItemStack).toDouble(), 3))
 
             // If both have the same enchantment threshold, prefer the item with more enchantments
             if (otherEnchantmentCmp == 0) {
                 val enchantmentCountCmp =
-                    o1.itemStack.getEnchantmentCount().compareTo(o2.itemStack.getEnchantmentCount())
+                    o1ItemStack.getEnchantmentCount().compareTo(o2ItemStack.getEnchantmentCount())
 
                 if (enchantmentCountCmp != 0) return enchantmentCountCmp
 
                 // Then durability...
-                val o1a = o1.itemStack.item as ArmorItem
-                val o2a = o2.itemStack.item as ArmorItem
+                val o1a = o1ItemStack.item as ArmorItem
+                val o2a = o2ItemStack.item as ArmorItem
 
                 val durabilityCmp =
                     o1a.material.getDurability(o1a.type).compareTo(o2a.material.getDurability(o2a.type))

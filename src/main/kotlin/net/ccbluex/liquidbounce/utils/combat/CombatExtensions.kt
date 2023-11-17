@@ -23,12 +23,15 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
 import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
+import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -67,8 +70,11 @@ class EnemyConfigurable : Configurable("Enemies") {
     // Invisible entities should be also considered as an enemy
     var invisible by boolean("Invisible", true)
 
-    // Dead entities should be also considered as an enemy to bypass modern anti cheat techniques
+    // Dead entities should NOT be considered as an enemy - but this is useful to bypass anti-cheats
     var dead by boolean("Dead", false)
+
+    // Sleeping entities should NOT be considered as an enemy
+    var sleeping by boolean("Sleeping", false)
 
     // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
     var friends by boolean("Friends", false)
@@ -87,6 +93,11 @@ class EnemyConfigurable : Configurable("Enemies") {
     fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
         // Check if the enemy is living and not dead (or ignore being dead)
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
+            // Check if enemy is sleeping (or ignore being sleeping)
+            if (suspect.isSleeping && !sleeping) {
+                return false
+            }
+
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
                 if (attackable && !teamMates && ModuleTeams.isInClientPlayersTeam(suspect)) {
@@ -97,6 +108,18 @@ class EnemyConfigurable : Configurable("Enemies") {
                 if (suspect is PlayerEntity && suspect != mc.player) {
                     if (attackable && !friends && FriendManager.isFriend(suspect)) {
                         return false
+                    }
+
+                    if (suspect is AbstractClientPlayerEntity) {
+                        if (ModuleFocus.enabled && (attackable || !ModuleFocus.combatFocus)
+                            && !ModuleFocus.isInFocus(suspect)
+                        ) {
+                            return false
+                        }
+
+                        if (attackable && ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(suspect)) {
+                            return false
+                        }
                     }
 
                     // Check if player might be a bot
@@ -145,6 +168,26 @@ fun ClientWorld.findEnemy(
         .minByOrNull { (_, distance) -> distance } ?: return null
 
     return bestTarget
+}
+
+/**
+ * Find the best enemy in the current world in a specific range.
+ */
+fun ClientWorld.countEnemies(
+    range: ClosedFloatingPointRange<Float>,
+    player: Entity = mc.player!!,
+    enemyConf: EnemyConfigurable = globalEnemyConfigurable
+): Int {
+    val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
+
+    val enemiesCount =
+        getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
+            .filter { it.shouldBeAttacked(enemyConf) }
+            .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
+            .filter { (_, distance) -> distance in squaredRange }
+            .count()
+
+    return enemiesCount
 }
 
 fun ClientWorld.getEntitiesInCuboid(

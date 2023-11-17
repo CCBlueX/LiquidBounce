@@ -13,6 +13,12 @@ complexity:
   NamedArguments:
     active: true
     threshold: 4
+  ComplexCondition:
+    threshold: 5
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
 
 style:
   MagicNumber:

@@ -92,7 +92,7 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
 /**
  * Allows to configure and manage modes
  */
-open class ChoiceConfigurable(
+class ChoiceConfigurable(
     @Exclude val module: Module,
     name: String,
     var activeChoice: Choice,

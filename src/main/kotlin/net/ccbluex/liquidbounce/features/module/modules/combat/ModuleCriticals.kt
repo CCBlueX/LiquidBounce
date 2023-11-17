@@ -101,8 +101,11 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val optimizeForCooldown by boolean("OptimizeForCooldown", true)
 
+        val checkKillaura by boolean("CheckKillaura", false)
+        val checkTrigger by boolean("CheckTrigger", false)
+
         val tickHandler = handler<TickJumpEvent> {
-            if (!enabled) return@handler
+            if (!isActive()) return@handler
 
             if (!canCrit(player, true)) {
                 return@handler
@@ -205,13 +208,25 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         tree(VisualsConfigurable)
     }
 
+    fun isActive(): Boolean {
+        if (!enabled)
+            return false
+
+        // if both module checks are disabled, we can safely say that we are active
+        if(!JumpCrit.checkKillaura && !JumpCrit.checkTrigger)
+            return true
+
+        return (ModuleKillAura.enabled && JumpCrit.checkKillaura) || (ModuleTrigger.enabled && JumpCrit.checkTrigger)
+    }
+
+
     /**
      * Sometimes when the player is almost at the highest point of his jump, the KillAura
      * will try to attack the enemy anyways. To maximise damage, this function is used to determine
      * whether or not it is worth to wait for the fall
      */
     fun shouldWaitForCrit(): Boolean {
-        if (!enabled) return false
+        if (!isActive()) return false
 
         val player = player
 

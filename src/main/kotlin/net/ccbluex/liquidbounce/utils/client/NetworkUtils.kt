@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.item.ItemUsageContext
+import net.minecraft.network.listener.ClientPlayPacketListener
+import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.ActionResult
@@ -68,4 +70,9 @@ fun clickBlockWithSlot(
 
     player.inventory.selectedSlot = prevHotbarSlot
 }
+
+fun handlePacket(packet: Packet<*>) =
+    runCatching { (packet as Packet<ClientPlayPacketListener>).apply(mc.networkHandler) }
+
+fun sendPacketSilently(packet: Packet<*>) = mc.networkHandler?.connection?.send(packet, null)
 

@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideClient
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.TitleScreen
@@ -42,6 +44,10 @@ object UltralightScreenHook : Listenable {
             if (activeView.context.events._fireViewClose()) {
                 UltralightEngine.removeView(activeView)
             }
+        }
+
+        if (HideClient.isHidingNow || ModuleHideClient.enabled) {
+            return@handler
         }
 
         val screen = event.screen ?: if (mc.world != null) return@handler else TitleScreen()

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.utils.ColorUtils
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -87,7 +88,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 entitiesWithBoxes.forEach { box, entities ->
                     for (entity in entities) {
-                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
                         val color = getColor(entity)
 
                         val baseColor = color.alpha(50)

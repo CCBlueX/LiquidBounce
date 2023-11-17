@@ -35,9 +35,7 @@ object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
     }
 
     override fun disable() {
-        if (!mc.options.forwardKey.pressedOnKeyboard) {
             mc.options.forwardKey.isPressed = false
-        }
     }
 
 }

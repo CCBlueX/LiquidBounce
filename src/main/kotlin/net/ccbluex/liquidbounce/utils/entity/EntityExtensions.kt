@@ -20,14 +20,12 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.block.BlockState
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -36,10 +34,6 @@ import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
-import net.minecraft.util.crash.CrashException
-import net.minecraft.util.crash.CrashReport
-import net.minecraft.util.crash.CrashReportSection
-import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Difficulty
@@ -52,9 +46,6 @@ val ClientPlayerEntity.moving
 
 
 fun ClientPlayerEntity.isCloseToEdge(distance: Double = 0.1): Boolean {
-    if (!this.pos.add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
-        return true
-
     val alpha = (this.directionYaw + 90.0F).toRadians()
 
     val from = this.pos + Vec3d(0.0, -0.1, 0.0)
@@ -181,11 +172,15 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    return this.squaredBoxedDistanceTo(entity.getCameraPosVec(1.0F))
+    return this.squaredBoxedDistanceTo(entity.eyes)
 }
 
 fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
-    return this.boundingBox.squaredBoxedDistanceTo(otherPos)
+    return this.box.squaredBoxedDistanceTo(otherPos)
+}
+
+fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3d): Double {
+    return this.box.offset(offsetPos - this.pos).squaredBoxedDistanceTo(entity.eyes)
 }
 
 fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
@@ -194,8 +189,12 @@ fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
     return pos.squaredDistanceTo(otherPos)
 }
 
-fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
-    return Vec3(
+fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
+    if (this.age == 0) {
+        return this.pos
+    }
+  
+    return Vec3d(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
         this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta
@@ -203,6 +202,10 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
 }
 
 fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
+    if (this.age == 0) {
+        return this.rotation
+    }
+
     return Rotation(
         this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
         this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,

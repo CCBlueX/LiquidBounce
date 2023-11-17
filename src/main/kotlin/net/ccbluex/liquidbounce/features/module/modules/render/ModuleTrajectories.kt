@@ -141,14 +141,13 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 }
             } else if (landingPosition is EntityHitResult) {
                 renderEnvironmentForWorld(matrixStack) {
-                    val vec = landingPosition.entity
-                        .interpolateCurrentPosition(event.partialTicks)
+                    val pos = landingPosition.entity
+                                .interpolateCurrentPosition(event.partialTicks)
 
-                    withPosition(vec) {
-                        withColor(Color4b(255, 0, 0, 100)) {
-                            drawSolidBox(landingPosition.entity.box)
-                        }
+                    withColor(Color4b(255, 0, 0, 100)) {
+                        drawSolidBox(landingPosition.entity.getDimensions(landingPosition.entity.pose)!!.getBoxAt(pos))
                     }
+
                 }
             }
         }

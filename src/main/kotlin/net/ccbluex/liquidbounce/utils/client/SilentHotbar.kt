@@ -32,28 +32,17 @@ object SilentHotbar : Listenable {
     private var ticksSinceLastUpdate: Int = 0
 
     /**
-     * When the minecraft's slot is overridden, this value will return the new slot.
-     * Otherwise `null`
-     */
-    val enforcedSlot: Int?
-        get() = this.hotbarState?.enforcedHotbarSlot
-
-    /**
      * Returns the slot that interactions would take place with
      */
     val serversideSlot: Int
         get() = this.hotbarState?.enforcedHotbarSlot ?: mc.player!!.inventory.selectedSlot
 
     fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
-        val allowOverride = this.hotbarState == null || ticksSinceLastUpdate > 1
-
-        if (!allowOverride) {
-            return
-        }
-
         this.hotbarState = SilentHotbarState(slot, requester, ticksUntilReset)
         this.ticksSinceLastUpdate = 0
     }
+
+    fun shouldReplaceSlot() = mc.player != null
 
     fun resetSlot(requester: Any?) {
         if (this.hotbarState?.requester == requester) {
@@ -61,7 +50,7 @@ object SilentHotbar : Listenable {
         }
     }
 
-    val gametickHandler = handler<GameTickEvent> {
+    val gameTickHandler = handler<GameTickEvent> {
         val hotbarState = this.hotbarState ?: return@handler
 
         if (ticksSinceLastUpdate >= hotbarState.ticksUntilReset) {

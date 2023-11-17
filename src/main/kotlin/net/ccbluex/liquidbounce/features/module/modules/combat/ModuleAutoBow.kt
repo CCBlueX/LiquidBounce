@@ -21,11 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -33,12 +32,14 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.item.BowItem
+import net.minecraft.item.TridentItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Box
@@ -46,7 +47,6 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.*
 
 /**
@@ -77,15 +77,14 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
      */
     private object AutoShootOptions : ToggleableConfigurable(this, "AutoShoot", true) {
-        // Target
-        val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
-        val murderMysteryMode by boolean("MurderMystery", false)
-
-        val charged by int("Charged", 20, 3..20)
+        val charged by int("Charged", 15, 3..20)
 
         val chargedRandom by floatRange("ChargedRandom", 0.0F..0.0F, -10.0F..10.0F)
         val delayBetweenShots by int("DelayBetweenShots", 0, 0..5000)
+
+        val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F)
+        val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
 
         var currentChargeRandom: Int? = null
 
@@ -108,12 +107,10 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val tickRepeatable =
             handler<GameTickEvent> {
-                val player = mc.player ?: return@handler
-
-                val currentItem = player.activeItem
+                val currentItem = player.activeItem?.item
 
                 // Should check if player is using bow
-                if (currentItem?.item !is BowItem) {
+                if (currentItem !is BowItem && currentItem !is TridentItem) {
                     return@handler
                 }
 
@@ -124,16 +121,32 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                     return@handler
                 }
 
-                if (this.murderMysteryMode) {
+                if (requiresHypotheticalHit) {
                     val hypotheticalHit = getHypotheticalHit()
 
-                    if (hypotheticalHit == null || !ModuleMurderMystery.isMurderer(hypotheticalHit)) {
+                    if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
+                        return@handler
+                    }
+
+                    if (ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(hypotheticalHit)) {
+                        return@handler
+                    }
+                } else if (BowAimbotOptions.enabled) {
+                    if(BowAimbotOptions.targetTracker.lockedOnTarget == null) {
+                        return@handler
+                    }
+
+                    val targetRotation = RotationManager.targetRotation ?: return@handler
+
+                    val aimDifference = RotationManager.rotationDifference(RotationManager.currentRotation
+                        ?: player.rotation, targetRotation)
+
+                    if (aimDifference > aimThreshold) {
                         return@handler
                     }
                 }
 
-                mc.interactionManager!!.stopUsingItem(player)
-
+                interaction.stopUsingItem(player)
                 updateChargeRandom()
             }
 
@@ -194,14 +207,14 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     /**
      * Bow aimbot automatically aims at enemy targets
      */
-    private object BowAimbotOptions : ToggleableConfigurable(this, "BowAimbot", false) {
+    private object BowAimbotOptions : ToggleableConfigurable(this, "BowAimbot", true) {
+
         // Target
         val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
         // Rotation
         val rotationConfigurable = RotationsConfigurable()
 
-        val predictSize by float("PredictionCofactor", 1.0f, 0.0f..1.5f)
         val minExpectedPull by int("MinExpectedPull", 5, 0..20)
 
         init {
@@ -209,37 +222,34 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(rotationConfigurable)
         }
 
-        val tickRepeatable =
-            handler<GameTickEvent> {
-                val player = mc.player ?: return@handler
+        val tickRepeatable = repeatable {
+            targetTracker.cleanup()
 
-                targetTracker.lockedOnTarget = null
-
-                // Should check if player is using bow
-                if (player.activeItem?.item !is BowItem) {
-                    return@handler
-                }
-
-                val eyePos = player.eyes
-
-                var target: Entity? = null
-                var rotation: Rotation? = null
-
-                for (enemy in targetTracker.enemies()) {
-                    val rot = getRotationToTarget(enemy.box.center, eyePos, enemy) ?: continue
-
-                    target = enemy
-                    rotation = rot
-
-                    break
-                }
-
-                if (rotation == null) {
-                    return@handler
-                }
-
-                RotationManager.aimAt(rotation, configurable = rotationConfigurable)
+            // Should check if player is using bow
+            val activeItem = player.activeItem?.item
+            if (activeItem !is BowItem && activeItem !is TridentItem) {
+                return@repeatable
             }
+
+            val eyePos = player.eyes
+
+            var rotation: Rotation? = null
+
+            for (enemy in targetTracker.enemies()) {
+                val rot = getRotationToTarget(enemy.box.center, eyePos, enemy) ?: continue
+
+                targetTracker.lock(enemy)
+                rotation = rot
+                break
+            }
+
+            if (rotation == null) {
+                return@repeatable
+            }
+
+            RotationManager.aimAt(rotation, configurable = rotationConfigurable)
+        }
+
     }
 
     private fun getRotationToTarget(
@@ -395,7 +405,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      *
      * TODO: Add version specific options
      */
-    private object FastChargeOptions : ToggleableConfigurable(this, "FastCharge", true) {
+    private object FastChargeOptions : ToggleableConfigurable(this, "FastCharge", false) {
         val packets by int("Packets", 20, 3..20)
 
         val tickRepeatable =

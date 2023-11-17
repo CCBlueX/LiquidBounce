@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.Items
@@ -88,13 +89,13 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     }
 
     fun utilizeInventory(
-        item: Int,
+        item: ItemSlot,
         button: Int,
         slotActionType: SlotActionType,
         inventoryConstraints: InventoryConstraintsConfigurable,
         close: Boolean = true,
     ) {
-        val slot = convertClientSlotToServerSlot(item)
+        val slot = item.getIdForServerWithCurrentScreen() ?: return
 
         if (!isInInventoryScreen) {
             openInventorySilently()
