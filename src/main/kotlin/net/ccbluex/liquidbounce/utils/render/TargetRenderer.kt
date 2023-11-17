@@ -242,7 +242,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
         private val speed by float("Speed", 0.1f, 0.01f..1f)
         private val heightMultiplier by float("HeightMultiplier", 1.1f, 0.5f..2f)
-        private val heightOffset by float("HeihgtOffset", 1f, 0f..2f)
+        private val heightOffset by float("HeightOffset", 1f, 0f..2f)
         private val glowOffset by float("GlowOffset", -1f, -3.1f..3.1f)
 
         override fun getHeight(entity: Entity, partialTicks: Float): Double {
