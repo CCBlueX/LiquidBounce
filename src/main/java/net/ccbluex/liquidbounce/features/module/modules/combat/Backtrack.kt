@@ -306,7 +306,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             } else {
                 clearPackets()
                 globalTimer.reset()
-                shouldDraw = false
             }
         }
     }
@@ -448,7 +447,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         val time = getRangeTime()
         if (time == -1L) {
             clearPackets()
-            shouldDraw = false
             return
         }
         synchronized(packetQueue) {
@@ -490,6 +488,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             packetQueue.clear()
         }
         positions.clear()
+        shouldDraw = false
     }
 
     private fun addBacktrackData(id: UUID, x: Double, y: Double, z: Double, time: Long) {
