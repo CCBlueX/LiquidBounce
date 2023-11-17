@@ -326,8 +326,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             // Is the target the crosshair points too well-adjusted to our target?
             if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
                 !isValidCrosshairTarget(currentCrosshairTarget)
-
-
             ) {
                 if(
                     (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.1, 0.0).offset(player.velocity.multiply(
