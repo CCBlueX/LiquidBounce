@@ -7,9 +7,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.ClickWindowEvent
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
@@ -24,10 +28,14 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
 
     private val notInChests by BoolValue("NotInChests", false)
     val aacAdditionPro by BoolValue("AACAdditionPro", false)
+    private val intave by BoolValue("Intave", false)
+
+    private val isIntave = (mc.currentScreen is GuiInventory || mc.currentScreen is GuiChest) && intave
 
     private val noMove by InventoryManager.noMoveValue
     private val noMoveAir by InventoryManager.noMoveAirValue
     private val noMoveGround by InventoryManager.noMoveGroundValue
+    private val undetectable by InventoryManager.undetectableValue
 
         // If player violates nomove check and inventory is open, close inventory and reopen it when still
         private val silentlyCloseAndReopen by BoolValue("SilentlyCloseAndReopen", false)
@@ -53,6 +61,9 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
         if (screen is GuiChat || screen is GuiIngameMenu)
             return
 
+        if (undetectable && (screen != null && screen !is GuiHudDesigner && screen !is ClickGui))
+            return
+
         if (notInChests && screen is GuiChest)
             return
 
@@ -66,6 +77,18 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
                 || (affectedBinding == mc.gameSettings.keyBindSprint && Sprint.handleEvents() && Sprint.mode == "Legit" && (!Sprint.onlyOnSprintPress || mc.thePlayer.isSprinting))
     }
 
+    @EventTarget
+    fun onStrafe(event: StrafeEvent) {
+        if (isIntave) {
+            mc.gameSettings.keyBindSneak.pressed = true
+        }
+    }
+
+    @EventTarget
+    fun onJump(event: JumpEvent) {
+        if (isIntave) event.cancelEvent()
+    }
+    
     @EventTarget
     fun onClick(event: ClickWindowEvent) {
         if (!canClickInventory()) event.cancelEvent()
