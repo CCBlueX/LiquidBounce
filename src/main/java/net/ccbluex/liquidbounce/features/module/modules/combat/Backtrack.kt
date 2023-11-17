@@ -363,7 +363,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
         synchronized(positions) {
-            positions.removeAll { (_, timestamp) -> timestamp <= System.currentTimeMillis() - delay }
+            positions.removeAll { (_, timestamp) -> timestamp < System.currentTimeMillis() - delay }
         }
     }
 
@@ -382,7 +382,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
         }
         synchronized(positions) {
-            positions.removeAll { (_, timestamp) -> timestamp <= time }
+            positions.removeAll { (_, timestamp) -> timestamp < time }
         }
     }
 

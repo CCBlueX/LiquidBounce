@@ -119,7 +119,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             blink(false)
     }
 
-    fun getTruePositionEyes(player: EntityPlayer): Vec3 {
+    private fun getTruePositionEyes(player: EntityPlayer): Vec3 {
         val mixinPlayer = player as? IMixinEntity
         return Vec3(mixinPlayer!!.trueX, mixinPlayer.trueY + player.getEyeHeight().toDouble(), mixinPlayer.trueZ)
     }
