@@ -77,11 +77,16 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                 VertexInputType.Pos,
                 RenderBufferBuilder.TESSELATOR_A
             )
-            val outlinesRenderer = RenderBufferBuilder(
-                VertexFormat.DrawMode.DEBUG_LINES,
-                VertexInputType.Pos,
-                RenderBufferBuilder.TESSELATOR_B
-            )
+            val outlinesRenderer =
+                if(outline)
+                    RenderBufferBuilder(
+                        VertexFormat.DrawMode.DEBUG_LINES,
+                        VertexInputType.Pos,
+                        RenderBufferBuilder.TESSELATOR_C
+                    )
+                else
+                    null
+
 
             renderEnvironmentForWorld(matrixStack) {
                 for (pos in markedBlocks) {
@@ -90,13 +95,17 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                     withPosition(vec3) {
                         boxesRenderer.drawBox(this, box)
                         // This can still be optimized since there will be a lot of useless matrix muls...
-                        outlinesRenderer.drawBox(this, box)
+                        if(outline) {
+                            outlinesRenderer!!.drawBox(this, box)
+                        }
                     }
                 }
 
                 withColor(baseColor) { boxesRenderer.draw() }
 
-                withColor(outlineColor) { outlinesRenderer.draw() }
+                if(outline) {
+                    withColor(outlineColor) { outlinesRenderer!!.draw() }
+                }
 
             }
         }

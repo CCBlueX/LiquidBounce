@@ -93,6 +93,7 @@ class RenderBufferBuilder<I: VertexInputType>(
     companion object {
         val TESSELATOR_A: Tessellator = Tessellator(0x200000)
         val TESSELATOR_B: Tessellator = Tessellator(0x200000)
+        val TESSELATOR_C: Tessellator = Tessellator(0x200000)
     }
 
 }
