@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 
@@ -51,7 +52,6 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     private val colorRainbow by boolean("Rainbow", false)
 
     private object Box : Choice("Box") {
-
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -60,31 +60,48 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         // todo: use box of block, not hardcoded
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
+
+
         val renderHandler = handler<WorldRenderEvent> { event ->
+
             val matrixStack = event.matrixStack
+
             val base = if (colorRainbow) rainbow() else color
+            val baseColor = base.alpha(50)
+            val outlineColor = base.alpha(100)
 
             val markedBlocks = BlockTracker.trackedBlockMap.keys
+
+            val boxesRenderer = RenderBufferBuilder(
+                VertexFormat.DrawMode.QUADS,
+                VertexInputType.Pos,
+                RenderBufferBuilder.TESSELATOR_A
+            )
+            val outlinesRenderer = RenderBufferBuilder(
+                VertexFormat.DrawMode.DEBUG_LINES,
+                VertexInputType.Pos,
+                RenderBufferBuilder.TESSELATOR_B
+            )
 
             renderEnvironmentForWorld(matrixStack) {
                 for (pos in markedBlocks) {
                     val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
-                    val baseColor = base.alpha(50)
-                    val outlineColor = base.alpha(100)
-
                     withPosition(vec3) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
-
-                        if (outline) {
-                            withColor(outlineColor) {
-                                drawOutlinedBox(box)
-                            }
-                        }
+                        boxesRenderer.drawBox(this, box)
+                        // This can still be optimized since there will be a lot of useless matrix muls...
+                        outlinesRenderer.drawBox(this, box)
                     }
                 }
+
+                withColor(baseColor) {
+                    boxesRenderer.draw()
+                }
+
+                withColor(outlineColor) {
+                    outlinesRenderer.draw()
+                }
+
             }
         }
 
