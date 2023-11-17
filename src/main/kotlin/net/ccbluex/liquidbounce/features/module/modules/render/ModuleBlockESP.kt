@@ -94,13 +94,9 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                     }
                 }
 
-                withColor(baseColor) {
-                    boxesRenderer.draw()
-                }
+                withColor(baseColor) { boxesRenderer.draw() }
 
-                withColor(outlineColor) {
-                    outlinesRenderer.draw()
-                }
+                withColor(outlineColor) { outlinesRenderer.draw() }
 
             }
         }
