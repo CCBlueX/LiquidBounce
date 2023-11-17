@@ -8,7 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePackets
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -79,7 +81,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
             "sent" -> {
                 if (event.eventType == EventState.RECEIVE) {
                     synchronized(packetsReceived) {
-                        handlePackets(*packetsReceived.toTypedArray())
+                        PacketUtils.queuedPackets.addAll(packetsReceived)
                     }
                     packetsReceived.clear()
                 }
@@ -155,7 +157,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
             when (mode.lowercase()) {
                 "sent" -> {
                     synchronized(packetsReceived) {
-                        handlePackets(*packetsReceived.toTypedArray())
+                        PacketUtils.queuedPackets.addAll(packetsReceived)
                     }
                     packetsReceived.clear()
                 }
@@ -215,7 +217,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
     private fun blink() {
         synchronized(packetsReceived) {
-            handlePackets(*packetsReceived.toTypedArray())
+            PacketUtils.queuedPackets.addAll(packetsReceived)
         }
         synchronized(packets) {
         sendPackets(*packets.toTypedArray(), triggerEvents = false)

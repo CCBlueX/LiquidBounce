@@ -134,6 +134,11 @@ class PushOutEvent : CancellableEvent()
 class Render2DEvent(val partialTicks: Float) : Event()
 
 /**
+ * Called when packets sent to client are processed
+ */
+class GameLoop() : Event()
+
+/**
  * Called when world is going to be rendered
  */
 class Render3DEvent(val partialTicks: Float) : Event()

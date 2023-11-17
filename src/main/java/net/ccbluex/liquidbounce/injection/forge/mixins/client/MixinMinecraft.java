@@ -104,6 +104,11 @@ public abstract class MixinMinecraft {
         if (displayHeight < 622) displayHeight = 622;
     }
 
+    @Inject(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/profiler/Profiler;startSection(Ljava/lang/String;)V", ordinal = 1))
+    private void hook(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new GameLoop());
+    }
+
     @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;checkGLError(Ljava/lang/String;)V", ordinal = 2, shift = At.Shift.AFTER))
     private void startGame(CallbackInfo callbackInfo) {
         LiquidBounce.INSTANCE.startClient();

@@ -135,6 +135,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
+
         if (event.isCancelled) return
 
         when (val packet = event.packet) {
