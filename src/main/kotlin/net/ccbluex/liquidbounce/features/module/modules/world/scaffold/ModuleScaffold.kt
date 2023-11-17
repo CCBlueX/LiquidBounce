@@ -339,7 +339,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 return@repeatable
             }
 
-            if(world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.1, 0.0).offset(player.velocity.multiply(
+            if(world.getBlockCollisions(player, player.boundingBox.offset(0.0, -1.0, 0.0).offset(player.velocity.multiply(
                     jumpFactor.toDouble()))).none()
                 && player.isOnGround
                 && !player.isSneaking
