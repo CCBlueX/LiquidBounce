@@ -34,6 +34,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
 import java.awt.Color
 import kotlin.math.min
+import kotlin.math.sin
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -101,7 +102,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
 
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-            val height = (heightMode.activeChoice as HeightMode).getHeight(entity)
+            val height = (heightMode.activeChoice as HeightMode).getHeight(entity, partialTicks)
             val pos =
                 entity.interpolateCurrentPosition(partialTicks).toVec3() +
                     Vec3(0.0, height, 0.0)
@@ -130,22 +131,30 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
             module,
             "HeightMode",
             { FeetHeight(it) },
-            { arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it), HealthHeight(it)) }
+            { arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it), HealthHeight(it), AnimatedHeight(it)) }
         )
 
         private val color by color("OuterColor", Color4b(0x64007CFF, true))
-        private val glowColor by color("GlowColor", Color4b(0x64007CFF, true))
+        private val glowColor by color("GlowColor", Color4b(0x00007CFF, true))
 
-        private val glowHeight by float("GlowHeight", 0.3f, -1f..1f)
+        private val glowHeightSetting by float("GlowHeight", 0.3f, -1f..1f)
 
         private val outline = tree(Outline())
 
 
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-            val height = (heightMode.activeChoice as HeightMode).getHeight(entity)
+            val height = (heightMode.activeChoice as HeightMode).getHeight(entity, partialTicks)
             val pos =
                 entity.interpolateCurrentPosition(partialTicks).toVec3() +
                     Vec3(0.0, height, 0.0)
+
+
+            val currentHeightMode = heightMode.activeChoice
+
+            val glowHeight = if(currentHeightMode is HeightWithGlow)
+                currentHeightMode.getGlowHeight(entity, partialTicks) - height
+            else
+                glowHeightSetting.toDouble()
 
             with(env) {
                 withPosition(pos) {
@@ -155,7 +164,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
                             radius,
                             color,
                             glowColor,
-                            Vec3(0.0, glowHeight.toDouble(), 0.0))
+                            Vec3(0.0, glowHeight, 0.0))
 
                         drawGradientCircle(
                             radius,
@@ -173,7 +182,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
     }
 
     inner class Outline : ToggleableConfigurable(module,"Outline", true) {
-        val color by color("Color", Color4b(0, 40, 255, 255))
+        val color by color("Color", Color4b(0x00007CFF, false))
     }
 
     inner class FeetHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Feet") {
@@ -182,7 +191,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
         val offset: Float by float("Offset", 0f, -1f..1f)
 
-        override fun getHeight(entity: Entity): Double {
+        override fun getHeight(entity: Entity, partialTicks: Float): Double {
             return offset.toDouble()
         }
 
@@ -193,7 +202,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
             get() = choiceConfigurable
 
         val offset by float("Offset", 0f, -1f..1f)
-        override fun getHeight(entity: Entity) = entity.box.maxY - entity.box.minY + offset
+        override fun getHeight(entity: Entity, partialTicks: Float) = entity.box.maxY - entity.box.minY + offset
     }
 
     // Lets the user chose the height relative to the entity's height
@@ -206,7 +215,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
         private val height by float("Height", 0.5f, -0.5f..1.5f)
 
-        override fun getHeight(entity: Entity): Double {
+        override fun getHeight(entity: Entity, partialTicks: Float): Double {
             val box = entity.box
             val entityHeight = box.maxY - box.minY
             return height * entityHeight
@@ -219,12 +228,35 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
 
 
-        override fun getHeight(entity: Entity): Double {
+        override fun getHeight(entity: Entity, partialTicks: Float): Double {
             if(entity !is LivingEntity) return 0.0
             val box = entity.box
             val entityHeight = box.maxY - box.minY
             return entity.health / entity.maxHealth * entityHeight
         }
+    }
+
+    inner class AnimatedHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightWithGlow("Animated") {
+        override val parent: ChoiceConfigurable
+            get() = choiceConfigurable
+
+        private val speed by float("Speed", 0.1f, 0.01f..1f)
+        private val heightMultiplier by float("HeightMultiplier", 1.1f, 0.5f..2f)
+        private val heightOffset by float("HeihgtOffset", 1f, 0f..2f)
+        private val glowOffset by float("GlowOffset", -1f, -3.1f..3.1f)
+
+        override fun getHeight(entity: Entity, partialTicks: Float): Double {
+            return calculateHeight((entity.age + partialTicks) * speed)
+        }
+
+        override fun getGlowHeight(entity: Entity, partialTicks: Float): Double {
+            return calculateHeight((entity.age + partialTicks) * speed + glowOffset)
+        }
+
+        private fun calculateHeight(time: Float) =
+            (sin(time) * heightMultiplier + heightOffset).toDouble()
+
+
     }
 
 
@@ -237,7 +269,11 @@ abstract class TargetRenderAppearance(name: String) : Choice(name) {
 }
 
 abstract class HeightMode(name: String) : Choice(name) {
-    open fun getHeight(entity: Entity): Double = 0.0
+    open fun getHeight(entity: Entity, partialTicks: Float): Double = 0.0
 }
 
+abstract class HeightWithGlow(name: String) : HeightMode(name) {
+    open fun getGlowHeight(entity: Entity, partialTicks: Float): Double = 0.0
+
+}
 
