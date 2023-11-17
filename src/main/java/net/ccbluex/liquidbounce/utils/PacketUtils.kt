@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.features.module.modules.player.FakeLag
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.NetworkManager
@@ -99,7 +100,11 @@ object PacketUtils : MinecraftInstance(), Listenable {
     @EventTarget(priority = 1000)
     fun runGameLoop(event: GameLoop) {
         synchronized(queuedPackets) {
-            queuedPackets.forEach(::handlePacket)
+            queuedPackets.forEach {
+                handlePacket(it)
+                val packetEv = PacketEvent(it, EventState.RECEIVE)
+                FakeLag.onPacket(packetEv)
+            }
 
             queuedPackets.clear()
         }

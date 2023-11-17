@@ -390,15 +390,16 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         if (target == null) return 0L
         var time = 0L
         var found = false
-        for (data in positions)
-        {
-            time = data.second
-            val targetPos = Vec3(target!!.posX, target!!.posY, target!!.posZ)
-            val (dx, dy, dz) = data.first - targetPos
-            val targetBox = target!!.hitBox.offset(dx, dy, dz)
-            if (mc.thePlayer.getDistanceToBox(targetBox) in minDistance..maxDistance) {
-                found = true
-                break
+        synchronized(positions) {
+            for (data in positions) {
+                time = data.second
+                val targetPos = Vec3(target!!.posX, target!!.posY, target!!.posZ)
+                val (dx, dy, dz) = data.first - targetPos
+                val targetBox = target!!.hitBox.offset(dx, dy, dz)
+                if (mc.thePlayer.getDistanceToBox(targetBox) in minDistance..maxDistance) {
+                    found = true
+                    break
+                }
             }
         }
         return if (found) time else -1L
