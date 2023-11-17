@@ -28,6 +28,8 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
     val aacAdditionPro by BoolValue("AACAdditionPro", false)
     private val intave by BoolValue("Intave", false)
 
+    private val isIntave = (mc.currentScreen is GuiInventory || mc.currentScreen is GuiChest) && intave
+
     private val noMove by InventoryManager.noMoveValue
     private val noMoveAir by InventoryManager.noMoveAirValue
     private val noMoveGround by InventoryManager.noMoveGroundValue
@@ -71,14 +73,14 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (intave) {
+        if (isIntave) {
             mc.gameSettings.keyBindSneak.pressed = true
         }
     }
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (intave) event.cancelEvent()
+        if (isIntave) event.cancelEvent()
     }
     
     @EventTarget
