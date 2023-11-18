@@ -419,7 +419,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         )
 
         if (currentTarget != null && attackTimer.hasTimePassed(attackDelay)) {
-            clicks++
+            if (maxCPS > 0)
+                clicks++
             attackTimer.reset()
             attackDelay = randomClickDelay(minCPS, maxCPS)
         }
