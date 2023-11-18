@@ -69,7 +69,7 @@ class ClientChatErrorEvent(val error: String) : Event()
 class AltManagerUpdateEvent(val success: Boolean, val message: String) : Event()
 
 @Nameable("browserReady")
-class BrowserReadyEvent(browser: IBrowser) : Event()
+class BrowserReadyEvent(val browser: IBrowser) : Event()
 
 @Nameable("virtualScreen")
 @WebSocketEvent

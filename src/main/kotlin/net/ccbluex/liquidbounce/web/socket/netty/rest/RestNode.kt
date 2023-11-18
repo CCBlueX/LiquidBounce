@@ -26,12 +26,12 @@ import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
 
 object RouteController {
 
-    private val paths = mutableListOf<PathNode>()
+    private val paths = mutableListOf<RestNode>()
 
-    fun new(path: String): PathNode {
-        val pathNode = PathNode(path)
-        paths += pathNode
-        return pathNode
+    fun new(path: String): RestNode {
+        val restNode = RestNode(path)
+        paths += restNode
+        return restNode
     }
 
     /**
@@ -51,7 +51,7 @@ object RouteController {
 
 }
 
-data class PathNode(val path: String) {
+data class RestNode(val path: String) {
 
     internal val routes = mutableListOf<Route>()
 

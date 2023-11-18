@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.outputString
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -111,7 +112,7 @@ open class Module(
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
     open val description: String
-        get() = "$translationBaseKey.description"
+        get() = Text.translatable("$translationBaseKey.description").outputString()
 
     // Tag to be displayed on the HUD
     open val tag: String?

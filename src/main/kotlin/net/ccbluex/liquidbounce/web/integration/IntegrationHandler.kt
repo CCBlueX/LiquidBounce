@@ -43,7 +43,7 @@ import net.minecraft.client.gui.screen.world.SelectWorldScreen
 object IntegrationHandler : Listenable {
 
     // This is the URL that will be opened when the client is ready.
-    private val INTEGRATION_URL = "https://dl.ccbluex.net/test.html"
+    private const val INTEGRATION_URL = "https://dl.ccbluex.net/test.html"
 
     /**
      * This tab is always open and initialized. We keep this tab open to make it possible to draw on the screen,
@@ -62,7 +62,8 @@ object IntegrationHandler : Listenable {
 
     data class VirtualScreen(val name: String)
 
-    enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean, val showAlong: Boolean = false) {
+    enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
+                                 val showAlong: Boolean = false) {
         TITLE("title", { it is TitleScreen }),
         MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }),
         SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }),
@@ -112,7 +113,8 @@ object IntegrationHandler : Listenable {
         if (!virtualScreenType.showAlong) {
             val emptyScreen = EmptyScreen()
             mc.setScreen(emptyScreen)
-            event.cancelEvent()
+            // TODO remove comment: when the integration is ready to be used
+            // event.cancelEvent()
         }
 
         virtualOpen(virtualScreenType.assignedName)
