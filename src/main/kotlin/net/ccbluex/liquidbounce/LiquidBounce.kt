@@ -184,6 +184,15 @@ object LiquidBounce : Listenable {
             logger.info("Successfully loaded client!")
         }.onFailure {
             logger.error("Unable to load client.", it)
+            TinyFileDialogs.tinyfd_messageBox(
+                "LiquidBounce Nextgen",
+                "LiquidBounce Nextgen failed to launch.\n" +
+                    "If the issue persists, report to the developers.\n" +
+                    "${it.message}",
+                "ok",
+                "error",
+                true
+            )
             exitProcess(1)
         }
     }
