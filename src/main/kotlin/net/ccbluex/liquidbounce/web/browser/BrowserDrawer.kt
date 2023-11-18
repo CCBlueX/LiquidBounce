@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.web.browser
 
 import com.cinemamod.mcef.MCEF
+import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
@@ -89,6 +90,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
     private fun renderTexture(width: Double, height: Double, texture: Int) {
         RenderSystem.disableDepthTest()
         RenderSystem.enableBlend()
+        RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
         RenderSystem.setShader { GameRenderer.getPositionTexColorProgram() }
         RenderSystem.setShaderTexture(0, texture)
         val t = Tessellator.getInstance()
