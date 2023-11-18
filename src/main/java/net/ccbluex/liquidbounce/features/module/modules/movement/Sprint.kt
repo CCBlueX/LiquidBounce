@@ -23,9 +23,10 @@ import kotlin.math.abs
 object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false) {
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
-    val onlyOnSprintPress by BoolValue("OnlyOnSprintPress", false) 
+    val onlyOnSprintPress by BoolValue("OnlyOnSprintPress", false)
+    val alwaysCorrect by BoolValue("AlwaysCorrectSprint", false)
 
-        val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
+    val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
         val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
 
         private val allDirectionsLimitSpeed by FloatValue("AllDirectionsLimitSpeed", 1f, 0.75f..1f)
@@ -55,7 +56,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             return
         }
 
-        if (onlyOnSprintPress && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown && !SuperKnockback.startSprint() && !isSprinting)
+        if ((onlyOnSprintPress || !handleEvents()) && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown && !SuperKnockback.startSprint() && !isSprinting)
             return
 
         if (Scaffold.handleEvents()) {
@@ -70,7 +71,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
             }
         }
 
-        if (handleEvents()) {
+        if (handleEvents() || alwaysCorrect) {
             player.isSprinting = !shouldStopSprinting(movementInput, isUsingItem)
             isSprinting = player.isSprinting
             if (player.isSprinting && allDirections && mode != "Legit") {
