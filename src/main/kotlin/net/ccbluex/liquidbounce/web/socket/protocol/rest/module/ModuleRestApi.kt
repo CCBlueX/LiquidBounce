@@ -32,41 +32,6 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import java.io.StringReader
 
-data class ModuleRequest(val name: String) {
-
-    fun acceptToggle(method: HttpMethod): FullHttpResponse {
-        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-
-        val supposedNew = method == HttpMethod.PUT || (method == HttpMethod.POST && !module.enabled)
-
-        if (module.enabled == supposedNew) {
-            return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
-        }
-        module.enabled = supposedNew
-
-        return httpOk(JsonObject().apply {
-            addProperty("name", module.name)
-            addProperty("enabled", module.enabled)
-        })
-    }
-
-    fun acceptGetSettingsRequest(): FullHttpResponse {
-        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-        return httpOk(ConfigSystem.serializeConfigurable(module))
-    }
-
-    fun acceptPutSettingsRequest(content: String): FullHttpResponse {
-        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-
-        StringReader(content).use {
-            ConfigSystem.deserializeConfigurable(module, it)
-        }
-
-        return httpOk(JsonObject())
-    }
-
-}
-
 internal fun RestNode.setupModuleRestApi() {
     get("/modules") {
         val mods = JsonArray()
@@ -110,5 +75,40 @@ internal fun RestNode.setupModuleRestApi() {
 
     }
 
+
+}
+
+data class ModuleRequest(val name: String) {
+
+    fun acceptToggle(method: HttpMethod): FullHttpResponse {
+        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
+
+        val supposedNew = method == HttpMethod.PUT || (method == HttpMethod.POST && !module.enabled)
+
+        if (module.enabled == supposedNew) {
+            return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
+        }
+        module.enabled = supposedNew
+
+        return httpOk(JsonObject().apply {
+            addProperty("name", module.name)
+            addProperty("enabled", module.enabled)
+        })
+    }
+
+    fun acceptGetSettingsRequest(): FullHttpResponse {
+        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
+        return httpOk(ConfigSystem.serializeConfigurable(module))
+    }
+
+    fun acceptPutSettingsRequest(content: String): FullHttpResponse {
+        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
+
+        StringReader(content).use {
+            ConfigSystem.deserializeConfigurable(module, it)
+        }
+
+        return httpOk(JsonObject())
+    }
 
 }
