@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import org.apache.logging.log4j.LogManager
+import org.lwjgl.util.tinyfd.TinyFileDialogs
 import kotlin.system.exitProcess
 
 /**
