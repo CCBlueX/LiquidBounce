@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
 import net.ccbluex.liquidbounce.features.module.modules.render.CameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoHurtCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.Tracers;
+import net.ccbluex.liquidbounce.utils.Rotation;
+import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -164,9 +166,13 @@ public abstract class MixinEntityRenderer {
             final Reach reach = Reach.INSTANCE;
 
             double d0 = reach.handleEvents() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
-            mc.objectMouseOver = entity.rayTrace(reach.handleEvents() ? reach.getBuildReach() : d0, p_getMouseOver_1_);
-            double d1 = d0;
             Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
+            Rotation rotation = new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch);
+            Vec3 vec31 = RotationUtils.INSTANCE.getVectorForRotation(RotationUtils.INSTANCE.getCurrentRotation() != null ? RotationUtils.INSTANCE.getCurrentRotation() : rotation);
+            double p_rayTrace_1_ = (reach.handleEvents() ? reach.getBuildReach() : d0);
+            Vec3 vec32 = vec3.addVector(vec31.xCoord * p_rayTrace_1_, vec31.yCoord * p_rayTrace_1_, vec31.zCoord * p_rayTrace_1_);
+            mc.objectMouseOver = entity.worldObj.rayTraceBlocks(vec3, vec32, false, false, true);
+            double d1 = d0;
             boolean flag = false;
             if (mc.playerController.extendedReach()) {
                 d0 = 6;
@@ -180,13 +186,13 @@ public abstract class MixinEntityRenderer {
             }
 
             if (reach.handleEvents()) {
-                final MovingObjectPosition movingObjectPosition = entity.rayTrace(reach.getBuildReach(), p_getMouseOver_1_);
+                double p_rayTrace_1_2 = reach.getBuildReach();
+                Vec3 vec322 = vec3.addVector(vec31.xCoord * p_rayTrace_1_2, vec31.yCoord * p_rayTrace_1_2, vec31.zCoord * p_rayTrace_1_2);
+                final MovingObjectPosition movingObjectPosition = entity.worldObj.rayTraceBlocks(vec3, vec322, false, false, true);
 
                 if (movingObjectPosition != null) d1 = movingObjectPosition.hitVec.distanceTo(vec3);
             }
 
-            Vec3 vec31 = entity.getLook(p_getMouseOver_1_);
-            Vec3 vec32 = vec3.addVector(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0);
             pointedEntity = null;
             Vec3 vec33 = null;
             float f = 1f;
