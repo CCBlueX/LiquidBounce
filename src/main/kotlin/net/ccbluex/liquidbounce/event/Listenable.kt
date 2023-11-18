@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+
 typealias Handler<T> = (T) -> Unit
 
 class EventHook<T : Event>(

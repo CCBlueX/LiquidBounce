@@ -2,20 +2,19 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.MovementInputEvent
-import net.ccbluex.liquidbounce.event.TickJumpEvent
+import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedPreventDeadlyJump
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.downwards
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.upwards
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 
 

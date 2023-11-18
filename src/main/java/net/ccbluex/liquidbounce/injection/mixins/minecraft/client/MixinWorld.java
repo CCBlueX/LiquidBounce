@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.ccbluex.liquidbounce.event.BlockChangeEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideTime;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideWeather;
 import net.minecraft.block.BlockState;

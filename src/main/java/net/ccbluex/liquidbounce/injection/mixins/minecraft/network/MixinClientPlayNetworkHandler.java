@@ -20,7 +20,11 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.config.Choice;
-import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent;
+import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent;
+import net.ccbluex.liquidbounce.event.events.DeathEvent;
+import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;

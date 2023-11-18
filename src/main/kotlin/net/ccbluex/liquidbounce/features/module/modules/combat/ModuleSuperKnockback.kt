@@ -22,7 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity

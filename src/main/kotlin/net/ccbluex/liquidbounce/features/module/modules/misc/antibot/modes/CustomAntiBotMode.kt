@@ -3,8 +3,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot

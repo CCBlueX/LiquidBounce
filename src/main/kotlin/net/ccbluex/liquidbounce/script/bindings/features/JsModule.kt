@@ -113,6 +113,6 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
          * Maps the lowercase name of the event to the event's kotlin class
          */
         private val LOWERCASE_NAME_EVENT_MAP: Map<String, KClass<out Event>> =
-            ALL_EVENT_CLASSES.associate { Pair(it.liquidBounceEventJsName.lowercase(), it) }
+            ALL_EVENT_CLASSES.associateBy { it.eventName.lowercase() }
     }
 }

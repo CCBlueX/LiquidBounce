@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 
 /**

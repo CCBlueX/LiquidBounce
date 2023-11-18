@@ -1,20 +1,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.minimap
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.event.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.coloredTriangle
-import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.drawGradientQuad
-import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition

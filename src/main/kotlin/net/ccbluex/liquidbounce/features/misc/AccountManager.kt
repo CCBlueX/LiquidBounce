@@ -34,8 +34,8 @@ import me.liuli.elixir.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
-import net.ccbluex.liquidbounce.event.AltManagerUpdateEvent
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.AltManagerUpdateEvent
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.util.ProfileKeys

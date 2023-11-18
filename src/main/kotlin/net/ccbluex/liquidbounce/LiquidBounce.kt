@@ -24,7 +24,11 @@ import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
+import net.ccbluex.liquidbounce.event.events.ClientStartEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
