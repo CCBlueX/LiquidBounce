@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.web.socket.netty
 
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.handler.codec.http.HttpContent
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.LastHttpContent
@@ -80,17 +81,29 @@ internal class HttpServerHandler : ChannelInboundHandlerAdapter() {
                 }
             }
 
-            is LastHttpContent -> {
-                val requestObject = RequestObject(
-                    localRequestContext.get(),
-                    msg.content().toString(Charsets.UTF_8)
-                )
-                localRequestContext.remove()
+            is HttpContent -> {
+                if (localRequestContext.get() == null) {
+                    logger.warn("Received HttpContent without HttpRequest")
+                    return
+                }
 
-                val httpConductor = HttpConductor()
-                val response = httpConductor.processRequestObject(requestObject)
-                ctx.writeAndFlush(response)
+                // Append content to the buffer
+                val requestContext = localRequestContext.get()
+                requestContext
+                    .contentBuffer
+                    .append(msg.content().toString(Charsets.UTF_8))
+
+                // If this is the last content, process the request
+                if (msg is LastHttpContent) {
+                    val requestObject = RequestObject(requestContext)
+                    localRequestContext.remove()
+
+                    val httpConductor = HttpConductor()
+                    val response = httpConductor.processRequestObject(requestObject)
+                    ctx.writeAndFlush(response)
+                }
             }
+
         }
 
         super.channelRead(ctx, msg)

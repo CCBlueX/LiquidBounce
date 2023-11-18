@@ -264,4 +264,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
+    operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }
+
 }

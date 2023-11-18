@@ -175,6 +175,12 @@ object ConfigSystem {
     }
 
     /**
+     * Serialize a configurable to a writer
+     */
+    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.gson)
+        = gson.toJsonTree(configurable, confType)
+
+    /**
      * Deserialize a configurable from a reader
      */
     fun deserializeConfigurable(configurable: Configurable, reader: Reader, gson: Gson = this.gson) {

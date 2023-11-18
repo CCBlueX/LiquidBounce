@@ -22,17 +22,40 @@ package net.ccbluex.liquidbounce.web.socket.netty.rest
 
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
 
-object RouteController {
+object RouteController : RestNode("")
 
-    private val paths = mutableListOf<RestNode>()
+open class RestNode(val path: String) {
 
-    fun new(path: String): RestNode {
-        val restNode = RestNode(path)
-        paths += restNode
-        return restNode
-    }
+    internal val nodes = mutableListOf<RestNode>()
+
+    fun new(path: String) = RestNode(path).also { nodes += it }
+
+    fun get(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.GET, handler).also { nodes += it }
+
+    fun post(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.POST, handler).also { nodes += it }
+
+    fun put(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.PUT, handler).also { nodes += it }
+
+    fun delete(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.DELETE, handler).also { nodes += it }
+
+    fun patch(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.PATCH, handler).also { nodes += it }
+
+    fun head(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.HEAD, handler).also { nodes += it }
+
+    fun options(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.OPTIONS, handler).also { nodes += it }
+
+    fun trace(path: String, handler: (RequestObject) -> FullHttpResponse)
+        = Route(path, HttpMethod.TRACE, handler).also { nodes += it }
 
     /**
      * Find a route for the given URI path and http method
@@ -44,49 +67,38 @@ object RouteController {
      * @example findRoute("/api/v1/users", HttpMethod.GET)
      */
     fun findRoute(path: String, method: HttpMethod): Route? {
-        val pathNode = paths.find { path.startsWith(it.path) } ?: return null
-        val lastPath = path.substring(pathNode.path.length)
-        return pathNode.routes.find { it.name == lastPath && it.method == method }
+        logger.debug("--------- ${if (this is Route) "ROUTE" else "NODE"} ${this.path} ---------")
+
+        val takenOff = path.substring(this.path.length)
+        logger.debug("Search for route: {} {}", method, takenOff)
+
+        // Nodes can now either include a route with the correct method or a node with a path that matches
+        // the given path
+        val nodes = nodes.filter {
+            logger.debug("Check node: $takenOff startsWith ${it.path} -> ${path.startsWith(it.path)}")
+            takenOff.startsWith(it.path)
+        }
+
+        logger.debug("Found ${nodes.size} nodes")
+
+        // Now we have to decide if the route matches the path exactly or if it is a node step
+        val exactMatch = nodes.filterIsInstance<Route>().find {
+            logger.debug("Check route: {} == {} && {} == {}", it.path, takenOff, it.method, method)
+            it.method == method && it.path == takenOff
+        }
+        if (exactMatch != null) {
+            return exactMatch
+        }
+
+        logger.debug("No exact match found")
+
+        // If we have no exact match we have to find the node that matches the path
+        val nodeMatch = nodes.firstOrNull() ?: return null
+        logger.debug("Found node match: ${nodeMatch.path}")
+        return nodeMatch.findRoute(takenOff, method)
     }
 
 }
 
-data class RestNode(val path: String) {
-
-    internal val routes = mutableListOf<Route>()
-
-    fun get(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.GET, handler)
-    }
-
-    fun post(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.POST, handler)
-    }
-
-    fun put(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.PUT, handler)
-    }
-
-    fun delete(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.DELETE, handler)
-    }
-
-    fun patch(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.PATCH, handler)
-    }
-
-    fun head(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.HEAD, handler)
-    }
-
-    fun options(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.OPTIONS, handler)
-    }
-
-    fun trace(path: String, handler: (RequestObject) -> FullHttpResponse) {
-        routes += Route(path, HttpMethod.TRACE, handler)
-    }
-
-}
-
-data class Route(val name: String, val method: HttpMethod, val handler: (RequestObject) -> FullHttpResponse)
+class Route(name: String, val method: HttpMethod, val handler: (RequestObject) -> FullHttpResponse)
+    : RestNode(name)

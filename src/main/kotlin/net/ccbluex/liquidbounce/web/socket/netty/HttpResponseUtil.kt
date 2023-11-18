@@ -64,3 +64,9 @@ fun httpForbidden(reason: String): FullHttpResponse {
     jsonObject.addProperty("reason", reason)
     return httpResponse(HttpResponseStatus.FORBIDDEN, jsonObject)
 }
+
+fun httpBadRequest(reason: String): FullHttpResponse {
+    val jsonObject = JsonObject()
+    jsonObject.addProperty("reason", reason)
+    return httpResponse(HttpResponseStatus.BAD_REQUEST, jsonObject)
+}

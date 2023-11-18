@@ -26,11 +26,20 @@ import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
 class HttpConductor {
 
     fun processRequestObject(requestObject: RequestObject) = runCatching {
-        val context = requestObject.requestContext
+        val context = requestObject.context
         val method = context.httpMethod
+
+        logger.debug("Request {}", requestObject)
+
+        if (!context.headers["content-length"].isNullOrEmpty() &&
+            context.headers["content-length"]?.toInt() != requestObject.content.length) {
+            logger.warn("Received incomplete request: $requestObject")
+            return@runCatching httpBadRequest("Incomplete request")
+        }
 
         val route = RouteController.findRoute(context.path, method)
             ?: return@runCatching httpNotFound(context.path, "Route not found")
+        logger.debug("Found route {}", route)
         val response = route.handler(requestObject)
         response
     }.getOrElse {

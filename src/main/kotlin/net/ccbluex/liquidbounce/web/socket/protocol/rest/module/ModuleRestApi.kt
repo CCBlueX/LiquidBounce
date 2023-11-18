@@ -22,9 +22,50 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.module
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.handler.codec.http.HttpMethod
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import java.io.StringReader
+
+data class ModuleRequest(val name: String) {
+
+    fun acceptToggle(method: HttpMethod): FullHttpResponse {
+        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
+
+        val supposedNew = method == HttpMethod.PUT || (method == HttpMethod.POST && !module.enabled)
+
+        if (module.enabled == supposedNew) {
+            return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
+        }
+        module.enabled = supposedNew
+
+        return httpOk(JsonObject().apply {
+            addProperty("name", module.name)
+            addProperty("enabled", module.enabled)
+        })
+    }
+
+    fun acceptGetSettingsRequest(): FullHttpResponse {
+        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
+        return httpOk(ConfigSystem.serializeConfigurable(module))
+    }
+
+    fun acceptPutSettingsRequest(content: String): FullHttpResponse {
+        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
+
+        StringReader(content).use {
+            ConfigSystem.deserializeConfigurable(module, it)
+        }
+
+        return httpOk(JsonObject())
+    }
+
+}
 
 internal fun RestNode.setupModuleRestApi() {
     get("/modules") {
@@ -41,5 +82,33 @@ internal fun RestNode.setupModuleRestApi() {
             })
         }
         httpOk(mods)
+    }.apply {
+        put("/toggle") {
+            decode<ModuleRequest>(it.content)
+                .acceptToggle(it.context.httpMethod)
+        }
+
+        delete("/toggle") {
+            decode<ModuleRequest>(it.content)
+                .acceptToggle(it.context.httpMethod)
+        }
+
+        post("/toggle") {
+            decode<ModuleRequest>(it.content)
+                .acceptToggle(it.context.httpMethod)
+        }
+
+        get("/settings") {
+            decode<ModuleRequest>(it.content)
+                .acceptGetSettingsRequest()
+        }
+
+        put("/settings") {
+            decode<ModuleRequest>(it.content)
+                .acceptPutSettingsRequest(it.content)
+        }
+
     }
+
+
 }

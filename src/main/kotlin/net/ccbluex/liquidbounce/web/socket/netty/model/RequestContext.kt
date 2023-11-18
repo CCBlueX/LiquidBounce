@@ -24,6 +24,7 @@ import java.util.*
 import java.util.stream.Collectors
 
 data class RequestContext(var httpMethod: HttpMethod, var uri: String, var headers: Map<String, String>) {
+    val contentBuffer = StringBuilder()
     val path = if (uri.contains("?")) uri.substring(0, uri.indexOf('?')) else uri
     val params = getUriParams(uri)
 }
