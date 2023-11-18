@@ -1,11 +1,12 @@
 .panel {
   border-radius: 5px;
   overflow: hidden;
-  width: 225px;
   position: absolute;
 
   top: var(--y);
   left: var(--x);
+
+  width: var(--width);
 
   &[data-expanded="true"] .toggle-icon {
     &::before {
@@ -28,11 +29,17 @@
   cursor: grab;
 }
 
+.panel[data-expanded="false"] .header {
+  border-bottom: solid 2px transparent;
+}
+
 .panel[data-dragging="true"] header {
   cursor: grabbing;
 }
 
 .header .icon {
+  width: 16px;
+  height: 16px;
   margin-right: 12px;
   pointer-events: none;
 }
@@ -84,10 +91,15 @@
   }
 }
 
-.modules {
+.resizable {
   background-color: var(--module);
-  max-height: 545px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.modules {
   overflow: auto;
+  height: var(--height);
 }
 
 ::-webkit-scrollbar {

@@ -1,11 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { type CSSProperties, useState } from "react";
 
+import Resizable from "~/components/resizable";
+
 import { Module } from "~/features/clickgui/use-modules";
 
-import styles from "./panel.module.scss";
-import ModuleItem from "~/features/clickgui/components/module";
+import ModuleItem from "./module";
+
 import useDraggable from "~/hooks/use-draggable.tsx";
+
+import styles from "./panel.module.scss";
 
 type PanelProps = {
   category: string;
@@ -23,6 +27,22 @@ export default function Panel({
     position,
     isDragging,
   } = useDraggable<HTMLElement>(`clickgui.panel.${category}`, startPosition);
+
+  const [{ width, height }, setDimensions] = useState(() => {
+    const dimensions = localStorage.getItem(
+      `clickgui.panel.${category}.dimensions`
+    );
+
+    if (dimensions) {
+      const [width, height] = dimensions.split(",").map(Number);
+      return { width, height };
+    }
+
+    return {
+      width: 225,
+      height: Math.max(100, Math.min(500, modules.length * 40 + 30)),
+    };
+  });
 
   const [expanded, setExpanded] = useState(() => {
     const expanded = localStorage.getItem(
@@ -44,6 +64,8 @@ export default function Panel({
   const style = {
     "--x": `${position[0]}px`,
     "--y": `${position[1]}px`,
+    "--width": `${width}px`,
+    "--height": `${height}px`,
   } as CSSProperties;
 
   return (
@@ -91,9 +113,33 @@ export default function Panel({
             animate="visible"
             exit="hidden"
           >
-            {modules.map((module) => (
-              <ModuleItem module={module} key={module.name} />
-            ))}
+            <Resizable
+              className={styles.resizable}
+              width={width}
+              height={height}
+              minHeight={100}
+              minWidth={200}
+              maxHeight={500}
+              maxWidth={400}
+              resizeHandles={["e", "s"]}
+              onResize={(_event, { size }) => {
+                setDimensions(() => ({
+                  width: size.width,
+                  height: size.height,
+                }));
+
+                localStorage.setItem(
+                  `clickgui.panel.${category}.dimensions`,
+                  `${size.width},${size.height}`
+                );
+              }}
+            >
+              <>
+                {modules.map((module) => (
+                  <ModuleItem module={module} key={module.name} />
+                ))}
+              </>
+            </Resizable>
           </motion.div>
         )}
       </AnimatePresence>
