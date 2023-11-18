@@ -4,6 +4,7 @@
   font-weight: 600;
   font-size: 12px;
   padding: 10px;
+  padding-right: 32px;
   transition: ease background-color 0.2s, ease color 0.2s;
   position: relative;
 
@@ -14,4 +15,28 @@
   &[data-enabled="true"] {
     color: var(--text);
   }
+
+  .chevron {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    width: 12px;
+    transition: transform 0.2s ease-out;
+  }
+
+  &[data-expanded="true"] .chevron {
+    transform: translateY(-50%) rotate(0deg);
+  }
+}
+
+.settings {
+  border-left: solid 6px var(--accent);
+  padding: 8px 12px;
+  padding-right: 44px;
+  background-color: var(--module);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, useState, createContext, useContext } from "react";
 
 import Resizable from "~/components/resizable";
 
@@ -10,12 +10,31 @@ import ModuleItem from "./module";
 import useDraggable from "~/hooks/use-draggable.tsx";
 
 import styles from "./panel.module.scss";
+import invariant from "tiny-invariant";
 
 type PanelProps = {
   category: string;
   modules: Module[];
   startPosition: [number, number];
 };
+
+type PanelContextType = {
+  width: number;
+  height: number;
+};
+
+const PanelContext = createContext<PanelContextType | null>(null);
+
+export function usePanelContext() {
+  const context = useContext(PanelContext);
+
+  invariant(
+    context,
+    "usePanelContext must be used within a PanelContextProvider"
+  );
+
+  return context;
+}
 
 export default function Panel({
   category,
@@ -39,8 +58,8 @@ export default function Panel({
     }
 
     return {
-      width: 225,
-      height: Math.max(100, Math.min(500, modules.length * 40 + 30)),
+      width: 230,
+      height: Math.max(100, Math.min(800, modules.length * 40 + 30)),
     };
   });
 
@@ -69,80 +88,82 @@ export default function Panel({
   } as CSSProperties;
 
   return (
-    <div
-      className={styles.panel}
-      style={style}
-      data-expanded={expanded}
-      data-dragging={isDragging}
-    >
-      <header
-        className={styles.header}
-        onContextMenu={handleContextMenu}
-        ref={headerRef}
+    <PanelContext.Provider value={{ width, height }}>
+      <div
+        className={styles.panel}
+        style={style}
+        data-expanded={expanded}
+        data-dragging={isDragging}
       >
-        <img
-          src={`./icons/${category.toLowerCase()}.svg`}
-          aria-hidden="true"
-          className={styles.icon}
-        />
-        <h2 className={styles.title}>{category}</h2>
-        <button className={styles.toggle} onClickCapture={toggleExpanded}>
-          <div className={styles.toggleIcon} />
-        </button>
-      </header>
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            className={styles.modules}
-            variants={{
-              hidden: {
-                opacity: 0,
-                height: 0,
-              },
-              visible: {
-                opacity: 1,
-                height: "auto",
-              },
-            }}
-            transition={{
-              bounce: 0,
-              ease: "easeInOut",
-              duration: 0.2,
-            }}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            <Resizable
-              className={styles.resizable}
-              width={width}
-              height={height}
-              minHeight={100}
-              minWidth={200}
-              maxHeight={500}
-              maxWidth={400}
-              resizeHandles={["e", "s"]}
-              onResize={(_event, { size }) => {
-                setDimensions(() => ({
-                  width: size.width,
-                  height: size.height,
-                }));
-
-                localStorage.setItem(
-                  `clickgui.panel.${category}.dimensions`,
-                  `${size.width},${size.height}`
-                );
+        <header
+          className={styles.header}
+          onContextMenu={handleContextMenu}
+          ref={headerRef}
+        >
+          <img
+            src={`./icons/${category.toLowerCase()}.svg`}
+            aria-hidden="true"
+            className={styles.icon}
+          />
+          <h2 className={styles.title}>{category}</h2>
+          <button className={styles.toggle} onClickCapture={toggleExpanded}>
+            <div className={styles.toggleIcon} />
+          </button>
+        </header>
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div
+              className={styles.modules}
+              variants={{
+                hidden: {
+                  opacity: 0,
+                  height: 0,
+                },
+                visible: {
+                  opacity: 1,
+                  height: "auto",
+                },
               }}
+              transition={{
+                bounce: 0,
+                ease: "easeInOut",
+                duration: 0.2,
+              }}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
             >
-              <>
-                {modules.map((module) => (
-                  <ModuleItem module={module} key={module.name} />
-                ))}
-              </>
-            </Resizable>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+              <Resizable
+                className={styles.resizable}
+                width={width}
+                height={height}
+                minHeight={100}
+                minWidth={230}
+                maxHeight={800}
+                maxWidth={400}
+                resizeHandles={["e", "s", "se"]}
+                onResize={(_event, { size }) => {
+                  setDimensions(() => ({
+                    width: size.width,
+                    height: size.height,
+                  }));
+
+                  localStorage.setItem(
+                    `clickgui.panel.${category}.dimensions`,
+                    `${size.width},${size.height}`
+                  );
+                }}
+              >
+                <div className={styles.moduleList}>
+                  {modules.map((module) => (
+                    <ModuleItem module={module} key={module.name} />
+                  ))}
+                </div>
+              </Resizable>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </PanelContext.Provider>
   );
 }

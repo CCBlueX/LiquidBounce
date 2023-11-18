@@ -73,3 +73,15 @@
   top: 50%;
   transform: translateY(-50%);
 }
+
+.react-resizable-handle-se {
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  height: 32px;
+  cursor: se-resize;
+}
+
+.react-resizable-handle-se:after {
+  display: none;
+}
