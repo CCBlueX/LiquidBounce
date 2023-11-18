@@ -19,12 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -51,15 +48,5 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
         --text: ${textColor.toHex(true)}
         --text-dimmed: ${dimmedTextColor.toHex(true)}
         """.trimIndent()
-
-    override fun enable() {
-        val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
-
-        val emptyScreen = EmptyScreen()
-        UltralightEngine.newScreenView(emptyScreen).apply {
-            loadPage(page)
-        }
-        mc.setScreen(emptyScreen)
-    }
 
 }

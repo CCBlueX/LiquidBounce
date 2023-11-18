@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.ForcedState
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
@@ -65,15 +66,18 @@ class StateUpdateEvent : Event() {
  */
 
 @Nameable("session")
+@WebSocketEvent
 class SessionEvent : Event()
 
 @Nameable("screen")
 class ScreenEvent(val screen: Screen?) : CancellableEvent()
 
 @Nameable("chatSend")
+@WebSocketEvent
 class ChatSendEvent(val message: String) : CancellableEvent()
 
 @Nameable("chatReceive")
+@WebSocketEvent
 class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatType) : Event() {
 
     enum class ChatType {

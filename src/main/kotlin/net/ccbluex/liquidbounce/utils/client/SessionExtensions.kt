@@ -109,6 +109,9 @@ fun MinecraftSessionService.loginAltening(account: String) =
 fun MinecraftSessionService.loginCracked(username: String) =
     login(username, "", YggdrasilEnvironment.PROD.environment)
 
+fun Session.isPremium() = (accountType == Session.AccountType.MOJANG || accountType == Session.AccountType.MSA)
+    && accessToken.isNotBlank() && accessToken.length > 3
+
 /**
  * Account Generator environments
  */

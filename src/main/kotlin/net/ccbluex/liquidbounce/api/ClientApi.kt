@@ -37,6 +37,9 @@ object ClientApi {
 
     private const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
 
+    // TODO: Use our own server for this
+    const val FACE_URL = "https://crafatar.com/avatars/%s?size=100"
+
     /**
      * This makes sense because we want forks to be able to use this API and not only the official client.
      * It also allows us to use API endpoints for legacy on other branches.

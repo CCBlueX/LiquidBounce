@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -41,14 +39,15 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.client.IS_MAC
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import org.apache.logging.log4j.LogManager
-import org.lwjgl.util.tinyfd.TinyFileDialogs
 import kotlin.system.exitProcess
 
 /**
@@ -98,19 +97,6 @@ object LiquidBounce : Listenable {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
-            // Restrict OS (to notify user that macOS is not supported)
-            if (IS_MAC) {
-                TinyFileDialogs.tinyfd_messageBox(
-                    "LiquidBounce Nextgen",
-                    "LiquidBounce Nextgen is not supported on macOS. Please use Windows or Linux instead.",
-                    "ok",
-                    "error",
-                    true
-                )
-                logger.error("LiquidBounce Nextgen is not supported on macOS. Please use Windows or Linux instead.")
-                exitProcess(1)
-            }
-
             // Load mappings
             McMappings.load()
 
@@ -127,7 +113,6 @@ object LiquidBounce : Listenable {
             // Features
             ModuleManager
             CommandManager
-            ThemeManager
             ScriptManager
             RotationManager
             CombatManager
@@ -137,11 +122,9 @@ object LiquidBounce : Listenable {
             InventoryTracker
             Tabs
             Chat
+            BrowserManager
 
             LiquidBounceFonts
-
-            // Load up a web platform
-            UltralightEngine.init()
 
             // Register commands and modules
             CommandManager.registerInbuilt()
@@ -152,6 +135,16 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
+
+            // Netty WebSocket
+            ClientSocket.start()
+
+            // Initialize browser
+            BrowserManager.initBrowser()
+            IntegrationHandler
+
+            // Fires up the client tab
+            IntegrationHandler.clientTab
 
             // Check for newest version
             if (updateAvailable) {
@@ -194,7 +187,8 @@ object LiquidBounce : Listenable {
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
         ConfigSystem.storeAll()
-        UltralightEngine.shutdown()
+        IntegrationHandler.clientTab?.closeTab()
+        BrowserManager.shutdownBrowser()
 
         ChunkScanner.ChunkScannerThread.stopThread()
     }

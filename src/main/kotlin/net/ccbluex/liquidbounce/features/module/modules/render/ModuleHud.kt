@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 
 /**
  * Module HUD
@@ -31,43 +30,24 @@ import net.ccbluex.liquidbounce.features.module.Module
  */
 
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
+
+    private var browserTab: ITab? = null
+
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
 
-    private var viewOverlay: ViewOverlay? = null
-
-    /**
-     * Create new HUD view
-     */
-    private fun makeView() {
-        if (viewOverlay != null) {
-            return
-        }
-
-        val page = ThemeManager.page("hud") ?: error("unable to find hud page in current theme")
-        viewOverlay = UltralightEngine.newOverlayView().apply {
-            loadPage(page)
-        }
-    }
-
-    /**
-     * Unload HUD view
-     */
-    private fun unloadView() {
-        viewOverlay?.let { UltralightEngine.removeView(it) }
-        viewOverlay = null
-    }
-
-    override fun init() {
-        makeView()
-    }
-
     override fun enable() {
-        makeView()
+        // Should not happen, but in-case there is already a tab open, close it
+        browserTab?.closeTab()
+
+        // Create a new tab and open it
+        browserTab = BrowserManager.browser?.createTab("https://www.testufo.com")
     }
 
     override fun disable() {
-        unloadView()
+        // Closes tab entirely
+        browserTab?.closeTab()
+        browserTab = null
     }
 
 }
