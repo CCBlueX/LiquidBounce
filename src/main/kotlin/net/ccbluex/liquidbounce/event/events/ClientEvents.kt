@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
@@ -39,7 +38,7 @@ class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
 @WebSocketEvent
-class ToggleModuleEvent(val module: Module, val newState: Boolean, val ignoreCondition: Boolean = false) : Event()
+class ToggleModuleEvent(val moduleName: String, val enabled: Boolean) : Event()
 
 @Nameable("notification")
 @WebSocketEvent

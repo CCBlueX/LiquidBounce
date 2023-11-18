@@ -85,11 +85,8 @@ open class Module(
                 if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
             )
 
-            // Ignore handleEvents condition to prevent enabled modules from freezing post game load
-            val notInGame = (mc.player == null || mc.world == null) && new
-
             // Call out module event
-            EventManager.callEvent(ToggleModuleEvent(this, new, notInGame))
+            EventManager.callEvent(ToggleModuleEvent(name, new))
 
             // Call to choices
             value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
