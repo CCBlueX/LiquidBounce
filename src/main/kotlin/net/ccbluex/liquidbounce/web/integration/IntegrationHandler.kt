@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.web.integration
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -38,6 +39,7 @@ import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
+import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 
 object IntegrationHandler : Listenable {
@@ -62,14 +64,33 @@ object IntegrationHandler : Listenable {
 
     data class VirtualScreen(val name: String)
 
+    private val parent: Screen
+        get() = mc.currentScreen ?: TitleScreen()
+
     enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
-                                 val showAlong: Boolean = false) {
-        TITLE("title", { it is TitleScreen }),
-        MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }),
-        SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }),
+                                 val showAlong: Boolean = false, private val open: () -> Unit = {}) {
+
+
+        TITLE("title", { it is TitleScreen }, open = {
+            RenderSystem.recordRenderCall {
+                mc.setScreen(TitleScreen())
+            }
+        }),
+        MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, open = {
+            mc.setScreen(MultiplayerScreen(parent))
+        }),
+        SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }, open = {
+            mc.setScreen(SelectWorldScreen(parent))
+        }),
+        OPTIONS("options", { it is OptionsScreen }, true, open = {
+            mc.setScreen(OptionsScreen(parent, mc.options))
+        }),
         GAME_MENU("game_menu", { it is GameMenuScreen }, true),
         INVENTORY("inventory", { it is InventoryScreen || it is CreativeInventoryScreen }, true),
-        CONTAINER("container", { it is GenericContainerScreen }, true)
+        CONTAINER("container", { it is GenericContainerScreen }, true);
+
+        fun open() = RenderSystem.recordRenderCall(open)
+
     }
 
     private fun virtualOpen(name: String) {
