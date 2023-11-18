@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.client.Client
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
 import net.ccbluex.liquidbounce.features.command.CommandManager

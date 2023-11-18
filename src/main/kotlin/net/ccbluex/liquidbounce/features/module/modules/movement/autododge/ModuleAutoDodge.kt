@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.MovementInputEvent
-import net.ccbluex.liquidbounce.event.TickJumpEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module

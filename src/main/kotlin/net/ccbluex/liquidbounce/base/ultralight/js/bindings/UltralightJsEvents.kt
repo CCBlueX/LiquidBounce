@@ -42,7 +42,7 @@ class UltralightJsEvents(val viewContextProvider: ContextProvider, val viewOverl
         init {
             // Register the known events
             for (eventClass in ALL_EVENT_CLASSES) {
-                EVENT_MAP[eventClass.liquidBounceEventJsName] = eventClass.java
+                EVENT_MAP[eventClass.eventName] = eventClass.java
             }
 
             // Register view related events

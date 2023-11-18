@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import net.ccbluex.liquidbounce.event.AttackEvent;
-import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
-import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.AttackEvent;
+import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent;
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;

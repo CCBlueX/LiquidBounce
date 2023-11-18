@@ -19,7 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent;
+import net.ccbluex.liquidbounce.event.events.MouseCursorEvent;
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent;
+import net.ccbluex.liquidbounce.event.events.MouseScrollEvent;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,7 +40,8 @@ public class MixinMouse {
      */
     @Inject(method = "onMouseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
     private void hookMouseButton(long window, int button, int action, int mods, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseButtonEvent(window, button, action, mods));
+        // does if (window == this.client.getWindow().getHandle())
+        EventManager.INSTANCE.callEvent(new MouseButtonEvent(button, action, mods));
     }
 
     /**
@@ -44,7 +49,8 @@ public class MixinMouse {
      */
     @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
     private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseScrollEvent(window, horizontal, vertical));
+        // does if (window == this.client.getWindow().getHandle())
+        EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical));
     }
 
     /**
@@ -52,7 +58,7 @@ public class MixinMouse {
      */
     @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
     private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseCursorEvent(window, x, y));
+        EventManager.INSTANCE.callEvent(new MouseCursorEvent(x, y));
     }
 
     /**

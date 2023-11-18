@@ -20,7 +20,10 @@ package net.ccbluex.liquidbounce.base.ultralight.hooks
 
 import net.ccbluex.liquidbounce.base.ultralight.RenderLayer
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * A integration bridge between Minecraft and Ultralight
@@ -45,27 +48,27 @@ object UltralightIntegrationHook : Listenable {
     }
 
     val windowFocusHandler = handler<WindowFocusEvent> {
-        UltralightEngine.inputAdapter.focusCallback(it.window, it.focused)
+        UltralightEngine.inputAdapter.focusCallback(mc.window.handle, it.focused)
     }
 
     val mouseButtonHandler = handler<MouseButtonEvent> {
-        UltralightEngine.inputAdapter.mouseButtonCallback(it.window, it.button, it.action, it.mods)
+        UltralightEngine.inputAdapter.mouseButtonCallback(mc.window.handle, it.button, it.action, it.mods)
     }
 
     val mouseScrollHandler = handler<MouseScrollEvent> {
-        UltralightEngine.inputAdapter.scrollCallback(it.window, it.horizontal, it.vertical)
+        UltralightEngine.inputAdapter.scrollCallback(mc.window.handle, it.horizontal, it.vertical)
     }
 
     val mouseCursorHandler = handler<MouseCursorEvent> {
-        UltralightEngine.inputAdapter.cursorPosCallback(it.window, it.x, it.y)
+        UltralightEngine.inputAdapter.cursorPosCallback(mc.window.handle, it.x, it.y)
     }
 
     val keyboardKeyHandler = handler<KeyboardKeyEvent> {
-        UltralightEngine.inputAdapter.keyCallback(it.window, it.keyCode, it.scancode, it.action, it.mods)
+        UltralightEngine.inputAdapter.keyCallback(mc.window.handle, it.keyCode, it.scanCode, it.action, it.mods)
     }
 
     val keyboardCharHandler = handler<KeyboardCharEvent> {
-        UltralightEngine.inputAdapter.charCallback(it.window, it.codepoint)
+        UltralightEngine.inputAdapter.charCallback(mc.window.handle, it.codePoint)
     }
 
 }
