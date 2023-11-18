@@ -68,9 +68,7 @@ export default function ModuleItem({ module }: ModuleProps) {
         component = <ColorModuleSetting setting={setting} key={setting.name} />;
         break;
       default:
-        component = (
-          <UnknownModuleSetting setting={setting} />
-        );
+        component = <UnknownModuleSetting setting={setting} />;
         break;
     }
 
@@ -105,7 +103,7 @@ export default function ModuleItem({ module }: ModuleProps) {
         <Chevron className={styles.chevron} />
       </div>
 
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="popLayout">
         {expanded && (
           <motion.div
             className={styles.settings}
@@ -117,16 +115,17 @@ export default function ModuleItem({ module }: ModuleProps) {
               visible: {
                 opacity: 1,
                 height: "auto",
+                transition: {
+                  staggerChildren: 0.05,
+                  bounce: 0,
+                  ease: "easeInOut",
+                  duration: 0.2,
+                },
               },
-            }}
-            transition={{
-              bounce: 0,
-              ease: "easeInOut",
-              duration: 0.2,
-              staggerChildren: 0.1,
             }}
             initial="hidden"
             animate="visible"
+            exit="hidden"
           >
             {module.settings.map(renderModuleSetting)}
           </motion.div>
