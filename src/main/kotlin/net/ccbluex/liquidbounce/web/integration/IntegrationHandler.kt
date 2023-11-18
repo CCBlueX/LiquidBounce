@@ -45,7 +45,7 @@ import net.minecraft.client.gui.screen.world.SelectWorldScreen
 object IntegrationHandler : Listenable {
 
     // This is the URL that will be opened when the client is ready.
-    private const val INTEGRATION_URL = "https://dl.ccbluex.net/test.html"
+    internal const val INTEGRATION_URL = "https://dl.ccbluex.net/test.html"
 
     /**
      * This tab is always open and initialized. We keep this tab open to make it possible to draw on the screen,
@@ -54,8 +54,8 @@ object IntegrationHandler : Listenable {
      *
      * The client tab will be initialized when the browser is ready.
      */
-    val clientTab by lazy {
-        BrowserManager.browser?.createInputAwareTab(INTEGRATION_URL) { true }
+    val clientJcef by lazy {
+        BrowserManager.browser?.createInputAwareTab(INTEGRATION_URL) { mc.currentScreen != null }
             ?.preferOnTop()
     }
 

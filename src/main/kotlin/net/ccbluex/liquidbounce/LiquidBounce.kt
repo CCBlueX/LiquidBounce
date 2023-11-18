@@ -145,7 +145,7 @@ object LiquidBounce : Listenable {
             IntegrationHandler
 
             // Fires up the client tab
-            IntegrationHandler.clientTab
+            IntegrationHandler.clientJcef
 
             // Check for newest version
             if (updateAvailable) {
@@ -197,7 +197,7 @@ object LiquidBounce : Listenable {
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
         ConfigSystem.storeAll()
-        IntegrationHandler.clientTab?.closeTab()
+        IntegrationHandler.clientJcef?.closeTab()
         BrowserManager.shutdownBrowser()
 
         ChunkScanner.ChunkScannerThread.stopThread()
