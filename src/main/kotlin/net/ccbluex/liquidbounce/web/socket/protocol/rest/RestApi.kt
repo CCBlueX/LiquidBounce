@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest
 
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupClientRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupPlayerRestApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupServerApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupWorldApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.module.setupModuleRestApi
@@ -36,6 +37,7 @@ class RestApi {
             setupModuleRestApi()
             setupWorldApi()
             setupServerApi()
+            setupPlayerRestApi()
         }
     }
 

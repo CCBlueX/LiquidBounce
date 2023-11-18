@@ -48,6 +48,7 @@ import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -68,12 +69,37 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Shadow
     protected abstract boolean isWalking();
 
+    @Unique
+    private float lastKnownHealth;
+    @Unique
+    private float lastKnownMaxHealth;
+    @Unique
+    private float lastKnownFoodLevel;
+    @Unique
+    private float lastKnownExperienceProgress;
+
     /**
      * Hook entity tick event
      */
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V", shift = At.Shift.AFTER))
     private void hookTickEvent(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new PlayerTickEvent());
+
+        var health = this.getHealth();
+        var maxHealth = this.getMaxHealth();
+        var foodLevel = this.getHungerManager().getFoodLevel();
+        var experienceProgress = this.experienceProgress;
+
+        // Call event if any of the values changed
+        if (health != this.lastKnownHealth || maxHealth != this.lastKnownMaxHealth ||
+                foodLevel != this.lastKnownFoodLevel || experienceProgress != this.lastKnownExperienceProgress) {
+            EventManager.INSTANCE.callEvent(new PlayerStatsChangeEvent(health, maxHealth, foodLevel, experienceProgress));
+        }
+
+        this.lastKnownHealth = health;
+        this.lastKnownMaxHealth = maxHealth;
+        this.lastKnownFoodLevel = foodLevel;
+        this.lastKnownExperienceProgress = experienceProgress;
     }
 
     /**

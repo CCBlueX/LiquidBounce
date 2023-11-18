@@ -70,6 +70,11 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Nullable
     public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
 
+    @Shadow public abstract float getHealth();
+
+    @Shadow
+    public abstract float getMaxHealth();
+
     /**
      * Hook anti levitation module
      */

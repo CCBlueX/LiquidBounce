@@ -61,6 +61,8 @@ object ClientSocket {
         socketEventHandler.register("clientChatError")
         socketEventHandler.register("altManagerUpdate")
         socketEventHandler.register("virtualScreen")
+        socketEventHandler.register("fps")
+        socketEventHandler.register("playerStats")
 
         // RestAPI
         restApi.setupRoutes()
