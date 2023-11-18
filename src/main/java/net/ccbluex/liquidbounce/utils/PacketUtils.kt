@@ -98,7 +98,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
         }
     }
     @EventTarget(priority = 1000)
-    fun runGameLoop(event: GameLoop) {
+    fun onGameLoop(event: GameLoopEvent) {
         synchronized(queuedPackets) {
             queuedPackets.forEach {
                 handlePacket(it)

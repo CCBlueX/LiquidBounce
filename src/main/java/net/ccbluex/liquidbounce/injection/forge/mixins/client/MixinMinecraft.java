@@ -106,7 +106,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/profiler/Profiler;startSection(Ljava/lang/String;)V", ordinal = 1))
     private void hook(CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new GameLoop());
+        EventManager.INSTANCE.callEvent(new GameLoopEvent());
     }
 
     @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;checkGLError(Ljava/lang/String;)V", ordinal = 2, shift = At.Shift.AFTER))

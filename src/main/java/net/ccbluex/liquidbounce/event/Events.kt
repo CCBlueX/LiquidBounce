@@ -136,7 +136,7 @@ class Render2DEvent(val partialTicks: Float) : Event()
 /**
  * Called when packets sent to client are processed
  */
-class GameLoop() : Event()
+class GameLoopEvent() : Event()
 
 /**
  * Called when world is going to be rendered
