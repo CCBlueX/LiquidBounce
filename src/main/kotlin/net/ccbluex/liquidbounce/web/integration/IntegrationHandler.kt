@@ -72,9 +72,7 @@ object IntegrationHandler : Listenable {
 
 
         TITLE("title", { it is TitleScreen }, open = {
-            RenderSystem.recordRenderCall {
-                mc.setScreen(TitleScreen())
-            }
+            mc.setScreen(TitleScreen())
         }),
         MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, open = {
             mc.setScreen(MultiplayerScreen(parent))
