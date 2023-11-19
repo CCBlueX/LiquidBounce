@@ -3,6 +3,7 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.systems.RenderSystem
+import it.unimi.dsi.fastutil.booleans.BooleanObjectImmutablePair
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.UV2f
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -38,11 +39,17 @@ class RenderBufferBuilder<I: VertexInputType>(
      *
      * @param box The bounding box of the box.
      */
-    fun drawBox(env: RenderEnvironment, box: Box) {
+    fun drawBox(env: RenderEnvironment, box: Box, useOutlineVertices: Boolean = false) {
         val matrix = env.currentMvpMatrix
 
+        val vertexPositions =
+            if(useOutlineVertices)
+                boxOutlineVertexPositions(box)
+            else
+                boxVertexPositions(box)
+
         // Draw the vertices of the box
-        boxVertexPositions(box).forEach { (x, y, z) ->
+        vertexPositions.forEach { (x, y, z) ->
             bufferBuilder.vertex(matrix, x, y, z).next()
         }
     }
@@ -71,6 +78,36 @@ class RenderBufferBuilder<I: VertexInputType>(
             Vec3(box.minX, box.maxY, box.maxZ),
             Vec3(box.minX, box.minY, box.minZ),
             Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ)
+        )
+        return vertices
+    }
+
+    private fun boxOutlineVertexPositions(box: Box): List<Vec3> {
+        val vertices = listOf(
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
             Vec3(box.minX, box.maxY, box.maxZ),
             Vec3(box.minX, box.maxY, box.minZ)
         )

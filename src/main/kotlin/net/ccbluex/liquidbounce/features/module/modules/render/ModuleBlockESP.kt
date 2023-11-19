@@ -104,7 +104,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                             boxesRenderer.drawBox(this, box)
                             // This can still be optimized since there will be a lot of useless matrix muls...
 
-                            outlinesRenderer?.drawBox(this, box)
+                            outlinesRenderer?.drawBox(this, box, true)
 
                         }
                     }
