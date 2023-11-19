@@ -134,12 +134,11 @@ class BoxesRenderer() {
         VertexInputType.Pos,
         RenderBufferBuilder.TESSELATOR_A
     )
-    private val outlinesRenderer =
-        RenderBufferBuilder(
+    private val outlinesRenderer = RenderBufferBuilder(
             DrawMode.DEBUG_LINES,
             VertexInputType.Pos,
             RenderBufferBuilder.TESSELATOR_B
-        )
+    )
 
     fun drawBox(env: RenderEnvironment, box: Box, outline: Boolean) {
         boxesRenderer.drawBox(env, box)
