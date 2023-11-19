@@ -24,12 +24,13 @@ import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.BoxesRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box

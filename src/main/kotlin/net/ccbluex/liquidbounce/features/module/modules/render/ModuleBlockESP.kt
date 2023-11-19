@@ -18,25 +18,24 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.BoxesRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import java.util.Collections
 
 /**
  * BlockESP module
