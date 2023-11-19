@@ -7,12 +7,8 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.UV2f
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.minecraft.client.gl.ShaderProgram
-import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.GameRenderer
-import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -38,11 +34,17 @@ class RenderBufferBuilder<I: VertexInputType>(
      *
      * @param box The bounding box of the box.
      */
-    fun drawBox(env: RenderEnvironment, box: Box) {
+    fun drawBox(env: RenderEnvironment, box: Box, useOutlineVertices: Boolean = false) {
         val matrix = env.currentMvpMatrix
 
+        val vertexPositions =
+            if(useOutlineVertices)
+                boxOutlineVertexPositions(box)
+            else
+                boxVertexPositions(box)
+
         // Draw the vertices of the box
-        boxVertexPositions(box).forEach { (x, y, z) ->
+        vertexPositions.forEach { (x, y, z) ->
             bufferBuilder.vertex(matrix, x, y, z).next()
         }
     }
@@ -77,6 +79,36 @@ class RenderBufferBuilder<I: VertexInputType>(
         return vertices
     }
 
+    private fun boxOutlineVertexPositions(box: Box): List<Vec3> {
+        val vertices = listOf(
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.minY, box.minZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.minY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.minY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.minY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.minZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.maxX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.maxZ),
+            Vec3(box.minX, box.maxY, box.minZ)
+        )
+        return vertices
+    }
+
     fun draw() {
         if (bufferBuilder.isBatchEmpty) {
             tesselator.buffer.end()
@@ -93,6 +125,36 @@ class RenderBufferBuilder<I: VertexInputType>(
     companion object {
         val TESSELATOR_A: Tessellator = Tessellator(0x200000)
         val TESSELATOR_B: Tessellator = Tessellator(0x200000)
+    }
+}
+
+class BoxesRenderer {
+    private val faceRenderer = RenderBufferBuilder(
+        DrawMode.QUADS,
+        VertexInputType.Pos,
+        RenderBufferBuilder.TESSELATOR_A
+    )
+    private val outlinesRenderer = RenderBufferBuilder(
+            DrawMode.DEBUG_LINES,
+            VertexInputType.Pos,
+            RenderBufferBuilder.TESSELATOR_B
+    )
+
+    fun drawBox(env: RenderEnvironment, box: Box, outline: Boolean) {
+        faceRenderer.drawBox(env, box)
+        // This can still be optimized since there will be a lot of useless matrix muls...
+        if(outline) {
+            outlinesRenderer.drawBox(env, box, true)
+        }
+    }
+
+    fun draw(env: RenderEnvironment, faceColor: Color4b, outlineColor: Color4b) {
+        env.withColor(faceColor) {
+            faceRenderer.draw()
+        }
+        env.withColor(outlineColor) {
+            outlinesRenderer.draw()
+        }
     }
 
 }
