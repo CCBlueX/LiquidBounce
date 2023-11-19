@@ -93,20 +93,25 @@ public class MixinKeyboardInput extends MixinInput {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
+
+        float z = this.movementForward;
+        float x = this.movementSideways;
+
+        final PlayerMoveInputEvent MoveInputEvent;
+
         if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null || player == null) {
-            return;
+            MoveInputEvent = new PlayerMoveInputEvent(Math.round(z), Math.round(x));
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
+        } else {
+            float deltaYaw = player.getYaw() - rotation.getYaw();
+
+            float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
+            float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
+
+            MoveInputEvent = new PlayerMoveInputEvent(Math.round(newZ), Math.round(newX));
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
         }
 
-        float deltaYaw = player.getYaw() - rotation.getYaw();
-
-        float x = this.movementSideways;
-        float z = this.movementForward;
-
-        float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
-        float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
-
-        final PlayerMoveInputEvent MoveInputEvent = new PlayerMoveInputEvent(Math.round(newZ), Math.round(newX));
-        EventManager.INSTANCE.callEvent(MoveInputEvent);
 
         this.movementSideways = MoveInputEvent.getSideways();
         this.movementForward = MoveInputEvent.getForward();
