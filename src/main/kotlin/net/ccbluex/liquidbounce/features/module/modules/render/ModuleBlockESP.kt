@@ -72,25 +72,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
             val baseColor = base.alpha(50)
             val outlineColor = base.alpha(100)
 
-
-
-
-
-
-            val boxesRenderer = RenderBufferBuilder(
-                VertexFormat.DrawMode.QUADS,
-                VertexInputType.Pos,
-                RenderBufferBuilder.TESSELATOR_A
-            )
-            val outlinesRenderer =
-                if(outline)
-                    RenderBufferBuilder(
-                        VertexFormat.DrawMode.DEBUG_LINES,
-                        VertexInputType.Pos,
-                        RenderBufferBuilder.TESSELATOR_B
-                    )
-                else
-                    null
+            val boxRenderer = boxesRenderer()
 
 
 
@@ -101,20 +83,13 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                         val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
                         withPosition(vec3) {
-                            boxesRenderer.drawBox(this, box)
-                            // This can still be optimized since there will be a lot of useless matrix muls...
-
-                            outlinesRenderer?.drawBox(this, box, true)
+                            boxRenderer.drawBox(this, box, outline)
 
                         }
                     }
                 }
 
-                withColor(baseColor) { boxesRenderer.draw() }
-
-                if(outline) {
-                    withColor(outlineColor) { outlinesRenderer?.draw() }
-                }
+                boxRenderer.draw(this, baseColor, outlineColor)
 
 
 

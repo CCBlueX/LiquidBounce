@@ -4,6 +4,7 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.systems.RenderSystem
 import it.unimi.dsi.fastutil.booleans.BooleanObjectImmutablePair
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.UV2f
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -132,6 +133,37 @@ class RenderBufferBuilder<I: VertexInputType>(
         val TESSELATOR_B: Tessellator = Tessellator(0x200000)
         val TESSELATOR_C: Tessellator = Tessellator(0x200000)
         val TESSELATOR_D: Tessellator = Tessellator(0x200000)
+    }
+}
+
+class boxesRenderer() {
+    private val boxesRenderer = RenderBufferBuilder(
+        DrawMode.QUADS,
+        VertexInputType.Pos,
+        RenderBufferBuilder.TESSELATOR_A
+    )
+    private val outlinesRenderer =
+        RenderBufferBuilder(
+            DrawMode.DEBUG_LINES,
+            VertexInputType.Pos,
+            RenderBufferBuilder.TESSELATOR_B
+        )
+
+    fun drawBox(env: RenderEnvironment, box: Box, outline: Boolean) {
+        boxesRenderer.drawBox(env, box)
+        // This can still be optimized since there will be a lot of useless matrix muls...
+        if(outline) {
+            outlinesRenderer.drawBox(env, box, true)
+        }
+    }
+
+    fun draw(env: RenderEnvironment, boxColor: Color4b, outlineColor: Color4b) {
+        env.withColor(boxColor) {
+            boxesRenderer.draw()
+        }
+        env.withColor(outlineColor) {
+            outlinesRenderer.draw()
+        }
     }
 
 }
