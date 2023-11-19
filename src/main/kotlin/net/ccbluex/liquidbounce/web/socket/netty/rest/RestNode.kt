@@ -23,10 +23,15 @@ package net.ccbluex.liquidbounce.web.socket.netty.rest
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.web.socket.netty.httpFile
+import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
+import net.ccbluex.liquidbounce.web.socket.netty.httpNotFound
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
+import java.io.File
 
 object RouteController : RestNode("")
 
+@Suppress("TooManyFunctions")
 open class RestNode(val path: String) {
 
     internal val nodes = mutableListOf<RestNode>()
@@ -57,6 +62,8 @@ open class RestNode(val path: String) {
     fun trace(path: String, handler: (RequestObject) -> FullHttpResponse)
         = Route(path, HttpMethod.TRACE, handler).also { nodes += it }
 
+    fun file(path: String, baseFolder: File) = FileServant(path, baseFolder).also { nodes += it }
+
     /**
      * Find a route for the given URI path and http method
      *
@@ -67,7 +74,7 @@ open class RestNode(val path: String) {
      * @example findRoute("/api/v1/users", HttpMethod.GET)
      */
     fun findRoute(path: String, method: HttpMethod): Route? {
-        logger.debug("--------- ${if (this is Route) "ROUTE" else "NODE"} ${this.path} ---------")
+        logger.debug("FR --------- ${if (this is Route) "ROUTE" else "NODE"} ${this.path} ---------")
 
         val takenOff = path.substring(this.path.length)
         logger.debug("Search for route: {} {}", method, takenOff)
@@ -98,7 +105,73 @@ open class RestNode(val path: String) {
         return nodeMatch.findRoute(takenOff, method)
     }
 
+    /**
+     * Find a route for the given URI path and http method
+     *
+     * @param path URI path
+     * @param method HTTP method
+     * @return Route or null if no route was found
+     *
+     * @example findRoute("/api/v1/users", HttpMethod.GET)
+     */
+    fun findFileServant(path: String): Pair<FileServant, String>? {
+        logger.debug("FFS --------- ${if (this is Route) "ROUTE" else "NODE"} ${this.path} ---------")
+
+        val takenOff = path.substring(this.path.length)
+        logger.debug("Search for file servant: {}", takenOff)
+
+        // Nodes can now either include a route with the correct method or a node with a path that matches
+        // the given path
+        val nodes = nodes.filter {
+            logger.debug("Check node: $takenOff startsWith ${it.path} -> ${path.startsWith(it.path)}")
+            takenOff.startsWith(it.path)
+        }
+
+        logger.debug("Found ${nodes.size} nodes")
+
+        // Now we have to decide if the file servant matches the path exactly or if it is a node step
+        val exactMatch = nodes.filterIsInstance<FileServant>().firstOrNull()
+        if (exactMatch != null) {
+            return exactMatch to takenOff
+        }
+
+        logger.debug("No exact match found")
+
+        // If we have no exact match we have to find the node that matches the path
+        val nodeMatch = nodes.firstOrNull() ?: return null
+        logger.debug("Found node match: ${nodeMatch.path}")
+        return nodeMatch.findFileServant(takenOff)
+    }
+
 }
 
-class Route(name: String, val method: HttpMethod, val handler: (RequestObject) -> FullHttpResponse)
+open class Route(name: String, val method: HttpMethod, val handler: (RequestObject) -> FullHttpResponse)
     : RestNode(name)
+
+class FileServant(val name: String, private val baseFolder: File) : RestNode(name) {
+
+    internal fun handleFileRequest(path: String): FullHttpResponse {
+        val filePath = path.substring(name.length).let {
+            if (it.startsWith("/")) it.substring(1) else it
+        }
+
+        val sanitizedPath = filePath.replace("..", "")
+        val file = baseFolder.resolve(sanitizedPath)
+        println(file)
+
+        return when {
+            !file.exists() -> httpNotFound(filePath, "File not found")
+            !file.isFile -> {
+                val indexFile = file.resolve("index.html")
+
+                when {
+                    indexFile.exists() && indexFile.isFile -> httpFile(indexFile)
+                    else -> httpForbidden("File is not a file")
+                }
+            }
+            file.isHidden -> httpForbidden("File is hidden")
+            else -> httpFile(file)
+        }
+    }
+
+}

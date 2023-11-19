@@ -19,6 +19,7 @@
  */
 package net.ccbluex.liquidbounce.web.socket.netty
 
+import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
@@ -37,11 +38,19 @@ class HttpConductor {
             return@runCatching httpBadRequest("Incomplete request")
         }
 
-        val route = RouteController.findRoute(context.path, method)
-            ?: return@runCatching httpNotFound(context.path, "Route not found")
-        logger.debug("Found route {}", route)
-        val response = route.handler(requestObject)
-        response
+        RouteController.findRoute(context.path, method)?.let { route ->
+            logger.debug("Found route {}", route)
+            return@runCatching route.handler(requestObject)
+        }
+
+        if (method == HttpMethod.GET) {
+            RouteController.findFileServant(context.path)?.let { (fileServant, path) ->
+                logger.debug("Found file servant {}", fileServant)
+                return@runCatching fileServant.handleFileRequest(path)
+            }
+        }
+
+        httpNotFound(context.path, "Route not found")
     }.getOrElse {
         logger.error("Error while processing request object: $requestObject", it)
         httpInternalServerError(it.message ?: "Unknown error")

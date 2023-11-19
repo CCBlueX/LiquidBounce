@@ -19,11 +19,13 @@
  */
 package net.ccbluex.liquidbounce.web.socket.netty
 
+import com.cinemamod.mcef.MIMEUtil
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.*
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import java.io.File
 
 private fun httpResponse(status: HttpResponseStatus, contentType: String = "text/plain",
                          content: String): FullHttpResponse {
@@ -69,4 +71,18 @@ fun httpBadRequest(reason: String): FullHttpResponse {
     val jsonObject = JsonObject()
     jsonObject.addProperty("reason", reason)
     return httpResponse(HttpResponseStatus.BAD_REQUEST, jsonObject)
+}
+
+fun httpFile(file: File): FullHttpResponse {
+    val response = DefaultFullHttpResponse(
+        HttpVersion.HTTP_1_1,
+        HttpResponseStatus.OK,
+        Unpooled.wrappedBuffer(file.readBytes())
+    )
+
+    val httpHeaders = response.headers()
+    httpHeaders[HttpHeaderNames.CONTENT_TYPE] = MIMEUtil.mimeFromExtension(file.extension)
+    httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
+    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
+    return response
 }
