@@ -20,7 +20,10 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest
 
+import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupClientRestApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupPlayerRestApi
@@ -41,6 +44,15 @@ class RestApi {
                 setupServerApi()
                 setupPlayerRestApi()
             }
+
+        RouteController.get("/") {
+            httpOk(JsonObject().apply {
+                addProperty("name", LiquidBounce.CLIENT_NAME)
+                addProperty("version", LiquidBounce.clientVersion)
+                addProperty("author", LiquidBounce.CLIENT_AUTHOR)
+            })
+        }
+
         RouteController.file("/", ConfigSystem.rootFolder.resolve("themes"))
     }
 
