@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.WorldRenderEvent
@@ -51,7 +52,6 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
-    val markedBlocks = Collections.synchronizedSet(BlockTracker.trackedBlockMap.keys)
 
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable
@@ -74,6 +74,9 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
 
 
+
+
+
             val boxesRenderer = RenderBufferBuilder(
                 VertexFormat.DrawMode.QUADS,
                 VertexInputType.Pos,
@@ -87,27 +90,30 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                 )
 
 
+
             renderEnvironmentForWorld(matrixStack) {
 
-                synchronized(markedBlocks) {
-                    for (pos in markedBlocks) {
-                        val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                    synchronized(BlockTracker.trackedBlockMap) {
+                        for (pos in BlockTracker.trackedBlockMap.keys) {
+                            val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
-                        withPosition(vec3) {
-                            boxesRenderer.drawBox(this, box)
-                            // This can still be optimized since there will be a lot of useless matrix muls...
+                            withPosition(vec3) {
+                                boxesRenderer.drawBox(this, box)
+                                // This can still be optimized since there will be a lot of useless matrix muls...
 
-                            outlinesRenderer.drawBox(this, box)
+                                outlinesRenderer.drawBox(this, box)
 
+                            }
                         }
                     }
-                }
-
-
 
                 withColor(baseColor) { boxesRenderer.draw() }
 
                 withColor(outlineColor) { outlinesRenderer.draw() }
+
+
+
+
 
 
 
