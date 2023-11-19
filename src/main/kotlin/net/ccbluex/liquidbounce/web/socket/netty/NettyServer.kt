@@ -37,7 +37,7 @@ internal class NettyServer {
     }
 
     fun startServer() {
-        val bossGroup = NioEventLoopGroup(1)
+        val bossGroup = NioEventLoopGroup()
         val workerGroup = NioEventLoopGroup()
 
         try {
