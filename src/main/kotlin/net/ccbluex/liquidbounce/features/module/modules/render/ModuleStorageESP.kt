@@ -68,30 +68,34 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         // todo: use box of block, not hardcoded
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
+
+
+
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
-            val blocksToRender = locations.entries.filter { it.value.shouldRender(it.key) }
+            val blocksToRender =
+                locations.entries.filter { it.value.shouldRender(it.key) }
+                    .groupBy {it.value}
+
 
             renderEnvironmentForWorld(matrixStack) {
-                for ((pos, type) in blocksToRender) {
+
+                for ((type, blocks) in blocksToRender) {
+                    val boxRenderer = BoxesRenderer()
+
                     val color = type.color
-
-                    val vec3 = Vec3(pos)
-
                     val baseColor = color.alpha(50)
                     val outlineColor = color.alpha(100)
 
-                    withPosition(vec3) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
+                    for ((pos, _) in blocks) {
+                        val vec3 = Vec3(pos)
 
-                        if (outline) {
-                            withColor(outlineColor) {
-                                drawOutlinedBox(box)
-                            }
+                        withPosition(vec3) {
+                            boxRenderer.drawBox(this, box, outline)
                         }
                     }
+
+                    boxRenderer.draw(this, baseColor, outlineColor)
                 }
             }
         }
