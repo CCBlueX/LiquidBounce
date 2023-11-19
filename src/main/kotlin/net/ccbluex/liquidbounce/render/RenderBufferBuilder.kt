@@ -129,7 +129,7 @@ class RenderBufferBuilder<I: VertexInputType>(
 }
 
 class BoxesRenderer() {
-    private val boxesRenderer = RenderBufferBuilder(
+    private val faceRenderer = RenderBufferBuilder(
         DrawMode.QUADS,
         VertexInputType.Pos,
         RenderBufferBuilder.TESSELATOR_A
@@ -141,7 +141,7 @@ class BoxesRenderer() {
     )
 
     fun drawBox(env: RenderEnvironment, box: Box, outline: Boolean) {
-        boxesRenderer.drawBox(env, box)
+        faceRenderer.drawBox(env, box)
         // This can still be optimized since there will be a lot of useless matrix muls...
         if(outline) {
             outlinesRenderer.drawBox(env, box, true)
@@ -150,7 +150,7 @@ class BoxesRenderer() {
 
     fun draw(env: RenderEnvironment, boxColor: Color4b, outlineColor: Color4b) {
         env.withColor(boxColor) {
-            boxesRenderer.draw()
+            faceRenderer.draw()
         }
         env.withColor(outlineColor) {
             outlinesRenderer.draw()
