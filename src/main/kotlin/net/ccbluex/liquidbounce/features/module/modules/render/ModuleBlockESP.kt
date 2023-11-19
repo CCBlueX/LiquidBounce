@@ -82,12 +82,15 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                 VertexInputType.Pos,
                 RenderBufferBuilder.TESSELATOR_A
             )
-            val outlinesRenderer: RenderBufferBuilder<VertexInputType.Pos> =
-                RenderBufferBuilder(
-                    VertexFormat.DrawMode.DEBUG_LINES,
-                    VertexInputType.Pos,
-                    RenderBufferBuilder.TESSELATOR_B
-                )
+            val outlinesRenderer =
+                if(outline)
+                    RenderBufferBuilder(
+                        VertexFormat.DrawMode.DEBUG_LINES,
+                        VertexInputType.Pos,
+                        RenderBufferBuilder.TESSELATOR_B
+                    )
+                else
+                    null
 
 
 
@@ -101,7 +104,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                             boxesRenderer.drawBox(this, box)
                             // This can still be optimized since there will be a lot of useless matrix muls...
 
-                            outlinesRenderer.drawBox(this, box)
+                            outlinesRenderer?.drawBox(this, box)
 
                         }
                     }
@@ -109,7 +112,9 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
                 withColor(baseColor) { boxesRenderer.draw() }
 
-                withColor(outlineColor) { outlinesRenderer.draw() }
+                if(outline) {
+                    withColor(outlineColor) { outlinesRenderer?.draw() }
+                }
 
 
 
