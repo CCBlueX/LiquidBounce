@@ -41,11 +41,11 @@ object ModuleNoFov : Module("NoFOV", Category.RENDER) {
     }
 
     object Custom : FovMode("Custom") {
-        private val baseFOV by float("BaseFOV", 1f, 0f..1.5f)
+        private val baseFov by float("BaseFOV", 1f, 0f..1.5f)
         private val limit by floatRange("Limit", 0f..1.5f, 0f..1.5f)
         private val multiplier by float("Multiplier", 1f, 0.1f..1.5f)
         override fun getFov(orig: Float): Float {
-            val newFov = (orig - 1) * multiplier + BaseFOV
+            val newFov = (orig - 1) * multiplier + baseFov
             return newFov.coerceIn(limit)
         }
     }
