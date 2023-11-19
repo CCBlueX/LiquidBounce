@@ -253,7 +253,7 @@ enum class ListValueType(val type: Class<*>?) {
     Block(net.minecraft.block.Block::class.java), Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java), Friend(
         FriendManager.Friend::class.java
     ),
-    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontDetail::class.java), None(
+    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontInfo::class.java), None(
         null
     )
 }
