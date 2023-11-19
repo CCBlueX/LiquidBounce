@@ -19,8 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMoveInputEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
@@ -31,7 +34,6 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -41,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack

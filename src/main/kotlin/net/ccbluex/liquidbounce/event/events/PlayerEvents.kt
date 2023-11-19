@@ -49,6 +49,9 @@ class PlayerPushOutEvent : CancellableEvent()
 @Nameable("playerMove")
 class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
 
+@Nameable("playerMoveInput")
+class PlayerMoveInputEvent(var forward: Float, var sideways: Float): Event()
+
 @Nameable("playerJump")
 class PlayerJumpEvent(var motion: Float) : CancellableEvent()
 
