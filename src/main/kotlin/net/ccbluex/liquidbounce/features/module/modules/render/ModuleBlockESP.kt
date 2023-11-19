@@ -93,19 +93,19 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
 
-                    synchronized(BlockTracker.trackedBlockMap) {
-                        for (pos in BlockTracker.trackedBlockMap.keys) {
-                            val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                synchronized(BlockTracker.trackedBlockMap) {
+                    for (pos in BlockTracker.trackedBlockMap.keys) {
+                        val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
-                            withPosition(vec3) {
-                                boxesRenderer.drawBox(this, box)
-                                // This can still be optimized since there will be a lot of useless matrix muls...
+                        withPosition(vec3) {
+                            boxesRenderer.drawBox(this, box)
+                            // This can still be optimized since there will be a lot of useless matrix muls...
 
-                                outlinesRenderer.drawBox(this, box)
+                            outlinesRenderer.drawBox(this, box)
 
-                            }
                         }
                     }
+                }
 
                 withColor(baseColor) { boxesRenderer.draw() }
 
