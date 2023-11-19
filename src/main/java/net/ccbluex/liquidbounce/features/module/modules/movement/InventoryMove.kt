@@ -12,6 +12,8 @@ import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
@@ -33,6 +35,7 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
     private val noMove by InventoryManager.noMoveValue
     private val noMoveAir by InventoryManager.noMoveAirValue
     private val noMoveGround by InventoryManager.noMoveGroundValue
+    private val undetectable by InventoryManager.undetectableValue
 
         // If player violates nomove check and inventory is open, close inventory and reopen it when still
         private val silentlyCloseAndReopen by BoolValue("SilentlyCloseAndReopen", false)
@@ -56,6 +59,9 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
 
         // Don't make player move when chat or ESC menu are open
         if (screen is GuiChat || screen is GuiIngameMenu)
+            return
+
+        if (undetectable && (screen != null && screen !is GuiHudDesigner && screen !is ClickGui))
             return
 
         if (notInChests && screen is GuiChest)

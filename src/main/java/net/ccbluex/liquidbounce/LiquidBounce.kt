@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
@@ -104,6 +105,7 @@ object LiquidBounce {
         registerListener(MiniMapRegister)
         registerListener(TickedActions)
         registerListener(MovementUtils)
+        registerListener(PacketUtils)
 
         // Load client fonts
         loadFonts()

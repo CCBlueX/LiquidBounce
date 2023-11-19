@@ -5,15 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.WorldEvent
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePackets
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -84,7 +81,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
             "sent" -> {
                 if (event.eventType == EventState.RECEIVE) {
                     synchronized(packetsReceived) {
-                        handlePackets(*packetsReceived.toTypedArray())
+                        PacketUtils.queuedPackets.addAll(packetsReceived)
                     }
                     packetsReceived.clear()
                 }
@@ -149,32 +146,35 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+    fun onMotion(event: MotionEvent) {
+        if (event.eventState == EventState.POST) {
+            val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
-            blink()
-        }
-
-        when (mode.lowercase()) {
-            "sent" -> {
-                synchronized(packetsReceived) {
-                    handlePackets(*packetsReceived.toTypedArray())
-                }
-                packetsReceived.clear()
+            if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+                blink()
             }
-            "received" -> {
-                synchronized(packets) {
-                    sendPackets(*packets.toTypedArray(), triggerEvents = false)
-                }
-                packets.clear()
-            }
-        }
 
-        if (pulse && pulseTimer.hasTimePassed(pulseDelay)) {
-            blink()
-            addFakePlayer()
-            pulseTimer.reset()
+            when (mode.lowercase()) {
+                "sent" -> {
+                    synchronized(packetsReceived) {
+                        PacketUtils.queuedPackets.addAll(packetsReceived)
+                    }
+                    packetsReceived.clear()
+                }
+
+                "received" -> {
+                    synchronized(packets) {
+                        sendPackets(*packets.toTypedArray(), triggerEvents = false)
+                    }
+                    packets.clear()
+                }
+            }
+
+            if (pulse && pulseTimer.hasTimePassed(pulseDelay)) {
+                blink()
+                addFakePlayer()
+                pulseTimer.reset()
+            }
         }
     }
 
@@ -217,7 +217,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
 
     private fun blink() {
         synchronized(packetsReceived) {
-            handlePackets(*packetsReceived.toTypedArray())
+            PacketUtils.queuedPackets.addAll(packetsReceived)
         }
         synchronized(packets) {
         sendPackets(*packets.toTypedArray(), triggerEvents = false)

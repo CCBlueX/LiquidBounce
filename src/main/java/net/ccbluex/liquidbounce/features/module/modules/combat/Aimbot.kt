@@ -46,7 +46,7 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         // Clicking delay
         if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
 
-        if (onClick && clickTimer.hasTimePassed(500)) return
+        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.gameSettings.keyBindAttack.isKeyDown && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
 

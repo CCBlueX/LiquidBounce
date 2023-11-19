@@ -5,35 +5,31 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.WorldEvent
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
-import net.ccbluex.liquidbounce.utils.extensions.*
-import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
+import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S06PacketUpdateHealth
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.network.status.client.C01PacketPing
-import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.status.client.C00PacketServerQuery
+import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-import java.util.LinkedHashMap
 
 object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false) {
 
@@ -123,6 +119,11 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             blink(false)
     }
 
+    private fun getTruePositionEyes(player: EntityPlayer): Vec3 {
+        val mixinPlayer = player as? IMixinEntity
+        return Vec3(mixinPlayer!!.trueX, mixinPlayer.trueY + player.getEyeHeight().toDouble(), mixinPlayer.trueZ)
+    }
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
@@ -139,10 +140,14 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             wasNearPlayer = false
 
             for (otherPlayer in otherPlayers) {
-                if (otherPlayer.getDistanceToBox(playerBox) <= distanceToPlayers.toDouble()) {
-                    blink()
-                    wasNearPlayer = true
-                    return
+                val entityMixin = otherPlayer as? IMixinEntity
+                if (entityMixin != null) {
+                    val eyes = getTruePositionEyes(otherPlayer)
+                    if (eyes.distanceTo(getNearestPointBB(eyes, playerBox)) <= distanceToPlayers.toDouble()) {
+                        blink()
+                        wasNearPlayer = true
+                        return
+                    }
                 }
             }
         }

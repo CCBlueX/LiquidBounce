@@ -35,6 +35,9 @@ object InventoryManager: MinecraftInstance() {
 		val closeDelayValue = IntegerValue("CloseDelay", 0, 0..500)
 			{ if (invOpenValue.get()) autoCloseValue.get() else simulateInventoryValue.get() }
 
+	// Undetectable
+	val undetectableValue = BoolValue("Undetectable", false)
+
 	private lateinit var inventoryWorker: Job
 
 	var hasScheduledInLastLoop = false
