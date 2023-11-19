@@ -66,7 +66,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            val boxRenderer = boxesRenderer()
+            val boxRenderer = BoxesRenderer()
 
             renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {
