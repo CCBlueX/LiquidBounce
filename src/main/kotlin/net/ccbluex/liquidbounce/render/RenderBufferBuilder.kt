@@ -148,8 +148,8 @@ class BoxesRenderer() {
         }
     }
 
-    fun draw(env: RenderEnvironment, boxColor: Color4b, outlineColor: Color4b) {
-        env.withColor(boxColor) {
+    fun draw(env: RenderEnvironment, faceColor: Color4b, outlineColor: Color4b) {
+        env.withColor(faceColor) {
             faceRenderer.draw()
         }
         env.withColor(outlineColor) {
