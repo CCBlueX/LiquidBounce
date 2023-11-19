@@ -255,6 +255,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 )
 
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
+            AimMode.BACKWARDS -> mc.player.rotationYaw + 180f
         }
     }
 
