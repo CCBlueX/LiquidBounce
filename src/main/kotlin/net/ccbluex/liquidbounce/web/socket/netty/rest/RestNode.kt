@@ -157,7 +157,6 @@ class FileServant(val name: String, private val baseFolder: File) : RestNode(nam
 
         val sanitizedPath = filePath.replace("..", "")
         val file = baseFolder.resolve(sanitizedPath)
-        println(file)
 
         return when {
             !file.exists() -> httpNotFound(filePath, "File not found")
