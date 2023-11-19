@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.KeyBindingEvent
-import net.ccbluex.liquidbounce.event.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.events.KeyBindingEvent
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module

@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import net.ccbluex.liquidbounce.event.BlockSlipperinessMultiplierEvent;
-import net.ccbluex.liquidbounce.event.BlockVelocityMultiplierEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent;
+import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.event.SessionEvent
+import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
 import net.ccbluex.liquidbounce.features.module.Category

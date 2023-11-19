@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.WindowFocusEvent;
-import net.ccbluex.liquidbounce.event.WindowResizeEvent;
+import net.ccbluex.liquidbounce.event.events.WindowFocusEvent;
+import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
 import net.ccbluex.liquidbounce.features.misc.HideClient;
 import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.Window;
@@ -93,7 +93,7 @@ public class MixinWindow {
     @Inject(method = "onWindowSizeChanged", at = @At("HEAD"))
     public void hookResize(long window, int width, int height, CallbackInfo callbackInfo) {
         if (window == handle) {
-            EventManager.INSTANCE.callEvent(new WindowResizeEvent(window, width, height));
+            EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
         }
     }
 
@@ -102,7 +102,8 @@ public class MixinWindow {
      */
     @Inject(method = "onWindowFocusChanged", at = @At(value = "FIELD", target = "Lnet/minecraft/client/util/Window;eventHandler:Lnet/minecraft/client/WindowEventHandler;"))
     public void hookFocus(long window, boolean focused, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new WindowFocusEvent(window, focused));
+        // does if (window == handle) in the instructions
+        EventManager.INSTANCE.callEvent(new WindowFocusEvent(focused));
     }
 
 }

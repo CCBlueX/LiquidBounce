@@ -19,7 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
+import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
+import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
+import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.handler
 
 object WorldChangeNotifier : Listenable {
     private val subscriber = arrayListOf<WorldChangeSubscriber>()
