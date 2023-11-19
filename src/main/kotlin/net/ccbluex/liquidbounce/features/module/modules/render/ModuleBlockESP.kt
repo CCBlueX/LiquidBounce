@@ -35,6 +35,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import java.util.Collections
 
 /**
  * BlockESP module
@@ -50,6 +51,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
+    val markedBlocks = Collections.synchronizedSet(BlockTracker.trackedBlockMap.keys)
 
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable
@@ -70,44 +72,47 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
             val baseColor = base.alpha(50)
             val outlineColor = base.alpha(100)
 
-            val markedBlocks = BlockTracker.trackedBlockMap.keys
+
 
             val boxesRenderer = RenderBufferBuilder(
                 VertexFormat.DrawMode.QUADS,
                 VertexInputType.Pos,
                 RenderBufferBuilder.TESSELATOR_A
             )
-            val outlinesRenderer =
-                if(outline)
-                    RenderBufferBuilder(
-                        VertexFormat.DrawMode.DEBUG_LINES,
-                        VertexInputType.Pos,
-                        RenderBufferBuilder.TESSELATOR_C
-                    )
-                else
-                    null
+            val outlinesRenderer: RenderBufferBuilder<VertexInputType.Pos> =
+                RenderBufferBuilder(
+                    VertexFormat.DrawMode.DEBUG_LINES,
+                    VertexInputType.Pos,
+                    RenderBufferBuilder.TESSELATOR_B
+                )
 
 
             renderEnvironmentForWorld(matrixStack) {
-                for (pos in markedBlocks) {
-                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
-                    withPosition(vec3) {
-                        boxesRenderer.drawBox(this, box)
-                        // This can still be optimized since there will be a lot of useless matrix muls...
-                        if(outline) {
-                            outlinesRenderer!!.drawBox(this, box)
+                synchronized(markedBlocks) {
+                    for (pos in markedBlocks) {
+                        val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
+                        withPosition(vec3) {
+                            boxesRenderer.drawBox(this, box)
+                            // This can still be optimized since there will be a lot of useless matrix muls...
+
+                            outlinesRenderer.drawBox(this, box)
+
                         }
                     }
                 }
 
+
+
                 withColor(baseColor) { boxesRenderer.draw() }
 
-                if(outline) {
-                    withColor(outlineColor) { outlinesRenderer!!.draw() }
+                withColor(outlineColor) { outlinesRenderer.draw() }
+
+
+
                 }
 
-            }
         }
 
     }
