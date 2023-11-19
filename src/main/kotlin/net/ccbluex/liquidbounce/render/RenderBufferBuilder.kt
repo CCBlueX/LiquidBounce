@@ -128,7 +128,7 @@ class RenderBufferBuilder<I: VertexInputType>(
     }
 }
 
-class BoxesRenderer() {
+class BoxesRenderer {
     private val faceRenderer = RenderBufferBuilder(
         DrawMode.QUADS,
         VertexInputType.Pos,
