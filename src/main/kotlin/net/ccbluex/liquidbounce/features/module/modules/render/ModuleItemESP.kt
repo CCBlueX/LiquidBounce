@@ -66,35 +66,21 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            val boxesRenderer = RenderBufferBuilder(
-                VertexFormat.DrawMode.QUADS,
-                VertexInputType.Pos,
-                RenderBufferBuilder.TESSELATOR_A
-            )
-            val outlinesRenderer = RenderBufferBuilder(
-                VertexFormat.DrawMode.DEBUG_LINES,
-                VertexInputType.Pos,
-                RenderBufferBuilder.TESSELATOR_B
-            )
+            val boxRenderer = boxesRenderer()
 
             renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
 
                     withPosition(pos) {
-                        boxesRenderer.drawBox(this, box)
-                        // This can still be optimized since there will be a lot of useless matrix muls...
-                        outlinesRenderer.drawBox(this, box, true)
+                        boxRenderer.drawBox(this, box, true)
                     }
                 }
 
-                withColor(baseColor) {
-                    boxesRenderer.draw()
-                }
 
-                withColor(outlineColor) {
-                    outlinesRenderer.draw()
-                }
+                boxRenderer.draw(this, baseColor, outlineColor)
+
+
             }
         }
 
