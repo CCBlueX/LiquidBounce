@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
+import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -43,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
-import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
@@ -125,7 +125,8 @@ object LiquidBounce : Listenable {
             Chat
             BrowserManager
 
-            LiquidBounceFonts
+            // Loads up fonts (requires connection to the internet on first launch)
+            Fonts
 
             // Register commands and modules
             CommandManager.registerInbuilt()

@@ -130,7 +130,7 @@ open class Configurable(
     protected fun items(name: String, default: MutableList<Item>) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
 
-    protected fun fonts(name: String, default: MutableList<Fonts.FontDetail>) =
+    protected fun fonts(name: String, default: MutableList<Fonts.FontInfo>) =
         value(name, default, ValueType.INVALID, ListValueType.FontDetail)
 
     protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =

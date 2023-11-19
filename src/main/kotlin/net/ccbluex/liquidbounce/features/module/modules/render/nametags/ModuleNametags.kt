@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
+import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
 import org.joml.Matrix4f
@@ -51,7 +51,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val scale by float("Scale", 2F, 1F..4F)
 
     val fontRenderer: FontRenderer
-        get() = LiquidBounceFonts.DEFAULT_FONT
+        get() = Fonts.DEFAULT_FONT
 
     private var mvMatrix: Matrix4f? = null
     private var projectionMatrix: Matrix4f? = null
