@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.Module
  */
 
 object ModuleNoFov : Module("NoFOV", Category.RENDER) {
-    val mode = choices("Mode", ConstantFov, arrayOf(ConstantFov, LimitFov, AmplifyFov))
+    val mode = choices("Mode", ConstantFov, arrayOf(ConstantFov, Custom))
 
     fun getFov(orig: Float) = (mode.activeChoice as FovMode).getFov(orig)
 
@@ -40,16 +40,14 @@ object ModuleNoFov : Module("NoFOV", Category.RENDER) {
         override fun getFov(orig: Float) = fov
     }
 
-    object LimitFov : FovMode("Limit") {
-        private val fovRange by floatRange("FOVRange", 0.9f..1.1f, 0f..1.5f)
-        override fun getFov(orig: Float) = orig.coerceIn(fovRange)
-    }
-
-    object AmplifyFov : FovMode("Amplify") {
-        private val multiplier by float("Multiplier", 0.9f, 0.1f..2.5f)
-
-        override fun getFov(orig: Float) = orig * multiplier
-
+    object Custom : FovMode("Custom") {
+        private val BaseFOV by float("BaseFOV", 1f, 0f..1.5f)
+        val limit by floatRange("Limit", 0f..1.5f, 0f..1.5f)
+        val multiplier by float("Multiplier", 1f, 0.1f..1.5f)
+        override fun getFov(orig: Float): Float {
+            val newFov = (orig - 1) * multiplier + BaseFOV
+            return newFov.coerceIn(limit)
+        }
     }
 
     abstract class FovMode(name: String) : Choice(name) {
