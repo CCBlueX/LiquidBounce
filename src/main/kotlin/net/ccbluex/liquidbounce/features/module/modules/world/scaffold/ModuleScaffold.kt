@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -45,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -186,7 +188,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     player.inventory.getStack(blockInHotbar)
                 }
 
-            val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
+            val optimalLine = this.currentOptimalLine
 
             // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
             val priorityGetter: (Vec3i) -> Double =
@@ -234,6 +236,21 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
+    var currentOptimalLine: Line? = null
+
+    val moveEvent =
+        handler<MovementInputEvent> { event ->
+            this.currentOptimalLine = null
+
+            val currentInput = event.directionalInput
+
+            if (currentInput == DirectionalInput.NONE) {
+                return@handler
+            }
+
+            this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
+        }
+
     fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
         val config =
             PositionFactoryConfiguration(
@@ -251,7 +268,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             AimMode.STABILIZED ->
                 StabilizedRotationTargetPositionFactory(
                     config,
-                    ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input)),
+                    this.currentOptimalLine,
                 )
 
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
