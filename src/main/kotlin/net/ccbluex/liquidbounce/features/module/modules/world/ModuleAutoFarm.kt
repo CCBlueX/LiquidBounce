@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMoveInputEvent
+import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -229,7 +229,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 ////        this.setVelocity(this.getVelocity().add(vec3d));
 //    }
 
-    val moveInputHandler = handler<PlayerMoveInputEvent> { event ->
+    val moveInputHandler = handler<RotatedMovementInputEvent> { event ->
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
             return@handler
         }

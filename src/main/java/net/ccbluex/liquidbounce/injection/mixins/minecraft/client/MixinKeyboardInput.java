@@ -20,8 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerMoveInputEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerPushOutEvent;
+import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -97,10 +96,10 @@ public class MixinKeyboardInput extends MixinInput {
         float z = this.movementForward;
         float x = this.movementSideways;
 
-        final PlayerMoveInputEvent MoveInputEvent;
+        final RotatedMovementInputEvent MoveInputEvent;
 
         if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null || player == null) {
-            MoveInputEvent = new PlayerMoveInputEvent(Math.round(z), Math.round(x));
+            MoveInputEvent = new RotatedMovementInputEvent(Math.round(z), Math.round(x));
             EventManager.INSTANCE.callEvent(MoveInputEvent);
         } else {
             float deltaYaw = player.getYaw() - rotation.getYaw();
@@ -108,7 +107,7 @@ public class MixinKeyboardInput extends MixinInput {
             float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
             float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
 
-            MoveInputEvent = new PlayerMoveInputEvent(Math.round(newZ), Math.round(newX));
+            MoveInputEvent = new RotatedMovementInputEvent(Math.round(newZ), Math.round(newX));
             EventManager.INSTANCE.callEvent(MoveInputEvent);
         }
 
