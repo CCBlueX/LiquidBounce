@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -267,7 +268,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     }
                     val degreePlayer = getDirection()
                     val degreePacket = Math.floorMod(packetDirection.toDegrees().toInt(), 360).toDouble()
-                    var angle = Math.abs(degreePacket + degreePlayer)
+                    var angle = abs(degreePacket + degreePlayer)
                     val threshold = 90.0
                     angle = Math.floorMod(angle.toInt(), 360).toDouble()
                     val inRange = angle in 180-threshold/2..180+threshold/2
