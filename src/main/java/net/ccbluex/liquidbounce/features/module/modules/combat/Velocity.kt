@@ -269,7 +269,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     val degreePlayer = getDirection()
                     val degreePacket = Math.floorMod(packetDirection.toDegrees().toInt(), 360).toDouble()
                     var angle = abs(degreePacket + degreePlayer)
-                    val threshold = 90.0
+                    val threshold = 120.0
                     angle = Math.floorMod(angle.toInt(), 360).toDouble()
                     val inRange = angle in 180-threshold/2..180+threshold/2
                     if (inRange)
