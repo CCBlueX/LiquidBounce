@@ -71,7 +71,7 @@ public abstract class MixinCamera {
         var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
-        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getPov() || configurable != null && !configurable.getSilent();
+        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getEnabled() && ModuleRotations.INSTANCE.getPov() || configurable != null && !configurable.getSilent();
 
         if (currentRotation == null || previousRotation == null || !shouldModifyRotation) {
             return;
