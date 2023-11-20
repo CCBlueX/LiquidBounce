@@ -16,10 +16,13 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ModuleScaffold, "Eagle", fa
     private var placedBlocks = 0
 
     val stateUpdateHandler =
-        handler<StateUpdateEvent> {
+        handler<StateUpdateEvent>(priority = -100) {
             val player = player
 
             if (ScaffoldDownFeature.shouldFallOffBlock()) {
+                return@handler
+            }
+            if (!player.isOnGround) {
                 return@handler
             }
 

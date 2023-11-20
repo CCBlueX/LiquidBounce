@@ -33,10 +33,12 @@ object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
     val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..1.3f)
 
-    val repeatable = handler<StateUpdateEvent> {
+    val repeatable = handler<StateUpdateEvent>(priority = -100) {
         // Check if player is on the edge and is NOT flying
-        if (player.isCloseToEdge(edgeDistance.toDouble()) && !player.abilities.flying) {
+        if (player.isCloseToEdge(edgeDistance.toDouble()) && !player.abilities.flying && player.isOnGround) {
             it.state.enforceEagle = true
+        } else {
+            println()
         }
     }
 
