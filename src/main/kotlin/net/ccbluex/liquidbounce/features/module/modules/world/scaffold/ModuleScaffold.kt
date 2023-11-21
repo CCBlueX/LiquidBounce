@@ -338,10 +338,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 TickStateManager.enforcedState.enforceJump = true
             }
 
-//            if (currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.3 > player.pos.y && player.isOnGround) {
-////                TickStateManager.enforcedState.enforceJump = true
-//            }
-
 
 
             var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
