@@ -68,18 +68,19 @@ object Fonts {
                 }
             }
 
-            runCatching {
+            return runCatching {
                 createFontFromFolder(file)
-            }.onFailure {
-                // Might retry to download the font if it's corrupted
+            }.getOrElse {
                 logger.error("Failed to load font $name", it)
+
+                // Might retry to download the font if it's corrupted
                 file.deleteRecursively()
                 if (retry) {
                     return load(retry = false)
                 }
-            }
 
-            error("Failed to load font $name")
+                error("Failed to load font $name")
+            }
         }
 
         /**
