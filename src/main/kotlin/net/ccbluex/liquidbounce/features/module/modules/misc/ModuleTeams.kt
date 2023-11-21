@@ -74,8 +74,6 @@ object ModuleTeams : Module("Teams", Category.MISC) {
             val targetSplit = targetName.split(" ")
             val clientSplit = clientName.split(" ")
 
-            println(clientSplit)
-
             // Check if both names have a prefix
             if (targetSplit.size > 1 && clientSplit.size > 1 && targetSplit[0] == clientSplit[0]) {
                 return true
