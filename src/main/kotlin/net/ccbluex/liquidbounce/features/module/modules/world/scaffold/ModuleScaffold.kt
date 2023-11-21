@@ -98,7 +98,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (player.isSneaking)
                 return false
 
-            if(blocksSinceJump > maxBlocks) {
+            if(blocksPlaced > maxBlocks) {
                 return true
             }
 
