@@ -75,6 +75,21 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         private val predictFactor by float("PredictFactor", 0.54f, 0f..2f)
         private val useDelay by boolean("UseDelay", true)
 
+        private val maxBlocks by int("MaxBlocks", 8, 3..17)
+
+        private var blocksPlaced = 0
+
+        fun onBlockPlacement() {
+            blocksPlaced++
+        }
+
+        fun jumpIfNeeded(ticksUntilNextBlock: Int) {
+            if(shouldJump(ticksUntilNextBlock)) {
+                TickStateManager.enforcedState.enforceJump = true
+                blocksPlaced = 0
+            }
+        }
+
         fun shouldJump(ticksUntilNextBlock: Int): Boolean {
             if (!enabled)
                 return false
@@ -83,13 +98,17 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (player.isSneaking)
                 return false
 
+            if(blocksSinceJump > maxBlocks) {
+                return true
+            }
+
             val extraPrediction =
                 if (useDelay) ticksUntilNextBlock
                 else 0
 
             val predictedBoundingBox = player.boundingBox.offset(0.0, -1.5, 0.0)
                 .offset(player.velocity.multiply(
-                    predictFactor.toDouble() + ticksUntilNextBlock
+                    predictFactor.toDouble() + extraPrediction
                 ))
 
             return world.getBlockCollisions(player, predictedBoundingBox).none()
@@ -332,10 +351,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
                 !isValidCrosshairTarget(currentCrosshairTarget)
             ) {
-                if (AutoJump.shouldJump(currentDelay))
-                {
-                    TickStateManager.enforcedState.enforceJump = true
-                }
+                AutoJump.jumpIfNeeded(currentDelay)
 
                 return@repeatable
             }
@@ -343,7 +359,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (AutoJump.shouldJump(currentDelay)
                 && currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y)
             {
-                TickStateManager.enforcedState.enforceJump = true
+                AutoJump.jumpIfNeeded(currentDelay)
             }
 
 
@@ -385,6 +401,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleFeature.onBlockPlacement()
+            AutoJump.onBlockPlacement()
 
             if (player.isOnGround) {
                 player.velocity.x *= speedModifier
