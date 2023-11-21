@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -81,8 +82,21 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
          */
         private val simulateJumpOrder by intRange("SimulateJumpOrder", 0..2,
             jumpOrder.indices)
+        private val wait by intRange("Wait", 0..0, 0..60)
+
+        private var ticksWait = 0
+
+        val repeatable = repeatable {
+            if (ticksWait > 0) {
+                ticksWait--
+            }
+        }
 
         val stepHandler = handler<PlayerStepEvent> {
+            if (ticksWait > 0) {
+                return@handler
+            }
+
             it.height = height
         }
 
@@ -105,6 +119,7 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
                         false
                     )
                 }.forEach(network::sendPacket)
+            ticksWait = wait.random()
         }
 
     }
