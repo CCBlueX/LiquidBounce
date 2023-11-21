@@ -72,9 +72,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     object AutoJump : ToggleableConfigurable(this, "AutoJump", false) {
-        private val predictFactor by float("PredictFactor", 0.54f, 0.1f..2f)
+        private val predictFactor by float("PredictFactor", 0.54f, 0f..2f)
+        private val useDelay by boolean("UseDelay", true)
 
-        fun shouldJump(): Boolean {
+        fun shouldJump(ticksUntilNextBlock: Int): Boolean {
             if (!enabled)
                 return false
             if (!player.isOnGround)
@@ -82,9 +83,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (player.isSneaking)
                 return false
 
+            val extraPrediction =
+                if (useDelay) ticksUntilNextBlock
+                else 0
+
             val predictedBoundingBox = player.boundingBox.offset(0.0, -1.5, 0.0)
                 .offset(player.velocity.multiply(
-                    predictFactor.toDouble()))
+                    predictFactor.toDouble() + ticksUntilNextBlock
+                ))
 
             return world.getBlockCollisions(player, predictedBoundingBox).none()
 
@@ -292,6 +298,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
             val currentCrosshairTarget = raycast(4.5, currentRotation)
 
+            val currentDelay = delay.random()
+
             // Prioritize by all means the main hand if it has a block
             val suitableHand =
                 arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull { isValidBlock(player.getStackInHand(it)) }
@@ -324,7 +332,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
                 !isValidCrosshairTarget(currentCrosshairTarget)
             ) {
-                if (AutoJump.shouldJump())
+                if (AutoJump.shouldJump(currentDelay))
                 {
                     TickStateManager.enforcedState.enforceJump = true
                 }
@@ -332,7 +340,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 return@repeatable
             }
 
-            if (AutoJump.shouldJump()
+            if (AutoJump.shouldJump(currentDelay)
                 && currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y)
             {
                 TickStateManager.enforcedState.enforceJump = true
@@ -388,11 +396,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             currentTarget = null
 
-            delay.random().let {
-                if (it > 0) {
-                    wait(it)
-                }
+            if (currentDelay > 0) {
+                wait(currentDelay)
             }
+
         }
 
     private fun findBestValidHotbarSlotForTarget(): Int? {
