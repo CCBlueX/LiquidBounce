@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.misc.GameDetector
+import net.ccbluex.liquidbounce.features.module.modules.render.ColorMixer
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -35,20 +36,21 @@ import java.awt.Color
 class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                 side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
 
-    private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow", "Mixer"), "Custom")
     private val textRed by IntegerValue("Text-R", 0, 0..255) { textColorMode == "Custom" }
     private val textGreen by IntegerValue("Text-G", 111, 0..255) { textColorMode == "Custom" }
     private val textBlue by IntegerValue("Text-B", 255, 0..255) { textColorMode == "Custom" }
-
+    private val mixerSecValue by IntegerValue("Mixer-Seconds", 2, 1..10) { textColorMode == "Mixer" }
+    private val mixerDistValue by IntegerValue("Mixer-Distance", 2, 0..10) { textColorMode == "Mixer" }
     private val rectMode by ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
-    private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow") { rectMode != "None" }
-        private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
-        private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
-        private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
-        private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
-        private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow", "Mixer"), "Rainbow") { rectMode != "None" }
+    private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
+    private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
 
-    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow", "Mixer"), "Custom")
         private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
         private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
         private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
@@ -182,6 +184,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             when (backgroundMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
+                                "Mixer" -> ColorMixer.getMixedColor(-index * mixerDistValue * 10, mixerSecValue).rgb
                                 else -> backgroundCustomColor
                             }
                         )
@@ -193,6 +196,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             else when (textColorMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
+                                "Mixer" -> ColorMixer.getMixedColor(-index * mixerDistValue * 10, mixerSecValue).rgb
                                 else -> textCustomColor
                             },
                             textShadow
@@ -206,6 +210,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                                 else when (rectColorMode) {
                                     "Rainbow" -> 0
                                     "Random" -> moduleColor
+                                    "Mixer" -> ColorMixer.getMixedColor(-index * mixerDistValue * 10, mixerSecValue).rgb
+
                                     else -> rectCustomColor
                                 }
 
@@ -226,6 +232,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             when (backgroundMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
+                                "Mixer" -> ColorMixer.getMixedColor(-index * mixerDistValue * 10, mixerSecValue).rgb
+
                                 else -> backgroundCustomColor
                             }
                         )
@@ -237,6 +245,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             else when (textColorMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
+                                "Mixer" -> ColorMixer.getMixedColor(-index * mixerDistValue * 10, mixerSecValue).rgb
+
                                 else -> textCustomColor
                             },
                             textShadow
@@ -250,6 +260,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                                 else when (rectColorMode) {
                                     "Rainbow" -> 0
                                     "Random" -> moduleColor
+                                    "Mixer" -> ColorMixer.getMixedColor(-index * mixerDistValue * 10, mixerSecValue).rgb
+
                                     else -> rectCustomColor
                                 }
 
