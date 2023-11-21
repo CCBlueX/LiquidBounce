@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
@@ -55,13 +56,13 @@ open class Value<T : Any>(
     internal val loweredName
         get() = name.lowercase()
 
-    @Exclude
+    @Exclude @ProtocolExclude
     private val listeners = mutableListOf<ValueListener<T>>()
 
     /**
      * If true, value will not be included in generated public config
      */
-    @Exclude
+    @Exclude @ProtocolExclude
     var doNotInclude = false
         private set
 

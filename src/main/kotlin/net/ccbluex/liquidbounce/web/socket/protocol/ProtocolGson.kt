@@ -20,12 +20,25 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol
 
+import com.google.gson.ExclusionStrategy
+import com.google.gson.FieldAttributes
 import com.google.gson.GsonBuilder
-import net.ccbluex.liquidbounce.web.socket.protocol.type.ModuleSerializer
-import net.ccbluex.liquidbounce.web.socket.protocol.type.TextSerializer
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.adapter.ConfigurableSerializer
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FIELD)
+annotation class ProtocolExclude
+
+class ProtocolExclusionStrategy : ExclusionStrategy {
+    override fun shouldSkipClass(clazz: Class<*>?) = false
+    override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(ProtocolExclude::class.java) != null
+}
 
 internal val protocolGson = GsonBuilder()
-    .registerTypeAdapter(Module::class.java, ModuleSerializer())
-    .registerTypeAdapter(Text::class.java, TextSerializer())
+    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .registerCommonTypeAdapters()
+    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
     .create()
+
