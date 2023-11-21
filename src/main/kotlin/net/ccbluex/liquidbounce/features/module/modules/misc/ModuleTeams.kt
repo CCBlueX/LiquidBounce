@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.minecraft.entity.LivingEntity
 
 /**
@@ -33,7 +34,7 @@ object ModuleTeams : Module("Teams", Category.MISC) {
 
     private val scoreboard by boolean("ScoreboardTeam", true)
     private val color by boolean("Color", true)
-    private val gommeSW by boolean("GommeSW", false)
+    private val prefix by boolean("Prefix", false)
 
     /**
      * Check if [entity] is in your own team using scoreboard, name color or team prefix
@@ -47,30 +48,38 @@ object ModuleTeams : Module("Teams", Category.MISC) {
             return true
         }
 
-        val displayName = player.displayName
-        val entityDisplayName = entity.displayName
+        val clientDisplayName = player.displayName
+        val targetDisplayName = entity.displayName
 
-        if (displayName == null || entityDisplayName == null) {
+        if (clientDisplayName == null || targetDisplayName == null) {
             return false
         }
 
-        val targetName = entityDisplayName.string.replace("§r", "")
-        val clientName = displayName.string.replace("§r", "")
+        // Checks if both names have the same color
+        if (color) {
+            val targetColor = clientDisplayName.style.color
+            val clientColor = targetDisplayName.style.color
 
-        if (targetName.length < 2 || clientName.length < 2) {
-            return false
-        }
-
-        if (gommeSW) {
-            if (targetName.startsWith("T") && clientName.startsWith("T")) {
-                if (targetName[1].isDigit() && clientName[1].isDigit()) {
-                    return targetName[1] == clientName[1]
-                }
+            if (targetColor != null && clientColor != null && targetColor == clientColor) {
+                return true
             }
         }
 
-        if (color && entity.displayName != null) {
-            return targetName.startsWith("§${clientName[1]}")
+        // Prefix check - this works on Hypixel BedWars, GommeHD Skywars and many other servers
+        if (prefix) {
+            val targetName = targetDisplayName.string
+                .stripMinecraftColorCodes()
+            val clientName = clientDisplayName.string
+                .stripMinecraftColorCodes()
+            val targetSplit = targetName.split(" ")
+            val clientSplit = clientName.split(" ")
+
+            println(clientSplit)
+
+            // Check if both names have a prefix
+            if (targetSplit.size > 1 && clientSplit.size > 1 && targetSplit[0] == clientSplit[0]) {
+                return true
+            }
         }
 
         return false
