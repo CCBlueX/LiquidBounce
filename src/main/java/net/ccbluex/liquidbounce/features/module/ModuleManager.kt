@@ -42,6 +42,7 @@ object ModuleManager : Listenable {
 
         // Register modules which need to be instanced (Java classes)
         registerModules(
+            ColorMixer::class.java,
             Ignite::class.java,
             ItemTeleport::class.java,
             Phase::class.java,
@@ -151,6 +152,7 @@ object ModuleManager : Listenable {
             NoFriends,
             NoHurtCam,
             NoJumpDelay,
+            HudDesigner,
             NoPitchLimit,
             NoRotateSet,
             NoScoreboard,

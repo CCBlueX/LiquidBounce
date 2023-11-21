@@ -76,9 +76,9 @@ class Notification(private val message: String) {
     fun drawNotification() {
         // Draw notification
         drawRect(-x + 8 + textLength, 0F, -x, -20F, Color.BLACK.rgb)
-        drawRect(-x, 0F, -x - 5, -20F, Color(0, 160, 255).rgb)
-        Fonts.font35.drawString(message, -x + 4, -14F, Int.MAX_VALUE)
-        glColor4f(1f, 1f, 1f, 1f)
+        drawRect(-x, 0F, -x - 5, -20F, Color(138, 101,239).rgb)
+        Fonts.font35.drawString(message, -x + 4, -14F, Color(255, 255, 255).rgb)
+        glColor4f(255f, 255f, 255f, 1f)
 
         // Animation
         val delta = deltaTime

@@ -19,7 +19,7 @@ import java.lang.reflect.Field;
 public class ColorMixer extends Module {
 
     public ColorMixer() {
-        super("ColorMixer", ModuleCategory.EXPLOIT);
+        super("ColorMixer", ModuleCategory.RENDER);
     }
 
     private static float[] lastFraction = new float[]{};
