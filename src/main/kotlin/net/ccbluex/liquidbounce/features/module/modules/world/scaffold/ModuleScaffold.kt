@@ -94,6 +94,26 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
+    object AutoJump : ToggleableConfigurable(this, "AutoJump", false) {
+        val predictFactor by float("PredictFactor", 0.54f, 0.1f..2f)
+
+        fun shouldJump(): Boolean {
+            if (!enabled)
+                return false
+            if (!player.isOnGround)
+                return false
+            if (player.isSneaking)
+                return false
+
+            val predictedBoundingBox = player.boundingBox.offset(0.0, -1.5, 0.0)
+                .offset(player.velocity.multiply(
+                    predictFactor.toDouble()))
+
+            return world.getBlockCollisions(player, predictedBoundingBox).none()
+
+        }
+    }
+
     private val cpsScheduler = tree(CpsScheduler())
 
     private val silent by boolean("Silent", true)
@@ -327,11 +347,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
                 !isValidCrosshairTarget(currentCrosshairTarget)
             ) {
-                if(
-                    (world.getBlockCollisions(player, player.boundingBox.offset(0.0, -1.5, 0.0).offset(player.velocity.multiply(
-                        jumpFactor.toDouble()))).none())
-                    && player.isOnGround
-                    && !player.isSneaking)
+                if (AutoJump.shouldJump())
                 {
                     TickStateManager.enforcedState.enforceJump = true
                 }
@@ -339,10 +355,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 return@repeatable
             }
 
-            if(world.getBlockCollisions(player, player.boundingBox.offset(0.0, -1.5, 0.0).offset(player.velocity.multiply(
-                    jumpFactor.toDouble()))).none()
-                && player.isOnGround
-                && !player.isSneaking
+            if (AutoJump.shouldJump()
                 && currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y)
             {
                 TickStateManager.enforcedState.enforceJump = true
