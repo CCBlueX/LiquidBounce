@@ -540,17 +540,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             if (!whileBlocking) {
                 return // return if it's not allowed to attack while using blocking with a shield
             }
-        } else if (player.isUsingItem && !whileUsingItem) {
-            return // return if it's not allowed to attack while the player is using another item that's not a shield
-        }
 
-        // Make sure to unblock now
-        if (player.isBlocking) {
             network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
                 BlockPos.ORIGIN, Direction.DOWN))
             if (AutoBlock.tickOff > 0) {
                 wait(AutoBlock.tickOff)
             }
+        } else if (player.isUsingItem && !whileUsingItem) {
+            return // return if it's not allowed to attack while the player is using another item that's not a shield
         }
 
         attack()
@@ -558,7 +555,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (simulateInventoryClosing && isInInventoryScreen) {
             openInventorySilently()
-        } else if (player.isBlocking) {
+        }
+
+        if (player.isBlocking) {
             if (AutoBlock.tickOn > 0) {
                 wait(AutoBlock.tickOn)
             }
