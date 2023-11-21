@@ -311,6 +311,8 @@
         
         "module.teleport.description": "Allows you to teleport around.",
 
+        "module.timerRange.description": "Allows you to manipulate timer to gain advantage against enemy.",
+
         "module.timer.description": "Changes the speed of the entire game.",
         
         "module.tower.description": "Automatically builds a tower beneath you.",
