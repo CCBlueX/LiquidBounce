@@ -302,7 +302,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     SimulatePlacementAttempts.cps,
                 ),
             ) {
-                // By the time this reaches here the variables are already non-null
+                // By the time this reaches here, the variables are already non-null
                 ModuleNoFall.MLG.doPlacement(
                     currentCrosshairTarget!!,
                     suitableHand!!,
