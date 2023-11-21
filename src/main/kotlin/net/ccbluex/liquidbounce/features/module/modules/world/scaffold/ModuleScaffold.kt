@@ -72,7 +72,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     object AutoJump : ToggleableConfigurable(this, "AutoJump", false) {
-        val predictFactor by float("PredictFactor", 0.54f, 0.1f..2f)
+        private val predictFactor by float("PredictFactor", 0.54f, 0.1f..2f)
 
         fun shouldJump(): Boolean {
             if (!enabled)
