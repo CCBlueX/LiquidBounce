@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.stat.Stats
 
 /**
  * Step module
@@ -101,6 +102,8 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
         }
 
         val stepSuccessEvent = handler<PlayerStepSuccessEvent> {
+            player.incrementStat(Stats.JUMP)
+
             // If we have configured 0..0 then we will send nothing.
             // That makes sense because the first entry of the array is 0.0
             // @see jumpOrder
