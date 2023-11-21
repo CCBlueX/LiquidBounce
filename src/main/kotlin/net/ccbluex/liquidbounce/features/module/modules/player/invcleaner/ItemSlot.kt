@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoPot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -18,6 +19,8 @@ abstract class ItemSlot {
      * Used for example for slot click packets
      */
     abstract fun getIdForServer(screen: GenericContainerScreen?): Int?
+
+    fun getIdForServerWithCurrentScreen() = getIdForServer(mc.currentScreen as? GenericContainerScreen)
 
     abstract override fun hashCode(): Int
     abstract override fun equals(other: Any?): Boolean

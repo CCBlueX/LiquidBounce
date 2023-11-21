@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideClient;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;

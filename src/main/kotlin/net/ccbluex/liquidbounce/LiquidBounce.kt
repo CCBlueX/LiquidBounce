@@ -24,7 +24,11 @@ import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
+import net.ccbluex.liquidbounce.event.events.ClientStartEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
@@ -33,6 +37,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
+import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -42,7 +47,6 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
-import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import org.apache.logging.log4j.LogManager
 import org.lwjgl.util.tinyfd.TinyFileDialogs
 import kotlin.system.exitProcess
@@ -134,7 +138,8 @@ object LiquidBounce : Listenable {
             Tabs
             Chat
 
-            LiquidBounceFonts
+            // Loads up fonts (requires connection to the internet on first launch)
+            Fonts
 
             // Load up a web platform
             UltralightEngine.init()
@@ -180,6 +185,15 @@ object LiquidBounce : Listenable {
             logger.info("Successfully loaded client!")
         }.onFailure {
             logger.error("Unable to load client.", it)
+            TinyFileDialogs.tinyfd_messageBox(
+                "LiquidBounce Nextgen",
+                "LiquidBounce Nextgen failed to launch.\n" +
+                    "If the issue persists, report to the developers.\n" +
+                    "${it.message}",
+                "ok",
+                "error",
+                true
+            )
             exitProcess(1)
         }
     }

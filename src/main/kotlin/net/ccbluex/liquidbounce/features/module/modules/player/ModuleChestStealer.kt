@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.utils.item.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
@@ -71,13 +72,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         // Quick swap items in hotbar (i.e. swords)
         if (performQuickSwaps(cleanupPlan, screen)) {
-            val delay = delay.random()
-
-            if (delay > 0) {
-                wait(delay - 1)
-                return@repeatable
-            }
-
             return@repeatable
         }
 
@@ -132,7 +126,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         requiredSpace: Int,
         screen: GenericContainerScreen
     ): Boolean? {
-        val itemsInInv = ModuleInventoryCleaner.findItemSlotsInInventory()
+        val itemsInInv = findNonEmptySlotsInInventory()
         var stillRequiredSpace = requiredSpace
         val itemsToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
 
@@ -197,6 +191,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
+     *
+     * @return true if the chest stealer should wait for the next tick to continue.
      */
     private suspend fun Sequence<*>.performQuickSwaps(
         cleanupPlan: InventoryCleanupPlan,
@@ -249,7 +245,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {
-            val availableItems = ModuleInventoryCleaner.findItemSlotsInInventory() + this.findItemsInContainer(screen)
+            val availableItems = findNonEmptySlotsInInventory() + this.findItemsInContainer(screen)
 
             CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
         }
