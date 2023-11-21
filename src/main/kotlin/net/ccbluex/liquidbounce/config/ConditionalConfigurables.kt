@@ -35,8 +35,8 @@ import net.minecraft.text.Text
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
  */
-open class ToggleableConfigurable(@Exclude @ProtocolExclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
-    Configurable(name, valueType = ValueType.TOGGLEABLE) {
+open class ToggleableConfigurable(@Exclude @ProtocolExclude val module: Module? = null, name: String,
+                                  enabled: Boolean) : Listenable, Configurable(name, valueType = ValueType.TOGGLEABLE) {
 
     val translationBaseKey: String
         get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
