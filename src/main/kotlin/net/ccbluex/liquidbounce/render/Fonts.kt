@@ -44,7 +44,7 @@ object Fonts {
     const val DEFAULT_FONT_SIZE: Int = 43
     val FONT_FORMATS = arrayOf("Regular", "Bold", "Italic", "BoldItalic")
     val DEFAULT_FONT = FontInfo("Montserrat")
-        .load() ?: error("Failed to load default font")
+        .load()
 
     /**
      * Takes the name of the font and loads it from the filesystem
@@ -56,19 +56,30 @@ object Fonts {
          * Loads the font from the filesystem or downloads it from the cloud and
          * creates a [FontRenderer] instance from it.
          */
-        fun load(): FontRenderer? {
+        fun load(retry: Boolean = true): FontRenderer {
             val file = File(fontsRoot, name)
 
-            if (!file.exists() || !file.isDirectory) {
+            if (!file.exists() || !file.isDirectory || file.listFiles().isNullOrEmpty()) {
                 runCatching {
+                    file.deleteRecursively()
                     downloadFont()
                 }.onFailure {
                     logger.error("Failed to download font $name", it)
-                    return null
                 }
             }
 
-            return createFontFromFolder(file)
+            runCatching {
+                createFontFromFolder(file)
+            }.onFailure {
+                // Might retry to download the font if it's corrupted
+                logger.error("Failed to load font $name", it)
+                file.deleteRecursively()
+                if (retry) {
+                    return load(retry = false)
+                }
+            }
+
+            error("Failed to load font $name")
         }
 
         /**
