@@ -98,12 +98,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (player.isSneaking)
                 return false
 
-            if(blocksPlaced > maxBlocks) {
-                return true
-            }
 
             val extraPrediction =
-                if (useDelay) ticksUntilNextBlock
+                if (blocksPlaced >= maxBlocks) 1
+                else if (useDelay) ticksUntilNextBlock
                 else 0
 
             val predictedBoundingBox = player.boundingBox.offset(0.0, -1.5, 0.0)
