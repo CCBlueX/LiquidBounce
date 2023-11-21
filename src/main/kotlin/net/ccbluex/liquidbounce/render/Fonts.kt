@@ -61,7 +61,6 @@ object Fonts {
 
             if (!file.exists() || !file.isDirectory || file.listFiles().isNullOrEmpty()) {
                 runCatching {
-                    file.deleteRecursively()
                     downloadFont()
                 }.onFailure {
                     logger.error("Failed to download font $name", it)
