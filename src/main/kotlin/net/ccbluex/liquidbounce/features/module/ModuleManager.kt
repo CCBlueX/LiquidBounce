@@ -158,6 +158,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSpeed,
             ModuleSprint,
             ModuleStep,
+            ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleFly,
