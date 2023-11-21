@@ -141,6 +141,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     init {
         tree(SimulatePlacementAttempts)
+        tree(AutoJump)
         tree(ScaffoldEagleFeature)
         tree(ScaffoldDownFeature)
         tree(ScaffoldSlowFeature)
