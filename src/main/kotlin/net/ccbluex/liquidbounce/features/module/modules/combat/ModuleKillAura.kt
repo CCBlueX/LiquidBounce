@@ -375,17 +375,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             // Attack enemy according to cps and cooldown
-            val canAttack = {
-                cooldown.readyToAttack && (!ModuleCriticals.shouldWaitForCrit() ||
-                    choosenEntity.velocity.lengthSquared() > 0.25 * 0.25) &&
-                    (attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
-                        !choosenEntity.wouldBlockHit(
-                            player
-                        )) && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
-            };
-            val clicks = cpsTimer.clicks(condition = canAttack, cps)
+            val clicks = cpsTimer.clicks({ checkIfReadyToAttack(choosenEntity) }, cps)
 
             if (clicks == 0) {
+                if (cpsTimer.isClickOnNextTick(AutoBlock.tickOff)) {
+                    AutoBlock.stopBlocking()
+                    return@repeatable
+                }
+
                 AutoBlock.startBlocking()
                 return@repeatable
             }
@@ -520,6 +517,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             )
             break
         }
+    }
+
+    fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
+        val critical = !ModuleCriticals.shouldWaitForCrit() || choosenEntity.velocity.lengthSquared() > 0.25 * 0.25
+        val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
+            !choosenEntity.wouldBlockHit(player)
+        val isInInventoryScreen = InventoryTracker.isInventoryOpenServerSide
+            || mc.currentScreen is GenericContainerScreen
+
+        return cooldown.readyToAttack && critical && shielding && !(isInInventoryScreen && !ignoreOpenInventory
+            && !simulateInventoryClosing)
     }
 
     /**
