@@ -20,12 +20,13 @@
 
 package net.ccbluex.liquidbounce.web.browser.supports
 
-import com.cinemamod.mcef.MCEF
-import com.cinemamod.mcef.MCEFDownloadRunner
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.mcef.MCEF
+import net.ccbluex.liquidbounce.mcef.MCEFDownloader
+import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.web.browser.BrowserType
 import net.ccbluex.liquidbounce.web.browser.supports.tab.JcefTab
-
 
 /**
  * Uses a modified fork of the JCEF library browser backend made for Minecraft.
@@ -43,7 +44,13 @@ class JcefBrowser : IBrowser, Listenable {
 
     override fun makeDependenciesAvailable() {
         if (!MCEF.isInitialized()) {
-            MCEFDownloadRunner().run()
+            MCEF.getSettings().apply {
+                downloadMirror = "https://dl.ccbluex.net/resources"
+                // Uses a natural user agent to prevent websites from blocking the browser
+                userAgent = HttpClient.DEFAULT_AGENT
+            }
+            // todo: add progression bar for downloading
+            MCEFDownloader.downloadJcef()
         }
     }
 

@@ -19,11 +19,11 @@
  */
 package net.ccbluex.liquidbounce.web.socket.netty
 
-import com.cinemamod.mcef.MIMEUtil
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.*
+import net.ccbluex.liquidbounce.mcef.MIMEUtil
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import java.io.File
 

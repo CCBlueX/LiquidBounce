@@ -100,7 +100,7 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation "com.github.CCBlueX:mcef:2b0d13bd36"
+    implementation "com.github.CCBlueX:mcef:1.0.0-1.20.1"
     implementation 'com.github.CCBlueX:Elixir:1.2.6'
 
     implementation('com.thealtening.api:api:4.1.0') {

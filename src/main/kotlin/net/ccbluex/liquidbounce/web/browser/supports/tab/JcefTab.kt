@@ -20,8 +20,8 @@
 
 package net.ccbluex.liquidbounce.web.browser.supports.tab
 
-import com.cinemamod.mcef.MCEF
-import com.cinemamod.mcef.MCEFBrowser
+import net.ccbluex.liquidbounce.mcef.MCEF
+import net.ccbluex.liquidbounce.mcef.MCEFBrowser
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
 
