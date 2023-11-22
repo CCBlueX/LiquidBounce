@@ -48,7 +48,7 @@ class SimulatedArrow(val world: ClientWorld, var pos: Vec3d, var velocity: Vec3d
 
         velocity *= drag
 
-        velocity.y -= 0.05000000074505806
+        velocity.y -= 0.05F.toDouble()
 
         updateCollision(pos, newPos)?.let {
             this.pos = it.pos
