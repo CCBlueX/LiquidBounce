@@ -34,6 +34,7 @@ accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
 accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
 accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
 accessible field net/minecraft/client/network/ClientPlayerEntity field_3938 I
+accessible method net/minecraft/client/network/ClientPlayerEntity sendMovementPackets ()V
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket y D

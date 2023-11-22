@@ -52,6 +52,8 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Final
     private PlayerInventory inventory;
 
+    @Shadow public abstract void tick();
+
     /**
      * Hook player stride event
      */
