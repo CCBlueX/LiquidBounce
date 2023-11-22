@@ -311,7 +311,7 @@
         
         "module.teleport.description": "Allows you to teleport around.",
 
-        "module.timerRange.description": "Allows you to manipulate timer to gain advantage against enemy.",
+        "module.timerRange.description": "Allows you to manipulate the game speed in order to gain an advantage against your enemies.",
 
         "module.timer.description": "Changes the speed of the entire game.",
         
