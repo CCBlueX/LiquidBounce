@@ -214,8 +214,11 @@ object RotationManager : Listenable {
 
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * speed
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * speed
+        // Linear aim
+        val factor = ((rotationDifference / 180) * speed).coerceAtMost(180f)
+
+        val straightLineYaw = abs(yawDifference / rotationDifference) * factor
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * factor
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
