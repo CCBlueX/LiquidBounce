@@ -445,7 +445,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private val legitAimpointTracker = LegitAimpointTracker(legitAimingConfigurable)
-    private var lastRotation: VecRotation? = null
 
     /**
      * Update enemy on target tracker
@@ -477,9 +476,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             val box = target.box.offset(targetPrediction)
 
-            val rotationPreference =
-                this.lastRotation?.let { LeastDifferencePreference(it.rotation, basePoint = it.vec) }
-                    ?: LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
+            val rotationPreference = if (this.legitAimingConfigurable.enabled) {
+                val aimpointChange = target.pos.subtract(target.prevPos)
+                    .subtract(player.pos.subtract(player.prevPos))
+
+                val nextPoint = this.legitAimpointTracker.nextPoint(box, box.center, aimpointChange)
+                LeastDifferencePreference(RotationManager.currentRotation ?: mc.player.rotation,
+                    nextPoint.aimSpot)
+            } else {
+                LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
+            }
 
             // find best spot
             val spot = raytraceBox(
@@ -493,25 +499,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // lock on target tracker
             targetTracker.lock(target)
 
-            val nextPoint = if (this.legitAimingConfigurable.enabled) {
-                val aimpointChange = target.pos.subtract(target.prevPos).subtract(player.pos.subtract(player.prevPos))
-
-                val nextPoint = this.legitAimpointTracker.nextPoint(box, spot.vec, aimpointChange)
-
-                lastRotation = VecRotation(
-                    RotationManager.makeRotation(nextPoint.aimSpotWithoutNoise, eyes), nextPoint.aimSpotWithoutNoise
-                )
-
-                nextPoint.aimSpot
-            } else {
-                lastRotation = null
-
-                spot.vec
-            }
-
             // aim at target
             RotationManager.aimAt(
-                RotationManager.makeRotation(nextPoint, player.eyes),
+                spot.rotation,
                 openInventory = ignoreOpenInventory,
                 configurable = rotations
             )

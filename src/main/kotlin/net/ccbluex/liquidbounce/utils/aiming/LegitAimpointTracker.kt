@@ -17,7 +17,6 @@ class LegitAimpointTracker(
 ) {
     private val random = Random()
 
-    private var lastPoint: Vec3d = Vec3d.ZERO
     private var currentOffset: Vec3d = Vec3d.ZERO
 
     /**
@@ -29,10 +28,6 @@ class LegitAimpointTracker(
 
     class AimSpot(
         val aimSpot: Vec3d,
-        /**
-         * Used for determining the next aim spot
-         */
-        val aimSpotWithoutNoise: Vec3d,
     )
 
     fun nextPoint(
@@ -46,8 +41,6 @@ class LegitAimpointTracker(
 
         val optimalTarget = box.center.add(0.0, (box.maxY - box.minY) * 0.25, 0.0)
 
-        val adjustedTarget = target + (optimalTarget - target) * aimPointFac
-
         val off =
             this.currentOffset
                 .multiply(
@@ -60,14 +53,11 @@ class LegitAimpointTracker(
                     pointMovementInLastTick.y.absoluteValue,
                     pointMovementInLastTick.horizontalLength(),
                 )
-
-        var currentPoint = adjustedTarget.add(off)
-
+        var currentPoint = (target + (optimalTarget - target) * aimPointFac)
+        currentPoint += off
         currentPoint -= pointMovementInLastTick * this.trackerConfigurable.aimBehindFactor.toDouble()
 
-        this.lastPoint = currentPoint
-
-        return AimSpot(currentPoint, adjustedTarget)
+        return AimSpot(currentPoint)
     }
 
     private fun updateCurrentOffset() {
@@ -83,8 +73,8 @@ class LegitAimpointTracker(
 
     class LegitAimpointTrackerConfigurable(module: Module)
         : ToggleableConfigurable(module, "SimulateLegitAiming", true) {
-        val horizontalStdPerVelocity by float("HorizontalStdDerivePerVelocity", 0.25F, 0.1F..10.0F)
-        val verticalStdPerVelocity by float("VerticalStdDerivePerVelocity", 0.25F, 0.1F..10.0F)
+        val horizontalStdPerVelocity by float("HorizontalDerive", 0.25F, 0.1F..10.0F)
+        val verticalStdPerVelocity by float("VerticalDerive", 0.25F, 0.1F..10.0F)
         val aimBehindFactor by float("AimBehindFactor", 0.4F, 0.1F..1.0F)
     }
 }
