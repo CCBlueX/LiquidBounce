@@ -231,6 +231,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
         val packet = event.packet
 
+        if (event.isCancelled)
+            return
+
         if (
             (
                 packet is S12PacketEntityVelocity
