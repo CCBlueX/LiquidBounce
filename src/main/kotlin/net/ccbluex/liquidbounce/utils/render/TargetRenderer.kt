@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -38,27 +39,19 @@ import kotlin.math.sin
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetRenderer(module: Module, deafultSetting: TargetRenderAppearance ) : ToggleableConfigurable(module, "TargetRendering", true) {
+abstract class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
-    val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle(module), GlowingCircle(module)))
+    abstract val appearance: ChoiceConfigurable
 
-    fun renderForWorld(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-        with(appearance.activeChoice) {
-            if (this !is WorldTargetRenderAppearance)
-                return
-
-            render(env, entity, partialTicks)
-        }
+    open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+        (appearance.activeChoice as TargetRenderAppearance).render(env, entity, partialTicks)
     }
+}
 
-    fun renderForOverlay(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-        with(appearance.activeChoice) {
-            if (this !is OverlayTargetRenderAppearance)
-                return
 
-            render(env, entity, partialTicks)
-        }
-    }
+class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
+
+    override val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle(module), GlowingCircle(module)))
 
     inner class Legacy : WorldTargetRenderAppearance("Legacy") {
 
@@ -268,13 +261,7 @@ class TargetRenderer(module: Module, deafultSetting: TargetRenderAppearance ) : 
 
         private fun calculateHeight(time: Float) =
             (sin(time) * heightMultiplier + heightOffset).toDouble()
-
-
     }
-
-
-
-
 }
 
 abstract class TargetRenderAppearance(name: String) : Choice(name) {
