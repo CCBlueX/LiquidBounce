@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
+import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.enchantment.EnchantmentHelper
@@ -109,7 +110,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val rotations = tree(RotationsConfigurable())
 
     // Target rendering
-    private val targetRenderer = tree(TargetRenderer(this))
+    private val targetRenderer = tree(WorldTargetRenderer(this))
 
     // Predict
     private val predict by floatRange("Predict", 0f..0f, 0f..5f)
@@ -294,7 +295,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
         val target = renderTarget ?: return
         renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.renderForWorld(this, target, partialTicks)
+            targetRenderer.render(this, target, partialTicks)
         }
     }
 
