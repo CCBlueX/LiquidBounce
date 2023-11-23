@@ -156,6 +156,16 @@ open class Module(
         }
     }
 
+
+    protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
+        choices(this, name, active, choices)
+
+    protected fun choices(
+        name: String,
+        activeCallback: (ChoiceConfigurable) -> Choice,
+        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+    ) = choices(this, name, activeCallback, choicesCallback)
+
     /**
      * Returns if module is hidden. Hidden modules are not displayed in the module list.
      * Used for HTML UI. DO NOT REMOVE!
