@@ -265,7 +265,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
 }
 
 class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
-    override val appearance = choices(module, "Mode", Legacy())
+    override val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy()))
 
     inner class Legacy : WorldTargetRenderAppearance("Legacy") {
 
