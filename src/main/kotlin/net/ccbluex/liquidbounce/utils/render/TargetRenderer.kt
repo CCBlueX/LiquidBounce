@@ -274,29 +274,10 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
 
         private val size by float("Size", 0.5f, 0.1f..2f)
 
-        private val height by float("Height", 0.1f, 0.02f..2f)
-
-        private val color by color("Color", Color4b(0x64007CFF, true))
-
-        private val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
+        private val yOffset by float("YOffset", 0.1f, 0f..1f)
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-            val box = Box(
-                -size.toDouble(), 0.0, -size.toDouble(),
-                size.toDouble(), height.toDouble(), size.toDouble()
-            )
+            val pos = entity.interpolateCurrentPosition(partialTicks)
 
-            val pos =
-                entity.interpolateCurrentPosition(partialTicks).toVec3() +
-                    Vec3(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
-
-
-            with(env) {
-                withColor(color) {
-                    withPosition(pos) {
-                        drawSolidBox(box)
-                    }
-                }
-            }
         }
     }
 }
