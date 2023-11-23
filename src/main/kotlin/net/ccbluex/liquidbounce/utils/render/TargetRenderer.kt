@@ -32,22 +32,35 @@ import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
-import java.awt.Color
 import kotlin.math.min
 import kotlin.math.sin
 
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
+class TargetRenderer(module: Module, deafultSetting: TargetRenderAppearance ) : ToggleableConfigurable(module, "TargetRendering", true) {
 
     val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle(module), GlowingCircle(module)))
 
-    fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-        ((appearance.activeChoice) as TargetRenderAppearance).render(env, entity, partialTicks)
+    fun renderForWorld(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+        with(appearance.activeChoice) {
+            if (this !is WorldTargetRenderAppearance)
+                return
+
+            render(env, entity, partialTicks)
+        }
     }
 
-    inner class Legacy : TargetRenderAppearance("Legacy") {
+    fun renderForOverlay(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+        with(appearance.activeChoice) {
+            if (this !is OverlayTargetRenderAppearance)
+                return
+
+            render(env, entity, partialTicks)
+        }
+    }
+
+    inner class Legacy : WorldTargetRenderAppearance("Legacy") {
 
         override val parent: ChoiceConfigurable
             get() = appearance
@@ -80,7 +93,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         }
     }
 
-    inner class Circle(module: Module) : TargetRenderAppearance("Circle") {
+    inner class Circle(module: Module) : WorldTargetRenderAppearance("Circle") {
         override val parent: ChoiceConfigurable
             get() = appearance
 
@@ -121,7 +134,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 
     }
 
-    inner class GlowingCircle(module: Module) : TargetRenderAppearance("GlowingCircle") {
+    inner class GlowingCircle(module: Module) : WorldTargetRenderAppearance("GlowingCircle") {
         override val parent: ChoiceConfigurable
             get() = appearance
 
@@ -267,6 +280,9 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
 abstract class TargetRenderAppearance(name: String) : Choice(name) {
     open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {}
 }
+
+abstract class WorldTargetRenderAppearance(name: String) : TargetRenderAppearance(name)
+abstract class OverlayTargetRenderAppearance(name: String) : TargetRenderAppearance(name)
 
 abstract class HeightMode(name: String) : Choice(name) {
     open fun getHeight(entity: Entity, partialTicks: Float): Double = 0.0

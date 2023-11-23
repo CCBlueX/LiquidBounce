@@ -294,7 +294,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
         val target = renderTarget ?: return
         renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, partialTicks)
+            targetRenderer.renderForWorld(this, target, partialTicks)
         }
     }
 
