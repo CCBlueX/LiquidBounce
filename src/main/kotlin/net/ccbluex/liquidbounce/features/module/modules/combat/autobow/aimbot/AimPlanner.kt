@@ -6,12 +6,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.QuickAccess
-import net.ccbluex.liquidbounce.utils.entity.centerOffset
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
-import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
 import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -31,59 +28,14 @@ object AimPlanner {
             ModuleDebug.DebuggedBox(target.dimensions.getBoxAt(actualPositionOnHit), Color4b(0, 0, 255, 127))
         )
 
-        val deltaPos = actualPositionOnHit.subtract(eyePos).add(target.dimensions.centerOffset)
+        val targetPosMutator = TargetPosMutator(
+            entityPositionOnHit = actualPositionOnHit,
+            eyePos = eyePos,
+            minPull = minPull,
+            targetDimensions = target.dimensions
+        )
 
-        val finalPrediction = predictBow(deltaPos, minPull)
-        val rotation = finalPrediction.rotation
-
-        if (rotation.yaw.isNaN() || rotation.pitch.isNaN()) {
-            return null
-        }
-
-        val pullProgress = finalPrediction.pullProgress
-
-        // If the planned trajectory would end in a block, don't shoot
-        if (doesTrajectoryHitBlock(deltaPos, rotation, pullProgress, eyePos, actualPositionOnHit)) {
-            return null
-        }
-
-        return rotation
-    }
-
-    private fun doesTrajectoryHitBlock(
-        deltaPos: Vec3d,
-        rotation: Rotation,
-        pullProgress: Float,
-        eyePos: Vec3d,
-        targetPos: Vec3d
-    ): Boolean {
-        val vertex = ModuleAutoBowAimbot.getHighestPointOfTrajectory(deltaPos, rotation, pullProgress)
-
-        val positions = mutableListOf<Vec3d>()
-
-        positions.add(eyePos)
-
-        if (vertex != null) positions.add(vertex.add(eyePos))
-
-        positions.add(targetPos)
-
-        for (i in 0 until positions.lastIndex) {
-            val raycast =
-                QuickAccess.world.raycast(
-                    RaycastContext(
-                        positions[i],
-                        positions[i + 1],
-                        RaycastContext.ShapeType.OUTLINE,
-                        RaycastContext.FluidHandling.ANY,
-                        QuickAccess.player,
-                    ),
-                )
-
-            if (raycast.type == HitResult.Type.BLOCK) {
-                return true
-            }
-        }
-        return false
+        return targetPosMutator.tryTargetEntity()
     }
 
     @Suppress("MaxLineLength")

@@ -91,7 +91,7 @@ fun predictEntityPositionOnArrowHit(entityPredictor: EntityPredictor, eyePos: Ve
         val realTravelTime =
             ModuleAutoBowAimbot.getTravelTime(
                 basePrediction.travelledOnX,
-                cos(basePrediction.rotation.pitch.toRadians()) * basePrediction.pullProgress * 3.0 * 0.7,
+                cos(basePrediction.rotation.pitch.toRadians()) * basePrediction.velocity * 3.0 * 0.7,
             )
 
         if (realTravelTime.isNaN()) {

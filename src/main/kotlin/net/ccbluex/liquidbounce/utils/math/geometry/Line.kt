@@ -1,11 +1,20 @@
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import com.google.common.collect.Range
+import com.mojang.datafixers.optics.profunctors.Closed
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 
 open class Line(val position: Vec3d, val direction: Vec3d) {
+
+    open fun getNearestPhiTo(point: Vec3d): Double {
+        val plane = NormalizedPlane(point, direction)
+
+        // If there is no intersection between the created plane and this line it means that the point is in the line.
+        return plane.intersectionPhi(this) ?: getPhiForPoint(point)
+    }
 
     open fun getNearestPointTo(point: Vec3d): Vec3d {
         val plane = NormalizedPlane(point, direction)
@@ -37,5 +46,9 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
         val minAvgDistPair = possibleCoordinates.minByOrNull { abs(it.second - directionAvg) }!!
 
         return minAvgDistPair.first / minAvgDistPair.second
+    }
+
+    fun subSegment(range: ClosedFloatingPointRange<Double>): LineSegment {
+        return LineSegment(position, direction, range)
     }
 }

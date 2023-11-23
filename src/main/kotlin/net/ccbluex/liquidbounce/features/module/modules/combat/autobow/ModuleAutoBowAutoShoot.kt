@@ -171,7 +171,8 @@ object ModuleAutoBowAutoShoot : ToggleableConfigurable(ModuleAutoBow, "AutoShoot
 
                 val playerHitBox =
                     Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
-                        .expand(0.3)
+                        .expand(0.4)
+                        .stretch(player.velocity)
                         .offset(player.pos)
 
                 val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
