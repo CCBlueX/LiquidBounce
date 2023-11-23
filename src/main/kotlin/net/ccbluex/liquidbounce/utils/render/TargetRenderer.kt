@@ -47,7 +47,7 @@ class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRen
         ((appearance.activeChoice) as TargetRenderAppearance).render(env, entity, partialTicks)
     }
 
-    inner class Legacy() : TargetRenderAppearance("Legacy") {
+    inner class Legacy : TargetRenderAppearance("Legacy") {
 
         override val parent: ChoiceConfigurable
             get() = appearance
