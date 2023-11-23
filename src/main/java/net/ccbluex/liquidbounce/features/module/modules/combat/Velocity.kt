@@ -242,8 +242,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     && (packet.motionX != 0 || packet.motionZ != 0)
             ) || (
                 packet is S27PacketExplosion
-                    && packet.field_149153_g > 0f
-                    && (packet.field_149152_f != 0f || packet.field_149159_h != 0f)
+                    && (thePlayer.motionY + packet.field_149153_g) > 0.0
+                    && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0)
             )
         ) {
             velocityTimer.reset()
@@ -263,8 +263,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                             packetDirection = atan2(motionX, motionZ)
                         }
                         is S27PacketExplosion -> {
-                            val motionX: Double = packet.field_149152_f.toDouble()
-                            val motionZ: Double = packet.field_149159_h.toDouble()
+                            val motionX: Double = (thePlayer.motionX + packet.field_149152_f)
+                            val motionZ: Double = (thePlayer.motionZ + packet.field_149159_h)
 
                             packetDirection = atan2(motionX, motionZ)
                         }

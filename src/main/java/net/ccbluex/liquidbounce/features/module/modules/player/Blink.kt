@@ -220,7 +220,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
             PacketUtils.queuedPackets.addAll(packetsReceived)
         }
         synchronized(packets) {
-        sendPackets(*packets.toTypedArray(), triggerEvents = false)
+            sendPackets(*packets.toTypedArray(), triggerEvents = false)
         }
 
         packets.clear()
