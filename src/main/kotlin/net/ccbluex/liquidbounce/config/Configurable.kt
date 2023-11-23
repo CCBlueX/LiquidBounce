@@ -139,9 +139,6 @@ open class Configurable(
     protected fun choices(module: Module, name: String, active: Choice, choices: Array<Choice>) =
         ChoiceConfigurable(module, name, { active }) { choices }.apply { this@Configurable.value.add(this) }
 
-
-
-
     protected fun choices(
         module: Module,
         name: String,
