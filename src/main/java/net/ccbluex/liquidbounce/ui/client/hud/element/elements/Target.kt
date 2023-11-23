@@ -7,6 +7,8 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.features.module.modules.render.ColorMixer
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui.height
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -19,6 +21,8 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ResourceLocation
@@ -39,6 +43,13 @@ class Target : Element() {
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
     private val absorption by BoolValue("Absorption", true)
     private val healthFromScoreboard by BoolValue("HealthFromScoreboard", true)
+    private val EasingAnimation by BoolValue("EasingAnimation", true)
+    private val HealAnimation by BoolValue("HealAnimation", true)
+    private val textColorMode by ListValue("Text-Color", arrayOf("Custom"), "Custom")
+    private val colorR by IntegerValue("Color-R", 0, 0..255) { textColorMode == "Custom" }
+    private val colorG by IntegerValue("Color-G", 111, 0..255) { textColorMode == "Custom" }
+    private val colorB by IntegerValue("Color-B", 255, 0..255) { textColorMode == "Custom" }
+
 
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private var easingHealth = 0F
@@ -56,32 +67,39 @@ class Target : Element() {
                 easingHealth = targetHealth
             }
 
-            val width = (38f + (target.name?.let(Fonts.font40::getStringWidth) ?: 0)).coerceAtLeast(118f)
-
+            val width = (38f + (target.name?.let(Fonts.font35::getStringWidth) ?: 0)).coerceAtLeast(118f)
             // Draw rect box
             drawBorderedRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
             // Damage animation
-            if (easingHealth > targetHealth.coerceAtMost(target.maxHealth))
+            if (easingHealth > targetHealth.coerceAtMost(target.maxHealth) && EasingAnimation)
                 drawRect(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 185, 65).rgb)
 
             // Health bar
-            drawRect(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 96, 66).rgb)
+
+            drawRect(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F,
+                when (textColorMode.lowercase(Locale.getDefault())) {
+                    "custom" -> Color(colorR, colorG, colorB).rgb
+                    else -> Color.WHITE.rgb // Default color or implement custom logic for other cases
+                }
+            )
+
+
 
             // Heal animation
-            if (easingHealth < targetHealth)
+            if (easingHealth < targetHealth && HealAnimation)
                 drawRect((easingHealth / target.maxHealth).coerceAtMost(1f) * width, 34F,
                         (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(44, 201, 144).rgb)
 
             easingHealth += ((targetHealth - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
 
             target.name?.let { Fonts.font40.drawString(it, 36, 3, 0xffffff) }
-            Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
+            Fonts.font35.drawString("distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
 
             // Draw info
             val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)
             if (playerInfo != null) {
-                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}", 36, 24, 0xffffff)
+                Fonts.font35.drawString("ping: ${playerInfo.responseTime.coerceAtLeast(0)}", 36, 24, 0xffffff)
 
                 // Draw head
                 val locationSkin = playerInfo.locationSkin

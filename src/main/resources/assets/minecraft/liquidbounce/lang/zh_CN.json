@@ -194,9 +194,7 @@
         "module.kick.description": "把自己踢出服务器。",
         
         "module.ladderJump.description": "碰到梯子时把你发射到天上。 (AAC)",
-        
-        "module.liquidChat.description": "允许你与其他LiquidBounce用户聊天。",
-        
+
         "module.liquidWalk.description": "允许你在水上行走。",
         
         "module.liquids.description": "允许你与液体交互。",

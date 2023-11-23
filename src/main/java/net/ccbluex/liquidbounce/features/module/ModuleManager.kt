@@ -59,6 +59,7 @@ object ModuleManager : Listenable {
             Ambience,
             Animations,
             AntiAFK,
+            AntiStaff,
             AntiBlind,
             AntiBot,
             AntiCactus,
@@ -134,7 +135,6 @@ object ModuleManager : Listenable {
             Kick,
             KillAura,
             LadderJump,
-            LiquidChat,
             LiquidWalk,
             Liquids,
             LongJump,
@@ -227,11 +227,14 @@ object ModuleManager : Listenable {
      */
     private fun registerModule(moduleClass: Class<out Module>) {
         try {
-            registerModule(moduleClass.newInstance())
+            val constructor = moduleClass.getDeclaredConstructor()
+            val moduleInstance = constructor.newInstance()
+            registerModule(moduleInstance)
         } catch (e: Throwable) {
             LOGGER.error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
         }
     }
+
 
     /**
      * Register a list of modules
@@ -277,7 +280,7 @@ object ModuleManager : Listenable {
     /**
      * Get module by [moduleName]
      */
-    fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
+    private fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
 
     operator fun get(name: String) = getModule(name)
 

@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientRichPresence
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.cape.CapeService
-import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat.jwtToken
 import net.ccbluex.liquidbounce.features.special.AutoReconnect.delay
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientFixes.blockFML
@@ -79,10 +78,6 @@ class ValuesConfig(file: File) : FileConfig(file) {
                 key.equals("thealtening", true) -> {
                     val jsonValue = value as JsonObject
                     if (jsonValue.has("API-Key")) apiKey = jsonValue["API-Key"].asString
-                }
-                key.equals("liquidchat", true) -> {
-                    val jsonValue = value as JsonObject
-                    if (jsonValue.has("token")) jwtToken = jsonValue["token"].asString
                 }
                 key.equals("DonatorCape", true) -> {
                     val jsonValue = value as JsonObject
@@ -158,9 +153,6 @@ class ValuesConfig(file: File) : FileConfig(file) {
         theAlteningObject.addProperty("API-Key", apiKey)
         jsonObject.add("thealtening", theAlteningObject)
 
-        val liquidChatObject = JsonObject()
-        liquidChatObject.addProperty("token", jwtToken)
-        jsonObject.add("liquidchat", liquidChatObject)
 
         val capeObject = JsonObject()
         capeObject.addProperty("TransferCode", CapeService.knownToken)

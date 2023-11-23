@@ -194,9 +194,7 @@
         "module.kick.description": "Позволяет кикнуть самого себя с сервера.",
         
         "module.ladderJump.description": "Повышает скорость при касании лестницы. (AAC)",
-        
-        "module.liquidChat.description": "Чат для общения с другими пользователями LiquidBounce.",
-        
+
         "module.liquidWalk.description": "Позволяет ходить по воде.",
         
         "module.liquids.description": "Позволяет взаимодействовать с жидкостями (вода/лава...).",

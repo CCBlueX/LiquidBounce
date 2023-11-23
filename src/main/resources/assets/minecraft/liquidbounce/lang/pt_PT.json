@@ -189,9 +189,7 @@
         "module.kick.description": "UNTRANSLATED: Allows you to kick yourself from a server.",
         
         "module.ladderJump.description": "UNTRANSLATED: Boosts you up when touching a ladder. (AAC)",
-        
-        "module.liquidChat.description": "Permite que tu fales com outros utilizadores do LiquidBounce.",
-        
+
         "module.liquidWalk.description": "Permite que tu andes em água.",
         
         "module.liquids.description": "Permite que tu interajas com líquidos.",

@@ -11,10 +11,13 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
+import net.minecraft.client.network.NetworkPlayerInfo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
+import net.minecraft.scoreboard.ScorePlayerTeam
+
 
 object EntityUtils : MinecraftInstance() {
 
@@ -53,6 +56,14 @@ object EntityUtils : MinecraftInstance() {
         }
         return false
     }
+
+    fun getName(networkPlayerInfoIn: NetworkPlayerInfo): String? {
+        return if (networkPlayerInfoIn.displayName != null) networkPlayerInfoIn.displayName.formattedText else ScorePlayerTeam.formatPlayerName(
+            networkPlayerInfoIn.playerTeam,
+            networkPlayerInfoIn.gameProfile.name
+        )
+    }
+
 
     fun getHealth(entity: EntityLivingBase, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {
         if (fromScoreboard && entity is EntityPlayer) run {

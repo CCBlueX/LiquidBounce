@@ -23,6 +23,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -63,6 +64,8 @@ public abstract class MixinItemRenderer {
     @Shadow
     protected abstract void transformFirstPersonItem(float equipProgress, float swingProgress);
 
+
+
     @Shadow
     protected abstract void performDrinking(AbstractClientPlayer clientPlayer, float partialTicks);
 
@@ -94,6 +97,8 @@ public abstract class MixinItemRenderer {
         enableRescaleNormal();
         pushMatrix();
 
+        //animations code
+        GL11.glTranslated(Animations.getItemPosX(), Animations.getItemPosY(), Animations.getItemPosZ());
         if (itemToRender != null) {
             boolean isAutoBlocking = itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking();
 

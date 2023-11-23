@@ -8,8 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
 
 object HudDesigner : Module("HudDesigner", ModuleCategory.RENDER, gameDetecting = false) {
 
@@ -20,6 +18,7 @@ object HudDesigner : Module("HudDesigner", ModuleCategory.RENDER, gameDetecting 
         return gui!!
     }
     override fun onEnable() {
+        state = false
         mc.displayGuiScreen(getGUI())
-}
     }
+}

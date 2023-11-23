@@ -196,9 +196,7 @@
         "module.kick.description": "Allows you to kick yourself from a server.",
         
         "module.ladderJump.description": "Boosts you up when touching a ladder. (AAC)",
-        
-        "module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
-        
+
         "module.liquidWalk.description": "Allows you to walk on water.",
         
         "module.liquids.description": "Allows you to interact with liquids.",
