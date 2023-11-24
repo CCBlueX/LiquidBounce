@@ -217,7 +217,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onGameLoop(event: GameLoopEvent) {
         val target = target as? EntityLivingBase
         val targetMixin = target as? IMixinEntity
         val trueDist = targetMixin?.let {mc.thePlayer.getDistance(it.trueX, it.trueY, it.trueZ)} ?: 0.0
