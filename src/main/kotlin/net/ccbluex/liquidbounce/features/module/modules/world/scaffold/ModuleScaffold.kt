@@ -229,7 +229,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             RotationManager.aimAt(
                 target.rotation,
-                openInventory = ignoreOpenInventory,
+                considerInventory = !ignoreOpenInventory,
                 configurable = rotationsConfigurable,
             )
         }

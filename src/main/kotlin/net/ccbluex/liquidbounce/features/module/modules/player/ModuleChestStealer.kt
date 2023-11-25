@@ -72,13 +72,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         // Quick swap items in hotbar (i.e. swords)
         if (performQuickSwaps(cleanupPlan, screen)) {
-            val delay = delay.random()
-
-            if (delay > 0) {
-                wait(delay - 1)
-                return@repeatable
-            }
-
             return@repeatable
         }
 
@@ -198,6 +191,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
+     *
+     * @return true if the chest stealer should wait for the next tick to continue.
      */
     private suspend fun Sequence<*>.performQuickSwaps(
         cleanupPlan: InventoryCleanupPlan,

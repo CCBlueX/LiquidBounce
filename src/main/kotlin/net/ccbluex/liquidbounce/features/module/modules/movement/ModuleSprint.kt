@@ -49,11 +49,10 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
         val deltaYaw = player.yaw - (RotationManager.currentRotation ?: return false).yaw
         val (forward, sideways) = Pair(player.input.movementForward, player.input.movementSideways)
 
-        val hasForwardMovement =
-            forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways * MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
-
-        val preventSprint =
-            (if (player.isOnGround) stopOnGround else stopOnAir) && !shouldSprintOmnidirectionally() && RotationManager.activeConfigurable?.fixVelocity == false && !hasForwardMovement
+        val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
+                MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
+        val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir) && !shouldSprintOmnidirectionally()
+            && RotationManager.aimPlan?.applyVelocityFix == false && !hasForwardMovement
 
         return enabled && preventSprint
     }

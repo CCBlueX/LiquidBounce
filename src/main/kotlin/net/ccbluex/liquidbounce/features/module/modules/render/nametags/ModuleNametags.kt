@@ -48,7 +48,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val distance by boolean("Distance", false)
 
     val border by boolean("Border", true)
-    val scale by float("Scale", 2F, 1F..4F)
+    val scale by float("Scale", 2F, 0.25F..4F)
 
     val fontRenderer: FontRenderer
         get() = Fonts.DEFAULT_FONT

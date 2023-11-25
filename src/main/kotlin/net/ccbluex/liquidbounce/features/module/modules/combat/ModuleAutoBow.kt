@@ -136,10 +136,10 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                         return@handler
                     }
 
-                    val targetRotation = RotationManager.targetRotation ?: return@handler
+                    val targetRotation = RotationManager.aimPlan ?: return@handler
 
                     val aimDifference = RotationManager.rotationDifference(RotationManager.currentRotation
-                        ?: player.rotation, targetRotation)
+                        ?: player.rotation, targetRotation.rotation)
 
                     if (aimDifference > aimThreshold) {
                         return@handler

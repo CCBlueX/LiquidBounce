@@ -188,7 +188,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             ) ?: continue
 
             // aim on target
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
             nextBlock = pos
             break
         }
