@@ -5,20 +5,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
-import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
+import net.ccbluex.liquidbounce.utils.realMotionX
+import net.ccbluex.liquidbounce.utils.realMotionY
+import net.ccbluex.liquidbounce.utils.realMotionZ
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.play.client.C0FPacketConfirmTransaction
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import kotlin.math.atan2
@@ -31,7 +37,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
      */
     private val mode by ListValue(
         "Mode", arrayOf(
-            "Simple", "AAC", "AACPush", "AACZero", "AACv4",
+            "Simple", "AAC", "AACPush", "AACZero", "AACv4", "GrimCombat",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"
         ), "Simple"
     )
@@ -248,6 +254,26 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 "simple" -> handleVelocity(event)
 
                 "aac", "reverse", "smoothreverse", "aaczero" -> hasReceivedVelocity = true
+
+                "grimcombat" -> {
+                    if (packet is S12PacketEntityVelocity) {
+                        val target = LiquidBounce.targetManager.getNearByEntity(3f)
+                        repeat(12) {
+                            mc.netHandler.addToSendQueue(C0FPacketConfirmTransaction())
+                            mc.thePlayer.sendQueue.addToSendQueue(
+                                C02PacketUseEntity(
+                                    target,
+                                    C02PacketUseEntity.Action.ATTACK
+                                )
+                            )
+                            mc.thePlayer.sendQueue.addToSendQueue(C0APacketAnimation())
+                        }
+                        event.cancelEvent()
+                        mc.thePlayer.motionY = packet.motionY.toDouble() / 8000.0
+                        mc.thePlayer.motionX *= 0
+                        mc.thePlayer.motionZ *= 0
+                    }
+                }
 
                 "jump" -> {
                     var packetDirection: Double = 0.0
