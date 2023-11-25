@@ -42,14 +42,14 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      * The value of predict future movement is the amount of ticks we are going to predict the future movement of the
      * client.
      */
-    private val predictFutureMovement by int("PredictClientMovement", 5, 0..20)
+    private val predictFutureMovement by int("PredictClientMovement", 5, 2..7)
 
     /**
      * The time offset defines a prediction or rather a delay of the point tracker.
      * We can either try to predict the next location of the player and use this as our newest point, or
      * we pretend to be slow in the head and aim behind.
      */
-    private val timeEnemyOffset by float("TimeEnemyOffset", -0.4f, -1.0f..1.0f)
+    private val timeEnemyOffset by float("TimeEnemyOffset", 4f, -10f..10f)
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
