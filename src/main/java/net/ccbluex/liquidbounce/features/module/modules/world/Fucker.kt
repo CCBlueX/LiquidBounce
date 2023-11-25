@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
+import net.minecraft.block.BlockAir
 import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
@@ -46,17 +47,18 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private val range by FloatValue("Range", 5F, 1F..7F)
 
     private val action by ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
-    private val surroundings by BoolValue("Surroundings", true)
-        private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
+    private var surroundings by BoolValue("Surroundings", true)
+    private val hypixelMode by BoolValue("Hypixel-Bypass", false)
+    private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
 
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
     private val swing by BoolValue("Swing", true)
     private val noHit by BoolValue("NoHit", false)
 
     private val rotations by BoolValue("Rotations", true)
-        private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
-        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
 
             override fun isSupported() = rotations
         }
@@ -131,6 +133,21 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 pos = blockPos
                 currentPos = pos ?: return
                 spot = faceBlock(currentPos) ?: return
+            }
+        }
+
+        val block = Block.getIdFromBlock(getBlock(currentPos)) == targetId
+        if (hypixelMode) {
+            if (block) {
+                val blockPos = currentPos.up()
+                if (getBlock(blockPos) !is BlockAir) {
+                    if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z)
+                        surroundings = true
+
+                    pos = blockPos
+                    currentPos = pos ?: return
+                    spot = faceBlock(currentPos) ?: return
+                }
             }
         }
 
