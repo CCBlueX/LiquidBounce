@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.FailSwing.dealWithFakeSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -126,11 +127,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val tickOn by int("TickOn", 0, 0..5)
         val onScanRange by boolean("OnScanRange", true)
         val interactWith by boolean("InteractWith", true)
+        val onlyWhenInDanger by boolean("OnlyWhenInDanger", true)
 
         var blockingStateEnforced = false
 
         fun startBlocking() {
             if (!enabled || player.isBlocking) {
+                return
+            }
+
+            if (onlyWhenInDanger && !isInDanger()) {
                 return
             }
 
@@ -195,6 +201,27 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         private fun canBlock(itemStack: ItemStack)
             = itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
 
+        private fun isInDanger(): Boolean {
+            val possibleTargets = targetTracker.enemies()
+
+            for (target in possibleTargets) {
+                if (target.isRemoved) {
+                    continue
+                }
+
+                // Check if the target is facing the player
+                if (facingEnemy(fromEntity = target, toEntity = player, rotation = target.rotation,
+                        range = range.toDouble(),
+                        wallsRange = wallRange.toDouble())) {
+                    return true
+                }
+
+                return true
+            }
+
+            return false
+        }
+
     }
 
     private val legitAimingConfigurable = LegitAimpointTracker.LegitAimpointTrackerConfigurable(this)
@@ -222,6 +249,32 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             tree(UseOwnCPS)
             tree(LimitRange)
         }
+
+        suspend fun Sequence<DummyEvent>.dealWithFakeSwing(target: Entity?) {
+            if (!enabled) {
+                return
+            }
+
+            val entity = target ?: world.findEnemy(0f..LimitRange.range)
+            val reach = LimitRange.range + if (LimitRange.asExtraRange) range else 0f
+
+            val shouldSwing = entity != null && !entity.isRemoved
+                && (!enabled || entity.boxedDistanceTo(player) <= reach)
+
+            val chosenCPS = if (enabled) UseOwnCPS.cps else cps
+            val clicks = cpsTimer.clicks({ shouldSwing }, chosenCPS)
+
+            prepareAttackEnvironment {
+                repeat(clicks) {
+                    if (swing) {
+                        player.swingHand(Hand.MAIN_HAND)
+                    } else {
+                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                    }
+                }
+            }
+        }
+
     }
 
     init {
@@ -336,16 +389,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     val repeatable = repeatable {
-        val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
-
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
-        // Did you ever send a rotation before?
-        val rotation = RotationManager.currentRotation
 
         if (target == null || (!AutoBlock.onScanRange && target.boxedDistanceTo(player) > range)) {
             AutoBlock.stopBlocking()
+
+            // Deal with fake swing
+            if (FailSwing.enabled) {
+                wait(AutoBlock.tickOff)
+                dealWithFakeSwing(target)
+            }
         }
 
         if (CombatManager.shouldPauseCombat()) {
@@ -353,8 +407,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@repeatable
         }
 
-        if (rotation != null && target != null && target.boxedDistanceTo(player) <= range
-            && facingEnemy(target, rotation, range.toDouble(), wallRange.toDouble())) {
+        if (target != null) {
+            // Check if our target is in range, otherwise deal with auto block
+            if (target.boxedDistanceTo(player) > range) {
+                AutoBlock.startBlocking()
+                return@repeatable
+            }
+
+            // Determine if we should attack the target or someone else
+            val rotation = RotationManager.serverRotation
+
             val choosenEntity: Entity
             if (raycast != TRACE_NONE) {
                 // Check if between enemy and player is another entity
@@ -372,6 +434,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }
             } else {
                 choosenEntity = target
+            }
+
+            // Are we actually facing the choosen entity?
+            if (!facingEnemy(toEntity = choosenEntity, rotation = rotation, range = range.toDouble(),
+                    wallsRange = wallRange.toDouble())) {
+                dealWithFakeSwing(choosenEntity)
+                return@repeatable
             }
 
             // Attack enemy according to cps and cooldown
@@ -408,39 +477,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             return@repeatable
-        } else if (target != null && rotation != null && AutoBlock.onScanRange) {
-            AutoBlock.startBlocking()
-            return@repeatable
-        }
-
-        if (!FailSwing.enabled) {
-            return@repeatable
-        }
-
-        val entity = target ?: world.findEnemy(0f..FailSwing.LimitRange.range)
-
-        val reach = FailSwing.LimitRange.range + if (FailSwing.LimitRange.asExtraRange) range else 0f
-
-        val shouldSwing = entity != null && !entity.isRemoved
-            && (!FailSwing.LimitRange.enabled || entity.boxedDistanceTo(player) <= reach)
-
-        val chosenCPS = if (FailSwing.UseOwnCPS.enabled) FailSwing.UseOwnCPS.cps else cps
-        val supposedRotation = rotation ?: player.rotation
-
-        val clicks = cpsTimer.clicks({
-            shouldSwing && raytraceEntity(
-                range.toDouble(), supposedRotation
-            ) { true } == null
-        }, chosenCPS)
-
-        prepareAttackEnvironment {
-            repeat(clicks) {
-                if (swing) {
-                    player.swingHand(Hand.MAIN_HAND)
-                } else {
-                    network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
-                }
-            }
         }
     }
 
@@ -481,8 +517,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     .subtract(player.pos.subtract(player.prevPos))
 
                 val nextPoint = this.legitAimpointTracker.nextPoint(box, box.center, aimpointChange)
-                LeastDifferencePreference(RotationManager.currentRotation ?: mc.player.rotation,
-                    nextPoint.aimSpot)
+                LeastDifferencePreference(RotationManager.currentRotation ?: mc.player?.rotation
+                    ?: Rotation.ZERO, nextPoint.aimSpot)
             } else {
                 LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
             }

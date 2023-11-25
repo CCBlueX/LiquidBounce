@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -58,23 +59,33 @@ class RotationsConfigurable : Configurable("Rotations") {
  */
 object RotationManager : Listenable {
 
+    /**
+     * Our final target rotation. This rotation is only used to define our current rotation.
+     */
     var targetRotation: Rotation? = null
-    val serverRotation: Rotation
-        get() = Rotation(mc.player?.lastYaw ?: 0f, mc.player?.lastPitch ?: 0f)
 
-    // Current rotation
+    /**
+     * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
+     */
     var currentRotation: Rotation? = null
         set(value) {
-            previousRotation = field ?: mc.player.rotation
+            previousRotation = field ?: mc.player?.rotation
 
             field = value
         }
+    // Used for rotation interpolation
+    var previousRotation: Rotation? = null
+
+    /**
+     * The rotation that was already sent to the server and is currently active.
+     * The value is not being written by the packets, but we gather the Rotation from the last yaw and pitch variables
+     * from our player instance handled by the sendMovementPackets() function.
+     */
+    val serverRotation: Rotation
+        get() = mc.player?.lastRotation ?: Rotation.ZERO
 
     var ticksUntilReset: Int = 0
     var ignoreOpenInventory = false
-
-    // Used for rotation interpolation
-    var previousRotation: Rotation? = null
 
     // Active configurable
     var activeConfigurable: RotationsConfigurable? = null
@@ -295,7 +306,8 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.currentRotation ?: mc.player.rotation)
+            get() = LeastDifferencePreference(RotationManager.currentRotation ?: mc.player?.rotation
+                ?: Rotation.ZERO)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)

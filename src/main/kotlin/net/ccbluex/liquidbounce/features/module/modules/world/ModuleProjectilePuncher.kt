@@ -81,7 +81,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
         val clicks = cpsTimer.clicks(condition = {
             target.boxedDistanceTo(player) <= range && facingEnemy(
-                target, rotation, range.toDouble(), 0.0
+                toEntity = target, rotation = rotation, range = range.toDouble(), wallsRange = 0.0
             )
         }, cps)
 

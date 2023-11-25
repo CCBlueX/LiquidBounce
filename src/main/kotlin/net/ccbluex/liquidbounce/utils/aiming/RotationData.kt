@@ -26,6 +26,10 @@ import kotlin.math.roundToInt
 
 data class Rotation(var yaw: Float, var pitch: Float) {
 
+    companion object {
+        val ZERO = Rotation(0f, 0f)
+    }
+
     val rotationVec: Vec3d
         get() {
             val yawCos = MathHelper.cos(-yaw * 0.017453292f)

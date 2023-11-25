@@ -47,7 +47,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
         val world = mc.world ?: return emptyList()
 
         var entities = world.entities.filter {
-            it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it)
+            !it.isRemoved && it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it)
         }
 
         entities = when (priority) {
