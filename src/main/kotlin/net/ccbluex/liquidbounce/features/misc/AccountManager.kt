@@ -55,7 +55,7 @@ object AccountManager : Configurable("Accounts") {
 
     @RequiredByScript
     fun loginAccount(id: Int) {
-        val account = accounts.getOrNull(id) ?: return
+        val account = accounts.getOrNull(id) ?: error("Account with id $id not found")
 
         // TODO: Implement directly into Elixir
         val (session, sessionService, profileKeys) = when (account) {
@@ -106,19 +106,28 @@ object AccountManager : Configurable("Accounts") {
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
      */
-    fun newCrackedAccount(username: String) {
-        // Get UUID of username from Mojang API
-        val uuid = runCatching {
-            MojangApi.getUUID(username)
-        }.getOrNull() ?: UUID.randomUUID()
-
-        // Create new cracked account
-        accounts += CrackedAccount().also { account ->
-            account.name = username
+    fun newCrackedAccount(username: String): MinecraftAccount {
+        // Check if username is valid. Make sure it follows the regex rules.
+        if (!username.matches(Regex("[a-zA-Z0-9_]{3,16}"))) {
+            error("Invalid username")
         }
 
-        // Store configurable
-        ConfigSystem.storeConfigurable(this@AccountManager)
+        // Check for duplicate of cracked type and username
+        if (accounts.any { it is CrackedAccount && it.name.equals(username, true) }) {
+            error("Duplicate username")
+        }
+
+        // TODO: Get UUID of username from Mojang API
+        //val uuid = runCatching {
+        //    MojangApi.getUUID(username)
+        //}.getOrNull() ?: UUID.randomUUID()
+
+        // Create new cracked account
+        return CrackedAccount().apply {
+            name = username
+            accounts += this
+            ConfigSystem.storeConfigurable(this@AccountManager)
+        }
     }
 
     /**
@@ -175,7 +184,10 @@ object AccountManager : Configurable("Accounts") {
              */
             override fun authResult(account: MicrosoftAccount) {
                 // Yay, it worked! Callback with account.
-                logger.info("Logged in as new account ${account.name}")
+                logger.info("Auth successful with new account ${account.name}")
+
+                // Check if account of same type and username already exists, if so replace it with the new one
+                accounts.removeIf { it is MicrosoftAccount && it.name.equals(account.name, true) }
 
                 // Add account to list of accounts
                 accounts += account
@@ -204,6 +216,11 @@ object AccountManager : Configurable("Accounts") {
         // Check if altening token is valid
         val (session) = mc.sessionService.loginAltening(accountToken)
 
+        // Check for duplicate of altening type and username
+        if (accounts.any { it is AlteningAccount && it.name.equals(session.username, true) }) {
+            error("Duplicate username")
+        }
+
         accounts += AlteningAccount().also { account ->
             account.token = accountToken
             account.name = session.username
@@ -220,6 +237,11 @@ object AccountManager : Configurable("Accounts") {
         }
 
         val alteningAccount = TheAltening.newBasicRetriever(apiToken).account
+
+        // Check for duplicate of altening type and username
+        if (accounts.any { it is AlteningAccount && it.name.equals(alteningAccount.username, true) }) {
+            error("Duplicate username")
+        }
 
         accounts += AlteningAccount().also { account ->
             account.name = alteningAccount.username

@@ -24,6 +24,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.utils.client.isPremium
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -76,4 +77,77 @@ private fun RestNode.setupAltManagerRestApi() {
         }
         httpOk(accounts)
     }
+
+    post("/account/login") {
+        class AccountForm(
+            val id: Int
+        )
+        val accountForm = decode<AccountForm>(it.content)
+        AccountManager.loginAccount(accountForm.id)
+
+        httpOk(JsonObject().apply {
+            mc.session.let {
+                addProperty("username", it.username)
+                addProperty("uuid", it.uuid)
+                addProperty("accountType", it.accountType.getName())
+                addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuid))
+                addProperty("premium", it.isPremium())
+            }
+        })
+    }
+
+    post("/accounts/new/cracked") {
+        class AccountForm(
+            val username: String
+        )
+        val accountForm = decode<AccountForm>(it.content)
+
+        val account = AccountManager.newCrackedAccount(accountForm.username)
+        httpOk(JsonObject().apply {
+            addProperty("id", AccountManager.accounts.indexOf(account))
+            addProperty("username", account.name)
+        })
+    }
+
+    post("/accounts/new/microsoft") {
+        AccountManager.newMicrosoftAccount()
+        httpOk(JsonObject())
+    }
+
+    post("/accounts/new/altening") {
+        class AlteningForm(
+            val token: String
+        )
+        val accountForm = decode<AlteningForm>(it.content)
+        AccountManager.newAlteningAccount(accountForm.token)
+        httpOk(JsonObject())
+    }
+
+    post("/accounts/new/alteningGenerate") {
+        class AlteningGenForm(
+            val apiToken: String
+        )
+        val accountForm = decode<AlteningGenForm>(it.content)
+
+        AccountManager.generateNewAlteningAccount(accountForm.apiToken)
+        httpOk(JsonObject())
+    }
+
+    // Deletes a specific account
+    delete("/account") {
+        class AccountForm(
+            val id: Int
+        )
+
+        val accountForm = decode<AccountForm>(it.content)
+        AccountManager.accounts.removeAt(accountForm.id)
+        httpOk(JsonObject())
+    }
+
+    // Clears all accounts
+    delete("/accounts") {
+        AccountManager.accounts.clear()
+        httpOk(JsonObject())
+    }
+
 }
