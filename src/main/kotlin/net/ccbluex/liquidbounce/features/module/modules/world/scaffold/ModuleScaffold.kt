@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
@@ -266,7 +265,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler =
         repeatable {
             val target = currentTarget
-            val currentRotation = RotationManager.currentRotation ?: player.rotation
+            // Might use server rotation instead as we cannot rely on anti-cheats implementing the correct order of the
+            // minecraft network events. This will make it less fast, but more reliable.
+            // TODO: Make this configurable to decide weather to use server rotation or current rotation
+            val currentRotation = RotationManager.serverRotation
             val currentCrosshairTarget = raycast(4.5, currentRotation)
 
             // Prioritize by all means the main hand if it has a block
