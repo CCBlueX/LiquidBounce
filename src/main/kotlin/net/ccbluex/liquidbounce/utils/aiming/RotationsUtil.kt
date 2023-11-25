@@ -20,9 +20,8 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -201,11 +200,11 @@ object RotationManager : Listenable {
     }
 
     /**
-     * Updates at network movement tick on PRE state, so we can update the rotation before the client sends the packet
+     * Updates at movement tick, so we can update the rotation before the movement runs and the client sends the packet
      * to the server.
      */
-    val tickHandler = handler<PlayerNetworkMovementTickEvent>(priority = -100) {
-        if (aimPlan == null || it.state == EventState.POST) {
+    val tickHandler = handler<PlayerMovementTickEvent>(priority = -100) {
+        if (aimPlan == null) {
             return@handler
         }
 

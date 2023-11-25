@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -170,12 +169,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
-    private val rotationUpdateHandler =
-        handler<PlayerNetworkMovementTickEvent> {
-            if (it.state != EventState.PRE) {
-                return@handler
-            }
-
+    private val rotationUpdateHandler = handler<PlayerMovementTickEvent> {
             val blockInHotbar = findBestValidHotbarSlotForTarget()
 
             val bestStick =

@@ -22,9 +22,12 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.DummyEvent
+import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.FailSwing.dealWithFakeSwing
@@ -364,11 +367,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
-    val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
-        if (it.state != EventState.PRE) {
-            return@handler
-        }
-
+    val rotationUpdateHandler = handler<PlayerMovementTickEvent> {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
