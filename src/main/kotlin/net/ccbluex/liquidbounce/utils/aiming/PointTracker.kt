@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -38,18 +39,27 @@ import java.security.SecureRandom
 
 class PointTracker : Configurable("PointTracker"), Listenable {
 
+    companion object {
+        /**
+         * The base predict defines the amount of ticks we are going to predict the future movement of the client.
+         * This adds on top of the amount of ticks the user has configured.
+         * Why are we doing this? Because our server rotation lags behind, and we need to compensate for that.
+         */
+        const val BASE_PREDICT = 2
+    }
+
     /**
      * The value of predict future movement is the amount of ticks we are going to predict the future movement of the
      * client.
      */
-    private val predictFutureMovement by int("PredictClientMovement", 5, 2..7)
+    private val predictFutureMovement by int("PredictClientMovement", 1, 0..5)
 
     /**
      * The time offset defines a prediction or rather a delay of the point tracker.
      * We can either try to predict the next location of the player and use this as our newest point, or
      * we pretend to be slow in the head and aim behind.
      */
-    private val timeEnemyOffset by float("TimeEnemyOffset", 4f, -10f..10f)
+    private val timeEnemyOffset by float("TimeEnemyOffset", 0.4f, -1f..2f)
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
@@ -124,7 +134,7 @@ class PointTracker : Configurable("PointTracker"), Listenable {
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
-        repeat(predictFutureMovement) {
+        repeat(BASE_PREDICT + predictFutureMovement) {
             simulatedPlayer.tick()
         }
 
@@ -141,8 +151,8 @@ class PointTracker : Configurable("PointTracker"), Listenable {
 
         // Predicted target position of the enemy
         val targetPrediction = entity.pos.subtract(entity.prevPos)
-            .multiply(timeEnemyOffset.toDouble())
-        var box = entity.boundingBox.offset(targetPrediction)
+            .multiply(BASE_PREDICT + timeEnemyOffset.toDouble())
+        var box = entity.box.offset(targetPrediction)
         if (!requiredOnTick && outOfBox) {
             box = box.withMinY(box.maxY).withMaxY(box.maxY + 1.0)
         }

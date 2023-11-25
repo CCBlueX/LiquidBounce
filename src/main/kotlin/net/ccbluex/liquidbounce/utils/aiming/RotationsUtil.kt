@@ -20,8 +20,9 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -92,13 +93,8 @@ object RotationManager : Listenable {
     val serverRotation: Rotation
         get() = mc.player?.lastRotation ?: Rotation.ZERO
 
-    fun aimAt(rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable) {
-        if (!allowedToUpdate()) {
-            return
-        }
-
-        aimPlan = configurable.toAimPlan(rotation, considerInventory)
-    }
+    fun aimAt(rotation: Rotation, considerInventory: Boolean = true,
+              configurable: RotationsConfigurable) = aimAt(configurable.toAimPlan(rotation, considerInventory))
 
     fun aimAt(plan: AimPlan) {
         if (!allowedToUpdate()) {
@@ -138,7 +134,7 @@ object RotationManager : Listenable {
 
         val playerRotation = player.rotation
 
-        if (aimPlan.ticksLeft == 0 ) {
+        if (aimPlan.ticksLeft == 0) {
             val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: serverRotation, playerRotation)
 
             if (differenceFromCurrentToPlayer < aimPlan.resetThreshold || aimPlan.applyClientSide) {
@@ -204,8 +200,12 @@ object RotationManager : Listenable {
         }
     }
 
-    val tickHandler = handler<GameTickEvent> {
-        if (aimPlan == null || mc.isPaused) {
+    /**
+     * Updates at network movement tick on PRE state, so we can update the rotation before the client sends the packet
+     * to the server.
+     */
+    val tickHandler = handler<PlayerNetworkMovementTickEvent>(priority = -100) {
+        if (aimPlan == null || it.state == EventState.POST) {
             return@handler
         }
 
