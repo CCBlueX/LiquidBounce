@@ -242,7 +242,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 // Check if there is a free angle to the block.
                 if (raytrace != null) {
                     val (rotation, _) = raytrace
-                    RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+                    RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
                     currentTarget = DestroyerTarget(pos, rotation)
                     return

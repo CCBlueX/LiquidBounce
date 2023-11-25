@@ -173,7 +173,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // Check if we got a free angle to the block
         if (raytrace != null) {
             val (rotation, _) = raytrace
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
             this.currentTarget = DestroyerTarget(pos, this.action)
             return
@@ -205,7 +205,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         ) ?: return
 
         val (rotation, _) = raytrace
-        RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+        RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
         this.currentTarget = DestroyerTarget(raytraceResult.blockPos, this.action)
     }

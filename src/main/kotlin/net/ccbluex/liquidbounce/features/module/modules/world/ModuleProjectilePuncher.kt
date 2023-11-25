@@ -121,7 +121,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             targetTracker.lock(entity)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
             break
         }
     }

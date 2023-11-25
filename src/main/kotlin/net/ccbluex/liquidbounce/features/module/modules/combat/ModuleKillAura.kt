@@ -107,10 +107,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(40f..60f))
 
     // Predict
-    private val predict by floatRange("Predict", 0f..0f, 0f..5f)
+    private val pointTracker = tree(PointTracker())
 
     // Bypass techniques
     private val swing by boolean("Swing", true)
@@ -224,11 +224,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     }
 
-    private val legitAimingConfigurable = LegitAimpointTracker.LegitAimpointTrackerConfigurable(this)
-
     init {
         tree(AutoBlock)
-        tree(legitAimingConfigurable)
     }
 
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
@@ -480,8 +477,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
-    private val legitAimpointTracker = LegitAimpointTracker(legitAimingConfigurable)
-
     /**
      * Update enemy on target tracker
      */
@@ -491,8 +486,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.validateLock {
             it.shouldBeAttacked() && it.squaredBoxedDistanceTo(player) <= rangeSquared
         }
-
-        val eyes = player.eyes
 
         val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
             ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
@@ -505,27 +498,19 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 continue
             }
 
-            val predictedTicks = predict.random()
-
-            val targetPrediction = target.pos.subtract(target.prevPos).multiply(predictedTicks)
-            val playerPrediction = player.pos.subtract(player.prevPos).multiply(predictedTicks)
-
-            val box = target.box.offset(targetPrediction)
-
-            val rotationPreference = if (this.legitAimingConfigurable.enabled) {
-                val aimpointChange = target.pos.subtract(target.prevPos)
-                    .subtract(player.pos.subtract(player.prevPos))
-
-                val nextPoint = this.legitAimpointTracker.nextPoint(box, box.center, aimpointChange)
-                LeastDifferencePreference(RotationManager.currentRotation ?: mc.player?.rotation
-                    ?: Rotation.ZERO, nextPoint.aimSpot)
-            } else {
-                LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION
-            }
+            val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, cpsTimer.isClickOnNextTick(1))
+            val rotationPreference = LeastDifferencePreference(RotationManager.currentRotation
+                ?: player.rotation, nextPoint)
 
             // find best spot
             val spot = raytraceBox(
-                eyes.add(playerPrediction),
+                eyes,
+                cutOffBox,
+                range = sqrt(scanRange),
+                wallsRange = wallRange.toDouble(),
+                rotationPreference = rotationPreference
+            ) ?: raytraceBox(
+                eyes,
                 box,
                 range = sqrt(scanRange),
                 wallsRange = wallRange.toDouble(),
@@ -536,11 +521,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(
-                spot.rotation,
-                openInventory = ignoreOpenInventory,
-                configurable = rotations
-            )
+            RotationManager.aimAt(rotations.toAimPlan(spot.rotation, !ignoreOpenInventory))
             break
         }
     }

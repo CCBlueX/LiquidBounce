@@ -37,8 +37,6 @@ import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import org.apache.commons.lang3.RandomUtils
-import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.sqrt
@@ -46,12 +44,22 @@ import kotlin.math.sqrt
 /**
  * Configurable to configure the dynamic rotation engine
  */
-class RotationsConfigurable : Configurable("Rotations") {
-    val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
+class RotationsConfigurable(
+    turnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
+) : Configurable("Rotations") {
+
+    val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
+    val smoothMode by enumChoice("SmoothMode", SmootherMode.RELATIVE, SmootherMode.values())
     val fixVelocity by boolean("FixVelocity", true)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     val ticksUntilReset by int("TicksUntilReset", 5, 1..30)
     val silent by boolean("Silent", true)
+
+
+    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) =
+        AimPlan(rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold,
+            considerInventory, fixVelocity, !silent)
+
 }
 
 /**
@@ -62,7 +70,7 @@ object RotationManager : Listenable {
     /**
      * Our final target rotation. This rotation is only used to define our current rotation.
      */
-    var targetRotation: Rotation? = null
+    var aimPlan: AimPlan? = null
 
     /**
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
@@ -84,24 +92,20 @@ object RotationManager : Listenable {
     val serverRotation: Rotation
         get() = mc.player?.lastRotation ?: Rotation.ZERO
 
-    var ticksUntilReset: Int = 0
-    var ignoreOpenInventory = false
-
-    // Active configurable
-    var activeConfigurable: RotationsConfigurable? = null
-
-    fun aimAt(vec: Vec3d, eyes: Vec3d, openInventory: Boolean = false, configurable: RotationsConfigurable) =
-        aimAt(makeRotation(vec, eyes), openInventory, configurable)
-
-    fun aimAt(rotation: Rotation, openInventory: Boolean = false, configurable: RotationsConfigurable) {
-        if (!shouldUpdate()) {
+    fun aimAt(rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable) {
+        if (!allowedToUpdate()) {
             return
         }
 
-        activeConfigurable = configurable
-        targetRotation = rotation
-        ticksUntilReset = configurable.ticksUntilReset
-        ignoreOpenInventory = openInventory
+        aimPlan = configurable.toAimPlan(rotation, considerInventory)
+    }
+
+    fun aimAt(plan: AimPlan) {
+        if (!allowedToUpdate()) {
+            return
+        }
+
+        aimPlan = plan
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -126,27 +130,20 @@ object RotationManager : Listenable {
      */
     fun update() {
         val player = mc.player ?: return
+        val aimPlan = aimPlan ?: return
 
         // Prevents any rotation changes, when inventory is opened
-        val canRotate = (!InventoryTracker.isInventoryOpenServerSide &&
-            mc.currentScreen !is GenericContainerScreen) || ignoreOpenInventory
-
-        val configurable = activeConfigurable ?: return
-
-        // Update rotations
-        val speed = RandomUtils.nextFloat(
-            configurable.turnSpeed.start,
-            configurable.turnSpeed.endInclusive
-        )
+        val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
+            mc.currentScreen !is GenericContainerScreen) || !aimPlan.considerInventory) && allowedToUpdate()
 
         val playerRotation = player.rotation
 
-        if (ticksUntilReset == 0 || !shouldUpdate()) {
-            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) <
-                configurable.resetThreshold || !configurable.silent) {
-                ticksUntilReset = -1
+        if (aimPlan.ticksLeft == 0 ) {
+            val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: serverRotation, playerRotation)
 
-                targetRotation = null
+            if (differenceFromCurrentToPlayer < aimPlan.resetThreshold || aimPlan.applyClientSide) {
+                this.aimPlan = null
+
                 currentRotation?.let { rotation ->
                     player.let { player ->
                         player.yaw = rotation.yaw + angleDifference(player.yaw, rotation.yaw)
@@ -157,48 +154,28 @@ object RotationManager : Listenable {
                 currentRotation = null
                 return
             }
-
-            if (canRotate) {
-                limitAngleChange(currentRotation ?: serverRotation, playerRotation, speed).fixedSensitivity().let {
-                    currentRotation = it
-
-                    if (!configurable.silent) {
-                        player.applyRotation(it)
-                    }
-                }
-            }
-            return
         }
 
-        if (canRotate) {
-            targetRotation?.let { targetRotation ->
-                limitAngleChange(currentRotation ?: playerRotation, targetRotation, speed).fixedSensitivity().let {
-                    currentRotation = it
+        if (allowedRotation) {
+            aimPlan.nextRotation(currentRotation ?: playerRotation).fixedSensitivity().let {
+                currentRotation = it
 
-                    if (!configurable.silent) {
-                        player.applyRotation(it)
-                    }
+                if (aimPlan.applyClientSide) {
+                    player.applyRotation(it)
                 }
             }
         }
 
         // Update reset ticks
-        if (ticksUntilReset > 0) {
-            ticksUntilReset--
+        if (aimPlan.ticksLeft > 0) {
+            aimPlan.ticksLeft--
         }
     }
 
     /**
      * Checks if it should update the server-side rotations
      */
-    fun shouldUpdate() = !CombatManager.shouldPauseRotation()
-
-    /**
-     * Calculate difference between the server rotation and your rotation
-     */
-    fun rotationDifference(rotation: Rotation): Double {
-        return rotationDifference(rotation, serverRotation)
-    }
+    private fun allowedToUpdate() = !CombatManager.shouldPauseRotation()
 
     /**
      * Calculate difference between two rotations
@@ -217,39 +194,18 @@ object RotationManager : Listenable {
     }
 
     /**
-     * Limit your rotations
-     */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, speed: Float): Rotation {
-        val yawDifference = angleDifference(targetRotation.yaw, currentRotation.yaw)
-        val pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
-
-        val rotationDifference = hypot(yawDifference, pitchDifference)
-
-        // Linear aim
-        val factor = ((rotationDifference / 180) * speed).coerceAtMost(180f)
-
-        val straightLineYaw = abs(yawDifference / rotationDifference) * factor
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * factor
-
-        return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
-            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
-        )
-    }
-
-    /**
      * Calculate difference between two angle points
      */
     fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
-        if (activeConfigurable?.fixVelocity == true) {
+        if (aimPlan?.applyVelocityFix == true) {
             event.velocity = fixVelocity(event.velocity, event.movementInput, event.speed)
         }
     }
 
     val tickHandler = handler<GameTickEvent> {
-        if (targetRotation == null || mc.isPaused) {
+        if (aimPlan == null || mc.isPaused) {
             return@handler
         }
 
