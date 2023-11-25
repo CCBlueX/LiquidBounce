@@ -215,8 +215,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         wallsRange = wallRange.toDouble())) {
                     return true
                 }
-
-                return true
             }
 
             return false
