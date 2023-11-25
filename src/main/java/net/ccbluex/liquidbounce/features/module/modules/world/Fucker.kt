@@ -49,6 +49,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private val action by ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
     private var surroundings by BoolValue("Surroundings", true)
     private val hypixelMode by BoolValue("Hypixel-Bypass", false)
+
     private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
 
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
