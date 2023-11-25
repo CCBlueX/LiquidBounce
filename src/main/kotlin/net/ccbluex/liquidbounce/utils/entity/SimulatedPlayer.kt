@@ -63,7 +63,7 @@ class SimulatedPlayer(
     private val pitch: Float,
     private var sprinting: Boolean,
 
-    private var fallDistance: Float,
+    var fallDistance: Float,
     private var jumpingCooldown: Int,
     private var isJumping: Boolean,
     private var isFallFlying: Boolean,
