@@ -67,7 +67,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             if (armorIndex != bestArmor.lastIndex) {
                 // Wait the requested delay, then continue. In case the user violates NoMove,
                 // it immediately goes to the next loop, breaks it and then closes inventory if it's open
-                wait(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
+                waitConditional(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
 
                 continue
             }

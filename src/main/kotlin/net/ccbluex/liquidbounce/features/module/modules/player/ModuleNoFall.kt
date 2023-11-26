@@ -124,7 +124,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         val repeatable = repeatable {
             if (player.fallDistance > 2f) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
-                wait { 1 }
+                waitTicks(1)
             }
         }
 

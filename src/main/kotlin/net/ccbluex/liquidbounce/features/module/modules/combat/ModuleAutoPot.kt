@@ -64,13 +64,13 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
                 return@repeatable
             }
 
-            wait(delay)
+            waitTicks(delay)
         } else {
             if (!tryToMoveSlotInHotbar(potionSlot)) {
                 return@repeatable
             }
 
-            wait(delay)
+            waitTicks(delay)
         }
     }
 

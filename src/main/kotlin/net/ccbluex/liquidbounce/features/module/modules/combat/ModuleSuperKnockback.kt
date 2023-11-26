@@ -85,7 +85,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
             antiSprint = true
 
             waitUntil { !player.isSprinting && !player.lastSprinting }
-            wait(reSprintTicks.random())
+            waitTicks(reSprintTicks.random())
 
             antiSprint = false
         }
@@ -109,10 +109,10 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
                 return@sequenceHandler
             }
 
-            wait(ticksUntilMovementBlock.random())
+            waitTicks(ticksUntilMovementBlock.random())
             stopMoving = true
             waitUntil { !player.input.hasForwardMovement() }
-            wait(ticksUntilAllowedMovement.random())
+            waitTicks(ticksUntilAllowedMovement.random())
             stopMoving = false
         }
     }

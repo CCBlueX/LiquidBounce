@@ -23,12 +23,7 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanGenerator
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ContainerItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.item.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -108,13 +103,13 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             val delay = delay.random()
 
             if (delay > 0) {
-                wait(delay - 1)
+                waitTicks(delay - 1)
                 return@repeatable
             }
         }
 
 
-        wait(closeDelay.random())
+        waitTicks(closeDelay.random())
 
         if (sortedItemsToCollect.isEmpty()) {
             player.closeHandledScreen()
@@ -226,7 +221,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             val delay = delay.random()
 
             if (delay > 0) {
-                wait(delay - 1)
+                waitTicks(delay - 1)
 
                 return true
             }

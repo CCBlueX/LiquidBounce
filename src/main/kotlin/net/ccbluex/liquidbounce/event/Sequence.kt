@@ -24,7 +24,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -71,46 +70,15 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
         }
     }
 
-    fun tick() {
-        if (this.elapsedTicks < this.totalTicks()) {
-            this.elapsedTicks++
-        } else {
+    internal fun tick() {
+        if (++this.elapsedTicks >= this.totalTicks()) {
             this.continuation?.resume(Unit)
         }
     }
 
-    suspend fun wait(ticks: Int) {
-        this.wait { ticks }
-    }
-
-    suspend fun waitSeconds(ticks: Int) {
-        this.wait { ticks * 20 }
-    }
-
     /**
-     * TODO: Remove this once waiting ticks on a non repeatable sequence is fixed
+     * Waits until the [case] is true, then continues. Checks every tick.
      */
-    suspend fun waitTicks(ticks: Int) {
-        var elapsedTicks = 0
-
-        while (elapsedTicks != ticks) {
-            elapsedTicks++
-            sync()
-        }
-    }
-
-    /**
-     * Waits for the amount of ticks that is retrieved via [ticksToWait]
-     */
-    suspend fun wait(ticksToWait: () -> Int) {
-        elapsedTicks = 0
-        totalTicks = ticksToWait
-
-        suspendCoroutine { continuation = it }
-    }
-
-    internal suspend fun sync() = wait(0)
-
     suspend fun waitUntil(case: () -> Boolean) {
         while (!case()) {
             sync()
@@ -118,24 +86,44 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
     }
 
     /**
-     * Waits for the requested [ticks]
-     *
-     * @param breakLoop In case it must exit early
+     * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
      */
-
-    // Somehow implement this only with the help of this class
-    suspend fun wait(ticks: Int, breakLoop: () -> Boolean = { false }) {
-        val player = mc.player ?: return
-        val ticksToWait = player.age + ticks
-
-        while (player.age < ticksToWait) {
-            if (breakLoop()) {
-                break
-            }
-
-            sync()
-        }
+    suspend fun waitConditional(ticks: Int, breakLoop: () -> Boolean = { false }) {
+        wait { if (breakLoop()) 0 else ticks }
     }
+
+    /**
+     * Waits a fixed amount of ticks before continuing.
+     * Re-entry at the game tick.
+     */
+    suspend fun waitTicks(ticks: Int) {
+        // Don't wait if ticks is 0
+        if (ticks == 0) {
+            return
+        }
+
+        this.wait { ticks }
+    }
+
+    /**
+     * Waits a fixed amount of seconds on tick level before continuing.
+     * Re-entry at the game tick.
+     */
+    suspend fun waitSeconds(ticks: Int) {
+        this.wait { ticks * 20 }
+    }
+
+    /**
+     * Waits for the amount of ticks that is retrieved via [ticksToWait]
+     */
+    private suspend fun wait(ticksToWait: () -> Int) {
+        elapsedTicks = 0
+        totalTicks = ticksToWait
+
+        suspendCoroutine { continuation = it }
+    }
+
+    internal suspend fun sync() = wait { 1 }
 
 }
 

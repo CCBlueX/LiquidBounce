@@ -152,7 +152,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         val repeat = repeatable {
             if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-                wait { switchDelay }
+                waitTicks(switchDelay)
                 return@repeatable
             }
 
@@ -375,7 +375,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             highlightedBlocks.clear()
 
             if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-                wait { switchDelay }
+                waitTicks(switchDelay)
                 return@repeatable
             }
 

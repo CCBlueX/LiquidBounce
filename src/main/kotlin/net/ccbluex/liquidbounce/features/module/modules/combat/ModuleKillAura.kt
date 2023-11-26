@@ -377,7 +377,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Deal with fake swing
             if (FailSwing.enabled) {
-                wait(AutoBlock.tickOff)
+                waitTicks(AutoBlock.tickOff)
                 dealWithFakeSwing(target)
             }
         }
@@ -397,7 +397,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                     // Deal with fake swing
                     if (FailSwing.enabled) {
-                        wait(AutoBlock.tickOff)
+                        waitTicks(AutoBlock.tickOff)
                         dealWithFakeSwing(target)
                     }
                 }
@@ -558,7 +558,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 )
             )
             if (AutoBlock.tickOff > 0) {
-                wait(AutoBlock.tickOff)
+                waitTicks(AutoBlock.tickOff)
             }
         } else if (player.isUsingItem && !whileUsingItem) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
@@ -573,7 +573,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (player.isBlocking) {
             if (AutoBlock.tickOn > 0) {
-                wait(AutoBlock.tickOn)
+                waitTicks(AutoBlock.tickOn)
             }
             interaction.sendSequencedPacket(world) { sequence ->
                 PlayerInteractItemC2SPacket(player.activeHand, sequence)

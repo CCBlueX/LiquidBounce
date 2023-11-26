@@ -340,11 +340,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         currentTarget = null
 
-        delay.random().let {
-            if (it > 0) {
-                wait(it)
-            }
-        }
+        waitTicks(delay.random())
     }
 
     private fun findBestValidHotbarSlotForTarget(): Int? {
