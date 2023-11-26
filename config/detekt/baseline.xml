@@ -198,6 +198,7 @@
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:Chat.kt$Chat : ToggleableConfigurable</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
+    <ID>TooManyFunctions:CombatUtils.kt$CombatManager : Listenable</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>TooManyFunctions:SimulatedPlayer.kt$SimulatedPlayer : PlayerSimulation</ID>
@@ -220,7 +221,6 @@
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupSpecial()</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent&gt; { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent&gt; { reconnect() }</ID>
-    <ID>UnusedPrivateProperty:ModuleAutoFarm.kt$ModuleAutoFarm$val curr = currentTarget ?: return@repeatable</ID>
     <ID>UnusedPrivateProperty:ModuleBlink.kt$ModuleBlink$i</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>

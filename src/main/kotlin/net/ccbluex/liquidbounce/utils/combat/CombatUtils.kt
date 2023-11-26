@@ -53,6 +53,7 @@ object CombatManager : Listenable {
         updatePauseCombat()
         // TODO: implement this for killaura autoblock and other
         updatePauseBlocking()
+        updateDuringCombat()
     }
 
     val tickHandler = handler<GameTickEvent> {
