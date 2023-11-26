@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.file.FileManager.loadAllConfigs
 import net.ccbluex.liquidbounce.file.FileManager.saveAllConfigs
 import net.ccbluex.liquidbounce.lang.LanguageManager.loadLanguages
-import net.ccbluex.liquidbounce.manager.TargetManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.ScriptManager.enableScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.loadScripts
@@ -73,7 +72,6 @@ object LiquidBounce {
     val commandManager = CommandManager
     val eventManager = EventManager
     val fileManager = FileManager
-    val targetManager = TargetManager
     val scriptManager = ScriptManager
 
     // HUD & ClickGUI

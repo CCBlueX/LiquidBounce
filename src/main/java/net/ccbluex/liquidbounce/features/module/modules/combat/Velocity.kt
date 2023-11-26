@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
+import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -259,20 +259,23 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
                 "grimcombat" -> {
                     if (packet is S12PacketEntityVelocity) {
-                        val target = LiquidBounce.targetManager.getNearByEntity(3f) ?: return
-                        repeat(12) {
-                            sendPacket(C0FPacketConfirmTransaction())
-                            sendPacket(
-                                C02PacketUseEntity(
-                                    target,
-                                    C02PacketUseEntity.Action.ATTACK
+                        val target = KillAura.target ?: return
+
+                        if (mc.thePlayer.getDistanceToEntity(target) < 3 && EntityUtils.isSelected(target, true)) {
+                            repeat(12) {
+                                sendPacket(C0FPacketConfirmTransaction())
+                                sendPacket(
+                                    C02PacketUseEntity(
+                                        target,
+                                        C02PacketUseEntity.Action.ATTACK
+                                    )
                                 )
-                            )
-                            sendPacket(C0APacketAnimation())
+                                sendPacket(C0APacketAnimation())
+                            }
+                            event.cancelEvent()
+                            mc.thePlayer.motionY = packet.realMotionY
+                            mc.thePlayer.stopXZ()
                         }
-                        event.cancelEvent()
-                        mc.thePlayer.motionY = packet.realMotionY
-                        mc.thePlayer.stopXZ()
                     }
                 }
 
