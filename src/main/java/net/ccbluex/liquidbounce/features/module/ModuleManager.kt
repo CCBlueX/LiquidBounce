@@ -101,7 +101,6 @@ object ModuleManager : Listenable {
             Criticals,
             Damage,
             Derp,
-            Disabler,
             ESP,
             Eagle,
             FakeLag,
