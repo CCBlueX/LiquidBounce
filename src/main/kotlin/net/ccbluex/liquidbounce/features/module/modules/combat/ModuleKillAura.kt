@@ -171,7 +171,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         private fun interactWithFront() {
             // Raycast using the current rotation and find a block or entity that should be interacted with
 
-            val rotationToTheServer = RotationManager.currentRotation ?: return
+            val rotationToTheServer = RotationManager.rotationForServer
 
             val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
                 when (raycast) {
@@ -201,8 +201,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             interaction.interactBlock(player, Hand.MAIN_HAND, hitResult)
         }
 
-        private fun canBlock(itemStack: ItemStack)
-            = itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
+        private fun canBlock(itemStack: ItemStack) = itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
 
         private fun isInDanger(): Boolean {
             val possibleTargets = targetTracker.enemies()
@@ -213,9 +212,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }
 
                 // Check if the target is facing the player
-                if (facingEnemy(fromEntity = target, toEntity = player, rotation = target.rotation,
+                if (facingEnemy(
+                        fromEntity = target, toEntity = player, rotation = target.rotation,
                         range = range.toDouble(),
-                        wallsRange = wallRange.toDouble())) {
+                        wallsRange = wallRange.toDouble()
+                    )
+                ) {
                     return true
                 }
             }
@@ -409,7 +411,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             // Determine if we should attack the target or someone else
-            val rotation = RotationManager.serverRotation
+            val rotation = RotationManager.rotationForServer
 
             val choosenEntity: Entity
             if (raycast != TRACE_NONE) {
@@ -431,8 +433,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             // Are we actually facing the choosen entity?
-            if (!facingEnemy(toEntity = choosenEntity, rotation = rotation, range = range.toDouble(),
-                    wallsRange = wallRange.toDouble())) {
+            if (!facingEnemy(
+                    toEntity = choosenEntity, rotation = rotation, range = range.toDouble(),
+                    wallsRange = wallRange.toDouble()
+                )
+            ) {
                 dealWithFakeSwing(choosenEntity)
                 return@repeatable
             }
@@ -496,8 +501,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, cpsTimer.isClickOnNextTick(1))
-            val rotationPreference = LeastDifferencePreference(RotationManager.currentRotation
-                ?: player.rotation, nextPoint)
+            val rotationPreference = LeastDifferencePreference(RotationManager.rotationForServer, nextPoint)
 
             // find best spot
             val spot = raytraceBox(
@@ -553,8 +557,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 return // return if it's not allowed to attack while using blocking with a shield
             }
 
-            network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                BlockPos.ORIGIN, Direction.DOWN))
+            network.sendPacket(
+                PlayerActionC2SPacket(
+                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                    BlockPos.ORIGIN, Direction.DOWN
+                )
+            )
             if (AutoBlock.tickOff > 0) {
                 wait(AutoBlock.tickOff)
             }

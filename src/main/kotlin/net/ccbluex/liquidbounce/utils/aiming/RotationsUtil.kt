@@ -54,10 +54,17 @@ class RotationsConfigurable(
     val ticksUntilReset by int("TicksUntilReset", 5, 1..30)
     val silent by boolean("Silent", true)
 
-
     fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) =
-        AimPlan(rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold,
-            considerInventory, fixVelocity, !silent)
+        AimPlan(
+            rotation,
+            smoothMode,
+            turnSpeed,
+            ticksUntilReset,
+            resetThreshold,
+            considerInventory,
+            fixVelocity,
+            !silent
+        )
 
 }
 
@@ -76,10 +83,11 @@ object RotationManager : Listenable {
      */
     var currentRotation: Rotation? = null
         set(value) {
-            previousRotation = field ?: mc.player?.rotation
+            previousRotation = field ?: mc.player.rotation
 
             field = value
         }
+
     // Used for rotation interpolation
     var previousRotation: Rotation? = null
 
@@ -89,10 +97,13 @@ object RotationManager : Listenable {
      * from our player instance handled by the sendMovementPackets() function.
      */
     val serverRotation: Rotation
-        get() = mc.player?.lastRotation ?: Rotation.ZERO
+        get() = mc.player.lastRotation
 
-    fun aimAt(rotation: Rotation, considerInventory: Boolean = true,
-              configurable: RotationsConfigurable) = aimAt(configurable.toAimPlan(rotation, considerInventory))
+    val rotationForServer: Rotation
+        get() = currentRotation ?: mc.player.rotation
+
+    fun aimAt(rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable) =
+        aimAt(configurable.toAimPlan(rotation, considerInventory))
 
     fun aimAt(plan: AimPlan) {
         if (!allowedToUpdate()) {
@@ -126,7 +137,7 @@ object RotationManager : Listenable {
         val player = mc.player ?: return
         val aimPlan = aimPlan ?: return
 
-        // Prevents any rotation changes, when inventory is opened
+        // Prevents any rotation changes when inventory is opened
         val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
             mc.currentScreen !is GenericContainerScreen) || !aimPlan.considerInventory) && allowedToUpdate()
 
@@ -206,10 +217,15 @@ object RotationManager : Listenable {
         val player = mc.player ?: return@handler
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
+            SimulatedPlayer.SimulatedPlayerInput(
+                event.directionalInput,
+                player.input.jumping,
+                player.isSprinting
+            )
         )
 
         simulatedPlayer.tick()
+
         val oldPos = player.pos
         player.setPosition(simulatedPlayer.pos)
 
@@ -269,8 +285,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.currentRotation ?: mc.player?.rotation
-                ?: Rotation.ZERO)
+            get() = LeastDifferencePreference(RotationManager.rotationForServer)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)

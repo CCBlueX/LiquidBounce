@@ -60,16 +60,20 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
             if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
                 val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)
-                val rotationPreference = LeastDifferencePreference(RotationManager.currentRotation
-                    ?: player.rotation, toPoint)
+                val rotationPreference = LeastDifferencePreference(RotationManager.rotationForServer, toPoint)
 
-                val spot = raytraceBox(fromPoint, cutOffBox, range = range.toDouble(), wallsRange = 0.0,
-                    rotationPreference = rotationPreference)
-                    ?: raytraceBox(fromPoint, box, range = range.toDouble(), wallsRange = 0.0,
-                    rotationPreference = rotationPreference) ?: continue
+                val spot = raytraceBox(
+                    fromPoint, cutOffBox, range = range.toDouble(), wallsRange = 0.0,
+                    rotationPreference = rotationPreference
+                )
+                    ?: raytraceBox(
+                        fromPoint, box, range = range.toDouble(), wallsRange = 0.0,
+                        rotationPreference = rotationPreference
+                    ) ?: continue
 
                 if (RotationManager.rotationDifference(player.rotation, spot.rotation) <=
-                    rotationsConfigurable.resetThreshold) {
+                    rotationsConfigurable.resetThreshold
+                ) {
                     break
                 }
 

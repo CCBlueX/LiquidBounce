@@ -170,62 +170,62 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-            val blockInHotbar = findBestValidHotbarSlotForTarget()
+        val blockInHotbar = findBestValidHotbarSlotForTarget()
 
-            val bestStick =
-                if (blockInHotbar == null) {
-                    ItemStack(Items.SANDSTONE, 64)
-                } else {
-                    player.inventory.getStack(blockInHotbar)
-                }
-
-            val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
-
-            // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
-            val priorityGetter: (Vec3i) -> Double =
-                if (optimalLine != null) {
-                    { vec ->
-                        -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
-                    }
-                } else {
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
-                }
-
-            val searchOptions =
-                BlockPlacementTargetFindingOptions(
-                    if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-                    bestStick,
-                    getFacePositionFactoryForConfig(),
-                    priorityGetter,
-                )
-
-            currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
-
-            val target = currentTarget ?: return@handler
-
-            // Debug stuff
-            if (optimalLine != null) {
-                val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
-                val a = optimalLine.getNearestPointTo(b)
-
-                // Debug the line a-b
-                ModuleDebug.debugGeometry(
-                    ModuleScaffold,
-                    "lineToBlock",
-                    ModuleDebug.DebuggedLineSegment(
-                        from = Vec3(a),
-                        to = Vec3(b),
-                        Color4b(255, 0, 0, 255),
-                    ),
-                )
+        val bestStick =
+            if (blockInHotbar == null) {
+                ItemStack(Items.SANDSTONE, 64)
+            } else {
+                player.inventory.getStack(blockInHotbar)
             }
 
-            RotationManager.aimAt(
-                target.rotation,
-                considerInventory = !ignoreOpenInventory,
-                configurable = rotationsConfigurable,
+        val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
+
+        // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
+        val priorityGetter: (Vec3i) -> Double =
+            if (optimalLine != null) {
+                { vec ->
+                    -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
+                }
+            } else {
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            }
+
+        val searchOptions =
+            BlockPlacementTargetFindingOptions(
+                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                bestStick,
+                getFacePositionFactoryForConfig(),
+                priorityGetter,
+            )
+
+        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
+
+        val target = currentTarget ?: return@handler
+
+        // Debug stuff
+        if (optimalLine != null) {
+            val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
+            val a = optimalLine.getNearestPointTo(b)
+
+            // Debug the line a-b
+            ModuleDebug.debugGeometry(
+                ModuleScaffold,
+                "lineToBlock",
+                ModuleDebug.DebuggedLineSegment(
+                    from = Vec3(a),
+                    to = Vec3(b),
+                    Color4b(255, 0, 0, 255),
+                ),
             )
         }
+
+        RotationManager.aimAt(
+            target.rotation,
+            considerInventory = !ignoreOpenInventory,
+            configurable = rotationsConfigurable,
+        )
+    }
 
     fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
         val config =
@@ -251,106 +251,101 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    val moveHandler =
-        repeatable {
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+    val moveHandler = repeatable {
+        Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+    }
+
+    val networkTickHandler = repeatable {
+        val target = currentTarget
+        val currentRotation = RotationManager.rotationForServer
+        val currentCrosshairTarget = raycast(4.5, currentRotation)
+
+        // Prioritize by all means the main hand if it has a block
+        val suitableHand =
+            arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull { isValidBlock(player.getStackInHand(it)) }
+
+        repeat(
+            cpsScheduler.clicks(
+                { simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving },
+                SimulatePlacementAttempts.cps,
+            ),
+        ) {
+            // By the time this reaches here the variables are already non-null
+            ModuleNoFall.MLG.doPlacement(
+                currentCrosshairTarget!!,
+                suitableHand!!,
+                ModuleScaffold::swing,
+                ModuleScaffold::swing,
+            )
         }
 
-    val networkTickHandler =
-        repeatable {
-            val target = currentTarget
-            // Might use server rotation instead as we cannot rely on anti-cheats implementing the correct order of the
-            // minecraft network events. This will make it less fast, but more reliable.
-            // TODO: Make this configurable to decide weather to use server rotation or current rotation
-            val currentRotation = RotationManager.serverRotation
-            val currentCrosshairTarget = raycast(4.5, currentRotation)
+        if (target == null || currentCrosshairTarget == null) {
+            return@repeatable
+        }
 
-            // Prioritize by all means the main hand if it has a block
-            val suitableHand =
-                arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull { isValidBlock(player.getStackInHand(it)) }
+        // Is the target the crosshair points too well-adjusted to our target?
+        if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
+            !isValidCrosshairTarget(
+                currentCrosshairTarget,
+            )
+        ) {
+            return@repeatable
+        }
 
-            repeat(
-                cpsScheduler.clicks(
-                    { simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving },
-                    SimulatePlacementAttempts.cps,
-                ),
-            ) {
-                // By the time this reaches here the variables are already non-null
-                ModuleNoFall.MLG.doPlacement(
-                    currentCrosshairTarget!!,
-                    suitableHand!!,
-                    ModuleScaffold::swing,
-                    ModuleScaffold::swing,
-                )
-            }
+        var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
+        val hasBlockInOffHand = isValidBlock(player.offHandStack)
 
-            if (target == null || currentCrosshairTarget == null) {
-                return@repeatable
-            }
+        // Handle silent block selection
+        if (silent && !hasBlockInMainHand && !hasBlockInOffHand) {
+            val bestMainHandSlot = findBestValidHotbarSlotForTarget()
 
-            // Is the target the crosshair points too well-adjusted to our target?
-            if (!target.doesCrosshairTargetFullfitRequirements(currentCrosshairTarget) ||
-                !isValidCrosshairTarget(
-                    currentCrosshairTarget,
-                )
-            ) {
-                return@repeatable
-            }
+            if (bestMainHandSlot != null) {
+                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, slotResetDelay)
 
-            var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
-            val hasBlockInOffHand = isValidBlock(player.offHandStack)
-
-            // Handle silent block selection
-            if (silent && !hasBlockInMainHand && !hasBlockInOffHand) {
-                val bestMainHandSlot = findBestValidHotbarSlotForTarget()
-
-                if (bestMainHandSlot != null) {
-                    SilentHotbar.selectSlotSilently(this, bestMainHandSlot, slotResetDelay)
-
-                    hasBlockInMainHand = true
-                } else {
-                    SilentHotbar.resetSlot(this)
-                }
+                hasBlockInMainHand = true
             } else {
                 SilentHotbar.resetSlot(this)
             }
+        } else {
+            SilentHotbar.resetSlot(this)
+        }
 
-            if (!hasBlockInMainHand && !hasBlockInOffHand) {
-                return@repeatable
-            }
+        if (!hasBlockInMainHand && !hasBlockInOffHand) {
+            return@repeatable
+        }
 
-            // no need for additional checks
-            val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
-            val result =
-                interaction.interactBlock(
-                    player,
-                    handToInteractWith,
-                    currentCrosshairTarget,
-                )
+        // no need for additional checks
+        val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
+        val result =
+            interaction.interactBlock(
+                player,
+                handToInteractWith,
+                currentCrosshairTarget,
+            )
 
-            if (!result.isAccepted) {
-                return@repeatable
-            }
+        if (!result.isAccepted) {
+            return@repeatable
+        }
 
-            ScaffoldMovementPlanner.trackPlacedBlock(target)
-            ScaffoldEagleFeature.onBlockPlacement()
+        ScaffoldMovementPlanner.trackPlacedBlock(target)
+        ScaffoldEagleFeature.onBlockPlacement()
 
-            if (player.isOnGround) {
-                player.velocity.x *= speedModifier
-                player.velocity.z *= speedModifier
-            }
-            if (result.shouldSwingHand() && swing) {
-                player.swingHand(handToInteractWith)
-            }
+        if (player.isOnGround) {
+            player.velocity.x *= speedModifier
+            player.velocity.z *= speedModifier
+        }
+        if (result.shouldSwingHand() && swing) {
+            player.swingHand(handToInteractWith)
+        }
 
-            currentTarget = null
+        currentTarget = null
 
-            delay.random().let {
-                if (it > 0) {
-                    wait(it)
-                }
+        delay.random().let {
+            if (it > 0) {
+                wait(it)
             }
         }
+    }
 
     private fun findBestValidHotbarSlotForTarget(): Int? {
         val bestSlot =
@@ -469,8 +464,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val isTargetUnderPlayer = context.blockPos.y <= player.blockY - 1
                 val isTowering =
                     context.blockPos.y == player.blockY - 1 &&
-                            canPlaceOnFace &&
-                            context.side == Direction.UP
+                        canPlaceOnFace &&
+                        context.side == Direction.UP
 
                 isTargetUnderPlayer && !isTowering
             }

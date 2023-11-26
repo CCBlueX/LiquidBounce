@@ -105,53 +105,53 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             return currentChargeRandom!!
         }
 
-        val tickRepeatable =
-            handler<GameTickEvent> {
-                val currentItem = player.activeItem?.item
+        val tickRepeatable = handler<GameTickEvent> {
+            val currentItem = player.activeItem?.item
 
-                // Should check if player is using bow
-                if (currentItem !is BowItem && currentItem !is TridentItem) {
-                    return@handler
-                }
-
-                if (player.itemUseTime < charged + getChargedRandom()) { // Wait until the bow is fully charged
-                    return@handler
-                }
-                if (!lastShotTimer.hasElapsed(delayBetweenShots.toLong())) {
-                    return@handler
-                }
-
-                if (requiresHypotheticalHit) {
-                    val hypotheticalHit = getHypotheticalHit()
-
-                    if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
-                        return@handler
-                    }
-
-                    if (ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(hypotheticalHit)) {
-                        return@handler
-                    }
-                } else if (BowAimbotOptions.enabled) {
-                    if(BowAimbotOptions.targetTracker.lockedOnTarget == null) {
-                        return@handler
-                    }
-
-                    val targetRotation = RotationManager.aimPlan ?: return@handler
-
-                    val aimDifference = RotationManager.rotationDifference(RotationManager.currentRotation
-                        ?: player.rotation, targetRotation.rotation)
-
-                    if (aimDifference > aimThreshold) {
-                        return@handler
-                    }
-                }
-
-                interaction.stopUsingItem(player)
-                updateChargeRandom()
+            // Should check if player is using bow
+            if (currentItem !is BowItem && currentItem !is TridentItem) {
+                return@handler
             }
 
+            if (player.itemUseTime < charged + getChargedRandom()) { // Wait until the bow is fully charged
+                return@handler
+            }
+            if (!lastShotTimer.hasElapsed(delayBetweenShots.toLong())) {
+                return@handler
+            }
+
+            if (requiresHypotheticalHit) {
+                val hypotheticalHit = getHypotheticalHit()
+
+                if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
+                    return@handler
+                }
+
+                if (ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(hypotheticalHit)) {
+                    return@handler
+                }
+            } else if (BowAimbotOptions.enabled) {
+                if (BowAimbotOptions.targetTracker.lockedOnTarget == null) {
+                    return@handler
+                }
+
+                val targetRotation = RotationManager.aimPlan ?: return@handler
+
+                val aimDifference = RotationManager.rotationDifference(
+                    RotationManager.rotationForServer, targetRotation.rotation
+                )
+
+                if (aimDifference > aimThreshold) {
+                    return@handler
+                }
+            }
+
+            interaction.stopUsingItem(player)
+            updateChargeRandom()
+        }
+
         fun getHypotheticalHit(): AbstractClientPlayerEntity? {
-            val rotation = RotationManager.currentRotation ?: player.rotation
+            val rotation = RotationManager.rotationForServer
             val yaw = rotation.yaw
             val pitch = rotation.pitch
 
@@ -180,8 +180,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
                     val playerHitBox =
                         Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
-                        .expand(0.3)
-                        .offset(player.pos)
+                            .expand(0.3)
+                            .offset(player.pos)
 
                     val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
@@ -372,7 +372,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                             (velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX),
                         ),
                     )
-                ).toFloat(),
+                    ).toFloat(),
             ),
             velocity,
             travelledOnX,
@@ -408,25 +408,24 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     private object FastChargeOptions : ToggleableConfigurable(this, "FastCharge", false) {
         val packets by int("Packets", 20, 3..20)
 
-        val tickRepeatable =
-            handler<GameTickEvent> {
-                val player = mc.player ?: return@handler
+        val tickRepeatable = handler<GameTickEvent> {
+            val player = mc.player ?: return@handler
 
-                val currentItem = player.activeItem
+            val currentItem = player.activeItem
 
-                // Should accelerated game ticks when using bow
-                if (currentItem?.item is BowItem) {
-                    repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
-                        network.sendPacket(
-                            PlayerMoveC2SPacket.OnGroundOnly(true),
-                        ) // Just show visual effect (not required to work - but looks better)
-                        player.tickActiveItemStack()
-                    }
-
-                    // Shoot with bow (auto shoot has to be enabled)
-                    // TODO: Depend on Auto Shoot
+            // Should accelerated game ticks when using bow
+            if (currentItem?.item is BowItem) {
+                repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
+                    network.sendPacket(
+                        PlayerMoveC2SPacket.OnGroundOnly(true),
+                    ) // Just show visual effect (not required to work - but looks better)
+                    player.tickActiveItemStack()
                 }
+
+                // Shoot with bow (auto shoot has to be enabled)
+                // TODO: Depend on Auto Shoot
             }
+        }
     }
 
     init {
