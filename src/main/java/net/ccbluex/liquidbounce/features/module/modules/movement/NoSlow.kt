@@ -43,18 +43,18 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
-        val heldItem = thePlayer.heldItem ?: return
-        val currentItem = thePlayer.inventory.currentItem
+        val player = mc.thePlayer ?: return
+        val heldItem = player.heldItem ?: return
+        val currentItem = player.inventory.currentItem
 
         if (!isMoving) {
             return
         }
 
-        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && thePlayer.isUsingItem) {
+        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && player.isUsingItem) {
             when (consumePacket.lowercase()) {
                 "aac5" -> {
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f))
                 }
                 "switchitem" -> {
                     when (event.eventState) {
@@ -86,7 +86,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
             }
         }
 
-        if (heldItem.item is ItemSword && thePlayer.isBlocking) {
+        if (heldItem.item is ItemSword && player.isBlocking) {
             when (swordMode.lowercase()) {
                 "none" -> {
                     return
@@ -102,7 +102,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
                         EventState.POST -> sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f
                             )
                         )
 
@@ -128,7 +128,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     if (event.eventState == EventState.POST) {
                         sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f
                             )
                         )
                     }
@@ -163,7 +163,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
      */
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (swordMode.lowercase() == "updatedncp") {
+        if (swordMode.lowercase() == "updatedncp" && mc.thePlayer.heldItem.item is ItemSword && mc.thePlayer.isBlocking) {
             mc.thePlayer.stopXZ()
         }
     }
