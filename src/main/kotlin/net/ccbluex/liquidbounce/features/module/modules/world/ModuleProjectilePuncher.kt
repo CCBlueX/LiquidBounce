@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -62,7 +62,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         targetTracker.cleanup()
     }
 
-    val tickHandler = handler<PlayerMovementTickEvent> {
+    val tickHandler = handler<SimulatedTickEvent> {
         if (player.isSpectator) {
             return@handler
         }

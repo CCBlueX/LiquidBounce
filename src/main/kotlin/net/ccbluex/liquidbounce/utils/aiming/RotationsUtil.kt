@@ -20,16 +20,15 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.lastRotation
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -203,12 +202,21 @@ object RotationManager : Listenable {
      * Updates at movement tick, so we can update the rotation before the movement runs and the client sends the packet
      * to the server.
      */
-    val tickHandler = handler<PlayerMovementTickEvent>(priority = -100) {
-        if (aimPlan == null) {
-            return@handler
-        }
+    val tickHandler = handler<MovementInputEvent>(priority = -100) { event ->
+        val player = mc.player ?: return@handler
 
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
+        )
+
+        simulatedPlayer.tick()
+        val oldPos = player.pos
+        player.setPosition(simulatedPlayer.pos)
+
+        EventManager.callEvent(SimulatedTickEvent())
         update()
+
+        player.setPosition(oldPos)
     }
 
     /**

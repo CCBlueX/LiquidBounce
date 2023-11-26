@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -47,7 +47,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         targetRotation = null
     }
 
-    val tickHandler = handler<PlayerMovementTickEvent> { event ->
+    val tickHandler = handler<SimulatedTickEvent> { event ->
         targetRotation = findNextTargetRotation()
         targetRotation?.let { RotationManager.aimAt(it, true, rotationsConfigurable) }
     }
