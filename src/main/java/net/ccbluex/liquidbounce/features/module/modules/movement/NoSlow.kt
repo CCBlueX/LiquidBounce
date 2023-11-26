@@ -24,12 +24,12 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 
 object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
-    private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "UNCP", "AAC5", "SwitchItem"), "None")
+    private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "UpdatedNCP", "AAC5", "SwitchItem"), "None")
 
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "UNCP","AAC5", "SwitchItem"), "None")
+    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem"), "None")
 
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
@@ -67,7 +67,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                         else -> {}
                     }
                 }
-                "uncp" -> {
+                "updatedncp" -> {
                     when (event.eventState) {
                         EventState.POST -> {
                             sendPacket(
@@ -110,7 +110,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     }
                 }
 
-                "uncp" -> {
+                "updatedncp" -> {
                     when (event.eventState) {
                         EventState.POST -> {
                             sendPacket(
@@ -163,7 +163,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
      */
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (swordMode.lowercase() == "uncp") {
+        if (swordMode.lowercase() == "updatedncp") {
             mc.thePlayer.stopXZ()
         }
     }
