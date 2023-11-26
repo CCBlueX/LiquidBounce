@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 /**
  * A module which applies fixes to the client that might cause issues on some servers or anti cheats.
  */
-object ModuleClientFixes : Module("ClientFixes", Category.EXPLOIT) {
+object ModuleClientFixes : Module("ClientFixes", Category.MISC) {
 
     /**
      * A fix for old anti-cheats which check the packet order by 1.8 standards, while we are at 1.20+.
