@@ -388,7 +388,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
 
-        if (target == null || (!AutoBlock.onScanRange && target.boxedDistanceTo(player) > range)) {
+        if (target == null) {
             AutoBlock.stopBlocking()
 
             // Deal with fake swing
@@ -406,7 +406,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         if (target != null) {
             // Check if our target is in range, otherwise deal with auto block
             if (target.boxedDistanceTo(player) > range) {
-                AutoBlock.startBlocking()
+                if (AutoBlock.onScanRange) {
+                    AutoBlock.startBlocking()
+                } else {
+                    AutoBlock.stopBlocking()
+
+                    // Deal with fake swing
+                    if (FailSwing.enabled) {
+                        wait(AutoBlock.tickOff)
+                        dealWithFakeSwing(target)
+                    }
+                }
                 return@repeatable
             }
 
