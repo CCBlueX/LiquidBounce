@@ -7,11 +7,8 @@ import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_
 import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -122,6 +119,7 @@ fun useHotbarSlotOrOffhand(item: HotbarItemSlot) {
         OffHandSlot -> {
             interactItem(Hand.OFF_HAND)
         }
+
         else -> {
             interactItem(Hand.MAIN_HAND) {
                 SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, 1)
@@ -158,9 +156,10 @@ class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal val delay by intRange("Delay", 2..4, 0..20)
     internal val invOpen by boolean("InvOpen", false)
     internal val noMove by boolean("NoMove", false)
+    internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
 
     val violatesNoMove
-        get() = noMove && mc.player?.moving == true
+        get() = noMove && (mc.player?.moving == true || noRotation && RotationManager.rotationForServer != RotationManager.serverRotation)
 }
 
 data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)
