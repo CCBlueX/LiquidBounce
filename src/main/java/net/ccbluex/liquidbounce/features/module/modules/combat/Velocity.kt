@@ -62,6 +62,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     // Legit
     private val legitDisableInAir by BoolValue("DisableInAir", true) { mode == "Legit" }
 
+    // Grim
+    private val grimVersionFix by BoolValue("1.9+", false)
+
     // Chance
     private val chance by IntegerValue("Chance", 100, 0..100) { mode == "Jump" || mode == "Legit" }
 
@@ -262,6 +265,10 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     if (packet is S12PacketEntityVelocity) {
                         val target = getNearByEntity(3F) ?: return
 
+                        // 1.9-
+                        if (!grimVersionFix)
+                            sendPacket(C0APacketAnimation())
+
                         repeat(12) {
                             sendPacket(C0FPacketConfirmTransaction())
                             sendPacket(
@@ -270,8 +277,12 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                                     C02PacketUseEntity.Action.ATTACK
                                 )
                             )
-                            sendPacket(C0APacketAnimation())
                         }
+
+                        // 1.9+
+                        if (grimVersionFix)
+                            sendPacket(C0APacketAnimation())
+
                         event.cancelEvent()
                         mc.thePlayer.motionY = packet.realMotionY
                         mc.thePlayer.stopXZ()
