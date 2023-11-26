@@ -123,7 +123,11 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
         suspendCoroutine { continuation = it }
     }
 
-    internal suspend fun sync() = wait { 1 }
+    /**
+     * Syncs the coroutine to the game tick.
+     * It does not matter if we wait 0 or 1 ticks, it will always sync to the next tick.
+     */
+    internal suspend fun sync() = wait { 0 }
 
 }
 
