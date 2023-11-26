@@ -12,6 +12,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.realMotionX
@@ -259,19 +261,18 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     if (packet is S12PacketEntityVelocity) {
                         val target = LiquidBounce.targetManager.getNearByEntity(3f)
                         repeat(12) {
-                            mc.netHandler.addToSendQueue(C0FPacketConfirmTransaction())
-                            mc.thePlayer.sendQueue.addToSendQueue(
+                            sendPacket(C0FPacketConfirmTransaction())
+                            sendPacket(
                                 C02PacketUseEntity(
                                     target,
                                     C02PacketUseEntity.Action.ATTACK
                                 )
                             )
-                            mc.thePlayer.sendQueue.addToSendQueue(C0APacketAnimation())
+                            sendPacket(C0APacketAnimation())
                         }
                         event.cancelEvent()
-                        mc.thePlayer.motionY = packet.motionY.toDouble() / 8000.0
-                        mc.thePlayer.motionX *= 0
-                        mc.thePlayer.motionZ *= 0
+                        mc.thePlayer.motionY = packet.realMotionY
+                        mc.thePlayer.stopXZ()
                     }
                 }
 
