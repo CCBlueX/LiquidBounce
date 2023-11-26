@@ -28,8 +28,10 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.*
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
+import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.SplashPotionItem
@@ -81,7 +83,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
             return false
         }
 
-        if (RotationManager.serverRotation.pitch <= 80) {
+        if (RotationManager.rotationForServer.pitch <= 80) {
             RotationManager.aimAt(
                 Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
                 configurable = rotations,

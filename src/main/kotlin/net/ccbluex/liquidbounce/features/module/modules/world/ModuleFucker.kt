@@ -86,7 +86,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
 
         val destroyerTarget = currentTarget ?: return@repeatable
-        val currentRotation = RotationManager.serverRotation
+        val currentRotation = RotationManager.rotationForServer
 
         // Check if we are already looking at the block
         val rayTraceResult = raytraceBlock(
@@ -112,7 +112,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
-            wait { delay }
+            waitTicks(delay)
         } else {
             // Air is not very interesting. Trust me. It's better to breath it instead of breaking it.
             if (raytracePos.getState()?.isAir == true) {
@@ -139,7 +139,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 }
             }
 
-            wait { delay }
+            waitTicks(delay)
         }
     }
 
