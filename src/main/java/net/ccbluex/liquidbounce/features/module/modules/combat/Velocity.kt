@@ -9,16 +9,25 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
+import net.ccbluex.liquidbounce.utils.realMotionX
+import net.ccbluex.liquidbounce.utils.realMotionY
+import net.ccbluex.liquidbounce.utils.realMotionZ
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.play.client.C0FPacketConfirmTransaction
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import kotlin.math.atan2
@@ -31,7 +40,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
      */
     private val mode by ListValue(
         "Mode", arrayOf(
-            "Simple", "AAC", "AACPush", "AACZero", "AACv4",
+            "Simple", "AAC", "AACPush", "AACZero", "AACv4", "GrimCombat",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"
         ), "Simple"
     )
@@ -52,6 +61,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     // Legit
     private val legitDisableInAir by BoolValue("DisableInAir", true) { mode == "Legit" }
+
+    // Grim
+    private val grimVersionFix by BoolValue("1.9+", false)
 
     // Chance
     private val chance by IntegerValue("Chance", 100, 0..100) { mode == "Jump" || mode == "Legit" }
@@ -249,6 +261,34 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
                 "aac", "reverse", "smoothreverse", "aaczero" -> hasReceivedVelocity = true
 
+                "grimcombat" -> {
+                    if (packet is S12PacketEntityVelocity) {
+                        val target = getNearByEntity(3F) ?: return
+
+                        // 1.9-
+                        if (!grimVersionFix)
+                            sendPacket(C0APacketAnimation())
+
+                        repeat(12) {
+                            sendPacket(C0FPacketConfirmTransaction())
+                            sendPacket(
+                                C02PacketUseEntity(
+                                    target,
+                                    C02PacketUseEntity.Action.ATTACK
+                                )
+                            )
+                        }
+
+                        // 1.9+
+                        if (grimVersionFix)
+                            sendPacket(C0APacketAnimation())
+
+                        event.cancelEvent()
+                        mc.thePlayer.motionY = packet.realMotionY
+                        mc.thePlayer.stopXZ()
+                    }
+                }
+
                 "jump" -> {
                     var packetDirection: Double = 0.0
                     when (packet) {
@@ -404,5 +444,13 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 }
             }
         }
+    }
+
+    private fun getNearByEntity(radius: Float): EntityLivingBase? {
+        return mc.theWorld.loadedEntityList.filter {
+            mc.thePlayer.getDistanceToEntity(it) < radius && EntityUtils.isSelected(
+                it, true
+            )
+        }.minByOrNull { it.getDistanceToEntity(mc.thePlayer) } as EntityLivingBase?
     }
 }
