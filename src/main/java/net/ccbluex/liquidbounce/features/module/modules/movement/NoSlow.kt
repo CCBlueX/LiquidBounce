@@ -163,7 +163,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
      */
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (swordMode.lowercase() == "updatedncp") {
+        if (swordMode.lowercase() == "updatedncp" && heldItem.item is ItemSword && thePlayer.isBlocking) {
             mc.thePlayer.stopXZ()
         }
     }
