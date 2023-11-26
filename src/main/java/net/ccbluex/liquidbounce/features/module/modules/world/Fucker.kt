@@ -49,8 +49,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private val action by ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
     private var surroundings by BoolValue("Surroundings", true)
     private val hypixelMode by BoolValue("Hypixel-Bypass", false)
-
-    private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
+    private val instant by BoolValue("Instant", false) { (action == "Destroy" || surroundings) && !hypixelMode}
 
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
     private val swing by BoolValue("Swing", true)
@@ -137,9 +136,9 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
             }
         }
 
-        val block = Block.getIdFromBlock(getBlock(currentPos)) == targetId
+        val hasBlock = Block.getIdFromBlock(getBlock(currentPos)) == targetId
         if (hypixelMode) {
-            if (block) {
+            if (hasBlock) {
                 val blockPos = currentPos.up()
                 if (getBlock(blockPos) !is BlockAir) {
                     if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z)
@@ -214,7 +213,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 }
 
                 // Break block
-                if (instant) {
+                if (instant && !hypixelMode) {
                     // CivBreak style block breaking
                     sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
 
