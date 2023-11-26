@@ -259,7 +259,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
                 "grimcombat" -> {
                     if (packet is S12PacketEntityVelocity) {
-                        val target = LiquidBounce.targetManager.getNearByEntity(3f)
+                        val target = LiquidBounce.targetManager.getNearByEntity(3f) ?: return
                         repeat(12) {
                             sendPacket(C0FPacketConfirmTransaction())
                             sendPacket(
