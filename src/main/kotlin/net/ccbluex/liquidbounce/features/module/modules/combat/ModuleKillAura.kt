@@ -140,6 +140,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             if (onlyWhenInDanger && !isInDanger()) {
+                stopBlocking()
                 return
             }
 
@@ -203,27 +204,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         private fun canBlock(itemStack: ItemStack) = itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
 
-        private fun isInDanger(): Boolean {
-            val possibleTargets = targetTracker.enemies()
-
-            for (target in possibleTargets) {
-                if (target.isRemoved) {
-                    continue
-                }
-
-                // Check if the target is facing the player
-                if (facingEnemy(
-                        fromEntity = target, toEntity = player, rotation = target.rotation,
-                        range = range.toDouble(),
-                        wallsRange = wallRange.toDouble()
-                    )
-                ) {
-                    return true
-                }
+        private fun isInDanger() = targetTracker.enemies()
+            .any { target -> facingEnemy(fromEntity = target, toEntity = player, rotation = target.rotation,
+                range = range.toDouble(), wallsRange = wallRange.toDouble())
             }
-
-            return false
-        }
 
     }
 
