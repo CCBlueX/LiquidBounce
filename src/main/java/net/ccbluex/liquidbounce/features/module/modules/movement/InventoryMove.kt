@@ -26,6 +26,7 @@ import net.minecraft.client.settings.GameSettings
 
 object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
+    private val allowSneaking by BoolValue("AllowSneaking", false)
     private val notInChests by BoolValue("NotInChests", false)
     val aacAdditionPro by BoolValue("AACAdditionPro", false)
     private val intave by BoolValue("Intave", false)
@@ -51,7 +52,7 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
         mc.gameSettings.keyBindLeft,
         mc.gameSettings.keyBindJump,
         mc.gameSettings.keyBindSprint,
-        mc.gameSettings.keyBindSneak
+        if (allowSneaking) mc.gameSettings.keyBindSneak
     )
 
     @EventTarget
