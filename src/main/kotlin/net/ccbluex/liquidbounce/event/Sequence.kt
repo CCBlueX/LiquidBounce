@@ -22,7 +22,7 @@ import com.google.common.collect.Lists
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.coroutines.Continuation
@@ -38,8 +38,12 @@ object SequenceManager : Listenable {
 
     /**
      * Tick sequences
+     *
+     * We want it to run before everything else, so we set the priority to 1000
+     * This is because we want to tick the existing sequences before new ones are added and might be ticked
+     * in the same tick
      */
-    val entityTickHandler = handler<PlayerMovementTickEvent> {
+    val tickSequences = handler<GameTickEvent>(priority = 1000) {
         for (sequence in sequences) {
             sequence.tick()
         }
