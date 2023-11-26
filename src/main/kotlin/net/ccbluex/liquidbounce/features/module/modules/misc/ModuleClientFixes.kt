@@ -39,6 +39,6 @@ object ModuleClientFixes : Module("ClientFixes", Category.MISC) {
      * Of course this is something to be fixed by the anti-cheat, but we cannot rely on that and have to fix it
      * ourselves.
      */
-    val fixInteractRotationUse by boolean("RemoveInteractItemMoveC2S", false)
+    val fixInteractRotationUse by boolean("RmInteractItemMoveC2S", false)
 
 }
