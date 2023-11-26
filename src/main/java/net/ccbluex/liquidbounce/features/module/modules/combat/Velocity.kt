@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0FPacketConfirmTransaction
@@ -259,23 +260,21 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
                 "grimcombat" -> {
                     if (packet is S12PacketEntityVelocity) {
-                        val target = KillAura.target ?: return
+                        val target = getNearByEntity(3F) ?: return
 
-                        if (mc.thePlayer.getDistanceToEntity(target) < 3 && EntityUtils.isSelected(target, true)) {
-                            repeat(12) {
-                                sendPacket(C0FPacketConfirmTransaction())
-                                sendPacket(
-                                    C02PacketUseEntity(
-                                        target,
-                                        C02PacketUseEntity.Action.ATTACK
-                                    )
+                        repeat(12) {
+                            sendPacket(C0FPacketConfirmTransaction())
+                            sendPacket(
+                                C02PacketUseEntity(
+                                    target,
+                                    C02PacketUseEntity.Action.ATTACK
                                 )
-                                sendPacket(C0APacketAnimation())
-                            }
-                            event.cancelEvent()
-                            mc.thePlayer.motionY = packet.realMotionY
-                            mc.thePlayer.stopXZ()
+                            )
+                            sendPacket(C0APacketAnimation())
                         }
+                        event.cancelEvent()
+                        mc.thePlayer.motionY = packet.realMotionY
+                        mc.thePlayer.stopXZ()
                     }
                 }
 
@@ -434,5 +433,13 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 }
             }
         }
+    }
+
+    private fun getNearByEntity(radius: Float): EntityLivingBase? {
+        return mc.theWorld.loadedEntityList.filter {
+            mc.thePlayer.getDistanceToEntity(it) < radius && EntityUtils.isSelected(
+                it, true
+            )
+        }.minByOrNull { it.getDistanceToEntity(mc.thePlayer) } as EntityLivingBase?
     }
 }
