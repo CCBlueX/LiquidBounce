@@ -52,7 +52,7 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
         mc.gameSettings.keyBindLeft,
         mc.gameSettings.keyBindJump,
         mc.gameSettings.keyBindSprint,
-        if (allowSneaking) mc.gameSettings.keyBindSneak
+        if (allowSneaking) mc.gameSettings.keyBindSneak else TODO()
     )
 
     @EventTarget
