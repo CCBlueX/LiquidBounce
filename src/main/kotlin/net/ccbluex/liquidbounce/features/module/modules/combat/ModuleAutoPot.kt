@@ -164,7 +164,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         if (healthPotion && healthIsLow) {
             allowedStatusEffects += StatusEffects.INSTANT_HEALTH
         }
-        if (regenPotion && healthIsLow) {
+        if (regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
             allowedStatusEffects += StatusEffects.REGENERATION
         }
         if (strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)) {
