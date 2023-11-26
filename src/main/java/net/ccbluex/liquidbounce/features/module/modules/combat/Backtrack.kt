@@ -65,11 +65,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private val smart by BoolValue("Smart", true) { mode == "Modern" }
 
     // ESP
-    private val esp by BoolValue("ESP", true) { mode == "Modern" }
-        private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" && esp }
-        private val red by IntegerValue("R", 0, 0..255) { !rainbow && mode == "Modern" && esp }
-        private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" && esp }
-        private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" && esp }
+    private val esp by BoolValue("ESP", true, subjective = true) { mode == "Modern" }
+        private val rainbow by BoolValue("Rainbow", true, subjective = true) { mode == "Modern" && esp }
+        private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+        private val green by IntegerValue("G", 255, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+        private val blue by IntegerValue("B", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
