@@ -358,7 +358,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        if ((isInInventoryScreen && !ignoreOpenInventory) || player.isSpectator || player.isDead || player.health <= 0f) {
+        if ((isInInventoryScreen && !ignoreOpenInventory) || player.isSpectator || player.isDead) {
             // Cleanup current target tracker
             targetTracker.cleanup()
             return@handler
@@ -369,7 +369,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     val repeatable = repeatable {
-        if (player.isDead || player.isSpectator || player.health <= 0f) {
+        if (player.isDead || player.isSpectator) {
             return@repeatable
         }
 
