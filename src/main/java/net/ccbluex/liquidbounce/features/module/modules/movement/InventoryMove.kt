@@ -50,7 +50,8 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDete
         mc.gameSettings.keyBindRight,
         mc.gameSettings.keyBindLeft,
         mc.gameSettings.keyBindJump,
-        mc.gameSettings.keyBindSprint
+        mc.gameSettings.keyBindSprint,
+        mc.gameSettings.keyBindSneak
     )
 
     @EventTarget
