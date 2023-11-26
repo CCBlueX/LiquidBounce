@@ -54,7 +54,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
         if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && player.isUsingItem) {
             when (consumePacket.lowercase()) {
                 "aac5" -> {
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f))
                 }
                 "switchitem" -> {
                     when (event.eventState) {
@@ -102,7 +102,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
                         EventState.POST -> sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f
                             )
                         )
 
@@ -128,7 +128,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     if (event.eventState == EventState.POST) {
                         sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f
                             )
                         )
                     }
