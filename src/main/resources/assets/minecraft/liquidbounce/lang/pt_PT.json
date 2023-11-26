@@ -302,6 +302,8 @@
         
         "module.teleport.description": "Permite que tu teleportes.",
 
+        "module.timerRange.description": "UNTRANSLATED: Allows you to manipulate the game speed in order to gain an advantage against your enemies.",
+
         "module.timer.description": "Muda a velocidade do jogo inteiro.",
         
         "module.tower.description": "Automaticamente constrói uma torre em baixo de ti.",
