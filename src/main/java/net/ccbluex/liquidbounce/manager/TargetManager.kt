@@ -61,7 +61,7 @@ object TargetManager : Listenable, MinecraftInstance() {
 
         if (target is EntityLivingBase && EntityUtils.isSelected(target, true)) {
             this.target = target
-            if (!attackedEntityList.contains(target)) attackedEntityList.add(target)
+            if (target !in attackedEntityList) attackedEntityList += target
         }
         lastAttackTimer.reset()
     }
@@ -74,14 +74,10 @@ object TargetManager : Listenable, MinecraftInstance() {
     }
 
     fun getNearByEntity(radius: Float): EntityLivingBase? {
-        return try {
-            mc.theWorld.loadedEntityList.filter {
-                mc.thePlayer.getDistanceToEntity(it) < radius && EntityUtils.isSelected(
-                    it, true
-                )
-            }.sortedBy { it.getDistanceToEntity(mc.thePlayer) }[0] as EntityLivingBase?
-        } catch (e: Exception) {
-            null
-        }
+        return mc.theWorld.loadedEntityList.filter {
+            mc.thePlayer.getDistanceToEntity(it) < radius && EntityUtils.isSelected(
+                it, true
+            )
+        }.minByOrNull { it.getDistanceToEntity(mc.thePlayer) } as EntityLivingBase?
     }
 }
