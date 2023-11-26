@@ -159,7 +159,8 @@ class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
 
     val violatesNoMove
-        get() = noMove && (mc.player?.moving == true || noRotation && RotationManager.rotationForServer != RotationManager.serverRotation)
+        get() = noMove && (mc.player?.moving == true || noRotation
+            && RotationManager.rotationForServer != RotationManager.serverRotation)
 }
 
 data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)
