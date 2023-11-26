@@ -65,10 +65,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private val smart by BoolValue("Smart", true) { mode == "Modern" }
 
     // ESP
-    private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" }
-    private val red by IntegerValue("R", 0, 0..255) { !rainbow && mode == "Modern" }
-    private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" }
-    private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" }
+    private val esp by BoolValue("ESP", true) { mode == "Modern" }
+        private val rainbow by BoolValue("Rainbow", true) { mode == "Modern" && esp }
+        private val red by IntegerValue("R", 0, 0..255) { !rainbow && mode == "Modern" && esp }
+        private val green by IntegerValue("G", 255, 0..255) { !rainbow && mode == "Modern" && esp }
+        private val blue by IntegerValue("B", 0, 0..255) { !rainbow && mode == "Modern" && esp }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
@@ -289,7 +290,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             "modern" -> {
-                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw)
+                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw || !esp )
                     return
 
                 val renderManager = mc.renderManager
