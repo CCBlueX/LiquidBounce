@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
@@ -40,8 +41,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import kotlin.math.max
 
 /**
  * Fucker module
@@ -58,11 +59,13 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             it
         }
     }
+    private val surroundings by boolean("Surroundings", true)
     private val visualSwing by boolean("VisualSwing", true)
-    //private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
-    private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
+    private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
+    private val delay by int("Delay", 0, 0..20)
+    private val action by enumChoice("Action", DestroyAction.DESTROY, DestroyAction.values())
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-    private val switchDelay by int("SwitchDelay", 0, 0..20)
+
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Rotation
@@ -70,64 +73,73 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private var currentTarget: DestroyerTarget? = null
 
-    // todo: Remove when the blocks option actually works
-    private val targetedBlocks = findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
-
     val moduleRepeatable = repeatable {
-        if (mc.currentScreen is HandledScreen<*>) {
-            wait { switchDelay }
+        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
 
         updateTarget()
 
+        // Check if blink is enabled - if so, we don't want to do anything.
         if (ModuleBlink.enabled) {
             return@repeatable
         }
 
-        val curr = currentTarget ?: return@repeatable
-        val currentRotation = RotationManager.currentRotation ?: return@repeatable
+        val destroyerTarget = currentTarget ?: return@repeatable
+        val currentRotation = RotationManager.rotationForServer
 
+        // Check if we are already looking at the block
         val rayTraceResult = raytraceBlock(
-            range.toDouble(), currentRotation, curr.pos, curr.pos.getState() ?: return@repeatable
+            max(range, wallRange).toDouble(),
+            currentRotation,
+            destroyerTarget.pos,
+            destroyerTarget.pos.getState() ?: return@repeatable
         ) ?: return@repeatable
 
-        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr.pos) {
+        // Check if the raytrace result includes a block, if not we don't want to deal with it.
+        if (rayTraceResult.type != HitResult.Type.BLOCK) {
             return@repeatable
         }
 
-        if (curr.action == DestroyAction.USE) {
+        val raytracePos = rayTraceResult.blockPos
+        if (raytracePos != destroyerTarget.pos) {
+            return@repeatable
+        }
+
+        // Use action should be used if the block is the same as the current target and the action is set to use.
+        if (destroyerTarget.action == DestroyAction.USE) {
             if (interaction.interactBlock(player, Hand.MAIN_HAND, rayTraceResult) == ActionResult.SUCCESS) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
-            wait { switchDelay }
-
-            return@repeatable
+            waitTicks(delay)
         } else {
-            val blockPos = rayTraceResult.blockPos
+            // Air is not very interesting. Trust me. It's better to breath it instead of breaking it.
+            if (raytracePos.getState()?.isAir == true) {
+                return@repeatable
+            }
 
-            if (blockPos.getState()?.isAir == false) {
-                val direction = rayTraceResult.side
+            val direction = rayTraceResult.side
 
-                if (forceImmediateBreak) {
-                    network.sendPacket(
-                        PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction
-                        )
+            if (forceImmediateBreak) {
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, raytracePos, direction
                     )
+                )
+                swingHand()
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, raytracePos, direction
+                    )
+                )
+            } else {
+                if (interaction.updateBlockBreakingProgress(raytracePos, direction)) {
                     swingHand()
-                    network.sendPacket(
-                        PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction
-                        )
-                    )
-                } else {
-                    if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
-                        swingHand()
-                    }
                 }
             }
+
+            waitTicks(delay)
         }
     }
 
@@ -147,40 +159,55 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         val eyesPos = player.eyes
 
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
-            targetedBlocks.contains(state.block) && getNearestPoint(
+            targets.contains(state.block) && getNearestPoint(
                 eyesPos, Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
         val (pos, state) = blockToProcess
 
-        val rt = raytraceBlock(
-            player.eyes, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
+        val raytrace = raytraceBlock(
+            eyesPos, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
         )
 
-        // We got a free angle at the block? Cool.
-        if (rt != null) {
-            val (rotation, _) = rt
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+        // Check if we got a free angle to the block
+        if (raytrace != null) {
+            val (rotation, _) = raytrace
+            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
             this.currentTarget = DestroyerTarget(pos, this.action)
             return
         }
 
-        val raytraceResult = mc.world?.raycast(
+        // Is there any block in the way?
+        if (surroundings) {
+            updateSurroundings(pos, state)
+        }
+    }
+
+    private fun updateSurroundings(initialPosition: BlockPos, state: BlockState) {
+        val raytraceResult = world.raycast(
             RaycastContext(
                 player.eyes,
-                Vec3d.of(pos).add(0.5, 0.5, 0.5),
+                initialPosition.toCenterPos(),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
                 player
             )
         ) ?: return
 
-        // Failsafe. Should not trigger
-        if (raytraceResult.type != HitResult.Type.BLOCK) return
+        if (raytraceResult.type != HitResult.Type.BLOCK) {
+            return
+        }
 
-        this.currentTarget = DestroyerTarget(raytraceResult.blockPos, DestroyAction.DESTROY)
+        val raytrace = raytraceBlock(
+            player.eyes, raytraceResult.blockPos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
+        ) ?: return
+
+        val (rotation, _) = raytrace
+        RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+
+        this.currentTarget = DestroyerTarget(raytraceResult.blockPos, this.action)
     }
 
     data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)

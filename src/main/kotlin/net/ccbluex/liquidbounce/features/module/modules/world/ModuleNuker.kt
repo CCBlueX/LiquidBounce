@@ -94,8 +94,10 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
                 for (x in -size..size) {
                     for (z in -size..size) {
-                        val vec3 = Vec3(playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
-                            playerPosition.z.toDouble() + z)
+                        val vec3 = Vec3(
+                            playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
+                            playerPosition.z.toDouble() + z
+                        )
                         val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                         val baseColor = base.alpha(50)
@@ -163,7 +165,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             updateSingleTarget()
 
             val curr = currentTarget ?: return@repeatable
-            val currentRotation = RotationManager.serverRotation
+            val currentRotation = RotationManager.rotationForServer
 
             val rayTraceResult = raytraceBlock(
                 range.toDouble() + 1, currentRotation, curr.pos, curr.pos.getState() ?: return@repeatable
@@ -237,12 +239,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             for ((pos, state) in targets) {
                 val raytrace = raytraceBlock(
                     ModuleNuker.player.eyes, pos, state, range = range.toDouble(),
-                    wallsRange = wallRange.toDouble())
+                    wallsRange = wallRange.toDouble()
+                )
 
                 // Check if there is a free angle to the block.
                 if (raytrace != null) {
                     val (rotation, _) = raytrace
-                    RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+                    RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
                     currentTarget = DestroyerTarget(pos, rotation)
                     return
@@ -408,7 +411,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                         PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
                     )
                     sendOutPackets++
-               }
+                }
             }
 
             if (packetChronometer.hasElapsed(1000)) {
@@ -446,10 +449,12 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                     RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
                     RotationManager.serverRotation
                 )
+
                 ComparisonMode.CLIENT_ROTATION -> RotationManager.rotationDifference(
                     RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
                     player.rotation
                 )
+
                 ComparisonMode.DISTANCE -> pos.getCenterDistanceSquared()
                 ComparisonMode.HARDNESS -> state.getHardness(world, pos).toDouble()
             }

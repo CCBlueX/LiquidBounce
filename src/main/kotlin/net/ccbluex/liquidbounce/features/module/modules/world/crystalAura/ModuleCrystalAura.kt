@@ -63,13 +63,12 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         tree(SelfPreservationOptions)
     }
 
-    val networkTickHandler =
-        repeatable {
-            // Make the crystal placer run
-            SubmoduleCrystalPlacer.tick()
-            // Make the crystal destroyer run
-            SubmoduleCrystalDestroyer.tick()
-        }
+    val networkTickHandler = repeatable {
+        // Make the crystal placer run
+        SubmoduleCrystalPlacer.tick()
+        // Make the crystal destroyer run
+        SubmoduleCrystalDestroyer.tick()
+    }
 
     /**
      * Approximates how favorable an explosion of a crystal at [pos] in a given [world] would be

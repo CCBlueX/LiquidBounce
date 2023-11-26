@@ -18,20 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.rotation
 
 /**
  * Aimbot module
@@ -39,10 +34,12 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
  * Automatically faces selected entities around you.
  */
 object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
+
     private val range by float("Range", 4.2f, 1f..8f)
 
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
-    private val turnSpeed = tree(RotationsConfigurable())
+    private val pointTracker = tree(PointTracker())
+    private val rotationsConfigurable = tree(RotationsConfigurable(10f..30f))
 
     private var targetRotation: Rotation? = null
 
@@ -50,14 +47,9 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         targetRotation = null
     }
 
-    val tickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (event.state != EventState.PRE) {
-            return@handler
-        }
-
+    val tickHandler = handler<SimulatedTickEvent> { event ->
         targetRotation = findNextTargetRotation()
-
-        targetRotation?.let { RotationManager.aimAt(it, false, turnSpeed) }
+        targetRotation?.let { RotationManager.aimAt(it, true, rotationsConfigurable) }
     }
 
     private fun findNextTargetRotation(): Rotation? {
@@ -67,7 +59,23 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             }
 
             if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
-                val spot = raytraceBox(player.eyes, target.box, range = range.toDouble(), wallsRange = 0.0) ?: break
+                val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)
+                val rotationPreference = LeastDifferencePreference(RotationManager.rotationForServer, toPoint)
+
+                val spot = raytraceBox(
+                    fromPoint, cutOffBox, range = range.toDouble(), wallsRange = 0.0,
+                    rotationPreference = rotationPreference
+                )
+                    ?: raytraceBox(
+                        fromPoint, box, range = range.toDouble(), wallsRange = 0.0,
+                        rotationPreference = rotationPreference
+                    ) ?: continue
+
+                if (RotationManager.rotationDifference(player.rotation, spot.rotation) <=
+                    rotationsConfigurable.resetThreshold
+                ) {
+                    break
+                }
 
                 return spot.rotation
             }

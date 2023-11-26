@@ -55,9 +55,7 @@ object SubmoduleCrystalDestroyer {
         // aim on target
         RotationManager.aimAt(rotation, configurable = ModuleCrystalAura.rotations)
 
-        val serverRotation = RotationManager.serverRotation ?: return
-
-        if (!facingEnemy(target, range, serverRotation)) {
+        if (!facingEnemy(target, range, RotationManager.rotationForServer)) {
             return
         }
 

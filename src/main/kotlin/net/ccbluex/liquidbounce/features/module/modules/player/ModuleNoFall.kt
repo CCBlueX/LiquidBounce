@@ -177,7 +177,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
         val tickHandler = handler<GameTickEvent> {
             val target = currentTarget ?: return@handler
-            val rotation = RotationManager.currentRotation ?: return@handler
+            val rotation = RotationManager.rotationForServer
 
             val rayTraceResult = raycast(4.5, rotation) ?: return@handler
 

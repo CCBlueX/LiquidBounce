@@ -67,5 +67,8 @@ class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 @Nameable("playerStep")
 class PlayerStepEvent(var height: Float) : Event()
 
+@Nameable("playerStepSuccess")
+class PlayerStepSuccessEvent : Event()
+
 @Nameable("tickJump")
 class TickJumpEvent : Event()

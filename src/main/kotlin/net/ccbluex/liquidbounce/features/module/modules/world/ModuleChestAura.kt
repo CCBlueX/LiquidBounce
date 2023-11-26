@@ -103,7 +103,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         updateTarget()
 
         val curr = currentBlock ?: return@repeatable
-        val currentRotation = RotationManager.currentRotation ?: return@repeatable
+        val currentRotation = RotationManager.rotationForServer
 
         val rayTraceResult = raytraceBlock(
             range.toDouble(),
@@ -188,7 +188,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             ) ?: continue
 
             // aim on target
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
             nextBlock = pos
             break
         }
