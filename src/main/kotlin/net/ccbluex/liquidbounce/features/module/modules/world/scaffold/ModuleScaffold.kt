@@ -219,58 +219,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        val blockInHotbar = findBestValidHotbarSlotForTarget()
-
-        val bestStick =
-            if (blockInHotbar == null) {
-                ItemStack(Items.SANDSTONE, 64)
-            } else {
-                player.inventory.getStack(blockInHotbar)
-            }
-
-        val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
-
-        // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
-        val priorityGetter: (Vec3i) -> Double =
-            if (optimalLine != null) {
-                { vec ->
-                    -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
-                }
-            } else {
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
-            }
-
-        val searchOptions =
-            BlockPlacementTargetFindingOptions(
-                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-                bestStick,
-                getFacePositionFactoryForConfig(),
-                priorityGetter,
-            )
-
-        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
-
         val target = currentTarget ?: return@handler
-
-        // Debug stuff
-        if (optimalLine != null) {
-            val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
-            val a = optimalLine.getNearestPointTo(b)
-
-            // Debug the line a-b
-            ModuleDebug.debugGeometry(
-                ModuleScaffold,
-                "lineToBlock",
-                ModuleDebug.DebuggedLineSegment(
-                    from = Vec3(a),
-                    to = Vec3(b),
-                    Color4b(255, 0, 0, 255),
-                ),
-            )
-        }
-
-        chat(optimalLine?.direction.toString())
-
         RotationManager.aimAt(
             if (this.aimMode.get() == AimMode.GODBRIDGE)
                 Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
@@ -308,7 +257,55 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val networkTickHandler = repeatable {
-        val target = currentTarget
+        val blockInHotbar = findBestValidHotbarSlotForTarget()
+
+        val bestStick =
+            if (blockInHotbar == null) {
+                ItemStack(Items.SANDSTONE, 64)
+            } else {
+                player.inventory.getStack(blockInHotbar)
+            }
+
+        val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
+
+        // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
+        val priorityGetter: (Vec3i) -> Double =
+            if (optimalLine != null) {
+                { vec ->
+                    -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
+                }
+            } else {
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            }
+
+        val searchOptions =
+            BlockPlacementTargetFindingOptions(
+                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                bestStick,
+                getFacePositionFactoryForConfig(),
+                priorityGetter,
+            )
+
+        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
+
+        val target = currentTarget ?: return@repeatable
+
+        // Debug stuff
+        if (optimalLine != null) {
+            val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
+            val a = optimalLine.getNearestPointTo(b)
+
+            // Debug the line a-b
+            ModuleDebug.debugGeometry(
+                ModuleScaffold,
+                "lineToBlock",
+                ModuleDebug.DebuggedLineSegment(
+                    from = Vec3(a),
+                    to = Vec3(b),
+                    Color4b(255, 0, 0, 255),
+                ),
+            )
+        }
 
         val currentRotation = RotationManager.rotationForServer
         val currentCrosshairTarget = raycast(4.5, currentRotation)
