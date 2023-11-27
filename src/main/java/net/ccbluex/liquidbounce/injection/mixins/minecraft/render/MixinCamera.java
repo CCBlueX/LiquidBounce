@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
+import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
@@ -66,12 +66,12 @@ public abstract class MixinCamera {
             return;
         }
 
-        RotationsConfigurable configurable = RotationManager.INSTANCE.getActiveConfigurable();
+        AimPlan aimPlan = RotationManager.INSTANCE.getAimPlan();
 
         var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
-        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getPov() || configurable != null && !configurable.getSilent();
+        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getPov() || aimPlan != null && aimPlan.getApplyClientSide();
 
         if (currentRotation == null || previousRotation == null || !shouldModifyRotation) {
             return;

@@ -96,7 +96,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
                 this.waitUntil { !player.isUsingItem }
 
                 if (delayPostStopUse > 0) {
-                    wait(delayPostStopUse)
+                    waitTicks(delayPostStopUse)
                 }
 
                 true
@@ -106,7 +106,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
                 interaction.stopUsingItem(player)
 
                 if (delayPostStopUse > 0) {
-                    wait(delayPostStopUse)
+                    waitTicks(delayPostStopUse)
                 }
 
                 true

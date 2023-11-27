@@ -153,7 +153,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
                 if (player.isUsingItem) {
-                    wait(delay)
+                    waitTicks(delay)
                     repeat(speed) {
                         network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                     }

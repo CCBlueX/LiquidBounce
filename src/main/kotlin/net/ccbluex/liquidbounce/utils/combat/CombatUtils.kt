@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 
@@ -17,6 +18,8 @@ object CombatManager : Listenable {
 
     // useful for autoblock
     private var pauseBlocking: Int = 0
+
+    private var duringCombat: Int = 0
 
     private fun updatePauseRotation() {
         if (pauseRotation <= 0) return
@@ -36,6 +39,12 @@ object CombatManager : Listenable {
         pauseBlocking--
     }
 
+    private fun updateDuringCombat() {
+        if (duringCombat <= 0) return
+
+        duringCombat--
+    }
+
     /**
      * Update current rotation to new rotation step
      */
@@ -44,15 +53,22 @@ object CombatManager : Listenable {
         updatePauseCombat()
         // TODO: implement this for killaura autoblock and other
         updatePauseBlocking()
+        updateDuringCombat()
     }
 
     val tickHandler = handler<GameTickEvent> {
         update()
     }
 
+    val attackHandler = handler<AttackEvent> {
+        // 60 ticks = 3 seconds
+        duringCombat = 60
+    }
+
     fun shouldPauseCombat(): Boolean = this.pauseCombat > 0
     fun shouldPauseRotation(): Boolean = this.pauseRotation > 0
     fun shouldPauseBlocking(): Boolean = this.pauseBlocking > 0
+    fun isInCombat(): Boolean = this.duringCombat > 0
 
     fun pauseCombatForAtLeast(pauseTime: Int) {
         this.pauseCombat = this.pauseCombat.coerceAtLeast(pauseTime)
@@ -65,4 +81,5 @@ object CombatManager : Listenable {
     fun pauseBlockingForAtLeast(pauseTime: Int) {
         this.pauseBlocking = this.pauseBlocking.coerceAtLeast(pauseTime)
     }
+
 }

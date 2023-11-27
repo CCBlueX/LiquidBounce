@@ -163,7 +163,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val yaw: Float
         val pitch: Float
 
-        val targetRotation = RotationManager.targetRotation
+        val targetRotation = RotationManager.aimPlan?.rotation
 
         if (targetRotation == null) {
             yaw = otherPlayer.yaw

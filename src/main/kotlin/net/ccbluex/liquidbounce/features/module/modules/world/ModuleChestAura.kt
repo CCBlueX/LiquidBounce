@@ -103,7 +103,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         updateTarget()
 
         val curr = currentBlock ?: return@repeatable
-        val currentRotation = RotationManager.currentRotation ?: return@repeatable
+        val currentRotation = RotationManager.rotationForServer
 
         val rayTraceResult = raytraceBlock(
             range.toDouble(),
@@ -133,13 +133,12 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             var success = false
 
             if (AwaitContainerOptions.enabled) {
-                wait {
+                waitConditional(AwaitContainerOptions.timeout) {
                     if (mc.currentScreen is HandledScreen<*>) {
                         success = true
-
-                        0
+                        true
                     } else {
-                        AwaitContainerOptions.timeout
+                        false
                     }
                 }
             } else {
@@ -147,7 +146,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 currentBlock = null
                 success = true
 
-                wait { delay }
+                waitTicks(delay)
             }
 
             if (success || currentRetries >= AwaitContainerOptions.maxRetrys) {
@@ -188,7 +187,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             ) ?: continue
 
             // aim on target
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
             nextBlock = pos
             break
         }

@@ -42,6 +42,6 @@ object Verus : Choice("Verus") {
 
     val timerRepeatable = repeatable {
         Timer.requestTimerSpeed(2.0F, priority = Priority.IMPORTANT_FOR_USAGE)
-        wait { 101 }
+        waitTicks(101)
     }
 }

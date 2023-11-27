@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -159,7 +158,10 @@ val Input.yAxisMovement: Float
     }
 
 val Entity?.rotation: Rotation
-    get() = Rotation(this?.yaw ?: 0f, this?.pitch ?: 0f)
+    get() = this?.let { Rotation(it.yaw, it.pitch) } ?: Rotation.ZERO
+
+val ClientPlayerEntity?.lastRotation: Rotation
+    get() = this?.let { Rotation(it.lastYaw, it.lastPitch) } ?: Rotation.ZERO
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())
@@ -193,7 +195,7 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
     if (this.age == 0) {
         return this.pos
     }
-  
+
     return Vec3d(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,

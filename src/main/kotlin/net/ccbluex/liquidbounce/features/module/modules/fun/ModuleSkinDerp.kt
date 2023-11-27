@@ -60,7 +60,7 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
     }
 
     val repeatable = repeatable {
-        wait(delay)
+        waitTicks(delay)
         if (hat) {
             mc.options.togglePlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
         }

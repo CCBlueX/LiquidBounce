@@ -130,6 +130,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleCapeTransfer,
             ModuleHideClient,
             ModuleFocus,
+            ModuleClientFixes,
 
             // Movement
             ModuleAirJump,
@@ -158,6 +159,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSpeed,
             ModuleSprint,
             ModuleStep,
+            ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleFly,

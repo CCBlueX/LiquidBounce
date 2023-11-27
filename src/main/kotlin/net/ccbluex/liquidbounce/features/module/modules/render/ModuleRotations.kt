@@ -53,9 +53,6 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
         if (!showRotationVector)
             return@handler
 
-
-
-
         val rotation = RotationManager.currentRotation ?: return@handler
         val camera = mc.gameRenderer.camera
 
