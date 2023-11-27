@@ -667,7 +667,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         }
 
         // Start blocking after attack
-        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) ) {
+        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock)) {
             startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
         }
 
