@@ -55,7 +55,7 @@
 
         "module.trigger.description": "自动攻击瞄准的目标。",
 
-        "module.velocity.description": "修改受到的击退大小。",
+        "module.velocity.description": "修改你所受到的击退。",
 
         "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度。",
 
@@ -139,7 +139,7 @@
         
         "module.eagle.description": "到方块边缘自动潜行。(别名：FastBridge)",
         
-        "module.fakeLag.description": "UNTRANSLATED: Lags you behind server side until first hit.",
+        "module.fakeLag.description": "在首次击中之前，使你在服务器端的位置滞后。",
         
         "module.fastBreak.description": "允许你更快地破坏方块。",
         
@@ -309,6 +309,8 @@
         
         "module.teleport.description": "允许你四处传送。",
 
+        "module.timerRange.description": "允许你操控游戏速度，以在与敌人对战中获得优势。",
+	    
         "module.timer.description": "改变游戏的运行速度。",
         
         "module.tower.description": "自动搭高。",

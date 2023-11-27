@@ -248,6 +248,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
     private val speedModifier by FloatValue("SpeedModifier", 1f, 0f..2f)
     private val slow by BoolValue("Slow", false)
+        private val slowGround by BoolValue("SlowOnlyGround", false) { slow }
         private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
 
     // Safety
@@ -350,8 +351,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (slow) {
-            player.motionX *= slowSpeed
-            player.motionZ *= slowSpeed
+            if (!slowGround || slowGround && mc.thePlayer.onGround) {
+                player.motionX *= slowSpeed
+                player.motionZ *= slowSpeed
+            }
         }
 
         // Eagle

@@ -5,33 +5,31 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MotionEvent
-import net.ccbluex.liquidbounce.event.SlowDownEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.item.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 
 object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
-    private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "AAC5", "SwitchItem"), "None")
+    private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "UpdatedNCP", "AAC5", "SwitchItem"), "None")
 
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "AAC5", "SwitchItem"), "None")
+    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem"), "None")
 
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
@@ -45,18 +43,18 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
-        val heldItem = thePlayer.heldItem ?: return
-        val currentItem = thePlayer.inventory.currentItem
+        val player = mc.thePlayer ?: return
+        val heldItem = player.heldItem ?: return
+        val currentItem = player.inventory.currentItem
 
         if (!isMoving) {
             return
         }
 
-        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && thePlayer.isUsingItem) {
+        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && player.isUsingItem) {
             when (consumePacket.lowercase()) {
                 "aac5" -> {
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f))
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f))
                 }
                 "switchitem" -> {
                     when (event.eventState) {
@@ -69,13 +67,26 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                         else -> {}
                     }
                 }
+                "updatedncp" -> {
+                    when (event.eventState) {
+                        EventState.POST -> {
+                            sendPacket(
+                                C08PacketPlayerBlockPlacement(
+                                    BlockPos.ORIGIN, 5, heldItem, 0f, 0f, 0f
+                                )
+                            )
+                        }
+
+                        else -> {}
+                    }
+                }
                 else -> {
                     return
                 }
             }
         }
 
-        if (heldItem.item is ItemSword && thePlayer.isBlocking) {
+        if (heldItem.item is ItemSword && player.isBlocking) {
             when (swordMode.lowercase()) {
                 "none" -> {
                     return
@@ -91,9 +102,23 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
                         EventState.POST -> sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f
                             )
                         )
+
+                        else -> {}
+                    }
+                }
+
+                "updatedncp" -> {
+                    when (event.eventState) {
+                        EventState.POST -> {
+                            sendPacket(
+                                C08PacketPlayerBlockPlacement(
+                                    BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f
+                                )
+                            )
+                        }
 
                         else -> {}
                     }
@@ -103,7 +128,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     if (event.eventState == EventState.POST) {
                         sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, thePlayer.heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f
                             )
                         )
                     }
@@ -130,6 +155,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
         event.forward = getMultiplier(heldItem, true)
         event.strafe = getMultiplier(heldItem, false)
+    }
+
+    /**
+     * Not sure how it works, but it should allow you to block again
+     * after jumping by stopping the player xz.
+     */
+    @EventTarget
+    fun onJump(event: JumpEvent) {
+        if (swordMode.lowercase() == "updatedncp" && mc.thePlayer.heldItem.item is ItemSword && mc.thePlayer.isBlocking) {
+            mc.thePlayer.stopXZ()
+        }
     }
 
     private fun getMultiplier(item: Item?, isForward: Boolean) = when (item) {
