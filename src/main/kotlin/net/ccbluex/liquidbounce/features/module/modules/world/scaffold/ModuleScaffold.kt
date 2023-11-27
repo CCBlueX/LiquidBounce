@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -84,7 +85,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         fun jumpIfNeeded(ticksUntilNextBlock: Int) {
             if (shouldJump(ticksUntilNextBlock)) {
-                TickStateManager.enforcedState.enforceJump = true
+                EventScheduler.schedule(ModuleScaffold, TickJumpEvent::class.java, action = {
+                    if (player.isOnGround) {
+                        player.jump()
+                    }
+                })
                 blocksPlaced = 0
             }
         }
