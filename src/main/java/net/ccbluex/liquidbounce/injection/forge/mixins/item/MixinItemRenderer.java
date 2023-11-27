@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
+import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animation;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
@@ -95,12 +96,12 @@ public abstract class MixinItemRenderer {
         pushMatrix();
 
         if (itemToRender != null) {
-            boolean isAutoBlocking = itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking();
+            boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking();
 
             if (itemToRender.getItem() instanceof ItemMap) {
                 renderItemMap(abstractclientplayer, f2, f, f1);
-            } else if (abstractclientplayer.getItemInUseCount() > 0 || isAutoBlocking) {
-                EnumAction enumaction = isAutoBlocking ? EnumAction.BLOCK : itemToRender.getItemUseAction();
+            } else if (abstractclientplayer.getItemInUseCount() > 0 || isForceBlocking) {
+                EnumAction enumaction = isForceBlocking ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 
                 switch (enumaction) {
                     case NONE:
