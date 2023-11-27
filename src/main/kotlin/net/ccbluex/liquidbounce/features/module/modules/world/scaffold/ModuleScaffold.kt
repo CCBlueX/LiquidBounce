@@ -38,25 +38,24 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
-import kotlin.math.abs
-import kotlin.math.floor
+import net.minecraft.util.math.*
+import kotlin.math.*
 import kotlin.random.Random
 
 /**
@@ -218,12 +217,62 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
+    private fun floor(x: Vec3d): Vec3d {
+        return Vec3d(floor(x.x), floor(x.y), floor(x.z))
+    }
+
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        val target = currentTarget ?: return@handler
+
+        val rotation: Rotation
+
+        if(this.aimMode.get() == AimMode.GODBRIDGE) {
+            val dirInput = DirectionalInput(player.input)
+
+            if(dirInput == DirectionalInput.NONE)
+                return@handler
+
+            val direction =
+                getMovementDirectionOfInput(
+                    player.yaw,
+                    dirInput
+                ) + 180
+
+            val movingYaw = round(direction / 45) * 45
+            val finalYaw: Float
+            if(movingYaw % 90 == 0f) {
+//                val flooredPlayerPos = floor(player.pos)
+                val rotatedYaw = (movingYaw) / 180.0 * PI
+                val offsetPlayerPos = player.pos + Vec3d(cos(rotatedYaw) * 0.5, 0.0, sin(rotatedYaw) * 0.5)
+//                ModuleDebug.DebuggedBox(Box(flooredPlayerPos, floor(offsetPlayerPos)), Color4b.BLUE)
+
+                val isOnLeftSide =
+                    floor(offsetPlayerPos.x) != floor(player.x) ||
+                    floor(offsetPlayerPos.z) != floor(player.z)
+
+                chat(isOnLeftSide.toString())
+                finalYaw = movingYaw +
+                    if(isOnLeftSide)
+                        45
+                    else
+                        -45
+            }
+            else {
+                finalYaw = movingYaw
+            }
+
+
+//            val amingPos = player.pos + Vec3d(cos(movingYaw).toDouble(), 0.0, sin(movingYaw).toDouble())
+
+
+
+            rotation = Rotation(finalYaw, 75f)
+        }
+        else {
+            val target = currentTarget ?: return@handler
+            rotation = target.rotation
+        }
         RotationManager.aimAt(
-            if (this.aimMode.get() == AimMode.GODBRIDGE)
-                Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
-            else target.rotation,
+            rotation,
             considerInventory = !ignoreOpenInventory,
             configurable = rotationsConfigurable,
         )
