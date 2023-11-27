@@ -148,6 +148,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         private val interactAutoBlock by BoolValue("InteractAutoBlock", true)
             { autoBlock !in arrayOf("Off", "Fake") }
 
+        private val uncpAutoBlock by BoolValue("UpdatedNCPAutoBlock", false)
+            { autoBlock !in arrayOf("Off", "Fake") }
+
         // AutoBlock conditions
         private val smartAutoBlock by BoolValue("SmartAutoBlock", false) { autoBlock != "Off" }
 
@@ -665,7 +668,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         }
 
         // Start blocking after attack
-        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock)) {
+        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) ) {
             startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
         }
 
@@ -776,7 +779,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Start blocking
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
-        if (blockStatus)
+        if (blockStatus && !uncpAutoBlock)
             return
 
         if (!fake) {
