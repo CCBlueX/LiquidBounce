@@ -264,6 +264,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
+        chat(optimalLine?.direction.toString())
+
         RotationManager.aimAt(
             if (this.aimMode.get() == AimMode.GODBRIDGE)
                 Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
@@ -383,6 +385,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         ScaffoldMovementPlanner.trackPlacedBlock(target)
         ScaffoldEagleFeature.onBlockPlacement()
+        AutoJump.onBlockPlacement()
 
         if (player.isOnGround) {
             player.velocity.x *= speedModifier
