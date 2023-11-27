@@ -39,7 +39,8 @@ import kotlin.math.ceil
 
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
-    val delay by intRange("Delay", 2..4, 0..20)
+    val startDelay by intRange("StartDelay", 1..2, 0..20)
+    val clickDelay by intRange("ClickDelay", 2..4, 0..20)
     var closeDelay by intRange("CloseDelay", 1..5, 0..20)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
@@ -47,19 +48,19 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private var lastSlot = 0
 
     private var shouldClose = false
+    private var isFirstTime = true
 
     val repeatable = repeatable {
         if (shouldClose) {
             player.closeHandledScreen()
             shouldClose = false
+            isFirstTime = true
         }
 
         val screen = mc.currentScreen
 
-        if (screen !is GenericContainerScreen) {
-            return@repeatable
-        }
-        if (checkTitle && !isScreenTitleChest(screen)) {
+        if (screen !is GenericContainerScreen || checkTitle && !isScreenTitleChest(screen)) {
+            isFirstTime = true
             return@repeatable
         }
 
@@ -70,8 +71,17 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             return@repeatable
         }
 
-        val itemsToCollect = cleanupPlan.usefulItems
-            .filterIsInstance<ContainerItemSlot>()
+        var itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
+
+        // Are there items to steal? Did we just now open the chest?
+        if (isFirstTime && itemsToCollect.isNotEmpty()) {
+            isFirstTime = false
+
+            waitTicks(startDelay.random())
+
+            // Re-check in case items are not the same as before
+            itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
+        }
 
         var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size, screen)
 
@@ -90,7 +100,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                     stillRequiredSpace -= 1
             }
 
-            mc.interactionManager!!.clickSlot(
+            interaction.clickSlot(
                 screen.screenHandler.syncId,
                 slot.slotInContainer,
                 0,
@@ -100,7 +110,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             lastSlot = slot.slotInContainer
 
-            val delay = delay.random()
+            val delay = clickDelay.random()
 
             if (delay > 0) {
                 waitTicks(delay - 1)
@@ -218,7 +228,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             )
 
 
-            val delay = delay.random()
+            val delay = clickDelay.random()
 
             if (delay > 0) {
                 waitTicks(delay - 1)
