@@ -33,7 +33,10 @@ import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
@@ -138,7 +141,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 val targetRotation = RotationManager.aimPlan ?: return@handler
 
                 val aimDifference = RotationManager.rotationDifference(
-                    RotationManager.rotationForServer, targetRotation.rotation
+                    RotationManager.serverRotation, targetRotation.rotation
                 )
 
                 if (aimDifference > aimThreshold) {
@@ -151,7 +154,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         fun getHypotheticalHit(): AbstractClientPlayerEntity? {
-            val rotation = RotationManager.rotationForServer
+            val rotation = RotationManager.serverRotation
             val yaw = rotation.yaw
             val pitch = rotation.pitch
 

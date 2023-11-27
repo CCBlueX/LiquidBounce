@@ -103,7 +103,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         updateTarget()
 
         val curr = currentBlock ?: return@repeatable
-        val currentRotation = RotationManager.rotationForServer
+        val currentRotation = RotationManager.serverRotation
 
         val rayTraceResult = raytraceBlock(
             range.toDouble(),

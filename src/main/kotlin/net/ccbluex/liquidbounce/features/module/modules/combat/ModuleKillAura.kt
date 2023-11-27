@@ -172,7 +172,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         private fun interactWithFront() {
             // Raycast using the current rotation and find a block or entity that should be interacted with
 
-            val rotationToTheServer = RotationManager.rotationForServer
+            val rotationToTheServer = RotationManager.serverRotation
 
             val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
                 when (raycast) {
@@ -409,7 +409,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             // Determine if we should attack the target or someone else
-            val rotation = RotationManager.rotationForServer
+            val rotation = RotationManager.serverRotation
 
             val choosenEntity: Entity
             if (raycast != TRACE_NONE) {
@@ -499,7 +499,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, cpsTimer.isClickOnNextTick(1))
-            val rotationPreference = LeastDifferencePreference(RotationManager.rotationForServer, nextPoint)
+            val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
             // find best spot
             val spot = raytraceBox(
