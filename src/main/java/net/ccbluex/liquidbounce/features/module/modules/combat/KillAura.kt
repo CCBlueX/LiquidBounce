@@ -144,11 +144,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             private val blockRate by IntegerValue("BlockRate", 100, 1..100)
                 { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
 
+        private val uncpAutoBlock by BoolValue("UpdatedNCPAutoBlock", false)
+            { autoBlock !in arrayOf("Off", "Fake") && !releaseAutoBlock }
 
         private val interactAutoBlock by BoolValue("InteractAutoBlock", true)
-            { autoBlock !in arrayOf("Off", "Fake") }
-
-        private val uncpAutoBlock by BoolValue("UpdatedNCPAutoBlock", false)
             { autoBlock !in arrayOf("Off", "Fake") }
 
         // AutoBlock conditions
