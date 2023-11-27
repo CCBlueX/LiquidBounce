@@ -368,36 +368,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return@repeatable
         }
 
-        val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
-
-        var wasInteractionSuccessful = false
-
-        ModuleNoFall.MLG.doPlacement(currentCrosshairTarget, handToInteractWith, onPlacementSuccess = {
-            ScaffoldMovementPlanner.trackPlacedBlock(target)
-            ScaffoldEagleFeature.onBlockPlacement()
-            AutoJump.onBlockPlacement()
-
-            if (player.isOnGround) {
-                player.velocity.x *= speedModifier
-                player.velocity.z *= speedModifier
-            }
-
-            currentTarget = null
-
-            wasInteractionSuccessful = true
-
-            swing
-        })
-
-        if (wasInteractionSuccessful) {
-            waitTicks(currentDelay)
-        }
-    }
-
-        if (!hasBlockInMainHand && !hasBlockInOffHand) {
-            return@repeatable
-        }
-
         // no need for additional checks
         val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         val result =
@@ -424,7 +394,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         currentTarget = null
 
-        waitTicks(delay.random())
+        waitTicks(currentDelay)
     }
 
     private fun findBestValidHotbarSlotForTarget(): Int? {
