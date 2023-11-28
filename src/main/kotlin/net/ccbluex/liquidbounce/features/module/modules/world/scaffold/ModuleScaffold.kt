@@ -18,8 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import com.viaversion.viaversion.api.connection.UserConnection
+import com.viaversion.viaversion.api.minecraft.Position
+import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
+import com.viaversion.viaversion.api.type.Type
+import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
+import com.viaversion.viaversion.protocols.protocol1_8.ServerboundPackets1_8
+import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
+import com.viaversion.viaversion.protocols.protocol1_9to1_8.Protocol1_9To1_8
+import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -52,6 +62,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -222,6 +233,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return Vec3d(floor(x.x), floor(x.y), floor(x.z))
     }
 
+
+
     private var isOnRightSide = false
 
     private val rotationUpdateHandler = handler<GameTickEvent> {
@@ -254,13 +267,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     isOnRightSide =
                         floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
                         floor(player.z + sin(radians) * 0.5) != floor(player.z)
-//                    chat(Direction.fromHorizontal(floor(movingYaw / 90).toInt()).toString())
                     if(
                         player.blockPos.down().getState()?.isAir == true
                         && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.6).toBlockPos().down().getState()?.isAir == true
                     ) {
                         isOnRightSide = !isOnRightSide
-                        chat("flipped")
+
                     }
                 }
 
@@ -270,7 +282,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 //                    it.placedBlock
 //                }
 
-                chat(isOnRightSide.toString())
                 finalYaw = movingYaw +
                     if(isOnRightSide)
                         45
@@ -326,55 +337,60 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val networkTickHandler = repeatable {
-        val blockInHotbar = findBestValidHotbarSlotForTarget()
+        run {
 
-        val bestStick =
-            if (blockInHotbar == null) {
-                ItemStack(Items.SANDSTONE, 64)
-            } else {
-                player.inventory.getStack(blockInHotbar)
-            }
+            val blockInHotbar = findBestValidHotbarSlotForTarget()
 
-        val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
-
-        // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
-        val priorityGetter: (Vec3i) -> Double =
-            if (optimalLine != null) {
-                { vec ->
-                    -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
+            val bestStick =
+                if (blockInHotbar == null) {
+                    ItemStack(Items.SANDSTONE, 64)
+                } else {
+                    player.inventory.getStack(blockInHotbar)
                 }
-            } else {
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+
+            val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
+
+            // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
+            val priorityGetter: (Vec3i) -> Double =
+                if (optimalLine != null) {
+                    { vec ->
+                        -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
+                    }
+                } else {
+                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+                }
+
+            val searchOptions =
+                BlockPlacementTargetFindingOptions(
+                    if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                    bestStick,
+                    getFacePositionFactoryForConfig(),
+                    priorityGetter,
+                )
+
+            currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
+
+            val target = currentTarget ?: return@run
+
+            // Debug stuff
+            if (optimalLine != null) {
+                val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
+                val a = optimalLine.getNearestPointTo(b)
+
+                // Debug the line a-b
+                ModuleDebug.debugGeometry(
+                    ModuleScaffold,
+                    "lineToBlock",
+                    ModuleDebug.DebuggedLineSegment(
+                        from = Vec3(a),
+                        to = Vec3(b),
+                        Color4b(255, 0, 0, 255),
+                    ),
+                )
             }
-
-        val searchOptions =
-            BlockPlacementTargetFindingOptions(
-                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-                bestStick,
-                getFacePositionFactoryForConfig(),
-                priorityGetter,
-            )
-
-        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
-
-        val target = currentTarget ?: return@repeatable
-
-        // Debug stuff
-        if (optimalLine != null) {
-            val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
-            val a = optimalLine.getNearestPointTo(b)
-
-            // Debug the line a-b
-            ModuleDebug.debugGeometry(
-                ModuleScaffold,
-                "lineToBlock",
-                ModuleDebug.DebuggedLineSegment(
-                    from = Vec3(a),
-                    to = Vec3(b),
-                    Color4b(255, 0, 0, 255),
-                ),
-            )
         }
+        val target = currentTarget
+
 
         val currentRotation = RotationManager.rotationForServer
         val currentCrosshairTarget = raycast(4.5, currentRotation)
@@ -392,12 +408,35 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ),
         ) {
             // By the time this reaches here, the variables are already non-null
-            ModuleNoFall.MLG.doPlacement(
-                currentCrosshairTarget!!,
-                suitableHand!!,
-                ModuleScaffold::swing,
-                ModuleScaffold::swing,
-            )
+            runCatching {
+                val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
+
+                if (!isViaFabricPlusLoaded) {
+                    return@repeatable
+                }
+
+                val localViaConnection = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
+
+                val viaConnection =
+                    mc.networkHandler?.connection?.channel?.attr(localViaConnection)?.get() ?: return@repeatable
+
+                if (viaConnection.protocolInfo.pipeline.contains(Protocol1_9To1_8::class.java)) {
+                    val clientStatus = PacketWrapper.create(ServerboundPackets1_8.PLAYER_BLOCK_PLACEMENT, viaConnection)
+
+                    clientStatus.write(Type.POSITION, Position(-1, (-1).toShort(), -1))
+                    clientStatus.write(Type.UNSIGNED_BYTE, 255.toShort())
+
+                    clientStatus.write(Type.ITEM, Protocol1_9To1_8.getHandItem(viaConnection))
+
+                    clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
+                    clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
+                    clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
+
+                    runCatching {
+                        clientStatus.sendToServer(Protocol1_9To1_8::class.java)
+                    }
+                }
+            }
         }
 
         if (target == null || currentCrosshairTarget == null) {
