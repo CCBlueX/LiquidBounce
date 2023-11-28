@@ -166,12 +166,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             if (player.isBlocking && !mc.options.useKey.isPressed) {
                 interaction.stopUsingItem(player)
             }
+
             blockingStateEnforced = false
         }
 
         private fun interactWithFront() {
             // Raycast using the current rotation and find a block or entity that should be interacted with
-
             val rotationToTheServer = RotationManager.serverRotation
 
             val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
@@ -190,9 +190,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 return
             }
 
-            val hitResult = raycast(
-                range.toDouble(), rotationToTheServer, includeFluids = false
-            ) ?: return
+            val hitResult = raycast(range.toDouble(), rotationToTheServer, includeFluids = false) ?: return
 
             if (hitResult.type != HitResult.Type.BLOCK) {
                 return
@@ -202,12 +200,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             interaction.interactBlock(player, Hand.MAIN_HAND, hitResult)
         }
 
-        private fun canBlock(itemStack: ItemStack) = itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
+        private fun canBlock(itemStack: ItemStack) =
+            itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
 
-        private fun isInDanger() = targetTracker.enemies()
-            .any { target -> facingEnemy(fromEntity = target, toEntity = player, rotation = target.rotation,
-                range = range.toDouble(), wallsRange = wallRange.toDouble())
-            }
+        private fun isInDanger() = targetTracker.enemies().any { target ->
+            facingEnemy(fromEntity = target, toEntity = player, rotation = target.rotation, range = range.toDouble(),
+                wallsRange = wallRange.toDouble())
+        }
 
     }
 
@@ -242,8 +241,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val entity = target ?: world.findEnemy(0f..LimitRange.range)
             val reach = LimitRange.range + if (LimitRange.asExtraRange) range else 0f
 
-            val shouldSwing = entity != null && !entity.isRemoved
-                && (!enabled || entity.boxedDistanceTo(player) <= reach)
+            val shouldSwing = entity != null && !entity.isRemoved &&
+                (!enabled || entity.boxedDistanceTo(player) <= reach)
 
             val chosenCPS = if (enabled) UseOwnCPS.cps else cps
             val clicks = cpsTimer.clicks({ shouldSwing }, chosenCPS)
@@ -411,10 +410,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // Determine if we should attack the target or someone else
             val rotation = RotationManager.serverRotation
 
-            val choosenEntity: Entity
+            val chosenEntity: Entity
+
             if (raycast != TRACE_NONE) {
                 // Check if between enemy and player is another entity
-                choosenEntity = raytraceEntity(range.toDouble(), rotation, filter = {
+                chosenEntity = raytraceEntity(range.toDouble(), rotation, filter = {
                     when (raycast) {
                         TRACE_ONLYENEMY -> it.shouldBeAttacked()
                         TRACE_ALL -> true
@@ -423,25 +423,22 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }) ?: target
 
                 // Swap enemy if there is a better enemy (closer to the player crosshair)
-                if (choosenEntity.shouldBeAttacked() && choosenEntity != target) {
-                    targetTracker.lock(choosenEntity)
+                if (chosenEntity.shouldBeAttacked() && chosenEntity != target) {
+                    targetTracker.lock(chosenEntity)
                 }
             } else {
-                choosenEntity = target
+                chosenEntity = target
             }
 
             // Are we actually facing the choosen entity?
-            if (!facingEnemy(
-                    toEntity = choosenEntity, rotation = rotation, range = range.toDouble(),
-                    wallsRange = wallRange.toDouble()
-                )
-            ) {
-                dealWithFakeSwing(choosenEntity)
+            if (!facingEnemy(toEntity = chosenEntity, rotation = rotation, range = range.toDouble(),
+                    wallsRange = wallRange.toDouble())) {
+                dealWithFakeSwing(chosenEntity)
                 return@repeatable
             }
 
             // Attack enemy according to cps and cooldown
-            val clicks = cpsTimer.clicks({ checkIfReadyToAttack(choosenEntity) }, cps)
+            val clicks = cpsTimer.clicks({ checkIfReadyToAttack(chosenEntity) }, cps)
 
             if (clicks == 0) {
                 if (cpsTimer.isClickOnNextTick(AutoBlock.tickOff)) {
@@ -465,10 +462,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         }
 
                         // Notify the user about the failed hit
-                        notifyForFailedHit(choosenEntity, rotation)
+                        notifyForFailedHit(chosenEntity, rotation)
                     } else {
                         // Attack enemy
-                        attackEntity(choosenEntity)
+                        attackEntity(chosenEntity)
                     }
                 }
             }
@@ -483,9 +480,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private fun updateEnemySelection() {
         val rangeSquared = range * range
 
-        targetTracker.validateLock {
-            it.shouldBeAttacked() && it.squaredBoxedDistanceTo(player) <= rangeSquared
-        }
+        targetTracker.validateLock { it.shouldBeAttacked() && it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
         val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
             ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
@@ -502,18 +497,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
             // find best spot
-            val spot = raytraceBox(
-                eyes,
-                cutOffBox,
-                range = sqrt(scanRange),
-                wallsRange = wallRange.toDouble(),
-                rotationPreference = rotationPreference
-            ) ?: raytraceBox(
-                eyes,
-                box,
-                range = sqrt(scanRange),
-                wallsRange = wallRange.toDouble(),
-                rotationPreference = rotationPreference
+            val spot = raytraceBox(eyes, cutOffBox, range = sqrt(scanRange),
+                wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
+            ) ?: raytraceBox(eyes, box, range = sqrt(scanRange),
+                wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
             ) ?: continue
 
             // lock on target tracker
@@ -529,17 +516,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val critical = !ModuleCriticals.shouldWaitForCrit() || choosenEntity.velocity.lengthSquared() > 0.25 * 0.25
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
             !choosenEntity.wouldBlockHit(player)
-        val isInInventoryScreen = InventoryTracker.isInventoryOpenServerSide
-            || mc.currentScreen is GenericContainerScreen
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        return cooldown.readyToAttack && critical && shielding && !(isInInventoryScreen && !ignoreOpenInventory
-            && !simulateInventoryClosing)
+        return cooldown.readyToAttack && critical && shielding &&
+            !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
     }
 
     /**
      * Prepare the environment for attacking an entity
      *
-     * This means, we make sure we are not blocking, we are not using another item
+     * This means, we make sure we are not blocking, we are not using another item,
      * and we are not in an inventory screen depending on the configuration.
      */
     private suspend fun Sequence<DummyEvent>.prepareAttackEnvironment(attack: () -> Unit) {
@@ -556,11 +543,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
                     BlockPos.ORIGIN, Direction.DOWN
                 )
             )
+
             if (AutoBlock.tickOff > 0) {
                 waitTicks(AutoBlock.tickOff)
             }
@@ -579,6 +566,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             if (AutoBlock.tickOn > 0) {
                 waitTicks(AutoBlock.tickOn)
             }
+
             interaction.sendSequencedPacket(world) { sequence ->
                 PlayerInteractItemC2SPacket(player.activeHand, sequence)
             }
@@ -609,18 +597,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 player.addEnchantedHitParticles(entity)
             }
 
-            val isCrit = ModuleCriticals.wouldCrit(true)
-
-            if (isCrit) {
-                world.playSound(
-                    null,
-                    player.x,
-                    player.y,
-                    player.z,
-                    SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                    player.soundCategory,
-                    1.0f,
-                    1.0f
+            if (ModuleCriticals.wouldCrit(true)) {
+                world.playSound(null, player.x, player.y, player.z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
+                    player.soundCategory, 1.0f, 1.0f
                 )
                 player.addCritParticles(entity)
             }
@@ -649,20 +628,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             NotifyWhenFail.Sound -> {
                 // Maybe a custom sound would be better
-                val pitch =
-                    if (NotifyWhenFail.Sound.NoPitchRandomization.enabled) NotifyWhenFail.Sound.NoPitchRandomization.pitch else RandomUtils.nextFloat(
-                        0f, 2f
-                    )
+                val pitch = if (NotifyWhenFail.Sound.NoPitchRandomization.enabled) {
+                    NotifyWhenFail.Sound.NoPitchRandomization.pitch
+                } else {
+                    RandomUtils.nextFloat(0f, 2f)
+                }
 
-                world.playSound(
-                    player,
-                    player.x,
-                    player.y,
-                    player.z,
-                    SoundEvents.UI_BUTTON_CLICK.value(),
-                    player.soundCategory,
-                    NotifyWhenFail.Sound.volume / 100f,
-                    pitch
+                world.playSound(player, player.x, player.y, player.z, SoundEvents.UI_BUTTON_CLICK.value(),
+                    player.soundCategory, NotifyWhenFail.Sound.volume / 100f, pitch
                 )
             }
         }
