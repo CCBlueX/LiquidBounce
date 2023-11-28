@@ -240,14 +240,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val movingYaw = round(direction / 45) * 45
             val finalYaw: Float
             if(movingYaw % 90 == 0f) {
-//                val flooredPlayerPos = floor(player.pos)
                 val rotatedYaw = (movingYaw) / 180.0 * PI
-                val offsetPlayerPos = player.pos + Vec3d(cos(rotatedYaw) * 0.5, 0.0, sin(rotatedYaw) * 0.5)
-//                ModuleDebug.DebuggedBox(Box(flooredPlayerPos, floor(offsetPlayerPos)), Color4b.BLUE)
 
                 val isOnLeftSide =
-                    floor(offsetPlayerPos.x) != floor(player.x) ||
-                    floor(offsetPlayerPos.z) != floor(player.z)
+                    floor(player.x + cos(rotatedYaw) * 0.5) != floor(player.x) ||
+                    floor(player.z + sin(rotatedYaw) * 0.5) != floor(player.z)
 
                 chat(isOnLeftSide.toString())
                 finalYaw = movingYaw +
@@ -259,11 +256,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             else {
                 finalYaw = movingYaw
             }
-
-
-//            val amingPos = player.pos + Vec3d(cos(movingYaw).toDouble(), 0.0, sin(movingYaw).toDouble())
-
-
 
             rotation = Rotation(finalYaw, 75f)
         }
