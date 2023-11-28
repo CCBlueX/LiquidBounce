@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -239,6 +240,11 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
     private boolean hookOmnidirectionalSprintC(ClientPlayerEntity instance) {
         return isOmniWalking(instance);
+    }
+
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
+    private void hookPostMovementInputEvent(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new PostMovementInputEvent(new DirectionalInput(input), input.jumping));
     }
 
     private boolean isOmniWalking(ClientPlayerEntity instance) {

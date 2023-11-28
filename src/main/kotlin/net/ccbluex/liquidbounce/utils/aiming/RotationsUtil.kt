@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.events.PostMovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -183,7 +183,8 @@ object RotationManager : Listenable {
     /**
      * Checks if it should update the server-side rotations
      */
-    private fun allowedToUpdate() = !CombatManager.shouldPauseRotation()
+    private fun allowedToUpdate() =
+        !CombatManager.shouldPauseRotation()
 
     /**
      * Calculate difference between two rotations
@@ -204,7 +205,8 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two angle points
      */
-    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
+    fun angleDifference(a: Float, b: Float) =
+        MathHelper.wrapDegrees(a - b)
 
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (aimPlan?.applyVelocityFix == true) {
@@ -216,13 +218,13 @@ object RotationManager : Listenable {
      * Updates at movement tick, so we can update the rotation before the movement runs and the client sends the packet
      * to the server.
      */
-    val tickHandler = handler<MovementInputEvent>(priority = -100) { event ->
+    val tickHandler = handler<PostMovementInputEvent> { event ->
         val player = mc.player ?: return@handler
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput(
                 event.directionalInput,
-                player.input.jumping,
+                event.jumping,
                 player.isSprinting
             )
         )

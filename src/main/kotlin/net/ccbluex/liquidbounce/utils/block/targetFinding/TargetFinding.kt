@@ -5,25 +5,22 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.minecraft.block.*
 import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
 
 
 enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
+    GODBRIDGE("GodBridge"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
-    GODBRIDGE("Godbridge"),
     NEAREST_ROTATION("NearestRotation"),
 }
 
@@ -66,10 +63,7 @@ enum class BlockTargetingMode {
     REPLACE_EXISTING_BLOCK
 }
 
-private fun findBestTargetPlanForTargetPosition(
-    posToInvestigate: BlockPos,
-    mode: BlockTargetingMode
-): BlockTargetPlan? {
+private fun findBestTargetPlanForTargetPosition(posToInvestigate: BlockPos, mode: BlockTargetingMode): BlockTargetPlan? {
     val directions = Direction.values()
 
     val options = directions.mapNotNull { direction ->
@@ -90,12 +84,8 @@ private fun findBestTargetPlanForTargetPosition(
 /**
  * @return null if it is impossible to target the block with the given parameters
  */
-fun getTargetPlanForPositionAndDirection(
-    pos: BlockPos,
-    direction: Direction,
-    mode: BlockTargetingMode
-): BlockTargetPlan? {
-    when (mode) {
+fun getTargetPlanForPositionAndDirection(pos: BlockPos, direction: Direction, mode: BlockTargetingMode): BlockTargetPlan? {
+     when (mode) {
         BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
             val currPos = pos.add(direction.opposite.vector)
             val currState = currPos.getState() ?: return null
@@ -106,7 +96,6 @@ fun getTargetPlanForPositionAndDirection(
 
             return BlockTargetPlan(currPos, direction)
         }
-
         BlockTargetingMode.REPLACE_EXISTING_BLOCK -> {
             return BlockTargetPlan(pos, direction)
         }
@@ -123,9 +112,10 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
         return null
     }
 
-    val offsetsToInvestigate = options.offsetsToInvestigate.sortedByDescending {
-        options.offsetPriorityGetter(pos.add(it))
-    }
+    val offsetsToInvestigate =
+        options.offsetsToInvestigate.sortedByDescending {
+            options.offsetPriorityGetter(pos.add(it))
+        }
 
     for (offset in offsetsToInvestigate) {
         val posToInvestigate = pos.add(offset)
