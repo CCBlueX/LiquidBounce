@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -221,69 +222,70 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return Vec3d(floor(x.x), floor(x.y), floor(x.z))
     }
 
-    var isOnRightSide = false
+    private var isOnRightSide = false
 
-    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
+    private val rotationUpdateHandler = handler<GameTickEvent> {
 
         val rotation: Rotation
 
         if(this.aimMode.get() == AimMode.GODBRIDGE) {
-            val target = currentTarget
+//            val target = currentTarget
 
-            if(target == null) {
+//            if(target == null) {
 
-                val dirInput = DirectionalInput(player.input)
+            val dirInput = DirectionalInput(player.input)
 
-                if(dirInput == DirectionalInput.NONE)
-                    return@handler
+            if(dirInput == DirectionalInput.NONE)
+                return@handler
 
-                val direction =
-                    getMovementDirectionOfInput(
-                        player.yaw,
-                        dirInput
-                    ) + 180
+            val direction =
+                getMovementDirectionOfInput(
+                    player.yaw,
+                    dirInput
+                ) + 180
 
-                val movingYaw = round(direction / 45) * 45
-                val finalYaw: Float
+            val movingYaw = round(direction / 45) * 45
+            val finalYaw: Float
 
 
-                if(movingYaw % 90 == 0f) {
-                    val radians = (movingYaw) / 180.0 * PI
-                    if (player.isOnGround) {
-                        isOnRightSide =
-                            floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
-                            floor(player.z + sin(radians) * 0.5) != floor(player.z)
-                        chat(Direction.fromHorizontal(floor(movingYaw / 90).toInt()).toString())
-                        if(
-                            player.blockPos.down().getState()?.isAir == true
-                            && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.5).toBlockPos().down().getState()?.isAir == true
-                        ) {
-                            isOnRightSide = !isOnRightSide
-                        }
+            if(movingYaw % 90 == 0f) {
+                val radians = (movingYaw) / 180.0 * PI
+                if (player.isOnGround) {
+                    isOnRightSide =
+                        floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
+                        floor(player.z + sin(radians) * 0.5) != floor(player.z)
+//                    chat(Direction.fromHorizontal(floor(movingYaw / 90).toInt()).toString())
+                    if(
+                        player.blockPos.down().getState()?.isAir == true
+                        && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.6).toBlockPos().down().getState()?.isAir == true
+                    ) {
+                        isOnRightSide = !isOnRightSide
+                        chat("flipped")
                     }
-
-
-    //
-    //                currentTarget?.let {
-    //                    it.placedBlock
-    //                }
-
-                    chat(isOnRightSide.toString())
-                    finalYaw = movingYaw +
-                        if(isOnRightSide)
-                            45
-                        else
-                            -45
-                }
-                else {
-                    finalYaw = movingYaw
                 }
 
-                rotation = Rotation(finalYaw, 75f)
+
+//
+//                currentTarget?.let {
+//                    it.placedBlock
+//                }
+
+                chat(isOnRightSide.toString())
+                finalYaw = movingYaw +
+                    if(isOnRightSide)
+                        45
+                    else
+                        -45
             }
             else {
-                rotation = Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
+                finalYaw = movingYaw
             }
+
+            rotation = Rotation(finalYaw, 75f)
+
+//            else {
+//                rotation = Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
+//            }
         }
         else {
             val target = currentTarget ?: return@handler
