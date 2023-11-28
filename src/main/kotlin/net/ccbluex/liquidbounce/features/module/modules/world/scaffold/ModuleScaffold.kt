@@ -182,6 +182,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldSafeWalkFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
+        tree(ScaffoldStabilizeMovementFeature)
     }
 
     var randomization = Random.nextDouble(-0.02, 0.02)
@@ -237,7 +238,56 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var isOnRightSide = false
 
-    private val rotationUpdateHandler = handler<GameTickEvent> {
+    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
+
+        val blockInHotbar = findBestValidHotbarSlotForTarget()
+
+        val bestStick =
+            if (blockInHotbar == null) {
+                ItemStack(Items.SANDSTONE, 64)
+            } else {
+                player.inventory.getStack(blockInHotbar)
+            }
+
+        val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
+
+        // Prioritze the block that is closest to the line, if there was no line found, prioritize the nearest block
+        val priorityGetter: (Vec3i) -> Double =
+            if (optimalLine != null) {
+                { vec ->
+                    -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
+                }
+            } else {
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            }
+
+        val searchOptions =
+            BlockPlacementTargetFindingOptions(
+                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                bestStick,
+                getFacePositionFactoryForConfig(),
+                priorityGetter,
+            )
+
+        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
+
+        val target = currentTarget
+        // Debug stuff
+        if (optimalLine != null && target != null) {
+            val b = target.placedBlock.toVec3d().add(0.5, 1.0, 0.5)
+            val a = optimalLine.getNearestPointTo(b)
+
+            // Debug the line a-b
+            ModuleDebug.debugGeometry(
+                ModuleScaffold,
+                "lineToBlock",
+                ModuleDebug.DebuggedLineSegment(
+                    from = Vec3(a),
+                    to = Vec3(b),
+                    Color4b(255, 0, 0, 255),
+                ),
+            )
+        }
 
         val rotation: Rotation
 
@@ -263,7 +313,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             if(movingYaw % 90 == 0f) {
                 val radians = (movingYaw) / 180.0 * PI
-                if (player.isOnGround) {
+                if (player.isOnGround && player.y % 1 == 0.0) {
                     isOnRightSide =
                         floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
                         floor(player.z + sin(radians) * 0.5) != floor(player.z)
@@ -272,7 +322,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.6).toBlockPos().down().getState()?.isAir == true
                     ) {
                         isOnRightSide = !isOnRightSide
-
                     }
                 }
 
