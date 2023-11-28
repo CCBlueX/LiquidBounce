@@ -44,7 +44,7 @@ object SequenceManager : Listenable {
      * This is because we want to tick the existing sequences before new ones are added and might be ticked
      * in the same tick
      */
-    val tickSequences = handler<PlayerMovementTickEvent>(priority = 1000) {
+    val tickSequences = handler<GameTickEvent>(priority = 1000) {
         for (sequence in sequences) {
             sequence.tick()
         }
