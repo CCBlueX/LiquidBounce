@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.ItemStack
@@ -160,7 +161,7 @@ class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
 
     val violatesNoMove
         get() = noMove && (mc.player?.moving == true || noRotation
-            && RotationManager.rotationForServer != RotationManager.serverRotation)
+            && (RotationManager.currentRotation ?: mc.player.rotation) != RotationManager.serverRotation)
 }
 
 data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

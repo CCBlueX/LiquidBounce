@@ -23,17 +23,23 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.entity.Entity
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
@@ -96,11 +102,8 @@ object RotationManager : Listenable {
      * The value is not being written by the packets, but we gather the Rotation from the last yaw and pitch variables
      * from our player instance handled by the sendMovementPackets() function.
      */
-    val serverRotation: Rotation
-        get() = mc.player.lastRotation
-
-    val rotationForServer: Rotation
-        get() = currentRotation ?: mc.player.rotation
+    var serverRotation = Rotation.ZERO
+        private set
 
     fun aimAt(rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable) =
         aimAt(configurable.toAimPlan(rotation, considerInventory))
@@ -236,6 +239,27 @@ object RotationManager : Listenable {
     }
 
     /**
+     * Track rotation changes
+     *
+     * We cannot only rely on player.lastYaw and player.lastPitch because
+     * sometimes we update the rotation off chain (e.g. on interactItem)
+     * and the player.lastYaw and player.lastPitch are not updated.
+     */
+    val packetHandler = handler<PacketEvent>(priority = -1000) {
+        val packet = it.packet
+
+        if (it.isCancelled) {
+            return@handler
+        }
+
+        if (packet is PlayerMoveC2SPacket && packet.changeLook) {
+            serverRotation = Rotation(packet.yaw, packet.pitch)
+        } else if (packet is PlayerPositionLookS2CPacket) {
+            serverRotation = Rotation(packet.yaw, packet.pitch)
+        }
+    }
+
+    /**
      * Fix velocity
      */
     private fun fixVelocity(currVelocity: Vec3d, movementInput: Vec3d, speed: Float): Vec3d {
@@ -285,7 +309,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.rotationForServer)
+            get() = LeastDifferencePreference(RotationManager.serverRotation)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)

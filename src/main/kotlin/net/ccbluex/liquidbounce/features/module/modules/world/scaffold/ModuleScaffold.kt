@@ -439,9 +439,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
         }
         val target = currentTarget
-
-
-        val currentRotation = RotationManager.rotationForServer
+      
+        val currentRotation = RotationManager.serverRotation
         val currentCrosshairTarget = raycast(4.5, currentRotation)
 
         val currentDelay = delay.random()

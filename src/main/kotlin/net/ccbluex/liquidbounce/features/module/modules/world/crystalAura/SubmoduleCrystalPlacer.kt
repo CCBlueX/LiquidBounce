@@ -63,7 +63,7 @@ object SubmoduleCrystalPlacer {
 
         RotationManager.aimAt(rotation.rotation, configurable = ModuleCrystalAura.rotations)
 
-        val serverRotation = RotationManager.rotationForServer
+        val serverRotation = RotationManager.serverRotation
 
         val rayTraceResult =
             raytraceBlock(

@@ -75,7 +75,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
         val condition = target.boxedDistanceTo(player) <= range &&
             facingEnemy(
-                toEntity = target, rotation = RotationManager.rotationForServer, range = range.toDouble(),
+                toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
                 wallsRange = 0.0
             )
         val clicks = cpsTimer.clicks(condition = { condition }, cps)

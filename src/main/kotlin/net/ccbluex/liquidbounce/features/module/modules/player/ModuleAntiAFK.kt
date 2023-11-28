@@ -164,7 +164,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
             if (Rotate.enabled) {
                 waitTicks(Rotate.delay)
-                val currentRotation = RotationManager.rotationForServer
+                val currentRotation = RotationManager.serverRotation
                 val pitchRandomization = Random.nextDouble(-5.0, 5.0).toFloat()
                 RotationManager.aimAt(
                     Rotation(
