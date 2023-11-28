@@ -408,34 +408,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ),
         ) {
             // By the time this reaches here, the variables are already non-null
-            runCatching {
-                val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
-
-                if (!isViaFabricPlusLoaded) {
-                    return@repeatable
-                }
-
-                val localViaConnection = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
-
-                val viaConnection =
-                    mc.networkHandler?.connection?.channel?.attr(localViaConnection)?.get() ?: return@repeatable
-
-                if (viaConnection.protocolInfo.pipeline.contains(Protocol1_9To1_8::class.java)) {
-                    val clientStatus = PacketWrapper.create(ServerboundPackets1_8.PLAYER_BLOCK_PLACEMENT, viaConnection)
-
-                    clientStatus.write(Type.POSITION, Position(-1, (-1).toShort(), -1))
-                    clientStatus.write(Type.UNSIGNED_BYTE, 255.toShort())
-
-                    clientStatus.write(Type.ITEM, Protocol1_9To1_8.getHandItem(viaConnection))
-
-                    clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
-                    clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
-                    clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
-
-                    runCatching {
-                        clientStatus.sendToServer(Protocol1_9To1_8::class.java)
-                    }
-                }
+            if (!viaFabricFailPlace()) {
+                ModuleNoFall.MLG.doPlacement(
+                    currentCrosshairTarget!!,
+                    suitableHand!!,
+                    ModuleScaffold::swing,
+                    ModuleScaffold::swing,
+                )
             }
         }
 
@@ -518,6 +497,39 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             if (stack.item is BlockItem) Pair(it, stack) else null
         }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }?.first
+    }
+
+    private fun viaFabricFailPlace(): Boolean {
+        runCatching {
+            val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
+
+            if (!isViaFabricPlusLoaded) {
+                return false
+            }
+
+            val localViaConnection = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
+
+            val viaConnection =
+                mc.networkHandler?.connection?.channel?.attr(localViaConnection)?.get() ?: return false
+
+            if (viaConnection.protocolInfo.pipeline.contains(Protocol1_9To1_8::class.java)) {
+                val clientStatus = PacketWrapper.create(ServerboundPackets1_8.PLAYER_BLOCK_PLACEMENT, viaConnection)
+
+                clientStatus.write(Type.POSITION, Position(-1, (-1).toShort(), -1))
+                clientStatus.write(Type.UNSIGNED_BYTE, 255.toShort())
+
+                clientStatus.write(Type.ITEM, Protocol1_9To1_8.getHandItem(viaConnection))
+
+                clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
+                clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
+                clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
+
+                runCatching {
+                    clientStatus.sendToServer(Protocol1_9To1_8::class.java)
+                }
+            }
+        }
+        return true
     }
 
     private fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {
