@@ -43,14 +43,52 @@ import kotlin.math.sqrt
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
+fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
+    val hitbox =
+        this.dimensions
+        .getBoxAt(position)
+        .expand(-0.05, 0.0, -0.05)
+        .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
 
-fun ClientPlayerEntity.isCloseToEdge(distance: Double = 0.1): Boolean {
-    val alpha = (this.directionYaw + 90.0F).toRadians()
+    return world.isSpaceEmpty(this, hitbox)
+}
+
+fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distance: Double = 0.1): Boolean {
+    val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
+
+    val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
+
+    simulatedInput.jumping = false
+    simulatedInput.sneaking = false
+
+    val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+        simulatedInput
+    )
+
+    simulatedPlayer.tick()
+
+    val nextVelocity = simulatedPlayer.velocity
+
+    val direction = if (nextVelocity.horizontalLengthSquared() > 0.003 * 0.003) {
+        nextVelocity.multiply(1.0, 0.0, 1.0).normalize()
+    } else {
+        Vec3d(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
+    }
 
     val from = this.pos + Vec3d(0.0, -0.1, 0.0)
-    val to = from + Vec3d(cos(alpha) * distance, 0.0, sin(alpha) * distance)
+    val to = from + direction.multiply(distance)
 
-    return findEdgeCollision(from, to) != null
+    if (findEdgeCollision(from, to) != null) {
+        return true
+    }
+
+    val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.multiply(1.0, 0.0, 1.0))
+
+    if (wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)) {
+        return true
+    }
+
+    return false
 }
 
 val ClientPlayerEntity.pressingMovementButton

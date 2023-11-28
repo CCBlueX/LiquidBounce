@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldMovementPlanner
 import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
@@ -16,7 +17,7 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ModuleScaffold,
     private const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075
 
     val moveEvent =
-        handler<MovementInputEvent>(priority = -10) { event ->
+        handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
             val optimalLine = ModuleScaffold.currentOptimalLine ?: return@handler
             val currentInput = event.directionalInput
 

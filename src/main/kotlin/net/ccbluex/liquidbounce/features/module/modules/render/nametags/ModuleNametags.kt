@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
 import org.joml.Matrix4f
@@ -70,7 +71,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         }
 
     val renderHandler =
-        handler<WorldRenderEvent>(priority = -100) { event ->
+        handler<WorldRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
             val matrixStack = event.matrixStack
 
             this.mvMatrix = Matrix4f(matrixStack.peek().positionMatrix)
