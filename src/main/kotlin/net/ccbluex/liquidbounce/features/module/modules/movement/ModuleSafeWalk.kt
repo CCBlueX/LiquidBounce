@@ -67,6 +67,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
                         event.directionalInput,
                         event.jumping,
                         player.isSprinting,
+                        player.isSneaking
                     ))
 
                 repeat(predict) {

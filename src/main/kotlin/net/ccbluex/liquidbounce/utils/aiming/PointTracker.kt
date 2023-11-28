@@ -129,7 +129,8 @@ class PointTracker : Configurable("PointTracker"), Listenable {
             SimulatedPlayer.SimulatedPlayerInput(
                 it.directionalInput,
                 player.input.jumping,
-                player.isSprinting
+                player.isSprinting,
+                player.isSneaking
             )
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)

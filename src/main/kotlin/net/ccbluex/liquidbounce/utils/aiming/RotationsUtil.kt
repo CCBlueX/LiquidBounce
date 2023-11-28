@@ -217,11 +217,7 @@ object RotationManager : Listenable {
         val player = mc.player ?: return@handler
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput(
-                event.directionalInput,
-                player.input.jumping,
-                player.isSprinting
-            )
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
         )
 
         simulatedPlayer.tick()

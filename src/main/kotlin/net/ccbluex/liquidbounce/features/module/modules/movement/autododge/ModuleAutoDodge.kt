@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
@@ -65,8 +66,12 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
         val arrows = findFlyingArrows(world)
 
-        val input =
-            SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
+        val input = SimulatedPlayer.SimulatedPlayerInput(
+            event.directionalInput,
+            player.input.jumping,
+            player.isSprinting,
+            player.isSneaking
+        )
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
