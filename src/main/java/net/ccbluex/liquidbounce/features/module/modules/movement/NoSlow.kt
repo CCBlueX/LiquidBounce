@@ -5,11 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import com.jcraft.jogg.Packet
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura.blockStatus
+import net.ccbluex.liquidbounce.features.module.modules.player.FakeLag
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
@@ -44,6 +47,12 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
     val soulsand by BoolValue("Soulsand", true)
     val liquidPush by BoolValue("LiquidPush", true)
 
+    private var shouldSwap = false
+
+    override fun onDisable() {
+        shouldSwap = false
+    }
+
     @EventTarget
     fun onMotion(event: MotionEvent) {
         val player = mc.thePlayer ?: return
@@ -51,10 +60,10 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
         val currentItem = player.inventory.currentItem
         val isUsingItem = usingItemFunc()
 
-        if (mc.thePlayer.motionX == 0.0 && mc.thePlayer.motionZ == 0.0)
+        if (mc.thePlayer.motionX == 0.0 && mc.thePlayer.motionZ == 0.0 && !shouldSwap)
             return
 
-        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && isUsingItem) {
+        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && (isUsingItem || shouldSwap)) {
             when (consumePacket.lowercase()) {
                 "aac5" -> {
                     sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f))
@@ -71,16 +80,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     }
                 }
                 "updatedncp" -> {
-                    when (event.eventState) {
-                        EventState.POST -> {
-                            sendPacket(
-                                C08PacketPlayerBlockPlacement(
-                                    BlockPos.ORIGIN, 5, heldItem, 0f, 0f, 0f
-                                )
-                            )
-                        }
+                    if (shouldSwap) {
+                        when (event.eventState) {
+                            EventState.PRE -> {
+                                serverSlot = (serverSlot + 1) % 9
+                                serverSlot = currentItem
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                                shouldSwap = false
+                            }
 
-                        else -> {}
+                            else -> {}
+                        }
                     }
                 }
                 else -> {
@@ -89,7 +99,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
             }
         }
 
-        if (heldItem.item is ItemBow && isUsingItem) {
+        if (heldItem.item is ItemBow && (isUsingItem || shouldSwap)) {
             when (bowPacket.lowercase()) {
                 "aac5" -> {
                     sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f))
@@ -106,16 +116,17 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     }
                 }
                 "updatedncp" -> {
-                    when (event.eventState) {
-                        EventState.POST -> {
-                            sendPacket(
-                                C08PacketPlayerBlockPlacement(
-                                    BlockPos.ORIGIN, 5, heldItem, 0f, 0f, 0f
-                                )
-                            )
-                        }
+                    if (shouldSwap) {
+                        when (event.eventState) {
+                            EventState.PRE -> {
+                                serverSlot = (serverSlot + 1) % 9
+                                serverSlot = currentItem
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                                shouldSwap = false
+                            }
 
-                        else -> {}
+                            else -> {}
+                        }
                     }
                 }
                 else -> {
@@ -187,6 +198,23 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
         }
     }
 
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        val packet = event.packet
+
+        if (event.isCancelled)
+            return
+
+        when (packet) {
+            is C08PacketPlayerBlockPlacement -> {
+                if (packet.stack?.item != null && mc.thePlayer.heldItem?.item != null && packet.stack.item == mc.thePlayer.heldItem?.item) {
+                    if ((consumePacket == "UpdatedNCP" && (packet.stack.item is ItemFood || packet.stack.item is ItemPotion || packet.stack.item is ItemBucketMilk)) || (bowPacket == "UpdatedNCP" && packet.stack.item is ItemBow)) {
+                        shouldSwap = true;
+                    }
+                }
+            }
+        }
+    }
     @EventTarget
     fun onSlowDown(event: SlowDownEvent) {
         val heldItem = mc.thePlayer.heldItem?.item
