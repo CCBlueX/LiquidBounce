@@ -15,7 +15,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
             if (mc.thePlayer.onGround) {
                 airTicks = 0
 
-                // Checks for Speed potion effect 1 & 2
+                // Checks the presence of Speed potion effect 1 & 2
                 if (mc.thePlayer.isPotionActive(Potion.moveSpeed)) {
                     val amplifier = mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier
 
@@ -26,7 +26,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
                     }
                 }
 
-                // Checks for Slowness potion effect
+                // Checks the presence of Slowness potion effect.
                 speed = if (mc.thePlayer.isPotionActive(Potion.moveSlowdown)
                     && mc.thePlayer.getActivePotionEffect(Potion.moveSlowdown).amplifier == 1) {
                     0.3f
