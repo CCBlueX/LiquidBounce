@@ -783,6 +783,11 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (blockStatus && !uncpAutoBlock)
             return
 
+        if (mc.thePlayer.isBlocking) {
+            blockStatus = true
+            return
+        }
+
         if (!fake) {
             if (!(blockRate > 0 && nextInt(endExclusive = 100) <= blockRate)) return
 
