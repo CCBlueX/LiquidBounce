@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.inventory.ItemUtils.isConsumingItem
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
@@ -146,6 +147,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         private val uncpAutoBlock by BoolValue("UpdatedNCPAutoBlock", false)
             { autoBlock !in arrayOf("Off", "Fake") && !releaseAutoBlock }
+
+        private val switchStartBlock by BoolValue("SwitchStartBlock", false)
+            { autoBlock !in arrayOf("Off", "Fake") }
 
         private val interactAutoBlock by BoolValue("InteractAutoBlock", true)
             { autoBlock !in arrayOf("Off", "Fake") }
@@ -756,9 +760,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (raycast) {
             val raycastedEntity =
                 raycastEntity(range.toDouble(), currentRotation.yaw, currentRotation.pitch) { entity ->
-                    (!livingRaycast || (entity is EntityLivingBase && entity !is EntityArmorStand)) && (isEnemy(
-                        entity
-                    ) || raycastIgnored || aac && mc.theWorld.getEntitiesWithinAABBExcludingEntity(
+                    (!livingRaycast || (entity is EntityLivingBase && entity !is EntityArmorStand)) && (isEnemy(entity) || raycastIgnored || aac && mc.theWorld.getEntitiesWithinAABBExcludingEntity(
                         entity, entity.entityBoundingBox
                     ).isNotEmpty())
                 }
@@ -803,6 +805,12 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     C02PacketUseEntity(interactEntity, INTERACT)
                 )
 
+            }
+
+            if (switchStartBlock)
+            {
+                InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
+                InventoryUtils.serverSlot = mc.thePlayer.inventory.currentItem
             }
 
             sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
