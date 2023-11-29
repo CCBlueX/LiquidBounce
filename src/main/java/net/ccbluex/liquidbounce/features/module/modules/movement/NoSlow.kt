@@ -116,18 +116,18 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     }
                 }
                 "updatedncp" -> {
-                    if (shouldSwap) {
                         when (event.eventState) {
                             EventState.PRE -> {
-                                serverSlot = (serverSlot + 1) % 9
-                                serverSlot = currentItem
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
-                                shouldSwap = false
+                                if (shouldSwap) {
+                                    serverSlot = (serverSlot + 1) % 9
+                                    serverSlot = currentItem
+                                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                                    shouldSwap = false
+                                }
                             }
-
+                            
                             else -> {}
                         }
-                    }
                 }
                 else -> {
                     return
@@ -233,6 +233,6 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
         else -> 0.2F
     }
 
-    fun isUNCPBlocking() = mc.gameSettings.keyBindUseItem.isKeyDown && (mc.thePlayer.heldItem.item is ItemSword)
-    fun usingItemFunc() = mc.thePlayer.heldItem != null && (mc.thePlayer.isUsingItem || (mc.thePlayer.heldItem.item is ItemSword && KillAura.blockStatus) || isUNCPBlocking())
+    fun isUNCPBlocking() = mc.gameSettings.keyBindUseItem.isKeyDown && (mc.thePlayer.heldItem?.item is ItemSword)
+    fun usingItemFunc() = mc.thePlayer?.heldItem != null && (mc.thePlayer.isUsingItem || (mc.thePlayer.heldItem?.item is ItemSword && KillAura.blockStatus) || isUNCPBlocking())
 }
