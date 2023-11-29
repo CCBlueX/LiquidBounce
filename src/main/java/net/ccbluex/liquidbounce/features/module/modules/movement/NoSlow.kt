@@ -202,7 +202,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (event.isCancelled)
+        if (event.isCancelled || shouldSwap)
             return
 
         when (packet) {
