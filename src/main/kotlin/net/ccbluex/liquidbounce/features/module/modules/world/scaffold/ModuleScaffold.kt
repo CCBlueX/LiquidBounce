@@ -222,6 +222,42 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
+    fun findRotation(target: BlockPlacementTarget?): Rotation? {
+        if(this.aimMode.get() != AimMode.GODBRIDGE)
+            return target?.rotation
+
+        val dirInput = DirectionalInput(player.input)
+
+        if (dirInput == DirectionalInput.NONE) {
+            target ?: return null
+
+            return Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
+        }
+
+        val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
+
+        val movingYaw = round(direction / 45) * 45
+        val finalYaw: Float
+
+        if (movingYaw % 90 == 0f) {
+            val radians = (movingYaw) / 180.0 * PI
+            if (player.isOnGround) {
+                isOnRightSide = floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
+                    floor(player.z + sin(radians) * 0.5) != floor(player.z)
+                if (player.blockPos.down().getState()?.isAir == true
+                    && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.6).toBlockPos().down()
+                        .getState()?.isAir == true
+                ) {
+                    isOnRightSide = !isOnRightSide
+                }
+            }
+            finalYaw = movingYaw + if (isOnRightSide) 45 else -45
+        } else {
+            finalYaw = movingYaw
+        }
+        return Rotation(finalYaw, 75f)
+    }
+
     private var isOnRightSide = false
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
@@ -270,48 +306,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
-        val rotation: Rotation
-
-        if (this.aimMode.get() == AimMode.GODBRIDGE) {
-//            val target = currentTarget
-//            if(target == null) {
-            val dirInput = DirectionalInput(player.input)
-
-            if (dirInput == DirectionalInput.NONE)
-                return@handler
-
-            val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
-
-            val movingYaw = round(direction / 45) * 45
-            val finalYaw: Float
-
-            if (movingYaw % 90 == 0f) {
-                val radians = (movingYaw) / 180.0 * PI
-                if (player.isOnGround) {
-                    isOnRightSide = floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
-                        floor(player.z + sin(radians) * 0.5) != floor(player.z)
-                    if (player.blockPos.down().getState()?.isAir == true
-                        && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.6).toBlockPos().down()
-                            .getState()?.isAir == true
-                    ) {
-                        isOnRightSide = !isOnRightSide
-                    }
-                }
-//                currentTarget?.let {
-//                    it.placedBlock
-//                }
-                finalYaw = movingYaw + if (isOnRightSide) 45 else -45
-            } else {
-                finalYaw = movingYaw
-            }
-            rotation = Rotation(finalYaw, 75f)
-
-//            else {
-//                rotation = Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
-//            }
-        } else {
-            rotation = target?.rotation ?: return@handler
-        }
+        val rotation = findRotation(target) ?: return@handler
 
         RotationManager.aimAt(
             rotation,
