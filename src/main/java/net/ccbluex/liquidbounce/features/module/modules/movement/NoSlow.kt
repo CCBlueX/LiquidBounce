@@ -80,18 +80,18 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                     }
                 }
                 "updatedncp" -> {
-                    if (shouldSwap) {
                         when (event.eventState) {
                             EventState.PRE -> {
-                                serverSlot = (serverSlot + 1) % 9
-                                serverSlot = currentItem
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
-                                shouldSwap = false
+                                if (shouldSwap) {
+                                    serverSlot = (serverSlot + 1) % 9
+                                    serverSlot = currentItem
+                                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                                    shouldSwap = false
+                                }
                             }
 
                             else -> {}
                         }
-                    }
                 }
                 else -> {
                     return
@@ -125,7 +125,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                                     shouldSwap = false
                                 }
                             }
-                            
+
                             else -> {}
                         }
                 }
@@ -144,9 +144,7 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                 "ncp" -> {
                     when (event.eventState) {
                         EventState.PRE -> sendPacket(
-                            C07PacketPlayerDigging(
-                                RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN
-                            )
+                            C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN)
                         )
 
                         EventState.POST -> sendPacket(
