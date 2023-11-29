@@ -28,8 +28,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNa
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.RunArgs.Game
@@ -39,6 +41,7 @@ import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 import kotlin.math.min
 import kotlin.math.sin
 
@@ -279,8 +282,13 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
             get() = appearance
 
         private val color by color("Color", Color4b.RED)
+        private val size by float("Size", 5f, 1f..20f)
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-            val pos = entity.interpolateCurrentPosition(partialTicks)
+
+            val pos =
+                entity.interpolateCurrentPosition(partialTicks) +
+                    Vec3d(0.0, entity.height.toDouble(), 0.0)
+
 
             val screenPos =
                 calculateScreenPos(
@@ -291,14 +299,15 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
 
             with(env) {
                 withColor(color) {
+                    chat("renderingArrow")
                     drawCustomMesh(
-                        VertexFormat.DrawMode.TRIANGLE_FAN,
+                        VertexFormat.DrawMode.TRIANGLE_STRIP,
                         VertexFormats.POSITION,
                         GameRenderer.getPositionProgram()!!
                     ) {
-                        vertex(it, screenPos.x, screenPos.y, 1f)
-                        vertex(it, screenPos.x - 10, screenPos.y + 20, 1f)
-                        vertex(it, screenPos.x + 10, screenPos.y + 20, 1f)
+                        vertex(it, screenPos.x - 5 *  size, screenPos.y - 10 * size, 1f).next()
+                        vertex(it, screenPos.x, screenPos.y, 1f).next()
+                        vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).next()
                     }
                 }
             }
