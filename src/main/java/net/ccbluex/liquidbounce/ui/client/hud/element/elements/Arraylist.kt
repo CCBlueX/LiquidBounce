@@ -67,6 +67,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
             // onUpdate - updates tag onInit and onChanged
             override fun onUpdate(value: String) = updateTagDetails()
         }
+        private val tagsCase by ModeValue("TagsCase", arrayOf("Normal", "Uppercase", "Lowercase"), "Normal") { tags }
         private val tagsArrayColor by object : BoolValue("TagsArrayColor", false) {
             override fun isSupported() = tags
             override fun onUpdate(value: Boolean) = updateTagDetails()
@@ -74,6 +75,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     private val font by FontValue("Font", Fonts.font40)
     private val textShadow by BoolValue("ShadowText", true)
+    private val moduleCase by ModeValue("ModuleCase", arrayOf("Normal", "Uppercase", "Lowercase"), "Normal")
     private val upperCase by BoolValue("UpperCase", false)
     private val space by FloatValue("Space", 0F, 0F..5F)
     private val textHeight by FloatValue("TextHeight", 11F, 1F..20F)
@@ -112,12 +114,24 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     }
 
     private fun getDisplayString(module: Module): String {
-        val displayString = when {
-            tags && !module.tag.isNullOrEmpty() -> module.getName() + tagPrefix + module.tag + tagSuffix
-            else -> module.getName()
+        val moduleName = when (moduleCase) {
+          "Normal" -> module.getName()
+          "Uppercase" -> module.getName().uppercase()
+          "Lowercase" -> module.getName().lowercase()
         }
 
-        return if (upperCase) displayString.uppercase() else displayString
+        val moduleTag = when (tagCase) {
+          "Normal" -> module.tag
+          "Uppercase" -> module.tag.uppercase()
+          "Lowercase" -> module.tag.lowercase()
+        }
+
+        val displayString = when {
+            tags && !module.tag.isNullOrEmpty() -> moduleName + tagPrefix + moduleTag + tagSuffix
+            else -> moduleName
+        }
+
+        return displayString
     }
 
     override fun drawElement(): Border? {
