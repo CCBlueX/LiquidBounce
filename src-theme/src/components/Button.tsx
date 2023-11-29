@@ -8,6 +8,7 @@ type ButtonProps = {
   icon?: React.ElementType<SVGProps<SVGSVGElement>>;
   children?: React.ReactNode;
   tooltip?: string;
+  onClick?: () => void;
 };
 
 export default function Button({
@@ -15,9 +16,10 @@ export default function Button({
   icon: Icon,
   children,
   tooltip,
+  onClick,
 }: ButtonProps) {
   const component = (
-    <button className={styles.button} data-variant={variant}>
+    <button className={styles.button} data-variant={variant} onClick={onClick}>
       {Icon && (
         <div className={styles.iconWrapper}>
           <Icon className={styles.icon} />

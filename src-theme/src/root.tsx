@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "react-query";
 import { Outlet } from "react-router-dom";
 
 import { TooltipProvider } from "./components/tooltip";
@@ -10,6 +11,8 @@ export default function Root() {
     const baseScaleFactor = 0.35;
     const maxResolutionWidth = 1920 * 1.1;
     const maxResolutionHeight = 1080 * 1.1;
+
+    localStorage.clear();
 
     // Calculate the aspect ratio of the base resolution
     const baseAspectRatio =
@@ -62,9 +65,13 @@ export default function Root() {
     };
   }, []);
 
+  const queryClient = new QueryClient();
+
   return (
-    <TooltipProvider>
-      <Outlet />
-    </TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Outlet />
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }

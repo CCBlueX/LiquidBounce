@@ -3,14 +3,13 @@ import { type CSSProperties, useState, createContext, useContext } from "react";
 
 import Resizable from "~/components/resizable";
 
-import { Module } from "~/features/clickgui/use-modules";
-
 import ModuleItem from "./module";
 
 import useDraggable from "~/hooks/use-draggable.tsx";
 
 import styles from "./panel.module.scss";
 import invariant from "tiny-invariant";
+import { Module } from "~/utils/api";
 
 type PanelProps = {
   category: string;

@@ -1,6 +1,5 @@
-import List from "../list";
-
-import { World } from "~/utils/types";
+import { World } from "~/utils/api";
+import { ListItem } from "..";
 
 type WorldEntryProps = {
   world: World;
@@ -8,7 +7,7 @@ type WorldEntryProps = {
 
 export default function WorldEntry({ world }: WorldEntryProps) {
   return (
-    <List.Item layoutId={world.name}>
+    <ListItem>
       {/* Server Icon Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Server Icon */}
@@ -26,9 +25,9 @@ export default function WorldEntry({ world }: WorldEntryProps) {
 
         {/* Server MOTD */}
         <div className="text-white/50 text-xl font-semibold">
-          {world.lastPlayed}
+          {new Date(world.lastPlayed).toLocaleString()}
         </div>
       </div>
-    </List.Item>
+    </ListItem>
   );
 }

@@ -1,4 +1,4 @@
-import List from "../list";
+import { ListItem } from "..";
 
 import { Proxy } from "~/utils/types";
 
@@ -8,7 +8,7 @@ type ProxyEntryProps = {
 
 export default function ProxyEntry({ proxy }: ProxyEntryProps) {
   return (
-    <List.Item layoutId={[proxy.host, proxy.port, proxy.username].join(":")}>
+    <ListItem>
       {/* Proxy Location Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Proxy Location */}
@@ -33,6 +33,6 @@ export default function ProxyEntry({ proxy }: ProxyEntryProps) {
           {proxy.host}:{proxy.port}
         </div>
       </div>
-    </List.Item>
+    </ListItem>
   );
 }

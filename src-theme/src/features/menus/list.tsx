@@ -4,13 +4,19 @@ import styles from "./list.module.css";
 
 type ListProps = {
   children: React.ReactNode;
+  loading?: boolean;
 };
 
-export default function List({ children }: ListProps) {
+export default function List({ children, loading }: ListProps) {
   return (
     <motion.div className={styles.listContainer}>
-      <motion.div className={styles.list} layout>
-        <AnimatePresence initial={false} mode="wait">
+      <motion.div className={styles.list} data-loading={loading}>
+        {loading &&
+          Array.from({ length: 50 }).map((_, idx) => (
+            <ListItem key={idx} loading />
+          ))}
+
+        <AnimatePresence initial={false} mode="popLayout">
           {children}
         </AnimatePresence>
       </motion.div>
@@ -18,36 +24,46 @@ export default function List({ children }: ListProps) {
   );
 }
 
-type ListItemProps = {
-  layoutId: string;
-  children: React.ReactNode;
-};
+type ListItemProps =
+  | {
+      children: React.ReactNode;
+      loading?: false;
+    }
+  | {
+      children?: never;
+      loading: true;
+    };
 
-function ListItem({ layoutId, children }: ListItemProps) {
+export function ListItem({ children, loading = false }: ListItemProps) {
   return (
     <motion.div
-      className={styles.listItem}
-      layoutId={layoutId}
+      className={styles.listItemWrapper}
+      layout
       variants={{
         show: {
           opacity: 1,
-          transition: {
-            duration: 0.5,
-            ease: "anticipate",
-          },
         },
         hide: {
           opacity: 0,
-          transition: {
-            duration: 0.5,
-            ease: "anticipate",
-          },
         },
       }}
+      initial="hide"
+      animate="show"
+      exit="hide"
     >
-      {children}
+      <div className={styles.listItem} data-loading={loading}>
+        {loading ? (
+          <div className={styles.loading}>
+            <div className={styles.loadingIcon} />
+            <div className={styles.loadingText}>
+              <div className={styles.loadingTextLine} />
+              <div className={styles.loadingTextLine} />
+            </div>
+          </div>
+        ) : (
+          children
+        )}
+      </div>
     </motion.div>
   );
 }
-
-List.Item = ListItem;

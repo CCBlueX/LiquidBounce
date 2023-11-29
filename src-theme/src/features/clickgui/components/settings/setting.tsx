@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { ModuleSetting } from "../../use-modules";
 
 import styles from "./setting.module.scss";
+import { Value } from "~/utils/api";
 
 export type ModuleSettingProps = {
-  setting: ModuleSetting;
+  value: Value;
 };
 
 type ModuleSettingItemProps = {

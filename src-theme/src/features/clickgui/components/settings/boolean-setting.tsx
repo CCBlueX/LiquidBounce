@@ -1,28 +1,28 @@
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { useState } from "react";
 
-import { BooleanModuleSetting } from "../../use-modules";
-
 import ModuleSetting from "./setting";
+
+import { BooleanValue } from "~/utils/api";
 
 import styles from "./setting.module.scss";
 
 type BooleanModuleSettingProps = {
-  setting: BooleanModuleSetting;
+  value: BooleanValue;
 };
 
 export default function BooleanModuleSetting({
-  setting,
+  value,
 }: BooleanModuleSettingProps) {
-  const [checked, setChecked] = useState(setting.value);
+  const [checked, setChecked] = useState(value.value);
 
   function onChange(checked: boolean) {
-    setChecked(checked);
+    setChecked(!checked);
     // TODO: Update setting value
   }
 
   return (
-    <ModuleSetting data-type={setting.type}>
+    <ModuleSetting data-type={value.valueType}>
       <div className={styles.container}>
         <SwitchPrimitive.Root
           className={styles.root}
@@ -31,7 +31,7 @@ export default function BooleanModuleSetting({
         >
           <SwitchPrimitive.Thumb className={styles.thumb} />
         </SwitchPrimitive.Root>
-        <div className={styles.label}>{setting.name}</div>
+        <div className={styles.label}>{value.name}</div>
       </div>
     </ModuleSetting>
   );

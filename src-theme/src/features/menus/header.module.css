@@ -1,6 +1,6 @@
 /* "h-[92px] bg-black/70 rounded-xl flex items-center space-x-10 px-8"> */
 .header {
-  height: 92px;
+  flex: 0 0 92px;
   background-color: rgba(0, 0, 0, 0.7);
   border-radius: 12px;
   display: flex;

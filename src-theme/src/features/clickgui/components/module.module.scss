@@ -39,4 +39,15 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  .loading {
+    color: var(--text-dimmed);
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 10px;
+    padding-right: 32px;
+    transition: ease background-color 0.2s, ease color 0.2s;
+    position: relative;
+  }
 }

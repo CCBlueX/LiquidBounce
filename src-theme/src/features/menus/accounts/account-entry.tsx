@@ -1,4 +1,4 @@
-import List from "../list";
+import { ListItem } from "..";
 
 import type { Account } from "~/utils/types";
 
@@ -8,7 +8,7 @@ type AccountEntryProps = {
 
 export default function AccountEntry({ account }: AccountEntryProps) {
   return (
-    <List.Item layoutId={account.uuid}>
+    <ListItem>
       {/* Account Head Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Account Head */}
@@ -31,6 +31,6 @@ export default function AccountEntry({ account }: AccountEntryProps) {
           {account.email}
         </div>
       </div>
-    </List.Item>
+    </ListItem>
   );
 }

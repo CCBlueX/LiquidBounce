@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
-import { Module, ModuleSetting, useModules } from "../use-modules";
+import { ModuleSetting, useModules } from "../use-modules";
 
 import { ReactComponent as Chevron } from "~/assets/icons/chevron.svg";
 
@@ -13,6 +13,8 @@ import StringModuleSetting from "./settings/string-setting";
 import ColorModuleSetting from "./settings/color-setting";
 
 import styles from "./module.module.scss";
+import { Module } from "~/utils/api";
+import ModuleSettings from "./module-setting";
 
 type ModuleProps = {
   module: Module;
@@ -39,40 +41,6 @@ export default function ModuleItem({ module }: ModuleProps) {
   function handleContextMenu(event: React.MouseEvent<HTMLDivElement>) {
     event.preventDefault();
     toggleExpanded();
-  }
-
-  function renderModuleSetting(setting: ModuleSetting) {
-    let component;
-
-    switch (setting.type) {
-      case "boolean":
-        component = (
-          <BooleanModuleSetting setting={setting} key={setting.name} />
-        );
-        break;
-      case "number":
-      case "range":
-        component = (
-          <SliderModuleSetting setting={setting} key={setting.name} />
-        );
-        break;
-      case "enum":
-        component = <EnumModuleSetting setting={setting} key={setting.name} />;
-        break;
-      case "string":
-        component = (
-          <StringModuleSetting setting={setting} key={setting.name} />
-        );
-        break;
-      case "color":
-        component = <ColorModuleSetting setting={setting} key={setting.name} />;
-        break;
-      default:
-        component = <UnknownModuleSetting setting={setting} />;
-        break;
-    }
-
-    return component;
   }
 
   return (
@@ -104,32 +72,7 @@ export default function ModuleItem({ module }: ModuleProps) {
       </div>
 
       <AnimatePresence initial={false} mode="popLayout">
-        {expanded && (
-          <motion.div
-            className={styles.settings}
-            variants={{
-              hidden: {
-                opacity: 0,
-                height: 0,
-              },
-              visible: {
-                opacity: 1,
-                height: "auto",
-                transition: {
-                  staggerChildren: 0.05,
-                  bounce: 0,
-                  ease: "easeInOut",
-                  duration: 0.2,
-                },
-              },
-            }}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            {module.settings.map(renderModuleSetting)}
-          </motion.div>
-        )}
+        {expanded && <ModuleSettings module={module} />}
       </AnimatePresence>
     </motion.div>
   );

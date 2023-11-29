@@ -1,27 +1,37 @@
 import Fuse from "fuse.js";
 import { useMemo, useState } from "react";
+import { useQuery } from "react-query";
 
 import Button from "~/components/button";
 import Switch from "~/components/switch";
 
-import Footer from "~/features/menus/footer";
-import Header from "~/features/menus/header";
-import List from "~/features/menus/list";
-import Menu from "~/features/menus/menu";
+import {
+  Footer,
+  Header,
+  List,
+  ListItem,
+  Menu,
+  SearchBar,
+} from "~/features/menus";
 
 import ServerEntry from "~/features/menus/multiplayer/server-entry";
-import { useServers } from "~/features/menus/multiplayer/use-servers";
 import VersionSelector from "~/features/menus/multiplayer/version-selector";
+
+import { getServers } from "~/utils/api";
 
 // Left Footer Actions
 import { ReactComponent as Add } from "~/assets/icons/add.svg";
 import { ReactComponent as DirectConnect } from "~/assets/icons/direct-connect.svg";
 import { ReactComponent as Change } from "~/assets/icons/change.svg";
 import { ReactComponent as Refresh } from "~/assets/icons/refresh.svg";
-import SearchBar from "~/features/menus/searchbar";
 
 export default function Multiplayer() {
-  const { servers } = useServers();
+  const {
+    status,
+    data: servers,
+    error,
+    refetch,
+  } = useQuery("servers", getServers);
   const [search, setSearch] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [currentVersion, setCurrentVersion] = useState(false);
@@ -29,10 +39,12 @@ export default function Multiplayer() {
   const [selectedVersion, setSelectedVersion] = useState<string>("1.20.1");
 
   const filteredServers = useMemo(() => {
-    if (!search) return servers;
+    if (!search || !servers) {
+      return servers;
+    }
 
     const fuse = new Fuse(servers, {
-      keys: ["name", "motd", "ip"],
+      keys: ["name", "address"],
     });
 
     return fuse.search(search).map((result) => result.item);
@@ -57,9 +69,12 @@ export default function Multiplayer() {
             onChange={setSelectedVersion}
           />
         </Header>
-        <List>
-          {filteredServers.map((server) => (
-            <ServerEntry key={server.name} server={server} />
+        <List loading={status === "loading"}>
+          {filteredServers?.map((server) => (
+            <ServerEntry
+              key={`${server.name}-${server.icon}`}
+              server={server}
+            />
           ))}
         </List>
       </Menu.Content>
@@ -67,7 +82,9 @@ export default function Multiplayer() {
         <Footer.Actions>
           <Button icon={Add}>Add</Button>
           <Button icon={DirectConnect}>Direct</Button>
-          <Button icon={Refresh}>Refresh</Button>
+          <Button icon={Refresh} onClick={refetch}>
+            Refresh
+          </Button>
           <Button icon={Change}>Change Client Brand</Button>
         </Footer.Actions>
         <Footer.Back />

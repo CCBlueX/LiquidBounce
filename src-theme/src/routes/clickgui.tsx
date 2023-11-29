@@ -8,9 +8,29 @@ import { useModules } from "~/features/clickgui/use-modules";
 import Panel from "~/features/clickgui/components/panel";
 
 import styles from "./clickgui.module.css";
+import { Module, getModules } from "~/utils/api";
+import { useQuery } from "react-query";
 
 export default function ClickGUI() {
-  const { modulesByCategory } = useModules();
+  // const { modulesByCategory } = useModules();
+
+  const {
+    status,
+    data: modules,
+    error,
+    refetch,
+  } = useQuery("modules", getModules);
+
+  const modulesByCategory = modules?.reduce((acc, module) => {
+    const category = module.category;
+
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+
+    acc[category].push(module);
+    return acc;
+  }, {} as Record<string, Module[]>);
 
   // let modulesColor = kotlin.colorToHex(clickGuiModule.instance.getModuleColor())
   //     let headerColor = kotlin.colorToHex(clickGuiModule.instance.getHeaderColor())
@@ -37,18 +57,19 @@ export default function ClickGUI() {
         }}
       >
         <AlignmentGrid />
-        <img
+        {/* <img
           src="./background.png"
           className="absolute inset-0 w-full h-full -z-10"
-        />
-        {Object.entries(modulesByCategory).map(([category, modules], idx) => (
-          <Panel
-            category={category}
-            modules={modules}
-            key={category}
-            startPosition={[30, 30 + idx * 45]}
-          />
-        ))}
+        /> */}
+        {modulesByCategory &&
+          Object.entries(modulesByCategory).map(([category, modules], idx) => (
+            <Panel
+              category={category}
+              modules={modules}
+              key={category}
+              startPosition={[30, 30 + idx * 45]}
+            />
+          ))}
       </AlignmentGridProvider>
     </div>
   );

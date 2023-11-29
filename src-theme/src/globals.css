@@ -9,7 +9,7 @@
 }
 
 body {
-  background-color: #181a1b;
+  /* background-color: #181a1b; */
 }
 
 /*@media screen and (max-width: 1366px) {
@@ -47,3 +47,7 @@ body {
     zoom: 0.4;
   }
 }*/
+
+[data-radix-popper-content-wrapper] {
+  zoom: var(--scale-factor);
+}

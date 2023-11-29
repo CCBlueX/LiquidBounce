@@ -6,13 +6,13 @@
     font-weight: 500;
   }
 
-  &[data-type="unknown"] {
+  &[data-type="INVALID"] {
     .label {
       color: var(--text-dimmed);
     }
   }
 
-  &[data-type="boolean"] {
+  &[data-type="BOOLEAN"] {
     .container {
       display: flex;
       align-items: center;
@@ -62,8 +62,10 @@
     }
   }
 
-  &[data-type="number"],
-  &[data-type="range"] {
+  &[data-type="INT"],
+  &[data-type="INT_RANGE"],
+  &[data-type="FLOAT"],
+  &[data-type="FLOAT_RANGE"] {
     .header {
       display: flex;
       align-items: center;
@@ -118,7 +120,7 @@
     }
   }
 
-  &[data-type="enum"] {
+  &[data-type="CHOICE"] {
     .trigger {
       display: flex;
       align-items: center;
@@ -152,7 +154,7 @@
     }
   }
 
-  &[data-type="string"] {
+  &[data-type="TEXT"] {
     .input {
       width: 100%;
       height: 32px;
@@ -174,7 +176,7 @@
     }
   }
 
-  &[data-type="color"] {
+  &[data-type="COLOR"] {
     .container {
       position: relative;
       display: flex;

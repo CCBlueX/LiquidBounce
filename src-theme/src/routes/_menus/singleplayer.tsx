@@ -1,24 +1,26 @@
 import Fuse from "fuse.js";
 import { useMemo, useState } from "react";
+import { useQuery } from "react-query";
 
 import Button from "~/components/button";
 import Combobox, { Option } from "~/components/combobox";
 import Switch from "~/components/switch";
 
-import Footer from "~/features/menus/footer";
-import Header from "~/features/menus/header";
-import Menu from "~/features/menus/menu";
+import { Footer, Header, List, Menu, SearchBar } from "~/features/menus";
 
 import WorldEntry from "~/features/menus/singleplayer/world-entry";
-import { useWorlds } from "~/features/menus/singleplayer/use-worlds";
 
 // Left Footer Buttons
 import { ReactComponent as Add } from "~/assets/icons/add.svg";
-import List from "~/features/menus/list";
-import SearchBar from "~/features/menus/searchbar";
+
+import { getWorlds } from "~/utils/api";
+
+function useWorlds() {
+  return useQuery("worlds", getWorlds);
+}
 
 export default function Singleplayer() {
-  const { worlds } = useWorlds();
+  const { state, data: worlds, error } = useWorlds();
   const [search, setSearch] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [gameModes, setGameModes] = useState<Option[]>([
@@ -72,8 +74,10 @@ export default function Singleplayer() {
     },
   ]);
 
-  const filteredWorlds = useMemo(() => {
-    if (!search) return worlds;
+  let filteredWorlds = useMemo(() => {
+    if (!search || !worlds) {
+      return worlds;
+    }
 
     const fuse = new Fuse(worlds, {
       keys: ["name"],
@@ -81,6 +85,25 @@ export default function Singleplayer() {
 
     return fuse.search(search).map((result) => result.item);
   }, [search, worlds]);
+
+  // if (favoritesOnly) {
+  //   filteredWorlds = filteredWorlds?.filter((world) => world.favorite);
+  // }
+
+  if (gameModes.some((mode) => mode.checked)) {
+    filteredWorlds = filteredWorlds?.filter((world) =>
+      gameModes.some((mode) => mode.checked && mode.value === world.gameMode)
+    );
+  }
+
+  if (difficulties.some((difficulty) => difficulty.checked)) {
+    filteredWorlds = filteredWorlds?.filter((world) =>
+      difficulties.some(
+        (difficulty) =>
+          difficulty.checked && difficulty.value === world.difficulty
+      )
+    );
+  }
 
   return (
     <Menu>
@@ -134,7 +157,7 @@ export default function Singleplayer() {
           </Combobox>
         </Header>
         <List>
-          {filteredWorlds.map((world) => (
+          {filteredWorlds?.map((world) => (
             <WorldEntry key={world.name} world={world} />
           ))}
         </List>
