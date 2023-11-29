@@ -20,11 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -38,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -224,6 +227,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(targetTracker)
             tree(rotationConfigurable)
         }
+        private val targetRenderer = tree(OverlayTargetRenderer(this.module!!))
+
 
         val tickRepeatable = repeatable {
             targetTracker.cleanup()
@@ -251,6 +256,13 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             }
 
             RotationManager.aimAt(rotation, configurable = rotationConfigurable)
+        }
+
+        val renderHandler = handler<OverlayRenderEvent> { event ->
+            val target = targetTracker.lockedOnTarget ?: return@handler
+            renderEnvironmentForGUI() {
+                targetRenderer.render(this, target, event.tickDelta)
+            }
         }
 
     }
