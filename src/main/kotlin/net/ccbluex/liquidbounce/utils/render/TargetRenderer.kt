@@ -290,16 +290,10 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
                     Vec3d(0.0, entity.height.toDouble(), 0.0)
 
 
-            val screenPos =
-                calculateScreenPos(
-                    pos,
-                    ModuleNametags.mvMatrix!!,
-                    ModuleNametags.projectionMatrix!!,
-                ) ?: return
+            val screenPos = calculateScreenPos(pos) ?: return
 
             with(env) {
                 withColor(color) {
-                    chat("renderingArrow")
                     drawCustomMesh(
                         VertexFormat.DrawMode.TRIANGLE_STRIP,
                         VertexFormats.POSITION,
