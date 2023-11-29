@@ -24,12 +24,18 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
+import net.minecraft.client.RunArgs.Game
+import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
@@ -267,17 +273,35 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
 class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
     override val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy()))
 
-    inner class Legacy : WorldTargetRenderAppearance("Legacy") {
+    inner class Legacy : OverlayTargetRenderAppearance("Arrow") {
 
         override val parent: ChoiceConfigurable
             get() = appearance
 
-        private val size by float("Size", 0.5f, 0.1f..2f)
-
-        private val yOffset by float("YOffset", 0.1f, 0f..1f)
+        private val color by color("Color", Color4b.RED)
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
             val pos = entity.interpolateCurrentPosition(partialTicks)
 
+            val screenPos =
+                calculateScreenPos(
+                    pos,
+                    ModuleNametags.mvMatrix!!,
+                    ModuleNametags.projectionMatrix!!,
+                ) ?: return
+
+            with(env) {
+                withColor(color) {
+                    drawCustomMesh(
+                        VertexFormat.DrawMode.TRIANGLE_FAN,
+                        VertexFormats.POSITION,
+                        GameRenderer.getPositionProgram()!!
+                    ) {
+                        vertex(it, screenPos.x, screenPos.y, 1f)
+                        vertex(it, screenPos.x - 10, screenPos.y + 20, 1f)
+                        vertex(it, screenPos.x + 10, screenPos.y + 20, 1f)
+                    }
+                }
+            }
         }
     }
 }

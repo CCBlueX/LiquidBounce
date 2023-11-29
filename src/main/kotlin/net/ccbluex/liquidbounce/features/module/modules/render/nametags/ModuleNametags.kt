@@ -53,8 +53,8 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val fontRenderer: FontRenderer
         get() = LiquidBounceFonts.DEFAULT_FONT
 
-    private var mvMatrix: Matrix4f? = null
-    private var projectionMatrix: Matrix4f? = null
+    var mvMatrix: Matrix4f? = null
+    var projectionMatrix: Matrix4f? = null
 
     val overlayRenderHandler =
         handler<OverlayRenderEvent> { event ->

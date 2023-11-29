@@ -20,11 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.GameTickEvent
+import net.ccbluex.liquidbounce.event.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -35,6 +38,8 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -87,6 +92,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
 
         var currentChargeRandom: Int? = null
+
+
+
 
         fun updateChargeRandom() {
             val lenHalf = (this.chargedRandom.endInclusive - this.chargedRandom.start) / 2.0F
@@ -221,6 +229,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(targetTracker)
             tree(rotationConfigurable)
         }
+        private val targetRenderer = tree(OverlayTargetRenderer(this.module!!))
+
 
         val tickRepeatable = repeatable {
             targetTracker.cleanup()
@@ -248,6 +258,13 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             }
 
             RotationManager.aimAt(rotation, configurable = rotationConfigurable)
+        }
+
+        val renderHandler = handler<OverlayRenderEvent> { event ->
+            val target = targetTracker.lockedOnTarget ?: return@handler
+            renderEnvironmentForGUI() {
+                targetRenderer.render(this, target, event.tickDelta)
+            }
         }
 
     }
@@ -433,5 +450,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         tree(AutoShootOptions)
         tree(BowAimbotOptions)
         tree(FastChargeOptions)
+
     }
+
 }
