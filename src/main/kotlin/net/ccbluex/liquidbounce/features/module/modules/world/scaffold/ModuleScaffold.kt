@@ -174,7 +174,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldSafeWalkFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
-        tree(ScaffoldStabilizeMovementFeature)
     }
 
     var randomization = Random.nextDouble(-0.02, 0.02)
@@ -244,6 +243,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (player.isOnGround) {
                 isOnRightSide = floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
                     floor(player.z + sin(radians) * 0.5) != floor(player.z)
+
                 if (player.blockPos.down().getState()?.isAir == true
                     && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.6).toBlockPos().down()
                         .getState()?.isAir == true
@@ -278,12 +278,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
 
-        val searchOptions = BlockPlacementTargetFindingOptions(
-            if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-            bestStack,
-            getFacePositionFactoryForConfig(),
-            priorityGetter,
-        )
+        val searchOptions =
+            BlockPlacementTargetFindingOptions(
+                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                bestStack,
+                getFacePositionFactoryForConfig(),
+                priorityGetter,
+            )
 
         currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
 
