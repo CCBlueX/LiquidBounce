@@ -785,6 +785,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         if (mc.thePlayer.isBlocking) {
             blockStatus = true
+            renderBlocking = true
             return
         }
 
