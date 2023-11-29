@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce.web.socket.netty
 
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelOption
+import io.netty.channel.epoll.Epoll
+import io.netty.channel.epoll.EpollEventLoopGroup
+import io.netty.channel.epoll.EpollServerSocketChannel
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.logging.LogLevel
@@ -37,15 +40,15 @@ internal class NettyServer {
     }
 
     fun startServer() {
-        val bossGroup = NioEventLoopGroup()
-        val workerGroup = NioEventLoopGroup()
+        val bossGroup = if (Epoll.isAvailable()) EpollEventLoopGroup() else NioEventLoopGroup()
+        val workerGroup = if (Epoll.isAvailable()) EpollEventLoopGroup() else NioEventLoopGroup()
 
         try {
             println("Starting Netty server...")
             val b = ServerBootstrap()
             b.option(ChannelOption.SO_BACKLOG, 1024)
             b.group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel::class.java)
+                .channel(if (Epoll.isAvailable()) EpollServerSocketChannel::class.java else NioServerSocketChannel::class.java)
                 .handler(LoggingHandler(LogLevel.INFO))
                 .childHandler(HttpChannelInitializer())
             val ch = b.bind(PORT).sync().channel()
@@ -60,7 +63,6 @@ internal class NettyServer {
 
         println("Netty server stopped.")
     }
-
 
 
 }
