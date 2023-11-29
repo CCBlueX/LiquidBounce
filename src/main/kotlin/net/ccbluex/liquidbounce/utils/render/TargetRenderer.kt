@@ -60,7 +60,13 @@ abstract class TargetRenderer(module: Module) : ToggleableConfigurable(module, "
 
 class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
 
-    override val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy(), Circle(module), GlowingCircle(module)))
+    override val appearance =
+        choices(
+            module,
+            "Mode",
+            Legacy(),
+            arrayOf(Legacy(), Circle(module), GlowingCircle(module))
+        )
 
     inner class Legacy : WorldTargetRenderAppearance("Legacy") {
 
