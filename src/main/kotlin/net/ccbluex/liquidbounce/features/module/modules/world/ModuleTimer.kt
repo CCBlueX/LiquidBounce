@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.WorldDisconnectEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -49,13 +47,13 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
         when (currentTimerState) {
             TimerState.NormalSpeed -> {
                 Timer.requestTimerSpeed(normalSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = normalSpeedTicks)
-                wait(normalSpeedTicks)
+                waitTicks(normalSpeedTicks)
                 currentTimerState = TimerState.BoostSpeed
             }
 
             TimerState.BoostSpeed -> {
                 Timer.requestTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = boostSpeedTicks)
-                wait(boostSpeedTicks)
+                waitTicks(boostSpeedTicks)
                 currentTimerState = TimerState.NormalSpeed
             }
         }

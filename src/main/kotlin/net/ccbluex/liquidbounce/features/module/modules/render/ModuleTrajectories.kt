@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
@@ -164,7 +163,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val yaw: Float
         val pitch: Float
 
-        val targetRotation = RotationManager.targetRotation
+        val targetRotation = RotationManager.aimPlan?.rotation
 
         if (targetRotation == null) {
             yaw = otherPlayer.yaw

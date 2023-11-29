@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -52,9 +52,6 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
         if (!showRotationVector)
             return@handler
-
-
-
 
         val rotation = RotationManager.currentRotation ?: return@handler
         val camera = mc.gameRenderer.camera

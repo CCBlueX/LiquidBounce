@@ -20,14 +20,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.BoxesRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.minecraft.block.BlockState
@@ -51,7 +53,6 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     private val colorRainbow by boolean("Rainbow", false)
 
     private object Box : Choice("Box") {
-
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -60,32 +61,43 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         // todo: use box of block, not hardcoded
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
-        val renderHandler = handler<WorldRenderEvent> { event ->
-            val matrixStack = event.matrixStack
-            val base = if (colorRainbow) rainbow() else color
 
-            val markedBlocks = BlockTracker.trackedBlockMap.keys
+
+        val renderHandler = handler<WorldRenderEvent> { event ->
+
+            val matrixStack = event.matrixStack
+
+            val base = if (colorRainbow) rainbow() else color
+            val baseColor = base.alpha(50)
+            val outlineColor = base.alpha(100)
+
+            val boxRenderer = BoxesRenderer()
+
+
 
             renderEnvironmentForWorld(matrixStack) {
-                for (pos in markedBlocks) {
-                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
-                    val baseColor = base.alpha(50)
-                    val outlineColor = base.alpha(100)
+                synchronized(BlockTracker.trackedBlockMap) {
+                    for (pos in BlockTracker.trackedBlockMap.keys) {
+                        val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
-                    withPosition(vec3) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
+                        withPosition(vec3) {
+                            boxRenderer.drawBox(this, box, outline)
 
-                        if (outline) {
-                            withColor(outlineColor) {
-                                drawOutlinedBox(box)
-                            }
                         }
                     }
                 }
-            }
+
+                boxRenderer.draw(this, baseColor, outlineColor)
+
+
+
+
+
+
+
+                }
+
         }
 
     }

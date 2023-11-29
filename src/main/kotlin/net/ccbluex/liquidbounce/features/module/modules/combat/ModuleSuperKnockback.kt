@@ -21,13 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import kotlin.random.Random
 
 /**
  * SuperKnockback module
@@ -47,10 +49,8 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         val attackHandler = handler<AttackEvent> { event ->
             val enemy = event.enemy
 
-            if (enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance > Random.nextInt(
-                    0, 99
-                ) && !ModuleCriticals.wouldCrit()
-            ) {
+            if (enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random() &&
+                !ModuleCriticals.wouldCrit()) {
                 if (player.isSprinting) {
                     network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 }
@@ -85,7 +85,6 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
             antiSprint = true
 
             waitUntil { !player.isSprinting && !player.lastSprinting }
-
             waitTicks(reSprintTicks.random())
 
             antiSprint = false
@@ -111,13 +110,9 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
             }
 
             waitTicks(ticksUntilMovementBlock.random())
-
             stopMoving = true
-
             waitUntil { !player.input.hasForwardMovement() }
-
             waitTicks(ticksUntilAllowedMovement.random())
-
             stopMoving = false
         }
     }
@@ -125,14 +120,6 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     fun shouldBlockSprinting() = enabled && SprintTap.isActive && SprintTap.antiSprint
 
     fun shouldStopMoving() = enabled && WTap.isActive && WTap.stopMoving
-
-    private suspend fun <T : Event> Sequence<T>.waitTicks(ticks: Int) {
-        if (ticks > 0) {
-            val time = System.currentTimeMillis() + ticks * 50L
-
-            waitUntil { System.currentTimeMillis() >= time }
-        }
-    }
 
     private suspend fun <T : Event> Sequence<T>.shouldStopSprinting(event: AttackEvent): Boolean {
         val enemy = event.enemy
@@ -152,13 +139,8 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
             return false
         }
 
-        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance > Random.nextInt(
-            0, 99
-        ) && !ModuleCriticals.wouldCrit()
-    }
-
-    enum class SprintStopMode(override val choiceName: String) : NamedChoice {
-        Packet("Packet"), SprintTap("SprintTap"), WTap("WTap")
+        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
+            && !ModuleCriticals.wouldCrit()
     }
 
 }

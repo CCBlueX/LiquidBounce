@@ -38,7 +38,7 @@ object ModuleAutoLeave : Module("AutoLeave", Category.COMBAT) {
     val tickRepeatable = repeatable {
         if (player.health <= health && !player.abilities.creativeMode && !mc.isIntegratedServerRunning) {
             // Delay to bypass anti cheat or combat log detections
-            wait(delay)
+            waitTicks(delay)
 
             // Kick (@see kick module)
             ModuleKick.kick(mode)

@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.WorldDisconnectEvent;
+import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;

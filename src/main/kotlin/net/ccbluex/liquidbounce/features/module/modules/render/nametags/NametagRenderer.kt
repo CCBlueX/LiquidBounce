@@ -1,19 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.render.RenderBufferBuilder
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.VertexInputType
-import net.ccbluex.liquidbounce.render.drawQuad
-import net.ccbluex.liquidbounce.render.drawQuadOutlines
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.render.LiquidBounceFonts
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.Camera
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.item.ItemStack
 import org.lwjgl.opengl.GL11
@@ -44,9 +37,9 @@ class NametagRenderer {
         info: NametagInfo,
         pos: Vec3,
     ) {
-        val c = LiquidBounceFonts.DEFAULT_FONT_SIZE.toFloat()
+        val c = Fonts.DEFAULT_FONT_SIZE.toFloat()
 
-        val scale = 1.0F / (c * 0.1F)
+        val scale = 1.0F / (c * 0.15F) * ModuleNametags.scale
 
         env.matrixStack.push()
         env.matrixStack.translate(pos.x, pos.y, pos.z)

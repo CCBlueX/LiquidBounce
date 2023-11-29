@@ -60,7 +60,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
             if (player.isBlocking) {
                 interaction.stopUsingItem(player)
-                wait(1)
+                waitTicks(1)
             }
 
             val itemDrop = itemDropDelay.random()
@@ -76,7 +76,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
             // If action was successful, drop the now-empty bowl
             if (bowl && player.inventory.getStack(mushroomStewSlot).item == Items.BOWL) {
-                wait(itemDrop)
+                waitTicks(itemDrop)
                 player.dropSelectedItem(true)
             }
             return@repeatable

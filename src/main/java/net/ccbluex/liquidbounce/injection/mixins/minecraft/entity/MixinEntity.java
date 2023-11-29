@@ -19,10 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.ccbluex.liquidbounce.event.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.PlayerStepEvent;
-import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
+import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
@@ -97,6 +98,13 @@ public abstract class MixinEntity {
         PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
         EventManager.INSTANCE.callEvent(stepEvent);
         return stepEvent.getHeight();
+    }
+
+    @Inject(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;",
+            at = @At(value = "RETURN", ordinal = 0))
+    private void hookStepHeight(Vec3d movement, CallbackInfoReturnable<Vec3d> cir) {
+        PlayerStepSuccessEvent stepEvent = new PlayerStepSuccessEvent();
+        EventManager.INSTANCE.callEvent(stepEvent);
     }
 
     @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)

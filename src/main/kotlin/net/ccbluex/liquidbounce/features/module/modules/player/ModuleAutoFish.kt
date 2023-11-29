@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -62,7 +62,7 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
                     continue
                 }
 
-                wait(reelDelay.random())
+                waitTicks(reelDelay.random())
                 interaction.sendSequencedPacket(world) { sequence ->
                     PlayerInteractItemC2SPacket(hand, sequence)
                 }
@@ -70,7 +70,7 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
                 player.swingHand(hand)
 
                 if (RecastRod.enabled) {
-                    wait(RecastRod.delay.random())
+                    waitTicks(RecastRod.delay.random())
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(hand, sequence)
                     }

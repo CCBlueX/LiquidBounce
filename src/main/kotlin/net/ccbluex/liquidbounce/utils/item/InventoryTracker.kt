@@ -19,8 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -28,15 +33,14 @@ import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket
 
 object InventoryTracker : Listenable {
-
     var isInventoryOpenServerSide = false
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
 
         if (packet is CloseHandledScreenC2SPacket || packet is CloseScreenS2CPacket || packet is OpenScreenS2CPacket) {
-            // Prevent closing inventory if it is already closed
-            if (!isInventoryOpenServerSide && packet is CloseHandledScreenC2SPacket) {
+            // Prevent closing inventory (no other screen!) if it is already closed
+            if (!isInventoryOpenServerSide && packet is CloseHandledScreenC2SPacket && packet.syncId == 0) {
                 it.cancelEvent()
                 return@handler
             }

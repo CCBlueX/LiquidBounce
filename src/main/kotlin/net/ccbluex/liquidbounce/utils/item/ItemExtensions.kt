@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
 import net.minecraft.command.argument.ItemStackArgument
@@ -52,12 +53,14 @@ fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
     return (0..8).firstOrNull { predicate(player.inventory.getStack(it)) }
 }
 
-fun findInventorySlot(item: Item): Int? = findInventorySlot { it.item == item }
+fun findInventorySlot(item: Item): ItemSlot? = findInventorySlot { it.item == item }
 
-fun findInventorySlot(predicate: (ItemStack) -> Boolean): Int? {
-    val player = mc.player ?: return null
+fun findInventorySlot(predicate: (ItemStack) -> Boolean): ItemSlot? {
+    if (mc.player == null) {
+        return null
+    }
 
-    return (0..40).firstOrNull { predicate(player.inventory.getStack(it)) }
+    return ALL_SLOTS_IN_INVENTORY.find { predicate(it.itemStack) }
 }
 
 /**
@@ -100,7 +103,7 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     return 0
 }
 
-fun isHotbarSlot(slot: Int) = slot == 40 || slot in 0..8
+fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
 val ToolItem.type: Int
     get() = when (this) {

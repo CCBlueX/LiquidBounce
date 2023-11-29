@@ -21,7 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
@@ -42,7 +46,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, Dexland
+            Modify, Strafe, AAC442, Dexland, JumpReset
         )
     }
 
@@ -183,7 +187,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             // Check if this is a regular velocity update
             if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) || packet is ExplosionS2CPacket) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
-                wait(delay)
+                waitTicks(delay)
 
                 // Apply strafe
                 player.strafe(speed = player.sqrtSpeed * strength)
@@ -202,5 +206,58 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             }
         }
 
+    }
+
+    /**
+     * Jump Reset mode. A technique most players use to minimize the amount of knockback they get.
+     */
+    private object JumpReset : Choice("JumpReset") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        object JumpByReceivedHits : ToggleableConfigurable(ModuleVelocity, "JumpByReceivedHits", false) {
+            val hitsUntilJump by int("HitsUntilJump", 2, 0..10)
+        }
+
+        object JumpByDelay : ToggleableConfigurable(ModuleVelocity, "JumpByDelay", true) {
+            val ticksUntilJump by int("TicksUntilJump", 2, 0..20)
+        }
+
+        init {
+            tree(JumpByReceivedHits)
+            tree(JumpByDelay)
+        }
+
+        var limitUntilJump = 0
+
+        val tickJumpHandler = handler<TickJumpEvent> {
+            // To be able to alter velocity when receiving knockback, player must be sprinting.
+            if (player.hurtTime != 9 || !player.isOnGround || !player.isSprinting || !isCooldownOver()) {
+                updateLimit()
+                return@handler
+            }
+
+            player.jump()
+            limitUntilJump = 0
+        }
+
+        fun isCooldownOver(): Boolean {
+            return when {
+                JumpByReceivedHits.enabled -> limitUntilJump >= JumpByReceivedHits.hitsUntilJump
+                JumpByDelay.enabled -> limitUntilJump >= JumpByDelay.ticksUntilJump
+                else -> true // If none of the options are enabled, it will go automatic
+            }
+        }
+
+        fun updateLimit() {
+            if (JumpByReceivedHits.enabled) {
+                if (player.hurtTime == 9) {
+                    limitUntilJump++
+                }
+                return
+            }
+
+            limitUntilJump++
+        }
     }
 }

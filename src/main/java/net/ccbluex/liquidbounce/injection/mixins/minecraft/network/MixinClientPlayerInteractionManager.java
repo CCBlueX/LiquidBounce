@@ -18,20 +18,23 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import net.ccbluex.liquidbounce.event.AttackEvent;
-import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
-import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.AttackEvent;
+import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent;
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleClientFixes;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.spongepowered.asm.mixin.Mixin;
@@ -119,6 +122,16 @@ public class MixinClientPlayerInteractionManager {
 
         args.set(3, rotation.getYaw());
         args.set(4, rotation.getPitch());
+    }
+
+    @Redirect(method = "interactItem", at = @At(value = "INVOKE", target =
+            "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/packet/Packet;)V"))
+    private void hookClientFixRemoveInteractItemMoveC2S(ClientPlayNetworkHandler instance, Packet<?> packet) {
+        if (ModuleClientFixes.INSTANCE.getEnabled() && ModuleClientFixes.INSTANCE.getFixInteractRotationUse()) {
+            return;
+        }
+
+        instance.sendPacket(packet);
     }
 
     @Inject(method = "stopUsingItem", at = @At("HEAD"))

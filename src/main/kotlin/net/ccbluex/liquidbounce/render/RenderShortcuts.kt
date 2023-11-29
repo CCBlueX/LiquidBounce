@@ -37,6 +37,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
+import org.lwjgl.opengl.GL11C
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -64,6 +65,9 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     RenderSystem.enableBlend()
     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
     RenderSystem.disableDepthTest()
+    GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
+
+
 
     matrixStack.push()
 
@@ -79,6 +83,7 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     RenderSystem.disableBlend()
     RenderSystem.enableDepthTest()
     RenderSystem.enableCull()
+    GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
 fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: RenderEnvironment.() -> Unit) {
@@ -386,7 +391,8 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
  * @param colors The colors for the vertices
  */
 fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
-    require(vertices.size == 4 && colors.size == 4) { "lists must have exactly 4 elements" }
+    require(vertices.size == colors.size) { "there must be a color for every vertex" }
+    require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer

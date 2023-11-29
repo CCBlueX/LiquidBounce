@@ -19,7 +19,11 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.StateUpdateEvent
+import net.ccbluex.liquidbounce.event.handler
 
 object TickStateManager : Listenable {
     var enforcedState = ForcedState()

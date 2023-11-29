@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
@@ -180,7 +182,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     val repeatable = repeatable {
         if (Pulse.enabled) {
-            wait(Pulse.delay)
+            waitTicks(Pulse.delay)
             blink()
         } else if (evadeArrows) {
             val firstPositionPacket = (packets.firstOrNull { it is PlayerMoveC2SPacket && it.changePosition } ?: return@repeatable) as PlayerMoveC2SPacket

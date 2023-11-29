@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.StateUpdateEvent
+import net.ccbluex.liquidbounce.event.events.StateUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
  */
 object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
-    val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..1.3f)
+    val edgeDistance by float("EagleEdgeDistance", 0.4f, 0.01f..1.3f)
 
     val repeatable = handler<StateUpdateEvent> {
         // Check if player is on the edge and is NOT flying
