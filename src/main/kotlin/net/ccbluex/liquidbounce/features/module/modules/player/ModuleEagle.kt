@@ -34,20 +34,11 @@ object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
     val edgeDistance by float("EagleEdgeDistance", 0.4f, 0.01f..1.3f)
 
-    var wasEagling = false
-
     val repeatable = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         val shouldBeActive = !player.abilities.flying && player.isOnGround
 
         if (shouldBeActive && player.isCloseToEdge(it.directionalInput, edgeDistance.toDouble())) {
             it.sneaking = true
-            wasEagling = true
-        } else if (wasEagling) {
-            println()
-
-            player.isCloseToEdge(it.directionalInput, edgeDistance.toDouble())
-
-            wasEagling = false
         }
     }
 
