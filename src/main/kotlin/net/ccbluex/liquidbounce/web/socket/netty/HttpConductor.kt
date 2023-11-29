@@ -19,7 +19,13 @@
  */
 package net.ccbluex.liquidbounce.web.socket.netty
 
+import com.google.gson.JsonObject
+import io.netty.buffer.Unpooled
+import io.netty.handler.codec.http.DefaultFullHttpResponse
+import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpMethod
+import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.HttpVersion
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
@@ -33,9 +39,26 @@ class HttpConductor {
         logger.debug("Request {}", requestObject)
 
         if (!context.headers["content-length"].isNullOrEmpty() &&
-            context.headers["content-length"]?.toInt() != requestObject.content.length) {
+            context.headers["content-length"]?.toInt() != requestObject.content.length
+        ) {
             logger.warn("Received incomplete request: $requestObject")
             return@runCatching httpBadRequest("Incomplete request")
+        }
+
+        if (method == HttpMethod.OPTIONS) {
+            val response = DefaultFullHttpResponse(
+                HttpVersion.HTTP_1_1,
+                HttpResponseStatus.OK,
+                Unpooled.wrappedBuffer(ByteArray(0))
+            )
+
+            val httpHeaders = response.headers()
+            httpHeaders[HttpHeaderNames.CONTENT_TYPE] = "text/plain"
+            httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
+            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
+            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS] = "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS"
+            httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"
+            return@runCatching response
         }
 
         RouteController.findRoute(context.path, method)?.let { route ->

@@ -21,4 +21,5 @@ package net.ccbluex.liquidbounce.web.socket.netty.model
 
 data class RequestObject(var context: RequestContext) {
     val content = context.contentBuffer.toString()
+    val params = context.params
 }

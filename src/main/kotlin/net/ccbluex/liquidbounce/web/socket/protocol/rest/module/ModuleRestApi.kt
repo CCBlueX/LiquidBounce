@@ -65,12 +65,12 @@ internal fun RestNode.setupModuleRestApi() {
         }
 
         get("/settings") {
-            decode<ModuleRequest>(it.content)
+            ModuleRequest(it.params["name"] ?: "")
                 .acceptGetSettingsRequest()
         }
 
         put("/settings") {
-            decode<ModuleRequest>(it.content)
+            ModuleRequest(it.params["name"] ?: "")
                 .acceptPutSettingsRequest(it.content)
         }
 
