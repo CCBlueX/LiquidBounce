@@ -94,9 +94,6 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         var currentChargeRandom: Int? = null
 
-
-
-
         fun updateChargeRandom() {
             val lenHalf = (this.chargedRandom.endInclusive - this.chargedRandom.start) / 2.0F
             val mid = this.chargedRandom.start + lenHalf
@@ -450,7 +447,5 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         tree(AutoShootOptions)
         tree(BowAimbotOptions)
         tree(FastChargeOptions)
-
     }
-
 }
