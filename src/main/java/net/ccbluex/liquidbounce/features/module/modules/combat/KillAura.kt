@@ -825,7 +825,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Stop blocking
      */
     private fun stopBlocking() {
-        if (blockStatus) {
+        if (blockStatus && !mc.thePlayer.isBlocking) {
             sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             blockStatus = false
         }
