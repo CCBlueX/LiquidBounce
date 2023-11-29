@@ -249,8 +249,18 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             { noInventoryAttack }
     private val noConsumeAttack by ListValue("NoConsumeAttack", arrayOf("Off", "NoHits", "NoRotation"), "Off", subjective = true)
 
-    // Visuals
+    // Mark
     private val mark by BoolValue("Mark", true, subjective = true)
+    private val markR by IntegerValue("MarkRed", 255, 0..255, subjective = true) { mark && markAlpha > 0 }
+    private val markG by IntegerValue("MarkGreen", 0, 0..255, subjective = true) { mark && markAlpha > 0 }
+    private val markB by IntegerValue("MarkBlue", 0, 0..255, subjective = true) { mark && markAlpha > 0 }
+    private val markA by IntegerValue("MarkAlpha", 70, 0..255, subjective = true) { mark }
+    private val markHitableR by IntegerValue("MarkHitableRed", 37, 0..255, subjective = true) { mark && markHitableAlpha > 0 }
+    private val markHitableG by IntegerValue("MarkHitableGreen", 126, 0..255, subjective = true) { mark && markHitableAlpha > 0 }
+    private val markHitableB by IntegerValue("MarkHitableBlue", 255, 0..255, subjective = true) { mark && markHitableAlpha > 0 }
+    private val markHitableA by IntegerValue("MarkHitableAlpha", 70, 0..255, subjective = true) { mark }
+
+    // Fake Sharpness
     private val fakeSharp by BoolValue("FakeSharp", true, subjective = true)
 
     /**
@@ -415,7 +425,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         target ?: return
 
         if (mark && targetMode != "Multi") drawPlatform(
-            target!!, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70)
+            target!!, if (hitable) Color((markHitableR, markHitableG, markHitableB, markHitableA) else Color(markR, markG, markB, markA)
         )
 
         if (currentTarget != null && attackTimer.hasTimePassed(attackDelay)) {
