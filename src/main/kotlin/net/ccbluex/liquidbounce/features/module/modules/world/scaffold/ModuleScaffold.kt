@@ -263,11 +263,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
-        val bestStack = if (blockInHotbar == null) {
-            ItemStack(Items.SANDSTONE, 64)
-        } else {
-            player.inventory.getStack(blockInHotbar)
-        }
+        val bestStack =
+            if (blockInHotbar == null) {
+                ItemStack(Items.SANDSTONE, 64)
+            } else {
+                player.inventory.getStack(blockInHotbar)
+            }
 
         val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
 
@@ -321,14 +322,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
-        val config = PositionFactoryConfiguration(
-            player.eyes,
-            if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble(),
-            if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else AdvancedRotation.DEFAULT_Y_RANGE.toDouble(),
-            if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble(),
-            AdvancedRotation.step.toDouble(),
-            randomization,
-        )
+        val config =
+            PositionFactoryConfiguration(
+                player.eyes,
+                if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble(),
+                if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else AdvancedRotation.DEFAULT_Y_RANGE.toDouble(),
+                if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble(),
+                AdvancedRotation.step.toDouble(),
+                randomization,
+            )
 
         return when (aimMode.get()) {
             AimMode.CENTER -> CenterTargetPositionFactory
