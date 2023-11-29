@@ -120,18 +120,17 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
           else -> module.getName()
         }
 
-        val moduleTag = when (tagsCase) {
-          "Uppercase" -> module.tag!!.uppercase()
-          "Lowercase" -> module.tag!!.lowercase()
-          else -> module.tag
+        val moduleTag = if (tags && !module.tag.isNullOrEmpty()) {
+          tagPrefix + when (tagsCase) {
+            "Uppercase" -> module.tag.uppercase()
+            "Lowercase" -> module.tag.lowercase()
+            else -> module.tag
+          } + tagSuffix
+        } else {
+          ""
         }
 
-        val displayString = when {
-            tags && !module.tag.isNullOrEmpty() -> moduleName + tagPrefix + moduleTag + tagSuffix
-            else -> moduleName
-        }
-
-        return displayString
+        return moduleName + moduleTag
     }
 
     override fun drawElement(): Border? {
