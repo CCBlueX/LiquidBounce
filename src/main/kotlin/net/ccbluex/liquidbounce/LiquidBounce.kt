@@ -136,8 +136,10 @@ object LiquidBounce : Listenable {
             ProxyManager
             AccountManager
             InventoryTracker
+            WorldToScreen
             Tabs
             Chat
+
 
             // Loads up fonts (requires connection to the internet on first launch)
             Fonts
@@ -154,9 +156,6 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
-
-            // Utils
-            WorldToScreen
 
             // Check for newest version
             if (updateAvailable) {
