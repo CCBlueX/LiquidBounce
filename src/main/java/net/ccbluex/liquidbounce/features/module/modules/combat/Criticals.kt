@@ -68,8 +68,6 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                 "packet" -> {
                     sendPackets(
                         C04PacketPlayerPosition(x, y + 0.0625, z, true),
-                        C04PacketPlayerPosition(x, y, z, false),
-                        C04PacketPlayerPosition(x, y + 1.1E-5, z, false),
                         C04PacketPlayerPosition(x, y, z, false)
                     )
                     thePlayer.onCriticalHit(entity)
@@ -102,7 +100,6 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                 "blocksmc" -> {
                     sendPackets(
                         C04PacketPlayerPosition(x, y + 0.001091981, z, true),
-                        C04PacketPlayerPosition(x, y + 0.000114514, z, false),
                         C04PacketPlayerPosition(x, y, z, false)
                     )
                 }
