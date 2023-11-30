@@ -19,9 +19,9 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
                 if (mc.thePlayer.isPotionActive(Potion.moveSpeed)) {
                     val amplifier = mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier
 
-                    speed = when (amplifier) {
-                        1 -> 0.55f
-                        2 -> 0.7f
+                    speed = when {
+                        amplifier == 1 -> 0.55f
+                        amplifier >= 2 -> 0.7f
                         else -> 0.33f
                     }
                 }
