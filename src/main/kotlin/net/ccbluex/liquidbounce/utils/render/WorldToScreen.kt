@@ -37,8 +37,11 @@ object WorldToScreen: Listenable {
             Vector3f()
         )
 
+        val guiScaleMul = 0.5f / mc.options.guiScale.value.toFloat()
+
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
-            .mul(0.25F * mc.framebuffer.viewportWidth, 0.25F * mc.framebuffer.viewportHeight, 1.0F)
+            .mul(guiScaleMul * mc.framebuffer.viewportWidth, guiScaleMul * mc.framebuffer.viewportHeight, 1.0F)
+
 
         return if (transformedPos.z < 1.0F) Vec3(screenPos.x, screenPos.y, transformedPos.z) else null
     }
