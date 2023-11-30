@@ -11,13 +11,16 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
     private var airTicks = 0
 
     override fun onUpdate() {
+        val player = mc.thePlayer
+
         if (isMoving) {
             if (mc.thePlayer.onGround) {
+                player.jump()
                 airTicks = 0
 
-                // Checks the presence of Speed potion effect 1 & 2
-                if (mc.thePlayer.isPotionActive(Potion.moveSpeed)) {
-                    val amplifier = mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier
+                // Checks the presence of Speed potion effect 1 & 2+
+                if (player.isPotionActive(Potion.moveSpeed)) {
+                    val amplifier = player.getActivePotionEffect(Potion.moveSpeed).amplifier
 
                     speed = when {
                         amplifier == 1 -> 0.55f
@@ -27,14 +30,12 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
                 }
 
                 // Checks the presence of Slowness potion effect.
-                speed = if (mc.thePlayer.isPotionActive(Potion.moveSlowdown)
-                    && mc.thePlayer.getActivePotionEffect(Potion.moveSlowdown).amplifier == 1) {
+                speed = if (player.isPotionActive(Potion.moveSlowdown)
+                    && player.getActivePotionEffect(Potion.moveSlowdown).amplifier == 1) {
                     0.3f
                 } else {
                     0.33f
                 }
-
-                mc.thePlayer.jump()
             } else {
                 if (airTicks == 0) {
                     mc.thePlayer.motionY = -0.09800000190734863
