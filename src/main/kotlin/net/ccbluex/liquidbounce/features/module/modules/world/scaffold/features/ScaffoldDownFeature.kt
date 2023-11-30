@@ -7,10 +7,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
 object ScaffoldDownFeature : ToggleableConfigurable(ModuleScaffold, "Down", false) {
     val repeatable =
-        handler<StateUpdateEvent>(priority = -10) {
+        handler<StateUpdateEvent>(priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING) {
             if (shouldFallOffBlock()) {
                 it.state.enforceEagle = false
             }

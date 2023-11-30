@@ -67,6 +67,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
                         event.directionalInput,
                         event.jumping,
                         player.isSprinting,
+                        player.isSneaking
                     ))
 
                 repeat(predict) {
@@ -93,7 +94,9 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
          * The input handler tracks the movement of the player and calculates the predicted future position.
          */
         private val inputHandler = handler<MovementInputEvent> { event ->
-            if (player.isOnGround && !player.isSneaking && player.isCloseToEdge(distance.toDouble())) {
+            val shouldBeActive = player.isOnGround && !player.isSneaking
+
+            if (shouldBeActive && player.isCloseToEdge(event.directionalInput, distance.toDouble())) {
                 event.directionalInput = DirectionalInput.NONE
             }
         }

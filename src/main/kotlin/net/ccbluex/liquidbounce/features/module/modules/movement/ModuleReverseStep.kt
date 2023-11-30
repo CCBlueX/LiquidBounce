@@ -80,7 +80,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
         val repeatable = repeatable {
             if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
                 val simInput = SimulatedPlayer.SimulatedPlayerInput(DirectionalInput.NONE, player.input.jumping,
-                    player.isSprinting)
+                    player.isSprinting, player.isSneaking)
                 val simulatePlayer = SimulatedPlayer.fromClientPlayer(simInput)
 
                 val simulationQueue = mutableListOf<PlayerMoveC2SPacket>()
