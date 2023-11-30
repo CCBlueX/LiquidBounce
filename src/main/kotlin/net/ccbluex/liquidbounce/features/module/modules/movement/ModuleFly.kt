@@ -100,9 +100,9 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             // Most basic bypass for vanilla fly check
             // This can also be done via packets, but this is easier.
             if (bypassVanillaCheck && player.age % 40 == 0) {
-                wait(1)
+                waitTicks(1)
                 player.velocity.y = -0.04
-                wait(1)
+                waitTicks(1)
             }
         }
 
@@ -209,7 +209,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
                         )
                     }
 
-                    wait(2)
+                    waitTicks(2)
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
                     }
@@ -286,7 +286,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         val repeatable = repeatable {
             player.velocity.y = 0.2
             player.strafe(speed = 0.34)
-            wait(4)
+            waitTicks(4)
         }
 
     }
@@ -315,7 +315,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         val failRepeatable = repeatable {
             if (!gotDamage) {
-                wait { 20 }
+                waitTicks(20)
                 if (!gotDamage) {
                     chat("Failed to self-damage")
                     shouldStop = true

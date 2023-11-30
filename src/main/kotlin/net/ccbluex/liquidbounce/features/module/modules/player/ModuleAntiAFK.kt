@@ -59,7 +59,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         val repeatable = repeatable {
             mc.options.forwardKey.enforced = true
-            wait { 10 }
+            waitTicks(10)
             player.yaw += 180f
         }
     }
@@ -89,7 +89,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 2 -> {
                     val key = randomKeyBind()
                     key.enforced = true
-                    wait { RandomUtils.nextInt(3, 7) }
+                    waitTicks((3..7).random())
                     key.enforced = false
                 }
 
@@ -105,7 +105,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                     player.pitch = (RandomUtils.nextFloat(0f, 10f) - 5f + player.pitch).coerceIn(-90f, 90f)
                 }
             }
-            wait { RandomUtils.nextInt(4, 7) }
+            waitTicks((4..7).random())
         }
     }
 
@@ -143,7 +143,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         val swingRepeatable = repeatable {
             if (Swing.enabled && !player.handSwinging) {
-                wait { Swing.delay }
+                waitTicks(Swing.delay)
                 player.swingHand(Hand.MAIN_HAND)
             }
         }
@@ -163,8 +163,8 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
 
             if (Rotate.enabled) {
-                wait { Rotate.delay }
-                val currentRotation = RotationManager.rotationForServer
+                waitTicks(Rotate.delay)
+                val currentRotation = RotationManager.serverRotation
                 val pitchRandomization = Random.nextDouble(-5.0, 5.0).toFloat()
                 RotationManager.aimAt(
                     Rotation(

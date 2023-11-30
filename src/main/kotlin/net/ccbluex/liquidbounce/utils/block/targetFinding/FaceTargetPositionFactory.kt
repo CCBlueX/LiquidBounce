@@ -98,7 +98,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
         if (MathHelper.approximatelyEquals(face.area, 0.0))
             return face.from
 
-        val currentRotation = RotationManager.rotationForServer
+        val currentRotation = RotationManager.serverRotation
 
         val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
 

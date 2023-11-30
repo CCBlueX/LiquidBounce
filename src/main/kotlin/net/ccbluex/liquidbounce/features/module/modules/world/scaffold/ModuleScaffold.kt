@@ -278,7 +278,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     val networkTickHandler = repeatable {
         val target = currentTarget
-        val currentRotation = RotationManager.rotationForServer
+        val currentRotation = RotationManager.serverRotation
         val currentCrosshairTarget = raycast(4.5, currentRotation)
 
         // Prioritize by all means the main hand if it has a block
@@ -361,11 +361,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         currentTarget = null
 
-        delay.random().let {
-            if (it > 0) {
-                wait(it)
-            }
-        }
+        waitTicks(delay.random())
     }
 
     private fun findBestValidHotbarSlotForTarget(): Int? {

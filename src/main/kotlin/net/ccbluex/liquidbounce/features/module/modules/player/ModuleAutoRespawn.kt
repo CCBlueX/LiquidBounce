@@ -37,7 +37,7 @@ object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
     val screenHandler = sequenceHandler<ScreenEvent> {
         if (it.screen is DeathScreen) {
             if (delay > 0) {
-                wait(delay)
+                waitTicks(delay)
             }
 
             player.requestRespawn()

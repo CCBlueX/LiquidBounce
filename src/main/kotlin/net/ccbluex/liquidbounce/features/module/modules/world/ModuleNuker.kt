@@ -152,7 +152,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         val repeat = repeatable {
             if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-                wait { switchDelay }
+                waitTicks(switchDelay)
                 return@repeatable
             }
 
@@ -165,7 +165,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             updateSingleTarget()
 
             val curr = currentTarget ?: return@repeatable
-            val currentRotation = RotationManager.rotationForServer
+            val currentRotation = RotationManager.serverRotation
 
             val rayTraceResult = raytraceBlock(
                 range.toDouble() + 1, currentRotation, curr.pos, curr.pos.getState() ?: return@repeatable
@@ -375,7 +375,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             highlightedBlocks.clear()
 
             if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-                wait { switchDelay }
+                waitTicks(switchDelay)
                 return@repeatable
             }
 

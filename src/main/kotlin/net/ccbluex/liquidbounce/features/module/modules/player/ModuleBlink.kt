@@ -183,7 +183,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     val repeatable = repeatable {
         if (Pulse.enabled) {
-            wait(Pulse.delay)
+            waitTicks(Pulse.delay)
             blink()
         } else if (evadeArrows) {
             val firstPositionPacket = (packets.firstOrNull { it is PlayerMoveC2SPacket && it.changePosition } ?: return@repeatable) as PlayerMoveC2SPacket

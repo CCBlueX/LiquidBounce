@@ -86,7 +86,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
 
         val destroyerTarget = currentTarget ?: return@repeatable
-        val currentRotation = RotationManager.rotationForServer
+        val currentRotation = RotationManager.serverRotation
 
         // Check if we are already looking at the block
         val rayTraceResult = raytraceBlock(
