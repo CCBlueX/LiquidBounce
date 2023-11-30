@@ -54,9 +54,6 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val fontRenderer: FontRenderer
         get() = Fonts.DEFAULT_FONT
 
-    private var mvMatrix: Matrix4f? = null
-    private var projectionMatrix: Matrix4f? = null
-
     val overlayRenderHandler =
         handler<OverlayRenderEvent> { event ->
             renderEnvironmentForGUI {
@@ -68,14 +65,6 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                     nametagRenderer.commit(this)
                 }
             }
-        }
-
-    val renderHandler =
-        handler<WorldRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
-            val matrixStack = event.matrixStack
-
-            this.mvMatrix = Matrix4f(matrixStack.peek().positionMatrix)
-            this.projectionMatrix = RenderSystem.getProjectionMatrix()
         }
 
     private fun RenderEnvironment.drawNametags(
@@ -110,11 +99,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                     .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
             val screenPos =
-                WorldToScreen.calculateScreenPos(
-                    nametagPos,
-                    mvMatrix!!,
-                    projectionMatrix!!,
-                ) ?: continue
+                WorldToScreen.calculateScreenPos(nametagPos) ?: continue
 
             val nametagInfo = NametagInfo.createForEntity(entity)
 

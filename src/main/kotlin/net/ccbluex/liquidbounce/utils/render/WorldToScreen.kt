@@ -1,17 +1,31 @@
 package net.ccbluex.liquidbounce.utils.render
 
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.joml.Vector3f
 
-object WorldToScreen {
+object WorldToScreen: Listenable {
+
+    private var mvMatrix: Matrix4f? = null
+    private var projectionMatrix: Matrix4f? = null
+    val renderHandler =
+        handler<WorldRenderEvent>(priority = -100) { event ->
+            val matrixStack = event.matrixStack
+
+            this.mvMatrix = Matrix4f(matrixStack.peek().positionMatrix)
+            this.projectionMatrix = RenderSystem.getProjectionMatrix()
+        }
+
     fun calculateScreenPos(
         pos: Vec3d,
-        mvMatrix: Matrix4f,
-        projectionMatrix: Matrix4f,
         cameraPos: Vec3d = mc.gameRenderer.camera.pos,
     ): Vec3? {
         val relativePos = pos - cameraPos
