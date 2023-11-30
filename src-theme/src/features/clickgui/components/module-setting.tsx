@@ -19,7 +19,10 @@ type ModuleSettingsProps = {
 export default function ModuleSettings({ module }: ModuleSettingsProps) {
   const { data: settings, isFetching } = useQuery(
     `module.${module.name}.settings`,
-    () => getModuleSettings(module.name)
+    () => getModuleSettings(module.name),
+    {
+      refetchOnWindowFocus: false,
+    }
   );
 
   console.log(settings);

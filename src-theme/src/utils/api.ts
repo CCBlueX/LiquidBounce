@@ -86,7 +86,7 @@ export function getModules(): Promise<Module[]> {
   return request("/modules");
 }
 
-type ValueType =
+export type ValueType =
   | "BOOLEAN"
   | "FLOAT"
   | "FLOAT_RANGE"

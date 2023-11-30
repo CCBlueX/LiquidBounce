@@ -1,25 +1,23 @@
 import { CSSProperties } from "react";
+import { useQuery } from "react-query";
 
 import AlignmentGrid, {
   AlignmentGridProvider,
 } from "~/components/alignment-grid";
 
-import { useModules } from "~/features/clickgui/use-modules";
 import Panel from "~/features/clickgui/components/panel";
 
+import { Module, getModuleSettings, getModules } from "~/utils/api";
+
 import styles from "./clickgui.module.css";
-import { Module, getModules } from "~/utils/api";
-import { useQuery } from "react-query";
+import { intToRgba } from "~/utils/misc";
 
 export default function ClickGUI() {
   // const { modulesByCategory } = useModules();
 
-  const {
-    status,
-    data: modules,
-    error,
-    refetch,
-  } = useQuery("modules", getModules);
+  const { data: modules } = useQuery("modules", getModules, {
+    refetchOnWindowFocus: false,
+  });
 
   const modulesByCategory = modules?.reduce((acc, module) => {
     const category = module.category;
@@ -32,19 +30,32 @@ export default function ClickGUI() {
     return acc;
   }, {} as Record<string, Module[]>);
 
-  // let modulesColor = kotlin.colorToHex(clickGuiModule.instance.getModuleColor())
-  //     let headerColor = kotlin.colorToHex(clickGuiModule.instance.getHeaderColor())
-  //     let accentColor = kotlin.colorToHex(clickGuiModule.instance.getAccentColor())
-  //     let accendDimmed = kotlin.colorToHex(clickGuiModule.instance.getAccentColor())
-  //     let textColor = kotlin.colorToHex(clickGuiModule.instance.getTextColor())
-  //     let textDimmedColor = kotlin.colorToHex(clickGuiModule.instance.getDimmedTextColor())
+  const { data: clickGuiSettings } = useQuery(
+    "clickGuiSettings",
+    () => getModuleSettings("ClickGUI"),
+    {
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  if (!modulesByCategory || !clickGuiSettings) {
+    return null;
+  }
+
+  function getColorSetting(name: string) {
+    const setting = clickGuiSettings?.value.find(
+      (setting) => setting.name === name && setting.valueType == "COLOR"
+    )?.value as number;
+
+    return intToRgba(setting);
+  }
+
   const style = {
-    "--module": "rgba(0, 0, 0, 0.5)",
-    "--header": "rgba(0, 0, 0, 0.5)",
-    "--accent": "var(--brand)",
-    "--accent-dimmed": "#121212",
-    "--text": "#fff",
-    "--text-dimmed": "#aaa",
+    "--module": getColorSetting("ModuleColor"),
+    "--header": getColorSetting("HeaderColor"),
+    "--accent": getColorSetting("AccentColor"),
+    "--text": getColorSetting("TextColor"),
+    "--text-dimmed": getColorSetting("DimmedTextColor"),
   } as CSSProperties;
 
   return (

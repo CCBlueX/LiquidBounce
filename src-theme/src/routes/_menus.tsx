@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 
 import Account from "~/components/account";
-import AnimatedOutlet from "~/components/AnimatedOutlet";
+import AnimatedOutlet from "~/components/animated-outlet";
 
 import { ReactComponent as Logo } from "~/assets/logo.svg";
 
