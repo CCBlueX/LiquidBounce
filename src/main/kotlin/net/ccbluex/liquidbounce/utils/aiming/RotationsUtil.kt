@@ -29,10 +29,7 @@ import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -185,6 +182,16 @@ object RotationManager : Listenable {
      * Checks if it should update the server-side rotations
      */
     private fun allowedToUpdate() = !CombatManager.shouldPauseRotation()
+
+    fun rotationMatchesPreviousRotation(): Boolean {
+        val player = mc.player ?: return false
+
+        currentRotation?.let {
+            return it == previousRotation
+        }
+
+        return player.rotation == player.lastRotation
+    }
 
     /**
      * Calculate difference between two rotations
