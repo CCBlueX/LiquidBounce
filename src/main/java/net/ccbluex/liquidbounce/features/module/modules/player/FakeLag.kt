@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -104,6 +106,9 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
                 val packetPos = Vec3(packet.x, packet.y, packet.z)
                 synchronized(positions) {
                     positions[packetPos] = System.currentTimeMillis()
+                }
+                if (packet.rotating) {
+                    RotationUtils.serverRotation = Rotation(packet.yaw, packet.pitch)
                 }
             }
             synchronized(packetQueue) {
