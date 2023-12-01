@@ -81,6 +81,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     object AutoJump : ToggleableConfigurable(this, "AutoJump", false) {
+        private val whenGoingDiagonal by boolean("WhenGoingDiagonal", false)
         private val predictFactor by float("PredictFactor", 0.54f, 0f..2f)
         private val useDelay by boolean("UseDelay", true)
 
@@ -101,12 +102,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
         }
 
+        var isGoingDiagonal = false
+
         fun shouldJump(ticksUntilNextBlock: Int): Boolean {
             if (!enabled)
                 return false
             if (!player.isOnGround)
                 return false
             if (player.isSneaking)
+                return false
+            if (!whenGoingDiagonal && isGoingDiagonal)
                 return false
 
             val extraPrediction =
@@ -221,7 +226,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
-    fun findRotation(target: BlockPlacementTarget?): Rotation? {
+    private fun findRotation(target: BlockPlacementTarget?): Rotation? {
         if(this.aimMode.get() != AimMode.GODBRIDGE)
             return target?.rotation
 
@@ -252,10 +257,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }
             }
             finalYaw = movingYaw + if (isOnRightSide) 45 else -45
+            AutoJump.isGoingDiagonal = false
+            return Rotation(finalYaw, 75f)
         } else {
-            finalYaw = movingYaw
+            AutoJump.isGoingDiagonal = true
+            return Rotation(movingYaw, 75.6f)
         }
-        return Rotation(finalYaw, 75f)
     }
 
     private var isOnRightSide = false
