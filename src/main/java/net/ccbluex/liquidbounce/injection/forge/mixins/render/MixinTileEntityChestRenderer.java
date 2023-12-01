@@ -21,7 +21,7 @@ public class MixinTileEntityChestRenderer {
     private void injectChamsPre(CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getChests()) {
+        if (chams.handleEvents() && chams.getChests()) {
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(1f, -1000000F);
         }
@@ -31,7 +31,7 @@ public class MixinTileEntityChestRenderer {
     private void injectChamsPost(CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getChests()) {
+        if (chams.handleEvents() && chams.getChests()) {
             glPolygonOffset(1f, 1000000F);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }

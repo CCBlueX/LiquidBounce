@@ -65,7 +65,7 @@ public abstract class MixinGuiNewChat {
     private void drawChat(int p_drawChat_1_, final CallbackInfo callbackInfo) {
         final HUD hud = HUD.INSTANCE;
 
-        if (hud.getState() && hud.getFontChat()) {
+        if (hud.handleEvents() && hud.getFontChat()) {
             callbackInfo.cancel();
             if (mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
                 int lvt_2_1_ = getLineCount();
@@ -143,7 +143,7 @@ public abstract class MixinGuiNewChat {
     private void setChatLine(IChatComponent p_setChatLine_1_, int p_setChatLine_2_, int p_setChatLine_3_, boolean p_setChatLine_4_, final CallbackInfo callbackInfo) {
         final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
-        if(hud.getState() && hud.fontChatValue.asBoolean()) {
+        if(hud.handleEvents() && hud.fontChatValue.asBoolean()) {
             callbackInfo.cancel();
 
             if (p_setChatLine_2_ != 0) {
@@ -181,7 +181,7 @@ public abstract class MixinGuiNewChat {
     private void getChatComponent(int p_getChatComponent_1_, int p_getChatComponent_2_, final CallbackInfoReturnable<IChatComponent> callbackInfo) {
         final HUD hud = HUD.INSTANCE;
 
-        if (hud.getState() && hud.getFontChat()) {
+        if (hud.handleEvents() && hud.getFontChat()) {
             if (getChatOpen()) {
                 ScaledResolution lvt_3_1_ = new ScaledResolution(mc);
                 int lvt_4_1_ = lvt_3_1_.getScaleFactor();

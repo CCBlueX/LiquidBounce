@@ -21,7 +21,8 @@ import net.minecraft.util.BlockPos
 
 object HighJump : Module("HighJump", ModuleCategory.MOVEMENT) {
     private val mode by ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")
-    private val height by FloatValue("Height", 2f, 1.1f..5f) { mode in arrayOf("Vanilla", "Damage") }
+        private val height by FloatValue("Height", 2f, 1.1f..5f) { mode in arrayOf("Vanilla", "Damage") }
+
     private val glass by BoolValue("OnlyGlassPane", false)
 
     @EventTarget
@@ -59,7 +60,7 @@ object HighJump : Module("HighJump", ModuleCategory.MOVEMENT) {
         if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
         when (mode.lowercase()) {
-            "vanilla" -> event.motion = event.motion * height
+            "vanilla" -> event.motion *= height
             "mineplex" -> event.motion = 0.47f
         }
     }

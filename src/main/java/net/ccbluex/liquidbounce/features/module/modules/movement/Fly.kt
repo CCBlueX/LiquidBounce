@@ -70,15 +70,12 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     private val modes = flyModes.map { it.modeName }.toTypedArray()
 
-    val mode by ListValue(
-        "Mode", modes, "Vanilla"
-    )
-    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..5f, subjective = true) {
-        mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan")
-    }
-    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true) {
-        mode in arrayOf("Vanilla", "SmoothVanilla")
-    }
+    val mode by ListValue("Mode", modes, "Vanilla")
+
+    val vanillaSpeed by FloatValue("VanillaSpeed", 2f, 0f..10f, subjective = true)
+        { mode in arrayOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan") }
+    private val vanillaKickBypass by BoolValue("VanillaKickBypass", false, subjective = true)
+        { mode in arrayOf("Vanilla", "SmoothVanilla") }
     val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
     // AAC
@@ -89,8 +86,10 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     // Hypixel
     val hypixelBoost by BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
-    val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 50..2000) { mode == "Hypixel" && hypixelBoost }
-    val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0.1f..5f) { mode == "Hypixel" && hypixelBoost }
+    val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 50..2000)
+        { mode == "Hypixel" && hypixelBoost }
+    val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0.1f..5f)
+        { mode == "Hypixel" && hypixelBoost }
 
     // Other
     val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
@@ -99,6 +98,9 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
+
+    var jumpY = 0.0
+
     var startY = 0.0
         private set
 
@@ -109,6 +111,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         val thePlayer = mc.thePlayer ?: return
 
         startY = thePlayer.posY
+        jumpY = thePlayer.posY
         wasFlying = mc.thePlayer.capabilities.isFlying
 
         modeModule.onEnable()
@@ -117,7 +120,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla" && mode != "Rewinside" && mode != "Collide" && mode != "Jump") {
+        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside" && mode != "Collide" && mode != "Jump") {
             if (mode == "CubeCraft") thePlayer.stopXZ()
             else thePlayer.stop()
         }
@@ -185,7 +188,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
     fun handleVanillaKickBypass() {
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
-        val ground = calculateGround()
+        val ground = calculateGround() + 0.5
         run {
             var posY = mc.thePlayer.posY
             while (posY > ground) {
@@ -208,7 +211,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     // TODO: Make better and faster calculation lol
     private fun calculateGround(): Double {
         val playerBoundingBox = mc.thePlayer.entityBoundingBox
-        var blockHeight = 1.0
+        var blockHeight = 0.05
         var ground = mc.thePlayer.posY
         while (ground > 0.0) {
             val customBox = AxisAlignedBB.fromBounds(

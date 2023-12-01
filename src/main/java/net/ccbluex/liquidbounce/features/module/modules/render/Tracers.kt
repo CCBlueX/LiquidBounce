@@ -29,12 +29,11 @@ import java.awt.Color
 object Tracers : Module("Tracers", ModuleCategory.RENDER) {
 
     private val colorMode by ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom")
+        private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }
+        private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
+        private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
     private val thickness by FloatValue("Thickness", 2F, 1F..5F)
-
-    private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }
-    private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
     private val bot by BoolValue("Bots", true)
 

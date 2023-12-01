@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.client.settings.GameSettings
 
-object AutoWalk : Module("AutoWalk", ModuleCategory.MOVEMENT, subjective = true) {
+object AutoWalk : Module("AutoWalk", ModuleCategory.MOVEMENT, subjective = true, gameDetecting = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

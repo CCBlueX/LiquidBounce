@@ -38,7 +38,7 @@ import net.minecraft.util.Vec3
 import java.awt.Color
 import kotlin.math.roundToInt
 
-object Nuker : Module("Nuker", ModuleCategory.WORLD) {
+object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false) {
 
     /**
      * OPTIONS
@@ -47,8 +47,10 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     private val radius by FloatValue("Radius", 5.2F, 1F..6F)
     private val throughWalls by BoolValue("ThroughWalls", false)
     private val priority by ListValue("Priority", arrayOf("Distance", "Hardness"), "Distance")
+
     private val rotations by BoolValue("Rotations", true)
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+        private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+
     private val layer by BoolValue("Layer", false)
     private val hitDelay by IntegerValue("HitDelay", 4, 0..20)
     private val nuke by IntegerValue("Nuke", 1, 1..20)
@@ -62,7 +64,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     private var currentBlock: BlockPos? = null
     private var blockHitDelay = 0
 
-    private var nukeTimer = TickTimer()
+    private val nukeTimer = TickTimer()
     private var nukedCount = 0
 
     var currentDamage = 0F
@@ -70,7 +72,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Block hit delay
-        if (blockHitDelay > 0 && !FastBreak.state) {
+        if (blockHitDelay > 0 && !FastBreak.handleEvents()) {
             blockHitDelay--
             return
         }
@@ -151,7 +153,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                 attackedBlocks += blockPos
 
                 // Call auto tool
-                if (AutoTool.state)
+                if (AutoTool.handleEvents())
                     AutoTool.switchSlot(blockPos)
 
                 // Start block breaking

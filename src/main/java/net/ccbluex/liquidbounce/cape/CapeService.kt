@@ -72,7 +72,7 @@ object CapeService : Listenable, MinecraftInstance() {
      * We start with an empty list, which will be updated by the refreshCapeCarriers function frequently based on the REFRESH_DELAY.
      */
     internal var capeCarriers = emptyList<CapeCarrier>()
-    private var lastUpdate = MSTimer()
+    private val lastUpdate = MSTimer()
     private var task: Thread? = null
 
     /**
@@ -201,7 +201,7 @@ object CapeService : Listenable, MinecraftInstance() {
 
             // Refresh cape carriers
             refreshCapeCarriers(force = true) {
-                LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
+                LOGGER.info("Successfully loaded ${capeCarriers.count()} cape carriers.")
             }
 
             capeUser.enabled = !capeUser.enabled

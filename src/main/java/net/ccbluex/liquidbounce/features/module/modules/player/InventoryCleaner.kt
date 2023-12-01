@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
@@ -15,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.extensions.shuffled
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.inventory.ArmorComparator.getBestArmorSet
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduled
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduledInLastLoop
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.toHotbarIndex
@@ -56,6 +57,8 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 	private val mergeStacks by BoolValue("MergeStacks", true, subjective = true)
 
+	private val repairEquipment by BoolValue("RepairEquipment", true, subjective = true)
+
 	private val invOpen by InventoryManager.invOpenValue
 	private val simulateInventory by InventoryManager.simulateInventoryValue
 
@@ -84,8 +87,36 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 	private val slot8Value = SortValue("Slot8", "Block")
 	private val slot9Value = SortValue("Slot9", "Block")
 
+	private val SORTING_VALUES = arrayOf(
+		slot1Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value
+	)
+
+	private suspend fun shouldOperate(): Boolean {
+		while (true) {
+			if (!handleEvents())
+				return false
+
+			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
+				return false
+
+			if (mc.thePlayer?.openContainer?.windowId != 0)
+				return false
+
+			if (invOpen && mc.currentScreen !is GuiInventory)
+				return false
+
+			// Wait till NoMove check isn't violated
+			if (canClickInventory(closeWhenViolating = true))
+				return true
+
+			// If NoMove is violated, wait a tick and check again
+			// If there is no delay, very weird things happen: https://www.guilded.gg/CCBlueX/groups/1dgpg8Jz/channels/034be45e-1b72-4d5a-bee7-d6ba52ba1657/chat?messageId=94d314cd-6dc4-41c7-84a7-212c8ea1cc2a
+			delay(50)
+		}
+	}
+
 	// Compact multiple small stacks into one to free up inventory space
-	suspend fun mergeInventoryStacks() {
+	suspend fun mergeStacks() {
 		if (!mergeStacks || !shouldOperate())
 			return
 
@@ -105,7 +136,10 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 					val sortedStacks = groupedStacks
 						// Only try to merge non-full stacks, without limiting stack counts in isStackUseful
-						.filter { it.value.stackSize != it.value.maxStackSize && isStackUseful(it.value, stacks, noLimits = true) }
+						.filter {
+							it.value.hasItemAgePassed(minItemAge) &&
+							it.value.stackSize != it.value.maxStackSize && isStackUseful(it.value, stacks, noLimits = true)
+						}
 						// Prioritise stacks that are lower in inventory
 						.sortedByDescending { it.index }
 						// Prioritise stacks that are sorted
@@ -113,21 +147,20 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 					// Return first stack that can be merged with a different stack of the same type else null
 					sortedStacks.firstOrNull { (_, clickedStack) ->
-						sortedStacks.any { (_, mergedStack) ->
-							clickedStack != mergedStack
-									&& clickedStack.stackSize + mergedStack.stackSize <= clickedStack.maxStackSize
+						sortedStacks.any { (_, stackToMerge) ->
+							clickedStack != stackToMerge
+								&& clickedStack.stackSize + stackToMerge.stackSize <= clickedStack.maxStackSize
+								// Check if stacks have the same NBT data and are actually mergeable
+								&& clickedStack.isItemEqual(stackToMerge)
+								&& ItemStack.areItemStackTagsEqual(clickedStack, stackToMerge)
 						}
 					}?.index
 				}
-
-			var hasMerged = false
 
 			for (index in indicesToDoubleClick) {
 				if (!shouldOperate()) return
 
 				if (index in TickScheduler) continue
-
-				hasMerged = true
 
 				// TODO: Perhaps add a slider for merge delay?
 
@@ -138,11 +171,146 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 				click(index, 0, 0, allowDuplicates = true, coerceTo = 100)
 			}
 
-			// No stacks to be merged were found
-			if (!hasMerged) break
+			if (indicesToDoubleClick.isEmpty())
+				break
 
 			// This part isn't fully instant because of the complex vanilla merging behaviour, stack size changes and so on
 			// Waits a tick to see how the stacks got merged
+			waitUntil(TickScheduler::isEmpty)
+		}
+	}
+
+	// Repair tools by merging them in the crafting grid
+	suspend fun repairEquipment() {
+		if (!repairEquipment || !shouldOperate())
+			return
+
+		val thePlayer = mc.thePlayer ?: return
+
+		// Loop multiple times until no repairs were done
+		while (true) {
+			if (!shouldOperate()) return
+
+			val stacks = thePlayer.openContainer.inventory
+
+			val pairsToRepair = stacks.withIndex()
+				.filter { (_, stack) ->
+					// Check if stack is damageable and either has no enchantments or just unbreaking.
+					stack.hasItemAgePassed(minItemAge) && shouldBeRepaired(stack)
+				}
+				.groupBy { it.value.item }
+				.filter { (_, stackGroup) ->
+					// Only try to repair groups of items when they contain a useful item that can be repaired
+					// Prevents repairing of items that would get thrown out
+					stackGroup.any { isStackUseful(it.value, stacks, noLimits = true) && it.value.isItemDamaged }
+				}
+				.mapValues { (_, groupStacks) ->
+					// Get all pairs of stacks that can be merged
+					val bestCombination = groupStacks.withIndex()
+						.flatMap { (index, indexedStack) ->
+							groupStacks.drop(index + 1).map { indexedStack to it }
+						}
+						.mapNotNull {
+							val (index1, stack1) = it.first
+							val (index2, stack2) = it.second
+
+							// Get combined durability of both stacks (with vanilla repair bonus) coerced to max durability
+							val durability = getCombinedDurabilityIfBeneficial(stack1, stack2) ?: return@mapNotNull null
+
+							Triple(index1, index2, durability)
+						}
+						.maxByOrNull { it.third } ?: return@mapValues null
+
+					// If there is a stack with higher or equal durability than the best combination, don't repair
+					if (bestCombination.third <= groupStacks.maxOf { it.value.totalDurability }) return@mapValues null
+					else bestCombination
+				}
+				.mapNotNull { it.value }
+
+			repair@ for ((index1, index2) in pairsToRepair) {
+				if (!shouldOperate()) return
+
+				if (index1 in TickScheduler || index2 in TickScheduler)
+					continue
+
+				// Drag and drop stack1 to crafting grid
+				click(index1, 0, 0)
+				click(1, 0, 0)
+
+				// Drag and drop stack2 to crafting grid
+				click(index2, 0, 0)
+				click(2, 0, 0)
+
+				val repairedStack = thePlayer.openContainer.getSlot(0).stack
+				val repairedItem = repairedStack.item
+
+				// Handle armor repairs with support for AutoArmor smart-swapping and equipping straight from crafting output
+				if (repairedItem is ItemArmor) {
+					val armorSlot = repairedItem.armorType + 5
+					var equipAfterCrafting = true
+
+					// Check if armor can be equipped straight from crafting output
+					if (thePlayer.openContainer.getSlot(armorSlot).hasStack) {
+						when {
+							// Smart swap armor from crafting output to armor slot
+							AutoArmor.handleEvents() && AutoArmor.smartSwap -> {
+								// Grab repaired armor
+								click(0, 0, 0)
+
+								// Swap it with currently equipped armor
+								click(armorSlot, 0, 0)
+
+								// Drop worse item by dragging and dropping it
+								click(-999, 0, 0)
+
+								continue@repair
+							}
+
+							// Drop equipped armor and continue equipping repaired armor normally
+							drop || AutoArmor.handleEvents() -> click(armorSlot, 0, 4)
+
+							// Can't smart swap or drop, don't equip
+							else -> equipAfterCrafting = false
+						}
+					}
+
+					if (equipAfterCrafting) {
+						// Grab repaired armor
+						click(0, 0, 0)
+
+						// Place it in armor slot
+						click(repairedItem.armorType + 5, 0, 0)
+
+						continue@repair
+					}
+				}
+
+				if (sort) {
+					for (hotbarIndex in 0..8) {
+						if (!canBeSortedTo(hotbarIndex, repairedItem))
+							continue
+
+						val hotbarStack = stacks.getOrNull(stacks.size - 9 + hotbarIndex)
+
+						// If occupied hotbar slot isn't already sorted or isn't strictly best, sort to it
+						if (!canBeSortedTo(hotbarIndex, hotbarStack?.item)
+							|| !isStackUseful(hotbarStack, stacks, strictlyBest = true))
+						{
+							// Sort repaired item to hotbar right after repairing
+							click(0, hotbarIndex, 2)
+							continue@repair
+						}
+					}
+				}
+
+				// Shift + left-click repaired item from crafting output into inventory
+				click(0, 0, 1)
+			}
+
+			if (pairsToRepair.isEmpty())
+				break
+
+			// Waits a tick to see how the stacks got repaired
 			waitUntil(TickScheduler::isEmpty)
 		}
 	}
@@ -227,31 +395,11 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 		waitUntil(TickScheduler::isEmpty)
 	}
 
-	private suspend fun shouldOperate(): Boolean {
-		while (true) {
-			if (!state)
-				return false
+	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, coerceTo: Int = Int.MAX_VALUE) {
+		// Wait for NoMove or cancel click
+		if (!shouldOperate())
+			return
 
-			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
-				return false
-
-			if (mc.thePlayer?.openContainer?.windowId != 0)
-				return false
-
-			if (invOpen && mc.currentScreen !is GuiInventory)
-				return false
-
-			// Wait till NoMove check isn't violated
-			if (canClickInventory(closeWhenViolating = true))
-				return true
-
-			// If NoMove is violated, wait a tick and check again
-			// If there is no delay, very weird things happen: https://www.guilded.gg/CCBlueX/groups/1dgpg8Jz/channels/034be45e-1b72-4d5a-bee7-d6ba52ba1657/chat?messageId=94d314cd-6dc4-41c7-84a7-212c8ea1cc2a
-			delay(50)
-		}
-	}
-
-	suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, coerceTo: Int = Int.MAX_VALUE) {
 		if (simulateInventory || invOpen)
 			serverOpenInventory = true
 
@@ -264,26 +412,9 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		TickScheduler.scheduleClick(slot, button, mode, allowDuplicates)
 
-		hasScheduled = true
+		hasScheduledInLastLoop = true
 
 		delay(randomDelay(minDelay, maxDelay).coerceAtMost(coerceTo).toLong())
-	}
-
-	private val SORTING_VALUES = arrayOf(
-		slot1Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value
-	)
-
-	private class SortValue(name: String, value: String) : ListValue(name, SORTING_KEYS, value, subjective = true) {
-		override fun isSupported() = sort
-		override fun onChanged(oldValue: String, newValue: String) =
-			SORTING_VALUES.forEach { value ->
-				if (value != this && newValue == value.get() && SORTING_TARGETS.keys.indexOf(value.get()) < 5) {
-					value.set(oldValue)
-					value.openList = true
-
-					displayChatMessage("§8[§9§lInventoryCleaner§8] §3Value §a${value.name}§3 was changed to §a$oldValue§3 to prevent conflicts.")
-				}
-			}
 	}
 
 	fun canBeSortedTo(index: Int, item: Item?, stacksSize: Int? = null): Boolean {
@@ -317,6 +448,8 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 			is ItemBucket -> isUsefulBucket(stack, stacks, entityStacksMap)
 
+			is ItemFlintAndSteel -> isUsefulLighter(stack, stacks, entityStacksMap)
+
 			in THROWABLE_ITEMS -> isUsefulThrowable(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 
 			else -> false
@@ -327,7 +460,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 		val item = stack?.item ?: return false
 
 		return when (item) {
-			is ItemArmor -> getBestArmorSet(stacks, entityStacksMap)?.contains(stack) ?: true
+			is ItemArmor -> stack in getBestArmorSet(stacks, entityStacksMap)
 
 			is ItemTool -> {
 				val blockType = when (item) {
@@ -365,6 +498,50 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		// Only keep helpful potions and, if 'onlyGoodPotions' is disabled, also splash harmful potions
 		return !isHarmful || (!onlyGoodPotions && isSplash)
+	}
+
+	private fun isUsefulLighter(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): Boolean {
+		val item = stack?.item ?: return false
+
+		if (item !is ItemFlintAndSteel) return false
+
+		val index = stacks.indexOf(stack)
+
+		val isSorted = canBeSortedTo(index, item, stacks.size)
+
+		if (isSorted) return true
+
+		val stacksToIterate = stacks.toMutableList()
+
+		var distanceSqToItem = .0
+
+		if (!entityStacksMap.isNullOrEmpty()) {
+			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			stacksToIterate += entityStacksMap.keys
+		}
+
+		return stacksToIterate.withIndex().none { (otherIndex, otherStack) ->
+			if (otherStack == stack)
+				return@none false
+
+			val otherItem = otherStack?.item ?: return@none false
+
+			if (otherItem !is ItemFlintAndSteel)
+				return@none false
+
+			// Items dropped on ground should have index -1
+			val otherIndex = if (otherIndex > stacks.lastIndex) -1 else otherIndex
+
+			// Only when both items are dropped on ground
+			if (index == otherIndex) {
+				val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@none false
+
+				return distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+			}
+
+			canBeSortedTo(otherIndex, otherItem, stacks.size)
+					|| otherStack.totalDurability > stack.totalDurability || otherIndex > index
+		}
 	}
 
 	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean, strictlyBest: Boolean): Boolean {
@@ -450,16 +627,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		val isSorted = canBeSortedTo(index, stack!!.item, stacks.size)
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
+		val betterCount = stacksToIterate.withIndex().count { (otherIndex, otherStack) ->
 			if (otherStack == stack || !isSuitableBlock(otherStack))
 				return@count false
 
@@ -509,16 +686,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		val isSorted = canBeSortedTo(index, item, stacks.size)
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		val betterCount = iteratedStacks.withIndex().count { (otherIndex, otherStack) ->
+		val betterCount = stacksToIterate.withIndex().count { (otherIndex, otherStack) ->
 			if (otherStack == stack)
 				return@count false
 
@@ -567,16 +744,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		if (isSorted) return true
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		return iteratedStacks.withIndex().none { (otherIndex, otherStack) ->
+		return stacksToIterate.withIndex().none { (otherIndex, otherStack) ->
 			if (otherStack == stack)
 				return@none false
 
@@ -608,16 +785,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		val isSorted = canBeSortedTo(index, item, stacks.size)
 
-		val iteratedStacks = stacks.toMutableList()
+		val stacksToIterate = stacks.toMutableList()
 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
 			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
-			iteratedStacks += entityStacksMap.keys
+			stacksToIterate += entityStacksMap.keys
 		}
 
-		iteratedStacks.forEachIndexed { otherIndex, otherStack ->
+		stacksToIterate.forEachIndexed { otherIndex, otherStack ->
 			val otherItem = otherStack?.item ?: return@forEachIndexed
 
 			// Check if items aren't the same instance but are the same type
@@ -675,6 +852,61 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
 		return false
 	}
+
+	/**
+	 * Calculates resulting durability after repairing equipment.
+	 * @return Combined durability of both stacks (with vanilla repair bonus) coerced to max durability
+	 * or null if either stack has higher or equal durability than the combined durability.
+	 */
+	private fun getCombinedDurabilityIfBeneficial(stack1: ItemStack, stack2: ItemStack): Int? {
+		// Get combined durability of both stacks (with vanilla repair bonus) coerced to max durability
+		val combinedDurability =
+			(stack1.durability + stack2.durability + stack1.maxDamage * 5 / 100)
+				.coerceAtMost(stack1.maxDamage)
+
+		// Check if combined durability is higher than total enchanted durability of either stack
+		return if (stack1.totalDurability >= combinedDurability || stack2.totalDurability >= combinedDurability) null
+		else combinedDurability
+	}
+
+	// Check if stack is damageable and either has no enchantments or just unbreaking.
+	private fun shouldBeRepaired(stack: ItemStack?) =
+		!stack.isEmpty() && stack.item.isRepairable && (
+			!stack.isItemEnchanted || (stack.enchantmentCount == 1 && Enchantment.unbreaking in stack.enchantments)
+		)
+
+	fun canBeRepairedWithOther(stack: ItemStack?, stacks: List<ItemStack?>): Boolean {
+		if (!handleEvents() || !repairEquipment)
+			return false
+
+		val item = stack?.item ?: return false
+
+		if (!shouldBeRepaired(stack))
+			return false
+
+		return stacks.any { otherStack ->
+			if (otherStack.isEmpty() || otherStack == stack)
+				return@any false
+
+			if (otherStack.item != item)
+				return@any false
+
+			getCombinedDurabilityIfBeneficial(stack, otherStack) != null
+		}
+	}
+
+	private class SortValue(name: String, value: String) : ListValue(name, SORTING_KEYS, value, subjective = true) {
+		override fun isSupported() = sort
+		override fun onChanged(oldValue: String, newValue: String) =
+			SORTING_VALUES.forEach { value ->
+				if (value != this && newValue == value.get() && SORTING_TARGETS.keys.indexOf(value.get()) < 5) {
+					value.set(oldValue)
+					value.openList = true
+
+					displayChatMessage("§8[§9§lInventoryCleaner§8] §3Value §a${value.name}§3 was changed to §a$oldValue§3 to prevent conflicts.")
+				}
+			}
+	}
 }
 
 private val ITEMS_WHITELIST = arrayOf(
@@ -683,7 +915,7 @@ private val ITEMS_WHITELIST = arrayOf(
 
 private val THROWABLE_ITEMS = arrayOf(Items.egg, Items.snowball)
 
-private val NEGATIVE_EFFECT_IDS = arrayOf(
+val NEGATIVE_EFFECT_IDS = intArrayOf(
 	Potion.moveSlowdown.id, Potion.digSlowdown.id, Potion.harm.id, Potion.confusion.id, Potion.blindness.id,
 	Potion.hunger.id, Potion.weakness.id, Potion.poison.id, Potion.wither.id,
 )

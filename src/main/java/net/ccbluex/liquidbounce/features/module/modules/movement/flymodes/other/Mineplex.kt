@@ -52,14 +52,7 @@ object Mineplex : FlyMode("Mineplex") {
 		val blockPos = BlockPos(mc.thePlayer).down()
 		val vec = (Vec3(blockPos) + Vec3(0.4, 0.4, 0.4) + Vec3(EnumFacing.UP.directionVec)) * 0.4
 
-		mc.playerController.onPlayerRightClick(
-			mc.thePlayer,
-			mc.theWorld,
-			mc.thePlayer.heldItem,
-			blockPos,
-			EnumFacing.UP,
-			vec
-		)
+		mc.thePlayer.onPlayerRightClick(blockPos, EnumFacing.UP, vec)
 
 		strafe(0.27f)
 		mc.timer.timerSpeed = 1 + mineplexSpeed

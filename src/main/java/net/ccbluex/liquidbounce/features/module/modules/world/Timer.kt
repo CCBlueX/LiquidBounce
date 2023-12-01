@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
-object Timer : Module("Timer", ModuleCategory.WORLD) {
+object Timer : Module("Timer", ModuleCategory.WORLD, gameDetecting = false) {
 
     private val mode by ListValue("Mode", arrayOf("OnMove", "NoMove", "Always"), "OnMove")
     private val speed by FloatValue("Speed", 2F, 0.1F..10F)

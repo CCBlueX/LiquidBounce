@@ -5,22 +5,39 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla
 
+import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.handleVanillaKickBypass
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.vanillaSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
+import net.ccbluex.liquidbounce.utils.MovementUtils.direction
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.stopXZ
+import kotlin.math.cos
+import kotlin.math.sin
 
 object Vanilla : FlyMode("Vanilla") {
-	override fun onUpdate() {
-		mc.thePlayer.capabilities.isFlying = false
+	override fun onMove(event: MoveEvent) {
+        val thePlayer = mc.thePlayer ?: return
 
-		mc.thePlayer.motionY = when {
-			mc.gameSettings.keyBindJump.isKeyDown -> vanillaSpeed.toDouble()
-			mc.gameSettings.keyBindSneak.isKeyDown -> -vanillaSpeed.toDouble()
-			else -> 0.0
-		}
+		strafe(vanillaSpeed, true, event)
 
-		strafe(vanillaSpeed, true)
+        thePlayer.onGround = false
+        thePlayer.isInWeb = false
+
+        thePlayer.capabilities.isFlying = false
+
+        var ySpeed = 0.0
+
+        if (mc.gameSettings.keyBindJump.isKeyDown)
+            ySpeed += vanillaSpeed
+
+        if (mc.gameSettings.keyBindSneak.isKeyDown)
+            ySpeed -= vanillaSpeed
+
+        thePlayer.motionY = ySpeed
+        event.y = ySpeed
+
 		handleVanillaKickBypass()
 	}
 }

@@ -11,11 +11,11 @@ import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.entity.player.EntityPlayer
 
-object NoRotateSet : Module("NoRotateSet", ModuleCategory.MISC) {
+object NoRotateSet : Module("NoRotateSet", ModuleCategory.MISC, gameDetecting = false) {
     var savedRotation = Rotation(0f, 0f)
 
     private val ignoreOnSpawn by BoolValue("IgnoreOnSpawn", false)
     val affectServerRotation by BoolValue("AffectServerRotation", true)
 
-    fun shouldModify(player: EntityPlayer) = state && (!ignoreOnSpawn || player.ticksExisted != 0)
+    fun shouldModify(player: EntityPlayer) = handleEvents() && (!ignoreOnSpawn || player.ticksExisted != 0)
 }

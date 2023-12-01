@@ -73,7 +73,7 @@ public abstract class MixinBlock {
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
     private void shouldSideBeRendered(IBlockAccess p_shouldSideBeRendered_1_, BlockPos p_shouldSideBeRendered_2_, EnumFacing p_shouldSideBeRendered_3_, CallbackInfoReturnable<Boolean> cir) {
-        if (XRay.INSTANCE.getState()) {
+        if (XRay.INSTANCE.handleEvents()) {
             cir.setReturnValue(XRay.INSTANCE.getXrayBlocks().contains((Block) (Object) this));
         }
     }
@@ -82,14 +82,14 @@ public abstract class MixinBlock {
     private void isCollidable(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final GhostHand ghostHand = GhostHand.INSTANCE;
 
-        if (ghostHand.getState() && !(ghostHand.getBlock() == Block.getIdFromBlock((Block) (Object) this))) {
+        if (ghostHand.handleEvents() && !(ghostHand.getBlock() == Block.getIdFromBlock((Block) (Object) this))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
 
     @Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
     private void getAmbientOcclusionLightValue(CallbackInfoReturnable<Float> cir) {
-        if (XRay.INSTANCE.getState()) {
+        if (XRay.INSTANCE.handleEvents()) {
             cir.setReturnValue(1F);
         }
     }
@@ -100,7 +100,7 @@ public abstract class MixinBlock {
 
         // NoSlowBreak
         final NoSlowBreak noSlowBreak = NoSlowBreak.INSTANCE;
-        if (noSlowBreak.getState()) {
+        if (noSlowBreak.handleEvents()) {
             if (noSlowBreak.getWater() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
                 f *= 5f;
             }
@@ -112,7 +112,7 @@ public abstract class MixinBlock {
             final NoFall noFall = NoFall.INSTANCE;
             final Criticals criticals = Criticals.INSTANCE;
 
-            if (noFall.getState() && noFall.getMode().equals("NoGround") || criticals.getState() && criticals.getMode().equals("NoGround")) {
+            if (noFall.handleEvents() && noFall.getMode().equals("NoGround") || criticals.handleEvents() && criticals.getMode().equals("NoGround")) {
                 f /= 5F;
             }
         }

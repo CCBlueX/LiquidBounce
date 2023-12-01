@@ -48,7 +48,7 @@
 
         "module.noFriends.description": "Permite que tu ataques amigos.",
 
-        "module.superKnockback.description": "Increases knockback dealt to other entities.",
+        "module.superKnockback.description": "UNTRANSLATED: Increases knockback dealt to other entities.",
 
         "module.teleportHit.description": "Permite que tu ataques jogadores de longe.",
 
@@ -58,21 +58,21 @@
 
         "module.velocity.description": "Permite que tu modifiques a quantidade de \"\"knockback\"\" que tu levas.",
 
-        "module.abortBreaking.description:": "Allows you to abort breaking.",
+        "module.abortBreaking.description:": "UNTRANSLATED: Allows you to abort breaking.",
 
         "module.antiHunger.description": "Prevém que tu fiques com fome.",
 
         "module.bedGodMode.description": "Permite que tu andes enquanto estás numa cama (Para 1.9)",
 
-        "module.clip.description": "Allows you to clip through blocks.",
+        "module.clip.description": "UNTRANSLATED: Allows you to clip through blocks.",
         
         "module.airJump.description": "Permite que tu saltes no meio do ár",
         
-        "module.airLadder.description": "Allows you to climb up ladders/vines without touching them.",
+        "module.airLadder.description": "UNTRANSLATED: Allows you to climb up ladders/vines without touching them.",
         
-        "module.animations.description": "Customizes your blocking animation.",
+        "module.animations.description": "UNTRANSLATED: Customizes your blocking animation.",
         
-        "module.antiAFK.description": "Prevents you from getting kicked for being AFK.",
+        "module.antiAFK.description": "UNTRANSLATED: Prevents you from getting kicked for being AFK.",
         
         "module.antiBlind.description": "Cancela efeitos de cegueira.",
         
@@ -86,13 +86,13 @@
         
         "module.attackEffects.description": "Mostra efeitos quanto tu atacas.",
         
-        "module.autoAccount.description": "Most feature-packed auto register/login & account manager.",
+        "module.autoAccount.description": "UNTRANSLATED: Most feature-packed auto register/login & account manager.",
         
         "module.autoBreak.description": "Automaticamente quebra o bloco que estás a olhar em.",
         
-        "module.autoFish.description": "Automatically catches fish when using a rod.",
+        "module.autoFish.description": "UNTRANSLATED: Automatically catches fish when using a rod.",
         
-        "module.autoRespawn.description": "Automatically respawns you after dying.",
+        "module.autoRespawn.description": "UNTRANSLATED: Automatically respawns you after dying.",
         
         "module.autoTool.description": "Automaticamente seleciona o melhor instrumento no teu inventário para destruir um bloco.",
         
@@ -110,7 +110,7 @@
         
         "module.bufferSpeed.description": "Permite que tu andes mais rápido em lajes e escadas.",
         
-        "module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
+        "module.bugUp.description": "UNTRANSLATED: Automatically setbacks you after falling a certain distance.",
         
         "module.cameraClip.description": "Permite que tu vejas atráves de paredes na vista de terceira pessoa.",
         
@@ -124,31 +124,33 @@
         
         "module.clickGUI.description": "Abre o ClickGUI.",
         
-        "module.componentOnHover.description": "Allows you to see onclick action and value of chat message components when hovered.",
+        "module.componentOnHover.description": "UNTRANSLATED: Allows you to see onclick action and value of chat message components when hovered.",
         
-        "module.consoleSpammer.description": "Spams the console of the server with errors.",
+        "module.consoleSpammer.description": "UNTRANSLATED: Spams the console of the server with errors.",
         
-        "module.damage.description": "Deals damage to yourself.",
+        "module.damage.description": "UNTRANSLATED: Deals damage to yourself.",
         
-        "module.derp.description": "Makes it look like you were derping around.",
+        "module.derp.description": "UNTRANSLATED: Makes it look like you were derping around.",
         
         "module.eSP.description": "Permite que tu vejas álvos através de paredes.",
         
-        "module.eagle.description": "Makes you eagle (aka. FastBridge).",
+        "module.eagle.description": "UNTRANSLATED: Makes you eagle (aka. FastBridge).",
+        
+        "module.fakeLag.description": "UNTRANSLATED: Lags you behind server side until first hit.",
         
         "module.fastBreak.description": "Permite que tu quebres blocos mais rápido.",
         
-        "module.fastClimb.description": "Allows you to climb up ladders and vines faster.",
+        "module.fastClimb.description": "UNTRANSLATED: Allows you to climb up ladders and vines faster.",
         
-        "module.fastPlace.description": "Allows you to place blocks faster.",
+        "module.fastPlace.description": "UNTRANSLATED: Allows you to place blocks faster.",
         
-        "module.fastStairs.description": "Allows you to climb up stairs faster.",
+        "module.fastStairs.description": "UNTRANSLATED: Allows you to climb up stairs faster.",
         
-        "module.fastUse.description": "Allows you to use items faster.",
+        "module.fastUse.description": "UNTRANSLATED: Allows you to use items faster.",
         
-        "module.fly.description": "Allows you to fly in survival mode.",
+        "module.fly.description": "UNTRANSLATED: Allows you to fly in survival mode.",
         
-        "module.forceUnicodeChat.description": "Allows you to send unicode messages in chat.",
+        "module.forceUnicodeChat.description": "UNTRANSLATED: Allows you to send unicode messages in chat.",
         
         "module.freeCam.description": "Permite que tu mexas enquanto fora do teu corpo.",
         
@@ -156,21 +158,23 @@
         
         "module.fucker.description": "Destrói blocos selecionados á volta de ti. (também conhecido como IDNuker)",
         
-        "module.fullbright.description": "Brightens up the world around you.",
+        "module.fullbright.description": "UNTRANSLATED: Brightens up the world around you.",
+
+        "module.gameDetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
         
-        "module.ghost.description": "Allows you to walk around and interact with your environment after dying.",
+        "module.ghost.description": "UNTRANSLATED: Allows you to walk around and interact with your environment after dying.",
         
-        "module.ghostHand.description": "Allows you to interact with selected blocks through walls.",
+        "module.ghostHand.description": "UNTRANSLATED: Allows you to interact with selected blocks through walls.",
         
-        "module.godMode.description": "GodMode Exploit for AAC",
+        "module.godMode.description": "UNTRANSLATED: GodMode Exploit for AAC",
         
-        "module.hUD.description": "Toggles visibility of the HUD.",
+        "module.hUD.description": "UNTRANSLATED: Toggles visibility of the HUD.",
         
         "module.highJump.description": "Permite que tu saltes mais alto.",
         
         "module.iceSpeed.description": "Permite que tu andes mais rápido em gelo.",
         
-        "module.inventoryCleaner.description": "Automatically throws away useless items.",
+        "module.inventoryCleaner.description": "UNTRANSLATED: Automatically throws away useless items.",
         
         "module.inventoryMove.description": "Permite que tu andes enquanto estás num inventário.",
         
@@ -180,11 +184,11 @@
         
         "module.keepAlive.description": "Tenta prevenir que tu morras.",
         
-        "module.keepContainer.description": "Allows you to open a formerly closed inventory container everywhere. (Press INSERT Key to open)",
+        "module.keepContainer.description": "UNTRANSLATED: Allows you to open a formerly closed inventory container everywhere. (Press INSERT Key to open)",
         
-        "module.kick.description": "Allows you to kick yourself from a server.",
+        "module.kick.description": "UNTRANSLATED: Allows you to kick yourself from a server.",
         
-        "module.ladderJump.description": "Boosts you up when touching a ladder. (AAC)",
+        "module.ladderJump.description": "UNTRANSLATED: Boosts you up when touching a ladder. (AAC)",
         
         "module.liquidChat.description": "Permite que tu fales com outros utilizadores do LiquidBounce.",
         
@@ -192,97 +196,99 @@
         
         "module.liquids.description": "Permite que tu interajas com líquidos.",
         
-        "module.longJump.description": "Allows you to jump further.",
+        "module.longJump.description": "UNTRANSLATED: Allows you to jump further.",
         
         "module.midClick.description": "Permite que tu adiciones um amigo por usar o botão direito nele.",
         
-        "module.moreCarry.description": "Allows you to store items in your crafting slots.",
+        "module.moreCarry.description": "UNTRANSLATED: Allows you to store items in your crafting slots.",
         
         "module.multiActions.description": "Permite que tu uses itens enquanto quebras bloosAllows you to use items while breaking blocks.",
         
         "module.nameProtect.description": "Muda os nomes dos jogadores no clientside.",
         
-        "module.nameTags.description": "Changes the scale of the nametags so you can always read them.",
+        "module.nameTags.description": "UNTRANSLATED: Changes the scale of the nametags so you can always read them.",
         
-        "module.noBob.description": "Disables the view bobbing effect.",
+        "module.noBob.description": "UNTRANSLATED: Disables the view bobbing effect.",
         
-        "module.noBooks.description": "Blocks server from opening books (forced ads, ...)",
+        "module.noBooks.description": "UNTRANSLATED: Blocks server from opening books (forced ads, ...)",
         
-        "module.noClip.description": "Allows you to freely move through walls (A sandblock has to fall on your head).",
+        "module.noClip.description": "UNTRANSLATED: Allows you to freely move through walls (A sandblock has to fall on your head).",
         
-        "module.noFOV.description": "Disables FOV changes caused by speed effect, etc.",
+        "module.noFOV.description": "UNTRANSLATED: Disables FOV changes caused by speed effect, etc.",
         
-        "module.noFall.description": "Prevents you from taking fall damage.",
+        "module.noFall.description": "UNTRANSLATED: Prevents you from taking fall damage.",
         
-        "module.noFluid.description": "Ignore fluids like water and lava.",
+        "module.noFluid.description": "UNTRANSLATED: Ignore fluids like water and lava.",
         
-        "module.noHurtCam.description": "Disables hurt cam effect when getting hurt.",
+        "module.noHurtCam.description": "UNTRANSLATED: Disables hurt cam effect when getting hurt.",
         
-        "module.noJumpDelay.description": "Removes delay between jumps.",
+        "module.noJumpDelay.description": "UNTRANSLATED: Removes delay between jumps.",
         
-        "module.noPitchLimit.description": "Allows you to rotate your head indefinitely in every direction..",
+        "module.noPitchLimit.description": "UNTRANSLATED: Allows you to rotate your head indefinitely in every direction..",
         
-        "module.noRotateSet.description": "Prevents the server from rotating your head.",
+        "module.noRotateSet.description": "UNTRANSLATED: Prevents the server from rotating your head.",
         
-        "module.noScoreboard.description": "Disables the scoreboard.",
-        
-        "module.noSlow.description": "Cancels slowness effects caused by Soul Sand and using items.",
-        
-        "module.noSlowBreak.description": "Automatically adjusts breaking speed when using modules that influence it.",
-        
-        "module.noSwing.description": "Disabled swing effect when hitting an entity/mining a block.",
-        
-        "module.noWeb.description": "Prevents you from getting slowed down in webs.",
-        
-        "module.nuker.description": "Breaks all blocks around you.",
-        
-        "module.parkour.description": "Automatically jumps when reaching the edge of a block.",
-        
-        "module.perfectHorseJump.description": "Automatically jumps when the jump bar of a horse is filled up completely.",
-        
-        "module.phase.description": "Allows you to walk through blocks.",
-        
-        "module.pingSpoof.description": "Spoofs your ping to a given value.",
-        
-        "module.plugins.description": "Allows you to see which plugins the server is using.",
-        
-        "module.portalMenu.description": "Allows you to open a menu while being in a portal.",
-        
-        "module.potionSaver.description": "Freezes all potion effects while you are standing still.",
-        
-        "module.projectiles.description": "Allows you to see where arrows will land.",
-        
-        "module.prophuntESP.description": "Allows you to see disguised players in PropHunt.",
+        "module.noScoreboard.description": "UNTRANSLATED: Disables the scoreboard.",
 
-        "module.reach.description": "Increases your reach.",
-        
-        "module.refill.description": "Refills items such as blocks and food from inventory to hotbar.",
-        
-        "module.regen.description": "Regenerates your health much faster.",
-        
-        "module.resourcePackSpoof.description": "Prevents servers from forcing you to download their resource pack.",
-        
-        "module.reverseStep.description": "Allows you to step down blocks faster.",
-        
-        "module.rotations.description": "Allows you to see server-sided head and body rotations.",
-        
-        "module.safeWalk.description": "Prevents you from falling down as if you were sneaking.",
-        
-        "module.scaffold.description": "Automatically places blocks beneath your feet.",
-        
-        "module.serverCrasher.description": "Allows you to crash certain server.",
-        
-        "module.skinDerp.description": "Makes your skin blink (Requires multi-layer skin).",
+        "module.noSlotSet.description": "Previne que o servidor mude o teu slot de hotbar.",
 
-        "module.slimeJump.description": "Allows you to to jump higher on slime blocks.",
+        "module.noSlow.description": "UNTRANSLATED: Cancels slowness effects caused by Soul Sand and using items.",
         
-        "module.sneak.description": "Automatically sneaks all the time.",
+        "module.noSlowBreak.description": "UNTRANSLATED: Automatically adjusts breaking speed when using modules that influence it.",
         
-        "module.spammer.description": "Spams the chat with a given message.",
+        "module.noSwing.description": "UNTRANSLATED: Disabled swing effect when hitting an entity/mining a block.",
+        
+        "module.noWeb.description": "UNTRANSLATED: Prevents you from getting slowed down in webs.",
+        
+        "module.nuker.description": "UNTRANSLATED: Breaks all blocks around you.",
+        
+        "module.parkour.description": "UNTRANSLATED: Automatically jumps when reaching the edge of a block.",
+        
+        "module.perfectHorseJump.description": "UNTRANSLATED: Automatically jumps when the jump bar of a horse is filled up completely.",
+        
+        "module.phase.description": "UNTRANSLATED: Allows you to walk through blocks.",
+        
+        "module.pingSpoof.description": "UNTRANSLATED: Spoofs your ping to a given value.",
+        
+        "module.plugins.description": "UNTRANSLATED: Allows you to see which plugins the server is using.",
+        
+        "module.portalMenu.description": "UNTRANSLATED: Allows you to open a menu while being in a portal.",
+        
+        "module.potionSaver.description": "UNTRANSLATED: Freezes all potion effects while you are standing still.",
+        
+        "module.projectiles.description": "UNTRANSLATED: Allows you to see where arrows will land.",
+        
+        "module.prophuntESP.description": "UNTRANSLATED: Allows you to see disguised players in PropHunt.",
+
+        "module.reach.description": "UNTRANSLATED: Increases your reach.",
+        
+        "module.refill.description": "UNTRANSLATED: Refills items such as blocks and food from inventory to hotbar.",
+        
+        "module.regen.description": "UNTRANSLATED: Regenerates your health much faster.",
+        
+        "module.resourcePackSpoof.description": "UNTRANSLATED: Prevents servers from forcing you to download their resource pack.",
+        
+        "module.reverseStep.description": "UNTRANSLATED: Allows you to step down blocks faster.",
+        
+        "module.rotations.description": "UNTRANSLATED: Allows you to see server-sided head and body rotations.",
+        
+        "module.safeWalk.description": "UNTRANSLATED: Prevents you from falling down as if you were sneaking.",
+        
+        "module.scaffold.description": "UNTRANSLATED: Automatically places blocks beneath your feet.",
+        
+        "module.serverCrasher.description": "UNTRANSLATED: Allows you to crash certain server.",
+        
+        "module.skinDerp.description": "UNTRANSLATED: Makes your skin blink (Requires multi-layer skin).",
+
+        "module.slimeJump.description": "UNTRANSLATED: Allows you to to jump higher on slime blocks.",
+        
+        "module.sneak.description": "UNTRANSLATED: Automatically sneaks all the time.",
+        
+        "module.spammer.description": "UNTRANSLATED: Spams the chat with a given message.",
         
         "module.speed.description": "Permite que tu movas mais rápido.",
         
-        "module.sprint.description": "Automatically sprints all the time.",
+        "module.sprint.description": "UNTRANSLATED: Automatically sprints all the time.",
 
         "module.step.description": "Permite que tu subas por blocos.",
         
@@ -290,11 +296,13 @@
         
         "module.strafe.description": "Permite que tu movas no ar livremente.",
         
-        "module.tNTESP.description": "Allows you to see ignited TNT blocks through walls.",
+        "module.tNTESP.description": "UNTRANSLATED: Allows you to see ignited TNT blocks through walls.",
         
         "module.teams.description": "Evita o KillAura de atacar membros da equipa.",
         
         "module.teleport.description": "Permite que tu teleportes.",
+
+        "module.timerRange.description": "UNTRANSLATED: Allows you to manipulate the game speed in order to gain an advantage against your enemies.",
 
         "module.timer.description": "Muda a velocidade do jogo inteiro.",
         

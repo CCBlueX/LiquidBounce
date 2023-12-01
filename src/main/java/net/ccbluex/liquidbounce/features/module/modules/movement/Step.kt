@@ -24,18 +24,20 @@ import net.minecraft.stats.StatList
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Step : Module("Step", ModuleCategory.MOVEMENT) {
+object Step : Module("Step", ModuleCategory.MOVEMENT, gameDetecting = false) {
 
     /**
      * OPTIONS
      */
 
-    private val mode by ListValue("Mode", arrayOf(
-            "Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "Spartan", "Rewinside"
-    ), "NCP")
+    private val mode by ListValue("Mode",
+        arrayOf("Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "Spartan", "Rewinside"), "NCP")
 
-    private val height by FloatValue("Height", 1F, 0.6F..10F) { mode !in arrayOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4") }
-    private val jumpHeight by FloatValue("JumpHeight", 0.42F, 0.37F..0.42F) { mode == "Jump" }
+        private val height by FloatValue("Height", 1F, 0.6F..10F)
+            { mode !in arrayOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4") }
+        private val jumpHeight by FloatValue("JumpHeight", 0.42F, 0.37F..0.42F)
+            { mode == "Jump" }
+
     private val delay by IntegerValue("Delay", 0, 0..500)
 
     /**
@@ -145,13 +147,13 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
         val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
-        if (moduleManager[Phase::class.java].state) {
+        if (moduleManager[Phase::class.java].handleEvents()) {
             event.stepHeight = 0F
             return
         }
 
         // Some fly modes should disable step
-        if (Fly.state && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+        if (Fly.handleEvents() && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
             return

@@ -96,12 +96,12 @@ object RandomUtils {
 
         val baseName = leetRandomly(adjective) + (if (adjective.length + animal.length < maxLength) random(
             1,
-            fillerChars
+            FILLER_CHARS
         ) else "") + leetRandomly(animal)
         val fillerCount = maxLength - baseName.length
 
         //Adds random prefix and suffix made up from filler characters.
-        return StringBuilder(random(fillerCount, fillerChars)).insert(nextInt(0, fillerCount), baseName).toString()
+        return StringBuilder(random(fillerCount, FILLER_CHARS)).insert(nextInt(0, fillerCount), baseName).toString()
     }
 
     //Randomly converts "leetable" characters, skips first and last.
@@ -3038,7 +3038,7 @@ object RandomUtils {
         "Zorilla"
     )
 
-    private const val fillerChars = "0123456789_"
+    private const val FILLER_CHARS = "0123456789_"
     private val leetMap = mapOf(
         "a" to "4",
         "b" to "8",

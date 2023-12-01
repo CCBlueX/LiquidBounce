@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.extensions.isMob
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 
 object EntityUtils : MinecraftInstance() {
 
@@ -27,6 +28,8 @@ object EntityUtils : MinecraftInstance() {
 
     var targetDead = false
 
+    private val healthSubstrings = arrayOf("hp", "health", "❤", "lives")
+
     fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
         if (entity is EntityLivingBase && (targetDead || entity.isEntityAlive) && entity != mc.thePlayer) {
             if (targetInvisible || !entity.isInvisible) {
@@ -35,12 +38,12 @@ object EntityUtils : MinecraftInstance() {
                         if (isBot(entity))
                             return false
 
-                        if (entity.isClientFriend() && !NoFriends.state)
+                        if (entity.isClientFriend() && !NoFriends.handleEvents())
                             return false
 
                         if (entity.isSpectator) return false
 
-                        return !Teams.state || !Teams.isInYourTeam(entity)
+                        return !Teams.handleEvents() || !Teams.isInYourTeam(entity)
                     }
                     return true
                 }
@@ -49,6 +52,28 @@ object EntityUtils : MinecraftInstance() {
             }
         }
         return false
+    }
+
+    fun getHealth(entity: EntityLivingBase, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {
+        if (fromScoreboard && entity is EntityPlayer) run {
+            val scoreboard = entity.worldScoreboard
+            val objective = scoreboard.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))
+
+            if (healthSubstrings !in objective.objective?.displayName)
+                return@run
+
+            val scoreboardHealth = objective.scorePoints
+
+            if (scoreboardHealth > 0)
+                return scoreboardHealth.toFloat()
+        }
+
+        var health = entity.health
+
+        if (absorption)
+            health += entity.absorptionAmount
+
+        return if (health > 0) health else 20f
     }
 
 }

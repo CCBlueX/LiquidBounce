@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
@@ -35,39 +36,37 @@ import kotlin.math.pow
 @ElementInfo(name = "Target")
 class Target : Element() {
 
-    private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
-    private val absorption by BoolValue("Absorption", false)
+    private val absorption by BoolValue("Absorption", true)
+    private val healthFromScoreboard by BoolValue("HealthFromScoreboard", true)
 
+    private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private var easingHealth = 0F
     private var lastTarget: Entity? = null
 
     override fun drawElement(): Border {
         val target = KillAura.target
 
-        if (target is EntityPlayer) {
-            val targetHealth = target.health + if (absorption) target.absorptionAmount else 0f
+        if (KillAura.handleEvents() && target is EntityPlayer) {
+            val targetHealth = getHealth(target, healthFromScoreboard, absorption)
 
             if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
-                    abs(easingHealth - targetHealth) < 0.01) {
+                    abs(easingHealth - targetHealth) < 0.01
+            ) {
                 easingHealth = targetHealth
             }
 
-            val width = (38 + (target.name?.let(Fonts.font40::getStringWidth) ?: 0))
-                    .coerceAtLeast(118)
-                    .toFloat()
+            val width = (38f + (target.name?.let(Fonts.font40::getStringWidth) ?: 0)).coerceAtLeast(118f)
 
             // Draw rect box
             drawBorderedRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
             // Damage animation
             if (easingHealth > targetHealth.coerceAtMost(target.maxHealth))
-                drawRect(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width,
-                        36F, Color(252, 185, 65).rgb)
+                drawRect(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 185, 65).rgb)
 
             // Health bar
-            drawRect(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width,
-                    36F, Color(252, 96, 66).rgb)
+            drawRect(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 96, 66).rgb)
 
             // Heal animation
             if (easingHealth < targetHealth)
@@ -82,8 +81,7 @@ class Target : Element() {
             // Draw info
             val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)
             if (playerInfo != null) {
-                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}",
-                        36, 24, 0xffffff)
+                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}", 36, 24, 0xffffff)
 
                 // Draw head
                 val locationSkin = playerInfo.locationSkin
@@ -98,8 +96,7 @@ class Target : Element() {
     private fun drawHead(skin: ResourceLocation, width: Int, height: Int) {
         glColor4f(1F, 1F, 1F, 1F)
         mc.textureManager.bindTexture(skin)
-        drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height,
-                64F, 64F)
+        drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height, 64F, 64F)
     }
 
 }

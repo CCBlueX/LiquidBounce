@@ -128,7 +128,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final InventoryMove inventoryMove = InventoryMove.INSTANCE;
         final Sneak sneak = Sneak.INSTANCE;
-        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionPro()) || AntiHunger.INSTANCE.getState() || (sneak.getState() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMove()) && sneak.getMode().equals("MineSecure"));
+        final boolean fakeSprint = (inventoryMove.handleEvents() && inventoryMove.getAacAdditionPro()) || AntiHunger.INSTANCE.handleEvents() || (sneak.handleEvents() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMove()) && sneak.getMode().equals("MineSecure"));
 
         boolean sprinting = isSprinting() && !fakeSprint;
 
@@ -142,7 +142,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean sneaking = isSneaking();
 
-        if (sneaking != serverSneakState && (!sneak.getState() || sneak.getMode().equals("Legit"))) {
+        if (sneaking != serverSneakState && (!sneak.handleEvents() || sneak.getMode().equals("Legit"))) {
             if (sneaking)
                 sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, START_SNEAKING));
             else sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, STOP_SNEAKING));
@@ -157,7 +157,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             final Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
 
             final Derp derp = Derp.INSTANCE;
-            if (derp.getState()) {
+            if (derp.handleEvents()) {
                 Rotation rot = derp.getRotation();
                 yaw = rot.getYaw();
                 pitch = rot.getPitch();
@@ -215,7 +215,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     private void swingItem(CallbackInfo callbackInfo) {
         final NoSwing noSwing = NoSwing.INSTANCE;
 
-        if (noSwing.getState()) {
+        if (noSwing.handleEvents()) {
             callbackInfo.cancel();
 
             if (!noSwing.getServerSide()) {
@@ -262,7 +262,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         prevTimeInPortal = timeInPortal;
 
         if (inPortal) {
-            if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !PortalMenu.INSTANCE.getState()) {
+            if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !PortalMenu.INSTANCE.handleEvents()) {
                 mc.displayGuiScreen(null);
             }
 
@@ -343,7 +343,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         final NoSlow noSlow = NoSlow.INSTANCE;
         final KillAura killAura = KillAura.INSTANCE;
 
-        boolean isUsingItem = getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus()));
+        boolean isUsingItem = getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus()) || NoSlow.INSTANCE.isUNCPBlocking());
 
         if (isUsingItem && !isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
@@ -371,7 +371,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
         }
 
-        if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown()) {
+        if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.handleEvents() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown()) {
             setSprinting(true);
         }
 

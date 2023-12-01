@@ -137,6 +137,8 @@
 
         "module.eagle.description": "Faz você ser como uma águia (também conhecido como FastBridge).",
 
+        "module.fakeLag.description": "UNTRANSLATED: Lags you behind server side until first hit.",
+
         "module.fastBreak.description": "Permite que você quebre blocos mais rapidamente.",
 
         "module.fastClimb.description": "Permite que você suba escadas e cipós mais rapidamente.",
@@ -158,6 +160,8 @@
         "module.fucker.description": "Destroi blocos selecionados ao seu redor. (também conhecido como IDNuker)",
 
         "module.fullbright.description": "Ilumina o mundo ao seu redor.",
+
+        "module.gameDetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
 
         "module.ghost.description": "Permite que você ande e interaja com o ambiente após morrer.",
 
@@ -226,6 +230,8 @@
         "module.noRotateSet.description": "Impede que o servidor gire sua cabeça.",
 
         "module.noScoreboard.description": "Desativa o ScoreBoard.",
+
+        "module.noSlotSet.description": "Impede que o servidor altere seu slot.",
 
         "module.noSlow.description": "Cancela os efeitos de lentidão causados Por Areia da Alma e uso de itens.",
 
@@ -298,6 +304,8 @@
         "module.teams.description": "Impede que o Killaura ataque companheiros de equipe.",
 
         "module.teleport.description": "Permite teletransportar-se pelo mapa.",
+
+        "module.timerRange.description": "UNTRANSLATED: Allows you to manipulate the game speed in order to gain an advantage against your enemies.",
 
         "module.timer.description": "Muda a velocidade de todo o jogo.",
 

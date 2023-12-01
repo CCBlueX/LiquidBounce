@@ -25,7 +25,6 @@ import net.minecraft.util.StringUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import java.awt.Color
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 @SideOnly(Side.CLIENT)
@@ -94,31 +93,26 @@ object BlackStyle : Style() {
         font35.drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, Color.WHITE.rgb)
     }
 
-    override fun drawModuleElementAndClick(
-        mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?
-    ): Boolean {
+    override fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean {
         drawRect(
-            moduleElement.x - 1,
-            moduleElement.y - 1,
-            moduleElement.x + moduleElement.width + 1,
-            moduleElement.y + moduleElement.height + 1,
+            moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
             getHoverColor(Color(40, 40, 40), moduleElement.hoverTime)
         )
         drawRect(
-            moduleElement.x - 1,
-            moduleElement.y - 1,
-            moduleElement.x + moduleElement.width + 1,
-            moduleElement.y + moduleElement.height + 1,
-            getHoverColor(Color(20, 20, 20, moduleElement.slowlyFade), moduleElement.hoverTime)
+            moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
+            getHoverColor(Color(20, 20, 20, moduleElement.slowlyFade), moduleElement.hoverTime, !moduleElement.module.isActive)
         )
 
-        font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, Color.WHITE.rgb)
+        font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5,
+            if (moduleElement.module.state && !moduleElement.module.isActive) Color(255, 255, 255, 128).rgb
+            else Color.WHITE.rgb
+        )
 
         // Draw settings
         val moduleValues = moduleElement.module.values.filter { it.isSupported() }
         if (moduleValues.isNotEmpty()) {
             font35.drawString(
-                if (moduleElement.showSettings) ">" else "<",
+                if (moduleElement.showSettings) "<" else ">",
                 moduleElement.x + moduleElement.width - 8,
                 moduleElement.y + 5,
                 Color.WHITE.rgb
@@ -136,7 +130,7 @@ object BlackStyle : Style() {
                     maxX,
                     yPos + moduleElement.settingsHeight,
                     3,
-                    Color(40, 40, 40).rgb,
+                    Color(20, 20, 20).rgb,
                     Color(40, 40, 40).rgb
                 )
 
@@ -318,13 +312,7 @@ object BlackStyle : Style() {
                 if (mouseButton != null && mouseX in minX..maxX && mouseY in moduleElement.y + 6..yPos + 2) return true
             }
         }
-        return false
-    }
 
-    private fun getHoverColor(color: Color, hover: Int): Int {
-        val r = color.red - hover * 2
-        val g = color.green - hover * 2
-        val b = color.blue - hover * 2
-        return Color(max(r, 0), max(g, 0), max(b, 0), color.alpha).rgb
+        return false
     }
 }

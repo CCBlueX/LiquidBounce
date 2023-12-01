@@ -31,21 +31,22 @@ import net.minecraft.util.Vec3
 object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
     private val range by FloatValue("Range", 4.5f, 3f..8f)
     private val swing by ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
+
     private val rotations by BoolValue("Rotations", true)
-    private val strafe by BoolValue("Strafe", false) { rotations }
+        private val strafe by BoolValue("Strafe", false) { rotations }
 
-    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
-    }
-    private val maxTurnSpeed by maxTurnSpeedValue
+        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+        }
+        private val maxTurnSpeed by maxTurnSpeedValue
 
-    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+        private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
 
-        override fun isSupported() = !maxTurnSpeedValue.isMinimal()
-    }
+            override fun isSupported() = !maxTurnSpeedValue.isMinimal()
+        }
 
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+        private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
     private var target: Entity? = null
 
@@ -84,7 +85,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
                 setTargetRotation(
                     limitAngleChange(
                         currentRotation ?: player.rotation,
-                        toRotation(nearestPoint, true),
+                        toRotation(nearestPoint, true).fixedSensitivity(),
                         nextFloat(minTurnSpeed, maxTurnSpeed)
                     ),
                     strafe = this.strafe,
@@ -105,11 +106,8 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
         val rotation = currentRotation ?: player.rotation
         val entity = target ?: return
 
-        if (!rotations && player.getDistanceToBox(entity.hitBox) <= range || isRotationFaced(
-                entity,
-                range.toDouble(),
-                rotation
-            )
+        if (!rotations && player.getDistanceToBox(entity.hitBox) <= range
+            || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 

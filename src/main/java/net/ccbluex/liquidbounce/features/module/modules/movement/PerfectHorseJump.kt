@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-object PerfectHorseJump : Module("PerfectHorseJump", ModuleCategory.MOVEMENT, subjective = true) {
+object PerfectHorseJump : Module("PerfectHorseJump", ModuleCategory.MOVEMENT, subjective = true, gameDetecting = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

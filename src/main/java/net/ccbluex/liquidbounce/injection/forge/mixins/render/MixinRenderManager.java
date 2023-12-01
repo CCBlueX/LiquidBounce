@@ -23,7 +23,7 @@ public abstract class MixinRenderManager {
     private AxisAlignedBB getEntityBoundingBox(Entity entity) {
 		final HitBox hitBox = HitBox.INSTANCE;
 
-        if (!hitBox.getState()) {
+        if (!hitBox.handleEvents()) {
             return entity.getEntityBoundingBox();
         }
 

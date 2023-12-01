@@ -20,8 +20,8 @@ import kotlin.math.sin
 
 object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
     private val mode by ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
-    private val clipMode by ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast") { mode == "Clip" }
-    private val checkerClimbMotion by FloatValue("CheckerClimbMotion", 0f, 0f..1f) { mode == "CheckerClimb" }
+        private val clipMode by ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast") { mode == "Clip" }
+        private val checkerClimbMotion by FloatValue("CheckerClimbMotion", 0f, 0f..1f) { mode == "CheckerClimb" }
 
     private var glitch = false
     private var waited = 0
@@ -98,8 +98,8 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
         if (packet is C03PacketPlayer) {
             if (glitch) {
                 val yaw = direction
-                packet.x = packet.x - sin(yaw) * 0.00000001
-                packet.z = packet.z + cos(yaw) * 0.00000001
+                packet.x -= sin(yaw) * 0.00000001
+                packet.z += cos(yaw) * 0.00000001
                 glitch = false
             }
         }

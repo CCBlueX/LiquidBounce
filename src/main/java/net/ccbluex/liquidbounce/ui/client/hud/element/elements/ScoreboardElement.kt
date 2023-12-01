@@ -34,7 +34,6 @@ import java.awt.Color
 class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                         side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.MIDDLE)) : Element(x, y, scale, side) {
 
-
     private val textRed by IntegerValue("Text-R", 255, 0..255)
     private val textGreen by IntegerValue("Text-G", 255, 0..255)
     private val textBlue by IntegerValue("Text-B", 255, 0..255)
@@ -45,11 +44,11 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
     private val backgroundColorAlpha by IntegerValue("Background-Alpha", 95, 0..255)
 
     private val rect by BoolValue("Rect", false)
-    private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Rainbow"), "Custom") { rect }
-    private val rectColorRed by IntegerValue("Rect-R", 0, 0..255) { rect && rectColorMode == "Custom"}
-    private val rectColorGreen by IntegerValue("Rect-G", 111, 0..255) { rect && rectColorMode == "Custom"}
-    private val rectColorBlue by IntegerValue("Rect-B", 255, 0..255) { rect && rectColorMode == "Custom"}
-    private val rectColorAlpha by IntegerValue("Rect-Alpha", 255, 0..255) { rect && rectColorMode == "Custom"}
+        private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Rainbow"), "Custom") { rect }
+            private val rectColorRed by IntegerValue("Rect-R", 0, 0..255) { rect && rectColorMode == "Custom"}
+            private val rectColorGreen by IntegerValue("Rect-G", 111, 0..255) { rect && rectColorMode == "Custom"}
+            private val rectColorBlue by IntegerValue("Rect-B", 255, 0..255) { rect && rectColorMode == "Custom"}
+            private val rectColorAlpha by IntegerValue("Rect-Alpha", 255, 0..255) { rect && rectColorMode == "Custom"}
 
     private val shadow by BoolValue("Shadow", false)
     private val font by FontValue("Font", Fonts.minecraftFont)
@@ -58,7 +57,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border? {
-        if (NoScoreboard.state)
+        if (NoScoreboard.handleEvents())
             return null
 
         val fontRenderer = font
@@ -83,12 +82,10 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
 
         val scoreboard = objective.scoreboard
         var scoreCollection = scoreboard.getSortedScores(objective)
-        val scores = Lists.newArrayList(Iterables.filter(scoreCollection) { input ->
-            input?.playerName != null && !input.playerName.startsWith("#")
-        })
+        val scores = scoreCollection.filter { it.playerName?.startsWith("#") == false }
 
         scoreCollection = if (scores.size > 15)
-            Lists.newArrayList(Iterables.skip(scores, scoreCollection.size - 15))
+            scores.drop(scoreCollection.size - 15)
         else
             scores
 
@@ -102,8 +99,6 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
 
         val maxHeight = scoreCollection.size * fontRenderer.FONT_HEIGHT
         val l1 = -maxWidth - 3 - if (rect) 3 else 0
-
-
 
         drawRect(l1 - 2, -2, 5, (maxHeight + fontRenderer.FONT_HEIGHT), backColor)
 
@@ -126,8 +121,13 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
 
                 glColor4f(1f, 1f, 1f, 1f)
 
-                fontRenderer.drawString(displayName, (l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2).toFloat(), (height -
-                        fontRenderer.FONT_HEIGHT), textColor, shadow)
+                fontRenderer.drawString(
+                    displayName,
+                    (l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2).toFloat(),
+                    height - fontRenderer.FONT_HEIGHT,
+                    textColor,
+                    shadow
+                )
             }
 
             if (rect) {
@@ -136,7 +136,13 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                     else -> rectCustomColor
                 }
 
-                drawRect(2F, if (index == scoreCollection.size - 1) -2F else height, 5F, if (index == 0) fontRenderer.FONT_HEIGHT.toFloat() else height + fontRenderer.FONT_HEIGHT * 2F, rectColor)
+                drawRect(
+                    2F,
+                    if (index == scoreCollection.size - 1) -2F else height,
+                    5F,
+                    if (index == 0) fontRenderer.FONT_HEIGHT.toFloat() else height + fontRenderer.FONT_HEIGHT * 2F,
+                    rectColor
+                )
             }
         }
 

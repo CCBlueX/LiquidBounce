@@ -74,7 +74,15 @@ object LiquidBounceStyle : Style() {
 
     override fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean {
         val xPos = moduleElement.x - (font35.getStringWidth(moduleElement.displayName) - 100) / 2
-        font35.drawString(moduleElement.displayName, xPos, moduleElement.y + 6, if (moduleElement.module.state) guiColor else Int.MAX_VALUE)
+        font35.drawString(
+            moduleElement.displayName, xPos,
+            moduleElement.y + 6,
+            if (moduleElement.module.state) {
+                if (moduleElement.module.isActive) guiColor
+                // Make inactive modules have alpha set to 100
+                else (guiColor and 0x00FFFFFF) or (0x64 shl 24)
+            } else Int.MAX_VALUE
+        )
 
         val moduleValues = moduleElement.module.values.filter { it.isSupported() }
         if (moduleValues.isNotEmpty()) {

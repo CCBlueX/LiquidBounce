@@ -32,7 +32,6 @@ import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.init.Blocks
-import net.minecraft.init.Items
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0DPacketCloseWindow
@@ -59,8 +58,6 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     private val noMoveAir by InventoryManager.noMoveAirValue
     private val noMoveGround by InventoryManager.noMoveGroundValue
 
-    private val noCompass by BoolValue("NoCompass", true)
-
     private val chestTitle by BoolValue("ChestTitle", true)
 
     private val randomSlot by BoolValue("RandomSlot", true)
@@ -83,7 +80,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
     private suspend fun shouldOperate(): Boolean {
         while (true) {
-            if (!state)
+            if (!handleEvents())
                 return false
 
             if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
@@ -106,7 +103,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     }
 
     suspend fun stealFromChest() {
-        if (!state)
+        if (!handleEvents())
             return
 
         val thePlayer = mc.thePlayer ?: return
@@ -114,10 +111,6 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
         val screen = mc.currentScreen ?: return
 
         if (screen !is GuiChest || !shouldOperate())
-            return
-
-        // Check if player isn't holding a compass and browsing navigation gui
-        if (noCompass && thePlayer.heldItem?.item == Items.compass)
             return
 
         // Check if chest isn't a custom gui
@@ -142,6 +135,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
             run scheduler@ {
                 itemsToSteal.forEachIndexed { index, (slot, stack, sortableTo) ->
+                    // Wait for NoMove or cancel click
                     if (!shouldOperate()) {
                         TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
                         return
@@ -215,13 +209,16 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
                 if (index in TickScheduler) return@mapIndexedNotNull null
 
-                val mergableCount = mc.thePlayer.inventory.mainInventory.sumOf {
-                    if (it?.isItemEqual(stack) == true) it.maxStackSize - it.stackSize
+                val mergeableCount = mc.thePlayer.inventory.mainInventory.sumOf { otherStack ->
+                    otherStack ?: return@sumOf 0
+
+                    if (otherStack.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stack, otherStack))
+                        otherStack.maxStackSize - otherStack.stackSize
                     else 0
                 }
 
-                val canMerge = mergableCount > 0
-                val canFullyMerge = mergableCount >= stack.stackSize
+                val canMerge = mergeableCount > 0
+                val canFullyMerge = mergeableCount >= stack.stackSize
 
                 // Clicking this item wouldn't take it from chest or merge it
                 if (!canMerge && spaceInInventory <= 0) return@mapIndexedNotNull null
@@ -229,13 +226,13 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                 // If stack can be merged without occupying any additional slot, do not take stack limits into account
                 // TODO: player could theoretically already have too many stacks in inventory before opening the chest so no more should even get merged
                 // TODO: if it can get merged but would also need another slot, it could simulate 2 clicks, one which maxes out the stack in inventory and second that puts excess items back
-                if (InventoryCleaner.state && !isStackUseful(stack, stacks, noLimits = canFullyMerge))
+                if (InventoryCleaner.handleEvents() && !isStackUseful(stack, stacks, noLimits = canFullyMerge))
                     return@mapIndexedNotNull null
 
                 var sortableTo: Int? = null
 
                 // If stack can get merged, do not try to sort it, normal shift + left-click will merge it
-                if (!canMerge && InventoryCleaner.state && InventoryCleaner.sort) {
+                if (!canMerge && InventoryCleaner.handleEvents() && InventoryCleaner.sort) {
                     for (hotbarIndex in 0..8) {
                         if (sortBlacklist[hotbarIndex])
                             continue
@@ -299,9 +296,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val packet = event.packet
-
-        when (packet) {
+        when (val packet = event.packet) {
             is C0DPacketCloseWindow, is S2DPacketOpenWindow, is S2EPacketCloseWindow -> {
                 receivedId = null
                 progress = null

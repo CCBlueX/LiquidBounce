@@ -73,7 +73,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 } else if (fileName.endsWith(".zip")) {
                     val zipFile = ZipFile(file)
                     val entries = zipFile.entries()
-                    val scriptFiles = ArrayList<File>()
+                    val scriptFiles = arrayListOf<File>()
 
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()

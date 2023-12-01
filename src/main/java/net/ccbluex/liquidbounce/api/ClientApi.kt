@@ -23,7 +23,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder
  */
 object ClientApi {
 
-    const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
+    private const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
 
     /**
      * This makes sense because we want forks to be able to use this API and not only the official client.

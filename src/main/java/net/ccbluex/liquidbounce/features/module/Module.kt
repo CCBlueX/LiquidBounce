@@ -7,20 +7,20 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce.isStarting
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.features.module.modules.misc.GameDetector
 import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
-import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.timing.TickedActions
+import net.ccbluex.liquidbounce.utils.timing.TickedActions.TickScheduler
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
-import net.minecraft.item.ItemStack
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
@@ -35,9 +35,15 @@ open class Module @JvmOverloads constructor(
     private val forcedDescription: String? = null,
     // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
     val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " "),
-    val subjective: Boolean = category == ModuleCategory.RENDER
+    val subjective: Boolean = category == ModuleCategory.RENDER,
+    val gameDetecting: Boolean = canBeEnabled
 
 ) : MinecraftInstance(), Listenable {
+
+    // Value that determines whether the module should depend on GameDetector
+    private val onlyInGameValue = BoolValue("OnlyInGame", true, subjective = true) { GameDetector.state }
+
+    protected val TickScheduler = TickScheduler(this)
 
     // Module information
 
@@ -140,60 +146,22 @@ open class Module @JvmOverloads constructor(
      * Get all values of module with unique names
      */
     open val values
-        get() = javaClass.declaredFields.map { valueField ->
-            valueField.isAccessible = true
-            valueField[this]
-        }.filterIsInstance<Value<*>>().distinctBy { it.name }
+        get() = javaClass.declaredFields
+            .map { field ->
+                field.isAccessible = true
+                field[this]
+            }.filterIsInstance<Value<*>>().toMutableList()
+            .also {
+                if (gameDetecting)
+                    it.add(onlyInGameValue)
+            }
+            .distinctBy { it.name }
+
+    val isActive
+        get() = !gameDetecting || !onlyInGameValue.get() || GameDetector.isInGame()
 
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = state
-
-    internal object TickScheduler {
-       lateinit var instance: Module
-
-        internal fun schedule(id: Int, allowDuplicates: Boolean = false, action: () -> Unit) =
-            TickedActions.schedule(id, instance, allowDuplicates, action)
-
-        internal fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: ((ItemStack?) -> Unit)? = null) =
-            schedule(slot, allowDuplicates) {
-                val newStack = mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
-                action?.invoke(newStack)
-            }
-
-        operator fun plusAssign(action: () -> Unit) {
-            schedule(-1, true, action)
-        }
-
-        // Schedule actions to be executed in following ticks, one each tick
-        // Thread is frozen until all actions were executed (suitable for coroutines)
-        internal fun scheduleAndSuspend(vararg actions: () -> Unit) =
-            actions.forEach {
-                this += it
-                waitUntil(::isEmpty)
-            }
-
-        internal fun scheduleAndSuspend(id: Int = -1, allowDuplicates: Boolean = true, action: () -> Unit) {
-            schedule(id, allowDuplicates, action)
-            waitUntil(::isEmpty)
-        }
-
-        internal fun isScheduled(id: Int) = TickedActions.isScheduled(id, instance)
-
-        // Checks if id click is scheduled: if (id in TickScheduler)
-        operator fun contains(id: Int) = isScheduled(id)
-
-        internal fun clear() = TickedActions.clear(instance)
-
-        internal val size
-            get() = TickedActions.size(instance)
-
-        internal fun isEmpty() = TickedActions.isEmpty(instance)
-
-    }
-
-    init {
-        TickScheduler.instance = this
-    }
+    override fun handleEvents() = state && isActive
 }

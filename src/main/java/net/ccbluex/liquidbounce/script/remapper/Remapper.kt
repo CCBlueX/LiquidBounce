@@ -21,8 +21,8 @@ object Remapper {
     private const val srgName = "stable_22"
     private val srgFile = File(dir, "mcp-$srgName.srg")
 
-    private val fields : HashMap<String, HashMap<String, String>> = hashMapOf()
-    private val methods : HashMap<String, HashMap<String, String>> = hashMapOf()
+    private val fields = hashMapOf<String, HashMap<String, String>>()
+    private val methods = hashMapOf<String, HashMap<String, String>>()
 
     /**
      * Load srg

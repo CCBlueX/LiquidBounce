@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.Ghost
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.GuiGameOver
 
-object AutoRespawn : Module("AutoRespawn", ModuleCategory.PLAYER) {
+object AutoRespawn : Module("AutoRespawn", ModuleCategory.PLAYER, gameDetecting = false) {
 
     private val instant by BoolValue("Instant", true)
 
@@ -21,7 +21,7 @@ object AutoRespawn : Module("AutoRespawn", ModuleCategory.PLAYER) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || Ghost.state)
+        if (thePlayer == null || Ghost.handleEvents())
             return
 
         if (if (instant) mc.thePlayer.health == 0F || mc.thePlayer.isDead else mc.currentScreen is GuiGameOver

@@ -10,7 +10,6 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
-import kotlin.math.ceil
 
 object ArmorComparator: MinecraftInstance() {
 	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
@@ -106,13 +105,17 @@ class ArmorSet(private vararg val armorPairs: Pair<Int?, ItemStack>?) : Iterable
 
 			val protectionLvl = stack.getEnchantmentLevel(Enchantment.protection)
 
-			// Protection 4 has enchantment protection factor hardcoded to 5, other levels are equal to their epf (see wiki)
-			epf += if (protectionLvl == 4) 5 else protectionLvl
+			// Calculate epf based on protection level
+			if (protectionLvl > 0)
+				epf += ((6 + protectionLvl * protectionLvl) * 0.75f / 3).toInt()
 		}
 
 		val baseDefense = baseDefensePercentage / 100f
 
-		baseDefense + (1 - baseDefense) * ceil(epf.coerceAtMost(25) * 0.75f) * 0.04f
+		// Not ceiling epf up to simulate the fact that 0.75f is actually random number between 0.5 and 1
+		// By ceiling up, you for example get that 3x protection 1 is same as 4x protection 1, even tho 4x protection 1 has better overall average defense
+		// More details: https://www.guilded.gg/CCBlueX/groups/1dgpg8Jz/channels/034be45e-1b72-4d5a-bee7-d6ba52ba1657/chat?messageId=c0d88f1e-5ad6-48f3-8acb-d5ab7611164b
+		baseDefense + (1 - baseDefense) * epf.coerceAtMost(25) * 0.75f * 0.04f
 	}
 
 	override fun iterator() = armorPairs.iterator()
@@ -125,5 +128,7 @@ class ArmorSet(private vararg val armorPairs: Pair<Int?, ItemStack>?) : Iterable
 
 	operator fun get(index: Int) = armorPairs.getOrNull(index)
 }
+
+operator fun ArmorSet?.contains(stack: ItemStack) = this?.contains(stack) ?: true
 
 private val NULL_LIST = listOf<Pair<Int?, ItemStack>?>(null)

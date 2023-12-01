@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.serverOnGround
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -21,10 +22,12 @@ import net.minecraft.potion.Potion
 object Regen : Module("Regen", ModuleCategory.PLAYER) {
 
     private val mode by ListValue("Mode", arrayOf("Vanilla", "Spartan"), "Vanilla")
+        private val speed by IntegerValue("Speed", 100, 1..100) { mode == "Vanilla" }
+
     private val delay by IntegerValue("Delay", 0, 0..10000)
-    private val speed by IntegerValue("Speed", 100, 1..100) { mode == "Vanilla" }
     private val health by IntegerValue("Health", 18, 0..20)
     private val food by IntegerValue("Food", 18, 0..20)
+
     private val noAir by BoolValue("NoAir", false)
     private val potionEffect by BoolValue("PotionEffect", false)
 
@@ -40,33 +43,37 @@ object Regen : Module("Regen", ModuleCategory.PLAYER) {
             resetTimer = false
         }
 
-        if ((!noAir || mc.thePlayer.onGround) && !mc.thePlayer.capabilities.isCreativeMode && mc.thePlayer.foodStats.foodLevel > food && mc.thePlayer.isEntityAlive && mc.thePlayer.health < health) {
-            if (potionEffect && !mc.thePlayer.isPotionActive(Potion.regeneration)) {
-                return
+        val thePlayer = mc.thePlayer ?: return
+
+        if (
+            !mc.playerController.gameIsSurvivalOrAdventure()
+            || noAir && !serverOnGround
+            || thePlayer.foodStats.foodLevel <= food
+            || !thePlayer.isEntityAlive
+            || thePlayer.health >= health
+            || (potionEffect && !thePlayer.isPotionActive(Potion.regeneration))
+            || !timer.hasTimePassed(delay)
+        ) return
+
+        when (mode.lowercase()) {
+            "vanilla" -> {
+                repeat(speed) {
+                    sendPacket(C03PacketPlayer(serverOnGround))
+                }
             }
 
-            if (timer.hasTimePassed(delay)) {
-                when (mode.lowercase()) {
-                    "vanilla" -> {
-                        repeat(speed) {
-                            sendPacket(C03PacketPlayer(mc.thePlayer.onGround))
-                        }
+            "spartan" -> {
+                if (!isMoving && serverOnGround) {
+                    repeat(9) {
+                        sendPacket(C03PacketPlayer(serverOnGround))
                     }
 
-                    "spartan" -> {
-                        if (!isMoving && mc.thePlayer.onGround) {
-                            repeat(9) {
-                                sendPacket(C03PacketPlayer(mc.thePlayer.onGround))
-                            }
-
-                            mc.timer.timerSpeed = 0.45F
-                            resetTimer = true
-                        }
-                    }
+                    mc.timer.timerSpeed = 0.45F
+                    resetTimer = true
                 }
-
-                timer.reset()
             }
         }
+
+        timer.reset()
     }
 }

@@ -36,11 +36,10 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT,
     val spacedModules by BoolValue("SpacedModules", false)
     val panelsForcedInBoundaries by BoolValue("PanelsForcedInBoundaries", true)
 
-
     private val colorRainbowValue = BoolValue("Rainbow", false) { style !in arrayOf("Slowly", "Black") }
-    private val colorRed by IntegerValue("R", 0, 0..255) { colorRainbowValue.isSupported() && !colorRainbowValue.get() }
-    private val colorGreen by IntegerValue("G", 160, 0..255) { colorRainbowValue.isSupported() && !colorRainbowValue.get() }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { colorRainbowValue.isSupported() && !colorRainbowValue.get() }
+        private val colorRed by IntegerValue("R", 0, 0..255) { colorRainbowValue.isSupported() && !colorRainbowValue.get() }
+        private val colorGreen by IntegerValue("G", 160, 0..255) { colorRainbowValue.isSupported() && !colorRainbowValue.get() }
+        private val colorBlue by IntegerValue("B", 255, 0..255) { colorRainbowValue.isSupported() && !colorRainbowValue.get() }
 
     val guiColor
         get() = if (colorRainbowValue.get()) ColorUtils.rainbow().rgb

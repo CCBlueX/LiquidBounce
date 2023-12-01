@@ -55,7 +55,7 @@
 
         "module.trigger.description": "自动攻击瞄准的目标。",
 
-        "module.velocity.description": "修改受到的击退大小。",
+        "module.velocity.description": "修改你所受到的击退。",
 
         "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度。",
 
@@ -139,6 +139,8 @@
         
         "module.eagle.description": "到方块边缘自动潜行。(别名：FastBridge)",
         
+        "module.fakeLag.description": "在首次击中之前，使你在服务器端的位置滞后。",
+        
         "module.fastBreak.description": "允许你更快地破坏方块。",
         
         "module.fastClimb.description": "允许你更快地爬梯子和藤蔓。",
@@ -160,6 +162,8 @@
         "module.fucker.description": "破坏周围的指定的方块。(别名：IDNuker)",
         
         "module.fullbright.description": "让你在黑暗中看清一切。",
+
+        "module.gameDetector.description": "检测你是否在一场已经开始的游戏中。",
         
         "module.ghost.description": "允许你在死亡后四处走动并与环境互动。",
         
@@ -230,6 +234,8 @@
         "module.noRotateSet.description": "防止服务器旋转你的头。",
         
         "module.noScoreboard.description": "隐藏记分板。",
+
+        "module.noSlotSet.description": "防止服务器更改你的物品栏。",
         
         "module.noSlow.description": "消除灵魂沙和使用物品造成的减速效果。",
         
@@ -303,6 +309,8 @@
         
         "module.teleport.description": "允许你四处传送。",
 
+        "module.timerRange.description": "允许你操控游戏速度，以在与敌人对战中获得优势。",
+	    
         "module.timer.description": "改变游戏的运行速度。",
         
         "module.tower.description": "自动搭高。",

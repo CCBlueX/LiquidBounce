@@ -141,6 +141,8 @@
         
         "module.eagle.description": "Makes you eagle (aka. FastBridge).",
         
+        "module.fakeLag.description": "Lags you behind server side until first hit.",
+        
         "module.fastBreak.description": "Allows you to break blocks faster.",
         
         "module.fastClimb.description": "Allows you to climb up ladders and vines faster.",
@@ -162,6 +164,8 @@
         "module.fucker.description": "Destroys selected blocks around you. (aka.  IDNuker)",
         
         "module.fullbright.description": "Brightens up the world around you.",
+
+        "module.gameDetector.description": "Detects if you are in an ongoing game.",
         
         "module.ghost.description": "Allows you to walk around and interact with your environment after dying.",
         
@@ -230,6 +234,8 @@
         "module.noPitchLimit.description": "Allows you to rotate your head indefinitely in every direction..",
         
         "module.noRotateSet.description": "Prevents the server from rotating your head.",
+
+        "module.noSlotSet.description": "Prevents the server from changing your hotbar slot.",
         
         "module.noScoreboard.description": "Disables the scoreboard.",
         
@@ -304,6 +310,8 @@
         "module.teams.description": "Prevents Killaura from attacking team mates.",
         
         "module.teleport.description": "Allows you to teleport around.",
+
+        "module.timerRange.description": "Allows you to manipulate the game speed in order to gain an advantage against your enemies.",
 
         "module.timer.description": "Changes the speed of the entire game.",
         

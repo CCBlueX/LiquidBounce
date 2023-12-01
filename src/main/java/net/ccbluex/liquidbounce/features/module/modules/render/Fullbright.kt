@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 
-object Fullbright : Module("Fullbright", ModuleCategory.RENDER) {
+object Fullbright : Module("Fullbright", ModuleCategory.RENDER, gameDetecting = false) {
     private val mode by ListValue("Mode", arrayOf("Gamma", "NightVision"), "Gamma")
     private var prevGamma = -1f
 
@@ -34,7 +34,7 @@ object Fullbright : Module("Fullbright", ModuleCategory.RENDER) {
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
-        if (state || XRay.state) {
+        if (state || XRay.handleEvents()) {
             when (mode.lowercase()) {
                 "gamma" -> when {
                     mc.gameSettings.gammaSetting <= 100f -> mc.gameSettings.gammaSetting++

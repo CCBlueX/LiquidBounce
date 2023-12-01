@@ -38,8 +38,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     private val modes = noFallModes.map { it.modeName }.toTypedArray()
 
     val mode by ListValue("Mode", modes, "SpoofGround")
-
-    val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
+        val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
 
     override fun onEnable() {
         modeModule.onEnable()
@@ -53,7 +52,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
-        if (!state || FreeCam.state) return
+        if (FreeCam.handleEvents()) return
 
         if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
                 fromBounds(

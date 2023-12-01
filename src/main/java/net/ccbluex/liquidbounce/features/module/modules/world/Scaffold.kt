@@ -49,71 +49,67 @@ import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.START_SNEAKING
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.STOP_SNEAKING
 import net.minecraft.util.*
+import net.minecraft.world.WorldSettings
+import net.minecraftforge.event.ForgeEventFactory
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import javax.vecmath.Color3f
 import kotlin.math.*
 
+
 object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
-    private val mode by ListValue(
-        "Mode",
-        arrayOf("Normal", "Rewinside", "Expand", "Telly", "GodBridge"),
-        "Normal"
-    )
+    private val mode by ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand", "Telly", "GodBridge"), "Normal")
 
-    // Expand
-    private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false) { mode == "Expand" }
-    private val expandLength by IntegerValue("ExpandLength", 1, 1..6) { mode == "Expand" }
+        // Expand
+        private val omniDirectionalExpand by BoolValue("OmniDirectionalExpand", false) { mode == "Expand" }
+        private val expandLength by IntegerValue("ExpandLength", 1, 1..6) { mode == "Expand" }
 
-    // Placeable delay
-    private val placeDelayValue: BoolValue = object : BoolValue("PlaceDelay", true) {
-        override fun isSupported() = mode != "GodBridge"
-    }
+        // Placeable delay
+        private val placeDelayValue = BoolValue("PlaceDelay", true) { mode != "GodBridge" }
+            private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0..1000) {
+                override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0..1000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
+                override fun isSupported() = placeDelayValue.isActive()
+            }
+            private val maxDelay by maxDelayValue
 
-        override fun isSupported() = placeDelayValue.isActive()
-    }
-    private val maxDelay by maxDelayValue
+            private val minDelayValue = object : IntegerValue("MinDelay", 0, 0..1000) {
+                override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 
-    private val minDelayValue = object : IntegerValue("MinDelay", 0, 0..1000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
-
-        override fun isSupported() = placeDelayValue.isActive() && !maxDelayValue.isMinimal()
-    }
-    private val minDelay by minDelayValue
+                override fun isSupported() = placeDelayValue.isActive() && !maxDelayValue.isMinimal()
+            }
+            private val minDelay by minDelayValue
 
     // Extra clicks
     private val extraClicks by BoolValue("DoExtraClicks", false)
+        private val extraClickMaxCPSValue: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0..50) {
+            override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(extraClickMinCPS)
 
-    private val extraClickMaxCPSValue: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0..50) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(extraClickMinCPS)
+            override fun isSupported() = extraClicks
+        }
+        private val extraClickMaxCPS by extraClickMaxCPSValue
 
-        override fun isSupported() = extraClicks
-    }
-    private val extraClickMaxCPS by extraClickMaxCPSValue
+        private val extraClickMinCPS by object : IntegerValue("ExtraClickMinCPS", 3, 0..50) {
+            override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(extraClickMaxCPS)
 
-    private val extraClickMinCPS by object : IntegerValue("ExtraClickMinCPS", 3, 0..50) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(extraClickMaxCPS)
+            override fun isSupported() = extraClicks && !extraClickMaxCPSValue.isMinimal()
+        }
 
-        override fun isSupported() = extraClicks && !extraClickMaxCPSValue.isMinimal()
-    }
-
-    private val placementAttempt by ListValue(
-        "PlacementAttempt", arrayOf("Fail", "Independent"), "Fail"
-    ) { extraClicks }
+        private val placementAttempt by ListValue("PlacementAttempt", arrayOf("Fail", "Independent"), "Fail")
+            { extraClicks }
 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
-    private val sortByHighestAmount by BoolValue("SortByHighestAmount", false, subjective = true) { autoBlock != "Off" }
+        private val sortByHighestAmount by BoolValue("SortByHighestAmount", false, subjective = true)
+            { autoBlock != "Off" }
 
     // Basic stuff
     val sprint by BoolValue("Sprint", false)
@@ -126,33 +122,32 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
 
+    // GodBridge mode subvalues
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { mode == "GodBridge" }
-    private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
-        override fun isSupported() = mode == "GodBridge" && !jumpAutomatically
+        private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
+            override fun isSupported() = mode == "GodBridge" && !jumpAutomatically
 
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minBlocksToJump.get())
-    }
+            override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minBlocksToJump.get())
+        }
 
-    private val minBlocksToJump: IntegerValue = object : IntegerValue("MinBlocksToJump", 4, 1..8) {
-        override fun isSupported() = mode == "GodBridge" && !jumpAutomatically && !maxBlocksToJump.isMinimal()
+        private val minBlocksToJump: IntegerValue = object : IntegerValue("MinBlocksToJump", 4, 1..8) {
+            override fun isSupported() = mode == "GodBridge" && !jumpAutomatically && !maxBlocksToJump.isMinimal()
 
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxBlocksToJump.get())
-    }
+            override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxBlocksToJump.get())
+        }
 
+    // Telly mode subvalues
     private val startHorizontally by BoolValue("StartHorizontally", true) { mode == "Telly" }
-
     private val maxHorizontalPlacements: IntegerValue = object : IntegerValue("MaxHorizontalPlacements", 1, 1..10) {
         override fun isSupported() = mode == "Telly"
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minHorizontalPlacements.get())
     }
-
     private val minHorizontalPlacements: IntegerValue = object : IntegerValue("MinHorizontalPlacements", 1, 1..10) {
         override fun isSupported() = mode == "Telly"
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxHorizontalPlacements.get())
     }
-
     private val maxVerticalPlacements: IntegerValue = object : IntegerValue("MaxVerticalPlacements", 1, 1..10) {
         override fun isSupported() = mode == "Telly"
 
@@ -170,36 +165,45 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minJumpTicks.get())
     }
-
     private val minJumpTicks: IntegerValue = object : IntegerValue("MinJumpTicks", 0, 0..10) {
         override fun isSupported() = mode == "Telly"
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxJumpTicks.get())
     }
 
+    private val allowClutching by BoolValue("AllowClutching", true) { mode !in arrayOf("Telly", "Expand") }
+        private val horizontalClutchBlocks: IntegerValue = object : IntegerValue("HorizontalClutchBlocks", 3, 1..5) {
+            override fun isSupported() = allowClutching && mode !in arrayOf("Telly", "Expand")
+
+            override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
+        }
+        private val verticalClutchBlocks: IntegerValue = object : IntegerValue("VerticalClutchBlocks", 2, 1..3) {
+            override fun isSupported() = allowClutching && mode !in arrayOf("Telly", "Expand")
+
+            override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
+        }
+
     // Eagle
-    private val eagleValue: ListValue = object : ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") {
-        override fun isSupported() = mode != "GodBridge"
-    }
-
+    private val eagleValue = ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal") { mode != "GodBridge" }
     val eagle by eagleValue
-
-    private val eagleSpeed by FloatValue("EagleSpeed", 0.3f, 0.3f..1.0f) { eagleValue.isSupported() && eagle != "Off" }
-    val eagleSprint by BoolValue("EagleSprint", false) { eagleValue.isSupported() && eagle == "Normal" }
-    private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10) { eagleValue.isSupported() && eagle != "Off" }
-    private val edgeDistance by FloatValue(
-        "EagleEdgeDistance", 0f, 0f..0.5f
-    ) { eagleValue.isSupported() && eagle != "Off" }
+        private val eagleSpeed by FloatValue("EagleSpeed", 0.3f, 0.3f..1.0f)
+            { eagleValue.isSupported() && eagle != "Off" }
+        val eagleSprint by BoolValue("EagleSprint", false) { eagleValue.isSupported() && eagle == "Normal" }
+        private val blocksToEagle by IntegerValue("BlocksToEagle", 0, 0..10)
+            { eagleValue.isSupported() && eagle != "Off" }
+        private val edgeDistance by FloatValue("EagleEdgeDistance", 0f, 0f..0.5f)
+            { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
     private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized", "GodBridge"), "Normal")
-    private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
-    private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
-    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" }
-    private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotationMode != "Off" && mode != "Telly"
-    }
+        private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
+            private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
+            private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && silentRotation }
+            private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
+                override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
+
+                override fun isSupported() = rotationMode != "Off" && mode != "Telly" && silentRotation
+            }
 
     // Search options
     private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { mode != "GodBridge" }
@@ -208,6 +212,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     // Turn Speed
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+
         override fun isSupported() = rotationMode != "Off"
     }
     private val maxTurnSpeed by maxTurnSpeedValue
@@ -217,55 +222,45 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotationMode != "Off"
     }
 
-    private val angleThresholdUntilReset by FloatValue(
-        "AngleThresholdUntilReset",
-        5f,
-        0.1f..180f
-    ) { rotationMode != "Off" }
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+        { rotationMode != "Off" && silentRotation }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
-    private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
-    private val zitterStrength by FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode == "Teleport" }
-    private val maxZitterTicksValue: IntegerValue = object : IntegerValue("MaxZitterTicks", 3, 0..6) {
-        override fun isSupported() = zitterMode == "Smooth"
+        private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
+        private val zitterStrength by FloatValue("ZitterStrength", 0.05f, 0f..0.2f) { zitterMode == "Teleport" }
 
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minZitterTicks)
-    }
+        private val maxZitterTicksValue: IntegerValue = object : IntegerValue("MaxZitterTicks", 3, 0..6) {
+                override fun isSupported() = zitterMode == "Smooth"
 
-    private val maxZitterTicks by maxZitterTicksValue
+                override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minZitterTicks)
+            }
+        private val maxZitterTicks by maxZitterTicksValue
 
-    private val minZitterTicksValue: IntegerValue = object : IntegerValue("MinZitterTicks", 2, 0..6) {
-        override fun isSupported() = zitterMode == "Smooth" && !maxZitterTicksValue.isMinimal()
+        private val minZitterTicksValue: IntegerValue = object : IntegerValue("MinZitterTicks", 2, 0..6) {
+            override fun isSupported() = zitterMode == "Smooth" && !maxZitterTicksValue.isMinimal()
 
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxZitterTicks)
-    }
-
-    private val minZitterTicks by minZitterTicksValue
+            override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxZitterTicks)
+        }
+        private val minZitterTicks by minZitterTicksValue
 
     // Game
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
     private val speedModifier by FloatValue("SpeedModifier", 1f, 0f..2f)
     private val slow by BoolValue("Slow", false)
-    private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
+        private val slowGround by BoolValue("SlowOnlyGround", false) { slow }
+        private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
 
     // Safety
     private val sameY by BoolValue("SameY", false) { mode != "GodBridge" }
-    private val safeWalk: BoolValue = object : BoolValue("SafeWalk", true) {
-        override fun isSupported() = mode != "GodBridge"
-    }
-
-    private val airSafe by BoolValue("AirSafe", false) { safeWalk.isActive() }
+    private val safeWalkValue = BoolValue("SafeWalk", true) { mode != "GodBridge" }
+        private val airSafe by BoolValue("AirSafe", false) { safeWalkValue.isActive() }
 
     // Visuals
     private val counterDisplay by BoolValue("Counter", true, subjective = true)
     private val mark by BoolValue("Mark", false, subjective = true)
     private val trackCPS by BoolValue("TrackCPS", false, subjective = true)
-    private val safetyLines by BoolValue(
-        "SafetyLines",
-        false,
-        subjective = true
-    ) { isGodBridgeEnabled }
+    private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { isGodBridgeEnabled }
 
     // Target placement
     private var placeRotation: PlaceRotation? = null
@@ -292,10 +287,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Downwards
     private val shouldGoDown
-        get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && mode !in arrayOf(
-            "GodBridge",
-            "Telly"
-        ) && blocksAmount > 1
+        get() = down && !sameY
+            && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
+            && mode !in arrayOf("GodBridge", "Telly")
+            && blocksAmount > 1
 
     // Current rotation
     private val currRotation
@@ -306,9 +301,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // GodBridge
     private var blocksPlacedUntilJump = 0
+
     private val isManualJumpOptionActive
         get() = mode == "GodBridge" && !jumpAutomatically
+
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
+
     private val isGodBridgeEnabled
         get() = mode == "GodBridge" || mode == "Normal" && rotationMode == "GodBridge"
 
@@ -335,6 +333,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
 
+        if (mc.playerController.currentGameType == WorldSettings.GameType.SPECTATOR)
+            return
+
         mc.timer.timerSpeed = timer
 
         // Telly
@@ -350,8 +351,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (slow) {
-            player.motionX *= slowSpeed
-            player.motionZ *= slowSpeed
+            if (!slowGround || slowGround && mc.thePlayer.onGround) {
+                player.motionX *= slowSpeed
+                player.motionZ *= slowSpeed
+            }
         }
 
         // Eagle
@@ -587,7 +590,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        val (f, g) = if (mode == "Telly") 5 to 3 else 1 to 1
+        val (f, g) = if (mode == "Telly") 5 to 3 else if (allowClutching) horizontalClutchBlocks.get() to verticalClutchBlocks.get() else 1 to 1
 
         (-f..f).flatMap { x ->
             (0 downTo -g).flatMap { y ->
@@ -617,10 +620,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (!delayTimer.hasTimePassed() || shouldKeepLaunchPosition && launchY - 1 != placeInfo.vec3.yCoord.toInt())
             return
 
-        var itemStack = player.inventoryContainer.getSlot(serverSlot + 36).stack
+        var stack = player.inventoryContainer.getSlot(serverSlot + 36).stack
 
         //TODO: blacklist more blocks than only bushes
-        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || itemStack.stackSize <= 0 || sortByHighestAmount) {
+        if (stack == null || stack.item !is ItemBlock || (stack.item as ItemBlock).block is BlockBush || stack.stackSize <= 0 || sortByHighestAmount) {
             val blockSlot = if (sortByHighestAmount) {
                 InventoryUtils.findLargestBlockStackInHotbar() ?: return
             } else {
@@ -637,42 +640,16 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
                 "spoof", "switch" -> serverSlot = blockSlot - 36
             }
-            itemStack = player.inventoryContainer.getSlot(blockSlot).stack
+            stack = player.inventoryContainer.getSlot(blockSlot).stack
         }
 
-        if (mc.playerController.onPlayerRightClick(
-                player, world, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3
-            )
-        ) {
-            delayTimer.reset()
-
-            if (player.onGround) {
-                player.motionX *= speedModifier
-                player.motionZ *= speedModifier
-            }
-
-            if (swing) {
-                player.swingItem()
-            } else {
-                sendPacket(C0APacketAnimation())
-            }
-
-            if (isManualJumpOptionActive) {
-                blocksPlacedUntilJump++
-            }
-
-            updatePlacedBlocksForTelly()
-        } else {
-            if (mc.playerController.sendUseItem(player, world, itemStack)) {
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
-            }
-        }
+        tryToPlaceBlock(stack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)
 
         if (autoBlock == "Switch")
             serverSlot = player.inventory.currentItem
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
-        switchBlockNextTickIfPossible(itemStack)
+        switchBlockNextTickIfPossible(stack)
 
         if (trackCPS) {
             CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
@@ -715,26 +692,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        if (mc.playerController.onPlayerRightClick(
-                player, world, stack, raytrace.blockPos, raytrace.sideHit, raytrace.hitVec
-            )
-        ) {
-            if (swing) {
-                player.swingItem()
-            } else {
-                sendPacket(C0APacketAnimation())
-            }
-
-            if (isManualJumpOptionActive) {
-                blocksPlacedUntilJump++
-            }
-
-            updatePlacedBlocksForTelly()
-        } else {
-            if (mc.playerController.sendUseItem(player, world, stack)) {
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
-            }
-        }
+        tryToPlaceBlock(stack, raytrace.blockPos, raytrace.sideHit, raytrace.hitVec, attempt = true)
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         switchBlockNextTickIfPossible(stack)
@@ -775,7 +733,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onMove(event: MoveEvent) {
         val player = mc.thePlayer ?: return
 
-        if (!safeWalk.isActive() || shouldGoDown) {
+        if (!safeWalkValue.isActive() || shouldGoDown) {
             return
         }
 
@@ -790,7 +748,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (counterDisplay) {
             glPushMatrix()
 
-            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null) glTranslatef(0f, 15f, 0f)
+            if (BlockOverlay.handleEvents() && BlockOverlay.info && BlockOverlay.currentBlock != null) glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
             val (width, height) = ScaledResolution(mc)
@@ -895,7 +853,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             // Round the rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
             val yaw = round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f
 
-            arrayOf(45f, 135f).any { yaw == it } && player.movementInput.moveStrafe == 0f
+            floatArrayOf(45f, 135f).any { yaw == it } && player.movementInput.moveStrafe == 0f
         }
 
         for (side in EnumFacing.values().filter { !horizontalOnly || it.axis != EnumFacing.Axis.Y }) {
@@ -907,7 +865,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
             if (isGodBridgeEnabled) {
                 // Selection of these values only. Mostly used by Godbridgers.
-                val list = arrayOf(-135f, -45f, 45f, 135f)
+                val list = floatArrayOf(-135f, -45f, 45f, 135f)
 
                 // Selection of pitch values that should be OK in non-complex situations.
                 val pitchList = 55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
@@ -1078,7 +1036,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         return null
     }
 
-    fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
+    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
         val player = mc.thePlayer ?: return null
         val world = mc.theWorld ?: return null
 
@@ -1144,7 +1102,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
             // The target rotation will either be the module's placeRotation or a forced rotation (usually that's where the GodBridge mode aims)
             val targetRotation = run {
-                val yaw = arrayOf(-135f, -45f, 45f, 135f).minByOrNull {
+                val yaw = floatArrayOf(-135f, -45f, 45f, 135f).minByOrNull {
                     abs(getAngleDifference(it, MathHelper.wrapAngleTo180_float(currRotation.yaw)))
                 } ?: return
 
@@ -1219,6 +1177,51 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         blocksUntilAxisChange++
+    }
+
+    private fun tryToPlaceBlock(
+        stack: ItemStack,
+        clickPos: BlockPos,
+        side: EnumFacing,
+        hitVec: Vec3,
+        attempt: Boolean = false
+    ): Boolean {
+        val thePlayer = mc.thePlayer ?: return false
+
+        val prevSize = stack.stackSize
+
+        val clickedSuccessfully = thePlayer.onPlayerRightClick(clickPos, side, hitVec, stack)
+
+        if (clickedSuccessfully) {
+            if (!attempt) {
+                delayTimer.reset()
+
+                if (thePlayer.onGround) {
+                    thePlayer.motionX *= speedModifier
+                    thePlayer.motionZ *= speedModifier
+                }
+            }
+
+            if (swing) thePlayer.swingItem()
+            else sendPacket(C0APacketAnimation())
+
+            if (isManualJumpOptionActive)
+                blocksPlacedUntilJump++
+
+            updatePlacedBlocksForTelly()
+
+            if (stack.stackSize <= 0) {
+                thePlayer.inventory.mainInventory[serverSlot] = null
+                ForgeEventFactory.onPlayerDestroyItem(thePlayer, stack)
+            } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
+                mc.entityRenderer.itemRenderer.resetEquippedProgress()
+
+        } else {
+            if (thePlayer.sendUseItem(stack))
+                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+        }
+
+        return clickedSuccessfully
     }
 
     /**

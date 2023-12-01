@@ -35,7 +35,7 @@ public class MixinPlayerControllerMP {
 
     @Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
     private void getIsHittingBlock(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (AbortBreaking.INSTANCE.getState())
+        if (AbortBreaking.INSTANCE.handleEvents())
             callbackInfoReturnable.setReturnValue(false);
     }
 

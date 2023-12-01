@@ -59,7 +59,7 @@ object NCPBHop : SpeedMode("NCPBHop") {
             val thePlayer = mc.thePlayer
 
             thePlayer.motionY -= 0.08
-            event.y = event.y - 0.09316090325960147
+            event.y -= 0.09316090325960147
             thePlayer.posY -= 0.09316090325960147
         }
         if (level == 1 && isMoving) {

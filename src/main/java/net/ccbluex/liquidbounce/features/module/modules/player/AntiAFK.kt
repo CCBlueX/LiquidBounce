@@ -20,23 +20,25 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 
-object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER) {
-
-    private val swingDelayTimer = MSTimer()
-    private val delayTimer = MSTimer()
+object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER, gameDetecting = false) {
 
     private val mode by ListValue("Mode", arrayOf("Old", "Random", "Custom"), "Random")
 
-    private val rotateValue = BoolValue("Rotate", true) { mode == "Custom" }
-    private val rotationDelay by IntegerValue("RotationDelay", 100, 0..1000) { rotateValue.isActive() }
-    private val rotationAngle by FloatValue("RotationAngle", 1f, -180F..180F) { rotateValue.isActive() }
-    private val swingValue = BoolValue("Swing", true) { mode == "Custom" }
-    private val swingDelay by IntegerValue("SwingDelay", 100, 0..1000) { swingValue.isActive() }
-    private val jump by BoolValue("Jump", true) { mode == "Custom" }
-    private val move by BoolValue("Move", true) { mode == "Custom" }
+        private val rotateValue = BoolValue("Rotate", true) { mode == "Custom" }
+            private val rotationDelay by IntegerValue("RotationDelay", 100, 0..1000) { rotateValue.isActive() }
+            private val rotationAngle by FloatValue("RotationAngle", 1f, -180F..180F) { rotateValue.isActive() }
+
+        private val swingValue = BoolValue("Swing", true) { mode == "Custom" }
+            private val swingDelay by IntegerValue("SwingDelay", 100, 0..1000) { swingValue.isActive() }
+
+        private val jump by BoolValue("Jump", true) { mode == "Custom" }
+        private val move by BoolValue("Move", true) { mode == "Custom" }
 
     private var shouldMove = false
     private var randomTimerDelay = 500L
+
+    private val swingDelayTimer = MSTimer()
+    private val delayTimer = MSTimer()
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

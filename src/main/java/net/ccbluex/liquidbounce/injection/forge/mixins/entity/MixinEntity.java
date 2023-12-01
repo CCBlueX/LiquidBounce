@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
+import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
@@ -34,7 +35,7 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinEntity {
+public abstract class MixinEntity implements IMixinEntity {
 
     @Shadow
     public double posX;
@@ -44,6 +45,46 @@ public abstract class MixinEntity {
 
     @Shadow
     public double posZ;
+
+    private double trueX;
+
+    public double getTrueX() {
+        return trueX;
+    }
+
+    public void setTrueX(double x) {
+        this.trueX = x;
+    }
+
+    private double trueY;
+
+    public double getTrueY() {
+        return trueY;
+    }
+
+    public void setTrueY(double y) {
+        this.trueY = y;
+    }
+
+    private double trueZ;
+
+    public double getTrueZ() {
+        return trueZ;
+    }
+
+    public void setTrueZ(double z) {
+        this.trueZ = z;
+    }
+
+    private boolean truePos;
+
+    public boolean getTruePos() {
+        return truePos;
+    }
+
+    public void setTruePos(boolean set) {
+        this.truePos = set;
+    }
 
     @Shadow
     public abstract boolean isSprinting();
@@ -188,20 +229,20 @@ public abstract class MixinEntity {
     private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
         final HitBox hitBox = HitBox.INSTANCE;
 
-        if (hitBox.getState())
+        if (hitBox.handleEvents())
             callbackInfoReturnable.setReturnValue(0.1F + hitBox.determineSize((Entity) (Object) this));
     }
 
     @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
     private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo) {
-        if (NoPitchLimit.INSTANCE.getState()) {
+        if (NoPitchLimit.INSTANCE.handleEvents()) {
             callbackInfo.cancel();
 
             prevRotationYaw = rotationYaw;
             prevRotationPitch = rotationPitch;
 
-            rotationYaw += yaw * 0.15;
-            rotationPitch -= pitch * 0.15;
+            rotationYaw += (float) (yaw * 0.15);
+            rotationPitch -= (float) (pitch * 0.15);
         }
     }
 
@@ -218,14 +259,14 @@ public abstract class MixinEntity {
 
     @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
     private void isInWater(final CallbackInfoReturnable<Boolean> cir) {
-        if (NoFluid.INSTANCE.getState() && NoFluid.INSTANCE.getWater()) {
+        if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getWater()) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "isInLava", at = @At("HEAD"), cancellable = true)
     private void isInLava(final CallbackInfoReturnable<Boolean> cir) {
-        if (NoFluid.INSTANCE.getState() && NoFluid.INSTANCE.getLava()) {
+        if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getLava()) {
             cir.setReturnValue(false);
         }
     }

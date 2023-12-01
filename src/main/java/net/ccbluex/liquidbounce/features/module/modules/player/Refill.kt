@@ -30,7 +30,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val mode by ListValue("Mode", arrayOf("Swap", "Merge"), "Swap")
 
     private val invOpen by BoolValue("InvOpen", false)
-    private val simulateInventory by BoolValue("SimulateInventory", false) { !invOpen }
+        private val simulateInventory by BoolValue("SimulateInventory", false) { !invOpen }
 
     private val noMove by InventoryManager.noMoveValue
     private val noMoveAir by InventoryManager.noMoveAirValue

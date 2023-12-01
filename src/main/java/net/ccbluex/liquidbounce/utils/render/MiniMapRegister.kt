@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object MiniMapRegister : MinecraftInstance(), Listenable {
 
-    private val chunkTextureMap = HashMap<ChunkLocation, MiniMapTexture>()
+    private val chunkTextureMap = hashMapOf<ChunkLocation, MiniMapTexture>()
     private val queuedChunkUpdates = HashSet<Chunk>(256)
     private val queuedChunkDeletions = HashSet<ChunkLocation>(256)
     private val deleteAllChunks = AtomicBoolean(false)
@@ -78,7 +78,7 @@ object MiniMapRegister : MinecraftInstance(), Listenable {
 
     class MiniMapTexture {
         val texture = DynamicTexture(16, 16)
-        var deleted = false
+        private var deleted = false
 
         fun updateChunkData(chunk: Chunk) {
             val rgbValues = texture.textureData

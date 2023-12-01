@@ -38,23 +38,23 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (event.eventState != EventState.POST) {
+        if (event.eventState != EventState.POST)
             return
-        }
+        
+        val thePlayer = mc.thePlayer ?: return
 
         // Clicking delay
         if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
 
-        if (onClick && clickTimer.hasTimePassed(500)) return
+        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.gameSettings.keyBindAttack.isKeyDown && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
 
         val entity = mc.theWorld.loadedEntityList.filter {
-            isSelected(
-                it, true
-            ) && mc.thePlayer.canEntityBeSeen(it) && mc.thePlayer.getDistanceToEntityBox(it) <= range && getRotationDifference(
-                it
-            ) <= fov
+            isSelected(it, true)
+            && thePlayer.canEntityBeSeen(it)
+            && thePlayer.getDistanceToEntityBox(it) <= range
+            && getRotationDifference(it) <= fov
         }.minByOrNull { getRotationDifference(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
@@ -63,9 +63,16 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         // Look up required rotations to hit enemy
         val boundingBox = entity.hitBox
 
-        val playerRotation = mc.thePlayer.rotation
-        val destinationRotation = if (center) toRotation(getCenter(boundingBox), true)
-        else searchCenter(boundingBox, false, false, true, false, range)?.rotation ?: return
+        val playerRotation = thePlayer.rotation
+        val destinationRotation =
+            if (center) toRotation(getCenter(boundingBox), true)
+            else searchCenter(boundingBox,
+                outborder = false,
+                random = false,
+                predict = true,
+                throughWalls = false,
+                range
+            )?.rotation ?: return
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
 
@@ -82,19 +89,19 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         val gaussian = random.nextGaussian()
 
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
-        val rotation = limitAngleChange(mc.thePlayer.rotation, destinationRotation, realisticTurnSpeed.toFloat())
+        val rotation = limitAngleChange(thePlayer.rotation, destinationRotation, realisticTurnSpeed.toFloat())
 
-        rotation.toPlayer(mc.thePlayer)
+        rotation.toPlayer(thePlayer)
 
         // Jitter
         // Some players do jitter on their mouses causing them to shake around. This is trying to simulate this behavior.
         if (jitter) {
             if (random.nextBoolean()) {
-                mc.thePlayer.fixedSensitivityYaw += (random.nextGaussian() - 0.5f).toFloat()
+                thePlayer.fixedSensitivityYaw += (random.nextGaussian() - 0.5f).toFloat()
             }
 
             if (random.nextBoolean()) {
-                mc.thePlayer.fixedSensitivityPitch += (random.nextGaussian() - 0.5f).toFloat()
+                thePlayer.fixedSensitivityPitch += (random.nextGaussian() - 0.5f).toFloat()
             }
         }
     }

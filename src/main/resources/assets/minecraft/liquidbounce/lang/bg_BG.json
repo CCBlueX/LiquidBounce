@@ -139,6 +139,8 @@
         
         "module.eagle.description": "Прави те орел (известен още като FastBridge).",
         
+        "module.fakeLag.description": "UNTRANSLATED: Lags you behind server side until first hit.",
+        
         "module.fastBreak.description": "Позволява ви да нарушавате блокове по-бързо.",
         
         "module.fastClimb.description": "Позволява ви да се изкачвате по стълбите и лозите по-бързо.",
@@ -160,6 +162,8 @@
         "module.fucker.description": "Унищожава избрани блокове около вас. (иввестен още като IDNuker)",
         
         "module.fullbright.description": "Озарява света около вас.",
+
+        "module.gameDetector.description": "UNTRANSLATED: Detects if you are in an ongoing game.",
         
         "module.ghost.description": "Позволява ви да се разхождате с вашата среда, след като умрете.",
         
@@ -230,6 +234,8 @@
         "module.noRotateSet.description": "Предотвратява сървъра да върти главата ви.",
         
         "module.noScoreboard.description": "Деактивира таблото.",
+
+        "module.noSlotSet.description": "Предотвратява сървъра да променя слотовете ви.",
         
         "module.noSlow.description": "Отменя ефектите на бавността, причинени от пясък на душите и използване на предмети.",
         
@@ -302,6 +308,8 @@
         "module.teams.description": "Предотвратява Killaura да атакува съотборници от екипа.",
         
         "module.teleport.description": "Ви позволява да се телепортирате наоколо.",
+
+        "module.timerRange.description": "UNTRANSLATED: Allows you to manipulate the game speed in order to gain an advantage against your enemies.",
 
         "module.timer.description": "Променя скоростта на цялата игра.",
         

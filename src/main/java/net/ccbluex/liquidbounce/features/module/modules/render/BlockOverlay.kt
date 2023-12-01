@@ -29,13 +29,13 @@ import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER) {
+object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER, gameDetecting = false) {
     val info by BoolValue("Info", false)
 
     private val colorRainbow by BoolValue("Rainbow", false)
-    private val colorRed by IntegerValue("R", 68, 0..255) { !colorRainbow }
-    private val colorGreen by IntegerValue("G", 117, 0..255) { !colorRainbow }
-    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
+        private val colorRed by IntegerValue("R", 68, 0..255) { !colorRainbow }
+        private val colorGreen by IntegerValue("G", 117, 0..255) { !colorRainbow }
+        private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
     val currentBlock: BlockPos?
         get() {

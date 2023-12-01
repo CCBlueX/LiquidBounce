@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -31,7 +30,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
     
     private var updatePos = false
 
-    private fun parseX(value: Int = x): Int {
+    fun parseX(value: Int = x): Int {
         if (!panelsForcedInBoundaries)
             return value
 

@@ -128,9 +128,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 	}
 
 	override fun onPacket(event: PacketEvent) {
-		val packet = event.packet
-
-		when (packet) {
+		when (val packet = event.packet) {
 			is S08PacketPlayerPosLook -> {
 				Fly.state = false
 				displayChatMessage("§8[§c§lBoostHypixel-§a§lFly§8] §cSetback detected.")

@@ -30,7 +30,7 @@ object ReverseStep : Module("ReverseStep", ModuleCategory.MOVEMENT) {
         if (thePlayer.motionY > 0)
             jumped = true
 
-        if (!state)
+        if (!handleEvents())
             return
 
         if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } ||

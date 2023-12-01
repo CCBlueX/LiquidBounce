@@ -18,6 +18,6 @@ public class MixinWorldClient {
     private boolean handleBarriers(final boolean flag) {
         final TrueSight trueSight = TrueSight.INSTANCE;
 
-        return flag || trueSight.getState() && trueSight.getBarriers();
+        return flag || trueSight.handleEvents() && trueSight.getBarriers();
     }
 }

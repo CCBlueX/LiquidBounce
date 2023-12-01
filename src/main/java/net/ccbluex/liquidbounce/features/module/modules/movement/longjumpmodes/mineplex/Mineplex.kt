@@ -17,6 +17,6 @@ object Mineplex : LongJumpMode("Mineplex") {
     }
 
     override fun onJump(event: JumpEvent) {
-        event.motion = event.motion * 4.08f
+        event.motion *= 4.08f
     }
 }
