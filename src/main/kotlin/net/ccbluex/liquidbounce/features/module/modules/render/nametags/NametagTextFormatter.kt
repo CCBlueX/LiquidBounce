@@ -21,7 +21,7 @@ class NametagTextFormatter(private val entity: Entity) {
 
         outputBuilder.append("${this.nameColor}${entity.displayName.string}")
 
-        if (ModuleNametags.health) {
+        if (ModuleNametags.Health.enabled) {
             outputBuilder.append(" ").append(this.healthText)
         }
 
@@ -35,13 +35,12 @@ class NametagTextFormatter(private val entity: Entity) {
     private val isBot = ModuleAntiBot.isBot(entity)
 
     private val nameColor: String
-        get() =
-            when {
-                isBot -> "§3"
-                entity.isInvisible -> "§6"
-                entity.isSneaking -> "§4"
-                else -> "§7"
-            }
+        get() = when {
+            isBot -> "§3"
+            entity.isInvisible -> "§6"
+            entity.isSneaking -> "§4"
+            else -> "§7"
+        }
 
     private val distanceText: String
         get() {
@@ -58,12 +57,11 @@ class NametagTextFormatter(private val entity: Entity) {
         get() {
             val playerPing = getPing(entity) ?: return ""
 
-            val coloringBasedOnPing =
-                when {
-                    playerPing > 200 -> "§c"
-                    playerPing > 100 -> "§e"
-                    else -> "§a"
-                }
+            val coloringBasedOnPing = when {
+                playerPing > 200 -> "§c"
+                playerPing > 100 -> "§e"
+                else -> "§a"
+            }
 
             return " §7[" + coloringBasedOnPing + playerPing + "ms§7]"
         }
@@ -74,6 +72,18 @@ class NametagTextFormatter(private val entity: Entity) {
                 return ""
             }
 
-            return "§c${entity.health.toInt()} HP"
+            var health = entity.health.toInt()
+
+            if (ModuleNametags.Health.fromScoreboard) {
+                entity.world.scoreboard.getObjectiveForSlot(2)?.let {
+                    it.scoreboard.getPlayerScore(entity.entityName, it)?.let { scoreboard ->
+                        if (scoreboard.score > 0 && scoreboard.objective?.displayName?.string == "❤") {
+                            health = scoreboard.score
+                        }
+                    }
+                }
+            }
+
+            return "§c${health} HP"
         }
 }
