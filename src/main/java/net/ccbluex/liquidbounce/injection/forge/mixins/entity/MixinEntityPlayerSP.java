@@ -343,7 +343,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         final NoSlow noSlow = NoSlow.INSTANCE;
         final KillAura killAura = KillAura.INSTANCE;
 
-        boolean isUsingItem = getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus()));
+        boolean isUsingItem = getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus()) || NoSlow.INSTANCE.isUNCPBlocking());
 
         if (isUsingItem && !isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);

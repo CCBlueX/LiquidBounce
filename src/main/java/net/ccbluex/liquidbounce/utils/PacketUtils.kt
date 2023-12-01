@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.features.module.modules.player.FakeLag
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.minecraft.entity.EntityLivingBase
@@ -97,13 +98,14 @@ object PacketUtils : MinecraftInstance(), Listenable {
             }
         }
     }
-    @EventTarget(priority = 1000)
+    @EventTarget(priority = -5)
     fun onGameLoop(event: GameLoopEvent) {
         synchronized(queuedPackets) {
             queuedPackets.forEach {
                 handlePacket(it)
                 val packetEv = PacketEvent(it, EventState.RECEIVE)
                 FakeLag.onPacket(packetEv)
+                Velocity.onPacket(packetEv)
             }
 
             queuedPackets.clear()

@@ -15,7 +15,7 @@ object VerusLowHop : SpeedMode("VerusLowHop") {
             if (mc.thePlayer.onGround) {
                 airTicks = 0
                 speed = if (mc.thePlayer.isPotionActive(Potion.moveSpeed)
-                    && mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier == 1)
+                    && mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
                         0.5f else 0.36f
 
                 mc.thePlayer.jump()

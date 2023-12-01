@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -230,6 +231,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
         val packet = event.packet
 
+        if (event.isCancelled)
+            return
+
         if (
             (
                 packet is S12PacketEntityVelocity
@@ -238,8 +242,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     && (packet.motionX != 0 || packet.motionZ != 0)
             ) || (
                 packet is S27PacketExplosion
-                    && packet.field_149153_g > 0f
-                    && (packet.field_149152_f != 0f || packet.field_149159_h != 0f)
+                    && (thePlayer.motionY + packet.field_149153_g) > 0.0
+                    && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0)
             )
         ) {
             velocityTimer.reset()
@@ -259,16 +263,16 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                             packetDirection = atan2(motionX, motionZ)
                         }
                         is S27PacketExplosion -> {
-                            val motionX: Double = packet.field_149152_f.toDouble()
-                            val motionZ: Double = packet.field_149159_h.toDouble()
+                            val motionX: Double = (thePlayer.motionX + packet.field_149152_f)
+                            val motionZ: Double = (thePlayer.motionZ + packet.field_149159_h)
 
                             packetDirection = atan2(motionX, motionZ)
                         }
                     }
                     val degreePlayer = getDirection()
                     val degreePacket = Math.floorMod(packetDirection.toDegrees().toInt(), 360).toDouble()
-                    var angle = Math.abs(degreePacket + degreePlayer)
-                    val threshold = 90.0
+                    var angle = abs(degreePacket + degreePlayer)
+                    val threshold = 120.0
                     angle = Math.floorMod(angle.toInt(), 360).toDouble()
                     val inRange = angle in 180-threshold/2..180+threshold/2
                     if (inRange)

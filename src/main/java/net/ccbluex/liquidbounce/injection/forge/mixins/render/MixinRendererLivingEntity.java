@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import co.uk.hexeption.utils.OutlineUtils;
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot;
 import net.ccbluex.liquidbounce.features.module.modules.render.Chams;
 import net.ccbluex.liquidbounce.features.module.modules.render.ESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.NameTags;
@@ -89,7 +90,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
             }
 
             final ESP esp = ESP.INSTANCE;
-            if (esp.handleEvents() && EntityUtils.INSTANCE.isSelected(p_renderModel_1_, false)) {
+            if (esp.handleEvents() && esp.shouldRender(p_renderModel_1_) && EntityUtils.INSTANCE.isSelected(p_renderModel_1_, false)) {
                 boolean fancyGraphics = mc.gameSettings.fancyGraphics;
                 mc.gameSettings.fancyGraphics = false;
 
