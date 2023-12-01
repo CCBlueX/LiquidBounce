@@ -201,6 +201,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleMurderMystery,
             ModuleAttackEffects,
             ModuleNametags,
+            ModuleCombineMobs,
 
             // ModuleNametags,
             ModuleNoBob,
