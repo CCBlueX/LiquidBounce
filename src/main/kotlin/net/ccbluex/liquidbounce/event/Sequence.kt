@@ -21,10 +21,8 @@ package net.ccbluex.liquidbounce.event
 import com.google.common.collect.Lists
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
