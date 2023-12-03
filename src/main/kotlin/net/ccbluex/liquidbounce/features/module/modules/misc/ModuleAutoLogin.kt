@@ -19,15 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import kotlinx.coroutines.awaitCancellation
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
-import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
-import kotlin.math.log
 
 
 /**
@@ -38,7 +35,7 @@ import kotlin.math.log
 object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
 
     private val password by text("Password", "pass123")
-    private val delay by intRange("Delay", 3..5, 0..20)
+    private val delay by intRange("Delay", 3..5, 0..100)
 
     private val registerCommand by text("RegisterCommand", "register")
     private val loginCommand by text("LoginCommand", "login")
@@ -46,22 +43,18 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
     private val registerRegexString by text("RegisterRegex", "/register")
     private val loginRegexString by text("LoginRegex", "/login")
 
-    var repeatable = repeatable {
-        repeat(50) {
-//            chat(it.toString())
-            waitTicks(1)
-        }
-    };
-
     var sequence: Sequence<DummyEvent>? = null
 
 
 
     fun login() {
+        chat("login")
         network.sendCommand("$loginCommand $password")
     }
 
     fun register() {
+        chat("register")
+
         network.sendCommand("$registerCommand $password $password")
     }
 
@@ -71,7 +64,7 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
         val registerRegex = Regex(registerRegexString)
 
         if (registerRegex.containsMatchIn(msg)) {
-            startAction { register() }
+            startDelayedAction { register() }
 
             return@handler
         }
@@ -79,17 +72,21 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
         val loginRegex = Regex(loginRegexString)
 
         if(loginRegex.containsMatchIn(msg)) {
-            startAction { login() }
+            startDelayedAction { login() }
         }
     }
 
-    private fun startAction(action: SuspendableHandler<DummyEvent>) {
+    private fun startDelayedAction(action: SuspendableHandler<DummyEvent>) {
         // cancel the previous sequence
         sequence?.cancel()
 
         //start the new
         sequence = Sequence<DummyEvent>({
-            waitTicks(delay.random())
+//            repeat(50) {
+                sync()
+                waitTicks(delay.random())
+//                chat(it.toString())
+//            }
             action(it)
         }, DummyEvent())
     }
