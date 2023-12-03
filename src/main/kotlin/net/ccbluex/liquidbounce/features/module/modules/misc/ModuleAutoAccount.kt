@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
  *
  * Spams the chat with a given message.
  */
-object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
+object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
 
     private val password by text("Password", "pass123")
     private val delay by intRange("Delay", 3..5, 0..50)
