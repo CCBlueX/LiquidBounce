@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
  */
 object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
 
-    private val password by text("Password", "pass123")
+    private val password by text("Password", "a1b2c3d4")
     private val delay by intRange("Delay", 3..5, 0..50)
 
     private val registerCommand by text("RegisterCommand", "register")
