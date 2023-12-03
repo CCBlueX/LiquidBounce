@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.event
 import com.google.common.collect.Lists
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -55,6 +57,11 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         SequenceManager.sequences += this@Sequence
         coroutineRun()
+        SequenceManager.sequences -= this@Sequence
+    }
+
+    open fun cancel() {
+        coroutine.cancel()
         SequenceManager.sequences -= this@Sequence
     }
 
@@ -152,7 +159,7 @@ class RepeatingSequence(handler: SuspendableHandler<DummyEvent>) : Sequence<Dumm
 
     }
 
-    fun cancel() {
+    override fun cancel() {
         repeat = false
     }
 
