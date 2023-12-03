@@ -98,7 +98,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         fun jumpIfNeeded(ticksUntilNextBlock: Int) {
             if (shouldJump(ticksUntilNextBlock)) {
                 EventScheduler.schedule(ModuleScaffold, MovementInputEvent::class.java, action = {
-                    TickStateManager.enforcedState.enforceJump = true
+                    (it as MovementInputEvent).jumping = true
                 })
                 blocksPlaced = 0
             }
