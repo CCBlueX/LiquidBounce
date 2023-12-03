@@ -157,7 +157,7 @@ object RotationManager : Listenable {
         val playerRotation = player.rotation
 
         if (aimPlan.ticksLeft == 0) {
-            val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: actualServerRotation, playerRotation)
+            val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: serverRotation, playerRotation)
 
             if (differenceFromCurrentToPlayer < aimPlan.resetThreshold || aimPlan.applyClientSide) {
                 this.aimPlan = null
