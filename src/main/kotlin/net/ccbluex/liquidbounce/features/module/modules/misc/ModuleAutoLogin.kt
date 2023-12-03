@@ -84,6 +84,7 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
 
         //start the new sequence
         sequence = Sequence<DummyEvent>({
+            waitUntil { mc.networkHandler != null }
             sync()
             waitTicks(delay.random())
 
