@@ -82,12 +82,10 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
 
         //start the new
         sequence = Sequence<DummyEvent>({
-//            repeat(50) {
-                sync()
-                waitTicks(delay.random())
-//                chat(it.toString())
-//            }
-            action(it)d
+            sync()
+            waitTicks(delay.random())
+
+            action(it)
         }, DummyEvent())
     }
 
