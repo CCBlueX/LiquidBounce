@@ -379,6 +379,8 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         player.updatePositionAndAngles(start.x, start.y, start.z, player.yaw, player.pitch)
     }
 
+    fun isLagging() = enabled && (packets.isNotEmpty() || positions.isNotEmpty())
+
     private inline fun runWithDisabledLogger(fn: () -> Unit) {
         disablelogger = true
 

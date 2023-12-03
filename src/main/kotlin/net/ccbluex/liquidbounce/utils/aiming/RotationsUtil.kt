@@ -27,6 +27,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.*
@@ -95,12 +98,21 @@ object RotationManager : Listenable {
     // Used for rotation interpolation
     var previousRotation: Rotation? = null
 
+    private val fakeLagging
+        get() = ModuleBadWifi.isLagging() || ModuleBacktrack.isLagging() || ModuleBlink.isLagging()
+
+    val serverRotation: Rotation
+        get() = if (fakeLagging) theoreticalServerRotation else actualServerRotation
+
     /**
      * The rotation that was already sent to the server and is currently active.
      * The value is not being written by the packets, but we gather the Rotation from the last yaw and pitch variables
      * from our player instance handled by the sendMovementPackets() function.
      */
-    var serverRotation = Rotation.ZERO
+    var actualServerRotation = Rotation.ZERO
+        private set
+
+    var theoreticalServerRotation = Rotation.ZERO
         private set
 
     fun aimAt(rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable) =
@@ -145,7 +157,7 @@ object RotationManager : Listenable {
         val playerRotation = player.rotation
 
         if (aimPlan.ticksLeft == 0) {
-            val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: serverRotation, playerRotation)
+            val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: actualServerRotation, playerRotation)
 
             if (differenceFromCurrentToPlayer < aimPlan.resetThreshold || aimPlan.applyClientSide) {
                 this.aimPlan = null
@@ -255,14 +267,19 @@ object RotationManager : Listenable {
     val packetHandler = handler<PacketEvent>(priority = -1000) {
         val packet = it.packet
 
-        if (it.isCancelled) {
+        var rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
+             Rotation(packet.yaw, packet.pitch)
+        } else if (packet is PlayerPositionLookS2CPacket) {
+            Rotation(packet.yaw, packet.pitch)
+        } else {
             return@handler
         }
 
-        if (packet is PlayerMoveC2SPacket && packet.changeLook) {
-            serverRotation = Rotation(packet.yaw, packet.pitch)
-        } else if (packet is PlayerPositionLookS2CPacket) {
-            serverRotation = Rotation(packet.yaw, packet.pitch)
+        // This normally applies to Modules like Blink, BadWifi, etc.
+        if (it.isCancelled) {
+            theoreticalServerRotation = rotation
+        } else {
+            actualServerRotation = rotation
         }
     }
 
@@ -316,7 +333,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.serverRotation)
+            get() = LeastDifferencePreference(RotationManager.actualServerRotation)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)
