@@ -45,7 +45,9 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
 
     var sequence: Sequence<DummyEvent>? = null
 
-
+    // We can receive chat messages before the world is initialized,
+    // so we have to handel events even before the that
+    override fun handleEvents() = enabled
 
     fun login() {
         chat("login")
@@ -80,7 +82,7 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
         // cancel the previous sequence
         sequence?.cancel()
 
-        //start the new
+        //start the new sequence
         sequence = Sequence<DummyEvent>({
             sync()
             waitTicks(delay.random())
