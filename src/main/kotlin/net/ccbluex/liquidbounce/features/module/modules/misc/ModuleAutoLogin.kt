@@ -66,8 +66,6 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
     }
 
     val onChat = handler<ChatReceiveEvent> { event ->
-        chat("received: ${event.message} ${event.type}")
-
         val msg = event.message
 
         val registerRegex = Regex(registerRegexString)
@@ -98,11 +96,6 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
 
 
     val onJump = handler<ChatSendEvent> {
-
-
-
-
-
 
     }
 
