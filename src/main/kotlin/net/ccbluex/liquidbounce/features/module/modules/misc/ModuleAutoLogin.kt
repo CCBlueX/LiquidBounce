@@ -94,9 +94,4 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
         }, DummyEvent())
     }
 
-
-    val onJump = handler<ChatSendEvent> {
-
-    }
-
 }
