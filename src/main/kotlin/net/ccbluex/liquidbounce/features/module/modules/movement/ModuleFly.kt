@@ -108,6 +108,16 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
+    private object Glide : Choice("Glide") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            player.velocity.y = -0.04
+        }
+    }
+
     /**
      * @anticheat Vulcan
      * @anticheat Version 2.7.7
@@ -286,7 +296,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         val repeatable = repeatable {
             player.velocity.y = 0.2
             player.strafe(speed = 0.34)
-            waitTicks(4)
+            waitTicks(5)
         }
 
     }

@@ -8,7 +8,6 @@
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
     <ID>ComplexCondition:ModuleVelocity.kt$ModuleVelocity$(packet is EntityVelocityUpdateS2CPacket &amp;&amp; packet.id == player.id || packet is ExplosionS2CPacket) &amp;&amp; it.original &amp;&amp; Delayed.enabled</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
-    <ID>ComplexCondition:SimulatedPlayer.kt$SimulatedPlayer$(horizontalCollision || this.isJumping) &amp;&amp; ( this.isClimbing() || pos.toBlockPos().getState() ?.isOf(Blocks.POWDER_SNOW) == true &amp;&amp; PowderSnowBlock.canWalkOnPowderSnow(player) )</ID>
     <ID>CyclomaticComplexMethod:Chat.kt$Chat$internal fun onClientError(packet: ClientErrorPacket)</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String&gt;, List&lt;Int&gt;&gt;, commandIdx: Int, isNewParameter: Boolean )</ID>
@@ -20,8 +19,6 @@
     <ID>CyclomaticComplexMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
-    <ID>CyclomaticComplexMethod:SimulatedPlayer.kt$SimulatedPlayer$override fun tick()</ID>
-    <ID>CyclomaticComplexMethod:SimulatedPlayer.kt$SimulatedPlayer$private fun travel(movementInput: Vec3d)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, cpsTimer.isClickOnNextTick(1))</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
@@ -52,7 +49,6 @@
     <ID>LongMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
-    <ID>LongMethod:SimulatedPlayer.kt$SimulatedPlayer$private fun travel(movementInput: Vec3d)</ID>
     <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float&gt;, ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String&gt;, val parameters: Array&lt;Parameter&lt;*&gt;&gt;, val subcommands: Array&lt;Command&gt;, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
@@ -101,7 +97,6 @@
     <ID>MaxLineLength:ModuleFly.kt$ModuleFly.Enderpearl$if</ID>
     <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*&gt;) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$if</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.NoCheatPlus$if</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.Vanilla$if</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))</ID>
@@ -131,8 +126,6 @@
     <ID>MaxLineLength:Region.kt$Region$return this.from.x &lt;= maxX &amp;&amp; this.to.x &gt; minX &amp;&amp; this.from.y &lt;= maxY &amp;&amp; this.to.y &gt; minY &amp;&amp; this.from.z &lt;= maxZ &amp;&amp; this.to.z &gt; minZ</ID>
     <ID>MaxLineLength:RenderingFlags.kt$RenderingFlags$*</ID>
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
-    <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer$if</ID>
-    <ID>MaxLineLength:SimulatedPlayer.kt$SimulatedPlayer.SimulatedPlayerInput$return "SimulatedPlayerInput(forwards={${this.pressingForward}}, backwards={${this.pressingBack}}, left={${this.pressingLeft}}, right={${this.pressingRight}}, jumping={${this.jumping}}, sprinting=$sprinting, slowDown=$slowDown)"</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$// it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")</ID>
     <ID>MaxLineLength:TargetFinding.kt$fun</ID>
@@ -157,7 +150,6 @@
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions&gt;</ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
-    <ID>NestedBlockDepth:SimulatedPlayer.kt$SimulatedPlayer$private fun updateMovementInFluid(tag: TagKey&lt;Fluid&gt;, speed: Double): Boolean</ID>
     <ID>NewLineAtEndOfFile:Face.kt$net.ccbluex.liquidbounce.utils.math.geometry.Face.kt</ID>
     <ID>NewLineAtEndOfFile:ItemStackComparators.kt$net.ccbluex.liquidbounce.utils.item.ItemStackComparators.kt</ID>
     <ID>NewLineAtEndOfFile:Levensthein.kt$net.ccbluex.liquidbounce.utils.math.Levensthein.kt</ID>
@@ -201,7 +193,7 @@
     <ID>TooManyFunctions:CombatUtils.kt$CombatManager : Listenable</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
-    <ID>TooManyFunctions:SimulatedPlayer.kt$SimulatedPlayer : PlayerSimulation</ID>
+    <ID>TooManyFunctions:ModuleBlink.kt$ModuleBlink : Module</ID>
     <ID>TooManyFunctions:UltralightEngine.kt$UltralightEngine</ID>
     <ID>TooManyFunctions:ViewOverlay.kt$ViewOverlay</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
@@ -214,7 +206,6 @@
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
     <ID>UnusedParameter:ModuleChestStealer.kt$ModuleChestStealer$screen: GenericContainerScreen</ID>
     <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
-    <ID>UnusedParameter:SimulatedPlayer.kt$SimulatedPlayer$water: TagKey&lt;Fluid&gt;?</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupExploits()</ID>
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupHeads()</ID>

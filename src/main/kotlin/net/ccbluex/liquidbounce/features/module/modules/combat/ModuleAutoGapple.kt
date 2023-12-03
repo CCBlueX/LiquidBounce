@@ -95,6 +95,10 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         inventoryConstraints: InventoryConstraintsConfigurable,
         close: Boolean = true,
     ) {
+        if (!player.currentScreenHandler.isPlayerInventory) {
+            return
+        }
+
         val slot = item.getIdForServerWithCurrentScreen() ?: return
 
         if (!isInInventoryScreen) {
@@ -104,10 +108,8 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         if (!inventoryConstraints.violatesNoMove && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             interaction.clickSlot(0, slot, button, slotActionType, player)
 
-            if (close) {
-                if (!isInInventoryScreen) {
-                    network.sendPacket(CloseHandledScreenC2SPacket(0))
-                }
+            if (close && canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
             }
         }
     }

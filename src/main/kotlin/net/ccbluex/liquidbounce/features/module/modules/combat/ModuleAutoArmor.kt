@@ -65,9 +65,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
             // Wait if this was not the last armor piece we want to equip
             if (armorIndex != bestArmor.lastIndex) {
-                // Wait the requested delay, then continue. In case the user violates NoMove,
+                // Wait the requested delay, then continue. In case the module cannot operate anymore,
                 // it immediately goes to the next loop, breaks it and then closes inventory if it's open
-                waitConditional(inventoryConstraints.delay.random()) { inventoryConstraints.violatesNoMove }
+                waitConditional(inventoryConstraints.delay.random()) { !canOperate(player) }
 
                 continue
             }
@@ -76,7 +76,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             return@repeatable
         }
 
-        if (locked && !isInInventoryScreen) {
+        if (locked && canCloseMainInventory) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
 
