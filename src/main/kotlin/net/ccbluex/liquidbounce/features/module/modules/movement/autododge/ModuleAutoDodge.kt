@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
@@ -90,12 +90,9 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         }
 
         if (dodgePlan.shouldJump && AllowRotationChange.allowJump && player.isOnGround) {
-            EventScheduler.schedule(this, TickJumpEvent::class.java, 0, action = {
-                // Make sure player is on ground
-                if (player.isOnGround) {
-                    player.jump()
-                }
-            })
+            EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                it.jumping = true
+            }
         }
 
         if (AllowTimer.enabled && dodgePlan.useTimer) {

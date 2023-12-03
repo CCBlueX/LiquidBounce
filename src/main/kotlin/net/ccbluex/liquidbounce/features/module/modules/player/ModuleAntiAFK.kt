@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.angle
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotationsConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -72,12 +74,9 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val repeatable = repeatable {
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
-                    EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
-                        // Make sure player is on ground
-                        if (player.isOnGround) {
-                            player.jump()
-                        }
-                    })
+                    EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                        it.jumping = true
+                    }
                 }
 
                 1 -> {
@@ -154,12 +153,9 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
 
             if (jump && player.isOnGround) {
-                EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
-                    // Make sure player is on ground
-                    if (player.isOnGround) {
-                        player.jump()
-                    }
-                })
+                EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                    it.jumping = true
+                }
             }
 
             if (Rotate.enabled) {
