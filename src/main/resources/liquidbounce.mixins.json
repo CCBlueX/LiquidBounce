@@ -46,6 +46,7 @@
     "minecraft.gui.custom.MixinDisconnectedScreen",
     "minecraft.item.MixinHeldItemRenderer",
     "minecraft.item.MixinItem",
+    "minecraft.network.MixinAllowedAddressResolver",
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.network.MixinClientPlayNetworkHandler",

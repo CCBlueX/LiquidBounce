@@ -44,7 +44,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
 object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
-    val modes = choices("Mode", Modify) {
+    val modes = choices("Mode", { Modify }) {
         arrayOf(
             Modify, Strafe, AAC442, Dexland, JumpReset
         )

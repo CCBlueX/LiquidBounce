@@ -169,7 +169,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             }
         }
 
-        if (hasClickedOnce && !isInInventoryScreen) {
+        if (hasClickedOnce && canCloseMainInventory) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
     }

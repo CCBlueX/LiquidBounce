@@ -216,6 +216,8 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
         }
     }
 
+    fun isLagging() = enabled && (packetQueue.isNotEmpty() || positions.isNotEmpty())
+
     private fun shouldLag() =
         world.findEnemy(0f..rangeToStart) != null && (!player.isUsingItem || !stopWhileUsingItem) && mc.currentScreen == null && !player.isDead
 

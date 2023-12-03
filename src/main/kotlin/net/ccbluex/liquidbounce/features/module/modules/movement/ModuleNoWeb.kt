@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
-    val modes = choices("Mode", Air) {
+    val modes = choices("Mode", { Air }) {
         arrayOf(
             Air
         )

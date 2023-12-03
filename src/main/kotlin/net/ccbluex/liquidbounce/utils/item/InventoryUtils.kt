@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.ItemStack
@@ -160,8 +160,8 @@ class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
 
     val violatesNoMove
-        get() = noMove && (mc.player?.moving == true || noRotation
-            && (RotationManager.currentRotation ?: mc.player.rotation) != RotationManager.serverRotation)
+        get() = noMove && (mc.player?.moving == true || mc.player?.input?.yAxisMovement != 0f ||
+            noRotation && !RotationManager.rotationMatchesPreviousRotation())
 }
 
 data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

@@ -28,6 +28,9 @@ import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -35,6 +38,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerFeature
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
@@ -53,6 +57,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -164,7 +169,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
     private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
 
-    private val sameY by boolean("SameY", false)
+    val sameY by boolean("SameY", false)
     private var currentTarget: BlockPlacementTarget? = null
 
     private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
@@ -179,6 +184,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldSafeWalkFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
+        tree(ScaffoldTowerFeature)
     }
 
     var randomization = Random.nextDouble(-0.02, 0.02)
@@ -277,7 +283,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.inventory.getStack(blockInHotbar)
             }
 
-        val optimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input))
+            val optimalLine = this.currentOptimalLine
 
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double =
@@ -328,6 +334,21 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
     }
 
+    var currentOptimalLine: Line? = null
+
+    val moveEvent =
+        handler<MovementInputEvent> { event ->
+            this.currentOptimalLine = null
+
+            val currentInput = event.directionalInput
+
+            if (currentInput == DirectionalInput.NONE) {
+                return@handler
+            }
+
+            this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
+        }
+
     fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
         val config =
             PositionFactoryConfiguration(
@@ -343,10 +364,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             AimMode.CENTER -> CenterTargetPositionFactory
             AimMode.GODBRIDGE -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
-            AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(
-                config,
-                ScaffoldMovementPlanner.getOptimalMovementLine(DirectionalInput(player.input)),
-            )
+            AimMode.STABILIZED ->
+                StabilizedRotationTargetPositionFactory(
+                    config,
+                    this.currentOptimalLine,
+                )
 
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
         }

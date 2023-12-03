@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -148,7 +149,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         fakePlayer = null
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
+    val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
             return@handler
         }
@@ -377,6 +378,8 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
         player.updatePositionAndAngles(start.x, start.y, start.z, player.yaw, player.pitch)
     }
+
+    fun isLagging() = enabled && (packets.isNotEmpty() || positions.isNotEmpty())
 
     private inline fun runWithDisabledLogger(fn: () -> Unit) {
         disablelogger = true

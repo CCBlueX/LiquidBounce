@@ -62,7 +62,8 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
                     SimulatedPlayer.SimulatedPlayerInput(
                         event.directionalInput,
                         player.input.jumping,
-                        player.isSprinting
+                        player.isSprinting,
+                        player.isSneaking
                     )
 
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)

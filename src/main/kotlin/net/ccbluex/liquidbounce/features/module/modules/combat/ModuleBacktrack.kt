@@ -185,6 +185,8 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         position = null
     }
 
+    fun isLagging() = enabled && packetQueue.isNotEmpty()
+
     private fun shouldConsiderAsEnemy(target: Entity) =
         target.shouldBeAttacked() && target.boxedDistanceTo(player) in range && player.age > 10
 

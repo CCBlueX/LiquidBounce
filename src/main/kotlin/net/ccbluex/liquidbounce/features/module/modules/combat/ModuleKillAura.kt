@@ -42,7 +42,10 @@ import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
+import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
@@ -111,6 +114,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
+
+    // Target rendering
+    private val targetRenderer = tree(WorldTargetRenderer(this))
 
     // Predict
     private val pointTracker = tree(PointTracker())
@@ -313,12 +319,28 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     private var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
+
+    private var renderTarget: Entity? = null;
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
+        renderTarget(matrixStack, event.partialTicks)
+
+
+        renderFailedHits(matrixStack)
+    }
+
+    private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
+        val target = renderTarget ?: return
+        renderEnvironmentForWorld(matrixStack) {
+            targetRenderer.render(this, target, partialTicks)
+        }
+    }
+
+    private fun renderFailedHits(matrixStack: MatrixStack) {
         if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
             failedHits.clear()
-            return@handler
+            return
         }
 
         failedHits.forEach { it.setRight(it.getRight() + 1) }
@@ -488,6 +510,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             rangeSquared.toDouble()
         }
 
+        renderTarget = null
+
         for (target in targetTracker.enemies()) {
             if (target.squaredBoxedDistanceTo(player) > scanRange) {
                 continue
@@ -502,6 +526,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             ) ?: raytraceBox(eyes, box, range = sqrt(scanRange),
                 wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
             ) ?: continue
+
+            renderTarget = target
 
             // lock on target tracker
             targetTracker.lock(target)

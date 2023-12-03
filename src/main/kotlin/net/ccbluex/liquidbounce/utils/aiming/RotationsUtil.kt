@@ -27,13 +27,14 @@ import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.PostMovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -97,12 +98,21 @@ object RotationManager : Listenable {
     // Used for rotation interpolation
     var previousRotation: Rotation? = null
 
+    private val fakeLagging
+        get() = ModuleBadWifi.isLagging() || ModuleBacktrack.isLagging() || ModuleBlink.isLagging()
+
+    val serverRotation: Rotation
+        get() = if (fakeLagging) theoreticalServerRotation else actualServerRotation
+
     /**
      * The rotation that was already sent to the server and is currently active.
      * The value is not being written by the packets, but we gather the Rotation from the last yaw and pitch variables
      * from our player instance handled by the sendMovementPackets() function.
      */
-    var serverRotation = Rotation.ZERO
+    var actualServerRotation = Rotation.ZERO
+        private set
+
+    var theoreticalServerRotation = Rotation.ZERO
         private set
 
     fun aimAt(rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable) =
@@ -186,6 +196,16 @@ object RotationManager : Listenable {
     private fun allowedToUpdate() =
         !CombatManager.shouldPauseRotation()
 
+    fun rotationMatchesPreviousRotation(): Boolean {
+        val player = mc.player ?: return false
+
+        currentRotation?.let {
+            return it == previousRotation
+        }
+
+        return player.rotation == player.lastRotation
+    }
+
     /**
      * Calculate difference between two rotations
      */
@@ -218,16 +238,15 @@ object RotationManager : Listenable {
      * Updates at movement tick, so we can update the rotation before the movement runs and the client sends the packet
      * to the server.
      */
-    val tickHandler = handler<PostMovementInputEvent> { event ->
+    val tickHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         val player = mc.player ?: return@handler
 
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput(
-                event.directionalInput,
-                event.jumping,
-                player.isSprinting
-            )
-        )
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
+
+        input.sneaking = event.sneaking
+        input.jumping = event.jumping
+
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
         simulatedPlayer.tick()
 
@@ -250,14 +269,19 @@ object RotationManager : Listenable {
     val packetHandler = handler<PacketEvent>(priority = -1000) {
         val packet = it.packet
 
-        if (it.isCancelled) {
+        var rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
+             Rotation(packet.yaw, packet.pitch)
+        } else if (packet is PlayerPositionLookS2CPacket) {
+            Rotation(packet.yaw, packet.pitch)
+        } else {
             return@handler
         }
 
-        if (packet is PlayerMoveC2SPacket && packet.changeLook) {
-            serverRotation = Rotation(packet.yaw, packet.pitch)
-        } else if (packet is PlayerPositionLookS2CPacket) {
-            serverRotation = Rotation(packet.yaw, packet.pitch)
+        // This normally applies to Modules like Blink, BadWifi, etc.
+        if (it.isCancelled) {
+            theoreticalServerRotation = rotation
+        } else {
+            actualServerRotation = rotation
         }
     }
 
@@ -311,7 +335,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.serverRotation)
+            get() = LeastDifferencePreference(RotationManager.actualServerRotation)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)
