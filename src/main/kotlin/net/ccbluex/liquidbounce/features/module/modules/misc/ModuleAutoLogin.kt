@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
 
     private val password by text("Password", "pass123")
-    private val delay by intRange("Delay", 3..5, 0..100)
+    private val delay by intRange("Delay", 3..5, 0..50)
 
     private val registerCommand by text("RegisterCommand", "register")
     private val loginCommand by text("LoginCommand", "login")
@@ -87,7 +87,7 @@ object ModuleAutoLogin : Module("AutoLogin", Category.MISC) {
                 waitTicks(delay.random())
 //                chat(it.toString())
 //            }
-            action(it)
+            action(it)d
         }, DummyEvent())
     }
 
