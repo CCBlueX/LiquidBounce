@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -37,12 +38,14 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
  */
 object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
-    val modes = choices("Mode", Safe, arrayOf(Safe, Simulate, OnEdge))
+    @Suppress("UnusedPrivateProperty")
+    private val modes = choices("Mode", {
+        it.choices[1] // Safe mode
+    }) {
+        arrayOf(NoneChoice(it), Safe(it), Simulate(it), OnEdge(it))
+    }
 
-    private object Safe : Choice("Safe") {
-
-        override val parent: ChoiceConfigurable
-            get() = modes
+    class Safe(override val parent: ChoiceConfigurable) : Choice("Safe") {
 
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
             event.isSafeWalk = true
@@ -50,12 +53,9 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     }
 
-    private object Simulate : Choice("Simulate") {
+    class Simulate(override val parent: ChoiceConfigurable) : Choice("Simulate") {
 
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val predict by int("Ticks", 5, 0..20)
+        private val predict by int("Ticks", 5, 0..20)
 
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
@@ -83,12 +83,9 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     }
 
-    private object OnEdge : Choice("OnEdge") {
+    class OnEdge(override val parent: ChoiceConfigurable) : Choice("OnEdge") {
 
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val distance by float("Distance", 0.5f, 0.1f..1f)
+        private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
 
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
@@ -96,7 +93,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         private val inputHandler = handler<MovementInputEvent> { event ->
             val shouldBeActive = player.isOnGround && !player.isSneaking
 
-            if (shouldBeActive && player.isCloseToEdge(event.directionalInput, distance.toDouble())) {
+            if (shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())) {
                 event.directionalInput = DirectionalInput.NONE
             }
         }

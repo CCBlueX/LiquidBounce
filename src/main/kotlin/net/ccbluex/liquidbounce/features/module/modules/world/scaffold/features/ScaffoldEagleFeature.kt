@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
 object ScaffoldEagleFeature : ToggleableConfigurable(ModuleScaffold, "Eagle", false) {
-    private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
 
+    private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
     private val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..1.3f)
 
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled

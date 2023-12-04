@@ -25,6 +25,7 @@ import com.viaversion.viaversion.api.type.Type
 import com.viaversion.viaversion.protocols.protocol1_8.ServerboundPackets1_8
 import com.viaversion.viaversion.protocols.protocol1_9to1_8.Protocol1_9To1_8
 import io.netty.util.AttributeKey
+import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
@@ -32,17 +33,16 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerFeature
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -50,14 +50,12 @@ import net.ccbluex.liquidbounce.utils.client.enforced
 import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -70,7 +68,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import kotlin.math.*
+import kotlin.math.abs
 import kotlin.random.Random
 
 /**
@@ -110,6 +108,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+
+    // SafeWalk feature - uses the SafeWalk module as a base
+    @Suppress("UnusedPrivateProperty")
+    private val safeWalkMode = choices("SafeWalk", {
+        it.choices[1] // Safe mode
+    }) {
+        arrayOf(NoneChoice(it), ModuleSafeWalk.Safe(it), ModuleSafeWalk.Simulate(it), ModuleSafeWalk.OnEdge(it))
+    }
+
     val zitterModes =
         choices(
             "ZitterMode",
@@ -121,7 +128,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ),
         )
     private val timer by float("Timer", 1f, 0.01f..10f)
-    private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
 
     val sameY by boolean("SameY", false)
     private var currentTarget: BlockPlacementTarget? = null
@@ -132,16 +138,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     init {
         tree(SimulatePlacementAttempts)
         tree(ScaffoldSlowFeature)
+        tree(ScaffoldSpeedLimiterFeature)
         tree(ScaffoldEagleFeature)
         tree(ScaffoldDownFeature)
         tree(ScaffoldAutoJumpFeature)
-        tree(ScaffoldSafeWalkFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
         tree(ScaffoldTowerFeature)
     }
 
-    var randomization = Random.nextDouble(-0.02, 0.02)
+    private var randomization = Random.nextDouble(-0.02, 0.02)
     private var startY = 0
 
     /**
@@ -377,11 +383,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleFeature.onBlockPlacement()
             ScaffoldAutoJumpFeature.onBlockPlacement()
-
-            if (player.isOnGround) {
-                player.velocity.x *= speedModifier
-                player.velocity.z *= speedModifier
-            }
 
             currentTarget = null
 
