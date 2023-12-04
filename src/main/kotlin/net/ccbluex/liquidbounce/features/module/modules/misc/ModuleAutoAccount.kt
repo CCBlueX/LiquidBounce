@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.client.chat
 
 
 /**
- * Spammer module
+ * Auto account module
  *
- * Spams the chat with a given message.
+ * Automatically handles logins or registrations on servers when requested.
  */
 object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
 
