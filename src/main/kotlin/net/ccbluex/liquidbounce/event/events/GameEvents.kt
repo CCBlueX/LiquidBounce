@@ -43,9 +43,6 @@ class InputHandleEvent : Event()
 @Nameable("movementInput")
 class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean, var sneaking: Boolean) : Event()
 
-@Nameable("postMovementInput")
-class PostMovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean) : Event()
-
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
 
