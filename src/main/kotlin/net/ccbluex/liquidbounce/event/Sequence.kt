@@ -58,6 +58,11 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
         SequenceManager.sequences -= this@Sequence
     }
 
+    open fun cancel() {
+        coroutine.cancel()
+        SequenceManager.sequences -= this@Sequence
+    }
+
     private var continuation: Continuation<Unit>? = null
     private var elapsedTicks = 0
     private var totalTicks: () -> Int = { 0 }
@@ -152,7 +157,7 @@ class RepeatingSequence(handler: SuspendableHandler<DummyEvent>) : Sequence<Dumm
 
     }
 
-    fun cancel() {
+    override fun cancel() {
         repeat = false
     }
 
