@@ -63,9 +63,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     override fun enable() {
         if (ModuleBlink.enabled) {
             // Cannot disable on the moment it's enabled, so schedule module deactivation in the next few milliseconds.
-            EventScheduler.schedule(this, GameRenderEvent::class.java, action = {
+            EventScheduler.schedule<GameRenderEvent>(this) {
                 this.enabled = false
-            })
+            }
 
             notification("Compatibility error", "BadWIFI is incompatible with Blink", NotificationEvent.Severity.ERROR)
         }

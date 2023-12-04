@@ -22,10 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
@@ -193,7 +190,8 @@ object RotationManager : Listenable {
     /**
      * Checks if it should update the server-side rotations
      */
-    private fun allowedToUpdate() = !CombatManager.shouldPauseRotation()
+    private fun allowedToUpdate() =
+        !CombatManager.shouldPauseRotation()
 
     fun rotationMatchesPreviousRotation(): Boolean {
         val player = mc.player ?: return false
@@ -224,7 +222,8 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two angle points
      */
-    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
+    fun angleDifference(a: Float, b: Float) =
+        MathHelper.wrapDegrees(a - b)
 
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (aimPlan?.applyVelocityFix == true) {
