@@ -98,7 +98,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleDisabler,
             ModuleForceUnicodeChat,
             ModuleGhostHand,
-            ModuleGodMode,
             ModuleKick,
             ModuleMoreCarry,
             ModuleNameCollector,
