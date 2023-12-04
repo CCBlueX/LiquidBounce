@@ -46,6 +46,7 @@ object ScaffoldAutoJumpFeature : ToggleableConfigurable(ModuleScaffold, "AutoJum
             else if (useDelay) ticksUntilNextBlock
             else 0
 
+        // TODO: Use player.isCloseToEdge() instead
         val predictedBoundingBox = player.boundingBox.offset(0.0, -1.5, 0.0)
             .offset(player.velocity.multiply(predictFactor.toDouble() + extraPrediction))
 
