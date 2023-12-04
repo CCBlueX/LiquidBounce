@@ -78,7 +78,6 @@ import kotlin.random.Random
  *
  * Places blocks under you.
  */
-@Suppress("TooManyFunctions")
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
         val cps by intRange("CPS", 5..8, 0..50)
@@ -96,7 +95,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
-    private val aimMode = enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
+    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
 
     object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
         val DEFAULT_XZ_RANGE = 0.1f..0.9f
@@ -187,47 +186,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
-    private fun findRotation(target: BlockPlacementTarget?): Rotation? {
-        if(this.aimMode.get() != AimMode.GODBRIDGE)
-            return target?.rotation
-
-        val dirInput = DirectionalInput(player.input)
-
-        if (dirInput == DirectionalInput.NONE) {
-            target ?: return null
-
-            return Rotation(floor(target.rotation.yaw / 90) * 90 + 45, 75f)
-        }
-
-        val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
-
-        val movingYaw = round(direction / 45) * 45
-        val finalYaw: Float
-
-        if (movingYaw % 90 == 0f) {
-            val radians = (movingYaw) / 180.0 * PI
-            if (player.isOnGround) {
-                isOnRightSide = floor(player.x + cos(radians) * 0.5) != floor(player.x) ||
-                    floor(player.z + sin(radians) * 0.5) != floor(player.z)
-
-                if (player.blockPos.down().getState()?.isAir == true
-                    && player.pos.offset(Direction.fromRotation(movingYaw.toDouble()), 0.6).toBlockPos().down()
-                        .getState()?.isAir == true
-                ) {
-                    isOnRightSide = !isOnRightSide
-                }
-            }
-            finalYaw = movingYaw + if (isOnRightSide) 45 else -45
-            ScaffoldAutoJumpFeature.isGoingDiagonal = false
-            return Rotation(finalYaw, 75f)
-        } else {
-            ScaffoldAutoJumpFeature.isGoingDiagonal = true
-            return Rotation(movingYaw, 75.6f)
-        }
-    }
-
-    private var isOnRightSide = false
-
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
@@ -280,7 +238,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
-        val rotation = findRotation(target) ?: return@handler
+        val rotation = if (aimMode == AimMode.GODBRIDGE) {
+            ScaffoldGodBridgeFeature.optimizeRotation(target)
+        } else {
+            target?.rotation
+        }
+
+        if (rotation == null) {
+            return@handler
+        }
 
         RotationManager.aimAt(
             rotation,
@@ -315,7 +281,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 randomization,
             )
 
-        return when (aimMode.get()) {
+        return when (aimMode) {
             AimMode.CENTER -> CenterTargetPositionFactory
             AimMode.GODBRIDGE -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)

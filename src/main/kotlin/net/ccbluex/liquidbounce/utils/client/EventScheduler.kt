@@ -32,7 +32,7 @@ object EventScheduler : Listenable {
     /**
      * Maps the event class to the scheduled tasks that currently wait for it.
      */
-    val eventActionsMap: Map<Class<out Event>, CopyOnWriteArrayList<ScheduleInfo>>
+    private val eventActionsMap: Map<Class<out Event>, CopyOnWriteArrayList<ScheduleInfo>>
 
     init {
         eventActionsMap = ALL_EVENT_CLASSES.associate { Pair(it.java, CopyOnWriteArrayList<ScheduleInfo>()) }
@@ -46,13 +46,24 @@ object EventScheduler : Listenable {
      * @return Whether the task was scheduled. A reason why a schedule failed is the `uniqueId` param
      * or the event does not exist.
      */
-
     inline fun <reified T : Event> schedule(
         module: Module,
         uniqueId: Int? = null,
         noinline action: (T) -> Unit
     ): Boolean {
-        val scheduledEvents = eventActionsMap[T::class.java] ?: return false
+        return schedule(module, T::class.java, uniqueId) { action(it as T) }
+    }
+
+    /**
+     * @see schedule
+     */
+    fun schedule(
+        module: Module,
+        eventClass: Class<out Event>,
+        uniqueId: Int?,
+        action: (Event) -> Unit
+    ): Boolean {
+        val scheduledEvents = eventActionsMap[eventClass] ?: return false
 
         if (uniqueId != null) {
             val alreadyScheduled = scheduledEvents.any { it.module == module && it.id == uniqueId }
@@ -62,7 +73,7 @@ object EventScheduler : Listenable {
             }
         }
 
-        scheduledEvents.add(ScheduleInfo(module, uniqueId, { action(it as T) }))
+        scheduledEvents.add(ScheduleInfo(module, uniqueId, action))
 
         return true
     }

@@ -107,7 +107,8 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 }
 
 /**
- * Always targets the point with the nearest rotation angle to the current rotation angle
+ * Always targets the point with the nearest rotation angle to the current rotation angle.
+ * If you have questions, you have to ask @superblaubeere27 because I am too stupid to explain this without a picture.
  */
 class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfiguration, val optimalLine: Line?) :
     FaceTargetPositionFactory() {
