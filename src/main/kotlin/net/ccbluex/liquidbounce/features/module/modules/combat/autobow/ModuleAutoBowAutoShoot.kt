@@ -125,11 +125,11 @@ object ModuleAutoBowAutoShoot : ToggleableConfigurable(ModuleAutoBow, "AutoShoot
                 return false
             }
 
-            val targetRotation = RotationManager.targetRotation ?: return false
+            val targetRotation = RotationManager.aimPlan ?: return false
 
             val aimDifference = RotationManager.rotationDifference(
                 RotationManager.currentRotation
-                    ?: player.rotation, targetRotation
+                    ?: player.rotation, targetRotation.rotation
             )
 
             if (aimDifference > aimThreshold) {
