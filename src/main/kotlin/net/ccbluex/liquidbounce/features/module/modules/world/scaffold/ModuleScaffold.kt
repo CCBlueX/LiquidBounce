@@ -78,6 +78,7 @@ import kotlin.random.Random
  *
  * Places blocks under you.
  */
+@Suppress("TooManyFunctions")
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
         val cps by intRange("CPS", 5..8, 0..50)
