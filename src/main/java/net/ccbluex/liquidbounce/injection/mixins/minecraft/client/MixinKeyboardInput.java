@@ -33,6 +33,7 @@ import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -71,7 +72,7 @@ public class MixinKeyboardInput extends MixinInput {
         }
     }
 
-    @Inject(method = "tick", at = @At("RETURN"), allow = 1)
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER), allow = 1)
     private void injectMovementInputEvent(boolean slowDown, float f, CallbackInfo ci) {
         var event = new MovementInputEvent(new DirectionalInput(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight), this.jumping, this.sneaking);
 
@@ -85,12 +86,14 @@ public class MixinKeyboardInput extends MixinInput {
         this.pressingRight = directionalInput.getRight();
         this.movementForward = KeyboardInput.getMovementMultiplier(directionalInput.getForwards(), directionalInput.getBackwards());
         this.movementSideways = KeyboardInput.getMovementMultiplier(directionalInput.getLeft(), directionalInput.getRight());
+
+        this.fixStrafeMovement();
+
         this.jumping = event.getJumping();
         this.sneaking = event.getSneaking();
     }
 
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.BEFORE))
-    private void injectStrafing(boolean slowDown, float f, CallbackInfo ci) {
+    private void fixStrafeMovement() {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
