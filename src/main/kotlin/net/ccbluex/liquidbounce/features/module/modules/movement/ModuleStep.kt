@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PlayerAdjustMovementCollisionsEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
-import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -101,8 +101,12 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
             it.height = height
         }
 
-        val stepSuccessEvent = handler<PlayerStepSuccessEvent> {
-            player.incrementStat(Stats.JUMP)
+        val stepSuccessEvent = handler<PlayerAdjustMovementCollisionsEvent> {
+            val stepHeight = it.adjustedVec.y
+
+            if (stepHeight <= 0.5) {
+                return@handler
+            }
 
             // If we have configured 0..0 then we will send nothing.
             // That makes sense because the first entry of the array is 0.0
@@ -110,6 +114,8 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
             if (simulateJumpOrder == 0..0) {
                 return@handler
             }
+
+            player.incrementStat(Stats.JUMP)
 
             // Slice the array to the specified range and send the packets
             jumpOrder.sliceArray(simulateJumpOrder)

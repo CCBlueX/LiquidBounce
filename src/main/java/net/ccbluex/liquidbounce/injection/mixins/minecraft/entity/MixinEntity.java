@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerAdjustMovementCollisionsEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -95,16 +95,23 @@ public abstract class MixinEntity {
 
     @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getStepHeight()F"))
     private float hookStepHeight(Entity instance) {
-        PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
-        EventManager.INSTANCE.callEvent(stepEvent);
-        return stepEvent.getHeight();
+        if ((Object) this == MinecraftClient.getInstance().player) {
+            PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
+            EventManager.INSTANCE.callEvent(stepEvent);
+            return stepEvent.getHeight();
+        }
+
+        return instance.getStepHeight();
     }
 
     @Inject(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;",
-            at = @At(value = "RETURN", ordinal = 0))
+            at = @At(value = "RETURN", ordinal = 0), cancellable = true)
     private void hookStepHeight(Vec3d movement, CallbackInfoReturnable<Vec3d> cir) {
-        PlayerStepSuccessEvent stepEvent = new PlayerStepSuccessEvent();
-        EventManager.INSTANCE.callEvent(stepEvent);
+        if ((Object) this == MinecraftClient.getInstance().player) {
+            PlayerAdjustMovementCollisionsEvent movementCollisionsEvent = new PlayerAdjustMovementCollisionsEvent(movement, cir.getReturnValue());
+            EventManager.INSTANCE.callEvent(movementCollisionsEvent);
+            cir.setReturnValue(movementCollisionsEvent.getAdjustedVec());
+        }
     }
 
     @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
