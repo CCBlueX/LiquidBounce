@@ -82,52 +82,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
-    object AutoJump : ToggleableConfigurable(this, "AutoJump", false) {
-        private val whenGoingDiagonal by boolean("WhenGoingDiagonal", false)
-        private val predictFactor by float("PredictFactor", 0.54f, 0f..2f)
-        private val useDelay by boolean("UseDelay", true)
-
-        private val maxBlocks by int("MaxBlocks", 8, 3..17)
-
-        private var blocksPlaced = 0
-
-        fun onBlockPlacement() {
-            blocksPlaced++
-        }
-
-        fun jumpIfNeeded(ticksUntilNextBlock: Int) {
-            if (shouldJump(ticksUntilNextBlock)) {
-                EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
-                    it.jumping = true
-                }
-                blocksPlaced = 0
-            }
-        }
-
-        var isGoingDiagonal = false
-
-        fun shouldJump(ticksUntilNextBlock: Int): Boolean {
-            if (!enabled)
-                return false
-            if (!player.isOnGround)
-                return false
-            if (player.isSneaking)
-                return false
-            if (!whenGoingDiagonal && isGoingDiagonal)
-                return false
-
-            val extraPrediction =
-                if (blocksPlaced >= maxBlocks) 1
-                else if (useDelay) ticksUntilNextBlock
-                else 0
-
-            val predictedBoundingBox = player.boundingBox.offset(0.0, -1.5, 0.0)
-                .offset(player.velocity.multiply(predictFactor.toDouble() + extraPrediction))
-
-            return world.getBlockCollisions(player, predictedBoundingBox).none()
-        }
-    }
-
     private val cpsScheduler = tree(CpsScheduler())
 
     private val silent by boolean("Silent", true)
@@ -174,7 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     init {
         tree(SimulatePlacementAttempts)
-        tree(AutoJump)
+        tree(ScaffoldSlowFeature)
         tree(ScaffoldEagleFeature)
         tree(ScaffoldDownFeature)
         tree(ScaffoldSlowFeature)
@@ -260,10 +214,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }
             }
             finalYaw = movingYaw + if (isOnRightSide) 45 else -45
-            AutoJump.isGoingDiagonal = false
+            ScaffoldAutoJumpFeature.isGoingDiagonal = false
             return Rotation(finalYaw, 75f)
         } else {
-            AutoJump.isGoingDiagonal = true
+            ScaffoldAutoJumpFeature.isGoingDiagonal = true
             return Rotation(movingYaw, 75.6f)
         }
     }
@@ -412,15 +366,15 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
             || !isValidCrosshairTarget(currentCrosshairTarget)
         ) {
-            AutoJump.jumpIfNeeded(currentDelay)
+            ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
 
             return@repeatable
         }
 
-        if (AutoJump.shouldJump(currentDelay) &&
+        if (ScaffoldAutoJumpFeature.shouldJump(currentDelay) &&
             currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y
         ) {
-            AutoJump.jumpIfNeeded(currentDelay)
+            ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
         }
 
         var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
@@ -452,7 +406,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         ModuleNoFall.MLG.doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleFeature.onBlockPlacement()
-            AutoJump.onBlockPlacement()
+            ScaffoldAutoJumpFeature.onBlockPlacement()
 
             if (player.isOnGround) {
                 player.velocity.x *= speedModifier
