@@ -125,12 +125,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNameProtect,
             ModuleNotifier,
             ModuleSpammer,
+            ModuleAutoAccount,
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
             ModuleCapeTransfer,
             ModuleHideClient,
             ModuleFocus,
+            ModuleClientFixes,
 
             // Movement
             ModuleAirJump,
@@ -159,6 +161,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSpeed,
             ModuleSprint,
             ModuleStep,
+            ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleFly,
@@ -200,6 +203,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleMurderMystery,
             ModuleAttackEffects,
             ModuleNametags,
+            ModuleCombineMobs,
 
             // ModuleNametags,
             ModuleNoBob,

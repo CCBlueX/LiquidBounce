@@ -80,7 +80,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         }
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
-            wait { 100 }
+            waitTicks(100)
             player.velocity.y = 0.0
             shouldGlide = true
         }

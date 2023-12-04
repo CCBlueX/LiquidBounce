@@ -42,20 +42,20 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
     /**
      * Update should be called to always pick the best target out of the current world context
      */
-    fun enemies(enemyConf: EnemyConfigurable = globalEnemyConfigurable): Iterable<Entity> {
+    fun enemies(enemyConf: EnemyConfigurable = globalEnemyConfigurable): Iterable<LivingEntity> {
         val player = mc.player ?: return emptyList()
         val world = mc.world ?: return emptyList()
 
-        var entities = world.entities.filter {
-            it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it)
+        var entities = world.entities.filterIsInstance<LivingEntity>().filter {
+            !it.isRemoved && it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it)
         }
 
         entities = when (priority) {
-            PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f }
+            PriorityEnum.HEALTH -> entities.sortedBy { it.health }
             PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(it) }
             PriorityEnum.AGE -> entities.sortedBy { -it.age }
             PriorityEnum.DISTANCE -> entities.sortedBy { it.squaredBoxedDistanceTo(player) }
-            PriorityEnum.HURT_TIME -> entities.sortedBy { if (it is LivingEntity) it.hurtTime else 0 }
+            PriorityEnum.HURT_TIME -> entities.sortedBy { it.hurtTime }
         }
 
         entities.minByOrNull { it.squaredBoxedDistanceTo(player) }
@@ -81,5 +81,9 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
 }
 
 enum class PriorityEnum(override val choiceName: String) : NamedChoice {
-    HEALTH("Health"), DISTANCE("Distance"), DIRECTION("Direction"), HURT_TIME("HurtTime"), AGE("Age")
+    HEALTH("Health"),
+    DISTANCE("Distance"),
+    DIRECTION("Direction"),
+    HURT_TIME("HurtTime"),
+    AGE("Age")
 }

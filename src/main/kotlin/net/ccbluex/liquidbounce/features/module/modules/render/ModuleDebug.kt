@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.minecraft.text.Text
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import java.awt.Color
@@ -62,7 +64,8 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
                     SimulatedPlayer.SimulatedPlayerInput(
                         event.directionalInput,
                         player.input.jumping,
-                        player.isSprinting
+                        player.isSprinting,
+                        player.isSneaking
                     )
 
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
@@ -86,7 +89,6 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
     private val debuggedGeometry = hashMapOf<DebuggedGeometryOwner, DebuggedGeometry>()
 
-
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
@@ -97,11 +99,50 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
 
+    val screenRenderHandler = handler<OverlayRenderEvent> { event ->
+        val context = event.context
+
+        val width = mc.window.scaledWidth
+
+        // Draw debug box of the screen with a width of 200
+        context.fill(width / 2 - 100, 20, width / 2 + 100,
+            40 + (mc.textRenderer.fontHeight * debugParameters.size), Color4b(0, 0, 0, 128).toRGBA())
+
+        context.drawCenteredTextWithShadow(mc.textRenderer, Text.of("Debugging").asOrderedText(),
+            width / 2, 22, Color4b.WHITE.toRGBA())
+
+        // Draw white line below Debugging text
+        context.fill(width / 2 - 100, 32, width / 2 + 100, 33, Color4b.WHITE.toRGBA())
+
+        debugParameters.onEachIndexed { index, (owner, parameter) ->
+            context.drawTextWithShadow(mc.textRenderer,
+                Text.of("${owner.owner.name}->${owner.name}: $parameter").asOrderedText(),
+                width / 2 - 94, 37 + (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA())
+        }
+    }
+
     fun debugGeometry(owner: Any, name: String, geometry: DebuggedGeometry) {
+        // Do not take any new debugging while the module is off
+        if (!enabled) {
+            return
+        }
+
         debuggedGeometry[DebuggedGeometryOwner(owner, name)] = geometry
     }
 
     data class DebuggedGeometryOwner(val owner: Any, val name: String)
+
+    data class DebuggedParameter(val owner: Module, val name: String)
+
+    private var debugParameters = hashMapOf<DebuggedParameter, Any>()
+
+    fun debugParameter(owner: Module, name: String, value: Any) {
+        if (!enabled) {
+            return
+        }
+
+        debugParameters[DebuggedParameter(owner, name)] = value
+    }
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
@@ -156,4 +197,12 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
             this.geometry.forEach { it.render(env) }
         }
     }
+
+    override fun disable() {
+        // Might clean up some memory if we disable the module
+        debuggedGeometry.clear()
+        debugParameters.clear()
+        super.disable()
+    }
+
 }

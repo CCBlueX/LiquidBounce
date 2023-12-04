@@ -19,10 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.events.AttackEvent
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -31,15 +28,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
-import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.util.Hand
 import kotlin.math.cos
 
 /**
@@ -67,8 +62,8 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         targetTracker.cleanup()
     }
 
-    val tickHandler = handler<PlayerNetworkMovementTickEvent> {
-        if (it.state != EventState.PRE || player.isSpectator) {
+    val tickHandler = handler<SimulatedTickEvent> {
+        if (player.isSpectator) {
             return@handler
         }
 
@@ -77,23 +72,20 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     val repeatable = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
-        val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        val clicks = cpsTimer.clicks(condition = {
-            target.boxedDistanceTo(player) <= range && facingEnemy(
-                target, rotation, range.toDouble(), 0.0
+        val condition = target.boxedDistanceTo(player) <= range &&
+            facingEnemy(
+                toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
+                wallsRange = 0.0
             )
-        }, cps)
+        val clicks = cpsTimer.clicks(condition = { condition }, cps)
 
         repeat(clicks) {
-            attackEntity(target)
+            target.attack(swing)
         }
     }
 
     private fun updateTarget() {
-        val player = mc.player ?: return
-        val world = mc.world ?: return
-
         val rangeSquared = range * range
 
         targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
@@ -121,7 +113,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             targetTracker.lock(entity)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
             break
         }
     }
@@ -138,22 +130,4 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         return dot > -cos(Math.toRadians(30.0))
     }
 
-    private fun attackEntity(entity: Entity) {
-        EventManager.callEvent(AttackEvent(entity))
-
-        // Swing before attacking (on 1.8)
-        if (swing && isOldCombat) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
-
-        // Swing after attacking (on 1.9+)
-        if (swing && !isOldCombat) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        // Reset cool down
-        player.resetLastAttackedTicks()
-    }
 }

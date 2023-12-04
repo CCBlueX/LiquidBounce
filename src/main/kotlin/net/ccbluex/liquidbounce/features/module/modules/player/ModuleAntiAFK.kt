@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.angle
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotationsConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -59,7 +61,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         val repeatable = repeatable {
             mc.options.forwardKey.enforced = true
-            wait { 10 }
+            waitTicks(10)
             player.yaw += 180f
         }
     }
@@ -72,12 +74,9 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val repeatable = repeatable {
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
-                    EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
-                        // Make sure player is on ground
-                        if (player.isOnGround) {
-                            player.jump()
-                        }
-                    })
+                    EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                        it.jumping = true
+                    }
                 }
 
                 1 -> {
@@ -89,7 +88,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 2 -> {
                     val key = randomKeyBind()
                     key.enforced = true
-                    wait { RandomUtils.nextInt(3, 7) }
+                    waitTicks((3..7).random())
                     key.enforced = false
                 }
 
@@ -105,7 +104,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                     player.pitch = (RandomUtils.nextFloat(0f, 10f) - 5f + player.pitch).coerceIn(-90f, 90f)
                 }
             }
-            wait { RandomUtils.nextInt(4, 7) }
+            waitTicks((4..7).random())
         }
     }
 
@@ -143,7 +142,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         val swingRepeatable = repeatable {
             if (Swing.enabled && !player.handSwinging) {
-                wait { Swing.delay }
+                waitTicks(Swing.delay)
                 player.swingHand(Hand.MAIN_HAND)
             }
         }
@@ -154,21 +153,18 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
 
             if (jump && player.isOnGround) {
-                EventScheduler.schedule(ModuleAntiAFK, TickJumpEvent::class.java, 0, action = {
-                    // Make sure player is on ground
-                    if (player.isOnGround) {
-                        player.jump()
-                    }
-                })
+                EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                    it.jumping = true
+                }
             }
 
             if (Rotate.enabled) {
-                wait { Rotate.delay }
-                val serverRotation = RotationManager.serverRotation
+                waitTicks(Rotate.delay)
+                val currentRotation = RotationManager.serverRotation
                 val pitchRandomization = Random.nextDouble(-5.0, 5.0).toFloat()
                 RotationManager.aimAt(
                     Rotation(
-                        serverRotation.yaw + angle, (serverRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
+                        currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
                     ), ignoreOpenInventory, rotationsConfigurable
                 )
             }

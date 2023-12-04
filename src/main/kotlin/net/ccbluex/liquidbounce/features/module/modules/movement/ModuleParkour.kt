@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
  * Parkour module
@@ -42,7 +43,7 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
             !player.isSneaking &&
             !mc.options.sneakKey.isPressed &&
             !mc.options.jumpKey.isPressed &&
-            player.isCloseToEdge(edgeDistance.toDouble())
+            player.isCloseToEdge(DirectionalInput(player.input), edgeDistance.toDouble())
 
         if (shouldJump) {
             player.jump()

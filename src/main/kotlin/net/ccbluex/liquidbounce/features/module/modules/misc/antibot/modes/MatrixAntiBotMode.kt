@@ -65,7 +65,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
 
             if (!isFullyArmored(entity)) {
                 armor = entity.armorItems
-                wait(1)
+                waitTicks(1)
             }
 
             if ((isFullyArmored(entity) || updatesArmor(entity, armor)) && entity.gameProfile.properties.isEmpty) {

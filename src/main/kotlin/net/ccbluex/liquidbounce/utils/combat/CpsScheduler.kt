@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.combat
 
-import kotlin.math.roundToInt
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleClickRecorder
+import kotlin.math.roundToInt
 
 /**
  * A CPS scheduler
@@ -38,6 +38,17 @@ class CpsScheduler : Configurable("CpsScheduler") {
 
     private var lastClick = 0L
     private var clickTime = -1L
+
+    companion object {
+        const val MINECRAFT_TIME_MS = 50L
+    }
+
+    /**
+     * Calculates if the next click is on the next tick or not.
+     * Allows to predict future actions and behave accordingly.
+     */
+    fun isClickOnNextTick(ticks: Int = 1) = clickTime != -1L
+        && (System.currentTimeMillis() - lastClick + (MINECRAFT_TIME_MS * ticks)) >= clickTime
 
     fun clicks(condition: () -> Boolean, cps: IntRange): Int {
         var timeLeft = System.currentTimeMillis() - lastClick

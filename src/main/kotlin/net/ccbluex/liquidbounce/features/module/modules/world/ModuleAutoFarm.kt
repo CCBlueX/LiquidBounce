@@ -66,8 +66,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-        val curr = currentTarget ?: return@repeatable
-        val currentRotation = RotationManager.currentRotation ?: return@repeatable
+        val currentRotation = RotationManager.serverRotation
 
         val rayTraceResult = mc.world?.raycast(
             RaycastContext(

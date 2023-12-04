@@ -124,7 +124,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         val repeatable = repeatable {
             if (player.fallDistance > 2f) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
-                wait { 1 }
+                waitTicks(1)
             }
         }
 
@@ -177,7 +177,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
         val tickHandler = handler<GameTickEvent> {
             val target = currentTarget ?: return@handler
-            val rotation = RotationManager.currentRotation ?: return@handler
+            val rotation = RotationManager.serverRotation
 
             val rayTraceResult = raycast(4.5, rotation) ?: return@handler
 

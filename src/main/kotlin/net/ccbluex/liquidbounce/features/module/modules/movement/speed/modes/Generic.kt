@@ -67,7 +67,7 @@ object SpeedYPort : Choice("YPort") {
         if (player.isOnGround && player.moving) {
             player.strafe(speed = 0.4)
             player.upwards(0.42f)
-            wait(1)
+            waitTicks(1)
             player.downwards(-1f)
         }
     }
