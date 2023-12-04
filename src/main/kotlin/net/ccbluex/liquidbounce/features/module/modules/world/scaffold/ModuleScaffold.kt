@@ -44,7 +44,10 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.enforced
+import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
@@ -131,7 +134,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldSlowFeature)
         tree(ScaffoldEagleFeature)
         tree(ScaffoldDownFeature)
-        tree(ScaffoldSlowFeature)
+        tree(ScaffoldAutoJumpFeature)
         tree(ScaffoldSafeWalkFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
