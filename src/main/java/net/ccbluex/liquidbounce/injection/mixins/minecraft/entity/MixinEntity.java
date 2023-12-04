@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerAdjustMovementCollisionsEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -108,7 +108,7 @@ public abstract class MixinEntity {
             at = @At(value = "RETURN", ordinal = 0), cancellable = true)
     private void hookStepHeight(Vec3d movement, CallbackInfoReturnable<Vec3d> cir) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            PlayerAdjustMovementCollisionsEvent movementCollisionsEvent = new PlayerAdjustMovementCollisionsEvent(movement, cir.getReturnValue());
+            PlayerStepSuccessEvent movementCollisionsEvent = new PlayerStepSuccessEvent(movement, cir.getReturnValue());
             EventManager.INSTANCE.callEvent(movementCollisionsEvent);
             cir.setReturnValue(movementCollisionsEvent.getAdjustedVec());
         }
