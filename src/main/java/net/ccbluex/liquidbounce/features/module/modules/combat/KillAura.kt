@@ -688,29 +688,23 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         if (predict) {
             boundingBox = boundingBox.offset(
-                (entity.posX - entity.prevPosX - (mc.thePlayer.posX - mc.thePlayer.prevPosX)) * nextFloat(
-                    minPredictSize, maxPredictSize
-                ), (entity.posY - entity.prevPosY - (mc.thePlayer.posY - mc.thePlayer.prevPosY)) * nextFloat(
-                    minPredictSize, maxPredictSize
-                ), (entity.posZ - entity.prevPosZ - (mc.thePlayer.posZ - mc.thePlayer.prevPosZ)) * nextFloat(
-                    minPredictSize, maxPredictSize
-                )
+                (entity.posX - entity.prevPosX - (mc.thePlayer.posX - mc.thePlayer.prevPosX))
+                    * nextFloat(minPredictSize, maxPredictSize),
+                (entity.posY - entity.prevPosY - (mc.thePlayer.posY - mc.thePlayer.prevPosY))
+                    * nextFloat(minPredictSize, maxPredictSize),
+                (entity.posZ - entity.prevPosZ - (mc.thePlayer.posZ - mc.thePlayer.prevPosZ))
+                    * nextFloat(minPredictSize, maxPredictSize)
             )
         }
 
-        val reachAccordingToDistance = if (mc.thePlayer.getDistanceToBox(boundingBox) > range) {
-            maxRange
-        } else {
-            range
-        }
-
-        val (_, rotation) = searchCenter(
+        val rotation = searchCenter(
             boundingBox,
             outborder && !attackTimer.hasTimePassed(attackDelay / 2),
             randomCenter,
             predict,
-            mc.thePlayer.getDistanceToBox(boundingBox) <= throughWallsRange,
-            reachAccordingToDistance
+            lookRange = range + scanRange,
+            attackRange = range,
+            throughWallsRange = throughWallsRange
         ) ?: return false
 
         // Get our current rotation. Otherwise, player rotation.
