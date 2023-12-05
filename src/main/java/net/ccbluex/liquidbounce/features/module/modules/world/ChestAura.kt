@@ -208,9 +208,9 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
             vec = eyes + getVectorForRotation(limitedRotation) * range.toDouble()
         }
 
-        performRayTrace(entity.pos, vec)?.let {
+        performRayTrace(entity.pos, vec)?.run {
             TickScheduler += {
-                if (thePlayer.onPlayerRightClick(it.blockPos, it.sideHit, it.hitVec)) {
+                if (thePlayer.onPlayerRightClick(blockPos, sideHit, hitVec)) {
                     if (visualSwing) thePlayer.swingItem()
                     else sendPacket(C0APacketAnimation())
 

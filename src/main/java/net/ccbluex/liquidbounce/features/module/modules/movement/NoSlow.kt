@@ -65,83 +65,55 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
 
         if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && (isUsingItem || shouldSwap)) {
             when (consumePacket.lowercase()) {
-                "aac5" -> {
+                "aac5" ->
                     sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f))
-                }
-                "switchitem" -> {
-                    when (event.eventState) {
-                        EventState.PRE -> {
-                            serverSlot = (serverSlot + 1) % 9
-                            serverSlot = currentItem
-                        }                          
 
-
-                        else -> {}
+                "switchitem" ->
+                    if (event.eventState == EventState.PRE) {
+                        serverSlot = (serverSlot + 1) % 9
+                        serverSlot = currentItem
                     }
-                }
-                "updatedncp" -> {
-                        when (event.eventState) {
-                            EventState.PRE -> {
-                                if (shouldSwap) {
-                                    serverSlot = (serverSlot + 1) % 9
-                                    serverSlot = currentItem
-                                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
-                                    shouldSwap = false
-                                }
-                            }
 
-                            else -> {}
-                        }
-                }
-                else -> {
-                    return
-                }
+                "updatedncp" ->
+                    if (event.eventState == EventState.PRE && shouldSwap) {
+                        serverSlot = (serverSlot + 1) % 9
+                        serverSlot = currentItem
+                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                        shouldSwap = false
+                    }
+                
+                else -> return
             }
         }
 
         if (heldItem.item is ItemBow && (isUsingItem || shouldSwap)) {
             when (bowPacket.lowercase()) {
-                "aac5" -> {
+                "aac5" ->
                     sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f))
-                }
-                "switchitem" -> {
-                    when (event.eventState) {
-                        EventState.PRE -> {
-                            serverSlot = (serverSlot + 1) % 9
-                            serverSlot = currentItem
-                        }
-
-
-                        else -> {}
+                
+                "switchitem" ->
+                    if (event.eventState == EventState.PRE) {
+                        serverSlot = (serverSlot + 1) % 9
+                        serverSlot = currentItem
                     }
-                }
-                "updatedncp" -> {
-                        when (event.eventState) {
-                            EventState.PRE -> {
-                                if (shouldSwap) {
-                                    serverSlot = (serverSlot + 1) % 9
-                                    serverSlot = currentItem
-                                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
-                                    shouldSwap = false
-                                }
-                            }
+                
+                "updatedncp" ->
+                    if (event.eventState == EventState.PRE && shouldSwap) {
+                        serverSlot = (serverSlot + 1) % 9
+                        serverSlot = currentItem
+                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                        shouldSwap = false
+                    }
 
-                            else -> {}
-                        }
-                }
-                else -> {
-                    return
-                }
+                else -> return
             }
         }
 
         if (heldItem.item is ItemSword && isUsingItem) {
             when (swordMode.lowercase()) {
-                "none" -> {
-                    return
-                }
+                "none" -> return
 
-                "ncp" -> {
+                "ncp" ->
                     when (event.eventState) {
                         EventState.PRE -> sendPacket(
                             C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN)
@@ -153,25 +125,19 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                             )
                         )
 
-                        else -> {}
+                        else -> return
                     }
-                }
 
-                "updatedncp" -> {
-                    when (event.eventState) {
-                        EventState.POST -> {
-                            sendPacket(
-                                C08PacketPlayerBlockPlacement(
-                                    BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f
-                                )
+                "updatedncp" ->
+                    if (event.eventState == EventState.POST) {
+                        sendPacket(
+                            C08PacketPlayerBlockPlacement(
+                                BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f
                             )
-                        }
-
-                        else -> {}
+                        )
                     }
-                }
 
-                "aac5" -> {
+                "aac5" ->
                     if (event.eventState == EventState.POST) {
                         sendPacket(
                             C08PacketPlayerBlockPlacement(
@@ -179,19 +145,12 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT, gameDetecting = false)
                             )
                         )
                     }
-                }
 
-                "switchitem" -> {
-                    when (event.eventState) {
-                        EventState.PRE -> {
-                            serverSlot = (serverSlot + 1) % 9
-                            serverSlot = currentItem
-                        }                          
-
-
-                        else -> {}
+                "switchitem" ->
+                    if (event.eventState == EventState.PRE) {
+                        serverSlot = (serverSlot + 1) % 9
+                        serverSlot = currentItem
                     }
-                }
             }
         }
     }
