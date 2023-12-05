@@ -212,7 +212,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
             for (credit in credits) {
                 try {
-                    requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET").let { (stream, code) ->
+                    requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET").let { (stream) ->
                         stream.use {
                             credit.avatar = CustomTexture(ImageIO.read(it))
                         }
@@ -240,8 +240,8 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         init {
             val mixin = this as IMixinGuiSlot
 
-            mixin.setListWidth(gui.width * 3 / 13)
-            mixin.setEnableScissor(true)
+            mixin.listWidth = gui.width * 3 / 13
+            mixin.enableScissor = true
         }
 
         var selectedSlot = 0
