@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.item.Item
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
-class GiveCommand : Command("give", "item", "i", "get") {
+object GiveCommand : Command("give", "item", "i", "get") {
     /**
      * Execute commands with provided [args]
      */

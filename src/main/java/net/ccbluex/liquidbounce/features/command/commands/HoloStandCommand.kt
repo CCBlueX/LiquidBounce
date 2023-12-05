@@ -15,7 +15,7 @@ import net.minecraft.nbt.NBTTagDouble
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
-class HoloStandCommand : Command("holostand") {
+object HoloStandCommand : Command("holostand") {
     /**
      * Execute commands with provided [args]
      */

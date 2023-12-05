@@ -21,7 +21,7 @@ import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import kotlin.concurrent.thread
 
-class AutoSettingsCommand : Command("autosettings", "setting", "settings", "config", "autosetting") {
+object AutoSettingsCommand : Command("autosettings", "setting", "settings", "config", "autosetting") {
 
     /**
      * Execute commands with provided [args]

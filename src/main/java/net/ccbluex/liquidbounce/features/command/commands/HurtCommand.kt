@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
-class HurtCommand : Command("hurt") {
+object HurtCommand : Command("hurt") {
     /**
      * Execute commands with provided [args]
      */

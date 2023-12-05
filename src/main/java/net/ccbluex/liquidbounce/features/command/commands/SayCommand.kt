@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
-class SayCommand : Command("say") {
+object SayCommand : Command("say") {
     /**
      * Execute commands with provided [args]
      */

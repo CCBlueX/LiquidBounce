@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.ResourceLocation
 
-class TacoCommand : Command("taco"), Listenable {
+object TacoCommand : Command("taco"), Listenable {
     private var toggle = false
     private var image = 0
     private var running = 0f
