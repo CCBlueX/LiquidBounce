@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
-class UsernameCommand : Command("username", "ign") {
+object UsernameCommand : Command("username", "ign") {
     /**
      * Execute commands with provided [args]
      */

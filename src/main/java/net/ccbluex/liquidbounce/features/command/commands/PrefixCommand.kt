@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 
-class PrefixCommand : Command("prefix") {
+object PrefixCommand : Command("prefix") {
     /**
      * Execute commands with provided [args]
      */

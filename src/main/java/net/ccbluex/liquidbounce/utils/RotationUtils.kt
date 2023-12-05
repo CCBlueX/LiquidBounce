@@ -128,9 +128,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val world = mc.theWorld ?: return null
         val player = mc.thePlayer ?: return null
 
-        if (blockPos == null) {
+        if (blockPos == null)
             return null
-        }
 
         val eyesPos = player.eyes
         val startPos = Vec3(blockPos)
@@ -143,12 +142,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
                 for (z in 0.0..1.0) {
                     val block = blockPos.getBlock() ?: return null
 
-                    val posVec = startPos.add(
-                        Vec3(
-                            block.blockBoundsMinX + (block.blockBoundsMaxX - block.blockBoundsMinX) * x,
-                            block.blockBoundsMinY + (block.blockBoundsMaxY - block.blockBoundsMinY) * x,
-                            block.blockBoundsMinZ + (block.blockBoundsMaxZ - block.blockBoundsMinZ) * x,
-                        )
+                    val posVec = startPos.addVector(
+                        block.blockBoundsMinX + (block.blockBoundsMaxX - block.blockBoundsMinX) * x,
+                        block.blockBoundsMinY + (block.blockBoundsMaxY - block.blockBoundsMinY) * x,
+                        block.blockBoundsMinZ + (block.blockBoundsMaxZ - block.blockBoundsMinZ) * x
                     )
 
                     val dist = eyesPos.distanceTo(posVec)
@@ -268,45 +265,57 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Search good center
      *
-     * @param bb           enemy box
-     * @param outborder    outborder option
-     * @param random       random option
-     * @param predict      predict option
-     * @param throughWalls throughWalls option
+     * @param bb                entity box to search rotation for
+     * @param outborder         outborder option
+     * @param random            random option
+     * @param predict           predict, offsets rotation by player's motion
+     * @param lookRange         look range
+     * @param attackRange       attack range, rotations in attack range will be prioritized
+     * @param throughWallsRange through walls range,
      * @return center
      */
     fun searchCenter(
-        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, predict: Boolean, throughWalls: Boolean, distance: Float
-    ): VecRotation? {
+        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, predict: Boolean,
+        lookRange: Float, attackRange: Float, throughWallsRange: Float = 0f
+    ): Rotation? {
+        val lookRange = lookRange.coerceAtLeast(attackRange)
+
         if (outborder) {
             val vec3 = Vec3(
                 bb.minX + (bb.maxX - bb.minX) * (x * 0.3 + 1.0),
                 bb.minY + (bb.maxY - bb.minY) * (y * 0.3 + 1.0),
                 bb.minZ + (bb.maxZ - bb.minZ) * (z * 0.3 + 1.0)
             )
-            return VecRotation(vec3, toRotation(vec3, predict).fixedSensitivity())
+
+            return toRotation(vec3, predict).fixedSensitivity()
         }
 
         val randomVec = Vec3(
-            bb.minX + (bb.maxX - bb.minX) * x, bb.minY + (bb.maxY - bb.minY) * y, bb.minZ + (bb.maxZ - bb.minZ) * z
+            bb.minX + (bb.maxX - bb.minX) * x,
+            bb.minY + (bb.maxY - bb.minY) * y,
+            bb.minZ + (bb.maxZ - bb.minZ) * z
         )
 
         val randomRotation = toRotation(randomVec, predict).fixedSensitivity()
 
         val eyes = mc.thePlayer.eyes
-        var vecRotation: VecRotation? = null
 
+        // TODO: Doesn't have GCD treatment as rotations below, but it is random rotation, what do you expect?
         if (random) {
             val dist = eyes.distanceTo(randomVec)
 
-            if (dist <= distance && (throughWalls || isVisible(randomVec))) {
-                return VecRotation(randomVec, randomRotation.fixedSensitivity())
-            }
+            if (dist <= attackRange && (dist <= throughWallsRange || isVisible(randomVec)))
+                return randomRotation
         }
 
-        for (x in 0.1..0.9) {
-            for (y in 0.1..0.9) {
-                for (z in 0.1..0.9) {
+        var attackRotation: Pair<Rotation, Float>? = null
+        var lookRotation: Pair<Rotation, Float>? = null
+
+        val rotationToCompareTo = if (random) randomRotation else currentRotation ?: serverRotation
+
+        for (x in 0.0..1.0) {
+            for (y in 0.0..1.0) {
+                for (z in 0.0..1.0) {
                     val vec = Vec3(
                         bb.minX + (bb.maxX - bb.minX) * x,
                         bb.minY + (bb.maxY - bb.minY) * y,
@@ -314,33 +323,44 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     )
 
                     val rotation = toRotation(vec, predict).fixedSensitivity()
-                    val vecDist = eyes.distanceTo(vec)
 
-                    if (vecDist <= distance) {
-                        if (throughWalls || isVisible(vec)) {
-                            val currentVec = VecRotation(vec, rotation)
-                            val rotationToCompare = if (random) randomRotation else currentRotation ?: serverRotation
+                    // Calculate actual hit vec after applying fixed sensitivity to rotation
+                    val gcdVec =
+                        bb.calculateIntercept(eyes, eyes + getVectorForRotation(rotation) * lookRange.toDouble())?.hitVec
+                            ?: continue
 
-                            if (vecRotation == null || getRotationDifference(
-                                    rotation, rotationToCompare
-                                ) < getRotationDifference(vecRotation.rotation, rotationToCompare)
-                            ) vecRotation = currentVec
-                        }
+                    val distance = eyes.distanceTo(gcdVec)
+
+                    // Check if vec is in range
+                    // Skip if a rotation that is in attack range was already found and the vec is out of attack range
+                    if (distance > lookRange || (attackRotation != null && distance > attackRange))
+                        continue
+
+                    // Check if vec is reachable through walls
+                    if (!isVisible(gcdVec) && distance > throughWallsRange)
+                        continue
+
+                    val rotationWithDiff = rotation to getRotationDifference(rotation, rotationToCompareTo)
+
+                    if (distance <= attackRange) {
+                        if (attackRotation == null || rotationWithDiff.second < attackRotation.second)
+                            attackRotation = rotationWithDiff
+                    } else {
+                        if (lookRotation == null || rotationWithDiff.second < lookRotation.second)
+                            lookRotation = rotationWithDiff
                     }
                 }
             }
         }
 
-        if (vecRotation == null) {
+        return attackRotation?.first ?: lookRotation?.first ?: run {
             val vec = getNearestPointBB(eyes, bb)
             val dist = eyes.distanceTo(vec)
 
-            if (dist <= distance && (throughWalls || isVisible(vec))) {
-                return VecRotation(vec, toRotation(vec, predict).fixedSensitivity())
-            }
+            if (dist <= lookRange && (dist <= throughWallsRange || isVisible(vec)))
+                toRotation(vec, predict)
+            else null
         }
-
-        return vecRotation
     }
 
     /**
@@ -396,13 +416,19 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param rotation your rotation
      * @return target vector
      */
-    fun getVectorForRotation(rotation: Rotation): Vec3 {
-        val f = MathHelper.cos(-rotation.yaw.toRadians() - PI.toFloat())
-        val f1 = MathHelper.sin(-rotation.yaw.toRadians() - PI.toFloat())
-        val f2 = -MathHelper.cos(-rotation.pitch.toRadians())
-        val f3 = MathHelper.sin(-rotation.pitch.toRadians())
+    fun getVectorForRotation(yaw: Float, pitch: Float): Vec3 {
+        val yawRad = yaw.toRadians()
+        val pitchRad = pitch.toRadians()
+
+        val f = MathHelper.cos(-yawRad - PI.toFloat())
+        val f1 = MathHelper.sin(-yawRad - PI.toFloat())
+        val f2 = -MathHelper.cos(-pitchRad)
+        val f3 = MathHelper.sin(-pitchRad)
+
         return Vec3((f1 * f2).toDouble(), f3.toDouble(), (f * f2).toDouble())
     }
+
+    fun getVectorForRotation(rotation: Rotation) = getVectorForRotation(rotation.yaw, rotation.pitch)
 
     /**
      * Allows you to check if your crosshair is over your target entity
@@ -421,9 +447,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) = raycastEntity(
-        blockReachDistance, rotation.yaw, rotation.pitch
-    ) { entity: Entity -> targetEntity == entity } != null
+    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) =
+        raycastEntity(blockReachDistance, rotation.yaw, rotation.pitch)
+            { entity: Entity -> targetEntity == entity } != null
 
     /**
      * Allows you to check if your enemy is behind a wall

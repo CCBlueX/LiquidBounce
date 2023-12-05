@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
-class ChatTokenCommand : Command("chattoken") {
+object ChatTokenCommand : Command("chattoken") {
 
     /**
      * Execute commands with provided [args]

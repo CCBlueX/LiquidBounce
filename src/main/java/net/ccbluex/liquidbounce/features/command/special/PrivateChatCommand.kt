@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
-class PrivateChatCommand : Command("pchat", "privatechat", "lcpm") {
+object PrivateChatCommand : Command("pchat", "privatechat", "lcpm") {
 
     /**
      * Execute commands with provided [args]

@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 
-class ToggleCommand : Command("toggle", "t") {
+object ToggleCommand : Command("toggle", "t") {
     /**
      * Execute commands with provided [args]
      */

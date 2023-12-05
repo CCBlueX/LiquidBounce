@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
-class HelpCommand : Command("help") {
+object HelpCommand : Command("help") {
     /**
      * Execute commands with provided [args]
      */

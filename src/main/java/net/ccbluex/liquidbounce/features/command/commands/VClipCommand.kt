@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
 
-class VClipCommand : Command("vclip") {
+object VClipCommand : Command("vclip") {
     /**
      * Execute commands with provided [args]
      */

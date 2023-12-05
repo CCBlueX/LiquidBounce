@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.features.command.special
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
 
-class ChatAdminCommand : Command("chatadmin") {
+object ChatAdminCommand : Command("chatadmin") {
 
     /**
      * Execute commands with provided [args]

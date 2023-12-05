@@ -13,7 +13,6 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S0CPacketSpawnPlayer
 import net.minecraft.network.play.server.S0FPacketSpawnMob
 import net.minecraft.network.play.server.S0EPacketSpawnObject
@@ -22,80 +21,73 @@ import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S18PacketEntityTeleport
 import kotlin.math.roundToInt
 
-
+// TODO: Remove annotations once all modules are converted to kotlin.
 object PacketUtils : MinecraftInstance(), Listenable {
-    // TODO: Remove annotations once all modules are converted to kotlin.
 
     val queuedPackets = mutableListOf<Packet<*>>()
 
-    @EventTarget(priority = 1000)
+    @EventTarget(priority = 2)
     fun onTick(event: TickEvent) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity is EntityLivingBase) {
-                val entityMixin = entity as? IMixinEntity
-                if (entityMixin?.truePos == false) {
-                    entityMixin.trueX = entity.posX
-                    entityMixin.trueY = entity.posY
-                    entityMixin.trueZ = entity.posZ
-                    entityMixin.truePos = true
+                (entity as? IMixinEntity)?.apply {
+                    if (!truePos) {
+                        trueX = entity.posX
+                        trueY = entity.posY
+                        trueZ = entity.posZ
+                        truePos = true
+                    }
                 }
             }
         }
     }
-    @EventTarget(priority = 1000)
+    @EventTarget(priority = 2)
     fun onPacket(event: PacketEvent) {
-
         val packet = event.packet
-
         val world = mc.theWorld ?: return
 
         when (packet) {
-            is S0CPacketSpawnPlayer -> {
-                val entity = world.getEntityByID(packet.entityID) as? IMixinEntity
-                entity?.apply {
+            is S0CPacketSpawnPlayer ->
+                (world.getEntityByID(packet.entityID) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
                     truePos = true
                 }
-            }
 
-            is S0FPacketSpawnMob -> {
-                val entity = world.getEntityByID(packet.entityID) as? IMixinEntity
-                entity?.apply {
+            is S0FPacketSpawnMob ->
+                (world.getEntityByID(packet.entityID) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
                     truePos = true
                 }
-            }
 
             is S14PacketEntity -> {
-                val realEntity = packet.getEntity(world)
-                val entity = realEntity as? IMixinEntity
-                entity?.let {
-                    if (!it.truePos)
-                    {
-                        it.trueX = realEntity.posX
-                        it.trueY = realEntity.posY
-                        it.trueZ = realEntity.posZ
-                        it.truePos = true
+                val entity = packet.getEntity(world)
+                val mixinEntity = entity as? IMixinEntity
+
+                mixinEntity?.apply {
+                    if (!truePos) {
+                        trueX = entity.posX
+                        trueY = entity.posY
+                        trueZ = entity.posZ
+                        truePos = true
                     }
-                    it.trueX = (it.trueX + packet.realMotionX)
-                    it.trueY = (it.trueY + packet.realMotionY)
-                    it.trueZ = (it.trueZ + packet.realMotionZ)
+
+                    trueX += packet.realMotionX
+                    trueY += packet.realMotionY
+                    trueZ += packet.realMotionZ
                 }
             }
 
-            is S18PacketEntityTeleport -> {
-                val entity = world.getEntityByID(packet.entityId) as? IMixinEntity
-                entity?.apply {
+            is S18PacketEntityTeleport ->
+                (world.getEntityByID(packet.entityId) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
                     truePos = true
                 }
-            }
         }
     }
     @EventTarget(priority = -5)
@@ -103,15 +95,16 @@ object PacketUtils : MinecraftInstance(), Listenable {
         synchronized(queuedPackets) {
             queuedPackets.forEach {
                 handlePacket(it)
-                val packetEv = PacketEvent(it, EventState.RECEIVE)
-                FakeLag.onPacket(packetEv)
-                Velocity.onPacket(packetEv)
+                val packetEvent = PacketEvent(it, EventState.RECEIVE)
+                FakeLag.onPacket(packetEvent)
+                Velocity.onPacket(packetEvent)
             }
 
             queuedPackets.clear()
         }
     }
     override fun handleEvents() = true
+
     @JvmStatic
     @JvmOverloads
     fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
