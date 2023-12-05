@@ -26,7 +26,7 @@ object RaycastUtils : MinecraftInstance() {
     ): Entity? {
         val renderViewEntity = mc.renderViewEntity
 
-        if (renderViewEntity == null && mc.theWorld == null)
+        if (renderViewEntity == null || mc.theWorld == null)
             return null
 
         var blockReachDistance = range

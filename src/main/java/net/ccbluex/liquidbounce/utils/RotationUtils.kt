@@ -128,9 +128,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val world = mc.theWorld ?: return null
         val player = mc.thePlayer ?: return null
 
-        if (blockPos == null) {
+        if (blockPos == null)
             return null
-        }
 
         val eyesPos = player.eyes
         val startPos = Vec3(blockPos)
