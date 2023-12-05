@@ -34,7 +34,7 @@ object ScaffoldAutoJumpFeature : ToggleableConfigurable(ModuleScaffold, "AutoJum
     fun shouldJump(ticksUntilNextBlock: Int): Boolean {
         if (!enabled)
             return false
-        if (player.isOnGround)
+        if (!player.isOnGround)
             return false
         if (player.isSneaking)
             return false
