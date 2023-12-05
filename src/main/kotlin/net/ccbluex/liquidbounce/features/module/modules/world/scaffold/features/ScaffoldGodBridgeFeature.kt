@@ -30,19 +30,19 @@ object ScaffoldGodBridgeFeature {
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45
-        val isMovingDiagonally = movingYaw % 90 == 0f
+        val isMovingStraight = movingYaw % 90 == 0f
 
-        ScaffoldAutoJumpFeature.isGoingDiagonal = isMovingDiagonally
+        ScaffoldAutoJumpFeature.isGoingDiagonal = !isMovingStraight
 
-        return if (isMovingDiagonally) {
-            getRotationForDiagonalInput(movingYaw)
-        } else {
+        return if (isMovingStraight) {
             getRotationForStraightInput(movingYaw)
+        } else {
+            getRotationForDiagonalInput(movingYaw)
         }
 
     }
 
-    private fun getRotationForDiagonalInput(movingYaw: Float): Rotation {
+    private fun getRotationForStraightInput(movingYaw: Float): Rotation {
         if (player.isOnGround) {
             isOnRightSide = floor(player.x + cos(movingYaw.toRadians()) * 0.5) != floor(player.x) ||
                 floor(player.z + sin(movingYaw.toRadians()) * 0.5) != floor(player.z)
@@ -64,7 +64,7 @@ object ScaffoldGodBridgeFeature {
         return Rotation(finalYaw, 75f)
     }
 
-    private fun getRotationForStraightInput(movingYaw: Float): Rotation {
+    private fun getRotationForDiagonalInput(movingYaw: Float): Rotation {
         return Rotation(movingYaw, 75.6f)
     }
 
