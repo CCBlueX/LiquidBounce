@@ -19,9 +19,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.SuspendableHandler
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -83,7 +85,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
         sequence?.cancel()
 
         //start the new sequence
-        sequence = Sequence<DummyEvent>({
+        sequence = Sequence(this, {
             waitUntil { mc.networkHandler != null }
             sync()
             waitTicks(delay.random())

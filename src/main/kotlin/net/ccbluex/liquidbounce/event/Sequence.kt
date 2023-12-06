@@ -23,8 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -52,7 +50,7 @@ object SequenceManager : Listenable {
 
 }
 
-open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val event: T) {
+open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHandler<T>, protected val event: T) {
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         SequenceManager.sequences += this@Sequence
@@ -70,10 +68,12 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
     private var totalTicks: () -> Int = { 0 }
 
     internal open suspend fun coroutineRun() {
-        runCatching {
-            handler(event)
-        }.onFailure {
-            logger.error("Exception occurred during subroutine", it)
+        if (owner.handleEvents()) {
+            runCatching {
+                handler(event)
+            }.onFailure {
+                logger.error("Exception occurred during subroutine", it)
+            }
         }
     }
 
@@ -140,27 +140,20 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
 
 class DummyEvent : Event()
 
-class RepeatingSequence(handler: SuspendableHandler<DummyEvent>) : Sequence<DummyEvent>(handler, DummyEvent()) {
+class RepeatingSequence(owner: Listenable, handler: SuspendableHandler<DummyEvent>)
+    : Sequence<DummyEvent>(owner, handler, DummyEvent()) {
 
-    private var repeat = true
+    private var continueLoop = true
 
     override suspend fun coroutineRun() {
-        sync()
-
-        while (repeat) {
-            runCatching {
-                handler(event)
-            }.onFailure {
-                logger.error("Exception occurred during subroutine", it)
-            }
-
+        while (continueLoop && owner.handleEvents()) {
+            super.coroutineRun()
             sync()
         }
-
     }
 
     override fun cancel() {
-        repeat = false
+        continueLoop = false
     }
 
 }
