@@ -1,7 +1,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.StateUpdateEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.block.canStandOn
@@ -10,10 +11,18 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
 object ScaffoldDownFeature : ToggleableConfigurable(ModuleScaffold, "Down", false) {
-    val repeatable =
-        handler<StateUpdateEvent>(priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING) {
+
+    val handleMovementInput =
+        handler<MovementInputEvent>(priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING) {
             if (shouldFallOffBlock()) {
-                it.state.enforceEagle = false
+                it.sneaking = false
+            }
+        }
+
+    val handleSafeWalk =
+        handler<PlayerSafeWalkEvent>(priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING) {
+            if (shouldFallOffBlock()) {
+                it.isSafeWalk = false
             }
         }
 

@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
-import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
@@ -60,8 +59,8 @@ public class MixinKeyboardInput extends MixinInput {
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
-        Boolean enforced = KeybindExtensionsKt.getEnforced(keyBinding);
-        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? (enforced != null ? enforced : KeybindExtensionsKt.getPressedOnKeyboard(keyBinding)) : (enforced != null ? enforced : keyBinding.isPressed());
+        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding)
+                ? KeybindExtensionsKt.getPressedOnKeyboard(keyBinding) : keyBinding.isPressed();
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingBack:Z", ordinal = 0))
@@ -114,12 +113,6 @@ public class MixinKeyboardInput extends MixinInput {
 
         this.movementSideways = Math.round(newX);
         this.movementForward = Math.round(newZ);
-    }
-
-    @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
-    private void injectForcedState(KeyboardInput instance, boolean value) {
-        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
-        instance.sneaking = enforceEagle != null ? enforceEagle : value;
     }
 
 }

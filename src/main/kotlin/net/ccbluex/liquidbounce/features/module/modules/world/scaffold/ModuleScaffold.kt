@@ -46,8 +46,6 @@ import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -182,10 +180,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     override fun disable() {
-        moveKeys.forEach {
-            it.enforced = null
-        }
-
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
     }

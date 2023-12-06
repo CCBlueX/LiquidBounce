@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.ForcedState
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.gui.screen.Screen
@@ -55,13 +54,8 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
-@Nameable("stateUpdate")
-class StateUpdateEvent : Event() {
-    val state: ForcedState = ForcedState()
-}
-
 /**
- * All events which are related to the the minecraft client
+ * All events which are related to the minecraft client
  */
 
 @Nameable("session")
