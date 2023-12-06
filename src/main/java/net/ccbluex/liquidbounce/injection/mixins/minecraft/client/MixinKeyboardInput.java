@@ -33,7 +33,6 @@ import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.entity.EntityPose;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -87,6 +86,10 @@ public class MixinKeyboardInput extends MixinInput {
         this.movementForward = KeyboardInput.getMovementMultiplier(directionalInput.getForwards(), directionalInput.getBackwards());
         this.movementSideways = KeyboardInput.getMovementMultiplier(directionalInput.getLeft(), directionalInput.getRight());
 
+        if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
+            this.movementForward = 0f;
+        }
+
         this.fixStrafeMovement();
 
         this.jumping = event.getJumping();
@@ -111,13 +114,6 @@ public class MixinKeyboardInput extends MixinInput {
 
         this.movementSideways = Math.round(newX);
         this.movementForward = Math.round(newZ);
-    }
-
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;sneakKey:Lnet/minecraft/client/option/KeyBinding;", shift = At.Shift.AFTER))
-    private void hookSuperKnockbackStopMoving(boolean slowDown, float f, CallbackInfo ci) {
-        if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
-            this.movementForward = 0.0f;
-        }
     }
 
     @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
