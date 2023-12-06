@@ -5,12 +5,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.event.AttackEvent
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -29,10 +32,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     // Condition to makesure timer isn't reset on lagback, when not attacking
     private var confirmLagBack = false
 
-    private val timerBoostMode by ListValue(
-        "TimerMode", arrayOf("Normal", "Smart"),
-        "Normal"
-    )
+    private val timerBoostMode by ListValue("TimerMode", arrayOf("Normal", "Smart"), "Normal")
 
     private val ticksValue by IntegerValue("Ticks", 10, 1..20)
     private val timerBoostValue by FloatValue("TimerBoost", 1.5f, 0.01f..35f)
@@ -43,8 +43,15 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private val minRange by FloatValue("MinRange", 1f, 1f..5f) { timerBoostMode == "Smart" }
     private val maxRange by FloatValue("MaxRange", 5f, 1f..5f) { timerBoostMode == "Smart" }
 
-    private val minTickDelay by IntegerValue("MinTickDelay", 5, 1..100) { timerBoostMode == "Smart" }
-    private val maxTickDelay by IntegerValue("MaxTickDelay", 100, 1..100) { timerBoostMode == "Smart" }
+    private val minTickDelay: IntegerValue = object : IntegerValue("MinTickDelay", 5, 1..100) {
+        override fun isSupported() = timerBoostMode == "Smart"
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxTickDelay.get())
+    }
+
+    private val maxTickDelay: IntegerValue = object : IntegerValue("MaxTickDelay", 100, 1..100) {
+        override fun isSupported() = timerBoostMode == "Smart"
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get())
+    }
 
     private val resetlagBack by BoolValue("ResetOnLagback", false)
 
@@ -73,7 +80,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
         val targetEntity = event.targetEntity
         val entityDistance = mc.thePlayer.getDistanceToEntityBox(targetEntity)
-        val randomCounter = Random.nextInt(minTickDelay, maxTickDelay)
+        val randomCounter = Random.nextInt(minTickDelay.get(), maxTickDelay.get())
         val randomRange = Random.nextDouble(minRange.toDouble(), maxRange.toDouble())
 
         smartCounter++
@@ -87,7 +94,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         if (shouldSlowed && confirmAttack) {
             confirmAttack = false
             playerTicks = ticksValue
-            if (resetlagBack) { confirmLagBack = true }
+            if (resetlagBack) {
+                confirmLagBack = true
+            }
             smartCounter = 0
         } else {
             timerReset()
@@ -125,10 +134,10 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      */
     private fun shouldResetTimer(): Boolean {
         return (playerTicks >= 1
-                || mc.thePlayer.isSpectator || mc.thePlayer.isDead
-                || mc.thePlayer.isInWater || mc.thePlayer.isInLava
-                || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder
-                || mc.thePlayer.isRiding)
+            || mc.thePlayer.isSpectator || mc.thePlayer.isDead
+            || mc.thePlayer.isInWater || mc.thePlayer.isInLava
+            || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder
+            || mc.thePlayer.isRiding)
     }
 
     /**
