@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
+import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
@@ -45,7 +45,8 @@ import kotlin.math.cos
 
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
-    private val cps by intRange("CPS", 5..8, 1..20)
+    private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
+
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -55,8 +56,6 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable())
-
-    private val cpsTimer = tree(CpsScheduler())
 
     override fun disable() {
         targetTracker.cleanup()
@@ -73,15 +72,15 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     val repeatable = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
 
-        val condition = target.boxedDistanceTo(player) <= range &&
-            facingEnemy(
-                toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
-                wallsRange = 0.0
-            )
-        val clicks = cpsTimer.clicks(condition = { condition }, cps)
+        if (target.boxedDistanceTo(player) > range ||
+            !facingEnemy(toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
+                wallsRange = 0.0)) {
+            return@repeatable
+        }
 
-        repeat(clicks) {
+        val clicks = clickScheduler.clicks {
             target.attack(swing)
+            true
         }
     }
 

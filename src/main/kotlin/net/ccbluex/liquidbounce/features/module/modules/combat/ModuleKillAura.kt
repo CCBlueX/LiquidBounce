@@ -15,6 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
@@ -22,7 +23,6 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -41,8 +41,6 @@ import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
-import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
@@ -54,7 +52,10 @@ import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
@@ -77,25 +78,7 @@ import kotlin.random.Random
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Attack speed
-    private val cps by intRange("CPS", 5..8, 1..20)
-
-    object Cooldown : ToggleableConfigurable(this, "Cooldown", true) {
-
-        private val rangeCooldown by floatRange("CooldownRange", 0.9f..1f, 0f..1f)
-
-        var nextCooldown = rangeCooldown.random()
-            private set
-
-        val readyToAttack: Boolean
-            get() = !this.enabled || player.getAttackCooldownProgress(0.0f) >= cooldown.nextCooldown
-
-        fun newCooldown() {
-            nextCooldown = rangeCooldown.random()
-        }
-
-    }
-
-    val cooldown = tree(Cooldown)
+    val clickScheduler = tree(ClickScheduler(this, true))
 
     // Range
     private val range by float("Range", 4.2f, 1f..8f)
@@ -122,13 +105,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val pointTracker = tree(PointTracker())
 
     // Bypass techniques
-    private val swing by boolean("Swing", true)
-    private val keepSprint by boolean("KeepSprint", true)
-    private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
+    internal val swing by boolean("Swing", true)
+    internal val keepSprint by boolean("KeepSprint", true)
+    internal val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
-    private val whileUsingItem by boolean("WhileUsingItem", true)
-    private val whileBlocking by boolean("WhileBlocking", true)
+    internal val whileUsingItem by boolean("WhileUsingItem", true)
+    internal val whileBlocking by boolean("WhileBlocking", true)
 
     object AutoBlock : ToggleableConfigurable(this, "AutoBlocking", false) {
 
@@ -225,40 +208,33 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val failRate by int("FailRate", 0, 0..100)
 
     private object FailSwing : ToggleableConfigurable(this, "FailSwing", false) {
-        object UseOwnCPS : ToggleableConfigurable(ModuleKillAura, "UseOwnCPS", true) {
-            val cps by intRange("CPS", 5..8, 0..20)
-        }
 
-        object LimitRange : ToggleableConfigurable(ModuleKillAura, "LimitRange", false) {
-            val asExtraRange by boolean("AsExtraRange", true)
-            val range by float("Range", 2f, 0f..10f)
-        }
+        /**
+         * Additional range for fail swing to work
+         */
+        val additionalRange by float("AdditionalRange", 2f, 0f..10f)
 
-        init {
-            tree(UseOwnCPS)
-            tree(LimitRange)
-        }
-
-        suspend fun Sequence<DummyEvent>.dealWithFakeSwing(target: Entity?) {
+        suspend fun Sequence<*>.dealWithFakeSwing(target: Entity?) {
             if (!enabled) {
                 return
             }
 
-            val entity = target ?: world.findEnemy(0f..LimitRange.range)
-            val reach = LimitRange.range + if (LimitRange.asExtraRange) range else 0f
+            val range = range + additionalRange
+            val entity = target ?: world.findEnemy(0f..range) ?: return
 
-            val shouldSwing = entity != null && !entity.isRemoved &&
-                (!enabled || entity.boxedDistanceTo(player) <= reach)
+            if (entity.isRemoved || entity.boxedDistanceTo(player) > range) {
+                return
+            }
 
-            val chosenCPS = if (enabled) UseOwnCPS.cps else cps
-            val clicks = cpsTimer.clicks({ shouldSwing }, chosenCPS)
-
-            prepareAttackEnvironment {
-                repeat(clicks) {
-                    if (swing) {
-                        player.swingHand(Hand.MAIN_HAND)
-                    } else {
-                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+            if (clickScheduler.goingToClick) {
+                prepareAttackEnvironment {
+                    clickScheduler.clicks {
+                        if (swing) {
+                            player.swingHand(Hand.MAIN_HAND)
+                        } else {
+                            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                        }
+                        true
                     }
                 }
             }
@@ -304,9 +280,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
-
-    private val cpsTimer = tree(CpsScheduler())
+    internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private val boxFadeSeconds
         get() = 50 * NotifyWhenFail.Box.fadeSeconds
@@ -397,83 +371,81 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
 
-        if (target == null) {
-            AutoBlock.stopBlocking()
-
-            // Deal with fake swing
-            if (FailSwing.enabled) {
-                waitTicks(AutoBlock.tickOff)
-                dealWithFakeSwing(target)
-            }
-        }
-
         if (CombatManager.shouldPauseCombat()) {
             AutoBlock.stopBlocking()
             return@repeatable
         }
 
-        if (target != null) {
-            // Check if our target is in range, otherwise deal with auto block
-            if (target.boxedDistanceTo(player) > range) {
-                if (AutoBlock.onScanRange) {
-                    AutoBlock.startBlocking()
-                } else {
-                    AutoBlock.stopBlocking()
+        if (target == null) {
+            AutoBlock.stopBlocking()
 
-                    // Deal with fake swing
-                    if (FailSwing.enabled) {
-                        waitTicks(AutoBlock.tickOff)
-                        dealWithFakeSwing(target)
-                    }
-                }
-                return@repeatable
+            // Deal with fake swing when there is no target
+            if (FailSwing.enabled) {
+                waitTicks(AutoBlock.tickOff)
+                dealWithFakeSwing(null)
             }
+            return@repeatable
+        }
 
-            // Determine if we should attack the target or someone else
-            val rotation = RotationManager.serverRotation
-
-            val chosenEntity: Entity
-
-            if (raycast != TRACE_NONE) {
-                // Check if between enemy and player is another entity
-                chosenEntity = raytraceEntity(range.toDouble(), rotation, filter = {
-                    when (raycast) {
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                        TRACE_ALL -> true
-                        else -> false
-                    }
-                }) ?: target
-
-                // Swap enemy if there is a better enemy (closer to the player crosshair)
-                if (chosenEntity.shouldBeAttacked() && chosenEntity != target) {
-                    targetTracker.lock(chosenEntity)
-                }
-            } else {
-                chosenEntity = target
-            }
-
-            // Are we actually facing the choosen entity?
-            if (!facingEnemy(toEntity = chosenEntity, rotation = rotation, range = range.toDouble(),
-                    wallsRange = wallRange.toDouble())) {
-                dealWithFakeSwing(chosenEntity)
-                return@repeatable
-            }
-
-            // Attack enemy according to cps and cooldown
-            val clicks = cpsTimer.clicks({ checkIfReadyToAttack(chosenEntity) }, cps)
-
-            if (clicks == 0) {
-                if (cpsTimer.isClickOnNextTick(AutoBlock.tickOff)) {
-                    AutoBlock.stopBlocking()
-                    return@repeatable
-                }
-
+        // Check if our target is in range, otherwise deal with auto block
+        if (target.boxedDistanceTo(player) > range) {
+            if (AutoBlock.onScanRange) {
                 AutoBlock.startBlocking()
-                return@repeatable
+            } else {
+                AutoBlock.stopBlocking()
+
+                // Deal with fake swing
+                if (FailSwing.enabled) {
+                    waitTicks(AutoBlock.tickOff)
+                    dealWithFakeSwing(target)
+                }
             }
 
+            return@repeatable
+        }
+
+        // Determine if we should attack the target or someone else
+        val rotation = RotationManager.serverRotation
+        val chosenEntity: Entity
+
+        if (raycast != TRACE_NONE) {
+            // Check if between enemy and player is another entity
+            chosenEntity = raytraceEntity(range.toDouble(), rotation, filter = {
+                when (raycast) {
+                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                    TRACE_ALL -> true
+                    else -> false
+                }
+            }) ?: target
+
+            // Swap enemy if there is a better enemy (closer to the player crosshair)
+            if (chosenEntity.shouldBeAttacked() && chosenEntity != target) {
+                targetTracker.lock(chosenEntity)
+            }
+        } else {
+            chosenEntity = target
+        }
+
+        // Are we actually facing the choosen entity?
+        if (!facingEnemy(toEntity = chosenEntity, rotation = rotation, range = range.toDouble(),
+                wallsRange = wallRange.toDouble())) {
+            dealWithFakeSwing(chosenEntity)
+            return@repeatable
+        }
+
+        mightAttack(chosenEntity)
+    }
+
+    private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity) {
+        // Attack enemy according to the attack scheduler
+        if (clickScheduler.goingToClick && checkIfReadyToAttack(chosenEntity)) {
             prepareAttackEnvironment {
-                repeat(clicks) {
+                clickScheduler.clicks {
+                    // On each click, we check if we are still ready to attack
+                    if (!checkIfReadyToAttack(chosenEntity)) {
+                        return@clicks false
+                    }
+
                     // Fail rate
                     if (failRate > 0 && failRate > Random.nextInt(100)) {
                         // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
@@ -484,15 +456,21 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         }
 
                         // Notify the user about the failed hit
-                        notifyForFailedHit(chosenEntity, rotation)
+                        notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
                     } else {
                         // Attack enemy
                         attackEntity(chosenEntity)
                     }
+
+                    true
                 }
             }
-
-            return@repeatable
+        } else {
+            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff)) {
+                AutoBlock.stopBlocking()
+            } else {
+                AutoBlock.startBlocking()
+            }
         }
     }
 
@@ -517,7 +495,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 continue
             }
 
-            val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, cpsTimer.isClickOnNextTick(1))
+            val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
+                clickScheduler.isClickOnNextTick(1))
             val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
             // find best spot
@@ -538,14 +517,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
-    fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
+    private fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
         val critical = !ModuleCriticals.shouldWaitForCrit() || choosenEntity.velocity.lengthSquared() > 0.25 * 0.25
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
             !choosenEntity.wouldBlockHit(player)
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        return cooldown.readyToAttack && critical && shielding &&
+        return critical && shielding &&
             !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
     }
 
@@ -555,7 +534,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      * This means, we make sure we are not blocking, we are not using another item,
      * and we are not in an inventory screen depending on the configuration.
      */
-    private suspend fun Sequence<DummyEvent>.prepareAttackEnvironment(attack: () -> Unit) {
+    private suspend fun Sequence<*>.prepareAttackEnvironment(attack: () -> Unit) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
@@ -582,7 +561,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         attack()
-        cooldown.newCooldown()
 
         if (simulateInventoryClosing && isInInventoryScreen) {
             openInventorySilently()
@@ -600,20 +578,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun attackEntity(entity: Entity) {
-        if (ModuleCriticals.wouldCrit(true) && unsprintOnCrit) {
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
-            player.isSprinting = false
-        }
-
         entity.attack(swing)
 
         if (keepSprint) {
-            var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
-            var magicAttackDamage = if (entity is LivingEntity) {
-                EnchantmentHelper.getAttackDamage(player.mainHandStack, entity.group)
-            } else {
-                EnchantmentHelper.getAttackDamage(player.mainHandStack, EntityGroup.DEFAULT)
-            }
+            var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+                .toFloat()
+            var magicAttackDamage = EnchantmentHelper.getAttackDamage(
+                player.mainHandStack,
+                if (entity is LivingEntity) entity.group else EntityGroup.DEFAULT
+            )
 
             val cooldownProgress = player.getAttackCooldownProgress(0.5f)
             genericAttackDamage *= 0.2f + cooldownProgress * cooldownProgress * 0.8f
@@ -624,7 +597,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             if (ModuleCriticals.wouldCrit(true)) {
-                world.playSound(null, player.x, player.y, player.z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
+                world.playSound(
+                    null, player.x, player.y,
+                    player.z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
                     player.soundCategory, 1.0f, 1.0f
                 )
                 player.addCritParticles(entity)

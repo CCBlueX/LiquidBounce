@@ -20,7 +20,7 @@
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, cpsTimer.isClickOnNextTick(1))</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, clickScheduler.isClickOnNextTick(1))</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyFunctionBlock:GpuViewRenderer.kt$GpuViewRenderer${ }</ID>
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
@@ -117,7 +117,6 @@
     <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
     <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$// vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))</ID>
     <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$return item is BowItem &amp;&amp; player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem</ID>
-    <ID>MaxLineLength:ModuleTrigger.kt$ModuleTrigger$condition = { (!cooldown || player.getAttackCooldownProgress(0.0f) &gt;= 1.0f) &amp;&amp; isWeaponSelected() &amp;&amp; !ModuleCriticals.shouldWaitForCrit() }</ID>
     <ID>MaxLineLength:ModuleVehicleFly.kt$ModuleVehicleFly$vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)</ID>
     <ID>MaxLineLength:ModuleVelocity.kt$ModuleVelocity$if</ID>
     <ID>MaxLineLength:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
@@ -128,8 +127,6 @@
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$// it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")</ID>
-    <ID>MaxLineLength:TargetFinding.kt$fun</ID>
-    <ID>MaxLineLength:TargetFinding.kt$private</ID>
     <ID>MaxLineLength:UltralightEngine.kt$UltralightEngine$get() = viewOverlays.find { it is ScreenViewOverlay &amp;&amp; mc.currentScreen == it.screen &amp;&amp; it.state == ViewOverlayState.VISIBLE }</ID>
     <ID>MaxLineLength:UltralightJsClient.kt$UltralightJsClient.MinecraftSession$if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) &amp;&amp; mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Block : ListValueType</ID>
@@ -218,7 +215,6 @@
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>
     <ID>UnusedPrivateProperty:ModuleMurderMystery.kt$ModuleMurderMystery$private val gameRenderEvent = handler&lt;WorldRenderEvent&gt; { if (playHurt) { mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("entity.villager.hurt")), 1F)) playHurt = false } if (playBow) { mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("item.crossbow.shoot")), 1F)) playBow = false } }</ID>
     <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent&gt; { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
-    <ID>UnusedPrivateProperty:Sequence.kt$Sequence$private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) { SequenceManager.sequences += this@Sequence coroutineRun() SequenceManager.sequences -= this@Sequence }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Parameter already has a command")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Subcommand already has parent command")</ID>

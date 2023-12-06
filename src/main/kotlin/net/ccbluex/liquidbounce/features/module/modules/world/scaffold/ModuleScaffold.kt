@@ -48,7 +48,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.enforced
 import net.ccbluex.liquidbounce.utils.client.moveKeys
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
+import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
@@ -77,13 +77,11 @@ import kotlin.random.Random
  * Places blocks under you.
  */
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
-    object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
-        val cps by intRange("CPS", 5..8, 0..50)
 
+    object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
+        internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false))
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
-
-    private val cpsScheduler = tree(CpsScheduler())
 
     private val silent by boolean("Silent", true)
     private val slotResetDelay by int("SlotResetDelay", 5, 0..40)
@@ -317,20 +315,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val suitableHand =
             arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull { isValidBlock(player.getStackInHand(it)) }
 
-        repeat(
-            cpsScheduler.clicks(
-                { simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving },
-                SimulatePlacementAttempts.cps,
-            ),
-        ) {
-            // By the time this reaches here, the variables are already non-null
-            if (!viaFabricFailPlace()) {
-                ModuleNoFall.MLG.doPlacement(
-                    currentCrosshairTarget!!,
-                    suitableHand!!,
-                    ModuleScaffold::swing,
-                    ModuleScaffold::swing,
-                )
+        if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
+            && SimulatePlacementAttempts.clickScheduler.goingToClick) {
+            SimulatePlacementAttempts.clickScheduler.clicks {
+                // By the time this reaches here, the variables are already non-null
+                if (!viaFabricFailPlace()) {
+                    ModuleNoFall.MLG.doPlacement(
+                        currentCrosshairTarget!!,
+                        suitableHand!!,
+                        ModuleScaffold::swing,
+                        ModuleScaffold::swing,
+                    )
+                }
+
+                true
             }
         }
 

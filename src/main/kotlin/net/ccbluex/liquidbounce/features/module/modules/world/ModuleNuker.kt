@@ -39,8 +39,6 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -326,16 +324,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         }
 
 
-        private val cps by intRange("CPS", 40..50, 1..200)
+        private val bps by intRange("BPS", 40..50, 1..200)
         private val doNotStop by boolean("DoNotStop", false)
-
-        // Do not put into CPS scheuduler into tree - we do not want user to change it
-        private val cpsScheduler = CpsScheduler()
-
-        // Chat feedback for the user
-        // TODO: Move this to separate module?
-        private var sendOutPackets = 0
-        private val packetChronometer = Chronometer()
 
         private val highlightBlocks by boolean("HighlightBlocks", true)
         private val highlightedBlocks = mutableListOf<BlockPos>()
@@ -389,9 +379,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 return@repeatable
             }
 
-            val cps = cpsScheduler.clicks({ ModuleNuker.enabled }, cps)
-
-            for ((pos, _) in targets.take(cps)) {
+            for ((pos, _) in targets.take(bps.random())) {
                 if (highlightBlocks) {
                     highlightedBlocks += pos
                 }
@@ -399,24 +387,14 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 network.sendPacket(
                     PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
                 )
-                sendOutPackets++
 
-                if (Swing.enabled) {
-                    sendOutPackets++
-                }
                 swingHand()
 
                 if (!doNotStop) {
                     network.sendPacket(
                         PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
                     )
-                    sendOutPackets++
                 }
-            }
-
-            if (packetChronometer.hasElapsed(1000)) {
-                sendOutPackets = 0
-                packetChronometer.reset()
             }
         }
 
