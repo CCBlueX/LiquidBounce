@@ -86,7 +86,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     implementation "com.viaversion:viaversion:4.8.1"
-    implementation "net.raphimc:ViaLoader:2.2.10"
+    implementation "net.raphimc:ViaLoader:2.2.11"
     // 2.9.5 requires Minecraft 1.20.2 - we are currently on 1.20.1
     //  modImplementation ("de.florianmichael:viafabricplus:2.9.5") {
     //      transitive = false
