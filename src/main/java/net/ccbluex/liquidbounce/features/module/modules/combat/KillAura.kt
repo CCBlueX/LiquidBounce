@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.inventory.ItemUtils.isConsumingItem
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
@@ -144,6 +145,11 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             private val blockRate by IntegerValue("BlockRate", 100, 1..100)
                 { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
 
+        private val uncpAutoBlock by BoolValue("UpdatedNCPAutoBlock", false)
+            { autoBlock !in arrayOf("Off", "Fake") && !releaseAutoBlock }
+
+        private val switchStartBlock by BoolValue("SwitchStartBlock", false)
+            { autoBlock !in arrayOf("Off", "Fake") }
 
         private val interactAutoBlock by BoolValue("InteractAutoBlock", true)
             { autoBlock !in arrayOf("Off", "Fake") }
@@ -682,29 +688,23 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         if (predict) {
             boundingBox = boundingBox.offset(
-                (entity.posX - entity.prevPosX - (mc.thePlayer.posX - mc.thePlayer.prevPosX)) * nextFloat(
-                    minPredictSize, maxPredictSize
-                ), (entity.posY - entity.prevPosY - (mc.thePlayer.posY - mc.thePlayer.prevPosY)) * nextFloat(
-                    minPredictSize, maxPredictSize
-                ), (entity.posZ - entity.prevPosZ - (mc.thePlayer.posZ - mc.thePlayer.prevPosZ)) * nextFloat(
-                    minPredictSize, maxPredictSize
-                )
+                (entity.posX - entity.prevPosX - (mc.thePlayer.posX - mc.thePlayer.prevPosX))
+                    * nextFloat(minPredictSize, maxPredictSize),
+                (entity.posY - entity.prevPosY - (mc.thePlayer.posY - mc.thePlayer.prevPosY))
+                    * nextFloat(minPredictSize, maxPredictSize),
+                (entity.posZ - entity.prevPosZ - (mc.thePlayer.posZ - mc.thePlayer.prevPosZ))
+                    * nextFloat(minPredictSize, maxPredictSize)
             )
         }
 
-        val reachAccordingToDistance = if (mc.thePlayer.getDistanceToBox(boundingBox) > range) {
-            maxRange
-        } else {
-            range
-        }
-
-        val (_, rotation) = searchCenter(
+        val rotation = searchCenter(
             boundingBox,
             outborder && !attackTimer.hasTimePassed(attackDelay / 2),
             randomCenter,
             predict,
-            mc.thePlayer.getDistanceToBox(boundingBox) <= throughWallsRange,
-            reachAccordingToDistance
+            lookRange = range + scanRange,
+            attackRange = range,
+            throughWallsRange = throughWallsRange
         ) ?: return false
 
         // Get our current rotation. Otherwise, player rotation.
@@ -754,9 +754,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (raycast) {
             val raycastedEntity =
                 raycastEntity(range.toDouble(), currentRotation.yaw, currentRotation.pitch) { entity ->
-                    (!livingRaycast || (entity is EntityLivingBase && entity !is EntityArmorStand)) && (isEnemy(
-                        entity
-                    ) || raycastIgnored || aac && mc.theWorld.getEntitiesWithinAABBExcludingEntity(
+                    (!livingRaycast || (entity is EntityLivingBase && entity !is EntityArmorStand)) && (isEnemy(entity) || raycastIgnored || aac && mc.theWorld.getEntitiesWithinAABBExcludingEntity(
                         entity, entity.entityBoundingBox
                     ).isNotEmpty())
                 }
@@ -776,8 +774,14 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Start blocking
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
-        if (blockStatus)
+        if (blockStatus && !uncpAutoBlock)
             return
+
+        if (mc.thePlayer.isBlocking) {
+            blockStatus = true
+            renderBlocking = true
+            return
+        }
 
         if (!fake) {
             if (!(blockRate > 0 && nextInt(endExclusive = 100) <= blockRate)) return
@@ -803,6 +807,12 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
             }
 
+            if (switchStartBlock)
+            {
+                InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
+                InventoryUtils.serverSlot = mc.thePlayer.inventory.currentItem
+            }
+
             sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
             blockStatus = true
         }
@@ -815,7 +825,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Stop blocking
      */
     private fun stopBlocking() {
-        if (blockStatus) {
+        if (blockStatus && !mc.thePlayer.isBlocking) {
             sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             blockStatus = false
         }

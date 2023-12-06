@@ -5,6 +5,9 @@
  */
 package net.ccbluex.liquidbounce.injection.implementations;
 
-public interface IMixinItemStack {
-    long getItemDelay();
+interface IMixinGuiSlot {
+
+    var listWidth: Int
+    var enableScissor: Boolean
+
 }

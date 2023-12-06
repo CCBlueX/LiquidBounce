@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
 
-class RemoteViewCommand : Command("remoteview", "rv") {
+object RemoteViewCommand : Command("remoteview", "rv") {
     /**
      * Execute commands with provided [args]
      */

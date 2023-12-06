@@ -140,7 +140,7 @@ fun ItemStack?.hasItemAgePassed(delay: Int) = this == null
         || System.currentTimeMillis() - (this as IMixinItemStack).itemDelay >= delay
 
 val ItemStack.attackDamage
-    get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) +
+    get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 1.0) +
             1.25 * getEnchantmentLevel(Enchantment.sharpness)
 
 fun ItemStack.isSplashPotion() = item is ItemPotion && ItemPotion.isSplash(metadata)

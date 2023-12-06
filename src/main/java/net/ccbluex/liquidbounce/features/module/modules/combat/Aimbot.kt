@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.Reach
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
@@ -70,9 +71,9 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
                 outborder = false,
                 random = false,
                 predict = true,
-                throughWalls = false,
-                range
-            )?.rotation ?: return
+                lookRange = range,
+                attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f
+            ) ?: return
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
 

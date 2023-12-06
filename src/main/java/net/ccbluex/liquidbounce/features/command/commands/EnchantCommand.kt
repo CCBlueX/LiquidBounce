@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
-class EnchantCommand : Command("enchant") {
+object EnchantCommand : Command("enchant") {
     /**
      * Execute commands with provided [args]
      */

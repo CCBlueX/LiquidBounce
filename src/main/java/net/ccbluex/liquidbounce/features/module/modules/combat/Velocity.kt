@@ -68,8 +68,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     // TODO: Could this be useful in other modes? (Jump?)
     // Limits
     private val limitMaxMotionValue = BoolValue("LimitMaxMotion", false) { mode == "Simple" }
-    private val maxXZMotion by FloatValue("MaxXZMotion", 0.4f, 0f..1.9f) { limitMaxMotionValue.isActive() }
-    private val maxYMotion by FloatValue("MaxYMotion", 0.36f, 0f..0.46f) { limitMaxMotionValue.isActive() } //0.00075 is added silently
+        private val maxXZMotion by FloatValue("MaxXZMotion", 0.4f, 0f..1.9f) { limitMaxMotionValue.isActive() }
+        private val maxYMotion by FloatValue("MaxYMotion", 0.36f, 0f..0.46f) { limitMaxMotionValue.isActive() }
+        //0.00075 is added silently
 
     // Vanilla XZ limits
     // Non-KB: 0.4 (no sprint), 0.9 (sprint)
@@ -212,7 +213,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         }
     }
 
-    fun getDirection(): Double {
+    // TODO: Recode
+    private fun getDirection(): Double {
         var moveYaw = mc.thePlayer.rotationYaw
         if (mc.thePlayer.moveForward != 0f && mc.thePlayer.moveStrafing == 0f) {
             moveYaw += if (mc.thePlayer.moveForward > 0) 0 else 180
@@ -242,8 +244,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     && (packet.motionX != 0 || packet.motionZ != 0)
             ) || (
                 packet is S27PacketExplosion
-                    && packet.field_149153_g > 0f
-                    && (packet.field_149152_f != 0f || packet.field_149159_h != 0f)
+                    && (thePlayer.motionY + packet.field_149153_g) > 0.0
+                    && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0)
             )
         ) {
             velocityTimer.reset()
@@ -254,17 +256,18 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 "aac", "reverse", "smoothreverse", "aaczero" -> hasReceivedVelocity = true
 
                 "jump" -> {
-                    var packetDirection: Double = 0.0
+                    // TODO: Recode and make all velocity modes support velocity direction checks
+                    var packetDirection = 0.0
                     when (packet) {
                         is S12PacketEntityVelocity -> {
-                            val motionX: Double = packet.motionX.toDouble()
-                            val motionZ: Double = packet.motionZ.toDouble()
+                            val motionX = packet.motionX.toDouble()
+                            val motionZ = packet.motionZ.toDouble()
 
                             packetDirection = atan2(motionX, motionZ)
                         }
                         is S27PacketExplosion -> {
-                            val motionX: Double = packet.field_149152_f.toDouble()
-                            val motionZ: Double = packet.field_149159_h.toDouble()
+                            val motionX = thePlayer.motionX + packet.field_149152_f
+                            val motionZ = thePlayer.motionZ + packet.field_149159_h
 
                             packetDirection = atan2(motionX, motionZ)
                         }

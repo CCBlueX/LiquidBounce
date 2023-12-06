@@ -233,5 +233,8 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
 
         return if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
     }
+    fun shouldRender(entity: EntityLivingBase): Boolean {
+        return (bot || !isBot(entity))
+    }
 
 }

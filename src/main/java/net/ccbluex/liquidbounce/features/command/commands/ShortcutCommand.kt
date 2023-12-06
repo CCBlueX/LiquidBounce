@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
-class ShortcutCommand : Command("shortcut") {
+object ShortcutCommand : Command("shortcut") {
     /**
      * Execute commands with provided [args]
      */

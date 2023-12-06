@@ -53,7 +53,7 @@ public abstract class MixinEntity implements IMixinEntity {
     }
 
     public void setTrueX(double x) {
-        this.trueX = x;
+        trueX = x;
     }
 
     private double trueY;
@@ -63,7 +63,7 @@ public abstract class MixinEntity implements IMixinEntity {
     }
 
     public void setTrueY(double y) {
-        this.trueY = y;
+        trueY = y;
     }
 
     private double trueZ;
@@ -73,7 +73,7 @@ public abstract class MixinEntity implements IMixinEntity {
     }
 
     public void setTrueZ(double z) {
-        this.trueZ = z;
+        trueZ = z;
     }
 
     private boolean truePos;
@@ -83,7 +83,7 @@ public abstract class MixinEntity implements IMixinEntity {
     }
 
     public void setTruePos(boolean set) {
-        this.truePos = set;
+        truePos = set;
     }
 
     @Shadow
@@ -241,8 +241,8 @@ public abstract class MixinEntity implements IMixinEntity {
             prevRotationYaw = rotationYaw;
             prevRotationPitch = rotationPitch;
 
-            rotationYaw += (float) (yaw * 0.15);
-            rotationPitch -= (float) (pitch * 0.15);
+            rotationYaw += yaw * 0.15f;
+            rotationPitch -= pitch * 0.15f;
         }
     }
 

@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import org.lwjgl.input.Keyboard
 
-class BindsCommand : Command("binds") {
+object BindsCommand : Command("binds") {
     /**
      * Execute commands with provided [args]
      */

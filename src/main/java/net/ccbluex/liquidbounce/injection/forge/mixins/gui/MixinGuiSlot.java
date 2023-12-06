@@ -195,6 +195,11 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
         this.enableScissor = enableScissor;
     }
 
+    @Override
+    public boolean getEnableScissor() {
+        return enableScissor;
+    }
+
     /**
      * @author CCBlueX (superblaubeere27)
      */

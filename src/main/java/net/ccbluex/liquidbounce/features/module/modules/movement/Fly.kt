@@ -99,6 +99,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
 
+    var jumpY = 0.0
+
     var startY = 0.0
         private set
 
@@ -109,6 +111,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         val thePlayer = mc.thePlayer ?: return
 
         startY = thePlayer.posY
+        jumpY = thePlayer.posY
         wasFlying = mc.thePlayer.capabilities.isFlying
 
         modeModule.onEnable()

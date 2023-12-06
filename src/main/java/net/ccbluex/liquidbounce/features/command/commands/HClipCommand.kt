@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.MovementUtils.forward
 
-class HClipCommand : Command("hclip") {
+object HClipCommand : Command("hclip") {
     /**
      * Execute commands with provided [args]
      */

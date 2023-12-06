@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
-class LiquidChatCommand : Command("chat", "lc", "irc") {
+object LiquidChatCommand : Command("chat", "lc", "irc") {
 
     /**
      * Execute commands with provided [args]

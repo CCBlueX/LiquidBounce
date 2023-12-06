@@ -309,6 +309,8 @@
         
         "module.teleport.description": "Ви позволява да се телепортирате наоколо.",
 
+        "module.timerRange.description": "UNTRANSLATED: Allows you to manipulate the game speed in order to gain an advantage against your enemies.",
+
         "module.timer.description": "Променя скоростта на цялата игра.",
         
         "module.tower.description": "Автоматично изгражда кула под вас.",

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
-class HideCommand : Command("hide") {
+object HideCommand : Command("hide") {
 
     /**
      * Execute commands with provided [args]
