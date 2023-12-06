@@ -32,7 +32,9 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import java.awt.Color
@@ -102,22 +104,59 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     val screenRenderHandler = handler<OverlayRenderEvent> { event ->
         val context = event.context
 
+        if (mc.options.playerListKey.isPressed) {
+            return@handler
+        }
+
         val width = mc.window.scaledWidth
 
-        // Draw debug box of the screen with a width of 200
-        context.fill(width / 2 - 100, 20, width / 2 + 100,
-            40 + (mc.textRenderer.fontHeight * debugParameters.size), Color4b(0, 0, 0, 128).toRGBA())
+        //
+        /**
+         * Separate the debugged owner from its parameter
+         * Structure should be like this:
+         * Owner ->
+         *   Parameter Name: Parameter Value
+         *   Parameter Name: Parameter Value
+         *   Parameter Name: Parameter Value
+         */
+        val textList = mutableListOf<OrderedText>()
 
-        context.drawCenteredTextWithShadow(mc.textRenderer, Text.of("Debugging").asOrderedText(),
-            width / 2, 22, Color4b.WHITE.toRGBA())
+        val debuggedOwners = debugParameters.keys.groupBy { it.owner }
+
+        debuggedOwners.onEachIndexed { index, (owner, parameter) ->
+            val ownerName = owner.name
+
+            textList += Text.literal(ownerName).styled {
+                it.withColor(Formatting.GOLD).withBold(true)
+            }.asOrderedText()
+
+            parameter.forEach { debuggedParameter ->
+                val parameterName = debuggedParameter.name
+                val parameterValue = debugParameters[debuggedParameter]
+                textList += Text.literal("$parameterName: $parameterValue").styled {
+                    it.withColor(Formatting.GRAY)
+                }.asOrderedText()
+            }
+        }
+
+        // Draw debug box of the screen with a width of 200
+        val biggestWidth = textList.maxOfOrNull { mc.textRenderer.getWidth(it) + 10 }?.coerceAtLeast(80)
+            ?: 80
+        val directionWidth = biggestWidth / 2
+        context.fill(width / 2 - directionWidth, 20, width / 2 + directionWidth,
+            50 + (mc.textRenderer.fontHeight * textList.size), Color4b(0, 0, 0, 128).toRGBA())
+
+        context.drawCenteredTextWithShadow(mc.textRenderer, Text.literal("Debugging").styled {
+            it.withColor(Formatting.LIGHT_PURPLE).withBold(true)
+        }.asOrderedText(), width / 2, 22, Color4b.WHITE.toRGBA())
 
         // Draw white line below Debugging text
-        context.fill(width / 2 - 100, 32, width / 2 + 100, 33, Color4b.WHITE.toRGBA())
+        context.fill(width / 2 - directionWidth, 32, width / 2 + directionWidth, 33, Color4b.WHITE.toRGBA())
 
-        debugParameters.onEachIndexed { index, (owner, parameter) ->
-            context.drawTextWithShadow(mc.textRenderer,
-                Text.of("${owner.owner.name}->${owner.name}: $parameter").asOrderedText(),
-                width / 2 - 94, 37 + (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA())
+        // Draw text line one by one
+        textList.forEachIndexed { index, text ->
+            context.drawCenteredTextWithShadow(mc.textRenderer, text, width / 2, 40 +
+                (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA())
         }
     }
 
