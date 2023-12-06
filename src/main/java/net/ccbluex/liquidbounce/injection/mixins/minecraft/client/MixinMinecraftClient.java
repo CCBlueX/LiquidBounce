@@ -117,6 +117,13 @@ public abstract class MixinMinecraftClient {
         EventManager.INSTANCE.callEvent(new ClientShutdownEvent());
     }
 
+    @Inject(method = "<init>", at = @At(value = "FIELD",
+            target = "Lnet/minecraft/client/MinecraftClient;profileKeys:Lnet/minecraft/client/util/ProfileKeys;",
+            ordinal = 0, shift = At.Shift.AFTER))
+    private void onSessionInit(CallbackInfo callback) {
+        EventManager.INSTANCE.callEvent(new SessionEvent());
+    }
+
     /**
      * Modify window title to our client title.
      * Example: LiquidBounce v1.0.0 | 1.16.3

@@ -304,6 +304,11 @@
             document.getElementById('response').innerText = "Deleted account: " + account.getName();
         }
 
+        function restoreInitial() {
+            client.getAccountManager().restoreInitial();
+            updateAccountData();
+        }
+
         try {
             events.on("altManagerUpdate", altManagerUpdate);
         } catch (e) {
@@ -328,6 +333,11 @@
                 <div id="accountType" class="accountType"></div>
                 <label><b>Location:</b></label>
                 <div id="location" class="location"></div>
+
+                <br>
+                <button onclick="restoreInitial()">
+                    Restore Initial
+                </button>
             </div>
 
             <div class="button">

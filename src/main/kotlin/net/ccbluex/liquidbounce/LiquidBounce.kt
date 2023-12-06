@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.IS_MAC
+import net.ccbluex.liquidbounce.utils.client.SessionHandler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
@@ -139,7 +140,7 @@ object LiquidBounce : Listenable {
             WorldToScreen
             Tabs
             Chat
-
+            SessionHandler
 
             // Loads up fonts (requires connection to the internet on first launch)
             Fonts

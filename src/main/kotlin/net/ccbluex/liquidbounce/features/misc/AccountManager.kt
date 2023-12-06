@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AltManagerUpdateEvent
+import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.util.ProfileKeys
@@ -83,7 +84,7 @@ object AccountManager : Configurable("Accounts") {
                     logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
                 }
 
-                Triple(session, sessionService, profileKeys)
+                SessionData(session, sessionService, profileKeys)
             }
 
             is AlteningAccount -> {
@@ -93,7 +94,7 @@ object AccountManager : Configurable("Accounts") {
                 account.name = session.username
                 account.uuid = session.uuid
 
-                Triple(session, sessionService, keys)
+                SessionData(session, sessionService, keys)
             }
             else -> error("Unknown account type: ${account::class.simpleName}")
         }
@@ -101,6 +102,8 @@ object AccountManager : Configurable("Accounts") {
         mc.session = session
         mc.sessionService = sessionService
         mc.profileKeys = profileKeys
+
+        EventManager.callEvent(SessionEvent())
     }
 
     /**
@@ -232,6 +235,9 @@ object AccountManager : Configurable("Accounts") {
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
     }
+
+    @RequiredByScript
+    fun restoreInitial() = mc.sessionService.restoreInitialSession()
 
 }
 
