@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.PacketUtils.handlePackets
+import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -128,6 +130,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
                         val packetPos = Vec3(packet.x, packet.y, packet.z)
                         synchronized(positions) {
                             positions += packetPos
+                        }
+                        if (packet.rotating) {
+                            serverRotation = Rotation(packet.yaw, packet.pitch)
                         }
                     }
                 }
