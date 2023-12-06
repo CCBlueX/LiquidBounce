@@ -319,6 +319,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
             target ?: return
             currentTarget ?: return
+            
+            // Update hitable
+            updateHitable() 
             return
         }
     }
