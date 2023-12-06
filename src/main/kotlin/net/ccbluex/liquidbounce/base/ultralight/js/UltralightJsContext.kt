@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.js.bindings.*
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 
 /**
@@ -50,10 +49,6 @@ class UltralightJsContext(viewOverlay: ViewOverlay, ulView: ThreadLock<Ultraligh
     fun setupContext(viewOverlay: ViewOverlay, context: JavascriptContext) {
         val globalContext = context.globalContext
         val globalObject = globalContext.globalObject
-//        globalObject.callAsFunction(globalObject, )
-
-        val myFunc = context.makeFunction("hello", null, "console.log('hello')", null, 0)
-        myFunc.toObject().callAsFunction(globalObject)
 
         // Pass the view to the context
         setProperty(globalObject, context, "view", viewOverlay)
