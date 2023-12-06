@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.minecraft.network.handshake.client.C00Handshake
 
-class ServerInfoCommand : Command("serverinfo"), Listenable {
+object ServerInfoCommand : Command("serverinfo"), Listenable {
     init {
         registerListener(this)
     }

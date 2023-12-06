@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.file.FileManager.xrayConfig
 import net.minecraft.block.Block
 
-class XrayCommand : Command("xray") {
+object XrayCommand : Command("xray") {
 
     /**
      * Execute commands with provided [args]

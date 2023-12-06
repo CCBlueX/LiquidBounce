@@ -14,22 +14,17 @@ object UNCPHop : SpeedMode("UNCPHop") {
 
     override fun onDisable() {
         airSpeedReset()
-        strafeZero()
-        super.onDisable()
+        mc.thePlayer?.stopXZ()
     }
 
     private fun airSpeedReset() {
         mc.thePlayer.speedInAir = 0.02f
     }
 
-    private fun strafeZero() {
-        strafe(0f)
-    }
-
     override fun onUpdate() {
         if (mc.thePlayer.isInLava || mc.thePlayer.isInWater
             || mc.thePlayer.isOnLadder || mc.thePlayer.isInWeb) {
-            strafeZero()
+            mc.thePlayer.stopXZ()
             return
         }
 
@@ -44,16 +39,11 @@ object UNCPHop : SpeedMode("UNCPHop") {
 
             // Prevent from getting flag while airborne/falling & fall damage
             if (mc.thePlayer.isAirBorne && mc.thePlayer.fallDistance >= 3) {
-                strafeZero()
+                mc.thePlayer.stopXZ()
                 airSpeedReset()
-
-                if (mc.thePlayer.hurtTime > 0) {
-                    mc.thePlayer.stopXZ()
-                }
             }
 
         } else {
-            strafeZero()
             mc.thePlayer.stopXZ()
         }
     }

@@ -216,6 +216,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
                 packetQueue.forEach { (packet) -> sendPacket(packet, false) }
             }
         }
+
         packetQueue.clear()
         positions.clear()
     }
@@ -229,6 +230,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
                 } else false
             }
         }
+
         synchronized(positions) {
             positions.entries.removeAll { (_, timestamp) -> timestamp <= System.currentTimeMillis() - delay }
         }

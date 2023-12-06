@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
-class FriendCommand : Command("friend", "friends") {
+object FriendCommand : Command("friend", "friends") {
     /**
      * Execute commands with provided [args]
      */

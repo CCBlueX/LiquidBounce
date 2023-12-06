@@ -26,7 +26,7 @@ import java.awt.Desktop
 import java.io.File
 import java.util.zip.ZipFile
 
-class ScriptManagerCommand : Command("scriptmanager", "scripts") {
+object ScriptManagerCommand : Command("scriptmanager", "scripts") {
     /**
      * Execute commands with provided [args]
      */

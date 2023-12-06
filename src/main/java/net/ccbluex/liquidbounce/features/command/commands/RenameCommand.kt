@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
-class RenameCommand : Command("rename") {
+object RenameCommand : Command("rename") {
     /**
      * Execute commands with provided [args]
      */

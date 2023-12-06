@@ -869,7 +869,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER) {
 		else combinedDurability
 	}
 
-	// Check if stack is damageable and either has no enchantments or just unbreaking.
+	// Check if stack is repairable and either has no enchantments or just unbreaking.
 	private fun shouldBeRepaired(stack: ItemStack?) =
 		!stack.isEmpty() && stack.item.isRepairable && (
 			!stack.isItemEnchanted || (stack.enchantmentCount == 1 && Enchantment.unbreaking in stack.enchantments)

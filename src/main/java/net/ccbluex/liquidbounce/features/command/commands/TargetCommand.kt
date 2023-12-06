@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
 
-class TargetCommand : Command("target") {
+object TargetCommand : Command("target") {
     /**
      * Execute commands with provided [args]
      */

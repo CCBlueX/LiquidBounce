@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-class PanicCommand : Command("panic") {
+object PanicCommand : Command("panic") {
     /**
      * Execute commands with provided [args]
      */
