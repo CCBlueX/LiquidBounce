@@ -77,7 +77,7 @@ import kotlin.random.Random
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
-        internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false))
+        internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 50))
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
