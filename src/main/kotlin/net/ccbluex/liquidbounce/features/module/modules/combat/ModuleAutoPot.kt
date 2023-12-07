@@ -116,31 +116,14 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
             return false
         }
 
-        val potionStack = foundPotSlot.getItemStack()
-
-        if (!potionStack.isNothing()) {
-            if (!healthPotion && potionStack.item !is SplashPotionItem && potionStack.item !is LingeringPotionItem) {
-                return false
-            }
-
-            if (!regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
-                return false
-            }
-
-            if (!strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)) {
-                return false
-            }
-
-            if (!speedPotion && potionStack.item is SplashPotionItem && potionStack.item.potion.effects.any { effect ->
-                    effect.effectType == StatusEffects.SPEED
-                }) {
-                useHotbarSlotOrOffhand(foundPotSlot)
-                return true
-            }
+        RotationManager.aimAt(
+            Rotation(player.yaw, (85f..90f).random().toFloat()),
+            configurable = rotations,
+        )
+        waitTicks(1)
+        if (RotationManager.serverRotation.pitch < 85) {
+            return false
         }
-
-        return false
-    }
 
         useHotbarSlotOrOffhand(foundPotSlot)
         return true
@@ -177,19 +160,22 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
             return false
         }
 
-        val allowedStatusEffects = mutableListOf<StatusEffect>()
         val healthIsLow = player.health <= health
-        if (healthPotion && healthIsLow) {
-            allowedStatusEffects += StatusEffects.INSTANT_HEALTH
-        }
-        if (regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
-            allowedStatusEffects += StatusEffects.REGENERATION
-        }
-        if (strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)) {
-            allowedStatusEffects += StatusEffects.STRENGTH
-        }
 
-        return PotionUtil.getPotionEffects(stack).any { allowedStatusEffects.contains(it.effectType) }
+        return PotionUtil.getPotionEffects(stack).any {
+            when (it.effectType) {
+                StatusEffects.INSTANT_HEALTH ->
+                    healthPotion && healthIsLow
+                StatusEffects.REGENERATION ->
+                    regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
+                StatusEffects.STRENGTH ->
+                    strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
+                StatusEffects.SPEED ->
+                    speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
+
+                else -> false
+            }
+        }
     }
 
     private fun hasBenefit(entity: LivingEntity): Boolean {
