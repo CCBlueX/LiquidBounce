@@ -40,10 +40,10 @@ import kotlin.math.roundToInt
  * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
  * This allows us to predict future actions and behave accordingly.
  */
-class ClickScheduler<T>(val module: T, showCooldown: Boolean, name: String = "ClickScheduler") : Configurable(name)
-    where T: Module {
+class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, name: String = "ClickScheduler")
+    : Configurable(name) where T : Module {
 
-    private val cps by intRange("CPS", 5..8, 1..20)
+    private val cps by intRange("CPS", 5..8, 1..maxCps)
 
     class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Cooldown", true)
         where T: Module {
