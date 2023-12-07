@@ -5,13 +5,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.ClickBlockEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.item.ItemSword
 import net.minecraft.util.BlockPos
 
 object AutoTool : Module("AutoTool", ModuleCategory.PLAYER, subjective = true, gameDetecting = false) {
+
+    private val swordSwitch by BoolValue("SwordSwitch", false)
 
     @EventTarget
     fun onClick(event: ClickBlockEvent) {
@@ -34,8 +40,41 @@ object AutoTool : Module("AutoTool", ModuleCategory.PLAYER, subjective = true, g
             }
         }
 
-        if (bestSlot != -1)
+        if (bestSlot != -1) {
             mc.thePlayer.inventory.currentItem = bestSlot
+        }
+    }
+
+    @EventTarget
+    fun onAttack(event: AttackEvent) {
+        val targetEntity = event.targetEntity
+
+        if (swordSwitch && targetEntity is EntityLivingBase) {
+            switchSlotForEntity(targetEntity)
+        }
+    }
+
+    private fun switchSlotForEntity(entity: EntityLivingBase) {
+        var bestSlot = -1
+        var bestDamage = 0F
+
+        for (i in 0..8) {
+            val item = mc.thePlayer.inventory.getStackInSlot(i) ?: continue
+
+            val damage = when (item.item) {
+                is ItemSword -> (item.item as ItemSword).damageVsEntity
+                else -> 0F
+            }
+
+            if (damage > bestDamage) {
+                bestDamage = damage
+                bestSlot = i
+            }
+        }
+
+        if (bestSlot != -1) {
+            mc.thePlayer.inventory.currentItem = bestSlot
+        }
     }
 
 }
