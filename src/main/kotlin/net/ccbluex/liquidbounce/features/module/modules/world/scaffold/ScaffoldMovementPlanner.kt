@@ -1,11 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -15,12 +14,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.PI
-import kotlin.math.absoluteValue
-import kotlin.math.acos
-import kotlin.math.cos
-import kotlin.math.round
-import kotlin.math.sin
+import kotlin.math.*
 
 object ScaffoldMovementPlanner {
     private const val MAX_LAST_PLACE_BLOCKS: Int = 4

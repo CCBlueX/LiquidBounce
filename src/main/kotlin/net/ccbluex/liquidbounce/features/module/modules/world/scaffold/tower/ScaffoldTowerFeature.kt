@@ -8,9 +8,7 @@ import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
-import net.ccbluex.liquidbounce.utils.client.Timer
-import net.minecraft.stat.Stats
+import net.ccbluex.liquidbounce.utils.client.player
 
 object ScaffoldTowerFeature : ToggleableConfigurable(ModuleScaffold, "Tower", false) {
     private val mode by enumChoice("Mode", TowerModes.JUMP, TowerModes.values())

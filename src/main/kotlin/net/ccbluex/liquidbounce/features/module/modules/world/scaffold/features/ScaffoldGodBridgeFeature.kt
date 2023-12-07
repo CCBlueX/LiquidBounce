@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
