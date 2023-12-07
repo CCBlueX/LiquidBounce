@@ -33,7 +33,7 @@ import java.awt.Color
  */
 @ElementInfo(name = "Arraylist", single = true)
 class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
-                side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
+    side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
 
     private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
     private val textRed by IntegerValue("Text-R", 0, 0..255) { textColorMode == "Custom" }
@@ -42,49 +42,48 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     private val rectMode by ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
     private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow") { rectMode != "None" }
-        private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
-        private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
-        private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
-        private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
-        private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
+    private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
+    private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
+    private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
 
     private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
-        private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
-        private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
-        private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
-        private val backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255) { backgroundMode == "Custom" }
 
     private fun isColorModeUsed(value: String) = textColorMode == value || rectMode == value || backgroundMode == value
+
     private val saturation by FloatValue("Random-Saturation", 0.9f, 0f..1f) { isColorModeUsed("Random") }
     private val brightness by FloatValue("Random-Brightness", 1f, 0f..1f) { isColorModeUsed("Random") }
     private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { isColorModeUsed("Rainbow") }
     private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { isColorModeUsed("Rainbow") }
 
     private val tags by BoolValue("Tags", true)
-        private val tagsStyle by object : ListValue("TagsStyle", arrayOf("[]", "()", "<>", "-", "|", "Space"), "Space") {
-            override fun isSupported() = tags
-
-            // onUpdate - updates tag onInit and onChanged
-            override fun onUpdate(value: String) = updateTagDetails()
-        }
-        private val tagsCase by ListValue("TagsCase", arrayOf("Normal", "Uppercase", "Lowercase"), "Normal") { tags }
-        private val tagsArrayColor by object : BoolValue("TagsArrayColor", false) {
-            override fun isSupported() = tags
-            override fun onUpdate(value: Boolean) = updateTagDetails()
-        }
+    private val tagsStyle by object : ListValue("TagsStyle", arrayOf("[]", "()", "<>", "-", "|", "Space"), "Space") {
+        override fun isSupported() = tags
+        // onUpdate - updates tag onInit and onChanged
+        override fun onUpdate(value: String) = updateTagDetails()
+    }
+    private val tagsCase by ListValue("TagsCase", arrayOf("Normal", "Uppercase", "Lowercase"), "Normal") { tags }
+    private val tagsArrayColor by object : BoolValue("TagsArrayColor", false) {
+        override fun isSupported() = tags
+        override fun onUpdate(value: Boolean) = updateTagDetails()
+    }
 
     private val font by FontValue("Font", Fonts.font40)
     private val textShadow by BoolValue("ShadowText", true)
     private val moduleCase by ListValue("ModuleCase", arrayOf("Normal", "Uppercase", "Lowercase"), "Normal")
-    private val upperCase by BoolValue("UpperCase", false)
     private val space by FloatValue("Space", 0F, 0F..5F)
     private val textHeight by FloatValue("TextHeight", 11F, 1F..20F)
     private val textY by FloatValue("TextY", 1F, 0F..20F)
 
     companion object {
         val spacedModules by BoolValue("SpacedModules", false)
-        val inactiveStyle by ListValue("InactiveModulesStyle", arrayOf("Normal", "Color", "Hide"), "Color")
-            { GameDetector.state }
+        val inactiveStyle by ListValue("InactiveModulesStyle", arrayOf("Normal", "Color", "Hide"), "Color") 
+        { GameDetector.state }
     }
 
     private var x2 = 0
@@ -103,7 +102,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     }
 
     fun updateTagDetails() {
-        val pair : Pair<String, String> = when (tagsStyle) {
+        val pair: Pair<String, String> = when (tagsStyle) {
             "[]", "()", "<>" -> tagsStyle[0].toString() to tagsStyle[1].toString()
             "-", "|" -> tagsStyle[0] + " " to ""
             else -> "" to ""
@@ -115,15 +114,17 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     private fun getDisplayString(module: Module): String {
         val moduleName = when (moduleCase) {
-          "Uppercase" -> module.getName().uppercase()
-          "Lowercase" -> module.getName().lowercase()
-          else -> module.getName()
+            "Uppercase" -> module.getName().uppercase()
+            "Lowercase" -> module.getName().lowercase()
+            else -> module.getName()
         }
 
-        val tag = when (tagsCase) {
-          "Uppercase" -> module.tag!!.uppercase()
-          "Lowercase" -> module.tag!!.lowercase()
-          else -> module.tag
+        var tag = module.tag ?: ""
+
+        tag = when (tagsCase) {
+            "Uppercase" -> tag.uppercase()
+            "Lowercase" -> tag.lowercase()
+            else -> tag
         }
 
         val moduleTag = if (tags && !module.tag.isNullOrEmpty()) tagPrefix + tag + tagSuffix else ""
@@ -176,7 +177,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
         modules.forEachIndexed { index, module ->
             val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
-                    if (side.vertical == Vertical.DOWN) index + 1 else index
+                if (side.vertical == Vertical.DOWN) index + 1 else index
 
             val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
