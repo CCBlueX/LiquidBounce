@@ -11,14 +11,17 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
+import kotlin.math.abs
 
 /**
  * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
@@ -30,6 +33,11 @@ val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
     val armorItems = (0 until 4).map { ArmorItemSlot(it) }
 
     return@run hotbarItems + offHandItem + inventoryItems + armorItems
+}
+
+fun findClosestItem(items: Array<Item>): Int? {
+    return (0..8).filter { player.inventory.getStack(it).item in items }
+        .minByOrNull { abs(player.inventory.selectedSlot - it) }
 }
 
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {

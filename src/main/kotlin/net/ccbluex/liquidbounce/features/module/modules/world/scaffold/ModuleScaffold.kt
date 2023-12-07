@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerFeature
@@ -43,6 +42,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -314,7 +314,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             SimulatePlacementAttempts.clickScheduler.clicks {
                 // By the time this reaches here, the variables are already non-null
                 if (!viaFabricFailPlace()) {
-                    ModuleNoFall.MLG.doPlacement(
+                    doPlacement(
                         currentCrosshairTarget!!,
                         suitableHand!!,
                         ModuleScaffold::swing,
@@ -371,7 +371,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         var wasSuccessful = false
 
-        ModuleNoFall.MLG.doPlacement(currentCrosshairTarget, handToInteractWith, {
+        doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleFeature.onBlockPlacement()
             ScaffoldAutoJumpFeature.onBlockPlacement()

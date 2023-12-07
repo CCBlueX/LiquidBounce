@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.Modul
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
