@@ -288,7 +288,7 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
             get() = appearance
 
         private val color by color("Color", Color4b.RED)
-        private val size by float("Size", 5f, 1f..20f)
+        private val size by float("Size", 1f, 0.5f..20f)
         override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
 
             val pos =
