@@ -146,6 +146,8 @@ class RepeatingSequence(owner: Listenable, handler: SuspendableHandler<DummyEven
     private var continueLoop = true
 
     override suspend fun coroutineRun() {
+        sync()
+
         while (continueLoop && owner.handleEvents()) {
             super.coroutineRun()
             sync()
