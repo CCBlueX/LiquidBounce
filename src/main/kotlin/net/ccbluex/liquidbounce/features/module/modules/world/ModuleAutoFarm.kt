@@ -55,7 +55,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private var currentTarget: BlockPos? = null
 
-    val networkTickHandler = repeatable { event ->
+    val repeatable = repeatable { event ->
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
@@ -91,7 +91,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         if (!blockPos.getState()!!.isAir) {
             val direction = rayTraceResult.side
 
-            if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
+            if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
         }
