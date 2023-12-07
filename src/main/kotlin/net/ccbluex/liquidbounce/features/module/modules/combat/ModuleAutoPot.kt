@@ -151,10 +151,13 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         return true
     }
 
-    private fun isPotion(stack: ItemStack): Boolean {
+    private val speedPotion by boolean("SpeedPotion", default = true)
+
+    private val isPotion(stack: ItemStack): Boolean {
         if (stack.isNothing()) {
             return false
         }
+
         if (stack.item !is SplashPotionItem && (stack.item !is LingeringPotionItem || !allowLingering)) {
             return false
         }
@@ -164,11 +167,17 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         if (healthPotion && healthIsLow) {
             allowedStatusEffects += StatusEffects.INSTANT_HEALTH
         }
+
         if (regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
             allowedStatusEffects += StatusEffects.REGENERATION
         }
+
         if (strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)) {
             allowedStatusEffects += StatusEffects.STRENGTH
+        }
+
+        if (speedPotion) {
+            allowedStatusEffects += StatusEffects.SPEED
         }
 
         return PotionUtil.getPotionEffects(stack).any { allowedStatusEffects.contains(it.effectType) }
