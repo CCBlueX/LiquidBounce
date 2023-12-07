@@ -63,6 +63,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
     private val healthPotion by boolean("HealthPotion", true)
     private val regenPotion by boolean("RegenPotion", true)
     private val strengthPotion by boolean("StrengthPotion", true)
+    private val speedPotion by boolean("SpeedPotion", false)
 
     private val allowLingering by boolean("AllowLingering", false)
 
@@ -115,14 +116,31 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
             return false
         }
 
-        RotationManager.aimAt(
-            Rotation(player.yaw, (85f..90f).random().toFloat()),
-            configurable = rotations,
-        )
-        waitTicks(1)
-        if (RotationManager.serverRotation.pitch < 85) {
-            return false
+        val potionStack = foundPotSlot.getItemStack()
+
+        if (!potionStack.isNothing()) {
+            if (!healthPotion && potionStack.item !is SplashPotionItem && potionStack.item !is LingeringPotionItem) {
+                return false
+            }
+
+            if (!regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
+                return false
+            }
+
+            if (!strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)) {
+                return false
+            }
+
+            if (!speedPotion && potionStack.item is SplashPotionItem && potionStack.item.potion.effects.any { effect ->
+                    effect.effectType == StatusEffects.SPEED
+                }) {
+                useHotbarSlotOrOffhand(foundPotSlot)
+                return true
+            }
         }
+
+        return false
+    }
 
         useHotbarSlotOrOffhand(foundPotSlot)
         return true
@@ -151,13 +169,10 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         return true
     }
 
-    private val speedPotion by boolean("SpeedPotion", default = true)
-
-    private val isPotion(stack: ItemStack): Boolean {
+    private fun isPotion(stack: ItemStack): Boolean {
         if (stack.isNothing()) {
             return false
         }
-
         if (stack.item !is SplashPotionItem && (stack.item !is LingeringPotionItem || !allowLingering)) {
             return false
         }
@@ -167,17 +182,11 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         if (healthPotion && healthIsLow) {
             allowedStatusEffects += StatusEffects.INSTANT_HEALTH
         }
-
         if (regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
             allowedStatusEffects += StatusEffects.REGENERATION
         }
-
         if (strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)) {
             allowedStatusEffects += StatusEffects.STRENGTH
-        }
-
-        if (speedPotion) {
-            allowedStatusEffects += StatusEffects.SPEED
         }
 
         return PotionUtil.getPotionEffects(stack).any { allowedStatusEffects.contains(it.effectType) }
