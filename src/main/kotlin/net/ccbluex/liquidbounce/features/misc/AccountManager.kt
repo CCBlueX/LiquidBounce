@@ -24,6 +24,8 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import com.thealtening.api.TheAltening
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import me.liuli.elixir.account.CrackedAccount
 import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.account.MinecraftAccount
@@ -54,11 +56,14 @@ object AccountManager : Configurable("Accounts") {
         ConfigSystem.root(this)
     }
 
-    @RequiredByScript
-    fun loginAccount(id: Int) {
-        val account = accounts.getOrNull(id) ?: return
+    fun loginAccountAsync(id: Int) = GlobalScope.launch {
+        loginAccount(id)
+    }
 
-        // TODO: Implement directly into Elixir
+    @RequiredByScript
+    fun loginAccount(id: Int) = runCatching {
+        val account = accounts.getOrNull(id) ?: error("Account not found!")
+
         val (session, sessionService, profileKeys) = when (account) {
             is CrackedAccount -> mc.sessionService.loginCracked(account.session.username)
 
@@ -104,7 +109,11 @@ object AccountManager : Configurable("Accounts") {
         mc.profileKeys = profileKeys
 
         EventManager.callEvent(SessionEvent())
-    }
+        EventManager.callEvent(AltManagerUpdateEvent(true, "Logged in as ${account.name}"))
+    }.onFailure {
+        logger.error("Failed to login into account", it)
+        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+    }.getOrThrow()
 
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
@@ -203,7 +212,7 @@ object AccountManager : Configurable("Accounts") {
         })
     }
 
-    fun newAlteningAccount(accountToken: String) {
+    fun newAlteningAccount(accountToken: String) = runCatching {
         // Check if altening token is valid
         val (session) = mc.sessionService.loginAltening(accountToken)
 
@@ -215,9 +224,12 @@ object AccountManager : Configurable("Accounts") {
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
+    }.onFailure {
+        logger.error("Failed to login into altening account (for add-process)", it)
+        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
     }
 
-    fun generateNewAlteningAccount(apiToken: String = this.alteningApiToken) {
+    fun generateNewAlteningAccount(apiToken: String = this.alteningApiToken) = runCatching {
         if (apiToken.isEmpty()) {
             error("Altening API Token is empty!")
         }
@@ -234,6 +246,9 @@ object AccountManager : Configurable("Accounts") {
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
+    }.onFailure {
+        logger.error("Failed to generate new altening account", it)
+        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
     }
 
     @RequiredByScript
