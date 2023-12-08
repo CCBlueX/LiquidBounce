@@ -153,25 +153,24 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
     }
 
     private fun isPotion(stack: ItemStack): Boolean {
-        if (stack.isNothing()) {
-            return false
-        }
-        if (stack.item !is SplashPotionItem && (stack.item !is LingeringPotionItem || !allowLingering)) {
-            return false
-        }
+    if (!stack.isNothing()) {
+        return isSplashOrLingeringPotion(stack) && hasDesiredPotionEffect(stack, StatusEffects.INSTANT_HEALTH) && isPlayerHealthLow(health)
+    }
+    return false
+}
 
-        val healthIsLow = player.health <= health
+    val healthIsLow = player.health <= health
 
-        return PotionUtil.getPotionEffects(stack).any {
-            when (it.effectType) {
-                StatusEffects.INSTANT_HEALTH ->
-                    healthPotion && healthIsLow
-                StatusEffects.REGENERATION ->
-                    regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
-                StatusEffects.STRENGTH ->
-                    strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
-                StatusEffects.SPEED ->
-                    speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
+    return PotionUtil.getPotionEffects(stack).any {
+        when (it.effectType) {
+            StatusEffects.INSTANT_HEALTH ->
+                healthPotion && healthIsLow
+            StatusEffects.REGENERATION ->
+                regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
+            StatusEffects.STRENGTH ->
+                strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
+            StatusEffects.SPEED ->
+                speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
 
                 else -> false
             }
