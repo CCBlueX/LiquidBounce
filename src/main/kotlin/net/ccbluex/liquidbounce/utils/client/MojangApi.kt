@@ -32,12 +32,7 @@ object MojangApi {
         val response = decode<ApiProfileResponse>(text)
 
         // Format UUID because otherwise it will be invalid
-        val formattedUuid = response.id.replaceFirst(
-            "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})".toRegex(),
-            "$1-$2-$3-$4-$5"
-        )
-
-        UUID.fromString(formattedUuid)
+        uuidFromUnformatted(response.id)
     }.onFailure {
         logger.error("Failed to get UUID of $username", it)
     }.getOrNull()

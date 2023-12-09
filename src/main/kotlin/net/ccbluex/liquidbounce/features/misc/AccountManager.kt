@@ -70,7 +70,7 @@ object AccountManager : Configurable("Accounts") {
             is MicrosoftAccount -> {
                 val session = net.minecraft.client.session.Session(
                     account.name,
-                    UUID.fromString(account.session.uuid),
+                    uuidFromUnformatted(account.session.uuid),
                     account.session.token,
                     Optional.empty(),
                     Optional.empty(),
@@ -104,9 +104,9 @@ object AccountManager : Configurable("Accounts") {
             else -> error("Unknown account type: ${account::class.simpleName}")
         }
 
-//        mc.session = session
-//        mc.sessionService = sessionService
-//        mc.profileKeys = profileKeys
+        mc.session = session
+        mc.sessionService = sessionService
+        mc.profileKeys = profileKeys
 
         EventManager.callEvent(SessionEvent())
         EventManager.callEvent(AltManagerUpdateEvent(true, "Logged in as ${account.name}"))
