@@ -18,31 +18,30 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.io.HttpClient
+import java.util.*
 
 object MojangApi {
 
     /**
      * Get UUID of username
      */
-    fun getUUID(username: String): String {
-        // TODO: Use GameProfileSerializer from authlib
+    fun getUUID(username: String): UUID? = runCatching {
+        val text = HttpClient.get("https://api.mojang.com/users/profiles/minecraft/$username")
+        val response = decode<ApiProfileResponse>(text)
 
-        // Read response content and get id from json
-        try {
-            // Make an http connection to Mojang API and ask for UUID of username
-            val text = HttpClient.get("https://api.mojang.com/users/profiles/minecraft/$username")
+        // Format UUID because otherwise it will be invalid
+        val formattedUuid = response.id.replaceFirst(
+            "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})".toRegex(),
+            "$1-$2-$3-$4-$5"
+        )
 
-            val jsonElement = JsonParser().parse(text)
+        UUID.fromString(formattedUuid)
+    }.onFailure {
+        logger.error("Failed to get UUID of $username", it)
+    }.getOrNull()
 
-            if (jsonElement.isJsonObject) {
-                return jsonElement.asJsonObject.get("id").asString
-            }
-        } catch (e: Exception) {
-            return ""
-        }
-        return ""
-    }
+    data class ApiProfileResponse(val id: String, val name: String)
 
 }

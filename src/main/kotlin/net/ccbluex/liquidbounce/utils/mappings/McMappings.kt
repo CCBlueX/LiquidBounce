@@ -19,11 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.mappings
 
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.io.resource
-import net.fabricmc.mappings.Mappings
-import net.fabricmc.mappings.model.V2MappingsProvider
-
 /**
  * Tiny mappings
  *
@@ -34,60 +29,64 @@ import net.fabricmc.mappings.model.V2MappingsProvider
  */
 object McMappings {
 
-    var mappings: Mappings? = null
+    // var mappings: Mappings? = null
 
     fun load() {
-        runCatching {
-            mappings = V2MappingsProvider.readTinyMappings(resource("/mappings/mappings.tiny").bufferedReader())
-        }.onFailure {
-            logger.error("Unable to load mappings. Ignore this if you are using a development environment.", it)
-        }
+//        runCatching {
+//            mappings = V2MappingsProvider.readTinyMappings(resource("/mappings/mappings.tiny").bufferedReader())
+//        }.onFailure {
+//            logger.error("Unable to load mappings. Ignore this if you are using a development environment.", it)
+//        }
     }
 
     fun remapClass(clazz: String): String {
         val className = clazz.replace('.', '/')
 
-        return mappings?.classEntries?.find {
-            it?.get("named") == className
-        }?.get("intermediary") ?: className
+//        return mappings?.classEntries?.find {
+//            it?.get("named") == className
+//        }?.get("intermediary") ?: className
+
+        return className
     }
 
     fun remapField(clazz: Class<*>, name: String, superClasses: Boolean): String {
         val classNames = mutableSetOf(clazz.name.replace('.', '/'))
 
-        if (superClasses) {
-            var current = clazz
-            while (current.name != "java.lang.Object") {
-                current = current.superclass
-                classNames.add(current.name.replace('.', '/'))
-            }
-        }
-
-        return mappings?.fieldEntries?.find {
-            val intern = it?.get("intermediary") ?: return@find false
-            val named = it.get("named") ?: return@find false
-
-            classNames.contains(intern.owner) && named.name == name
-        }?.get("intermediary")?.name ?: name
+//        if (superClasses) {
+//            var current = clazz
+//            while (current.name != "java.lang.Object") {
+//                current = current.superclass
+//                classNames.add(current.name.replace('.', '/'))
+//            }
+//        }
+//
+//        return mappings?.fieldEntries?.find {
+//            val intern = it?.get("intermediary") ?: return@find false
+//            val named = it.get("named") ?: return@find false
+//
+//            classNames.contains(intern.owner) && named.name == name
+//        }?.get("intermediary")?.name ?: name
+        return name
     }
 
     fun remapMethod(clazz: Class<*>, name: String, superClasses: Boolean): String {
-        val classNames = mutableSetOf(clazz.name.replace('.', '/'))
-
-        if (superClasses) {
-            var current = clazz
-            while (current.name != "java.lang.Object") {
-                current = current.superclass
-                classNames.add(current.name.replace('.', '/'))
-            }
-        }
-
-        return mappings?.methodEntries?.find {
-            val intern = it?.get("intermediary") ?: return@find false
-            val named = it.get("named") ?: return@find false
-
-            classNames.contains(intern.owner) && named.name == name
-        }?.get("intermediary")?.name ?: name
+//        val classNames = mutableSetOf(clazz.name.replace('.', '/'))
+//
+//        if (superClasses) {
+//            var current = clazz
+//            while (current.name != "java.lang.Object") {
+//                current = current.superclass
+//                classNames.add(current.name.replace('.', '/'))
+//            }
+//        }
+//
+//        return mappings?.methodEntries?.find {
+//            val intern = it?.get("intermediary") ?: return@find false
+//            val named = it.get("named") ?: return@find false
+//
+//            classNames.contains(intern.owner) && named.name == name
+//        }?.get("intermediary")?.name ?: name
+        return name
     }
 
 }

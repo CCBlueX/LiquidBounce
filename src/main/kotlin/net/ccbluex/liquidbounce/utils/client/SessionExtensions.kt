@@ -19,20 +19,17 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import com.mojang.authlib.Agent
 import com.mojang.authlib.Environment
 import com.mojang.authlib.exceptions.AuthenticationException
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
-import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.client.util.ProfileKeys
-import net.minecraft.client.util.Session
+import net.minecraft.client.session.ProfileKeys
+import net.minecraft.client.session.Session
 import java.net.Proxy
 import java.util.*
 
@@ -54,9 +51,9 @@ object SessionHandler : Listenable {
 fun MinecraftSessionService.restoreInitialSession() {
     val initialSession = SessionHandler.initialSession!!
 
-    mc.session = initialSession.session
+    // mc.session = initialSession.session
     mc.sessionService = initialSession.sessionService
-    mc.profileKeys = initialSession.profileKeys
+    // mc.profileKeys = initialSession.profileKeys
 }
 
 /**
@@ -84,7 +81,7 @@ private fun MinecraftSessionService.login(username: String, password: String = "
             Session.AccountType.LEGACY
         )
         val sessionService = YggdrasilAuthenticationService(
-            Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
+            Proxy.NO_PROXY, YggdrasilEnvironment.PROD.environment
         ).createMinecraftSessionService()
 
         return SessionData(session, sessionService, ProfileKeys.MISSING)
@@ -92,45 +89,49 @@ private fun MinecraftSessionService.login(username: String, password: String = "
 
     // Create a new authentication service
     // We could use mc.sessionService, but we want to use our own environment.
-    val authenticationService = YggdrasilAuthenticationService(Proxy.NO_PROXY, "", environment)
+    val authenticationService = YggdrasilAuthenticationService(Proxy.NO_PROXY, environment)
+
+    TODO("Login is not implemented yet!")
 
     // Create a new user authentication
-    val userAuthentication = authenticationService.createUserAuthentication(Agent.MINECRAFT)
-    userAuthentication.setUsername(username)
-    userAuthentication.setPassword(password)
-
-    // Logging in
-    userAuthentication.logIn()
-
-    // Create a new session
-    val session = Session(
-        userAuthentication.selectedProfile.name,
-        userAuthentication.selectedProfile.id.toString(),
-        userAuthentication.authenticatedToken,
-        Optional.empty(),
-        Optional.empty(),
-        Session.AccountType.MOJANG
-    )
-    val sessionService = authenticationService.createMinecraftSessionService()
-
-    var profileKeys = ProfileKeys.MISSING
-    runCatching {
-        // todo: fix support for altening (Failed to create profile keys for ... due to Status: 401)
-        val userAuthenticationService = YggdrasilUserApiService(session.accessToken,
-            mc.authenticationService.proxy, environment)
-        profileKeys = ProfileKeys.create(userAuthenticationService, session, mc.runDirectory.toPath())
-    }.onFailure {
-        logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
-    }
-
-    return SessionData(session, sessionService, profileKeys)
+//    val userAuthentication = authenticationService.createUserAuthentication(Agent.MINECRAFT)
+//    userAuthentication.setUsername(username)
+//    userAuthentication.setPassword(password)
+//
+//    // Logging in
+//    userAuthentication.logIn()
+//
+//    // Create a new session
+//    val session = Session(
+//        userAuthentication.selectedProfile.name,
+//        userAuthentication.selectedProfile.id.toString(),
+//        userAuthentication.authenticatedToken,
+//        Optional.empty(),
+//        Optional.empty(),
+//        Session.AccountType.MOJANG
+//    )
+//    val sessionService = authenticationService.createMinecraftSessionService()
+//
+//    var profileKeys = ProfileKeys.MISSING
+//    runCatching {
+//        // todo: fix support for altening (Failed to create profile keys for ... due to Status: 401)
+//        val userAuthenticationService = YggdrasilUserApiService(session.accessToken,
+//            mc.authenticationService.proxy, environment)
+//        profileKeys = ProfileKeys.create(userAuthenticationService, session, mc.runDirectory.toPath())
+//    }.onFailure {
+//        logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
+//    }
+//
+//    return SessionData(session, sessionService, profileKeys)
 }
 
 fun MinecraftSessionService.loginMojang(email: String, password: String) =
     login(email, password, YggdrasilEnvironment.PROD.environment)
 
-fun MinecraftSessionService.loginAltening(account: String) =
-    login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
+fun MinecraftSessionService.loginAltening(account: String) {
+    TODO("Login is not implemented yet!")
+}
+//    login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
 
 fun MinecraftSessionService.loginCracked(username: String) =
     login(username, "", YggdrasilEnvironment.PROD.environment)
@@ -138,32 +139,32 @@ fun MinecraftSessionService.loginCracked(username: String) =
 /**
  * Account Generator environments
  */
-enum class GenEnvironments(
-    private val authHost: String,
-    private val accountsHost: String,
-    private val sessionHost: String,
-    private val servicesHost: String
-) : Environment {
-
-    THE_ALTENING(
-        "http://authserver.thealtening.com",
-        "https://api.mojang.com",
-        "http://sessionserver.thealtening.com",
-        "https://api.minecraftservices.com"
-    );
-
-    override fun getAuthHost() = authHost
-    override fun getAccountsHost() = accountsHost
-    override fun getSessionHost() = sessionHost
-    override fun getServicesHost() = servicesHost
-    override fun getName() = name
-
-    override fun asString() = StringJoiner(", ", "", "")
-        .add("authHost='$authHost'")
-        .add("accountsHost='$accountsHost'")
-        .add("sessionHost='$sessionHost'")
-        .add("servicesHost='$servicesHost'")
-        .add("name='" + getName() + "'")
-        .toString()
-
-}
+//enum class GenEnvironments(
+//    private val authHost: String,
+//    private val accountsHost: String,
+//    private val sessionHost: String,
+//    private val servicesHost: String
+//) : Environment {
+//
+//    THE_ALTENING(
+//        "http://authserver.thealtening.com",
+//        "https://api.mojang.com",
+//        "http://sessionserver.thealtening.com",
+//        "https://api.minecraftservices.com"
+//    );
+//
+//    override fun getAuthHost() = authHost
+//    override fun getAccountsHost() = accountsHost
+//    override fun getSessionHost() = sessionHost
+//    override fun getServicesHost() = servicesHost
+//    override fun getName() = name
+//
+//    override fun asString() = StringJoiner(", ", "", "")
+//        .add("authHost='$authHost'")
+//        .add("accountsHost='$accountsHost'")
+//        .add("sessionHost='$sessionHost'")
+//        .add("servicesHost='$servicesHost'")
+//        .add("name='" + getName() + "'")
+//        .toString()
+//
+//}

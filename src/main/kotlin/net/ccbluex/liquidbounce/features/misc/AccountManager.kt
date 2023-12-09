@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.event.events.AltManagerUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.client.util.ProfileKeys
+import net.minecraft.client.session.ProfileKeys
 import java.net.Proxy
 import java.util.*
 
@@ -68,16 +68,16 @@ object AccountManager : Configurable("Accounts") {
             is CrackedAccount -> mc.sessionService.loginCracked(account.session.username)
 
             is MicrosoftAccount -> {
-                val session = net.minecraft.client.util.Session(
+                val session = net.minecraft.client.session.Session(
                     account.name,
-                    account.session.uuid,
+                    UUID.fromString(account.session.uuid),
                     account.session.token,
                     Optional.empty(),
                     Optional.empty(),
-                    net.minecraft.client.util.Session.AccountType.MSA
+                    net.minecraft.client.session.Session.AccountType.MSA
                 )
                 val sessionService = YggdrasilAuthenticationService(
-                    Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
+                    Proxy.NO_PROXY, YggdrasilEnvironment.PROD.environment
                 ).createMinecraftSessionService()
 
                 var profileKeys = ProfileKeys.MISSING
@@ -92,21 +92,21 @@ object AccountManager : Configurable("Accounts") {
                 SessionData(session, sessionService, profileKeys)
             }
 
-            is AlteningAccount -> {
-                val (session, sessionService, keys) = mc.sessionService.loginAltening(account.token)
-
-                // Update account info
-                account.name = session.username
-                account.uuid = session.uuid
-
-                SessionData(session, sessionService, keys)
-            }
+//            is AlteningAccount -> {
+//                val (session, sessionService, keys) = mc.sessionService.loginAltening(account.token)
+//
+//                // Update account info
+//                account.name = session.username
+//                account.uuid = session.uuidOrNull.toString()
+//
+//                SessionData(session, sessionService, keys)
+//            }
             else -> error("Unknown account type: ${account::class.simpleName}")
         }
 
-        mc.session = session
-        mc.sessionService = sessionService
-        mc.profileKeys = profileKeys
+//        mc.session = session
+//        mc.sessionService = sessionService
+//        mc.profileKeys = profileKeys
 
         EventManager.callEvent(SessionEvent())
         EventManager.callEvent(AltManagerUpdateEvent(true, "Logged in as ${account.name}"))
@@ -214,13 +214,13 @@ object AccountManager : Configurable("Accounts") {
 
     fun newAlteningAccount(accountToken: String) = runCatching {
         // Check if altening token is valid
-        val (session) = mc.sessionService.loginAltening(accountToken)
-
-        accounts += AlteningAccount().also { account ->
-            account.token = accountToken
-            account.name = session.username
-            account.uuid = session.uuid
-        }
+//        val (session) = mc.sessionService.loginAltening(accountToken)
+//
+//        accounts += AlteningAccount().also { account ->
+//            account.token = accountToken
+//            account.name = session.username
+//            account.uuid = session.uuidOrNull.toString()
+//        }
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
@@ -302,12 +302,12 @@ class AlteningAccount : MinecraftAccount("Altening") {
      * @throws me.liuli.elixir.exception.LoginException if login failed
      */
     override fun update() {
-        // Login into account
-        val (session, _) = mc.sessionService.loginAltening(token)
-
-        // Update account info
-        name = session.username
-        uuid = session.uuid
+//        // Login into account
+//        val (session, _) = mc.sessionService.loginAltening(token)
+//
+//        // Update account info
+//        name = session.username
+//        uuid = session.uuidOrNull.toString()
     }
 
 }

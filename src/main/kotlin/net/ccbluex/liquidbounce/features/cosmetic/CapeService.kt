@@ -127,7 +127,7 @@ object CapeService : Listenable, Configurable("Cape") {
     fun getCapeDownload(uuid: UUID): Pair<String, String>? {
         val clientCapeUser = clientCapeUser
 
-        if (uuid == mc.session.profile.id && clientCapeUser != null) {
+        if (uuid == mc.session.uuidOrNull && clientCapeUser != null) {
             // If the UUID is the same as the current user, we can use the clientCapeUser
             val capeName = clientCapeUser.capeName
             return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)

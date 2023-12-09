@@ -93,8 +93,8 @@ dependencies {
     // }
 
     // Recommended mods (on IDE)
-    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    modImplementation "maven.modrinth:sodium:${project.sodium_version}"
+    // modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    // modImplementation "maven.modrinth:sodium:${project.sodium_version}"
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'

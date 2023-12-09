@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.network.ClientCommonNetworkHandler;
+import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -40,9 +42,7 @@ import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -50,24 +50,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ClientPlayNetworkHandler.class)
-public class MixinClientPlayNetworkHandler {
+public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkHandler {
 
-    @Shadow
-    @Final
-    private MinecraftClient client;
 
-    @Shadow
-    @Final
-    private ClientConnection connection;
+    protected MixinClientPlayNetworkHandler(MinecraftClient client, ClientConnection connection, ClientConnectionState connectionState) {
+        super(client, connection, connectionState);
+    }
 
     @Inject(method = "onChunkData", at = @At("RETURN"))
     private void injectChunkLoadEvent(ChunkDataS2CPacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.getX(), packet.getZ()));
+        EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.getChunkX(), packet.getChunkZ()));
     }
 
     @Inject(method = "onUnloadChunk", at = @At("RETURN"))
     private void injectUnloadEvent(UnloadChunkS2CPacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.getX(), packet.getZ()));
+        EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.pos().x, packet.pos().z));
     }
 
     @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))

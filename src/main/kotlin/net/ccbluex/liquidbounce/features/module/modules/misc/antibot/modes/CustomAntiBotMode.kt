@@ -82,7 +82,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
 
     private fun hasIllegalName(player: PlayerEntity): Boolean {
         val validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-        val name = player.entityName
+        val name = player.nameForScoreboard
 
         if (name.length < 3 || name.length > 16) {
             return true

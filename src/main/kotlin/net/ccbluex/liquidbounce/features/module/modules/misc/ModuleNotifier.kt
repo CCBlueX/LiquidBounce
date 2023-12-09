@@ -63,10 +63,12 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
 
         if (packet is PlayerListS2CPacket) {
             for (entry in packet.playerAdditionEntries) {
-                if (entry.profile.name != null && entry.profile.name.length > 2) {
-                    uuidNameCache[entry.profile.id] = entry.profile.name
+                val profile = entry.profile ?: continue
+
+                if (profile.name != null && profile.name.length > 2) {
+                    uuidNameCache[profile.id] = profile.name
                     if (joinMessages) {
-                        val message = joinMessageFormat.format(entry.profile.name)
+                        val message = joinMessageFormat.format(profile.name)
 
                         if (useNotification) {
                             notification("Notifier", message, NotificationEvent.Severity.INFO)

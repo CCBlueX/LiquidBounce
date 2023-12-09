@@ -107,7 +107,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
                 eyesPos,
-                Box(pos, pos.add(1, 1, 1))
+                Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared && isTargeted(state, pos)
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
@@ -150,7 +150,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val block = state.block
 
         return when (block) {
-            is GourdBlock -> true
+            // is GourdBlock -> true
+            // todo: what is a gourd block?
             is CropBlock -> block.isMature(state)
             is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= 3
             is CocoaBlock -> state.get(CocoaBlock.AGE) >= 2
