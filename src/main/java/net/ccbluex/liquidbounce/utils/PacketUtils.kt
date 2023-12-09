@@ -95,15 +95,9 @@ object PacketUtils : MinecraftInstance(), Listenable {
         synchronized(queuedPackets) {
             queuedPackets.forEach {
                 handlePacket(it)
-<<<<<<< HEAD
-                val packetEv = PacketEvent(it, EventState.RECEIVE)
-                FakeLag.onPacket(packetEv)
-                Velocity.onPacket(packetEv)
-=======
                 val packetEvent = PacketEvent(it, EventState.RECEIVE)
                 FakeLag.onPacket(packetEvent)
                 Velocity.onPacket(packetEvent)
->>>>>>> 78e6e18bfbcf55ebe972e959add5bf37d4116f19
             }
 
             queuedPackets.clear()
