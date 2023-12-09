@@ -281,9 +281,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        updateTargetToBreakable(radius, radiusSquared, eyesPos)
+        if (updateTargetToBreakable(radius, radiusSquared, eyesPos))
+            return
 
-        if (!AutoPlaceCrops.enabled) return
+        if (!AutoPlaceCrops.enabled)
+            return
 
         updateTargetToPlaceable(radius, radiusSquared, eyesPos)
 
