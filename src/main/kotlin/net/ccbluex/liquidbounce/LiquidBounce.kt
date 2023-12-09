@@ -43,10 +43,12 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.IS_MAC
+import net.ccbluex.liquidbounce.utils.client.SessionHandler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import org.apache.logging.log4j.LogManager
 import org.lwjgl.util.tinyfd.TinyFileDialogs
 import kotlin.system.exitProcess
@@ -135,8 +137,10 @@ object LiquidBounce : Listenable {
             ProxyManager
             AccountManager
             InventoryTracker
+            WorldToScreen
             Tabs
             Chat
+            SessionHandler
 
             // Loads up fonts (requires connection to the internet on first launch)
             Fonts

@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.utils.ColorUtils
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -152,28 +151,8 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         return getBaseColor()
     }
 
-    fun getTeamColor(entity: Entity): Color4b? {
-        val chars: CharArray = (entity.displayName ?: return null).string.toCharArray()
-        var color = Int.MAX_VALUE
-
-        val colors = "0123456789abcdef"
-
-        for (i in 0 until chars.size - 1) {
-            if (chars[i] != '§') {
-                continue
-            }
-
-            val index = colors.indexOf(chars[i + 1])
-
-            if (index !in 0..15) {
-                continue
-            }
-
-            color = ColorUtils.hexColors[index]
-            break
-        }
-
-        return Color4b(Color(color))
+    private fun getTeamColor(entity: Entity): Color4b? {
+        return Color4b(Color(entity.displayName.style.color?.rgb ?: return null))
     }
 
 }

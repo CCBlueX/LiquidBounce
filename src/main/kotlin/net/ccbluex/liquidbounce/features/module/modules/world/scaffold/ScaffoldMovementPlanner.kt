@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -14,11 +14,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.round
-import kotlin.math.sin
+import kotlin.math.*
 
 object ScaffoldMovementPlanner {
     private const val MAX_LAST_PLACE_BLOCKS: Int = 4
@@ -42,8 +38,15 @@ object ScaffoldMovementPlanner {
         // Is this a good way to find the block center?
         val blockUnderPlayer = findBlockPlayerStandsOn() ?: return null
 
-        val lastBlocksAvg = findLastPlacedBlocksAverage()
-        val lineBaseBlock = lastBlocksAvg ?: blockUnderPlayer.toVec3d()
+        val lastBlocksLine = fitLinesThroughLastPlacedBlocks()
+
+        // If it makes sense to follow the last placed blocks, we lay the movement line through them, otherwise, we
+        // don't consider them because the user probably wants to do something new
+        val lineBaseBlock = if (lastBlocksLine != null && !divergesTooMuchFromDirection(lastBlocksLine, direction)) {
+            lastBlocksLine.position
+        } else {
+            blockUnderPlayer.toVec3d()
+        }
 
         // We try to make the player run on this line
         val optimalLine = Line(Vec3d(lineBaseBlock.x + 0.5, player.pos.y, lineBaseBlock.z + 0.5), direction)
@@ -52,18 +55,20 @@ object ScaffoldMovementPlanner {
         ModuleDebug.debugGeometry(
             ModuleScaffold,
             "optimalLine",
-            ModuleDebug.DebuggedLine(optimalLine, if (lastBlocksAvg == null) Color4b.RED else Color4b.GREEN)
+            ModuleDebug.DebuggedLine(optimalLine, if (lastBlocksLine == null) Color4b.RED else Color4b.GREEN)
         )
 
         return optimalLine
     }
 
+    private fun divergesTooMuchFromDirection(lastBlocksLine: Line, direction: Vec3d): Boolean {
+        return acos(lastBlocksLine.direction.dotProduct(direction)).absoluteValue / Math.PI * 180 > 50.0
+    }
+
     /**
-     * Calculates the average position of last 2 placed blocks.
-     * It used as a starting position for the optimal movement line. This is especially important if wanted
-     * to move diagonally.
+     * Tries to fit a line that goes through the last placed blocks. Currently only considers the last two.
      */
-    private fun findLastPlacedBlocksAverage(): Vec3d? {
+    private fun fitLinesThroughLastPlacedBlocks(): Line? {
         // Take the last 2 blocks placed
         val lastPlacedBlocksToConsider =
             lastPlacedBlocks.subList(
@@ -71,11 +76,21 @@ object ScaffoldMovementPlanner {
                 toIndex = (lastPlacedBlocks.size).coerceAtLeast(0),
             )
 
-        if (lastPlacedBlocksToConsider.isEmpty()) {
+        if (lastPlacedBlocksToConsider.size < 2) {
             return null
         }
 
         // Just debug stuff
+        debugLastPlacedBlocks(lastPlacedBlocksToConsider)
+
+        val avgPos = Vec3d.of(lastPlacedBlocksToConsider[0].add(lastPlacedBlocksToConsider[1])).multiply(0.5)
+        val dir = Vec3d.of(lastPlacedBlocksToConsider[1].subtract(lastPlacedBlocksToConsider[0])).normalize()
+
+        // Calculate the average direction of the last placed blocks
+        return Line(avgPos, dir)
+    }
+
+    private fun debugLastPlacedBlocks(lastPlacedBlocksToConsider: MutableList<BlockPos>) {
         lastPlacedBlocksToConsider.forEachIndexed { idx, pos ->
             val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 255.0).toInt()
 
@@ -85,12 +100,6 @@ object ScaffoldMovementPlanner {
                 ModuleDebug.DebuggedBox(Box.from(pos.toVec3d()), Color4b(alpha, alpha, 255, 127)),
             )
         }
-
-        // Calculate the average direction of the last placed blocks
-        return lastPlacedBlocksToConsider
-            .fold(Vec3i.ZERO) { a, b -> a.add(b) }
-            .toVec3d()
-            .multiply(1.0 / lastPlacedBlocksToConsider.size.toDouble())
     }
 
     /**
@@ -100,6 +109,7 @@ object ScaffoldMovementPlanner {
      */
     private fun findBlockPlayerStandsOn(): BlockPos? {
         val offsetsToTry = arrayOf(0.301, 0.0, -0.301)
+        // Contains the blocks which the player is currently supported by
         val candidates = mutableListOf<BlockPos>()
 
         for (xOffset in offsetsToTry) {
@@ -112,10 +122,19 @@ object ScaffoldMovementPlanner {
             }
         }
 
+        // We want to keep the direction of the scaffold
+        this.lastPlacedBlocks.lastOrNull()?.let { lastPlacedBlock ->
+            if (lastPlacedBlock in candidates) {
+                return lastPlacedBlock
+            }
+        }
+
+        // Stabilize the heuristic
         if (lastPosition in candidates) {
             return lastPosition
         }
 
+        // We have no reason to prefer a candidate so just pick any.
         val currPosition = candidates.firstOrNull()
 
         lastPosition = currPosition

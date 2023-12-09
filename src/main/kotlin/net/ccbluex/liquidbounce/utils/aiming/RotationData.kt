@@ -19,12 +19,15 @@
 
 package net.ccbluex.liquidbounce.utils.aiming
 
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.roundToInt
 
 data class Rotation(var yaw: Float, var pitch: Float) {
+
+    companion object {
+        val ZERO = Rotation(0f, 0f)
+    }
 
     val rotationVec: Vec3d
         get() {
@@ -39,8 +42,7 @@ data class Rotation(var yaw: Float, var pitch: Float) {
      * Fix rotation based on sensitivity
      */
     fun fixedSensitivity(): Rotation {
-        val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
-        val gcd = f * f * f * 8.0 * 0.15F
+        val gcd = RotationManager.gcd
 
         // get previous rotation
         val rotation = RotationManager.serverRotation

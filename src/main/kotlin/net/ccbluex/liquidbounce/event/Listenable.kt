@@ -64,7 +64,7 @@ inline fun <reified T : Event> Listenable.sequenceHandler(
     priority: Int = 0,
     noinline eventHandler: SuspendableHandler<T>
 ) {
-    handler<T>(ignoreCondition, priority) { event -> Sequence(eventHandler, event) }
+    handler<T>(ignoreCondition, priority) { event -> Sequence(this, eventHandler, event) }
 }
 
 /**
@@ -73,7 +73,7 @@ inline fun <reified T : Event> Listenable.sequenceHandler(
 fun Listenable.repeatable(eventHandler: SuspendableHandler<DummyEvent>) {
     // We store our sequence in this variable. That can be done because our variable will survive the scope of this function
     // and can be used in the event handler function. This is a very useful pattern to use in Kotlin.
-    var sequence: RepeatingSequence? = RepeatingSequence(eventHandler)
+    var sequence: RepeatingSequence? = RepeatingSequence(this, eventHandler)
 
     // Ignore condition makes sense because we do not want our sequence to run after we do not handle events anymore
     handler<GameTickEvent>(ignoreCondition = true) {
@@ -83,7 +83,7 @@ fun Listenable.repeatable(eventHandler: SuspendableHandler<DummyEvent>) {
             if (sequence == null) {
                 // If not, start it
                 // This will start a new repeating sequence which will run until the condition is false
-                sequence = RepeatingSequence(eventHandler)
+                sequence = RepeatingSequence(this, eventHandler)
             }
         } else if (sequence != null) { // This condition is only true if the sequence is running
             // If the sequence is running, we should stop it

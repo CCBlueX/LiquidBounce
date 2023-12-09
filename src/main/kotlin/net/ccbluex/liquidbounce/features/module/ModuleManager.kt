@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.Modul
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
@@ -98,7 +99,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleDisabler,
             ModuleForceUnicodeChat,
             ModuleGhostHand,
-            ModuleGodMode,
             ModuleKick,
             ModuleMoreCarry,
             ModuleNameCollector,
@@ -124,12 +124,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNameProtect,
             ModuleNotifier,
             ModuleSpammer,
+            ModuleAutoAccount,
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
             ModuleCapeTransfer,
             ModuleHideClient,
             ModuleFocus,
+            ModuleClientFixes,
 
             // Movement
             ModuleAirJump,
@@ -158,6 +160,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSpeed,
             ModuleSprint,
             ModuleStep,
+            ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleFly,
@@ -199,6 +202,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleMurderMystery,
             ModuleAttackEffects,
             ModuleNametags,
+            ModuleCombineMobs,
 
             // ModuleNametags,
             ModuleNoBob,

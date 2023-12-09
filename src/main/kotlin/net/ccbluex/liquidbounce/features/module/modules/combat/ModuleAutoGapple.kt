@@ -57,7 +57,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
         if (player.health + player.absorptionAmount < health) {
             if (slot != null) {
-                wait { inventoryConstraints.delay.random() }
+                waitTicks(inventoryConstraints.delay.random())
 
                 if (slot != player.inventory.selectedSlot) {
                     lastSlot = player.inventory.selectedSlot
@@ -95,6 +95,10 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         inventoryConstraints: InventoryConstraintsConfigurable,
         close: Boolean = true,
     ) {
+        if (!player.currentScreenHandler.isPlayerInventory) {
+            return
+        }
+
         val slot = item.getIdForServerWithCurrentScreen() ?: return
 
         if (!isInInventoryScreen) {
@@ -104,10 +108,8 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         if (!inventoryConstraints.violatesNoMove && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             interaction.clickSlot(0, slot, button, slotActionType, player)
 
-            if (close) {
-                if (!isInInventoryScreen) {
-                    network.sendPacket(CloseHandledScreenC2SPacket(0))
-                }
+            if (close && canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
             }
         }
     }

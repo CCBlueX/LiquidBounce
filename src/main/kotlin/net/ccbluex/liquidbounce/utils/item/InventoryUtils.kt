@@ -7,20 +7,21 @@ import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_
 import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
+import kotlin.math.abs
 
 /**
  * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
@@ -32,6 +33,11 @@ val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
     val armorItems = (0 until 4).map { ArmorItemSlot(it) }
 
     return@run hotbarItems + offHandItem + inventoryItems + armorItems
+}
+
+fun findClosestItem(items: Array<Item>): Int? {
+    return (0..8).filter { player.inventory.getStack(it).item in items }
+        .minByOrNull { abs(player.inventory.selectedSlot - it) }
 }
 
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {
@@ -122,6 +128,7 @@ fun useHotbarSlotOrOffhand(item: HotbarItemSlot) {
         OffHandSlot -> {
             interactItem(Hand.OFF_HAND)
         }
+
         else -> {
             interactItem(Hand.MAIN_HAND) {
                 SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, 1)
@@ -158,9 +165,11 @@ class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal val delay by intRange("Delay", 2..4, 0..20)
     internal val invOpen by boolean("InvOpen", false)
     internal val noMove by boolean("NoMove", false)
+    internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
 
     val violatesNoMove
-        get() = noMove && mc.player?.moving == true
+        get() = noMove && (mc.player?.moving == true || mc.player?.input?.yAxisMovement != 0f ||
+            noRotation && !RotationManager.rotationMatchesPreviousRotation())
 }
 
 data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

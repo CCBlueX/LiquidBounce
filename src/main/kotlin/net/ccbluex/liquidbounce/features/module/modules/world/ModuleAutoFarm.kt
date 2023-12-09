@@ -239,7 +239,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         player.isSprinting = true
     }
 
-    val networkTickHandler = repeatable { _ ->
+    val repeatable = repeatable { event ->
         // return if the user is inside a screen like the inventory
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
@@ -302,9 +302,17 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         movingToBlock = false // disabling to stop the player from moving forward (see velocityHandler)
         walkTarget = null // resetting walkTarget to null to stop rendering
 
-        val rotation = RotationManager.currentRotation ?: return@repeatable
+        val currentRotation = RotationManager.serverRotation
 
-        val rayTraceResult = raycast(range.toDouble(), rotation) ?: return@repeatable
+        val rayTraceResult = mc.world?.raycast(
+            RaycastContext(
+                player.eyes,
+                player.eyes.add(currentRotation.rotationVec.multiply(range.toDouble())),
+                RaycastContext.ShapeType.COLLIDER,
+                RaycastContext.FluidHandling.NONE,
+                player
+            )
+        )
 
 
 
@@ -327,7 +335,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                     } // swap to a fortune item to increase drops
             }
             val direction = rayTraceResult.side
-            if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
+
+            if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
             if(mc.interactionManager!!.blockBreakingProgress == -1) {

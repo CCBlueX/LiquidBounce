@@ -28,10 +28,36 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.util.ProfileKeys
 import net.minecraft.client.util.Session
 import java.net.Proxy
 import java.util.*
+
+data class SessionData(val session: Session, val sessionService: MinecraftSessionService?,
+                       val profileKeys: ProfileKeys)
+
+object SessionHandler : Listenable {
+
+    var initialSession: SessionData? = null
+
+    val sessionHandler = handler<SessionEvent> {
+        if (initialSession == null) {
+            initialSession = SessionData(mc.session, mc.sessionService, mc.profileKeys)
+        }
+    }
+
+}
+
+fun MinecraftSessionService.restoreInitialSession() {
+    val initialSession = SessionHandler.initialSession!!
+
+    mc.session = initialSession.session
+    mc.sessionService = initialSession.sessionService
+    mc.profileKeys = initialSession.profileKeys
+}
 
 /**
  * Login to a Minecraft account
@@ -46,7 +72,7 @@ import java.util.*
  * @throws Exception If an unknown issue occurs
  */
 private fun MinecraftSessionService.login(username: String, password: String = "", environment: Environment) :
-    Triple<Session, MinecraftSessionService?, ProfileKeys> {
+    SessionData {
     // If the password is blank, we assume that the account is cracked
     if (password.isBlank()) {
         val session = Session(
@@ -61,7 +87,7 @@ private fun MinecraftSessionService.login(username: String, password: String = "
             Proxy.NO_PROXY, "", YggdrasilEnvironment.PROD.environment
         ).createMinecraftSessionService()
 
-        return Triple(session, sessionService, ProfileKeys.MISSING)
+        return SessionData(session, sessionService, ProfileKeys.MISSING)
     }
 
     // Create a new authentication service
@@ -97,7 +123,7 @@ private fun MinecraftSessionService.login(username: String, password: String = "
         logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
     }
 
-    return Triple(session, sessionService, profileKeys)
+    return SessionData(session, sessionService, profileKeys)
 }
 
 fun MinecraftSessionService.loginMojang(email: String, password: String) =

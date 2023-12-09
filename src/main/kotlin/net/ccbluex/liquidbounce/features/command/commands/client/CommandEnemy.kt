@@ -57,14 +57,14 @@ object CommandEnemy {
             )
             .subcommand(
                 CommandBuilder
-                    .begin("mobs")
+                    .begin("hostile")
                     .handler { command, _ ->
-                        globalEnemyConfigurable.mobs = !globalEnemyConfigurable.mobs
+                        globalEnemyConfigurable.hostile = !globalEnemyConfigurable.hostile
 
                         chat(
                             regular(
                                 command.result(
-                                    if (globalEnemyConfigurable.mobs) {
+                                    if (globalEnemyConfigurable.hostile) {
                                         "enabled"
                                     } else {
                                         "disabled"
@@ -79,14 +79,14 @@ object CommandEnemy {
             )
             .subcommand(
                 CommandBuilder
-                    .begin("animals")
+                    .begin("passive")
                     .handler { command, _ ->
-                        globalEnemyConfigurable.animals = !globalEnemyConfigurable.animals
+                        globalEnemyConfigurable.passive = !globalEnemyConfigurable.passive
 
                         chat(
                             regular(
                                 command.result(
-                                    if (globalEnemyConfigurable.animals) {
+                                    if (globalEnemyConfigurable.passive) {
                                         "enabled"
                                     } else {
                                         "disabled"
@@ -145,14 +145,14 @@ object CommandEnemy {
             )
             .subcommand(
                 CommandBuilder
-                    .begin("friends")
+                    .begin("sleeping")
                     .handler { command, _ ->
-                        globalEnemyConfigurable.friends = !globalEnemyConfigurable.friends
+                        globalEnemyConfigurable.sleeping = !globalEnemyConfigurable.sleeping
 
                         chat(
                             regular(
                                 command.result(
-                                    if (globalEnemyConfigurable.friends) {
+                                    if (globalEnemyConfigurable.sleeping) {
                                         "enabled"
                                     } else {
                                         "disabled"
@@ -167,14 +167,14 @@ object CommandEnemy {
             )
             .subcommand(
                 CommandBuilder
-                    .begin("teammates")
+                    .begin("friends")
                     .handler { command, _ ->
-                        globalEnemyConfigurable.teamMates = !globalEnemyConfigurable.teamMates
+                        globalEnemyConfigurable.friends = !globalEnemyConfigurable.friends
 
                         chat(
                             regular(
                                 command.result(
-                                    if (globalEnemyConfigurable.teamMates) {
+                                    if (globalEnemyConfigurable.friends) {
                                         "enabled"
                                     } else {
                                         "disabled"

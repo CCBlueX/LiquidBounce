@@ -22,11 +22,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
-import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
-import net.ccbluex.liquidbounce.utils.item.findNonEmptySlotsInInventory
-import net.ccbluex.liquidbounce.utils.item.isInInventoryScreen
-import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
@@ -115,7 +111,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 val delay = inventoryConstraints.delay.random()
 
                 if (delay > 0) {
-                    wait(delay - 1) { inventoryConstraints.violatesNoMove }
+                    waitConditional(delay - 1) { inventoryConstraints.violatesNoMove }
 
                     return@repeatable
                 }
@@ -143,7 +139,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 val delay = inventoryConstraints.delay.random()
 
                 if (delay > 0) {
-                    wait(delay - 1) { inventoryConstraints.violatesNoMove }
+                    waitConditional(delay - 1) { inventoryConstraints.violatesNoMove }
 
                     return@repeatable
                 }
@@ -166,14 +162,14 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 val delay = inventoryConstraints.delay.random()
 
                 if (delay > 0) {
-                    wait(delay - 1) { inventoryConstraints.violatesNoMove }
+                    waitConditional(delay - 1) { inventoryConstraints.violatesNoMove }
 
                     return@repeatable
                 }
             }
         }
 
-        if (hasClickedOnce && !isInInventoryScreen) {
+        if (hasClickedOnce && canCloseMainInventory) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
     }
