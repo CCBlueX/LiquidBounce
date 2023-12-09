@@ -52,6 +52,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.*
+import net.minecraft.world.RaycastContext
 import kotlin.math.abs
 
 /**
@@ -72,11 +73,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // the ticks to wait after interacting with something
-
     private val interactDelay by intRange("InteractDelay", 2..3, 1..15)
 
 //    private val extraSearchRange by float("extraSearchRange", 0F, 0F..3F)
-//    private val breakDelay by intRange("BreakDelay", 0..1, 1..15)
 
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
@@ -181,7 +180,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         init {
             tree(Path)
             tree(Blocks)
-
         }
 
 
@@ -312,7 +310,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 RaycastContext.FluidHandling.NONE,
                 player
             )
-        )
+        ) ?: return@repeatable
 
 
 
@@ -341,7 +339,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             }
             if(mc.interactionManager!!.blockBreakingProgress == -1) {
                 // Only wait if the block is completely broken
-                wait(interactDelay.random())
+                waitTicks(interactDelay.random())
             }
             return@repeatable
 
@@ -361,7 +359,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 if(item != null){
                     SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
                     placeCrop(rayTraceResult)
-                    wait(interactDelay.random())
+                    waitTicks(interactDelay.random())
 
                 }
             }
@@ -473,7 +471,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             this.currentTarget = pos
             // aim at target
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(rotation, configurable = rotations)
+
             break // We got a free angle at the block? No need to see more of them.
         }
 
@@ -504,7 +503,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             this.currentTarget = pos
             // aim at target
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(rotation, configurable = rotations)
+
             break // We got a free angle at the block? No need to see more of them.
         }
     }

@@ -380,7 +380,7 @@ private fun considerSpot(
 
 
     // Is either spot visible or distance within wall range?
-    if ((!visible || distance >= rangeSquared - 0.1) && distance >= wallsRangeSquared - 0.1) {
+    if ((!visible || distance >= rangeSquared) && distance >= wallsRangeSquared) {
         return
     }
 
