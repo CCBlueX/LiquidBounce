@@ -22,26 +22,22 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.raytracePlaceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.findClosestItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
@@ -52,7 +48,10 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import net.minecraft.world.RaycastContext
 import kotlin.math.abs
 
@@ -386,7 +385,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
 
-    private fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
+    fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
         val block = state.block
 
         return when (block) {
@@ -409,7 +408,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         return isFarmBlock(state, allowFarmland, allowSoulsand) && hasAirAbove(pos)
     }
 
-    private fun hasAirAbove(pos: BlockPos) = pos.up().getState()?.isAir == true
+    fun hasAirAbove(pos: BlockPos) = pos.up().getState()?.isAir == true
 
 
     private fun isFarmBlock(state: BlockState, allowFarmland: Boolean, allowSoulsand: Boolean): Boolean {
@@ -427,63 +426,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
     override fun enable() {
-//        ChunkScanner.subscribe(ReadyBlockTracker)
         ChunkScanner.subscribe(BlockTracker)
     }
 
     override fun disable() {
         ChunkScanner.unsubscribe(BlockTracker)
-//        ChunkScanner.unsubscribe(FarmBlockTracker)
-    }
-    enum class TrackedState {
-        Destroy,
-        Farmland,
-        Soulsand
     }
 
-    object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
-        override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            val block = state.block
-            if (block is FarmlandBlock && hasAirAbove(pos))
-                return TrackedState.Farmland
-
-            if (block is SoulSandBlock && hasAirAbove(pos))
-                return TrackedState.Soulsand
-
-            if (isTargeted(state, pos))
-                return TrackedState.Destroy
-
-
-            val stateBellow = pos.down().getState() ?: return null
-
-            if(stateBellow.isAir) return null
-
-            val blockBellow = stateBellow.block
-
-            if (blockBellow is FarmlandBlock){
-                val targetBlockPos = TargetBlockPos(pos.down())
-                if (state.isAir){
-                    this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
-                    return null
-                } else {
-                    this.trackedBlockMap.remove(targetBlockPos)
-                }
-            } else if (blockBellow is SoulSandBlock){
-                val targetBlockPos = TargetBlockPos(pos.down())
-                if(state.isAir){
-                    this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
-                    return null
-                } else {
-                    this.trackedBlockMap.remove(targetBlockPos)
-                }
-            }
-
-            return null
-
-
-        }
-
-    }
 
 
 }
