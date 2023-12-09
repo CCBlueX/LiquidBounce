@@ -20,7 +20,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
         val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack){
                 withColor(color){
-                    ModuleAutoFarm.walkTarget?.let { target ->
+                    AutoFarmAutoWalk.walkTarget?.let { target ->
                         drawLines(player.interpolateCurrentPosition(event.partialTicks).toVec3(), Vec3(target))
                     }
                 }

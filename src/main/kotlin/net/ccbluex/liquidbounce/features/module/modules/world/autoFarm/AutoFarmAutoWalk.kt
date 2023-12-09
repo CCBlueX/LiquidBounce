@@ -6,10 +6,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.item.getHotbarItems
 import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
@@ -27,7 +24,7 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
     private var invHadSpace = true
 
-    private var walkTarget: Vec3d? = null
+    var walkTarget: Vec3d? = null
 
     private fun findWalkToItem() =
         world.entities.filter {it is ItemEntity && it.distanceTo(player) < 20}
@@ -42,20 +39,15 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         }
         invHadSpace = invHasSpace
 
-        val walkToBlock = findWalkToBlock()
-        val walkToItem = findWalkToItem()
-
         walkTarget = if (toItems && invHasSpace) {
             arrayOf(findWalkToBlock(), findWalkToItem())
                 .minByOrNull { it?.squaredDistanceTo(player.pos) ?: Double.MAX_VALUE }
         } else {
-            walkToBlock
+            findWalkToBlock()
         }
 
-        val target = walkTarget ?: run {
-            walkTarget = null
-            return false
-        }
+        val target = walkTarget ?: return false
+
         RotationManager.aimAt(RotationManager.makeRotation(target, player.eyes), configurable = ModuleAutoFarm.rotations)
         return true
     }
@@ -86,7 +78,11 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         return closestBlock
     }
 
-    private fun shouldWalk() = (walkTarget != null && mc.currentScreen is HandledScreen<*>)
+    fun stopWalk() {
+        walkTarget = null
+    }
+
+    private fun shouldWalk() = (walkTarget != null && mc.currentScreen !is HandledScreen<*>)
 
     val horizontalMovementHandling = handler<RotatedMovementInputEvent> { event ->
         if (!shouldWalk())

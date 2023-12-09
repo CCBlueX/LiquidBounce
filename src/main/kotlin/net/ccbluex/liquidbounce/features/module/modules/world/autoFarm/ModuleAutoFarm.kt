@@ -33,10 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.findClosestItem
-import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.item.getHotbarItems
-import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
@@ -103,8 +100,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     // Rotation
 
     var currentTarget: BlockPos? = null
-    private var movingToBlock = false
-    var walkTarget: Vec3d? = null // Vec3d to support blocks and items
 
     val repeatable = repeatable { event ->
         // return if the user is inside a screen like the inventory
@@ -135,9 +130,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-
-        movingToBlock = false // disabling to stop the player from moving forward (see velocityHandler)
-        walkTarget = null // resetting walkTarget to null to stop rendering
+        autoWalk.stopWalk() // resetting walkTarget to null to stop the walking and rendering
 
         val currentRotation = RotationManager.serverRotation
 
@@ -195,18 +188,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
     }
-
-    private fun findBestItem(validator: (Int, ItemStack) -> Boolean,
-                             sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }) = (0..8)
-        .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
-        .filter { (slot, itemStack) -> validator (slot, itemStack) }
-        .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
-
-
-    private fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) = (0..8)
-        .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
-        .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
-        ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
     private fun placeCrop(rayTraceResult: BlockHitResult){
         val stack = player.mainHandStack
         val count = stack.count
