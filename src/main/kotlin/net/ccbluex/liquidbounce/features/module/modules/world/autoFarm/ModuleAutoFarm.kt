@@ -64,9 +64,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             it
         }
     }
-    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    // the ticks to wait after interacting with something
+    // The ticks to wait after interacting with something
     private val interactDelay by intRange("InteractDelay", 2..3, 1..15)
 
 //    private val extraSearchRange by float("extraSearchRange", 0F, 0F..3F)
@@ -79,14 +78,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private val fortune by boolean("fortune", true)
 
-
-
     private val autoWalk = tree(AutoFarmAutoWalk)
 
     init {
         tree(AutoPlaceCrops)
         tree(AutoFarmVisualizer)
     }
+
     val rotations = tree(RotationsConfigurable())
 
 
@@ -97,12 +95,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         get() = Hotbar.findClosestItem(itemsForFarmland)
     private val itemForSoulSand
         get() = Hotbar.findClosestItem(itemsForFarmland)
-    // Rotation
 
     var currentTarget: BlockPos? = null
 
     val repeatable = repeatable { event ->
-        // return if the user is inside a screen like the inventory
+        // Return if the user is inside a screen like the inventory
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
