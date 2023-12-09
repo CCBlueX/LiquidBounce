@@ -208,12 +208,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
     }
 
-    private fun updateTarget() {
-        currentTarget = null
-
-        val radius = range
-        val radiusSquared = radius * radius
-        val eyesPos = player.eyes
+    fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
 
         // searches for any blocks within the radius that need to be destroyed, such as crops.
         // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on
@@ -239,19 +234,22 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // aim at target
             RotationManager.aimAt(rotation, configurable = rotations)
 
-            break // We got a free angle at the block? No need to see more of them.
+            return true // We got a free angle at the block? No need to see more of them.
         }
+        return false
+    }
 
-        if (!AutoPlaceCrops.enabled) return
+    fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
+
         val hotbarItems = getHotbarItems()
         val allowFarmland = hotbarItems.any { it in itemsForFarmland }
         val allowSoulsand = hotbarItems.any { it in itemsForSoulsand }
 
-        if(!allowFarmland && !allowSoulsand) return
+        if(!allowFarmland && !allowSoulsand) return false
         val blocksToPlace =
             searchBlocksInCuboid(radius, eyesPos) { pos, state ->
                 !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
-                && getNearestPoint(
+                    && getNearestPoint(
                     eyesPos,
                     Box(pos, pos.add(1, 1, 1))
                 ).squaredDistanceTo(eyesPos) <= radiusSquared
@@ -271,8 +269,24 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // aim at target
             RotationManager.aimAt(rotation, configurable = rotations)
 
-            break // We got a free angle at the block? No need to see more of them.
+            return true // We got a free angle at the block? No need to see more of them.
         }
+        return false
+    }
+
+    private fun updateTarget() {
+        currentTarget = null
+
+        val radius = range
+        val radiusSquared = radius * radius
+        val eyesPos = player.eyes
+
+        updateTargetToBreakable(radius, radiusSquared, eyesPos)
+
+        if (!AutoPlaceCrops.enabled) return
+
+        updateTargetToPlaceable(radius, radiusSquared, eyesPos)
+
     }
 
 
