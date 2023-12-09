@@ -267,26 +267,6 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
 
     return Vec3d(origin[0], origin[1], origin[2])
 }
-// fun getNearestPointOnSide(eyes: Vec3d, box: Box, face: Direction): Vec3d {
-//    val origin = doubleArrayOf(eyes.x, eyes.y, eyes.z)
-//    val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
-//    val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
-//
-//    // It loops through every coordinate of the double arrays and picks the nearest point
-//    for (i in 0..2) {
-//        if(face.axis.ordinal == i)
-//        origin[i] =
-//            if(face.axis.ordinal == i) {
-//                if (face.direction == Direction.AxisDirection.NEGATIVE){
-//                    face.opposite
-//                }
-//
-//            }
-//            origin[i].coerceIn(destMins[i], destMaxs[i])
-//    }
-//
-//    return Vec3d(origin[0], origin[1], origin[2])
-//}
 
 fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
     if (!this.isBlocking) {
