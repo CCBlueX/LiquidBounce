@@ -74,7 +74,7 @@ private fun MinecraftSessionService.login(username: String, password: String = "
     if (password.isBlank()) {
         val session = Session(
             username,
-            MojangApi.getUUID(username),
+            MojangApi.getUuid(username),
             "-",
             Optional.empty(),
             Optional.empty(),

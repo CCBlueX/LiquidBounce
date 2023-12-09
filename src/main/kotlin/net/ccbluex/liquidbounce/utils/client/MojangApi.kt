@@ -25,9 +25,9 @@ import java.util.*
 object MojangApi {
 
     /**
-     * Get UUID of username
+     * Requests the Uuid of a username from the Mojang API
      */
-    fun getUUID(username: String): UUID? = runCatching {
+    fun getUuid(username: String): UUID? = runCatching {
         val text = HttpClient.get("https://api.mojang.com/users/profiles/minecraft/$username")
         val response = decode<ApiProfileResponse>(text)
 

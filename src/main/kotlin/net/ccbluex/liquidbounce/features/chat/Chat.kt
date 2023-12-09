@@ -350,7 +350,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = MojangApi.getUUID(target)
+            val incomingUUID = MojangApi.getUuid(target)
             incomingUUID.toString()
         }
     }

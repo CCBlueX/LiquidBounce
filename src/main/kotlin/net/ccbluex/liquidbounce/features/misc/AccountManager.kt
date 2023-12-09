@@ -121,7 +121,7 @@ object AccountManager : Configurable("Accounts") {
     fun newCrackedAccount(username: String) {
         // Get UUID of username from Mojang API
         val uuid = runCatching {
-            MojangApi.getUUID(username)
+            MojangApi.getUuid(username)
         }.getOrNull() ?: UUID.randomUUID()
 
         // Create new cracked account
