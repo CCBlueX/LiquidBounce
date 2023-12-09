@@ -73,14 +73,6 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
             else if(item in ModuleAutoFarm.itemsForSoulsand) allowedItems[2] = true
         }
 
-//        val closestCropBlock = BlockTracker.trackedBlockMap.keys.map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))}
-//            .minByOrNull { it.distanceTo(player.pos) }
-//        val closestFarmBlock = farmLandBlocks.minByOrNull { it.distanceTo(player.pos) }
-
-//        val closestBlock = (if (!Walk.toReplace) closestCropBlock else
-//            listOf(closestCropBlock, closestFarmBlock)
-//                .minByOrNull { it?.distanceTo(player.pos) ?: Double.MAX_VALUE})
-
         val closestBlock = AutoFarmBlockTracker.trackedBlockMap
             .filter { allowedItems[it.value.ordinal] }
             .keys
