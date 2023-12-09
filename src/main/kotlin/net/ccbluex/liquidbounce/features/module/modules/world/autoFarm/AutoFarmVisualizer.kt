@@ -73,7 +73,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             val outlineColor = baseColor.alpha(100)
 
 
-            val markedBlocks = ModuleAutoFarm.BlockTracker.trackedBlockMap
+            val markedBlocks = AutoFarmBlockTracker.trackedBlockMap
 //                val markedFarmBlocks = FarmBlockTracker.trackedBlockMap.keys
             renderEnvironmentForWorld(matrixStack) {
                 CurrentTarget.render(this)
@@ -84,7 +84,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                     if (xdiff * xdiff + zdiff * zdiff > rangeSquared) continue
 
                     withPosition(vec3) {
-                        if(type == ModuleAutoFarm.TrackedState.Destroy){
+                        if(type == AutoFarmTrackedStates.Destroy){
                             withColor(fillColor) {
                                 drawSolidBox(box)
                             }
@@ -95,7 +95,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
                         }
 
-                        if (outline && type == ModuleAutoFarm.TrackedState.Destroy) {
+                        if (outline && type == AutoFarmTrackedStates.Destroy) {
                             withColor(outlineColor) {
                                 drawOutlinedBox(box)
                             }

@@ -7,23 +7,23 @@ import net.minecraft.block.FarmlandBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.util.math.BlockPos
 
-enum class TrackedState {
+enum class AutoFarmTrackedStates {
     Destroy,
     Farmland,
     Soulsand
 }
 
-object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
-    override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
+object AutoFarmBlockTracker : AbstractBlockLocationTracker<AutoFarmTrackedStates>() {
+    override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates? {
         val block = state.block
         if (block is FarmlandBlock && ModuleAutoFarm.hasAirAbove(pos))
-            return TrackedState.Farmland
+            return AutoFarmTrackedStates.Farmland
 
         if (block is SoulSandBlock && ModuleAutoFarm.hasAirAbove(pos))
-            return TrackedState.Soulsand
+            return AutoFarmTrackedStates.Soulsand
 
         if (ModuleAutoFarm.isTargeted(state, pos))
-            return TrackedState.Destroy
+            return AutoFarmTrackedStates.Destroy
 
 
         val stateBellow = pos.down().getState() ?: return null
@@ -35,7 +35,7 @@ object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         if (blockBellow is FarmlandBlock){
             val targetBlockPos = TargetBlockPos(pos.down())
             if (state.isAir){
-                this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
+                this.trackedBlockMap[targetBlockPos] = AutoFarmTrackedStates.Farmland
                 return null
             } else {
                 this.trackedBlockMap.remove(targetBlockPos)
@@ -43,7 +43,7 @@ object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         } else if (blockBellow is SoulSandBlock){
             val targetBlockPos = TargetBlockPos(pos.down())
             if(state.isAir){
-                this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
+                this.trackedBlockMap[targetBlockPos] = AutoFarmTrackedStates.Soulsand
                 return null
             } else {
                 this.trackedBlockMap.remove(targetBlockPos)

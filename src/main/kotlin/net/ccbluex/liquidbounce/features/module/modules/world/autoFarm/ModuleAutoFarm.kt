@@ -38,6 +38,8 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findClosestItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.item.getHotbarItems
+import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
@@ -93,11 +95,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         tree(AutoPlaceCrops)
         tree(AutoFarmVisualizer)
     }
-    private val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable())
 
 
-    private val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
-    private val itemsForSoulsand = arrayOf(Items.NETHER_WART)
+    val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
+    val itemsForSoulsand = arrayOf(Items.NETHER_WART)
 
     private val itemForFarmland
         get() = findClosestItem(itemsForFarmland)
@@ -108,28 +110,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     var currentTarget: BlockPos? = null
     private var movingToBlock = false
     var walkTarget: Vec3d? = null // Vec3d to support blocks and items
-
-    private var invHadSpace = false
-
-    val horizontalMovementHandling = handler<RotatedMovementInputEvent> { event ->
-        if (!movingToBlock || mc.currentScreen is HandledScreen<*>) {
-            return@handler
-        }
-
-        event.forward = 1f
-
-        player.isSprinting = true
-    }
-
-    val verticalMovementHandling = handler<MovementInputEvent> { event ->
-        if (!movingToBlock || mc.currentScreen is HandledScreen<*>) {
-            return@handler
-        }
-        // We want to swim up in water, so we don't drown and can move onwards
-        if (player.isTouchingWater) {
-            event.jumping = true
-        }
-    }
 
     val repeatable = repeatable { event ->
         // return if the user is inside a screen like the inventory
@@ -153,35 +133,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-        // if there is no currentTarget (a block close enough to be interacted with) walk if wanted
+        // If there is no currentTarget (a block close enough to be interacted with) walk if wanted
         currentTarget ?: run {
             if(!autoWalk.enabled){
                 // don't walk if it isn't enabled
                 return@repeatable
             }
 
-            val invHasSpace = hasInventorySpace()
-            if(!invHasSpace && invHadSpace && autoWalk.toItems){
-                notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
-            }
-            invHadSpace = invHasSpace
-
-            val walkToBlock = findWalkToBlock()
-            val walkToItem = findWalkToItem()
-
-            walkTarget = if (autoWalk.toItems && invHasSpace &&  walkToItem != null) {
-                walkToBlock?.takeIf {it.distanceTo(player.pos) < walkToItem.squaredDistanceTo(player.pos) } ?: walkToItem
-            } else {
-                walkToBlock
-            }
-
-            val target = walkTarget ?: run {
-                movingToBlock = false
-                walkTarget = null
-                return@repeatable
-            }
-            RotationManager.aimAt(RotationManager.makeRotation(target, player.eyes), configurable = rotations)
-            movingToBlock = true
 
             return@repeatable
         }
@@ -246,43 +204,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
     }
-    private fun getHotbarItems() = (0..8).map { player.inventory.getStack(it).item }
-
-
-    private fun findWalkToBlock(): Vec3d?{
-
-        if(BlockTracker.trackedBlockMap.isEmpty()){
-            return null
-        }
-
-        val allowedItems = arrayOf(true, false, false)
-        // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
-        // 2. false: we should only walk to farmland blocks if we got the needed items
-        // 3. false: same as 2. only go if we got the needed items for souldsand (netherwarts)
-        val hotbarItems = getHotbarItems()
-        for (item in hotbarItems){
-            if(item in itemsForFarmland) allowedItems[1] = true
-            else if(item in itemsForSoulsand) allowedItems[2] = true
-        }
-
-//        val closestCropBlock = BlockTracker.trackedBlockMap.keys.map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z))}
-//            .minByOrNull { it.distanceTo(player.pos) }
-//        val closestFarmBlock = farmLandBlocks.minByOrNull { it.distanceTo(player.pos) }
-
-//        val closestBlock = (if (!Walk.toReplace) closestCropBlock else
-//            listOf(closestCropBlock, closestFarmBlock)
-//                .minByOrNull { it?.distanceTo(player.pos) ?: Double.MAX_VALUE})
-
-        val closestBlock = BlockTracker.trackedBlockMap
-            .filter { allowedItems[it.value.ordinal] }
-            .keys
-            .map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z)) }
-            .minByOrNull { it.distanceTo(player.pos)}
-
-        return closestBlock
-    }
-
-    private fun findWalkToItem() = world.entities.filter {it is ItemEntity && it.distanceTo(player) < 20}.minByOrNull { it.distanceTo(player) }?.pos
 
     private fun findBestItem(validator: (Int, ItemStack) -> Boolean,
                              sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }) = (0..8)
@@ -295,8 +216,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
         .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
         ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
-
-    private fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
     private fun placeCrop(rayTraceResult: BlockHitResult){
         val stack = player.mainHandStack
         val count = stack.count
@@ -426,11 +345,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
     override fun enable() {
-        ChunkScanner.subscribe(BlockTracker)
+        ChunkScanner.subscribe(AutoFarmBlockTracker)
     }
 
     override fun disable() {
-        ChunkScanner.unsubscribe(BlockTracker)
+        ChunkScanner.unsubscribe(AutoFarmBlockTracker)
     }
 
 

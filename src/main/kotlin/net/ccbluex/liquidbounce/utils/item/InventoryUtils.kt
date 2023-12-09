@@ -8,6 +8,7 @@ import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPac
 import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -35,14 +36,20 @@ val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
     return@run hotbarItems + offHandItem + inventoryItems + armorItems
 }
 
+fun getHotbarItems() = (0..8).map { player.inventory.getStack(it).item }
+
 fun findClosestItem(items: Array<Item>): Int? {
     return (0..8).filter { player.inventory.getStack(it).item in items }
         .minByOrNull { abs(player.inventory.selectedSlot - it) }
 }
 
+fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
+
+
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {
     return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
 }
+
 
 fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = null): Int {
     if (screen == null) {
