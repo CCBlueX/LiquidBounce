@@ -255,7 +255,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             val (rotation, _) = raytracePlaceBlock(
                 player.eyes,
                 pos.up(),
-                state,
                 range = range.toDouble() - 0.1,
                 wallsRange = wallRange.toDouble() - 0.1
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
