@@ -1,9 +1,6 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
-import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.dot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.step
@@ -16,7 +13,6 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import kotlin.jvm.optionals.getOrNull
-import kotlin.math.sign
 
 fun raytraceBlock(
     eyes: Vec3d,
@@ -214,7 +210,6 @@ fun raytracePlaceBlock(
                             else -> eyes.z.coerceIn((box.minZ..box.maxZ).shrinkBy(0.05))
                         }
                     )
-//                chat(visibilityPredicate.isVisible(eyes, nearestSpot).toString())
 
                 considerSpot(
                     nearestSpot,
@@ -226,7 +221,6 @@ fun raytracePlaceBlock(
                     nearestSpot,
                     bestRotationTracker,
                 )
-//                chat(bestRotationTracker.bestVisible.toString())
 
                 for (a in 0.05..0.95 step 0.1){
                     for (b in 0.05..0.95 step 0.1){
@@ -320,9 +314,6 @@ fun raytraceBox(
         val validCauseVisible = visibilityPredicate.isVisible(eyesPos = eyes, targetSpot = preferredSpotOnBox)
 
         if (validCauseBelowWallsRange || validCauseVisible && preferredSpotDistance < rangeSquared) {
-            if(preferredSpotDistance > 4.47 * 4.47) {
-                chat(preferredSpotDistance.toString())
-            }
             return VecRotation(RotationManager.makeRotation(preferredSpot, eyes), preferredSpot)
         }
     }
