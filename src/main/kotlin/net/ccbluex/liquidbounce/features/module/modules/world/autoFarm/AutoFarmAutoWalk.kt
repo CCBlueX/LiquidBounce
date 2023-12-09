@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.item.getHotbarItems
+import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.ItemEntity
@@ -63,7 +63,7 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         // 2. false: we should only walk to farmland blocks if we got the needed items
         // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
         if(toPlace) {
-            val hotbarItems = getHotbarItems()
+            val hotbarItems = Hotbar.items
             for (item in hotbarItems){
                 if(item in ModuleAutoFarm.itemsForFarmland) allowedItems[1] = true
                 else if(item in ModuleAutoFarm.itemsForSoulsand) allowedItems[2] = true

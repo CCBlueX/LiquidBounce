@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.item.getHotbarItems
 import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -242,7 +241,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
 
-        val hotbarItems = getHotbarItems()
+        val hotbarItems = Hotbar.items
         val allowFarmland = hotbarItems.any { it in itemsForFarmland }
         val allowSoulsand = hotbarItems.any { it in itemsForSoulsand }
 

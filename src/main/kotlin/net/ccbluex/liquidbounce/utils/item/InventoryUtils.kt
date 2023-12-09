@@ -35,17 +35,14 @@ val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
     return@run hotbarItems + offHandItem + inventoryItems + armorItems
 }
 
-fun getHotbarItems() = (0..8).map { player.inventory.getStack(it).item }
-
-fun findClosestItem(items: Array<Item>): Int? {
-    return (0..8).filter { player.inventory.getStack(it).item in items }
-        .minByOrNull { abs(player.inventory.selectedSlot - it) }
-}
 object Hotbar {
     fun findClosestItem(items: Array<Item>): Int? {
         return (0..8).filter { player.inventory.getStack(it).item in items }
             .minByOrNull { abs(player.inventory.selectedSlot - it) }
     }
+
+    val items
+        get() = (0..8).map { player.inventory.getStack(it).item }
 
     fun findBestItem(
         validator: (Int, ItemStack) -> Boolean,
