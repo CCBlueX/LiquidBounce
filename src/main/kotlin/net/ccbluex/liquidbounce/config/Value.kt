@@ -23,7 +23,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import com.mojang.brigadier.StringReader
-import me.liuli.elixir.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.chat
 
 import com.mojang.authlib.exceptions.InvalidCredentialsException
+import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
@@ -350,7 +351,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = MojangApi.getUuid(target)
+            val incomingUUID = GameProfileRepository().fetchUuidByUsername(target)
             incomingUUID.toString()
         }
     }

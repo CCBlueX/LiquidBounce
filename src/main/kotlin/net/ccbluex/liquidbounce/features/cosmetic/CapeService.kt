@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import com.google.gson.JsonParser
-import me.liuli.elixir.utils.boolean
-import me.liuli.elixir.utils.string
+import net.ccbluex.liquidbounce.authlib.utils.boolean
+import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.utils.client.Chronometer

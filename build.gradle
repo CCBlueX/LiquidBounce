@@ -90,8 +90,6 @@ dependencies {
     implementation "com.viaversion:viaversion:4.8.1"
     implementation "net.raphimc:ViaLoader:2.2.10"
 
-
-
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
@@ -101,11 +99,14 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation('com.thealtening.api:api:4.1.0') {
+    implementation('com.github.CCBlueX:mc-authlib:v1.3.1') {
         exclude group: 'com.google.code.gson', module: 'gson'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+        exclude group: 'com.mojang', module: 'authlib'
     }
-
-    implementation 'com.github.CCBlueX:Elixir:1.2.6'
 
     implementation 'com.labymedia:ultralight-java-base:0.4.12'
     implementation 'com.labymedia:ultralight-java-databind:0.4.12'
