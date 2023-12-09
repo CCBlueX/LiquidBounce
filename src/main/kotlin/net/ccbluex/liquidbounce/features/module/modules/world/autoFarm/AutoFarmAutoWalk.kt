@@ -29,9 +29,9 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
     private var walkTarget: Vec3d? = null
 
-    private fun findWalkToItem() = world.entities.filter {it is ItemEntity && it.distanceTo(
-        player
-    ) < 20}.minByOrNull { it.distanceTo(player) }?.pos
+    private fun findWalkToItem() =
+        world.entities.filter {it is ItemEntity && it.distanceTo(player) < 20}
+            .minByOrNull { it.distanceTo(player) }?.pos
     fun findWalkTarget(): Boolean {
 
         val invHasSpace = hasInventorySpace()
@@ -43,8 +43,9 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         val walkToBlock = findWalkToBlock()
         val walkToItem = findWalkToItem()
 
-        walkTarget = if (toItems && invHasSpace &&  walkToItem != null) {
-            walkToBlock?.takeIf {it.distanceTo(player.pos) < walkToItem.squaredDistanceTo(player.pos) } ?: walkToItem
+        walkTarget = if (toItems && invHasSpace) {
+            arrayOf(findWalkToBlock(), findWalkToItem())
+                .minByOrNull { it?.squaredDistanceTo(player.pos) ?: Double.MAX_VALUE }
         } else {
             walkToBlock
         }
@@ -82,7 +83,7 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         return closestBlock
     }
 
-    fun shouldWalk() = (walkTarget != null && mc.currentScreen is HandledScreen<*>)
+    private fun shouldWalk() = (walkTarget != null && mc.currentScreen is HandledScreen<*>)
 
     val horizontalMovementHandling = handler<RotatedMovementInputEvent> { event ->
         if (!shouldWalk())
