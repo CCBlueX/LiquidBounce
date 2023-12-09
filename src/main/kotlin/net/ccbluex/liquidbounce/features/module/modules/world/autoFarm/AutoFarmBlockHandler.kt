@@ -33,24 +33,22 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker<AutoFarmTrackedStates
         val blockBellow = stateBellow.block
 
         if (blockBellow is FarmlandBlock){
-            val targetBlockPos = TargetBlockPos(pos.down())
-            if (state.isAir){
-                this.trackedBlockMap[targetBlockPos] = AutoFarmTrackedStates.Farmland
-                return null
-            } else {
-                this.trackedBlockMap.remove(targetBlockPos)
-            }
+            handlePlaceableBlock(pos, state, AutoFarmTrackedStates.Farmland)
         } else if (blockBellow is SoulSandBlock){
-            val targetBlockPos = TargetBlockPos(pos.down())
-            if(state.isAir){
-                this.trackedBlockMap[targetBlockPos] = AutoFarmTrackedStates.Soulsand
-                return null
-            } else {
-                this.trackedBlockMap.remove(targetBlockPos)
-            }
+            handlePlaceableBlock(pos, state, AutoFarmTrackedStates.Soulsand)
         }
-
         return null
     }
 
+    private fun handlePlaceableBlock(pos: BlockPos, state: BlockState, trackedState: AutoFarmTrackedStates) {
+        val targetBlockPos = TargetBlockPos(pos.down())
+        if (state.isAir){
+            // If there is no air above, add it
+            this.trackedBlockMap[targetBlockPos] = trackedState
+        } else {
+            // If there is no air above, we want to remove it
+            this.trackedBlockMap.remove(targetBlockPos)
+        }
+    }
 }
+

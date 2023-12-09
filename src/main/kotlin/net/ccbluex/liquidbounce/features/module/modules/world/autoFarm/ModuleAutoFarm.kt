@@ -205,10 +205,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
     }
 
+    // Searches for any blocks within the radius that need to be destroyed, such as crops.
     fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
-
-        // searches for any blocks within the radius that need to be destroyed, such as crops.
-        // If there are no such blocks, it proceeds to check if there are any blocks suitable for placing crops or nether wart on
         val blocksToBreak = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && isTargeted(state, pos) && getNearestPoint(
                 eyesPos,
@@ -236,6 +234,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         return false
     }
 
+    // Searches for any blocks suitable for placing crops or nether wart on
     fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
 
         val hotbarItems = Hotbar.items
@@ -313,7 +312,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     /**
      * checks if the block is either a farmland or soulsand block and has air above it
      */
-    private fun isFarmBlockWithAir(state: BlockState, pos: BlockPos, allowFarmland: Boolean = true, allowSoulsand: Boolean = true): Boolean {
+    private fun isFarmBlockWithAir(
+        state: BlockState,
+        pos: BlockPos,
+        allowFarmland: Boolean = true,
+        allowSoulsand: Boolean = true
+    ): Boolean {
         return isFarmBlock(state, allowFarmland, allowSoulsand) && hasAirAbove(pos)
     }
 

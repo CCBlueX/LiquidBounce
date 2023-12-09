@@ -168,7 +168,6 @@ val sidesToCheck = arrayOf(
 fun raytracePlaceBlock(
     eyes: Vec3d,
     pos: BlockPos,
-    state: BlockState,
     range: Double,
     wallsRange: Double,
 ): VecRotation? {
@@ -270,7 +269,8 @@ fun raytracePlaceBlock(
                     }
                 }
                 bestRotationTracker.bestInvisible?.let {
-                    return it // if we found a point we can place a block on, on this face there is no need to look at the others
+                    // if we found a point we can place a block on, on this face there is no need to look at the others
+                    return it
                 }
 
 
