@@ -33,11 +33,13 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.item.getHotbarItems
+import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -47,7 +49,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
-import kotlin.math.abs
 
 /**
  * AutoFarm module
@@ -94,9 +95,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     val itemsForSoulsand = arrayOf(Items.NETHER_WART)
 
     private val itemForFarmland
-        get() = findClosestItem(itemsForFarmland)
+        get() = Hotbar.findClosestItem(itemsForFarmland)
     private val itemForSoulSand
-        get() = findClosestItem(itemsForFarmland)
+        get() = Hotbar.findClosestItem(itemsForFarmland)
     // Rotation
 
     var currentTarget: BlockPos? = null
@@ -153,7 +154,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val state = rayTraceResult.blockPos.getState() ?: return@repeatable
         if(isTargeted(state, blockPos)){
             if(fortune){
-                findBestItem (1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
+                Hotbar.findBestItem(1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
                     ?.let { (slot, _) ->
                         SilentHotbar.selectSlotSilently(this, slot, 2)
                     } // swap to a fortune item to increase drops
@@ -274,6 +275,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         return false
     }
 
+    // Finds either a breakable target (such as crops, cactus, etc.)
+    // or a placeable target (such as a farmblock or soulsand with air above).
+    // It will prefer a breakable target
     private fun updateTarget() {
         currentTarget = null
 
@@ -281,12 +285,14 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
+        // Can we find a breakable target?
         if (updateTargetToBreakable(radius, radiusSquared, eyesPos))
             return
 
         if (!AutoPlaceCrops.enabled)
             return
 
+        // Can we find a placeable target?
         updateTargetToPlaceable(radius, radiusSquared, eyesPos)
 
     }

@@ -41,22 +41,29 @@ fun findClosestItem(items: Array<Item>): Int? {
     return (0..8).filter { player.inventory.getStack(it).item in items }
         .minByOrNull { abs(player.inventory.selectedSlot - it) }
 }
+object Hotbar {
+    fun findClosestItem(items: Array<Item>): Int? {
+        return (0..8).filter { player.inventory.getStack(it).item in items }
+            .minByOrNull { abs(player.inventory.selectedSlot - it) }
+    }
 
-fun findBestItem(
-    validator: (Int, ItemStack) -> Boolean,
-    sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }
-) =
-    (0..8)
-        .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
-        .filter { (slot, itemStack) -> validator (slot, itemStack) }
-        .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
+    fun findBestItem(
+        validator: (Int, ItemStack) -> Boolean,
+        sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }
+    ) =
+        (0..8)
+            .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
+            .filter { (slot, itemStack) -> validator (slot, itemStack) }
+            .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
 
 
-fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) =
-    (0..8)
-        .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
-        .maxByOrNull { (slot, itemStack) -> sort(slot, itemStack) }
-        ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
+    fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) =
+        (0..8)
+            .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
+            .maxByOrNull { (slot, itemStack) -> sort(slot, itemStack) }
+            ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
+
+}
 
 fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
 

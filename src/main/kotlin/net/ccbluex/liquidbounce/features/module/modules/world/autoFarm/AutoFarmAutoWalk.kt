@@ -54,18 +54,20 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
     private fun findWalkToBlock(): Vec3d?{
 
-        if(AutoFarmBlockTracker.trackedBlockMap.isEmpty()){
+        if (AutoFarmBlockTracker.trackedBlockMap.isEmpty())
             return null
-        }
+
 
         val allowedItems = arrayOf(true, false, false)
         // 1. true: we should always walk to blocks we want to destroy because we can do so even without any items
         // 2. false: we should only walk to farmland blocks if we got the needed items
-        // 3. false: same as 2. only go if we got the needed items for souldsand (netherwarts)
-        val hotbarItems = getHotbarItems()
-        for (item in hotbarItems){
-            if(item in ModuleAutoFarm.itemsForFarmland) allowedItems[1] = true
-            else if(item in ModuleAutoFarm.itemsForSoulsand) allowedItems[2] = true
+        // 3. false: same as 2. only go if we got the needed items for soulsand (netherwarts)
+        if(toPlace) {
+            val hotbarItems = getHotbarItems()
+            for (item in hotbarItems){
+                if(item in ModuleAutoFarm.itemsForFarmland) allowedItems[1] = true
+                else if(item in ModuleAutoFarm.itemsForSoulsand) allowedItems[2] = true
+            }
         }
 
         val closestBlock =
