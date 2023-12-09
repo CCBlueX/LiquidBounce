@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world
+package net.ccbluex.liquidbounce.features.module.modules.world.autoFarm
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -39,13 +39,13 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.item.findClosestItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.ItemEntity
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.ActionResult
@@ -86,137 +86,33 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private val fortune by boolean("fortune", true)
 
-    private object Visualize : ToggleableConfigurable(this, "Visualize", true) {
-        private object Path : ToggleableConfigurable(this.module, "Path", true) {
-            val color by color("PathColor", Color4b(36, 237, 0, 255))
-
-            val renderHandler = handler<WorldRenderEvent> { event ->
-                renderEnvironmentForWorld(event.matrixStack){
-                    withColor(color){
-                        walkTarget?.let { target ->
-                            drawLines(player.interpolateCurrentPosition(event.partialTicks).toVec3(), Vec3(target))
-                        }
-                    }
-                }
-
-            }
-
-        }
-
-        private object Blocks : ToggleableConfigurable(this.module, "Blocks", true) {
-            val outline by boolean("Outline", true)
-
-            private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
-            private val placeColor by color("PlaceColor", Color4b(191, 245, 66, 100))
-            private val range by int("Range", 50, 10..128).listen {
-                rangeSquared = it * it
-                it
-            }
-            var rangeSquared: Int = range * range
 
 
-            private val colorRainbow by boolean("Rainbow", false)
+    private val autoWalk = tree(AutoFarmAutoWalk)
 
-            // todo: use box of block, not hardcoded
-            private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-            private object CurrentTarget : ToggleableConfigurable(this.module, "CurrentTarget", true) {
-                private val color by color("Color", Color4b(66, 120, 245, 255))
-                private val colorRainbow by boolean("Rainbow", false)
-
-                fun render(renderEnvironment: RenderEnvironment) {
-                    if(!this.enabled) return
-                    val target = currentTarget ?: return
-                    with(renderEnvironment){
-                        withPosition(Vec3(target)){
-                            withColor((if(colorRainbow) rainbow() else color).alpha(50)){
-                                drawSolidBox(box)
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            val renderHandler = handler<WorldRenderEvent> { event ->
-                val matrixStack = event.matrixStack
-                val baseColor = if (colorRainbow) rainbow() else readyColor
-//                val baseForFarmBlocks = if (colorRainbow) rainbow() else farmBlockColor
-
-                val fillColor = baseColor.alpha(50)
-                val outlineColor = baseColor.alpha(100)
-
-
-                val markedBlocks = BlockTracker.trackedBlockMap
-//                val markedFarmBlocks = FarmBlockTracker.trackedBlockMap.keys
-                renderEnvironmentForWorld(matrixStack) {
-                    CurrentTarget.render(this)
-                    for ((pos, type) in markedBlocks) {
-                        val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                        val xdiff = pos.x - player.x
-                        val zdiff = pos.z - player.z
-                        if (xdiff * xdiff + zdiff * zdiff > rangeSquared) continue
-
-                        withPosition(vec3) {
-                            if(type == TrackedState.Destroy){
-                                withColor(fillColor) {
-                                    drawSolidBox(box)
-                                }
-                            } else {
-                                withColor(placeColor) {
-                                    drawSideBox(box, Direction.UP)
-                                }
-
-                            }
-
-                            if (outline && type == TrackedState.Destroy) {
-                                withColor(outlineColor) {
-                                    drawOutlinedBox(box)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        init {
-            tree(Path)
-            tree(Blocks)
-        }
-
-
-
-
-
-    }
-
-    private object Walk : ToggleableConfigurable(this, "AutoWalk", false){
-
-        // makes the player move to farmland blocks where there is need for crop replacement
-        val toReplace by boolean("ToReplace", true)
-
-        val toItems by boolean("ToItems", true)
-    }
     init {
         tree(AutoPlaceCrops)
-        tree(Walk)
-        tree(Visualize)
+        tree(AutoFarmVisualizer)
     }
     private val rotations = tree(RotationsConfigurable())
 
 
     private val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
     private val itemsForSoulsand = arrayOf(Items.NETHER_WART)
+
+    private val itemForFarmland
+        get() = findClosestItem(itemsForFarmland)
+    private val itemForSoulSand
+        get() = findClosestItem(itemsForFarmland)
     // Rotation
 
-    private var currentTarget: BlockPos? = null
+    var currentTarget: BlockPos? = null
     private var movingToBlock = false
-    private var walkTarget: Vec3d? = null // Vec3d to support blocks and items
+    var walkTarget: Vec3d? = null // Vec3d to support blocks and items
 
     private var invHadSpace = false
 
-    private var farmLandBlocks = hashSetOf<Vec3d>()
-
-    val horizantalMovementHandling = handler<RotatedMovementInputEvent> { event ->
+    val horizontalMovementHandling = handler<RotatedMovementInputEvent> { event ->
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
@@ -260,13 +156,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         // if there is no currentTarget (a block close enough to be interacted with) walk if wanted
         currentTarget ?: run {
-            if(!Walk.enabled){
+            if(!autoWalk.enabled){
                 // don't walk if it isn't enabled
                 return@repeatable
             }
 
             val invHasSpace = hasInventorySpace()
-            if(!invHasSpace && invHadSpace && Walk.toItems){
+            if(!invHasSpace && invHadSpace && autoWalk.toItems){
                 notification("Inventory is Full", "autoFarm wont walk to items", NotificationEvent.Severity.ERROR)
             }
             invHadSpace = invHasSpace
@@ -274,7 +170,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             val walkToBlock = findWalkToBlock()
             val walkToItem = findWalkToItem()
 
-            walkTarget = if (Walk.toItems && invHasSpace &&  walkToItem != null) {
+            walkTarget = if (autoWalk.toItems && invHasSpace &&  walkToItem != null) {
                 walkToBlock?.takeIf {it.distanceTo(player.pos) < walkToItem.squaredDistanceTo(player.pos) } ?: walkToItem
             } else {
                 walkToBlock
@@ -337,23 +233,18 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             val state = pos.getState()?: return@repeatable
             if(isFarmBlockWithAir(state, pos)){
                 val item =
-                    findClosestItem(
-                        if(state.block is FarmlandBlock) {
-                            itemsForFarmland
-                        } else {
-                            itemsForSoulsand
-                        }
-                    )
+                    if(state.block is FarmlandBlock) {
+                        itemForFarmland
+                    } else {
+                        itemForSoulSand
+                    }
+                item ?: return@repeatable
 
-                if(item != null){
-                    SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
-                    placeCrop(rayTraceResult)
-                    waitTicks(interactDelay.random())
-
-                }
+                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
+                placeCrop(rayTraceResult)
+                waitTicks(interactDelay.random())
             }
         }
-
 
     }
     private fun getHotbarItems() = (0..8).map { player.inventory.getStack(it).item }
@@ -394,10 +285,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private fun findWalkToItem() = world.entities.filter {it is ItemEntity && it.distanceTo(player) < 20}.minByOrNull { it.distanceTo(player) }?.pos
 
-
-
-    private fun findClosestItem(items: Array<Item>) = (0..8).filter { player.inventory.getStack(it).item in items }
-        .minByOrNull { abs(player.inventory.selectedSlot - it) }
     private fun findBestItem(validator: (Int, ItemStack) -> Boolean,
                              sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }) = (0..8)
         .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
@@ -432,7 +319,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
     private fun updateTarget() {
-        this.currentTarget = null
+        currentTarget = null
 
         val radius = range
         val radiusSquared = radius * radius
@@ -458,7 +345,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
 
             // set currentTarget to the new target
-            this.currentTarget = pos
+            currentTarget = pos
             // aim at target
             RotationManager.aimAt(rotation, configurable = rotations)
 
@@ -490,7 +377,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
             // set currentTarget to the new target
-            this.currentTarget = pos
+            currentTarget = pos
             // aim at target
             RotationManager.aimAt(rotation, configurable = rotations)
 
@@ -548,13 +435,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         ChunkScanner.unsubscribe(BlockTracker)
 //        ChunkScanner.unsubscribe(FarmBlockTracker)
     }
-    private enum class TrackedState {
+    enum class TrackedState {
         Destroy,
         Farmland,
         Soulsand
     }
 
-    private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
+    object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             val block = state.block
             if(block is FarmlandBlock && hasAirAbove(pos))
