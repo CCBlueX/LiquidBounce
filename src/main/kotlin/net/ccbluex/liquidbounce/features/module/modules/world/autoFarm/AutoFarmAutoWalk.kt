@@ -48,7 +48,10 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
 
         val target = walkTarget ?: return false
 
-        RotationManager.aimAt(RotationManager.makeRotation(target, player.eyes), configurable = ModuleAutoFarm.rotations)
+        RotationManager.aimAt(
+            RotationManager.makeRotation(target, player.eyes),
+            configurable = ModuleAutoFarm.rotations
+        )
         return true
     }
 
