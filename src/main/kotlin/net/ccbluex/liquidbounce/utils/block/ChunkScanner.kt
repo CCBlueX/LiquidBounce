@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
 import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.BlockState
@@ -75,6 +76,7 @@ object ChunkScanner : Listenable {
         }
 
         this.subscriber.add(newSubscriber)
+
 
         val world = mc.world ?: return
 
@@ -168,7 +170,7 @@ object ChunkScanner : Listenable {
             for (x in 0 until 16) {
                 for (y in 0 until chunk.height) {
                     for (z in 0 until 16) {
-                        val pos = BlockPos(x + chunk.pos.startX, y, z + chunk.pos.startZ)
+                        val pos = BlockPos(x + chunk.pos.startX, y + chunk.bottomY, z + chunk.pos.startZ)
                         val blockState = chunk.getBlockState(pos)
 
                         for (sub in subscribersForRecordBlock) {

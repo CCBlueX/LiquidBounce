@@ -444,10 +444,10 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             val block = state.block
-            if(block is FarmlandBlock && hasAirAbove(pos))
+            if (block is FarmlandBlock && hasAirAbove(pos))
                 return TrackedState.Farmland
 
-            if(block is SoulSandBlock && hasAirAbove(pos))
+            if (block is SoulSandBlock && hasAirAbove(pos))
                 return TrackedState.Soulsand
 
             if (isTargeted(state, pos))
@@ -460,15 +460,15 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
             val blockBellow = stateBellow.block
 
-            if(blockBellow is FarmlandBlock){
+            if (blockBellow is FarmlandBlock){
                 val targetBlockPos = TargetBlockPos(pos.down())
-                if(state.isAir){
+                if (state.isAir){
                     this.trackedBlockMap[targetBlockPos] = TrackedState.Farmland
                     return null
                 } else {
                     this.trackedBlockMap.remove(targetBlockPos)
                 }
-            } else if(blockBellow is SoulSandBlock){
+            } else if (blockBellow is SoulSandBlock){
                 val targetBlockPos = TargetBlockPos(pos.down())
                 if(state.isAir){
                     this.trackedBlockMap[targetBlockPos] = TrackedState.Soulsand
