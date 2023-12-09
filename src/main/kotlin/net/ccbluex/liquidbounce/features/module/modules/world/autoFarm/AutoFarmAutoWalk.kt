@@ -32,7 +32,9 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
     private fun findWalkToItem() =
         world.entities.filter {it is ItemEntity && it.distanceTo(player) < 20}
             .minByOrNull { it.distanceTo(player) }?.pos
-    fun findWalkTarget(): Boolean {
+    fun updateWalkTarget(): Boolean {
+        if (!enabled)
+            return false
 
         val invHasSpace = hasInventorySpace()
         if(!invHasSpace && invHadSpace && toItems){
@@ -74,11 +76,12 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
             else if(item in ModuleAutoFarm.itemsForSoulsand) allowedItems[2] = true
         }
 
-        val closestBlock = AutoFarmBlockTracker.trackedBlockMap
-            .filter { allowedItems[it.value.ordinal] }
-            .keys
-            .map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z)) }
-            .minByOrNull { it.distanceTo(player.pos)}
+        val closestBlock =
+            AutoFarmBlockTracker.trackedBlockMap
+                .filter { allowedItems[it.value.ordinal] }
+                .keys
+                .map { Vec3d.ofCenter(Vec3i(it.x, it.y, it.z)) }
+                .minByOrNull { it.distanceTo(player.pos)}
 
         return closestBlock
     }

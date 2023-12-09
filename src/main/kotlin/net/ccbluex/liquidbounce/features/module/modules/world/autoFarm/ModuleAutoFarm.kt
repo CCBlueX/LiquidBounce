@@ -19,10 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autoFarm
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -43,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.ItemEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.ActionResult
@@ -53,7 +49,6 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
 import net.minecraft.world.RaycastContext
 import kotlin.math.abs
 
@@ -135,11 +130,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         // If there is no currentTarget (a block close enough to be interacted with) walk if wanted
         currentTarget ?: run {
-            if(!autoWalk.enabled){
-                // don't walk if it isn't enabled
-                return@repeatable
-            }
-
+            autoWalk.updateWalkTarget()
 
             return@repeatable
         }
