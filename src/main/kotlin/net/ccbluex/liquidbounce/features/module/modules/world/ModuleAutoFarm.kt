@@ -80,7 +80,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
-    private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlaceCrops", true) {
+    private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlace", true) {
         val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
     }
 
@@ -107,7 +107,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             val outline by boolean("Outline", true)
 
             private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
-            private val replaceColor by color("ReplaceColor", Color4b(36, 237, 0, 255))
+            private val placeColor by color("PlaceColor", Color4b(191, 245, 66, 100))
             private val range by int("Range", 50, 10..128).listen {
                 rangeSquared = it * it
                 it
@@ -162,7 +162,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                                     drawSolidBox(box)
                                 }
                             } else {
-                                withColor(replaceColor) {
+                                withColor(placeColor) {
                                     drawSideBox(box, Direction.UP)
                                 }
 
@@ -215,18 +215,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private var invHadSpace = false
 
     private var farmLandBlocks = hashSetOf<Vec3d>()
-//    val velocityHandler = handler<PlayerVelocityStrafe> { event ->
-//        if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
-//            return@handler
-//        }
-//
-//        RotationManager.currentRotation?.let { rotation ->
-//            event.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), event.speed, rotation.yaw)
-//        }
-//
-////        Vec3d vec3d = Entity.movementInputToVelocity(movementInput, speed, this.getYaw());
-////        this.setVelocity(this.getVelocity().add(vec3d));
-//    }
 
     val horizantalMovementHandling = handler<RotatedMovementInputEvent> { event ->
         if (!movingToBlock || mc.currentScreen is HandledScreen<*>) {
@@ -301,10 +289,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             movingToBlock = true
 
             return@repeatable
-//            val rotation = RotationManager.currentRotation ?: return@repeatable
-
-//            player.velocity = Entity.movementInputToVelocity(Vec3d(0.0, 0.0, 0.98), player.movementSpeed, rotation.yaw).add(player.velocity)
-
         }
 
 
@@ -313,7 +297,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val currentRotation = RotationManager.serverRotation
 
-        val rayTraceResult = mc.world?.raycast(
+        val rayTraceResult = world.raycast(
             RaycastContext(
                 player.eyes,
                 player.eyes.add(currentRotation.rotationVec.multiply(range.toDouble())),
@@ -323,14 +307,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             )
         ) ?: return@repeatable
 
-
-
-
-
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
-
             return@repeatable
-
         }
 
         val blockPos = rayTraceResult.blockPos
