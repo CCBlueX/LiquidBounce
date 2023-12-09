@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -108,8 +108,12 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val checkKillaura by boolean("CheckKillaura", false)
         val checkTrigger by boolean("CheckTrigger", false)
 
-        val tickHandler = handler<TickJumpEvent> {
-            if (!isActive()) return@handler
+        var adjustNextMotion = false
+
+        val movementInputEvent = handler<MovementInputEvent> {
+            if (!isActive()) {
+                return@handler
+            }
 
             if (!canCrit(player, true)) {
                 return@handler
@@ -122,15 +126,16 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             world.findEnemy(0f..range) ?: return@handler
 
             if (player.isOnGround) {
-                // Simulate player jumping and send jump stat increment
-                player.jump()
+                it.jumping = true
+                adjustNextMotion = true
             }
         }
 
         val onJump = handler<PlayerJumpEvent> { event ->
             // Only change if there is nothing affecting the default motion (like a honey block)
-            if (event.motion == 0.42f) {
+            if (event.motion == 0.42f && adjustNextMotion) {
                 event.motion = height
+                adjustNextMotion = false
             }
         }
 
