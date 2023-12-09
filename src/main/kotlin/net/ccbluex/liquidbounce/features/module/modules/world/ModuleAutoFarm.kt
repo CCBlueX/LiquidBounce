@@ -189,7 +189,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     }
 
-    private object Walk : ToggleableConfigurable(this, "GotoCrops", false){
+    private object Walk : ToggleableConfigurable(this, "AutoWalk", false){
 
         // makes the player move to farmland blocks where there is need for crop replacement
         val toReplace by boolean("ToReplace", true)
@@ -475,8 +475,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos,
                 state,
-                range = range.toDouble(),
-                wallsRange = wallRange.toDouble()
+                range = range.toDouble() - 0.1,
+                wallsRange = wallRange.toDouble() - 0.1
             ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
 
             // set currentTarget to the new target
@@ -507,8 +507,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 player.eyes,
                 pos.up(),
                 state,
-                range = range.toDouble(),
-                wallsRange = wallRange.toDouble()
+                range = range.toDouble() - 0.1,
+                wallsRange = wallRange.toDouble() - 0.1
             ) ?: continue // We don't have a free angle at the block? Well let me see the next.
 
             // set currentTarget to the new target
