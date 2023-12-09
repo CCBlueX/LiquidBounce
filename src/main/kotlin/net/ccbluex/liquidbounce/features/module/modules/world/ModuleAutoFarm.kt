@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -227,14 +228,24 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 ////        this.setVelocity(this.getVelocity().add(vec3d));
 //    }
 
-    val moveInputHandler = handler<RotatedMovementInputEvent> { event ->
-        if (!movingToBlock || mc.currentScreen is HandledScreen<*>){
+    val horizantalMovementHandling = handler<RotatedMovementInputEvent> { event ->
+        if (!movingToBlock || mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
 
         event.forward = 1f
 
         player.isSprinting = true
+    }
+
+    val verticalMovementHandling = handler<MovementInputEvent> { event ->
+        if (!movingToBlock || mc.currentScreen is HandledScreen<*>) {
+            return@handler
+        }
+        // We want to swim up in water, so we don't drown and can move onwards
+        if (player.isTouchingWater) {
+            event.jumping = true
+        }
     }
 
     val repeatable = repeatable { event ->
@@ -306,7 +317,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             RaycastContext(
                 player.eyes,
                 player.eyes.add(currentRotation.rotationVec.multiply(range.toDouble())),
-                RaycastContext.ShapeType.COLLIDER,
+                RaycastContext.ShapeType.OUTLINE,
                 RaycastContext.FluidHandling.NONE,
                 player
             )
@@ -601,7 +612,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                     this.trackedBlockMap.remove(targetBlockPos)
                 }
             }
-
 
             return null
 
