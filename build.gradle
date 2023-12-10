@@ -87,6 +87,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
+    implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
     implementation "com.viaversion:viaversion:4.8.1"
     implementation "net.raphimc:ViaLoader:2.2.10"
 
@@ -267,7 +268,8 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
-        include(dependency('com.github.CCBlueX:Elixir'))
+        include(dependency('com.github.CCBlueX:mc-authlib'))
+        include(dependency('net.fabricmc:tiny-mappings-parser'))
         include(dependency('org.graalvm.sdk:graal-sdk:23.0.2'))
         include(dependency('org.graalvm.truffle:truffle-api:23.0.2'))
         include(dependency('org.graalvm.js:js:23.0.2'))
