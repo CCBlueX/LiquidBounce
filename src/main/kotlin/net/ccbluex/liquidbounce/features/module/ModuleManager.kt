@@ -258,7 +258,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         addModule(module)
     }
 
-    fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
+    fun autoComplete(begin: String, args: List<String>, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
 

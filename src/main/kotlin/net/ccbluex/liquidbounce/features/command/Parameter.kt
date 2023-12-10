@@ -36,7 +36,7 @@ class ParameterValidationResult<T> private constructor(
 }
 
 typealias ParameterVerifier<T> = (String) -> ParameterValidationResult<T>
-typealias AutoCompletionHandler = (String) -> List<String>
+typealias AutoCompletionHandler = (String, List<String>) -> List<String>
 
 class Parameter<T>(
     val name: String,

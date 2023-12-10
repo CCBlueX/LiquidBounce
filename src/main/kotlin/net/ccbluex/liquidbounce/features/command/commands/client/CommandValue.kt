@@ -43,6 +43,14 @@ object CommandValue {
                 ParameterBuilder
                     .begin<String>("valueName")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .autocompletedWith { begin, args ->
+                        val module = ModuleManager.find { it.name.equals(args[1], true) }
+                        if (module == null) return@autocompletedWith emptyList()
+
+                        module.getContainedValuesRecursively()
+                            .filter { it.name.startsWith(begin, true) }
+                            .map { it.name }
+                    }
                     .required()
                     .build()
             )
@@ -50,6 +58,7 @@ object CommandValue {
                 ParameterBuilder
                     .begin<String>("value")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .useMinecraftAutoCompletion()
                     .required()
                     .build()
             )
@@ -65,7 +74,7 @@ object CommandValue {
                 try {
                     value.setByString(valueString)
                 } catch (e: Exception) {
-                    throw CommandException(command.result("valueError", e.message ?: ""))
+                    throw CommandException(command.result("valueError", valueName, e.message ?: ""))
                 }
 
                 chat(regular(command.result("success")))
