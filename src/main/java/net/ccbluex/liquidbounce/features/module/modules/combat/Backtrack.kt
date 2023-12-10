@@ -210,18 +210,22 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     fun onGameLoop(event: GameLoopEvent) {
         val target = target as? EntityLivingBase
         val targetMixin = target as? IMixinEntity
-        val trueDist = targetMixin?.let {mc.thePlayer.getDistance(it.trueX, it.trueY, it.trueZ)} ?: 0.0
-        val dist = target?.let {mc.thePlayer.getDistance(it.posX, it.posY, it.posZ)} ?: 0.0
 
-        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos && trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
-            shouldDraw = true
-            if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
-                handlePackets()
-            else
-                handlePacketsRange()
-        } else {
-            clearPackets()
-            globalTimer.reset()
+        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
+            val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
+            val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
+
+            if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+                shouldDraw = true
+
+                if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
+                    handlePackets()
+                else
+                    handlePacketsRange()
+            } else {
+                clearPackets()
+                globalTimer.reset()
+            }
         }
     }
 
