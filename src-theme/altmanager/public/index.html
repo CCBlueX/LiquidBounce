@@ -255,7 +255,6 @@
             updateAccountData();
 
             // Set altening token
-            console.log(client.getAccountManager().getAlteningApiToken());
             document.getElementById('apitoken').value = client.getAccountManager().getAlteningApiToken();
         };
 
@@ -301,7 +300,6 @@
 
             feedback("Generating account...", "white");
             client.getAccountManager().setAlteningApiToken(apiToken);
-            console.log("Generating new altening account using token: " + client.getAccountManager().getAlteningApiToken());
             client.getAccountManager().generateAlteningAccountAsync(apiToken);
         }
 
