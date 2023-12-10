@@ -51,11 +51,11 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
         }
 
         entities = when (priority) {
-            PriorityEnum.HEALTH -> entities.sortedBy { it.health } // Sort by health
-            PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(it) } // Sort by FOV
-            PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
-            PriorityEnum.DISTANCE -> entities.sortedBy { it.squaredBoxedDistanceTo(player) } // Sort by distance
-            PriorityEnum.HURT_TIME -> entities.sortedBy { it.hurtTime } // Sort by hurt time
+            PriorityEnum.HEALTH -> entities.sortedBy { it.health }
+            PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(it) }
+            PriorityEnum.AGE -> entities.sortedBy { -it.age }
+            PriorityEnum.DISTANCE -> entities.sortedBy { it.squaredBoxedDistanceTo(player) }
+            PriorityEnum.HURT_TIME -> entities.sortedBy { it.hurtTime }
         }
 
         entities.minByOrNull { it.squaredBoxedDistanceTo(player) }

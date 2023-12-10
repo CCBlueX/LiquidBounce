@@ -44,7 +44,7 @@ enum class ItemType(val allowOnlyOne: Boolean) {
     SWORD(true),
     BOW(true),
     CROSSBOW(true),
-    ARROW(true),
+    ARROW(false),
     TOOL(true),
     ROD(true),
     SHIELD(true),

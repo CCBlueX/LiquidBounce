@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.autobow.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp

@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityDimensions
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.effect.StatusEffects
@@ -102,6 +103,9 @@ val PlayerEntity.ping: Int
 
 val ClientPlayerEntity.directionYaw: Float
     get() = getMovementDirectionOfInput(this.yaw, DirectionalInput(this.input))
+
+val EntityDimensions.centerOffset: Vec3d
+    get() = Vec3d(width / 2.0, height / 2.0, width / 2.0)
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
     var actualYaw = facingYaw
