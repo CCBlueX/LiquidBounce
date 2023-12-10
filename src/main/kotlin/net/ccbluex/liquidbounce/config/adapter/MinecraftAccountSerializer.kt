@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.config.adapter
 
 import com.google.gson.*
-import me.liuli.elixir.account.MinecraftAccount
-import me.liuli.elixir.manage.AccountSerializer
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.manage.AccountSerializer
 import java.lang.reflect.Type
 
 object MinecraftAccountSerializer : JsonSerializer<MinecraftAccount>, JsonDeserializer<MinecraftAccount> {

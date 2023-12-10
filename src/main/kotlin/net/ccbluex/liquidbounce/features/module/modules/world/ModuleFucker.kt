@@ -134,7 +134,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val blockToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             targets.contains(state.block) && getNearestPoint(
-                eyesPos, Box(pos, pos.add(1, 1, 1))
+                eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 

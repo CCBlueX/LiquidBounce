@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.PipelineEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkSide;
+import net.minecraft.network.handler.PacketSizeLogger;
 import net.minecraft.network.packet.Packet;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -83,7 +84,8 @@ public class MixinClientConnection {
      * Hook proxy
      */
     @Inject(method = "addHandlers", at = @At("HEAD"))
-    private static void hookProxy(ChannelPipeline pipeline, NetworkSide side, CallbackInfo callbackInfo) {
+    private static void hookProxy(ChannelPipeline pipeline, NetworkSide side, PacketSizeLogger packetSizeLogger,
+                                  CallbackInfo ci) {
         if (side == NetworkSide.CLIENTBOUND) {
             final PipelineEvent event = new PipelineEvent(pipeline);
             EventManager.INSTANCE.callEvent(event);

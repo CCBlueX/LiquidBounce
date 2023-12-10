@@ -68,8 +68,6 @@ class ParameterBuilder<T> private constructor(val name: String) {
 
         fun <T> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
 
-        fun autocompleteWithList(supplier: () -> Iterable<String>): AutoCompletionHandler =
-            { start -> supplier().filter { it.startsWith(start, true) } }
     }
 
     fun verifiedBy(verifier: ParameterVerifier<T>): ParameterBuilder<T> {
@@ -111,6 +109,12 @@ class ParameterBuilder<T> private constructor(val name: String) {
 
     fun autocompletedWith(autocompletionHandler: AutoCompletionHandler): ParameterBuilder<T> {
         this.autocompletionHandler = autocompletionHandler
+
+        return this
+    }
+
+    fun autocompletedWith(autocompletionHandler: (String) -> List<String>): ParameterBuilder<T> {
+        this.autocompletionHandler = { begin, _ -> autocompletionHandler(begin) }
 
         return this
     }

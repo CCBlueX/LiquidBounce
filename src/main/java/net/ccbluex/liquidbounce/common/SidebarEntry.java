@@ -15,27 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+package net.ccbluex.liquidbounce.common;
 
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.realms.gui.screen.RealmsMainScreen;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.text.Text;
 
-@Mixin(RealmsMainScreen.class)
-public class MixinRealmsMainScreen {
-
-    @Shadow
-    private static Screen realmsGenericErrorScreen;
-
-    @Inject(method = "init", at = @At("HEAD"))
-    private void hookGenericErrorScreenReset(final CallbackInfo callbackInfo) {
-        realmsGenericErrorScreen = null;
-    }
-
+@Environment(EnvType.CLIENT)
+public record SidebarEntry(Text name, Text score, int scoreWidth) {
 }

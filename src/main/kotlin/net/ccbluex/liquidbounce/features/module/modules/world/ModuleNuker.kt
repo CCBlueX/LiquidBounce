@@ -419,7 +419,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         return searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && !blacklistedBlocks.contains(state.block) && !isOnPlatform(pos)
-                && getNearestPoint(eyesPos, Box(pos, pos.add(1, 1, 1)))
+                && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1)))
                 .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {

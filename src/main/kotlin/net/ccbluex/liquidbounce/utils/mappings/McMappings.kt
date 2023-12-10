@@ -34,7 +34,7 @@ import net.fabricmc.mappings.model.V2MappingsProvider
  */
 object McMappings {
 
-    var mappings: Mappings? = null
+     var mappings: Mappings? = null
 
     fun load() {
         runCatching {

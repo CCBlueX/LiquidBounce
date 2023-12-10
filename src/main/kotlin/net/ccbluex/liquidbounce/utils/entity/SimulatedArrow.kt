@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.ProjectileUtil
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -65,7 +67,7 @@ class SimulatedArrow(val world: ClientWorld, var pos: Vec3d, var velocity: Vec3d
     private fun updateCollision(pos: Vec3d, newPos: Vec3d): HitResult? {
         val world = this.world
 
-        val arrowEntity = ArrowEntity(this.world, this.pos.x, this.pos.y, this.pos.z)
+        val arrowEntity = ArrowEntity(this.world, this.pos.x, this.pos.y, this.pos.z, ItemStack(Items.ARROW))
 
         // Get landing position
         val blockHitResult = world.raycast(

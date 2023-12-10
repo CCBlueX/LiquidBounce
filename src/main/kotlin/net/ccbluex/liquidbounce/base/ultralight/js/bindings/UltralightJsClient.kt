@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.util.Session
+import net.minecraft.client.session.Session
 
 /**
  * Referenced by JS as `client`
@@ -38,7 +38,8 @@ object UltralightJsClient {
 
     val sessionService = MinecraftSession
 
-    val uuid = mc.session.uuid
+    val uuid = mc.session.uuidOrNull
+
     fun exitClient() = mc.scheduleStop()
 
     fun isUpdateAvailable() = LiquidBounce.updateAvailable
@@ -55,7 +56,7 @@ object UltralightJsClient {
          *
          * TODO: pull URL service from API instead of hard coding the url
          */
-        fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuid}?size=100"
+        fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuidOrNull}?size=100"
 
         fun getFaceUrlByUUID(uuid: String) = "https://crafatar.com/avatars/$uuid}?size=100"
 

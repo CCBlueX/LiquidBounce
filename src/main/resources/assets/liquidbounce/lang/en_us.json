@@ -154,6 +154,7 @@
   "liquidbounce.command.value.description": "Allows you to change a value",
   "liquidbounce.command.value.result.success": "Successfully changed value.",
   "liquidbounce.command.value.result.valueNotFound": "Unable to find value %s!",
+  "liquidbounce.command.value.result.valueError": "Unable to change value %s because of an error: '%s'!",
   "liquidbounce.command.ping.description": "Checks your ping.",
   "liquidbounce.command.ping.result.pingCheck": "Your ping is %sms.",
   "liquidbounce.command.remoteview.description": "Allows you to view the perspective of another player.",

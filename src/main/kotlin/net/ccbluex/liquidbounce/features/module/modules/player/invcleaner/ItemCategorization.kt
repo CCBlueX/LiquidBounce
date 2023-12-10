@@ -1,36 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedArmorItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedArrowItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedBlockItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedBowItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedCrossbowItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedFoodItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedPrimitiveItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedRodItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedShieldItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedSwordItem
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedToolItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.ArrowItem
-import net.minecraft.item.BlockItem
-import net.minecraft.item.BowItem
-import net.minecraft.item.BucketItem
-import net.minecraft.item.CrossbowItem
-import net.minecraft.item.EnderPearlItem
-import net.minecraft.item.FishingRodItem
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.MilkBucketItem
-import net.minecraft.item.ShieldItem
-import net.minecraft.item.SwordItem
-import net.minecraft.item.ToolItem
+import net.minecraft.item.*
 
 val PREFER_ITEMS_IN_HOTBAR: (o1: WeightedItem, o2: WeightedItem) -> Int =
     { o1, o2 -> compareByCondition(o1, o2, WeightedItem::isInHotbar) }
@@ -103,7 +79,8 @@ object ItemCategorization {
             is ArrowItem -> arrayOf(WeightedArrowItem(slot))
             is ToolItem -> {
                 arrayOf(
-                    WeightedSwordItem(slot),
+                    // todo: add weapon type
+                    //WeightedSwordItem(slot),
                     WeightedToolItem(slot)
                 )
             }

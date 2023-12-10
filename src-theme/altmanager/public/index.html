@@ -216,15 +216,18 @@
             console.log("Account List updating...")
             while (accounts.hasNext()) {
                 let account = accounts.next();
-                console.log("Account " + i + ": " + account.getType() + " " + account.getName());
+                let accountProfile = account.getProfile();
+                let accountUsername = accountProfile.getUsername();
+                let accountType = account.getType();
+                console.log("Account " + i + ": " + accountType + " " + accountUsername);
 
                 let row = document.createElement('tr');
                 let type = document.createElement('td');
                 let name = document.createElement('td');
                 let button = document.createElement('td');
 
-                type.innerText = account.getType();
-                name.innerText = account.getName();
+                type.innerText = accountType;
+                name.innerText = accountUsername;
                 button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
 
                 row.appendChild(type);
@@ -252,7 +255,6 @@
             updateAccountData();
 
             // Set altening token
-            console.log(client.getAccountManager().getAlteningApiToken());
             document.getElementById('apitoken').value = client.getAccountManager().getAlteningApiToken();
         };
 
@@ -298,10 +300,7 @@
 
             feedback("Generating account...", "white");
             client.getAccountManager().setAlteningApiToken(apiToken);
-            console.log("Generating new altening account using token: " + client.getAccountManager().getAlteningApiToken());
-            client.getAccountManager().generateNewAlteningAccount(apiToken);
-            updateAccountList();
-            feedback("Account generated!", "green");
+            client.getAccountManager().generateAlteningAccountAsync(apiToken);
         }
 
         function loginAccount(id) {
@@ -317,9 +316,10 @@
 
         function deleteAccount(id) {
             const account = client.getAccountManager().getAccounts().remove(parseInt(id));
+            const accountProfile = account.getProfile();
             updateAccountList();
 
-            feedback("Deleted account: " + account.getName(), "green");
+            feedback("Deleted account: " + accountProfile.getUsername(), "green");
         }
 
         function restoreInitial() {

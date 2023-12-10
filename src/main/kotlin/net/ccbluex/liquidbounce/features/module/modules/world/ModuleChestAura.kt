@@ -171,7 +171,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val blocksToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             targetedBlocks.contains(state.block) && pos !in clickedBlocks && getNearestPoint(
                 eyesPos,
-                Box(pos, pos.add(1, 1, 1))
+                Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
