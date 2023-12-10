@@ -78,6 +78,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private var shouldDraw = true
 
+    private var ignoreWholeTick = false
+
     // Legacy
     private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20) { mode == "Legacy" }
 
@@ -227,6 +229,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 globalTimer.reset()
             }
         }
+
+        ignoreWholeTick = false
     }
 
     @EventTarget
@@ -408,6 +412,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
         positions.clear()
         shouldDraw = false
+        ignoreWholeTick = true
     }
 
     private fun addBacktrackData(id: UUID, x: Double, y: Double, z: Double, time: Long) {
@@ -504,7 +509,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private fun shouldBacktrack() =
         target?.let {
-            !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20
+            !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
     private fun reset() {
