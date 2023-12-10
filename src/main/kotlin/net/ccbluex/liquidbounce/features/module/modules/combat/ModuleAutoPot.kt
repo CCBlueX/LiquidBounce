@@ -163,7 +163,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
     }
 
     private fun isValidPotion(stack: ItemStack): Boolean {
-        return (stack.item is SplashPotionItem || (stack.item is LingeringPotionItem && allowLingering))
+        return stack.item is SplashPotionItem || stack.item is LingeringPotionItem && allowLingering
     }
 
     private fun foundTargetEffect(effect: StatusEffectInstance, healthIsLow: Boolean) =
