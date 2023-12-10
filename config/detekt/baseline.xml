@@ -19,6 +19,7 @@
     <ID>CyclomaticComplexMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
+    <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, clickScheduler.isClickOnNextTick(1))</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
@@ -49,6 +50,7 @@
     <ID>LongMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
+    <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float&gt;, ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String&gt;, val parameters: Array&lt;Parameter&lt;*&gt;&gt;, val subcommands: Array&lt;Command&gt;, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
@@ -137,7 +139,6 @@
     <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion${ o1, o2 -&gt; o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) }</ID>
     <ID>MaxLineLength:WeightedSwordItem.kt$WeightedSwordItem.Companion$return</ID>
     <ID>MaxLineLength:WeightedToolItem.kt$WeightedToolItem.Companion$(o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)</ID>
-    <ID>MemberNameEqualsClassName:ModuleBlockESP.kt$ModuleBlockESP.Box$// todo: use box of block, not hardcoded private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
     <ID>MemberNameEqualsClassName:ModuleStorageESP.kt$ModuleStorageESP.Box$// todo: use box of block, not hardcoded private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.FastClimb.Motion$private val motion by float("Motion", 0.2872F, 0.1f..0.5f)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.IceSpeed.Motion$val motion by float("Motion", 0.5f, 0.2f..1.5f)</ID>
@@ -173,7 +174,6 @@
     <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$RangedValue$IllegalArgumentException()</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$RangedValue$IllegalStateException()</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$Value$IllegalArgumentException()</ID>
-    <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$Value$IllegalStateException()</ID>
     <ID>ThrowsCount:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandBuilder.kt$CommandBuilder$fun build(): Command</ID>
@@ -182,6 +182,7 @@
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandManager.kt$CommandManager$fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
+    <ID>ThrowsCount:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:Chat.kt$Chat : ToggleableConfigurable</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
@@ -198,10 +199,9 @@
     <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$mods: Int</ID>
     <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$window: Long</ID>
     <ID>UnusedParameter:HttpClient.kt$HttpClient$headers: Array&lt;Pair&lt;String, String&gt;&gt; = emptyArray()</ID>
-    <ID>UnusedParameter:McMappings.kt$McMappings$clazz: Class&lt;*&gt;</ID>
-    <ID>UnusedParameter:McMappings.kt$McMappings$superClasses: Boolean</ID>
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
     <ID>UnusedParameter:ModuleChestStealer.kt$ModuleChestStealer$screen: GenericContainerScreen</ID>
+    <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String&gt;</ID>
     <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupExploits()</ID>
@@ -209,7 +209,6 @@
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupSpecial()</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent&gt; { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent&gt; { reconnect() }</ID>
-    <ID>UnusedPrivateProperty:McMappings.kt$McMappings$val classNames = mutableSetOf(clazz.name.replace('.', '/'))</ID>
     <ID>UnusedPrivateProperty:ModuleBlink.kt$ModuleBlink$i</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
@@ -223,7 +222,6 @@
     <ID>UseCheckOrError:FontRenderer.kt$FontRenderer$throw IllegalStateException("Can't begin a build a new batch when there are pending operations.")</ID>
     <ID>UseCheckOrError:MinecraftFramebufferShader.kt$MinecraftFramebufferShader$throw IllegalStateException("${this.shaderName} is not loaded")</ID>
     <ID>UseCheckOrError:Value.kt$RangedValue$throw IllegalStateException()</ID>
-    <ID>UseCheckOrError:Value.kt$Value$throw IllegalStateException()</ID>
     <ID>UseCheckOrError:WorldChangeNotifier.kt$WorldChangeNotifier$throw IllegalStateException("Subscriber already registered")</ID>
     <ID>UseRequire:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("Optional parameters are only allowed at the end")</ID>
     <ID>UseRequire:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("The command is marked as executable, but no handler was specified.")</ID>
@@ -237,5 +235,6 @@
     <ID>UseRequire:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
     <ID>UseRequire:UltralightJsEvents.kt$UltralightJsEvents$throw IllegalArgumentException("$handler is not a function.")</ID>
     <ID>UseRequire:Value.kt$RangedValue$throw IllegalArgumentException()</ID>
+    <ID>UseRequire:Value.kt$Value$throw IllegalArgumentException()</ID>
   </CurrentIssues>
 </SmellBaseline>
