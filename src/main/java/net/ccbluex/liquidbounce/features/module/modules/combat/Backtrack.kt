@@ -211,22 +211,21 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         val target = target as? EntityLivingBase
         val targetMixin = target as? IMixinEntity
 
-        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack()
-            && targetMixin.truePos && (style == "Smooth" || !globalTimer.hasTimePassed(delay))
-        ) {
-            val trueDistSq = targetMixin.run { mc.thePlayer.getDistanceSq(trueX, trueY, trueZ) }
-            val distSq = target.run { mc.thePlayer.getDistanceSq(posX, posY, posZ) }
+        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
+            val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
+            val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
 
-            if (trueDistSq <= 36f && (!smart || trueDistSq >= distSq)) {
+            if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
                 shouldDraw = true
+
                 if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
                     handlePackets()
                 else
                     handlePacketsRange()
+            } else {
+                clearPackets()
+                globalTimer.reset()
             }
-        } else {
-            clearPackets()
-            globalTimer.reset()
         }
     }
 
