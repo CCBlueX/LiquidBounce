@@ -210,7 +210,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val blocksToBreak = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && isTargeted(state, pos) && getNearestPoint(
                 eyesPos,
-                Box(pos, pos.add(1, 1, 1))
+                Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
@@ -247,7 +247,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
                     && getNearestPoint(
                     eyesPos,
-                    Box(pos, pos.add(1, 1, 1))
+                    Box.enclosing(pos, pos.add(1, 1, 1))
                 ).squaredDistanceTo(eyesPos) <= radiusSquared
             }.sortedBy { it.first.getCenterDistanceSquared() }
 
