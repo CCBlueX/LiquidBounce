@@ -41,7 +41,7 @@ public abstract class MixinPlayerListEntry {
     private boolean capeTextureLoading = false;
     private Identifier capeTexture = null;
 
-    @Inject(method = "getSkinTextures", at = @At("RETURN"))
+    @Inject(method = "getSkinTextures", at = @At("RETURN"), cancellable = true)
     private void injectCapeCosmetic(CallbackInfoReturnable<SkinTextures> callbackInfo) {
         if (capeTexture != null) {
             var textures = callbackInfo.getReturnValue();
