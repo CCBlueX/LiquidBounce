@@ -57,7 +57,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
         if (player.health + player.absorptionAmount < health) {
             if (slot != null) {
-                waitTicks(inventoryConstraints.delay.random())
+                waitTicks(inventoryConstraints.clickDelay.random())
 
                 if (slot != player.inventory.selectedSlot) {
                     lastSlot = player.inventory.selectedSlot

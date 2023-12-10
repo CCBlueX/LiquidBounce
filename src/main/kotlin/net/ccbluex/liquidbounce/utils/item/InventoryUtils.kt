@@ -162,7 +162,9 @@ var DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND,
  * Configurable to configure the dynamic rotation engine
  */
 class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
-    internal val delay by intRange("Delay", 2..4, 0..20)
+    internal val startDelay by intRange("StartDelay", 1..2, 0..20)
+    internal val clickDelay by intRange("ClickDelay", 2..4, 0..20)
+    internal val closeDelay by intRange("CloseDelay", 1..2, 0..20)
     internal val invOpen by boolean("InvOpen", false)
     internal val noMove by boolean("NoMove", false)
     internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
