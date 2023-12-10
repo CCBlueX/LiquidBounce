@@ -89,7 +89,7 @@ dependencies {
 
     implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
     implementation "com.viaversion:viaversion:4.8.1"
-    implementation "net.raphimc:ViaLoader:2.2.10"
+    implementation "net.raphimc:ViaLoader:2.2.12"
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
