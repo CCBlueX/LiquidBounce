@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.LingeringPotionItem
@@ -153,30 +153,29 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
     }
 
     private fun isPotion(stack: ItemStack): Boolean {
-        if (stack.isNothing()) {
-            return false
-        }
-        if (stack.item !is SplashPotionItem && (stack.item !is LingeringPotionItem || !allowLingering)) {
+        if (stack.isNothing() || !isValidPotion(stack)) {
             return false
         }
 
         val healthIsLow = player.health <= health
 
-        return PotionUtil.getPotionEffects(stack).any {
-            when (it.effectType) {
-                StatusEffects.INSTANT_HEALTH ->
-                    healthPotion && healthIsLow
-                StatusEffects.REGENERATION ->
-                    regenPotion && healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
-                StatusEffects.STRENGTH ->
-                    strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
-                StatusEffects.SPEED ->
-                    speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
-
-                else -> false
-            }
-        }
+        return PotionUtil.getPotionEffects(stack).any { foundTargetEffect(it, healthIsLow) }
     }
+
+    private fun isValidPotion(stack: ItemStack): Boolean {
+        return (stack.item is SplashPotionItem || (stack.item is LingeringPotionItem && allowLingering))
+    }
+
+    private fun foundTargetEffect(effect: StatusEffectInstance, healthIsLow: Boolean) =
+        when (effect.effectType) {
+            StatusEffects.INSTANT_HEALTH -> healthPotion && healthIsLow
+            StatusEffects.REGENERATION -> regenPotion &&
+                healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
+
+            StatusEffects.STRENGTH -> strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
+            StatusEffects.SPEED -> speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
+            else -> false
+        }
 
     private fun hasBenefit(entity: LivingEntity): Boolean {
         if (!entity.isAffectedBySplashPotions) {
@@ -199,11 +198,12 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
      *
      * TODO: Use actual lingering radius instead of a square
      */
-    private fun isStandingInsideLingering() = world.entities.filterIsInstance<AreaEffectCloudEntity>().any {
-        it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potion.effects.any { effect ->
-            effect.effectType == StatusEffects.REGENERATION || effect.effectType == StatusEffects.INSTANT_HEALTH
-                || effect.effectType == StatusEffects.STRENGTH
+    private fun isStandingInsideLingering() =
+        world.entities.filterIsInstance<AreaEffectCloudEntity>().any {
+            it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potion.effects.any { effect ->
+                effect.effectType == StatusEffects.REGENERATION || effect.effectType == StatusEffects.INSTANT_HEALTH
+                    || effect.effectType == StatusEffects.STRENGTH
+            }
         }
-    }
 
 }
