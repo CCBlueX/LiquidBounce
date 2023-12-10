@@ -296,7 +296,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val block = state.block
 
         return when (block) {
-            is GourdBlock -> true
+            is PumpkinBlock -> true
+            Blocks.MELON -> true
             is CropBlock -> block.isMature(state)
             is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= 3
             is CocoaBlock -> state.get(CocoaBlock.AGE) >= 2
