@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.client.util.Session
+import net.minecraft.client.session.Session
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPatch
@@ -83,7 +83,7 @@ object ModuleCapeTransfer : Module("CapeTransfer", Category.MISC) {
 
         thread(name = "CapeUpdate") {
             // Apply cape to new account
-            val uuid = mc.session.uuid
+            val uuid = mc.session.uuidOrNull?.toString() ?: return@thread
             val username = mc.session.username
 
             val httpClient = HttpClients.createDefault()

@@ -45,15 +45,15 @@ object CommandRemoteView {
                     .handler { command, args ->
                         val name = args[0] as String
                         for (entity in mc.world!!.entities) {
-                            if (name.equals(entity.entityName, true)) {
+                            if (name.equals(entity.nameForScoreboard, true)) {
                                 if (mc.getCameraEntity() == entity) {
-                                    chat(regular(command.result("alreadyViewing", variable(entity.entityName))))
+                                    chat(regular(command.result("alreadyViewing", variable(entity.nameForScoreboard))))
                                     return@handler
                                 }
                                 mc.setCameraEntity(entity)
-                                pName = entity.entityName
-                                chat(regular(command.result("viewPlayer", variable(entity.entityName))))
-                                chat(regular(command.result("caseOff", variable(entity.entityName))))
+                                pName = entity.nameForScoreboard
+                                chat(regular(command.result("viewPlayer", variable(entity.nameForScoreboard))))
+                                chat(regular(command.result("caseOff", variable(entity.nameForScoreboard))))
                             }
                         }
                     }

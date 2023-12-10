@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.chat
 
 import com.mojang.authlib.exceptions.InvalidCredentialsException
+import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
@@ -278,11 +279,11 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
                 runCatching {
                     val sessionHash = packet.sessionHash
 
-                    mc.sessionService.joinServer(mc.session.profile, mc.session.accessToken, sessionHash)
+                    mc.sessionService.joinServer(mc.session.uuidOrNull, mc.session.accessToken, sessionHash)
                     client.sendPacket(
                         ServerLoginMojangPacket(
                             mc.session.username,
-                            mc.session.profile.id,
+                            mc.session.uuidOrNull,
                             allowMessages = true
                         )
                     )
@@ -350,17 +351,8 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = MojangApi.getUUID(target)
-
-            if (incomingUUID.isBlank()) return ""
-
-            val uuid = StringBuffer(incomingUUID)
-                .insert(20, '-')
-                .insert(16, '-')
-                .insert(12, '-')
-                .insert(8, '-')
-
-            uuid.toString()
+            val incomingUUID = GameProfileRepository().fetchUuidByUsername(target)
+            incomingUUID.toString()
         }
     }
 

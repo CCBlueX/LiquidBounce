@@ -104,7 +104,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
              * @see net.minecraft.world.entity.EntityIndex.add
              */
             clone.uuid = UUID.randomUUID()
-            world.addEntity(clone.id, clone)
+            world.addEntity(clone)
 
             fakePlayer = clone
         }

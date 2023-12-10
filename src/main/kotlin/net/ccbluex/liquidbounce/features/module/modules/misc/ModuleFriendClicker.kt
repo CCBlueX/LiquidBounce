@@ -55,7 +55,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
         val pickup = mc.options.pickItemKey.isPressed
 
         if (facesEnemy && pickup && !clicked) {
-            val name = entity.entityName
+            val name = entity.nameForScoreboard
 
             if (FriendManager.isFriend(name)) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))

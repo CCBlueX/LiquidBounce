@@ -146,6 +146,7 @@ class CpuViewRenderer : ViewRenderer {
             .next()
 
         tessellator.draw()
+        RenderSystem.defaultBlendFunc()
         RenderSystem.disableBlend()
     }
 

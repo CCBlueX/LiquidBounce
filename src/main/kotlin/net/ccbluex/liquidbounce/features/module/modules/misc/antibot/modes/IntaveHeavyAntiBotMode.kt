@@ -97,7 +97,9 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
 
     private fun handlePlayerListAddPlayers(entries: MutableList<PlayerListS2CPacket.Entry>) {
         for (entry in entries) {
-            if (entry.latency < 2 || ModuleAntiBot.isGameProfileUnique(entry.profile)) {
+            val profile = entry.profile ?: continue
+
+            if (entry.latency < 2 || ModuleAntiBot.isGameProfileUnique(profile)) {
                 continue
             }
 

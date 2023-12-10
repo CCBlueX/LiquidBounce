@@ -85,8 +85,6 @@ public abstract class MixinMinecraftClient {
     @Nullable
     public abstract ClientPlayNetworkHandler getNetworkHandler();
 
-    @Shadow
-    public abstract boolean isConnectedToRealms();
 
     @Shadow
     public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
@@ -118,7 +116,7 @@ public abstract class MixinMinecraftClient {
     }
 
     @Inject(method = "<init>", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/MinecraftClient;profileKeys:Lnet/minecraft/client/util/ProfileKeys;",
+            target = "Lnet/minecraft/client/MinecraftClient;profileKeys:Lnet/minecraft/client/session/ProfileKeys;",
             ordinal = 0, shift = At.Shift.AFTER))
     private void onSessionInit(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new SessionEvent());
@@ -129,8 +127,14 @@ public abstract class MixinMinecraftClient {
      * Example: LiquidBounce v1.0.0 | 1.16.3
      *
      * @param callback our window title
+     *
+     * todo: modify constant Minecraft instead
      */
-    @Inject(method = "getWindowTitle", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getWindowTitle", at = @At(
+            value = "INVOKE",
+            target = "Ljava/lang/StringBuilder;append(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            ordinal = 1),
+            cancellable = true)
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
         if (HideClient.INSTANCE.isHidingNow()) {
             return;
@@ -151,18 +155,18 @@ public abstract class MixinMinecraftClient {
         titleBuilder.append(" | ");
         titleBuilder.append(SharedConstants.getGameVersion().getName());
 
-        ClientPlayNetworkHandler clientPlayNetworkHandler = getNetworkHandler();
+        ClientPlayNetworkHandler clientPlayNetworkHandler = this.getNetworkHandler();
         if (clientPlayNetworkHandler != null && clientPlayNetworkHandler.getConnection().isOpen()) {
-            titleBuilder.append(" | ");
-
-            if (server != null && !server.isRemote()) {
-                titleBuilder.append(I18n.translate("title.singleplayer"));
-            } else if (this.isConnectedToRealms()) {
-                titleBuilder.append(I18n.translate("title.multiplayer.realms"));
-            } else if (server == null && (this.getCurrentServerEntry() == null || !this.getCurrentServerEntry().isLocal())) {
-                titleBuilder.append(I18n.translate("title.multiplayer.other"));
+            titleBuilder.append(" - ");
+            ServerInfo serverInfo = this.getCurrentServerEntry();
+            if (this.server != null && !this.server.isRemote()) {
+                titleBuilder.append(I18n.translate("title.singleplayer", new Object[0]));
+            } else if (serverInfo != null && serverInfo.isRealm()) {
+                titleBuilder.append(I18n.translate("title.multiplayer.realms", new Object[0]));
+            } else if (this.server == null && (serverInfo == null || !serverInfo.isLocal())) {
+                titleBuilder.append(I18n.translate("title.multiplayer.other", new Object[0]));
             } else {
-                titleBuilder.append(I18n.translate("title.multiplayer.lan"));
+                titleBuilder.append(I18n.translate("title.multiplayer.lan", new Object[0]));
             }
         }
 
