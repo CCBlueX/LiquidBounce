@@ -50,6 +50,7 @@
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.network.MixinClientPlayNetworkHandler",
     "minecraft.network.MixinPlayerListEntry",
+    "minecraft.network.MixinClientLoginNetworkHandlerMixin",
     "minecraft.registry.MixinRegistries",
     "minecraft.render.MixinBackgroundRenderer",
     "minecraft.render.MixinBuiltinModelItemRenderer",
