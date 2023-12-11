@@ -23,7 +23,6 @@ import com.labymedia.ultralight.UltralightPlatform
 import com.labymedia.ultralight.UltralightRenderer
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
-import com.labymedia.ultralight.gpu.UltralightGPUDriverNativeUtil
 import com.labymedia.ultralight.os.OperatingSystem
 import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
 import net.ccbluex.liquidbounce.base.ultralight.hooks.UltralightIntegrationHook
@@ -34,11 +33,11 @@ import net.ccbluex.liquidbounce.base.ultralight.impl.glfw.GlfwCursorAdapter
 import net.ccbluex.liquidbounce.base.ultralight.impl.glfw.GlfwInputAdapter
 import net.ccbluex.liquidbounce.base.ultralight.impl.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.base.ultralight.js.bindings.UltralightStorage
-import net.ccbluex.liquidbounce.utils.client.ThreadLock
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
+import org.lwjgl.util.tinyfd.TinyFileDialogs
+import kotlin.system.exitProcess
 
 object UltralightEngine {
 
@@ -119,6 +118,21 @@ object UltralightEngine {
      * This will download the required natives and resources and load them.
      */
     private fun initNatives() {
+        // Restrict OS (to notify user that macOS is not supported)
+        if (IS_MAC) {
+            val message = "LiquidBounce Nextgen is not supported on macOS. Please use Windows or Linux instead."
+
+            TinyFileDialogs.tinyfd_messageBox(
+                "LiquidBounce Nextgen",
+                message,
+                "ok",
+                "error",
+                true
+            )
+            logger.error(message)
+            exitProcess(1)
+        }
+
         // Check resources
         logger.info("Checking resources...")
         resources.downloadResources()
@@ -138,16 +152,21 @@ object UltralightEngine {
         )
         logger.debug("Libraries: $libs")
 
-        val os = OperatingSystem.get()
-        for (lib in libs) {
-            logger.debug("Loading library $lib")
-            System.load(natives.resolve(os.mapLibraryName(lib)).toAbsolutePath().toString())
-        }
+        runCatching {
+            val os = OperatingSystem.get()
 
-        logger.debug("Loading UltralightJava")
-        UltralightJava.load(natives)
-        logger.debug("Loading UltralightGPUDriver")
-        UltralightGPUDriverNativeUtil.load(natives)
+            for (lib in libs) {
+                runCatching {
+                    logger.debug("Loading library $lib")
+                    System.load(natives.resolve(os.mapLibraryName(lib)).toAbsolutePath().toString())
+                }.onFailure {
+                    logger.error("Failed to load library $lib", it)
+                }
+            }
+
+            logger.debug("Loading UltralightJava")
+            UltralightJava.load(natives)
+        }.onFailure(ErrorHandler::fatal)
     }
 
     fun shutdown() {
