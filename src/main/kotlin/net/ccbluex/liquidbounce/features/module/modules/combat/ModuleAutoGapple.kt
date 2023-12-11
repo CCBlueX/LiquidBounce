@@ -56,8 +56,6 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
             if (hotbarSlot == null) {
                 if (findEmptyHotbarSlot() && invSlot != null) {
                     performInventoryClick(invSlot)
-
-                    return@repeatable
                 }
 
                 return@repeatable
