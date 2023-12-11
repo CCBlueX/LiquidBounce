@@ -11,66 +11,76 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
-import net.ccbluex.liquidbounce.value.BlockValue
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.bed
 import net.minecraft.util.BlockPos
 import java.awt.Color
 import java.util.LinkedList
-import kotlin.streams.toList
 
 object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
-    private val mode by ListValue("Mode", arrayOf("Box", "2D"), "Box")
-    private val radius by IntegerValue("Radius", 30, 0..60)
-    private val blockLimit by IntegerValue("BlockLimit", 256, 0..2056)
+    private val radius by IntegerValue("Radius", 8, 0..32)
+    private val maxLayers by IntegerValue("MaxProtectionLayers", 2, 1..8)
+    private val down by BoolValue("ConsiderBlocksUnderBed", false)
+    private val renderBeds by BoolValue("RenderBedBlocks", true)
 
     private val colorRainbow by BoolValue("Rainbow", false)
-        private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
-        private val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }
-        private val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow }
+        private val colorRed by IntegerValue("R", 96, 0..255) { !colorRainbow }
+        private val colorGreen by IntegerValue("G", 96, 0..255) { !colorRainbow }
+        private val colorBlue by IntegerValue("B", 96, 0..255) { !colorRainbow }
 
     private val searchTimer = MSTimer()
     private val bedBlockList = mutableListOf<BlockPos>()
     private val blocksToRender = mutableListOf<BlockPos>()
     private var thread: Thread? = null
 
-    fun getBlocksToRender(bedBlock: BlockPos) : Set<BlockPos> {
+    private fun getBlocksToRender(bedBlock: BlockPos) : Set<BlockPos> {
         val nextLayerAirBlocks = mutableSetOf<BlockPos>()
-
-        val currLayer = LinkedList<BlockPos>()
-        val nextLayer = mutableSetOf<BlockPos>()
+        val nextLayerBlocks = mutableSetOf<BlockPos>()
         val cachedBlocks = mutableSetOf<BlockPos>()
-        currLayer.add(bedBlock)
+        var currentLayer = 1
+        val currentLayerBlocks = LinkedList<BlockPos>()
+        currentLayerBlocks.add(bedBlock)
 
-        while (currLayer.isNotEmpty()) {
-            val currBlock = currLayer.removeFirst()
-            val blocksAround = mutableListOf(
-                currBlock.north(),
-                currBlock.east(),
-                currBlock.west(),
-                currBlock.south(),
-                currBlock.up()
-            )
+        while (currentLayerBlocks.isNotEmpty()) {
+            val currBlock = currentLayerBlocks.removeFirst()
+            val currBlockID = Block.getIdFromBlock(getBlock(currBlock))
+            // it's not necessary to make protection layers around unbreakable blocks
+            val breakableBlockIDs = listOf(35, 159, 121, 20, 5, 49, 26) // wool, stained clay, end stone, glass, wood, obsidian, bed
 
-            val airBlocks = blocksAround.stream().filter { blockPos -> getBlock(blockPos) == air }.toList()
-            nextLayerAirBlocks.addAll(airBlocks)
-            nextLayer.addAll(blocksAround.filter {
-                blockPos -> getBlock(blockPos) != air && !cachedBlocks.contains(blockPos)
-            })
+            if (breakableBlockIDs.contains(currBlockID)) {
+                val blocksAround = mutableListOf(
+                    currBlock.north(),
+                    currBlock.east(),
+                    currBlock.west(),
+                    currBlock.south(),
+                    currBlock.up(),
+                )
+
+                if (down) {
+                    blocksAround.add(currBlock.down())
+                }
+
+                nextLayerAirBlocks.addAll(
+                    blocksAround.filter { blockPos -> getBlock(blockPos) == air }
+                )
+                nextLayerBlocks.addAll(
+                    blocksAround.filter { blockPos -> getBlock(blockPos) != air && !cachedBlocks.contains(blockPos) }
+                )
+            }
 
             // move to the next layer
-            if (currLayer.isEmpty() && nextLayerAirBlocks.isEmpty()) {
-                currLayer.addAll(nextLayer)
-                cachedBlocks.addAll(nextLayer)
-                nextLayer.clear()
+            if (currentLayerBlocks.isEmpty() && nextLayerAirBlocks.isEmpty() && currentLayer < maxLayers) {
+                currentLayerBlocks.addAll(nextLayerBlocks)
+                cachedBlocks.addAll(nextLayerBlocks)
+                nextLayerBlocks.clear()
+                currentLayer += 1
             }
         }
 
@@ -83,13 +93,10 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
             val radius = radius
             val selectedBlock = Block.getBlockById(26)
 
-            if (selectedBlock == null || selectedBlock == air)
-                return
-
             thread = Thread({
-                val blockList = mutableListOf<BlockPos>()
+                //val blockList = mutableListOf<BlockPos>()
 
-                for (x in -radius until radius) {
+                /*for (x in -radius until radius) {
                     for (y in radius downTo -radius + 1) {
                         for (z in -radius until radius) {
                             val thePlayer = mc.thePlayer
@@ -101,15 +108,16 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
                             val blockPos = BlockPos(xPos, yPos, zPos)
                             val block = getBlock(blockPos)
 
-                            if (block == selectedBlock && blockList.size < blockLimit) blockList += blockPos
+                            if (block == selectedBlock && blockList.size < 256) blockList += blockPos
                         }
                     }
-                }
+                }*/
+                val blocks = searchBlocks(radius, setOf(bed))
                 searchTimer.reset()
 
                 synchronized(bedBlockList) {
                     bedBlockList.clear()
-                    bedBlockList += blockList
+                    bedBlockList += blocks.keys
                 }
                 synchronized(blocksToRender) {
                     blocksToRender.clear()
@@ -123,22 +131,17 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        synchronized(bedBlockList) {
-            val color = Color.RED
-            for (blockPos in bedBlockList) {
-                when (mode.lowercase()) {
-                    "box" -> drawBlockBox(blockPos, color, true)
-                    "2d" -> draw2D(blockPos, color.rgb, Color.BLACK.rgb)
+        if (renderBeds) {
+            synchronized(bedBlockList) {
+                for (blockPos in bedBlockList) {
+                    drawBlockBox(blockPos, Color.RED, true)
                 }
             }
         }
         synchronized(blocksToRender) {
             val color = if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
             for (blockPos in blocksToRender) {
-                when (mode.lowercase()) {
-                    "box" -> drawBlockBox(blockPos, color, true)
-                    "2d" -> draw2D(blockPos, color.rgb, Color.BLACK.rgb)
-                }
+                drawBlockBox(blockPos, color, true)
             }
         }
     }
