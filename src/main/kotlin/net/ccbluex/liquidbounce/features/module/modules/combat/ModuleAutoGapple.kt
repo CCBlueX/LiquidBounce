@@ -19,10 +19,14 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.DummyEvent
+import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.Items
@@ -40,88 +44,146 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     private val health by int("Health", 15, 1..20)
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
 
-    private var lastSlot = -1
-
     val repeatable = repeatable {
-        val slot = findHotbarSlot(Items.GOLDEN_APPLE)
+        val hotbarSlot = findHotbarSlot(Items.GOLDEN_APPLE)
         val invSlot = findInventorySlot(Items.GOLDEN_APPLE)
 
-        if (slot == null && invSlot == null || interaction.hasRidingInventory()) {
-            if (lastSlot != -1) {
-                player.inventory.selectedSlot = lastSlot
-                lastSlot = -1
-            }
-
+        if (interaction.hasRidingInventory() && invSlot != null && hotbarSlot == null) {
             return@repeatable
         }
 
         if (player.health + player.absorptionAmount < health) {
-            if (slot != null) {
-                waitTicks(inventoryConstraints.clickDelay.random())
+            if (hotbarSlot == null) {
+                if (findEmptyHotbarSlot() && invSlot != null) {
+                    performInventoryClick(invSlot)
 
-                if (slot != player.inventory.selectedSlot) {
-                    lastSlot = player.inventory.selectedSlot
-                    player.inventory.selectedSlot = slot
-                }
-
-                if (player.isBlocking) {
-                    waitUntil { !player.isBlocking }
-                }
-
-                mc.options.useKey.isPressed = true
-
-                waitUntil { player.health + player.absorptionAmount >= health }
-
-                mc.options.useKey.isPressed = false
-
-                if (lastSlot != -1) {
-                    player.inventory.selectedSlot = lastSlot
-                    lastSlot = -1
+                    return@repeatable
                 }
 
                 return@repeatable
-            } else if (invSlot != null && (0..8).any { player.inventory.getStack(it).isEmpty }) {
-                utilizeInventory(invSlot, 0, SlotActionType.QUICK_MOVE, inventoryConstraints)
+            }
 
-                return@repeatable
+            hotbarSlot.run {
+                val delay = inventoryConstraints.clickDelay.random()
+
+                waitConditional(delay) { !canUseItem() }
+
+                if (!canUseItem()) {
+                    return@repeatable
+                }
+
+                SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, this, 1)
+
+                if (player.isUsingItem) {
+                    interaction.stopUsingItem(player)
+
+                    waitConditional(1) { !canUseItem() }
+
+                    if (!canUseItem()) {
+                        SilentHotbar.resetSlot(this)
+
+                        return@repeatable
+                    }
+
+                    if (SilentHotbar.serversideSlot != this) {
+                        SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, this, delay.coerceAtLeast(1))
+                    }
+                }
+
+                var stopItemUse = false
+
+                waitUntil {
+                    // Keep the slot during eating
+                    SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, this, 1)
+
+                    mc.options.useKey.isPressed = true
+
+                    stopItemUse = player.health + player.absorptionAmount >= health
+                        || player.inventory.getStack(this).item != Items.GOLDEN_APPLE
+                        || !canUseItem()
+
+                    return@waitUntil stopItemUse
+                }
+
+                if (stopItemUse) {
+                    releaseUseKey()
+
+                    SilentHotbar.resetSlot(this)
+                }
             }
         }
     }
 
-    fun utilizeInventory(
-        item: ItemSlot,
-        button: Int,
-        slotActionType: SlotActionType,
-        inventoryConstraints: InventoryConstraintsConfigurable,
-        close: Boolean = true,
-    ) {
-        if (!player.currentScreenHandler.isPlayerInventory) {
-            return
+    private fun findEmptyHotbarSlot(): Boolean {
+        return ALL_SLOTS_IN_INVENTORY.find {
+            it.slotType == ItemSlotType.HOTBAR && it.itemStack.isNothing()
+        } != null
+    }
+
+    private fun canUseItem() = !InventoryTracker.isInventoryOpenServerSide
+
+    private fun shouldCancelInvMove(): Boolean {
+        if (inventoryConstraints.violatesNoMove) {
+            if (canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
+
+            return true
         }
 
-        val slot = item.getIdForServerWithCurrentScreen() ?: return
+        if (inventoryConstraints.invOpen && !isInInventoryScreen) {
+            return true
+        }
+
+        if (!player.currentScreenHandler.isPlayerInventory) {
+            return true
+        }
+
+        return false
+    }
+
+    private suspend fun Sequence<DummyEvent>.performInventoryClick(item: ItemSlot): Boolean {
+        if (shouldCancelInvMove()) {
+            return false
+        }
+
+        val slot = item.getIdForServerWithCurrentScreen() ?: return false
 
         if (!isInInventoryScreen) {
             openInventorySilently()
         }
 
-        if (!inventoryConstraints.violatesNoMove && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
-            interaction.clickSlot(0, slot, button, slotActionType, player)
+        val startDelay = inventoryConstraints.startDelay.random()
 
-            if (close && canCloseMainInventory) {
+        if (startDelay > 0) {
+            waitConditional(startDelay) { shouldCancelInvMove() }
+
+            if (shouldCancelInvMove()) {
+                return false
+            }
+        }
+
+        interaction.clickSlot(0, slot, 0, SlotActionType.QUICK_MOVE, player)
+
+        if (canCloseMainInventory) {
+            waitConditional(inventoryConstraints.closeDelay.random()) { shouldCancelInvMove() }
+
+            // Can it still be closed?
+            if (canCloseMainInventory) {
                 network.sendPacket(CloseHandledScreenC2SPacket(0))
             }
+        }
+
+        return true
+    }
+
+    private fun releaseUseKey() {
+        if (!mc.options.useKey.pressedOnKeyboard) {
+            mc.options.useKey.isPressed = false
         }
     }
 
     override fun disable() {
-        if (!mc.options.useKey.pressedOnKeyboard) {
-            mc.options.useKey.isPressed = false
-        }
-
-        if (lastSlot != -1) {
-            player.inventory.selectedSlot = lastSlot
-            lastSlot = -1
-        }
+        releaseUseKey()
     }
 }
