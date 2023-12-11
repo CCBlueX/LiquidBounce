@@ -125,6 +125,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNotifier,
             ModuleSpammer,
             ModuleAutoAccount,
+            ModuleAutoInsult,
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
