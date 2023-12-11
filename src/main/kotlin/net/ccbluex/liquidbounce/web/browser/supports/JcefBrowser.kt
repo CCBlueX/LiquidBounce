@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.web.browser.supports
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.MCEFDownloader
@@ -40,6 +40,8 @@ import net.ccbluex.liquidbounce.web.browser.supports.tab.JcefTab
  */
 class JcefBrowser : IBrowser, Listenable {
 
+    private val mcefFolder = ConfigSystem.rootFolder.resolve("mcef")
+    private val librariesFolder = mcefFolder.resolve("libraries")
     private val tabs = mutableListOf<JcefTab>()
 
     override fun makeDependenciesAvailable() {
@@ -50,7 +52,7 @@ class JcefBrowser : IBrowser, Listenable {
                 userAgent = HttpClient.DEFAULT_AGENT
             }
             // todo: add progression bar for downloading
-            MCEFDownloader.downloadJcef()
+            MCEFDownloader.downloadJcef(librariesFolder)
         }
     }
 

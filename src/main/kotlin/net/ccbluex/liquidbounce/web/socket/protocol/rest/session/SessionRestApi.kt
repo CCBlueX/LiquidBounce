@@ -43,9 +43,9 @@ private fun RestNode.setupLocalSessionRestApi() {
         httpOk(JsonObject().apply {
             mc.session.let {
                 addProperty("username", it.username)
-                addProperty("uuid", it.uuid)
+                addProperty("uuid", it.uuidOrNull.toString())
                 addProperty("accountType", it.accountType.getName())
-                addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuid))
+                addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuidOrNull))
                 addProperty("premium", it.isPremium())
             }
         })
@@ -68,10 +68,9 @@ private fun RestNode.setupAltManagerRestApi() {
                 // -> We do not want to share the access token or anything relevant
 
                 addProperty("id", i)
-                addProperty("username", account.name)
-                // Be careful with this, it will require a session refresh which takes time
-                // addProperty("uuid", account.session.uuid)
-                // addProperty("faceUrl", ClientApi.FACE_URL.format(account.session.uuid))
+                addProperty("username", account.profile?.username)
+                addProperty("uuid", account.profile?.uuid.toString())
+                addProperty("faceUrl", ClientApi.FACE_URL.format(account.profile?.uuid))
                 addProperty("type", account.type)
             })
         }
@@ -88,9 +87,9 @@ private fun RestNode.setupAltManagerRestApi() {
         httpOk(JsonObject().apply {
             mc.session.let {
                 addProperty("username", it.username)
-                addProperty("uuid", it.uuid)
+                addProperty("uuid", it.uuidOrNull.toString())
                 addProperty("accountType", it.accountType.getName())
-                addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuid))
+                addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuidOrNull))
                 addProperty("premium", it.isPremium())
             }
         })
@@ -102,11 +101,8 @@ private fun RestNode.setupAltManagerRestApi() {
         )
         val accountForm = decode<AccountForm>(it.content)
 
-        val account = AccountManager.newCrackedAccount(accountForm.username)
-        httpOk(JsonObject().apply {
-            addProperty("id", AccountManager.accounts.indexOf(account))
-            addProperty("username", account.name)
-        })
+        AccountManager.newCrackedAccount(accountForm.username)
+        httpOk(JsonObject())
     }
 
     post("/accounts/new/microsoft") {
@@ -129,7 +125,7 @@ private fun RestNode.setupAltManagerRestApi() {
         )
         val accountForm = decode<AlteningGenForm>(it.content)
 
-        AccountManager.generateNewAlteningAccount(accountForm.apiToken)
+        AccountManager.generateAlteningAccount(accountForm.apiToken)
         httpOk(JsonObject())
     }
 

@@ -45,10 +45,10 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
-import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -114,7 +114,6 @@ object LiquidBounce : Listenable {
             // Features
             ModuleManager
             CommandManager
-            ThemeManager
             ScriptManager
             RotationManager
             CombatManager
@@ -129,9 +128,6 @@ object LiquidBounce : Listenable {
 
             // Loads up fonts (requires connection to the internet on first launch)
             Fonts
-
-            // Load up a web platform
-            UltralightEngine.init()
 
             // Register commands and modules
             CommandManager.registerInbuilt()
