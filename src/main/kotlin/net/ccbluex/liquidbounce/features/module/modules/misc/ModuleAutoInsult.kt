@@ -36,7 +36,7 @@ import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
  */
 object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
 
-    // A list of funny messages to choose from
+    
     val messages = listOf(
         "Get rekt, noob!",
         "You are so bad, lol.",
@@ -50,7 +50,7 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         "You are not even a challenge."
     )
 
-    // A random number generator
+    
     val random = java.util.Random()
 
     // A handler for chat receive events
