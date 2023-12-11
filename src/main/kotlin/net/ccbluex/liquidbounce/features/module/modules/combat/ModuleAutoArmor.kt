@@ -40,47 +40,77 @@ import net.minecraft.screen.slot.SlotActionType
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
-    //private val startDelay by intRange("StartDelay", 1..2, 0..20)
-    //private val closeDelay by intRange("CloseDelay", 1..2, 0..20)
     private val hotbar by boolean("Hotbar", true)
 
     var locked = false
+    var clickedInInventory = false
 
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
 
-        val bestArmor = findBestArmorPiecesInInventory()
-
-        for ((armorIndex, armorPiece) in bestArmor.withIndex()) {
-            if (!canOperate(player))
-                break
-
-            val moveOccurred = equipArmorPiece(armorPiece)
-
-            if (!moveOccurred) {
-                continue
-            }
-
-            locked = true
-
-            // Wait if this was not the last armor piece we want to equip
-            if (armorIndex != bestArmor.lastIndex) {
-                // Wait the requested delay, then continue. In case the module cannot operate anymore,
-                // it immediately goes to the next loop, breaks it and then closes inventory if it's open
-                waitConditional(inventoryConstraints.delay.random()) { !canOperate(player) }
-
-                continue
-            }
-
-            // Close in the next tick, good anti-cheats will need this
+        // In case during swap delay something goes wrong, we check here
+        if (!canOperate(player, !locked || !clickedInInventory)) {
             return@repeatable
         }
 
-        if (locked && canCloseMainInventory) {
-            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        // Filter out already equipped armor pieces
+        val bestArmor = findBestArmorPiecesInInventory().filter { !it.isAlreadyEquipped }
+
+        for ((armorIndex, armorPiece) in bestArmor.withIndex()) {
+            if (!canOperate(player)) {
+                return@repeatable
+            }
+
+            val startDelay = inventoryConstraints.startDelay.random()
+
+            val hasToSwapPiece = !player.inventory.getStack(armorPiece.inventorySlot).isNothing()
+            val isFirstInventoryClick = (!armorPiece.isReachableByHand || !hotbar) && !clickedInInventory
+
+            val moveOccurred = equipArmorPiece(armorPiece, isFirstInventoryClick && startDelay > 0)
+
+            if (moveOccurred == null) {
+                setStatus(true)
+
+                waitConditional(startDelay - 1) { !canOperate(player) }
+
+                return@repeatable
+            } else if (moveOccurred) {
+                locked = true
+
+                // Wait if this was not the last armor piece we want to equip or a swap has occurred
+                if (armorIndex != bestArmor.lastIndex || hasToSwapPiece) {
+                    val delay = inventoryConstraints.clickDelay.random()
+
+                    // Ignore checking if there is no delay
+                    if (delay > 0) {
+                        waitConditional(delay - 1) { !canOperate(player) }
+
+                        return@repeatable
+                    }
+
+                    // Prevents the following behavior when no delay:
+                    // 1. Remove worse equipped armor
+                    // 2. Close inventory
+                    // 3. Equip better unequipped armor
+                    // 4. Close inventory
+                    if (hasToSwapPiece) {
+                        // Sacrifice speed (one tick) to maintain proper inventory process pattern
+                        return@repeatable
+                    }
+                }
+            }
         }
 
-        locked = false
+        if (locked && canCloseMainInventory) {
+            waitConditional(inventoryConstraints.closeDelay.random()) { !canOperate(player) }
+
+            // Can we still close the inventory or has something changed?
+            if (locked && canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
+        }
+
+        setStatus(false)
     }
 
     /**
@@ -90,10 +120,10 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
      *
      * @return false if a move was not possible, true if a move occurred
      */
-    private fun equipArmorPiece(armorPiece: ArmorPiece): Boolean {
+    private fun equipArmorPiece(armorPiece: ArmorPiece, delayFirstClick: Boolean): Boolean? {
         val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
 
-        if (armorPiece.isAlreadyEquipped || stackInArmor.item == Items.ELYTRA)
+        if (stackInArmor.item == Items.ELYTRA)
             return false
 
         val inventorySlot = armorPiece.itemSlot
@@ -101,22 +131,36 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
         return if (!stackInArmor.isNothing()) {
             // Clear current armor
-            performMoveOrHotbarClick(armorPieceSlot, isInArmorSlot = true)
+            performMoveOrHotbarClick(armorPieceSlot, isInArmorSlot = true, delayFirstClick)
         } else {
             // Equip new armor
-            performMoveOrHotbarClick(inventorySlot, isInArmorSlot = false)
+            performMoveOrHotbarClick(inventorySlot, isInArmorSlot = false, delayFirstClick)
         }
     }
 
-    private fun canOperate(player: ClientPlayerEntity): Boolean {
-        if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
+    private fun canOperate(player: ClientPlayerEntity, ignore: Boolean = true): Boolean {
+        val old = locked to clickedInInventory
+
+        setStatus(false)
+
+        if (inventoryConstraints.violatesNoMove && (!ignore || InventoryTracker.isInventoryOpenServerSide)) {
+            if (canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
+
+            return false
+        }
+
+        if (!ignore && inventoryConstraints.invOpen && !isInInventoryScreen) {
             return false
         }
 
         // We cannot move items while in a different screen
-        if (player.currentScreenHandler.syncId != 0) {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory() && !ignore) {
             return false
         }
+
+        setStatus(old.first, old.second)
 
         return true
     }
@@ -145,7 +189,8 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private fun performMoveOrHotbarClick(
         slot: ItemSlot,
         isInArmorSlot: Boolean,
-    ): Boolean {
+        delayFirstClick: Boolean,
+    ): Boolean? {
         val canTryHotbarMove = !isInArmorSlot && hotbar && !InventoryTracker.isInventoryOpenServerSide
 
         if (slot is HotbarItemSlot && canTryHotbarMove) {
@@ -154,16 +199,15 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             return true
         }
 
-        val canDoConventionalMove = !interaction.hasRidingInventory()
-
-        if (!canDoConventionalMove) {
+        // Check if module can still operate in inventory
+        if (!canOperate(player, false)) {
             return false
         }
 
         // Should the item be just thrown out of the inventory
         val shouldThrow = isInArmorSlot && player.inventory.main.none { it.isEmpty }
 
-        return performInventoryMove(slot, shouldThrow)
+        return performInventoryMove(slot, shouldThrow, delayFirstClick)
     }
 
     /**
@@ -174,19 +218,18 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private fun performInventoryMove(
         slot: ItemSlot,
         shouldThrow: Boolean,
-    ): Boolean {
-        val isCurrentMovementLegal = !inventoryConstraints.violatesNoMove
-        val isInventoryStateLegal = !inventoryConstraints.invOpen || InventoryTracker.isInventoryOpenServerSide
-
-        if (!isCurrentMovementLegal || !isInventoryStateLegal) {
-            return false
-        }
-
+        delayFirstClick: Boolean,
+    ): Boolean? {
         val screen = mc.currentScreen as? GenericContainerScreen
         val serverSlotId = slot.getIdForServer(screen) ?: return false
 
         // Open inventory, click selected slots but don't close it just yet
         runWithOpenedInventory {
+            // Is this the first time? Return an abnormal result if so
+            if (delayFirstClick) {
+                return null
+            }
+
             if (shouldThrow) {
                 interaction.clickSlot(0, serverSlotId, 1, SlotActionType.THROW, player)
             } else {
@@ -199,7 +242,16 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         return true
     }
 
+    private fun setStatus(locked: Boolean, invClick: Boolean = locked) {
+        this.locked = locked
+        clickedInInventory = invClick
+    }
+
     override fun disable() {
-        locked = false
+        if (canCloseMainInventory) {
+            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        }
+
+        setStatus(false)
     }
 }

@@ -44,6 +44,12 @@ object SequenceManager : Listenable {
      */
     val tickSequences = handler<GameTickEvent>(priority = 1000) {
         for (sequence in sequences) {
+            // Prevent modules handling events when not supposed to
+            if (!sequence.owner.handleEvents()) {
+                sequence.cancel()
+                continue
+            }
+
             sequence.tick()
         }
     }
@@ -96,6 +102,11 @@ open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHa
      * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
      */
     suspend fun waitConditional(ticks: Int, breakLoop: () -> Boolean = { false }) {
+        // Don't wait if ticks is 0
+        if (ticks == 0) {
+            return
+        }
+
         wait { if (breakLoop()) 0 else ticks }
     }
 
