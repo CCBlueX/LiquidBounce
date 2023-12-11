@@ -44,7 +44,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
 object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
-    val modes = choices("Mode", Modify) {
+    val modes = choices("Mode", { Modify }) {
         arrayOf(
             Modify, Strafe, AAC442, Dexland, JumpReset
         )
@@ -187,7 +187,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             // Check if this is a regular velocity update
             if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) || packet is ExplosionS2CPacket) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
-                wait(delay)
+                waitTicks(delay)
 
                 // Apply strafe
                 player.strafe(speed = player.sqrtSpeed * strength)

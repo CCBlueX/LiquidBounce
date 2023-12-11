@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -99,9 +98,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
         if (MathHelper.approximatelyEquals(face.area, 0.0))
             return face.from
 
-        val player = mc.player!!
-
-        val currentRotation = RotationManager.currentRotation ?: player.rotation
+        val currentRotation = RotationManager.serverRotation
 
         val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
 
@@ -110,7 +107,8 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 }
 
 /**
- * Always targets the point with the nearest rotation angle to the current rotation angle
+ * Always targets the point with the nearest rotation angle to the current rotation angle.
+ * If you have questions, you have to ask @superblaubeere27 because I am too stupid to explain this without a picture.
  */
 class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfiguration, val optimalLine: Line?) :
     FaceTargetPositionFactory() {

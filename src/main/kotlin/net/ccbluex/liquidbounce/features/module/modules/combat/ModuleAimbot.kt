@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -48,11 +47,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         targetRotation = null
     }
 
-    val tickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (event.state != EventState.PRE) {
-            return@handler
-        }
-
+    val tickHandler = handler<SimulatedTickEvent> { event ->
         targetRotation = findNextTargetRotation()
         targetRotation?.let { RotationManager.aimAt(it, true, rotationsConfigurable) }
     }
@@ -65,13 +60,13 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
             if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
                 val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)
-                val rotationPreference = LeastDifferencePreference(RotationManager.currentRotation
-                    ?: player.rotation, toPoint)
+                val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, toPoint)
 
-                val spot = raytraceBox(fromPoint, cutOffBox, range = range.toDouble(), wallsRange = 0.0,
-                    rotationPreference = rotationPreference)
-                    ?: raytraceBox(fromPoint, box, range = range.toDouble(), wallsRange = 0.0,
-                    rotationPreference = rotationPreference) ?: continue
+                val spot = raytraceBox(fromPoint, cutOffBox, range = range.toDouble(),
+                    wallsRange = 0.0, rotationPreference = rotationPreference
+                ) ?: raytraceBox(fromPoint, box, range = range.toDouble(),
+                    wallsRange = 0.0, rotationPreference = rotationPreference
+                ) ?: continue
 
                 if (RotationManager.rotationDifference(player.rotation, spot.rotation) <=
                     rotationsConfigurable.resetThreshold) {

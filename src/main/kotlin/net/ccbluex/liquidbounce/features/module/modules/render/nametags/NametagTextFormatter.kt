@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.utils.entity.ping
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import kotlin.math.roundToInt
 
 class NametagTextFormatter(private val entity: Entity) {
@@ -19,9 +20,9 @@ class NametagTextFormatter(private val entity: Entity) {
             outputBuilder.append(this.pingText).append(" ")
         }
 
-        outputBuilder.append("${this.nameColor}${entity.displayName.string}")
+        outputBuilder.append("${this.nameColor}${entity.displayName!!.string}")
 
-        if (ModuleNametags.health) {
+        if (ModuleNametags.Health.enabled) {
             outputBuilder.append(" ").append(this.healthText)
         }
 
@@ -35,13 +36,12 @@ class NametagTextFormatter(private val entity: Entity) {
     private val isBot = ModuleAntiBot.isBot(entity)
 
     private val nameColor: String
-        get() =
-            when {
-                isBot -> "§3"
-                entity.isInvisible -> "§6"
-                entity.isSneaking -> "§4"
-                else -> "§7"
-            }
+        get() = when {
+            isBot -> "§3"
+            entity.isInvisible -> "§6"
+            entity.isSneaking -> "§4"
+            else -> "§7"
+        }
 
     private val distanceText: String
         get() {
@@ -58,12 +58,11 @@ class NametagTextFormatter(private val entity: Entity) {
         get() {
             val playerPing = getPing(entity) ?: return ""
 
-            val coloringBasedOnPing =
-                when {
-                    playerPing > 200 -> "§c"
-                    playerPing > 100 -> "§e"
-                    else -> "§a"
-                }
+            val coloringBasedOnPing = when {
+                playerPing > 200 -> "§c"
+                playerPing > 100 -> "§e"
+                else -> "§a"
+            }
 
             return " §7[" + coloringBasedOnPing + playerPing + "ms§7]"
         }
@@ -74,6 +73,19 @@ class NametagTextFormatter(private val entity: Entity) {
                 return ""
             }
 
-            return "§c${entity.health.toInt()} HP"
+            var health = entity.health.toInt()
+
+            if (ModuleNametags.Health.fromScoreboard) {
+                entity.world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)?.let { objective ->
+                    // todo: check if this still works after updating to 1.20.4
+                    objective.scoreboard.getScore(entity, objective)?.let { scoreboard ->
+                        if (scoreboard.score > 0 && objective.displayName?.string == "❤") {
+                            health = scoreboard.score
+                        }
+                    }
+                }
+            }
+
+            return "§c${health} HP"
         }
 }

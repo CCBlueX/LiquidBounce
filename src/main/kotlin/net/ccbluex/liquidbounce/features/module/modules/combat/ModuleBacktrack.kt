@@ -20,6 +20,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.TrackedPosition
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
 import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket
+import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.math.Box
@@ -184,6 +185,8 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         target = null
         position = null
     }
+
+    fun isLagging() = enabled && packetQueue.isNotEmpty()
 
     private fun shouldConsiderAsEnemy(target: Entity) =
         target.shouldBeAttacked() && target.boxedDistanceTo(player) in range && player.age > 10

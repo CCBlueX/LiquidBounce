@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.ForcedState
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
@@ -42,7 +41,7 @@ class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 class InputHandleEvent : Event()
 
 @Nameable("movementInput")
-class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean) : Event()
+class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean, var sneaking: Boolean) : Event()
 
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
@@ -56,13 +55,8 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
-@Nameable("stateUpdate")
-class StateUpdateEvent : Event() {
-    val state: ForcedState = ForcedState()
-}
-
 /**
- * All events which are related to the the minecraft client
+ * All events which are related to the minecraft client
  */
 
 @Nameable("session")

@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import com.google.gson.JsonParser
-import me.liuli.elixir.utils.boolean
-import me.liuli.elixir.utils.string
+import net.ccbluex.liquidbounce.authlib.utils.boolean
+import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -127,7 +127,7 @@ object CapeService : Listenable, Configurable("Cape") {
     fun getCapeDownload(uuid: UUID): Pair<String, String>? {
         val clientCapeUser = clientCapeUser
 
-        if (uuid == mc.session.profile.id && clientCapeUser != null) {
+        if (uuid == mc.session.uuidOrNull && clientCapeUser != null) {
             // If the UUID is the same as the current user, we can use the clientCapeUser
             val capeName = clientCapeUser.capeName
             return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)

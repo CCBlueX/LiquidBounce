@@ -152,7 +152,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     }
 
     private fun getTeamColor(entity: Entity): Color4b? {
-        return Color4b(Color(entity.displayName.style.color?.rgb ?: return null))
+        return Color4b(Color(entity.displayName!!.style.color?.rgb ?: return null))
     }
 
 }

@@ -8,7 +8,7 @@ fun blockParameter(name: String = "block") =
     ParameterBuilder
         .begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith {
+        .autocompletedWith { begin ->
             Registries.BLOCK.map {
                 it.translationKey
                     .removePrefix("block.")
@@ -20,7 +20,7 @@ fun itemParameter(name: String = "item") =
     ParameterBuilder
         .begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith {
+        .autocompletedWith { begin ->
             Registries.ITEM.map {
                 it.translationKey
                     .removePrefix("item.")
@@ -33,7 +33,7 @@ fun enchantmentParameter(name: String = "enchantment") =
     ParameterBuilder
         .begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith {
+        .autocompletedWith { begin ->
             Registries.ENCHANTMENT.map {
                 it.translationKey
                     .removePrefix("enchantment.")
@@ -49,6 +49,8 @@ fun moduleParameter(name: String = "module", validator: (Module) -> Boolean = { 
     ParameterBuilder
         .begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-        .autocompletedWith { ModuleManager.autoComplete(it, validator = validator) }
+        .autocompletedWith { begin, args ->
+            ModuleManager.autoComplete(begin, args, validator = validator)
+        }
 
 

@@ -70,7 +70,7 @@ class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 class PlayerStepEvent(var height: Float) : Event()
 
 @Nameable("playerStepSuccess")
-class PlayerStepSuccessEvent : Event()
+class PlayerStepSuccessEvent(val movementVec: Vec3d, var adjustedVec: Vec3d) : Event()
 
 @Nameable("tickJump")
 class TickJumpEvent : Event()

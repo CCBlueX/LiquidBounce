@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
@@ -47,9 +48,8 @@ import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import org.apache.logging.log4j.LogManager
-import org.lwjgl.util.tinyfd.TinyFileDialogs
-import kotlin.system.exitProcess
 
 /**
  * LiquidBounce
@@ -114,6 +114,7 @@ object LiquidBounce : Listenable {
             // Features
             ModuleManager
             CommandManager
+            ThemeManager
             ScriptManager
             RotationManager
             CombatManager
@@ -121,12 +122,16 @@ object LiquidBounce : Listenable {
             ProxyManager
             AccountManager
             InventoryTracker
+            WorldToScreen
             Tabs
             Chat
             BrowserManager
 
             // Loads up fonts (requires connection to the internet on first launch)
             Fonts
+
+            // Load up a web platform
+            UltralightEngine.init()
 
             // Register commands and modules
             CommandManager.registerInbuilt()
@@ -177,19 +182,7 @@ object LiquidBounce : Listenable {
             Chat.connectAsync()
         }.onSuccess {
             logger.info("Successfully loaded client!")
-        }.onFailure {
-            logger.error("Unable to load client.", it)
-            TinyFileDialogs.tinyfd_messageBox(
-                "LiquidBounce Nextgen",
-                "LiquidBounce Nextgen failed to launch.\n" +
-                    "If the issue persists, report to the developers.\n" +
-                    "${it.message}",
-                "ok",
-                "error",
-                true
-            )
-            exitProcess(1)
-        }
+        }.onFailure(ErrorHandler::fatal)
     }
 
     /**
@@ -198,8 +191,6 @@ object LiquidBounce : Listenable {
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
         ConfigSystem.storeAll()
-        IntegrationHandler.clientJcef?.closeTab()
-        BrowserManager.shutdownBrowser()
 
         ChunkScanner.ChunkScannerThread.stopThread()
     }

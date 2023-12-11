@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.stat.Stats
 
@@ -102,7 +103,13 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
         }
 
         val stepSuccessEvent = handler<PlayerStepSuccessEvent> {
-            player.incrementStat(Stats.JUMP)
+            val stepHeight = it.adjustedVec.y
+
+            ModuleDebug.debugParameter(ModuleStep, "StepHeight", stepHeight)
+
+            if (stepHeight <= 0.5) {
+                return@handler
+            }
 
             // If we have configured 0..0 then we will send nothing.
             // That makes sense because the first entry of the array is 0.0
@@ -110,6 +117,8 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
             if (simulateJumpOrder == 0..0) {
                 return@handler
             }
+
+            player.incrementStat(Stats.JUMP)
 
             // Slice the array to the specified range and send the packets
             jumpOrder.sliceArray(simulateJumpOrder)

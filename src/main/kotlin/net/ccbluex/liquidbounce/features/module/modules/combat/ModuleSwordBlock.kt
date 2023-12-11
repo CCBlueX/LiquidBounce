@@ -51,7 +51,7 @@ object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT) {
                 val offHandItem = player.getStackInHand(Hand.OFF_HAND)
                 if (offHandItem?.item !is ShieldItem) {
                     // Until "now" we should get a shield from the server
-                    wait(1)
+                    waitTicks(1)
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence) // This time we use a new sequence
                     }

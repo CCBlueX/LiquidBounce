@@ -105,7 +105,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
                     it.isUsingItem && arrayOf(it.mainHandStack, it.offHandStack).any { stack -> stack.item is BowItem }
                 }
                 .forEach { playerEntity ->
-                    handleHasBow(playerEntity, playerEntity.skinTexture, isCharging=true)
+                    handleHasBow(playerEntity, playerEntity.skinTextures.texture, isCharging=true)
                 }
         }
 
@@ -316,7 +316,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             return
         }
 
-        val locationSkin = entity.skinTexture
+        val locationSkin = entity.skinTextures.texture
 
         when {
             isSword -> handleHasSword(entity, locationSkin)
@@ -423,7 +423,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         } else {
             if (isMurderer(entityPlayer)) {
                 return Color4b(203, 9, 9)
-            } else if (bowSkins.contains(entityPlayer.skinTexture.path)) {
+            } else if (bowSkins.contains(entityPlayer.skinTextures.texture.path)) {
                 return Color4b(0, 144, 255)
             }
         }
@@ -431,7 +431,8 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         return null
     }
 
-    fun isMurderer(entityPlayer: AbstractClientPlayerEntity) = murdererSkins.contains(entityPlayer.skinTexture.path)
+    fun isMurderer(entityPlayer: AbstractClientPlayerEntity) =
+        murdererSkins.contains(entityPlayer.skinTextures.texture.path)
 
     fun shouldAttack(entityPlayer: AbstractClientPlayerEntity): Boolean {
         if (modes.activeChoice == AssassinationMode) {
@@ -440,7 +441,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             }
         }
 
-        return isMurderer(entityPlayer) || bowSkins.contains(entityPlayer.skinTexture.path)
+        return isMurderer(entityPlayer) || bowSkins.contains(entityPlayer.skinTextures.texture.path)
     }
 
     fun disallowsArrowDodge(): Boolean {

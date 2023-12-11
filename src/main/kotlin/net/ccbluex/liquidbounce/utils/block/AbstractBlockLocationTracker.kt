@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
-import java.util.Collections
+import java.util.*
 
 /**
  * Tracks locations of specific blocks in the world
@@ -31,7 +31,6 @@ import java.util.Collections
 abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscriber {
 
     val trackedBlockMap: MutableMap<TargetBlockPos, T> = Collections.synchronizedMap(hashMapOf<TargetBlockPos, T>())
-
 
     abstract fun getStateFor(pos: BlockPos, state: BlockState): T?
 

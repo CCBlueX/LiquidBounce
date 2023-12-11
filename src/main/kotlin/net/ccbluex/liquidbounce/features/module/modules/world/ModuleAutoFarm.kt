@@ -55,7 +55,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private var currentTarget: BlockPos? = null
 
-    val networkTickHandler = repeatable { event ->
+    val repeatable = repeatable { event ->
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
@@ -66,8 +66,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-        val curr = currentTarget ?: return@repeatable
-        val currentRotation = RotationManager.currentRotation ?: return@repeatable
+        val currentRotation = RotationManager.serverRotation
 
         val rayTraceResult = mc.world?.raycast(
             RaycastContext(
@@ -92,7 +91,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         if (!blockPos.getState()!!.isAir) {
             val direction = rayTraceResult.side
 
-            if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
+            if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
         }
@@ -108,7 +107,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
                 eyesPos,
-                Box(pos, pos.add(1, 1, 1))
+                Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared && isTargeted(state, pos)
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
@@ -151,7 +150,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val block = state.block
 
         return when (block) {
-            is GourdBlock -> true
+            // is GourdBlock -> true
+            // todo: what is a gourd block?
             is CropBlock -> block.isMature(state)
             is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= 3
             is CocoaBlock -> state.get(CocoaBlock.AGE) >= 2

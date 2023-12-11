@@ -82,3 +82,12 @@ class VirtualScreenEvent(val name: String, val action: Action) : Event() {
     }
 
 }
+
+/**
+ * The simulated tick event is called by the [MovementInputEvent] with a simulated movement context.
+ * This context includes a simulated player position one tick into the future.
+ * Position changes will not apply within the simulated tick. Only use this for prediction purposes as
+ * updating the rotation or target.
+ */
+@Nameable("simulatedTick")
+class SimulatedTickEvent : Event()
