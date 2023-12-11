@@ -76,6 +76,8 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.values())
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
+    var hasClickedBefore = false
+
     val repeatable = repeatable {
         if (!canCurrentlyDoCleanup())
             return@repeatable
@@ -83,12 +85,11 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         val cleanupPlan =
             CleanupPlanGenerator(cleanupTemplateFromSettings, findNonEmptySlotsInInventory()).generatePlan()
 
-        var hasClickedOnce = false
-
         for (hotbarSwap in cleanupPlan.swaps) {
             if (!canCurrentlyDoCleanup()) {
                 return@repeatable
             }
+
             // We can only swap to hotbar
             if (hotbarSwap.to !is HotbarItemSlot) {
                 continue
@@ -96,10 +97,23 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
             val fromServerId = hotbarSwap.from.getIdForServer(null) ?: continue
 
-            if (tryRunActionInInventory {
-                    executeAction(fromServerId, hotbarSwap.to.hotbarSlotForServer, SlotActionType.SWAP)
-                }) {
-                hasClickedOnce = true
+            val startDelay = inventoryConstraints.startDelay.random()
+
+            val action = tryRunActionInInventory(!hasClickedBefore && startDelay > 0) {
+                executeAction(fromServerId, hotbarSwap.to.hotbarSlotForServer, SlotActionType.SWAP)
+            }
+
+            // This means the module has not clicked before, therefore apply start delay.
+            if (action == null) {
+                hasClickedBefore = true
+
+                waitConditional(startDelay - 1) { !canCurrentlyDoCleanup() }
+
+                return@repeatable
+            }
+
+            if (action) {
+                hasClickedBefore = true
 
                 cleanupPlan.remapSlots(
                     hashMapOf(
@@ -108,10 +122,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                     )
                 )
 
-                val delay = inventoryConstraints.delay.random()
+                val delay = inventoryConstraints.clickDelay.random()
 
                 if (delay > 0) {
-                    waitConditional(delay - 1) { inventoryConstraints.violatesNoMove }
+                    waitConditional(delay - 1) { !canCurrentlyDoCleanup() }
 
                     return@repeatable
                 }
@@ -127,19 +141,30 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
             val serverSlotId = slot.getIdForServer(null) ?: continue
 
-            val shouldReturn = tryRunActionInInventory {
+            val startDelay = inventoryConstraints.startDelay.random()
+
+            val action = tryRunActionInInventory(!hasClickedBefore && startDelay > 0) {
                 executeAction(serverSlotId, 0, SlotActionType.PICKUP)
                 executeAction(serverSlotId, 0, SlotActionType.PICKUP_ALL)
                 executeAction(serverSlotId, 0, SlotActionType.PICKUP)
             }
 
-            if (shouldReturn) {
-                hasClickedOnce = true
+            // This means the module has not clicked before, therefore apply start delay.
+            if (action == null) {
+                hasClickedBefore = true
 
-                val delay = inventoryConstraints.delay.random()
+                waitConditional(startDelay - 1) { !canCurrentlyDoCleanup() }
+
+                return@repeatable
+            }
+
+            if (action) {
+                hasClickedBefore = true
+
+                val delay = inventoryConstraints.clickDelay.random()
 
                 if (delay > 0) {
-                    waitConditional(delay - 1) { inventoryConstraints.violatesNoMove }
+                    waitConditional(delay - 1) { !canCurrentlyDoCleanup() }
 
                     return@repeatable
                 }
@@ -156,21 +181,43 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
             val serverSlotId = slot.getIdForServer(null) ?: continue
 
-            if (tryRunActionInInventory { executeAction(serverSlotId, 1, SlotActionType.THROW) }) {
-                hasClickedOnce = true
+            val startDelay = inventoryConstraints.startDelay.random()
 
-                val delay = inventoryConstraints.delay.random()
+            val action = tryRunActionInInventory(!hasClickedBefore && startDelay > 0) {
+                executeAction(serverSlotId, 1, SlotActionType.THROW)
+            }
+
+            // This means the module has not clicked before, therefore apply start delay.
+            if (action == null) {
+                hasClickedBefore = true
+
+                waitConditional(startDelay - 1) { !canCurrentlyDoCleanup() }
+
+                return@repeatable
+            }
+
+            if (action) {
+                hasClickedBefore = true
+
+                val delay = inventoryConstraints.clickDelay.random()
 
                 if (delay > 0) {
-                    waitConditional(delay - 1) { inventoryConstraints.violatesNoMove }
+                    waitConditional(delay - 1) { !canCurrentlyDoCleanup() }
 
                     return@repeatable
                 }
             }
         }
 
-        if (hasClickedOnce && canCloseMainInventory) {
-            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        if (hasClickedBefore && canCloseMainInventory) {
+            waitConditional(inventoryConstraints.closeDelay.random()) { !canCurrentlyDoCleanup() }
+
+            // Can we still close the inventory or has something changed?
+            if (canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
+
+            hasClickedBefore = false
         }
     }
 
@@ -199,9 +246,14 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         return itemsInInv.filter { it !in cleanupPlan.usefulItems }
     }
 
-    private fun tryRunActionInInventory(action: () -> Unit): Boolean {
-        if (!inventoryConstraints.violatesNoMove && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
+    private fun tryRunActionInInventory(delayFirstClick: Boolean, action: () -> Unit): Boolean? {
+        if (canCurrentlyDoCleanup()) {
             openInventorySilently()
+
+            // Is this the first time? Return abnormal result if so
+            if (delayFirstClick) {
+                return null
+            }
 
             action()
 
@@ -220,6 +272,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     }
 
     private fun canCurrentlyDoCleanup(): Boolean {
+        val old = hasClickedBefore
+
+        hasClickedBefore = false
+
         if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
             return false
         }
@@ -228,16 +284,32 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             return false
         }
 
+        if (inventoryConstraints.invOpen && !isInInventoryScreen) {
+            return false
+        }
+
+        hasClickedBefore = old
+
         return true
     }
 
     private fun isNoMoveViolated(): Boolean {
-        if (inventoryConstraints.violatesNoMove && InventoryTracker.isInventoryOpenServerSide) {
-            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        if (inventoryConstraints.violatesNoMove) {
+            if (canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
 
             return true
         }
 
         return false
+    }
+
+    override fun disable() {
+        if (canCloseMainInventory) {
+            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        }
+
+        hasClickedBefore = false
     }
 }
