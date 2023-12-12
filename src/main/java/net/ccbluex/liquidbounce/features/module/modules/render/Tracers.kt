@@ -37,6 +37,7 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
     private val thickness by FloatValue("Thickness", 2F, 1F..5F)
 
     private val bot by BoolValue("Bots", true)
+    private val teams by BoolValue("Teams", false)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -60,7 +61,7 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
                 val colorMode = colorMode.lowercase()
                 val color = when {
                     entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
-                    Teams.state && Teams.isInYourTeam(entity) -> Color(0, 162, 232)
+                    teams && Teams.state && Teams.isInYourTeam(entity) -> Color(0, 162, 232)
                     colorMode == "custom" -> Color(colorRed, colorGreen, colorBlue, 150)
                     colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
                     colorMode == "rainbow" -> ColorUtils.rainbow()
