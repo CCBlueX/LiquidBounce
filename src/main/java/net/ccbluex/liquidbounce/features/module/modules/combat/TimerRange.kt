@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.script.api.global.Chat
+import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -221,6 +222,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private fun getAllLivingEntities(): List<EntityLivingBase> {
         return mc.theWorld.loadedEntityList.filterIsInstance<EntityLivingBase>()
             .filterNot { it is EntityArmorStand }
+            .filter { EntityUtils.isSelected(it, true) }
             .toList()
     }
 
@@ -231,9 +233,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         val player = mc.thePlayer
 
         val entitiesInRange = getAllLivingEntities()
-            .filter { it !== player }
-            .filter { !it.isDead && !it.isInvisible }
-            .filter { player.getDistanceToEntityBox(it) <= rangeValue && !rangeValue.isNaN() }
+            .filterNot { it == player }
+            .filterNot { it.isDead && it.isInvisible }
+            .filter { player.getDistanceToEntityBox(it) <= rangeValue }
 
         return entitiesInRange.minByOrNull { player.getDistanceToEntityBox(it) }
     }
