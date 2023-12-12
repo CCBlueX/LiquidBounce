@@ -51,6 +51,7 @@
     "minecraft.network.MixinClientLoginNetworkHandlerMixin",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.network.MixinClientPlayNetworkHandler",
+    "minecraft.network.MixinPacketWrapper",
     "minecraft.network.MixinPlayerListEntry",
     "minecraft.registry.MixinRegistries",
     "minecraft.render.MixinBackgroundRenderer",

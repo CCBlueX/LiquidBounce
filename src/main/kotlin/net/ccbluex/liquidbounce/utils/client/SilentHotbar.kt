@@ -48,7 +48,7 @@ object SilentHotbar : Listenable {
         }
     }
 
-    val tickHandler = handler<GameTickEvent> {
+    val tickHandler = handler<GameTickEvent>(priority = 1001) {
         val hotbarState = hotbarState ?: return@handler
 
         if (ticksSinceLastUpdate >= hotbarState.ticksUntilReset) {
