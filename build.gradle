@@ -111,7 +111,6 @@ dependencies {
 
     implementation 'com.labymedia:ultralight-java-base:0.4.12'
     implementation 'com.labymedia:ultralight-java-databind:0.4.12'
-    implementation 'com.labymedia:ultralight-java-gpu:0.4.12'
     implementation 'com.labymedia:ultralight-java-glfw-opengl-util:0.4.12'
 
     implementation 'org.graalvm.sdk:graal-sdk:23.0.2'
@@ -265,7 +264,6 @@ shadowJar {
     dependencies {
         include(dependency('com.labymedia:ultralight-java-base'))
         include(dependency('com.labymedia:ultralight-java-databind'))
-        include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:mc-authlib'))

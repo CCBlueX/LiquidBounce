@@ -42,15 +42,13 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.client.IS_MAC
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import org.apache.logging.log4j.LogManager
-import org.lwjgl.util.tinyfd.TinyFileDialogs
-import kotlin.system.exitProcess
 
 /**
  * LiquidBounce
@@ -98,19 +96,6 @@ object LiquidBounce : Listenable {
         runCatching {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
-
-            // Restrict OS (to notify user that macOS is not supported)
-            if (IS_MAC) {
-                TinyFileDialogs.tinyfd_messageBox(
-                    "LiquidBounce Nextgen",
-                    "LiquidBounce Nextgen is not supported on macOS. Please use Windows or Linux instead.",
-                    "ok",
-                    "error",
-                    true
-                )
-                logger.error("LiquidBounce Nextgen is not supported on macOS. Please use Windows or Linux instead.")
-                exitProcess(1)
-            }
 
             // Load mappings
             McMappings.load()
@@ -185,19 +170,7 @@ object LiquidBounce : Listenable {
             Chat.connectAsync()
         }.onSuccess {
             logger.info("Successfully loaded client!")
-        }.onFailure {
-            logger.error("Unable to load client.", it)
-            TinyFileDialogs.tinyfd_messageBox(
-                "LiquidBounce Nextgen",
-                "LiquidBounce Nextgen failed to launch.\n" +
-                    "If the issue persists, report to the developers.\n" +
-                    "${it.message}",
-                "ok",
-                "error",
-                true
-            )
-            exitProcess(1)
-        }
+        }.onFailure(ErrorHandler::fatal)
     }
 
     /**
