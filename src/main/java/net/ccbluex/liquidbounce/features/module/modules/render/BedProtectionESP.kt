@@ -40,7 +40,7 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
         private val colorBlue by IntegerValue("B", 96, 0..255) { !colorRainbow }
 
     private val searchTimer = MSTimer()
-    private val bedBlockList = mutableListOf<BlockPos>()
+    private val targetBlockList = mutableListOf<BlockPos>()
     private val blocksToRender = mutableListOf<BlockPos>()
     private var thread: Thread? = null
 
@@ -112,15 +112,15 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
                 val blocks = searchBlocks(radius, setOf(targetBlock), 32)
                 searchTimer.reset()
 
-                synchronized(bedBlockList) {
-                    bedBlockList.clear()
-                    bedBlockList += blocks.keys
+                synchronized(targetBlockList) {
+                    targetBlockList.clear()
+                    targetBlockList += blocks.keys
                 }
                 synchronized(blocksToRender) {
                     blocksToRender.clear()
-                    for (bedBlock in bedBlockList) {
+                    for (block in targetBlockList) {
                         val currentSize = blocksToRender.size
-                        val newBlocks = getBlocksToRender(bedBlock, maxLayers, down, allLayers)
+                        val newBlocks = getBlocksToRender(block, maxLayers, down, allLayers)
 
                         if (currentSize + newBlocks.size > blockLimit) {
                             blocksToRender += newBlocks.stream().limit((blockLimit - currentSize).toLong()).toList()
@@ -139,8 +139,8 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         if (renderTargetBlocks) {
-            synchronized(bedBlockList) {
-                for (blockPos in bedBlockList) {
+            synchronized(targetBlockList) {
+                for (blockPos in targetBlockList) {
                     drawBlockBox(blockPos, Color.RED, true)
                 }
             }
