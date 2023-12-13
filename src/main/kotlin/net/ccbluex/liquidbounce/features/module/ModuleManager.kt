@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
@@ -115,6 +116,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleDankBobbing,
             ModuleDerp,
             ModuleSkinDerp,
+            ModuleHandDerp,
 
             // Misc
             ModuleAntiBot,
