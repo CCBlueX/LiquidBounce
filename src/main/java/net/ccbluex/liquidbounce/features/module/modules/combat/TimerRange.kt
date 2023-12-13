@@ -221,7 +221,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      */
     private fun getAllLivingEntities(): List<EntityLivingBase> {
         return mc.theWorld.loadedEntityList.filterIsInstance<EntityLivingBase>()
-            .filterNot { it is EntityArmorStand }
             .filter { EntityUtils.isSelected(it, true) }
             .toList()
     }
@@ -233,8 +232,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         val player = mc.thePlayer
 
         val entitiesInRange = getAllLivingEntities()
-            .filterNot { it == player }
-            .filterNot { it.isDead && it.isInvisible }
             .filter { player.getDistanceToEntityBox(it) <= rangeValue }
 
         return entitiesInRange.minByOrNull { player.getDistanceToEntityBox(it) }
