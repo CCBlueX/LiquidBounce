@@ -1,11 +1,16 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.getNearestPointOnSide
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.fabricmc.loader.impl.lib.sat4j.core.Vec
@@ -136,12 +141,13 @@ interface RotationPreference : Comparator<Rotation> {
     ): Vec3d
 }
 
-class BlockVisibilityPredicate(private val expectedTarget: BlockPos) : VisibilityPredicate {
+class BlockVisibilityPredicate(private val expectedTarget: BlockPos, private val side: Direction? = null) : VisibilityPredicate {
     override fun isVisible(
         eyesPos: Vec3d,
         targetSpot: Vec3d,
     ): Boolean {
-        return facingBlock(eyesPos, targetSpot, this.expectedTarget)
+
+        return facingBlock(eyesPos, targetSpot, this.expectedTarget, side)
     }
 }
 
@@ -160,23 +166,25 @@ fun ClosedRange<Double>.shrinkBy(value: Double): ClosedFloatingPointRange<Double
     return (start + value)..(endInclusive - value)
 }
 
-fun pointOnBlockSide(side: Direction,
-                     a: Double,
-                     b: Double,
-                     box: Box,
+fun pointOnBlockSide(
+    side: Direction,
+    a: Double,
+    b: Double,
+    box: Box,
 ): Vec3d {
+
+
 
     val spot =
         when(side) {
-            Direction.DOWN -> Vec3d(a, box.minY, b)
-            Direction.UP -> Vec3d(a, box.maxY, b)
-            Direction.NORTH -> Vec3d(a, b, box.minZ)
-            Direction.SOUTH -> Vec3d(a, b, box.maxZ)
-            Direction.WEST -> Vec3d(box.maxX, a, b)
-            Direction.EAST -> Vec3d(box.minX, a, b)
-
+            Direction.DOWN -> Vec3d(a, 0.0 , b)
+            Direction.UP -> Vec3d(a, 1.0, b)
+            Direction.NORTH -> Vec3d(a, b, 0.0)
+            Direction.SOUTH -> Vec3d(a, b, 1.0)
+            Direction.WEST -> Vec3d(0.0 , a, b)
+            Direction.EAST -> Vec3d(1.0, a, b)
         }
-    return spot
+    return Vec3d(spot.x * box.lengthX, spot.y * box.lengthY, spot.z * box.lengthZ)
 }
 
 fun raytraceBlockSide(
@@ -191,7 +199,7 @@ fun raytraceBlockSide(
     pos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
         for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
             val box = boxShape.offset(pos)
-            val visibilityPredicate = BoxVisibilityPredicate(boxShape)
+            val visibilityPredicate = BoxVisibilityPredicate(box)
 
             val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
 
@@ -207,11 +215,15 @@ fun raytraceBlockSide(
                 nearestSpotOnSide,
                 bestRotationTracker,
             )
+//            chat(side.toString())
+
 
             for (a in 0.05..0.95 step 0.1) {
                 for (b in 0.05..0.95 step 0.1) {
-                    val spot = pointOnBlockSide(side, a, b, box)
+                    val spot = pointOnBlockSide(side, a, b, box) + pos.toVec3d()
 
+
+                    ModuleDebug.debugGeometry(ModuleAutoFarm, "deddee", ModuleDebug.DebuggedPoint(spot, Color4b.RED))
                     considerSpot(
                         spot,
                         box,
@@ -225,14 +237,17 @@ fun raytraceBlockSide(
 
                 }
             }
+            bestRotationTracker.bestVisible?.let {
+                chat("found visibel")
+                return it
+            }
+
             bestRotationTracker.bestInvisible?.let {
+                chat("found invisibel")
                 // if we found a point we can place a block on, on this face there is no need to look at the others
                 return it
             }
 
-            bestRotationTracker.bestVisible?.let {
-                return it
-            }
         }
     }
     return null
@@ -245,7 +260,7 @@ val sidesToCheck = arrayOf(
     Direction.SOUTH,
     Direction.WEST,
     Direction.EAST,
-    Direction.UP // last and least up because it is the most unlikely place to be able to place a block on
+    Direction.UP // last and least UP because it is the most unlikely place to be able to place a block on
 )
 
 fun raytracePlaceBlock(
@@ -260,6 +275,7 @@ fun raytracePlaceBlock(
     val shapeContext = ShapeContext.of(player)
     val eyeOffsetFromBlock = pos.toCenterPos() - eyes
     for (side in sidesToCheck) {
+//        chat(side.toString())
 
         // The difference between the eyes and the center of the face.
         // Using 0.45 instead of 0.5 to avoid too narrow angles
@@ -269,7 +285,7 @@ fun raytracePlaceBlock(
 
         val newPos = pos.offset(side)
 
-        raytraceBlockSide(side.opposite, newPos, eyes, rangeSquared, wallsRangeSquared, shapeContext).let {
+        raytraceBlockSide(side.opposite, newPos, eyes, rangeSquared, wallsRangeSquared, shapeContext)?.let {
             return it
         }
     }
@@ -364,7 +380,7 @@ private fun considerSpot(
     bestRotationTracker: BestRotationTracker,
 ) {
 
-    val spotOnBox = box.raycast(eyes, preferredSpot).getOrNull() ?: return
+    val spotOnBox = box.raycast(eyes, preferredSpot).getOrNull() ?: spot
     val distance = eyes.squaredDistanceTo(spotOnBox)
 
     val visible = visibilityPredicate.isVisible(eyes, spotOnBox)
