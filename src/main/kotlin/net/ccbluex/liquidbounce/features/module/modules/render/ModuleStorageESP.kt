@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.entity.*
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -65,11 +66,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
         private val outline by boolean("Outline", true)
 
-        // todo: use box of block, not hardcoded
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
-
-
 
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
@@ -79,7 +76,6 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
 
             renderEnvironmentForWorld(matrixStack) {
-
                 for ((type, blocks) in blocksToRender) {
                     val boxRenderer = BoxesRenderer()
 
@@ -89,6 +85,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
                     for ((pos, _) in blocks) {
                         val vec3 = Vec3(pos)
+                        val box = pos.getState()?.getOutlineShape(world, pos)?.boundingBox ?: box
 
                         withPosition(vec3) {
                             boxRenderer.drawBox(this, box, outline)
