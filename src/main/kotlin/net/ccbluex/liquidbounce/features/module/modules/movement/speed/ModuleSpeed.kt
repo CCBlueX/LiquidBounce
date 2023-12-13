@@ -20,12 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Custom
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.LegitHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spartan524
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spartan524GroundTimer
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedYPort
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Verus
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 
 /**
  * Speed module
@@ -40,4 +36,15 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
             Verus, SpeedYPort, LegitHop, Custom, Spartan524, Spartan524GroundTimer
         )
     )
+
+    private val notDuringScaffold by boolean("NotDuringScaffold", true)
+
+    override fun handleEvents(): Boolean {
+        if (notDuringScaffold && ModuleScaffold.enabled) {
+            return false
+        }
+
+        return super.handleEvents()
+    }
+
 }
