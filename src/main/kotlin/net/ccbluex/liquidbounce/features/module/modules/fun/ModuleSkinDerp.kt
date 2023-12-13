@@ -44,7 +44,7 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
     private var prevModelParts = emptySet<PlayerModelPart>()
 
     override fun enable() {
-        prevModelParts = mc.options.enabledPlayerModelParts
+        prevModelParts = mc.options.enabledPlayerModelParts.toSet()
     }
 
     override fun disable() {
@@ -52,7 +52,6 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
         for (modelPart in PlayerModelPart.values()) {
             mc.options.togglePlayerModelPart(modelPart, false)
         }
-
         // Enable all old model parts
         for (modelPart in prevModelParts) {
             mc.options.togglePlayerModelPart(modelPart, true)
