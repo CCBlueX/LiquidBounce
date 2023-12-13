@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.entity.getNearestPointOnSide
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -162,10 +163,8 @@ fun ClosedRange<Double>.shrinkBy(value: Double): ClosedFloatingPointRange<Double
 fun pointOnBlockSide(side: Direction,
                      a: Double,
                      b: Double,
-                     blockBox: Box,
-                     safetyInsert: Double
+                     box: Box,
 ): Vec3d {
-    val box = blockBox.shrink(safetyInsert, safetyInsert, safetyInsert)
 
     val spot =
         when(side) {
@@ -180,56 +179,38 @@ fun pointOnBlockSide(side: Direction,
     return spot
 }
 
-fun raytraceBlockSide(side: Direction, pos: BlockPos,
-                      eyes: Vec3d,
-                      rangeSquared: Double,
-                      wallsRangeSquared: Double,
-                      shapeContext: ShapeContext
+fun raytraceBlockSide(
+    side: Direction,
+    pos: BlockPos,
+    eyes: Vec3d,
+    rangeSquared: Double,
+    wallsRangeSquared: Double,
+    shapeContext: ShapeContext
 ): VecRotation? {
-    val newPos = pos.offset(side)
 
-
-    val offset = Vec3d(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())
-    newPos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
+    pos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
         for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
-            val box = boxShape.offset(offset)
-            val visibilityPredicate = BoxVisibilityPredicate(box)
+            val box = boxShape.offset(pos)
+            val visibilityPredicate = BoxVisibilityPredicate(boxShape)
 
             val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
-            val o = 1.0E-7
-            val nearestSpot =
-                Vec3d(
-                    when (side) {
-                        Direction.WEST -> box.maxX - o
-                        Direction.EAST -> box.minX + o
-                        else -> eyes.x.coerceIn((box.minX..box.maxX).shrinkBy(0.05))
-                    },
-                    when (side) {
-                        Direction.DOWN -> box.maxY - o
-                        Direction.UP -> box.minY + o
-                        else -> eyes.y.coerceIn((box.minY..box.maxY).shrinkBy(0.05))
-                    },
-                    when (side) {
-                        Direction.NORTH -> box.maxZ - o
-                        Direction.SOUTH -> box.minZ + o
-                        else -> eyes.z.coerceIn((box.minZ..box.maxZ).shrinkBy(0.05))
-                    }
-                )
+
+            val nearestSpotOnSide = getNearestPointOnSide(eyes, box, side)
 
             considerSpot(
-                nearestSpot,
+                nearestSpotOnSide,
                 box,
                 eyes,
                 visibilityPredicate,
                 rangeSquared,
                 wallsRangeSquared,
-                nearestSpot,
+                nearestSpotOnSide,
                 bestRotationTracker,
             )
 
             for (a in 0.05..0.95 step 0.1) {
                 for (b in 0.05..0.95 step 0.1) {
-                    val spot = pointOnBlockSide(side, a, b, box, o)
+                    val spot = pointOnBlockSide(side, a, b, box)
 
                     considerSpot(
                         spot,
@@ -279,11 +260,16 @@ fun raytracePlaceBlock(
     val shapeContext = ShapeContext.of(player)
     val eyeOffsetFromBlock = pos.toCenterPos() - eyes
     for (side in sidesToCheck) {
-        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, -0.45) // the difference between the eyes and the center of the face. using 0.45 instead of 0.5 to avoid too narrow angles
-        val dotProduct = eyeOffsetFromFace.dotProduct(side.vector.toVec3d())
-        if(dotProduct <= 0) continue // we are behind the face
 
-        raytraceBlockSide(side, pos, eyes, rangeSquared, wallsRangeSquared, shapeContext).let {
+        // The difference between the eyes and the center of the face.
+        // Using 0.45 instead of 0.5 to avoid too narrow angles
+        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, -0.45)
+        val dotProduct = eyeOffsetFromFace.dotProduct(side.vector.toVec3d())
+        if(dotProduct <= 0) continue // We are behind the face
+
+        val newPos = pos.offset(side)
+
+        raytraceBlockSide(side.opposite, newPos, eyes, rangeSquared, wallsRangeSquared, shapeContext).let {
             return it
         }
     }

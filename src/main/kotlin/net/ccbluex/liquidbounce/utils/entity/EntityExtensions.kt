@@ -34,6 +34,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
@@ -266,6 +267,27 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
     }
 
     return Vec3d(origin[0], origin[1], origin[2])
+}
+
+fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
+    val nearestPointInBlock = getNearestPoint(eyes, box)
+
+    val x = nearestPointInBlock.x
+    val y = nearestPointInBlock.y
+    val z = nearestPointInBlock.z
+
+    val nearestPointOnSide =
+        when(side) {
+            Direction.DOWN -> Vec3d(x, box.minY, z)
+            Direction.UP -> Vec3d(x, box.maxY, z)
+            Direction.NORTH -> Vec3d(x, y, box.minZ)
+            Direction.SOUTH -> Vec3d(x, y,  box.maxZ)
+            Direction.WEST -> Vec3d(box.maxX, y, z)
+            Direction.EAST -> Vec3d(box.minX, y, z)
+        }
+
+    return nearestPointOnSide
+
 }
 
 fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
