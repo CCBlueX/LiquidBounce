@@ -60,26 +60,19 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
     val repeatable = repeatable {
         waitTicks(delay)
-        if (hat) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
-        }
-        if (jacket) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
-        }
-        if (leftPants) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
-        }
-        if (rightPants) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
-        }
-        if (leftSleeve) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
-        }
-        if (rightSleeve) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
-        }
-        if (cape) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
+        val partsMap = mapOf(
+            PlayerModelPart.HAT to hat,
+            PlayerModelPart.JACKET to jacket,
+            PlayerModelPart.LEFT_PANTS_LEG to leftPants,
+            PlayerModelPart.RIGHT_PANTS_LEG to rightPants,
+            PlayerModelPart.LEFT_SLEEVE to leftSleeve,
+            PlayerModelPart.RIGHT_SLEEVE to rightSleeve,
+            PlayerModelPart.CAPE to cape
+        )
+        for ((part, isEnabled) in partsMap) {
+            if (isEnabled) {
+                mc.options.togglePlayerModelPart(part, Random.nextBoolean())
+            }
         }
     }
 }
