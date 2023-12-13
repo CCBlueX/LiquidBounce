@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
@@ -266,7 +269,7 @@ object RotationManager : Listenable {
     val packetHandler = handler<PacketEvent>(priority = -1000) {
         val packet = it.packet
 
-        var rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
+        val rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
              Rotation(packet.yaw, packet.pitch)
         } else if (packet is PlayerPositionLookS2CPacket) {
             Rotation(packet.yaw, packet.pitch)
@@ -275,11 +278,11 @@ object RotationManager : Listenable {
         }
 
         // This normally applies to Modules like Blink, BadWifi, etc.
-        if (it.isCancelled) {
-            theoreticalServerRotation = rotation
-        } else {
+        if (!it.isCancelled) {
             actualServerRotation = rotation
         }
+
+        theoreticalServerRotation = rotation
     }
 
     /**
