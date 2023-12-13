@@ -141,13 +141,12 @@ interface RotationPreference : Comparator<Rotation> {
     ): Vec3d
 }
 
-class BlockVisibilityPredicate(private val expectedTarget: BlockPos, private val side: Direction? = null) : VisibilityPredicate {
+class BlockVisibilityPredicate(private val expectedTarget: BlockPos) : VisibilityPredicate {
     override fun isVisible(
         eyesPos: Vec3d,
         targetSpot: Vec3d,
     ): Boolean {
-
-        return facingBlock(eyesPos, targetSpot, this.expectedTarget, side)
+        return facingBlock(eyesPos, targetSpot, this.expectedTarget)
     }
 }
 
@@ -173,8 +172,6 @@ fun pointOnBlockSide(
     box: Box,
 ): Vec3d {
 
-
-
     val spot =
         when(side) {
             Direction.DOWN -> Vec3d(a, 0.0 , b)
@@ -196,6 +193,7 @@ fun raytraceBlockSide(
     shapeContext: ShapeContext
 ): VecRotation? {
 
+            chat(side.toString())
     pos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
         for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
             val box = boxShape.offset(pos)
@@ -203,18 +201,18 @@ fun raytraceBlockSide(
 
             val bestRotationTracker = BestRotationTracker(LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION)
 
-            val nearestSpotOnSide = getNearestPointOnSide(eyes, box, side)
+//            val nearestSpotOnSide = getNearestPointOnSide(eyes, box, side)
 
-            considerSpot(
-                nearestSpotOnSide,
-                box,
-                eyes,
-                visibilityPredicate,
-                rangeSquared,
-                wallsRangeSquared,
-                nearestSpotOnSide,
-                bestRotationTracker,
-            )
+//            considerSpot(
+//                nearestSpotOnSide,
+//                box,
+//                eyes,
+//                visibilityPredicate,
+//                rangeSquared,
+//                wallsRangeSquared,
+//                nearestSpotOnSide,
+//                bestRotationTracker,
+//            )
 //            chat(side.toString())
 
 
@@ -279,7 +277,7 @@ fun raytracePlaceBlock(
 
         // The difference between the eyes and the center of the face.
         // Using 0.45 instead of 0.5 to avoid too narrow angles
-        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, -0.45)
+        val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, 0.45)
         val dotProduct = eyeOffsetFromFace.dotProduct(side.vector.toVec3d())
         if(dotProduct <= 0) continue // We are behind the face
 
@@ -380,7 +378,7 @@ private fun considerSpot(
     bestRotationTracker: BestRotationTracker,
 ) {
 
-    val spotOnBox = box.raycast(eyes, preferredSpot).getOrNull() ?: spot
+    val spotOnBox = box.raycast(eyes, (preferredSpot - eyes) * 2.0 + eyes).getOrNull() ?: return
     val distance = eyes.squaredDistanceTo(spotOnBox)
 
     val visible = visibilityPredicate.isVisible(eyes, spotOnBox)
