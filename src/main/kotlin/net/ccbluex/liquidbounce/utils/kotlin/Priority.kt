@@ -11,6 +11,11 @@ enum class Priority(val priority: Int) {
 object EventPriorityConvention {
 
     /**
+     * The event should be called first.
+     */
+    const val FIRST_PRIORITY: Int = 1000
+
+    /**
      * At the stage of modeling what the player is actually going to do after other events added their suggestions
      */
     const val MODEL_STATE: Int = -10

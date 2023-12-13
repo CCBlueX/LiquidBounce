@@ -1,19 +1,20 @@
 package net.ccbluex.liquidbounce.utils.item
 
-import com.viaversion.viaversion.api.connection.UserConnection
+import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
 import com.viaversion.viaversion.api.type.Type
 import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
 import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
-import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.Item
@@ -90,45 +91,36 @@ fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = n
     }
 }
 
-fun convertServerSlotToClientSlot(slot: Int): Int {
-    return when (slot) {
-        in 36..44 -> slot - 36
-        in 9..35 -> slot
-        in 5..8 -> 39 - slot + 5
-        45 -> 40
-        else -> throw IllegalArgumentException("Invalid slot $slot")
-    }
-}
-
 /**
- * Sends an open inventory packet using ViaFabricPlus code. This is only for older versions.
+ * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions.
  */
 
-// https://github.com/ViaVersion/ViaFabricPlus/blob/d6c8501fa908520f99676aefa46dcc20de2840a6/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L128-L143
+// https://github.com/ViaVersion/ViaFabricPlus/blob/ecd5d188187f2ebaaad8ded0ffe53538911f7898/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L124-L130
 fun openInventorySilently() {
     if (InventoryTracker.isInventoryOpenServerSide) {
         return
     }
 
     runCatching {
-        val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
+        val isViaFabricPlusLoaded = FabricLoader.getInstance().isModLoaded("viafabricplus")
 
         if (!isViaFabricPlusLoaded) {
             return
         }
 
-        val localViaConnection = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
-
-        val viaConnection = mc.networkHandler?.connection?.channel?.attr(localViaConnection)?.get() ?: return
+        val viaConnection = Via.getManager().connectionManager.connections.firstOrNull() ?: return
 
         if (viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
             val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_STATUS, viaConnection)
             clientStatus.write(Type.VAR_INT, 2) // Open Inventory Achievement
 
             runCatching {
-                clientStatus.sendToServer(Protocol1_12To1_11_1::class.java)
+                clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
             }.onSuccess {
                 InventoryTracker.isInventoryOpenServerSide = true
+            }.onFailure {
+                chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
+                it.printStackTrace()
             }
         }
     }

@@ -24,11 +24,13 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.entity.*
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -41,9 +43,8 @@ import java.awt.Color
  */
 
 object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
-//    private val modeValue = Choi("Mode", arrayOf("Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
 
-    private val modes = choices("Mode", Box, arrayOf(Box))
+    private val modes = choices("Mode", Glow, arrayOf(Box, Glow))
 
     val chestValue by boolean("Chest", true)
     val enderChestValue by boolean("EnderChest", true)
@@ -64,12 +65,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             get() = modes
 
         private val outline by boolean("Outline", true)
-
-        // todo: use box of block, not hardcoded
-        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
-
-
+        private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
@@ -79,7 +75,6 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
 
             renderEnvironmentForWorld(matrixStack) {
-
                 for ((type, blocks) in blocksToRender) {
                     val boxRenderer = BoxesRenderer()
 
@@ -89,6 +84,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
                     for ((pos, _) in blocks) {
                         val vec3 = Vec3(pos)
+                        val box = pos.getState()?.getOutlineShape(world, pos)?.boundingBox ?: fullBox
 
                         withPosition(vec3) {
                             boxRenderer.drawBox(this, box, outline)
@@ -102,7 +98,14 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
     }
 
-    private fun categorizeBlockEntity(block: BlockEntity): ChestType? {
+    object Glow : Choice("Glow") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+    }
+
+    fun categorizeBlockEntity(block: BlockEntity): ChestType? {
         return when (block) {
             is ChestBlockEntity -> ChestType.CHEST
             is EnderChestBlockEntity -> ChestType.ENDER_CHEST
@@ -116,8 +119,8 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     }
 
     enum class ChestType(val color: Color4b, val shouldRender: (BlockPos) -> Boolean) {
-        CHEST(Color4b(0, 66, 255), { chestValue && !net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura.clickedBlocks.contains(it) }),
-        ENDER_CHEST(Color4b(Color.MAGENTA), { enderChestValue && !net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura.clickedBlocks.contains(it) }),
+        CHEST(Color4b(0, 66, 255), { chestValue && !ModuleChestAura.clickedBlocks.contains(it) }),
+        ENDER_CHEST(Color4b(Color.MAGENTA), { enderChestValue && !ModuleChestAura.clickedBlocks.contains(it) }),
         FURNACE(Color4b(Color.BLACK), { furnaceValue }),
         DISPENSER(Color4b(Color.BLACK), { dispenserValue }),
         HOPPER(Color4b(Color.GRAY), { hopperValue }),

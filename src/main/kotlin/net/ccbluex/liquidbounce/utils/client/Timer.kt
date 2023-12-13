@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
 import net.minecraft.client.MinecraftClient
@@ -17,7 +18,7 @@ object Timer : Listenable {
     val timerSpeed: Float
         get() = requestHandler.getActiveRequestValue() ?: 1.0f
 
-    val tickHandler = handler<GameTickEvent> {
+    val tickHandler = handler<GameTickEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) {
         requestHandler.tick()
     }
 
