@@ -32,6 +32,7 @@ import kotlin.random.Random
  */
 object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
+    private val sync by boolean("Sync", false)
     private val delay by int("Delay", 0, 0..20)
     private val hat by boolean("Hat", true)
     private val jacket by boolean("Jacket", true)
@@ -71,7 +72,11 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
         )
         for ((part, isEnabled) in partsMap) {
             if (isEnabled) {
-                mc.options.togglePlayerModelPart(part, Random.nextBoolean())
+                if (sync)
+                    mc.options.togglePlayerModelPart(part, !mc.options.isPlayerModelPartEnabled(part))
+                else
+                    mc.options.togglePlayerModelPart(part, Random.nextBoolean())
+
             }
         }
     }
