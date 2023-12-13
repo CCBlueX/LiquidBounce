@@ -55,6 +55,7 @@
     "minecraft.network.MixinPlayerListEntry",
     "minecraft.registry.MixinRegistries",
     "minecraft.render.MixinBackgroundRenderer",
+    "minecraft.render.MixinBlockEntityRenderDispatcher",
     "minecraft.render.MixinBuiltinModelItemRenderer",
     "minecraft.render.MixinCamera",
     "minecraft.render.MixinEntityRenderer",
