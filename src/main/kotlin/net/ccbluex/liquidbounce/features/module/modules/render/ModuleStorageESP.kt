@@ -46,12 +46,12 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow))
 
-    val chestValue by boolean("Chest", true)
-    val enderChestValue by boolean("EnderChest", true)
-    val furnaceValue by boolean("Furnace", true)
-    val dispenserValue by boolean("Dispenser", true)
-    val hopperValue by boolean("Hopper", true)
-    val shulkerBoxValue by boolean("ShulkerBox", true)
+    private val chestColor by color("Chest", Color4b(16, 71, 92))
+    private val enderChestColor by color("EnderChest", Color4b(Color.MAGENTA))
+    private val furnaceColor by color("Furnace", Color4b(Color.BLACK))
+    private val dispenserColor by color("Dispenser", Color4b(Color.BLACK))
+    private val hopperColor by color("Hopper", Color4b(Color.GRAY))
+    private val shulkerColor by color("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
 
     private val locations = HashMap<BlockPos, ChestType>()
 
@@ -70,15 +70,15 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val blocksToRender =
-                locations.entries.filter { it.value.shouldRender(it.key) }
+                locations.entries
+                    .filter { (pos, type) -> type.color().a > 0 && type.shouldRender(pos) }
                     .groupBy {it.value}
-
 
             renderEnvironmentForWorld(matrixStack) {
                 for ((type, blocks) in blocksToRender) {
                     val boxRenderer = BoxesRenderer()
 
-                    val color = type.color
+                    val color = type.color()
                     val baseColor = color.alpha(50)
                     val outlineColor = color.alpha(100)
 
@@ -118,13 +118,13 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         }
     }
 
-    enum class ChestType(val color: Color4b, val shouldRender: (BlockPos) -> Boolean) {
-        CHEST(Color4b(0, 66, 255), { chestValue && !ModuleChestAura.clickedBlocks.contains(it) }),
-        ENDER_CHEST(Color4b(Color.MAGENTA), { enderChestValue && !ModuleChestAura.clickedBlocks.contains(it) }),
-        FURNACE(Color4b(Color.BLACK), { furnaceValue }),
-        DISPENSER(Color4b(Color.BLACK), { dispenserValue }),
-        HOPPER(Color4b(Color.GRAY), { hopperValue }),
-        SHULKER_BOX(Color4b(Color(0x6e, 0x4d, 0x6e).brighter()), { shulkerBoxValue })
+    enum class ChestType(val color: () -> Color4b, val shouldRender: (BlockPos) -> Boolean = { true }) {
+        CHEST({chestColor}, { !ModuleChestAura.clickedBlocks.contains(it) }),
+        ENDER_CHEST({enderChestColor}, { !ModuleChestAura.clickedBlocks.contains(it) }),
+        FURNACE({furnaceColor}),
+        DISPENSER({dispenserColor}),
+        HOPPER({hopperColor}),
+        SHULKER_BOX({ net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP.shulkerColor })
     }
 
     object StorageScanner : WorldChangeNotifier.WorldChangeSubscriber {

@@ -31,13 +31,16 @@ public class MixinBlockEntityRenderDispatcher {
             var type = ModuleStorageESP.INSTANCE.categorizeBlockEntity(blockEntity);
 
             if (type != null) {
-                var color = type.getColor();
-                outlineVertexConsumerProvider.setColor(color.getR(), color.getG(), color.getB(), 255);
+                var color = type.getColor().invoke();
 
-                blockEntityRenderer.render(blockEntity, tickDelta, matrices, outlineVertexConsumerProvider, light, overlay);
-                OutlineFlag.drawOutline = true;
+                if (color.getA() > 0) {
+                    outlineVertexConsumerProvider.setColor(color.getR(), color.getG(), color.getB(), color.getA());
+
+                    blockEntityRenderer.render(blockEntity, tickDelta, matrices, outlineVertexConsumerProvider, light, overlay);
+                    OutlineFlag.drawOutline = true;
+                    return;
+                }
             }
-            return;
         }
 
         blockEntityRenderer.render(blockEntity, tickDelta, matrices, vertexConsumers, light, overlay);
