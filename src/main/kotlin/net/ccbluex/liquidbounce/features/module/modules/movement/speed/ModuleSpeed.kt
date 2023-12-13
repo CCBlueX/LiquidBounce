@@ -33,7 +33,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     val modes = choices(
         "Mode", SpeedYPort, arrayOf(
-            Verus, SpeedYPort, LegitHop, Custom, Spartan524, Spartan524GroundTimer
+            Verus, SpeedYPort, LegitHop, Custom, HypixelBHop, Spartan524, Spartan524GroundTimer
         )
     )
 
