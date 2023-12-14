@@ -85,11 +85,11 @@ public class MixinKeyboardInput extends MixinInput {
         this.movementForward = KeyboardInput.getMovementMultiplier(directionalInput.getForwards(), directionalInput.getBackwards());
         this.movementSideways = KeyboardInput.getMovementMultiplier(directionalInput.getLeft(), directionalInput.getRight());
 
+        this.fixStrafeMovement();
+
         if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
             this.movementForward = 0f;
         }
-
-        this.fixStrafeMovement();
 
         this.jumping = event.getJumping();
         this.sneaking = event.getSneaking();

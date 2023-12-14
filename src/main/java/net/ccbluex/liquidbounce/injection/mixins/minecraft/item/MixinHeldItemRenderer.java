@@ -64,7 +64,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 0
     ))
     private UseAction hookUseAction(ItemStack instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && ModuleKillAura.AutoBlock.INSTANCE.getEnabled() &&
+        var item = instance.getItem();
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() &&
+                ModuleKillAura.AutoBlock.INSTANCE.getEnabled() &&
                 ModuleKillAura.AutoBlock.INSTANCE.getVisualBlocking()) {
             return UseAction.BLOCK;
         }
