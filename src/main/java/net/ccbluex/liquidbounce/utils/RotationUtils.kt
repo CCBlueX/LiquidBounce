@@ -311,7 +311,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var attackRotation: Pair<Rotation, Float>? = null
         var lookRotation: Pair<Rotation, Float>? = null
 
-        val rotationToCompareTo = if (random) randomRotation else currentRotation ?: serverRotation
+        val rotationToCompareTo = if (random) randomRotation else currentRotation ?: mc.thePlayer.rotation
 
         for (x in 0.0..1.0) {
             for (y in 0.0..1.0) {
