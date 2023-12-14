@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.util.Vec3
 import java.util.*
 
 object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
@@ -41,7 +42,7 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
     fun onMotion(event: MotionEvent) {
         if (event.eventState != EventState.POST)
             return
-        
+
         val thePlayer = mc.thePlayer ?: return
 
         // Clicking delay
@@ -53,16 +54,25 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
         val entity = mc.theWorld.loadedEntityList.filter {
             isSelected(it, true)
-            && thePlayer.canEntityBeSeen(it)
-            && thePlayer.getDistanceToEntityBox(it) <= range
-            && getRotationDifference(it) <= fov
+                && thePlayer.canEntityBeSeen(it)
+                && thePlayer.getDistanceToEntityBox(it) <= range
+                && getRotationDifference(it) <= fov
         }.minByOrNull { getRotationDifference(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
         if (!lock && isFaced(entity, range.toDouble())) return
 
+        val entityPrediction = Vec3(entity.posX - entity.prevPosX,
+            entity.posY - entity.prevPosY,
+            entity.posZ - entity.prevPosZ
+        ).times(1.5)
+
         // Look up required rotations to hit enemy
-        val boundingBox = entity.hitBox
+        val boundingBox = entity.hitBox.offset(
+            entityPrediction.xCoord,
+            entityPrediction.yCoord,
+            entityPrediction.zCoord
+        )
 
         val playerRotation = thePlayer.rotation
         val destinationRotation =
