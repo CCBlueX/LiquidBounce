@@ -40,17 +40,17 @@ object ModuleDerp : Module("Derp", Category.FUN) {
             if (yawMode.activeChoice == YawStatic) {
                 yaw = YawStatic.yawValue
             } else if (yawMode.activeChoice == YawOffset) {
-                yaw = player.yaw + YawOffset.yawOffset
+                yaw = player.yaw + YawOffset.yawOffsetValue
             }
             if (pitchMode.activeChoice == PitchStatic) {
                 pitch = if (safePitch) PitchStatic.pitchValue.coerceIn(-90f, 90f) else PitchStatic.pitchValue
             } else if (pitchMode.activeChoice == PitchOffset) {
-                pitch = if (safePitch) (player.pitch + PitchOffset.pitchOffset).coerceIn(
+                pitch = if (safePitch) (player.pitch + PitchOffset.pitchOffsetValue).coerceIn(
                     -90f,
                     90f
-                ) else player.pitch + PitchOffset.pitchOffset
+                ) else player.pitch + PitchOffset.pitchOffsetValue
             }
-            return floatArrayOf(yaw, pitch.toFloat())
+            return floatArrayOf(yaw, pitch)
         }
 
 
@@ -69,7 +69,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     private object YawOffset : Choice("Offset") {
         override val parent: ChoiceConfigurable
             get() = yawMode
-        val yawOffset by float("Offset", 0f, -180f..180f)
+        val yawOffsetValue by float("Offset", 0f, -180f..180f)
     }
 
     private object YawRandom : Choice("Random") {
@@ -88,11 +88,11 @@ object ModuleDerp : Module("Derp", Category.FUN) {
         val yawBackwardTicks by int("BackwardTicks", 5, 0..100)
 
         val repeatable = repeatable {
-            for (i in 0..yawForwardTicks) {
+            repeat(yawForwardTicks) {
                 yaw = player.yaw
                 waitTicks(1)
             }
-            for (i in 0..yawBackwardTicks) {
+            repeat(yawBackwardTicks) {
                 yaw = player.yaw + 180
                 waitTicks(1)
             }
@@ -118,7 +118,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     private object PitchOffset : Choice("Offset") {
         override val parent: ChoiceConfigurable
             get() = pitchMode
-        val pitchOffset by float("Offset", 0f, -180f..180f)
+        val pitchOffsetValue by float("Offset", 0f, -180f..180f)
     }
 
     private object PitchRandom : Choice("Random") {

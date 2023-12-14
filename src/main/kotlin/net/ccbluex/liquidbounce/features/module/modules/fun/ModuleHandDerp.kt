@@ -76,7 +76,9 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
 
     val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
-        if (silent && packet is EntityTrackerUpdateS2CPacket && packet.trackedValues.any { data -> data.id == (mc.player as MixinPlayerEntityAccessor).getTrackedMainArm().id }) {
+        if (silent && packet is EntityTrackerUpdateS2CPacket &&
+            packet.trackedValues.any { data ->
+                data.id == (mc.player as MixinPlayerEntityAccessor).getTrackedMainArm().id }) {
             it.cancelEvent()
         }
     }
@@ -92,10 +94,10 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
         override val parent: ChoiceConfigurable
             get() = mode
 
-        val delay by int("Delay", 1, 0..20)
+        val delayValue by int("Delay", 1, 0..20)
 
         val repeatable = repeatable {
-            waitTicks(delay)
+            waitTicks(delayValue)
             switchHand()
         }
     }
