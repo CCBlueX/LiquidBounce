@@ -80,7 +80,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         this.murdererSkins.clear()
     }
 
-    private val gameRenderEvent = handler<WorldRenderEvent> {
+    val gameRenderEvent = handler<WorldRenderEvent> {
         if (playHurt) {
             mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("entity.villager.hurt")), 1F))
 
@@ -94,7 +94,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
     }
 
-    val motionUpdateHandler = handler<GameTickEvent> { event ->
+    val motionUpdateHandler = handler<GameTickEvent> { _ ->
         val world = mc.world ?: return@handler
         val player = mc.player ?: return@handler
 
@@ -105,7 +105,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
                     it.isUsingItem && arrayOf(it.mainHandStack, it.offHandStack).any { stack -> stack.item is BowItem }
                 }
                 .forEach { playerEntity ->
-                    handleHasBow(playerEntity, playerEntity.skinTextures.texture, isCharging=true)
+                    handleHasBow(playerEntity, playerEntity.skinTextures.texture, isCharging = true)
                 }
         }
 
@@ -137,11 +137,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
         val rgb = IntArray(128 * 128)
 
-        (0 until rgb.size).forEach { i ->
-
-//            if (j / 4 == 0) {
-//                rgb[i] = (i + ((i / 128) and 1)) * 8 + (16 shl 24)
-//            } else {
+        for (i in 0..rgb.size) {
             val color = MapColor.getRenderColor(mapData.colors[i].toInt())
 
             val r = color and 0xFF
@@ -149,14 +145,12 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             val b = (color ushr 16) and 0xFF
 
             rgb[i] = Color(r, g, b).getRGB()
-//            }
-
         }
 
         val contractLine = IntArray(128 * 7)
 
-        (0 until 7).forEach { y ->
-            (0 until 128).forEach { x ->
+        for (y in 0..7) {
+            for (x in 0..128) {
                 var newRGB = rgb[128 * 105 + y * 128 + x]
 
                 newRGB = if (newRGB == Color(123, 102, 62).rgb || newRGB == Color(143, 119, 72).rgb) {
@@ -174,7 +168,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         var lastNonEmptyScanline = -1
         var emptyScanlines = 0
 
-        (0 until 128).forEach { x ->
+        for (x in 0..128) {
             var isEmpty = true
 
             for (y in 0 until 7) {
@@ -264,7 +258,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 //                println("${packet.sound.value().id}/${packet.volume}")
 
                 // Fitted by observed values
-                val expectedDistance = ((1/ packet.volume) - 0.98272992) / 0.04342088
+                val expectedDistance = ((1 / packet.volume) - 0.98272992) / 0.04342088
 
                 val probablyAssassin = world.players.minByOrNull {
                     (it.distanceTo(player) - expectedDistance).absoluteValue
@@ -363,24 +357,24 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     @Suppress("CyclomaticComplexMethod")
     private fun isSword(item: Item?): Boolean {
         return item is SwordItem ||
-            item is PickaxeItem ||
-            item is ShovelItem && item != Items.WOODEN_SHOVEL && item != Items.GOLDEN_SHOVEL ||
-            item is AxeItem ||
-            item is HoeItem ||
-            item is BoatItem ||
-            run {
-                if (item !is BlockItem) {
-                    return@run false
-                }
+                item is PickaxeItem ||
+                item is ShovelItem && item != Items.WOODEN_SHOVEL && item != Items.GOLDEN_SHOVEL ||
+                item is AxeItem ||
+                item is HoeItem ||
+                item is BoatItem ||
+                run {
+                    if (item !is BlockItem) {
+                        return@run false
+                    }
 
-                val block = item.block
+                    val block = item.block
 
-                return@run block == Blocks.SPONGE ||
-                    block == Blocks.DEAD_BUSH ||
-                    block == Blocks.REDSTONE_TORCH ||
-                    block == Blocks.CHORUS_PLANT
-            } ||
-            item in arrayOf(
+                    return@run block == Blocks.SPONGE ||
+                            block == Blocks.DEAD_BUSH ||
+                            block == Blocks.REDSTONE_TORCH ||
+                            block == Blocks.CHORUS_PLANT
+                } ||
+                item in arrayOf(
             Items.GOLDEN_CARROT,
             Items.CARROT,
             Items.CARROT_ON_A_STICK,
@@ -431,7 +425,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         return null
     }
 
-    fun isMurderer(entityPlayer: AbstractClientPlayerEntity) =
+    private fun isMurderer(entityPlayer: AbstractClientPlayerEntity) =
         murdererSkins.contains(entityPlayer.skinTextures.texture.path)
 
     fun shouldAttack(entityPlayer: AbstractClientPlayerEntity): Boolean {

@@ -23,14 +23,10 @@
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, clickScheduler.isClickOnNextTick(1))</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
-    <ID>EmptyFunctionBlock:GpuViewRenderer.kt$GpuViewRenderer${ }</ID>
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
     <ID>EmptyFunctionBlock:ViewListener.kt$ViewListener${}</ID>
     <ID>EmptyFunctionBlock:ViewLoadListener.kt$ViewLoadListener${}</ID>
-    <ID>ForEachOnRange:ModuleMurderMystery.kt$ModuleMurderMystery$0 until 128</ID>
-    <ID>ForEachOnRange:ModuleMurderMystery.kt$ModuleMurderMystery$0 until 7</ID>
-    <ID>ForEachOnRange:ModuleMurderMystery.kt$ModuleMurderMystery$0 until rgb.size</ID>
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _directlyCallEvent(event: Event)</ID>
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _fireViewClose(): Boolean</ID>
     <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _unregisterEvents()</ID>
@@ -73,7 +69,6 @@
     <ID>MaxLineLength:ConfigSystem.kt$ConfigSystem$)</ID>
     <ID>MaxLineLength:Cosmetics.kt$Cosmetics$*</ID>
     <ID>MaxLineLength:GlfwInputAdapter.kt$GlfwInputAdapter$.</ID>
-    <ID>MaxLineLength:GpuViewRenderer.kt$GpuViewRenderer$// context.drawTexture(matrices, 0, 0, 1, 0.0f, 0.0f, mc.window.scaledWidth, mc.window.scaledHeight, mc.window.scaledWidth, mc.window.scaledHeight)</ID>
     <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.60"</ID>
     <ID>MaxLineLength:LineSegment.kt$LineSegment$class</ID>
     <ID>MaxLineLength:LiquidBounce.kt$LiquidBounce$*</ID>
@@ -111,9 +106,6 @@
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else AdvancedRotation.DEFAULT_Y_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
-    <ID>MaxLineLength:ModuleStorageESP.kt$ModuleStorageESP$// private val modeValue = Choi("Mode", arrayOf("Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")</ID>
-    <ID>MaxLineLength:ModuleStorageESP.kt$ModuleStorageESP.ChestType$CHEST : ChestType</ID>
-    <ID>MaxLineLength:ModuleStorageESP.kt$ModuleStorageESP.ChestType$ENDER_CHEST : ChestType</ID>
     <ID>MaxLineLength:ModuleSuperKnockback.kt$ModuleSuperKnockback$// TODO: remove this once the issue with sequence type events being a bit late to detect player.isSprinting so these modes perform even better</ID>
     <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
     <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$// vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))</ID>
@@ -139,7 +131,6 @@
     <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion${ o1, o2 -&gt; o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) }</ID>
     <ID>MaxLineLength:WeightedSwordItem.kt$WeightedSwordItem.Companion$return</ID>
     <ID>MaxLineLength:WeightedToolItem.kt$WeightedToolItem.Companion$(o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)</ID>
-    <ID>MemberNameEqualsClassName:ModuleStorageESP.kt$ModuleStorageESP.Box$// todo: use box of block, not hardcoded private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.FastClimb.Motion$private val motion by float("Motion", 0.2872F, 0.1f..0.5f)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.IceSpeed.Motion$val motion by float("Motion", 0.5f, 0.2f..1.5f)</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
@@ -147,15 +138,6 @@
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions&gt;</ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
-    <ID>NewLineAtEndOfFile:Face.kt$net.ccbluex.liquidbounce.utils.math.geometry.Face.kt</ID>
-    <ID>NewLineAtEndOfFile:ItemStackComparators.kt$net.ccbluex.liquidbounce.utils.item.ItemStackComparators.kt</ID>
-    <ID>NewLineAtEndOfFile:Levensthein.kt$net.ccbluex.liquidbounce.utils.math.Levensthein.kt</ID>
-    <ID>NewLineAtEndOfFile:Line.kt$net.ccbluex.liquidbounce.utils.math.geometry.Line.kt</ID>
-    <ID>NewLineAtEndOfFile:LineSegment.kt$net.ccbluex.liquidbounce.utils.math.geometry.LineSegment.kt</ID>
-    <ID>NewLineAtEndOfFile:NormalizedPlane.kt$net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane.kt</ID>
-    <ID>NewLineAtEndOfFile:PlayerSimulation.kt$net.ccbluex.liquidbounce.utils.entity.PlayerSimulation.kt</ID>
-    <ID>NewLineAtEndOfFile:RigidPlayerSimulation.kt$net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation.kt</ID>
-    <ID>NewLineAtEndOfFile:Tabs.kt$net.ccbluex.liquidbounce.features.tabs.Tabs.kt</ID>
     <ID>PrintStackTrace:BrowserFileSystem.kt$BrowserFileSystem$e</ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
     <ID>PrintStackTrace:ModuleBlink.kt$ModuleBlink$e</ID>
@@ -198,7 +180,6 @@
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
     <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$mods: Int</ID>
     <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$window: Long</ID>
-    <ID>UnusedParameter:HttpClient.kt$HttpClient$headers: Array&lt;Pair&lt;String, String&gt;&gt; = emptyArray()</ID>
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
     <ID>UnusedParameter:ModuleChestStealer.kt$ModuleChestStealer$screen: GenericContainerScreen</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String&gt;</ID>
@@ -213,7 +194,6 @@
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>
-    <ID>UnusedPrivateProperty:ModuleMurderMystery.kt$ModuleMurderMystery$private val gameRenderEvent = handler&lt;WorldRenderEvent&gt; { if (playHurt) { mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("entity.villager.hurt")), 1F)) playHurt = false } if (playBow) { mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("item.crossbow.shoot")), 1F)) playBow = false } }</ID>
     <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent&gt; { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Parameter already has a command")</ID>
