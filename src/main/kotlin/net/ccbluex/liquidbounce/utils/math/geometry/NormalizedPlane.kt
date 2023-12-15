@@ -59,5 +59,4 @@ class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
         }
     }
 
-
 }
