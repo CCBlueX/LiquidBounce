@@ -33,6 +33,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 
 object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
@@ -81,7 +82,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     // Legacy
     private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20) { mode == "Legacy" }
 
-    private val backtrackedPlayer = mutableMapOf<UUID, MutableList<BacktrackData>>()
+    private val backtrackedPlayer = ConcurrentHashMap<UUID, MutableList<BacktrackData>>()
 
     private val nonDelayedSoundSubstrings = arrayOf("game.player.hurt", "game.player.die")
 
