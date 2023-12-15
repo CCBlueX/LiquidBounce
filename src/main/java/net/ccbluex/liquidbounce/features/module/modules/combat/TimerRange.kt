@@ -15,8 +15,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import kotlin.random.Random
@@ -197,7 +197,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * This check is useful to prevent player from changing speed while looking away
      * And prevent player from changing speed toward unintended entity/target while moving.
      */
-    private fun isLookingTowardsEntities(entity: EntityLivingBase): Boolean {
+    private fun isLookingTowardsEntities(entity: Entity): Boolean {
         val lookVec = mc.thePlayer.lookVec.normalize()
         val playerPos = mc.thePlayer.positionVector.addVector(0.0, mc.thePlayer.eyeHeight.toDouble(), 0.0)
         val entityPos = entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
@@ -217,24 +217,21 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     }
 
     /**
-     * Get all living entities in the world.
+     * Get all entities in the world.
      */
-    private fun getAllLivingEntities(): List<EntityLivingBase> {
-        return mc.theWorld.loadedEntityList.filterIsInstance<EntityLivingBase>()
-            .filterNot { it is EntityArmorStand }
+    private fun getAllEntities(): List<Entity> {
+        return mc.theWorld.loadedEntityList
             .filter { EntityUtils.isSelected(it, true) }
             .toList()
     }
 
     /**
-     * Find the nearest living entity in range.
+     * Find the nearest entity in range.
      */
-    private fun getNearestEntityInRange(): EntityLivingBase? {
+    private fun getNearestEntityInRange(): Entity? {
         val player = mc.thePlayer
 
-        val entitiesInRange = getAllLivingEntities()
-            .filterNot { it == player }
-            .filterNot { it.isDead && it.isInvisible }
+        val entitiesInRange = getAllEntities()
             .filter { player.getDistanceToEntityBox(it) <= rangeValue }
 
         return entitiesInRange.minByOrNull { player.getDistanceToEntityBox(it) }
