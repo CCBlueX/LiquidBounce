@@ -56,8 +56,9 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        if (player.health + player.absorptionAmount < health && headSlot != null && !isInInventoryScreen) {
-            if (player.hasStatusEffect(StatusEffects.REGENERATION) || (player.health + player.absorptionAmount < healthToIgnoreRegen)) {
+        val fullHealth = player.health + player.absorptionAmount
+        if (fullHealth < health && headSlot != null && !isInInventoryScreen) {
+            if (player.hasStatusEffect(StatusEffects.REGENERATION) || fullHealth < healthToIgnoreRegen) {
                 return@repeatable
             }
 
