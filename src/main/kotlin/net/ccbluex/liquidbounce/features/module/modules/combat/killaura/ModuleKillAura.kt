@@ -19,10 +19,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -35,14 +32,17 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.TickBase
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.combat.*
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
@@ -62,12 +62,8 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
-import org.apache.commons.lang3.RandomUtils
-import org.apache.commons.lang3.tuple.MutablePair
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -107,11 +103,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Bypass techniques
     internal val swing by boolean("Swing", true)
-    internal val keepSprint by boolean("KeepSprint", true)
+    private val keepSprint by boolean("KeepSprint", true)
     private val attackShielding by boolean("AttackShielding", false)
 
-    internal val whileUsingItem by boolean("WhileUsingItem", true)
-    internal val whileBlocking by boolean("WhileBlocking", true)
+    private val whileUsingItem by boolean("WhileUsingItem", true)
+    private val whileBlocking by boolean("WhileBlocking", true)
 
     init {
         tree(AutoBlock)
@@ -124,46 +120,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     init {
         tree(FailSwing)
-    }
-
-    private object NotifyWhenFail : ToggleableConfigurable(this, "NotifyWhenFail", false) {
-        val mode = choices("Mode", Box, arrayOf(Box, Sound))
-
-        object Box : Choice("Box") {
-            override val parent: ChoiceConfigurable
-                get() = mode
-
-            val fadeSeconds by int("FadeSeconds", 4, 1..10)
-
-            val color by color("Color", Color4b(255, 179, 72, 255))
-            val colorRainbow by boolean("Rainbow", false)
-        }
-
-        object Sound : Choice("Sound") {
-            override val parent: ChoiceConfigurable
-                get() = mode
-
-            val volume by float("Volume", 50f, 0f..100f)
-
-            object NoPitchRandomization : ToggleableConfigurable(ModuleKillAura, "NoPitchRandomization", false) {
-                val pitch by float("Pitch", 0.8f, 0f..2f)
-            }
-
-            init {
-                tree(NoPitchRandomization)
-            }
-        }
-    }
-
-    init {
         tree(NotifyWhenFail)
     }
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
-
-    private val boxFadeSeconds
-        get() = 50 * NotifyWhenFail.Box.fadeSeconds
+    private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     override fun disable() {
         targetTracker.cleanup()
@@ -171,16 +132,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         AutoBlock.stopBlocking()
     }
 
-    private var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
+    private var renderTarget: Entity? = null
 
-    private var renderTarget: Entity? = null;
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
         renderTarget(matrixStack, event.partialTicks)
-
-
         renderFailedHits(matrixStack)
     }
 
@@ -188,43 +146,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val target = renderTarget ?: return
         renderEnvironmentForWorld(matrixStack) {
             targetRenderer.render(this, target, partialTicks)
-        }
-    }
-
-    private fun renderFailedHits(matrixStack: MatrixStack) {
-        if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
-            failedHits.clear()
-            return
-        }
-
-        failedHits.forEach { it.setRight(it.getRight() + 1) }
-        failedHits = failedHits.filter { it.right <= boxFadeSeconds } as ArrayList<MutablePair<Vec3d, Long>>
-
-        val markedBlocks = failedHits
-
-        val base = if (NotifyWhenFail.Box.colorRainbow) rainbow() else NotifyWhenFail.Box.color
-
-        val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
-
-        renderEnvironmentForWorld(matrixStack) {
-            for ((pos, opacity) in markedBlocks) {
-                val vec3 = Vec3(pos)
-
-                val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
-
-                val baseColor = base.alpha(fade)
-                val outlineColor = base.alpha(fade)
-
-                withPosition(vec3) {
-                    withColor(baseColor) {
-                        drawSolidBox(box)
-                    }
-
-                    withColor(outlineColor) {
-                        drawOutlinedBox(box)
-                    }
-                }
-            }
         }
     }
 
@@ -494,34 +415,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // reset cooldown
         player.resetLastAttackedTicks()
-    }
-
-    private fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
-        if (!NotifyWhenFail.enabled) {
-            return
-        }
-
-        when (NotifyWhenFail.mode.activeChoice) {
-            NotifyWhenFail.Box -> {
-                val centerDistance = entity.box.center.subtract(player.eyes).length()
-                val boxSpot = player.eyes.add(rotation.rotationVec.multiply(centerDistance))
-
-                failedHits.add(MutablePair(boxSpot, 0L))
-            }
-
-            NotifyWhenFail.Sound -> {
-                // Maybe a custom sound would be better
-                val pitch = if (NotifyWhenFail.Sound.NoPitchRandomization.enabled) {
-                    NotifyWhenFail.Sound.NoPitchRandomization.pitch
-                } else {
-                    RandomUtils.nextFloat(0f, 2f)
-                }
-
-                world.playSound(player, player.x, player.y, player.z, SoundEvents.UI_BUTTON_CLICK.value(),
-                    player.soundCategory, NotifyWhenFail.Sound.volume / 100f, pitch
-                )
-            }
-        }
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
