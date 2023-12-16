@@ -169,6 +169,10 @@
             width: 32px;
             height: 32px;
         }
+
+        #status {
+            text-align: right;
+        }
     </style>
     <script>
         const random = (length = 8) => {
@@ -191,9 +195,12 @@
 
         function altManagerUpdate(event) {
             let message = event.getMessage();
+            let success = event.getSuccess();
 
             console.log(message);
-            document.getElementById('response').innerText = message;
+            feedback(message, success ? "green" : "red")
+
+            updateAccountData();
             updateAccountList();
         }
 
@@ -205,19 +212,22 @@
             accountsDiv.innerHTML = "";
 
             // Add all accounts
-            var i = 0;
+            let i = 0;
             console.log("Account List updating...")
             while (accounts.hasNext()) {
                 let account = accounts.next();
-                console.log("Account " + i + ": " + account.getType() + " " + account.getName());
+                let accountProfile = account.getProfile();
+                let accountUsername = accountProfile.getUsername();
+                let accountType = account.getType();
+                console.log("Account " + i + ": " + accountType + " " + accountUsername);
 
                 let row = document.createElement('tr');
                 let type = document.createElement('td');
                 let name = document.createElement('td');
                 let button = document.createElement('td');
 
-                type.innerText = account.getType();
-                name.innerText = account.getName();
+                type.innerText = accountType;
+                name.innerText = accountUsername;
                 button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
 
                 row.appendChild(type);
@@ -245,7 +255,6 @@
             updateAccountData();
 
             // Set altening token
-            console.log(client.getAccountManager().getAlteningApiToken());
             document.getElementById('apitoken').value = client.getAccountManager().getAlteningApiToken();
         };
 
@@ -253,24 +262,28 @@
             let username = document.getElementById('username').value;
 
             if (username === "") {
-                document.getElementById('response').innerText = "Please enter a username";
+                feedback("Please enter a username", "red");
                 return;
             }
 
             client.getAccountManager().newCrackedAccount(username);
             updateAccountList();
+
+            feedback("Account added!", "green");
         }
 
         function newAlteningAccount() {
             let token = document.getElementById('token').value;
 
             if (token === "") {
-                document.getElementById('response').innerText = "Please enter a token";
+                feedback("Please enter an account token", "red");
                 return;
             }
 
+            feedback("Adding account...", "white");
             client.getAccountManager().newAlteningAccount(token);
             updateAccountList();
+            feedback("Account added!", "green");
         }
 
         function newMicrosoftAccount() {
@@ -281,27 +294,45 @@
             let apiToken = document.getElementById('apitoken').value;
 
             if (apiToken === "") {
-                document.getElementById('response').innerText = "Please enter an API token";
+                feedback("Please enter an API token", "red");
                 return;
             }
 
+            feedback("Generating account...", "white");
             client.getAccountManager().setAlteningApiToken(apiToken);
-            console.log("Generating new altening account using token: " + client.getAccountManager().getAlteningApiToken());
-            client.getAccountManager().generateNewAlteningAccount(apiToken);
-            updateAccountList();
+            client.getAccountManager().generateAlteningAccountAsync(apiToken);
         }
 
         function loginAccount(id) {
-            client.getAccountManager().loginAccount(parseInt(id));
-            updateAccountData();
-            updateAccountList();
+            feedback("Logging in...", "white")
+
+            try {
+                client.getAccountManager().loginAccountAsync(parseInt(id));
+            } catch (e) {
+                console.error(e);
+                feedback("Failed to login: " + e.getMessage(), "red");
+            }
         }
 
         function deleteAccount(id) {
-            var account = client.getAccountManager().getAccounts().remove(parseInt(id));
+            const account = client.getAccountManager().getAccounts().remove(parseInt(id));
+            const accountProfile = account.getProfile();
             updateAccountList();
 
-            document.getElementById('response').innerText = "Deleted account: " + account.getName();
+            feedback("Deleted account: " + accountProfile.getUsername(), "green");
+        }
+
+        function restoreInitial() {
+            client.getAccountManager().restoreInitial();
+            updateAccountData();
+            feedback("Restored initial account", "green");
+        }
+
+        function feedback(message, color) {
+            let status = document.getElementById('status');
+
+            status.innerText = message;
+            status.style.color = color;
         }
 
         try {
@@ -328,6 +359,14 @@
                 <div id="accountType" class="accountType"></div>
                 <label><b>Location:</b></label>
                 <div id="location" class="location"></div>
+
+                <br>
+                <button onclick="restoreInitial()">
+                    Restore Initial
+                </button>
+
+                <br>
+                <p class="status" id="status">Idle...</p>
             </div>
 
             <div class="button">
@@ -373,7 +412,6 @@
             </div>
 
             <div class="accounts" id="accounts"></div>
-            <div id="response"></div>
         </div>
     </div>
     <footer>

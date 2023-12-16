@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
+import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.util.hit.HitResult
 
@@ -35,12 +35,11 @@ import net.minecraft.util.hit.HitResult
 object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
 
     object Left : ToggleableConfigurable(this, "Left", true) {
-        val cps by intRange("CPS", 5..8, 1..20)
-        val cooldown by boolean("Cooldown", true)
+        val clickScheduler = tree(ClickScheduler(ModuleAutoClicker, true))
     }
 
     object Right : ToggleableConfigurable(this, "Right", false) {
-        val cps by intRange("CPS", 5..8, 1..20)
+        val clickScheduler = tree(ClickScheduler(ModuleAutoClicker, false))
     }
 
     init {
@@ -48,7 +47,7 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
         tree(Right)
     }
 
-    val cpsScheduler = tree(CpsScheduler())
+
 
     val attack: Boolean
         get() = mc.options.attackKey.isPressed
@@ -56,20 +55,25 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
     val use: Boolean
         get() = mc.options.useKey.isPressed
 
-    val shouldTargetBlock: Boolean
+    private val shouldTargetBlock: Boolean
         get() = player.abilities.creativeMode || mc.crosshairTarget?.type != HitResult.Type.BLOCK
 
     val tickHandler = repeatable {
-        Left.let {
-            repeat(cpsScheduler.clicks({ it.enabled && attack && shouldTargetBlock &&
-                (!it.cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) }, it.cps)) {
+        Left.run {
+            if (!enabled || !attack || !shouldTargetBlock) return@run
+
+            clickScheduler.clicks {
                 KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
+                true
             }
         }
 
-        Right.let {
-            repeat(cpsScheduler.clicks({ it.enabled && use }, it.cps)) {
+        Right.run {
+            if (!enabled || !use) return@run
+
+            clickScheduler.clicks {
                 KeyBinding.onKeyPressed(mc.options.useKey.boundKey)
+                true
             }
         }
     }

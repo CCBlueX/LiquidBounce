@@ -20,10 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -32,10 +29,10 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
+
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
@@ -109,8 +106,16 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         val speed by float("Speed", 2.5f, 0f..20f)
         val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
         val fallDistance by float("FallDistanceToJump", 0.42f, 0f..2f)
-        val ticks by int("TicksToWork", 10, 3..500)
 
+        var stopMovement = false
+
+        val movementInputHandler = handler<MovementInputEvent> {
+            if (stopMovement) {
+                it.directionalInput = DirectionalInput.NONE
+                stopMovement = false
+            }
+        }
+        
         val tickJumpHandler = sequenceHandler<TickJumpEvent> {
             if (arrowBoost <= arrowsToShoot) {
                 mc.options.useKey.isPressed = true
@@ -118,9 +123,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
                     Rotation(player.yaw, -90f), configurable = rotations
                 )
                 // Stops moving
-                moveKeys.forEach {
-                    it.enforced = false
-                }
+                stopMovement = true
                 // Shoots arrow
                 if (player.itemUseTime >= charged) {
                     interaction.stopUsingItem(player)

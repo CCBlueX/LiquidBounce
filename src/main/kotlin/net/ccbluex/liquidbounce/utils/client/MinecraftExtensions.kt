@@ -32,15 +32,13 @@ val Window.size
 val Window.sizeLong
     get() = Pair(width.toLong(), height.toLong())
 
-object QuickAccess {
-    val mc: MinecraftClient
-        inline get() = net.ccbluex.liquidbounce.utils.client.mc
-    val player: ClientPlayerEntity
-        inline get() = mc.player!!
-    val world: ClientWorld
-        inline get() = mc.world!!
-    val network: ClientPlayNetworkHandler
-        inline get() = mc.networkHandler!!
-    val interaction: ClientPlayerInteractionManager
-        inline get() = mc.interactionManager!!
-}
+val mc: MinecraftClient
+    inline get() = MinecraftClient.getInstance()!!
+val player: ClientPlayerEntity
+    inline get() = mc.player!!
+val world: ClientWorld
+    inline get() = mc.world!!
+val network: ClientPlayNetworkHandler
+    inline get() = mc.networkHandler!!
+val interaction: ClientPlayerInteractionManager
+    inline get() = mc.interactionManager!!

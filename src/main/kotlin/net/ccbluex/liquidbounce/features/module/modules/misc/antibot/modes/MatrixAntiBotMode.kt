@@ -27,11 +27,13 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
 
         if (packet is PlayerListS2CPacket) {
             for (entry in packet.playerAdditionEntries) {
-                if (entry.latency < 2 || !entry.profile.properties.isEmpty || isGameProfileUnique(entry.profile)) {
+                val profile = entry.profile ?: continue
+
+                if (entry.latency < 2 || profile.properties?.isEmpty == false || isGameProfileUnique(profile)) {
                     continue
                 }
 
-                if (isADuplicate(entry.profile)) {
+                if (isADuplicate(profile)) {
                     botList.add(entry.profileId)
                     continue
                 }
@@ -65,7 +67,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
 
             if (!isFullyArmored(entity)) {
                 armor = entity.armorItems
-                wait(1)
+                waitTicks(1)
             }
 
             if ((isFullyArmored(entity) || updatesArmor(entity, armor)) && entity.gameProfile.properties.isEmpty) {

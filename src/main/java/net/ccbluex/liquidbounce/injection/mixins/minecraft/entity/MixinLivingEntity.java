@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDel
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
+import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -117,7 +117,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return instance.add(x, y, z);
         }
 
-        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null) {
+        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
             return instance.add(x, y, z);
         }
 
@@ -185,9 +185,9 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private float hookModifyFallFlyingPitch(LivingEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        RotationsConfigurable configurable = rotationManager.getActiveConfigurable();
+        AimPlan configurable = rotationManager.getAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getFixVelocity() || !configurable.getSilent()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
             return instance.getPitch();
         }
 
@@ -201,9 +201,9 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private Vec3d hookModifyFallFlyingRotationVector(LivingEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        RotationsConfigurable configurable = rotationManager.getActiveConfigurable();
+        AimPlan configurable = rotationManager.getAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getFixVelocity() || !configurable.getSilent()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
             return instance.getRotationVector();
         }
 

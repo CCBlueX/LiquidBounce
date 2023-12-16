@@ -15,27 +15,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.realms.gui.screen.RealmsMainScreen;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
-@Mixin(RealmsMainScreen.class)
-public class MixinRealmsMainScreen {
+internal object Packet : Choice("Packet") {
 
-    @Shadow
-    private static Screen realmsGenericErrorScreen;
+    override val parent: ChoiceConfigurable
+        get() = ModuleNoFall.modes
 
-    @Inject(method = "init", at = @At("HEAD"))
-    private void hookGenericErrorScreenReset(final CallbackInfo callbackInfo) {
-        realmsGenericErrorScreen = null;
+    val repeatable = repeatable {
+        if (player.fallDistance > 2f) {
+            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
+        }
     }
 
 }

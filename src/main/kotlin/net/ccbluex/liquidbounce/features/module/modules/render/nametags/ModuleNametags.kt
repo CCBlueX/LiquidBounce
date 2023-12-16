@@ -18,9 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -34,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
-import org.joml.Matrix4f
 
 /**
  * Nametags module
@@ -43,7 +41,14 @@ import org.joml.Matrix4f
  */
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
-    val health by boolean("Health", true)
+    object Health : ToggleableConfigurable(this, "Health", true) {
+        val fromScoreboard by boolean("FromScoreboard", false)
+    }
+
+    init {
+        tree(Health)
+    }
+
     val ping by boolean("Ping", true)
     val distance by boolean("Distance", false)
 
@@ -53,45 +58,26 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val fontRenderer: FontRenderer
         get() = Fonts.DEFAULT_FONT
 
-    private var mvMatrix: Matrix4f? = null
-    private var projectionMatrix: Matrix4f? = null
+    val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
+        renderEnvironmentForGUI {
+            val nametagRenderer = NametagRenderer()
 
-    val overlayRenderHandler =
-        handler<OverlayRenderEvent> { event ->
-            renderEnvironmentForGUI {
-                val nametagRenderer = NametagRenderer()
-
-                try {
-                    drawNametags(nametagRenderer, event.tickDelta)
-                } finally {
-                    nametagRenderer.commit(this)
-                }
+            try {
+                drawNametags(nametagRenderer, event.tickDelta)
+            } finally {
+                nametagRenderer.commit(this)
             }
         }
+    }
 
-    val renderHandler =
-        handler<WorldRenderEvent>(priority = -100) { event ->
-            val matrixStack = event.matrixStack
-
-            this.mvMatrix = Matrix4f(matrixStack.peek().positionMatrix)
-            this.projectionMatrix = RenderSystem.getProjectionMatrix()
-        }
-
-    private fun RenderEnvironment.drawNametags(
-        nametagRenderer: NametagRenderer,
-        tickDelta: Float,
-    ) {
+    private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
         val nametagsToRender = collectAndSortNametagsToRender(tickDelta)
 
         nametagsToRender.forEachIndexed { index, (pos, nametagInfo) ->
             // We want nametags that are closer to the player to be rendered above nametags that are further away.
             val renderZ = index / nametagsToRender.size.toFloat()
 
-            nametagRenderer.drawNametag(
-                this,
-                nametagInfo,
-                Vec3(pos.x, pos.y, renderZ),
-            )
+            nametagRenderer.drawNametag(this, nametagInfo, Vec3(pos.x, pos.y, renderZ))
         }
     }
 
@@ -103,17 +89,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         val nametagsToRender = mutableListOf<Pair<Vec3, NametagInfo>>()
 
         for (entity in ModuleESP.findRenderedEntities()) {
-            val nametagPos =
-                entity
-                    .interpolateCurrentPosition(tickDelta)
-                    .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
+            val nametagPos = entity.interpolateCurrentPosition(tickDelta)
+                .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
-            val screenPos =
-                WorldToScreen.calculateScreenPos(
-                    nametagPos,
-                    mvMatrix!!,
-                    projectionMatrix!!,
-                ) ?: continue
+            val screenPos = WorldToScreen.calculateScreenPos(nametagPos) ?: continue
 
             val nametagInfo = NametagInfo.createForEntity(entity)
 

@@ -35,30 +35,28 @@ object SilentHotbar : Listenable {
      * Returns the slot that interactions would take place with
      */
     val serversideSlot: Int
-        get() = this.hotbarState?.enforcedHotbarSlot ?: mc.player!!.inventory.selectedSlot
+        get() = hotbarState?.enforcedHotbarSlot ?: mc.player?.inventory?.selectedSlot ?: 0
 
     fun selectSlotSilently(requester: Any?, slot: Int, ticksUntilReset: Int = 20) {
-        this.hotbarState = SilentHotbarState(slot, requester, ticksUntilReset)
-        this.ticksSinceLastUpdate = 0
+        hotbarState = SilentHotbarState(slot, requester, ticksUntilReset)
+        ticksSinceLastUpdate = 0
     }
 
-    fun shouldReplaceSlot() = mc.player != null
-
     fun resetSlot(requester: Any?) {
-        if (this.hotbarState?.requester == requester) {
-            this.hotbarState = null
+        if (hotbarState?.requester == requester) {
+            hotbarState = null
         }
     }
 
-    val gameTickHandler = handler<GameTickEvent> {
-        val hotbarState = this.hotbarState ?: return@handler
+    val tickHandler = handler<GameTickEvent>(priority = 1001) {
+        val hotbarState = hotbarState ?: return@handler
 
         if (ticksSinceLastUpdate >= hotbarState.ticksUntilReset) {
             this.hotbarState = null
             return@handler
         }
 
-        this.ticksSinceLastUpdate++
+        ticksSinceLastUpdate++
     }
 }
 

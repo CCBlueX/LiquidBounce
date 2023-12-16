@@ -19,25 +19,33 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.render.shaders.OutlineShader;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.ColorHelper;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -138,6 +146,11 @@ public abstract class MixinWorldRenderer {
             return true;
         }
 
+        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive() &&
+                ModuleStorageESP.INSTANCE.categorizeEntity(entity) != null) {
+            return true;
+        }
+
         return instance.hasOutline(entity);
     }
 
@@ -148,12 +161,35 @@ public abstract class MixinWorldRenderer {
      */
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
     private int injectTeamColor(Entity instance) {
+        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive()) {
+            var categorizedEntity = ModuleStorageESP.INSTANCE.categorizeEntity(instance);
+            if (categorizedEntity != null) {
+                return categorizedEntity.getColor().invoke().toRGBA();
+            }
+        }
+
         if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive()) {
             final Color4b color = ModuleESP.INSTANCE.getColor(instance);
             return color.toRGBA();
         }
 
         return instance.getTeamColorValue();
+    }
+
+    @ModifyVariable(method = "render",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BufferBuilderStorage;getOutlineVertexConsumers()Lnet/minecraft/client/render/OutlineVertexConsumerProvider;",
+                    ordinal = 1),
+            ordinal = 3,
+            name = "bl3",
+            require = 1
+    )
+    private boolean hookOutlineFlag(boolean bl3) {
+        if (OutlineFlag.drawOutline) {
+            OutlineFlag.drawOutline = false;
+            return true;
+        }
+
+        return bl3;
     }
 
 }

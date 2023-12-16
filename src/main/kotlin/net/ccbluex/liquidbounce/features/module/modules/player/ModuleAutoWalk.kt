@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 
 /**
  * AutoWalk module
@@ -30,12 +30,8 @@ import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
  */
 object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
 
-    val repeatable = repeatable {
-        mc.options.forwardKey.isPressed = true
-    }
-
-    override fun disable() {
-            mc.options.forwardKey.isPressed = false
+    val moveInputHandler = handler<MovementInputEvent> {
+        it.directionalInput = it.directionalInput.copy(forwards = true)
     }
 
 }

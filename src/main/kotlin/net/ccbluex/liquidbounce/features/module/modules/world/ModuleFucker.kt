@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
@@ -34,8 +35,6 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
@@ -60,7 +59,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
     private val surroundings by boolean("Surroundings", true)
-    private val visualSwing by boolean("VisualSwing", true)
     private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
     private val delay by int("Delay", 0, 0..20)
     private val action by enumChoice("Action", DestroyAction.DESTROY, DestroyAction.values())
@@ -78,7 +76,18 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             return@repeatable
         }
 
+        val wasTarget = currentTarget
+
         updateTarget()
+
+        if (wasTarget != null && currentTarget == null) {
+            interaction.cancelBlockBreaking()
+        }
+
+        // Delay if the target changed - this also includes when introducing a new target from null.
+        if (wasTarget != currentTarget) {
+            waitTicks(delay)
+        }
 
         // Check if blink is enabled - if so, we don't want to do anything.
         if (ModuleBlink.enabled) {
@@ -96,13 +105,11 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             destroyerTarget.pos.getState() ?: return@repeatable
         ) ?: return@repeatable
 
-        // Check if the raytrace result includes a block, if not we don't want to deal with it.
-        if (rayTraceResult.type != HitResult.Type.BLOCK) {
-            return@repeatable
-        }
-
         val raytracePos = rayTraceResult.blockPos
-        if (raytracePos != destroyerTarget.pos) {
+
+        // Check if the raytrace result includes a block, if not we don't want to deal with it.
+        if (rayTraceResult.type != HitResult.Type.BLOCK ||
+            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos) {
             return@repeatable
         }
 
@@ -112,42 +119,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 player.swingHand(Hand.MAIN_HAND)
             }
 
-            wait { delay }
+            waitTicks(delay)
         } else {
-            // Air is not very interesting. Trust me. It's better to breath it instead of breaking it.
-            if (raytracePos.getState()?.isAir == true) {
-                return@repeatable
-            }
-
-            val direction = rayTraceResult.side
-
-            if (forceImmediateBreak) {
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, raytracePos, direction
-                    )
-                )
-                swingHand()
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, raytracePos, direction
-                    )
-                )
-            } else {
-                if (interaction.updateBlockBreakingProgress(raytracePos, direction)) {
-                    swingHand()
-                }
-            }
-
-            wait { delay }
-        }
-    }
-
-    private fun swingHand() {
-        if (visualSwing) {
-            player.swingHand(Hand.MAIN_HAND)
-        } else {
-            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+            doBreak(rayTraceResult, immediate = forceImmediateBreak)
         }
     }
 
@@ -160,7 +134,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targets.contains(state.block) && getNearestPoint(
-                eyesPos, Box(pos, pos.add(1, 1, 1))
+                eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
@@ -173,7 +147,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // Check if we got a free angle to the block
         if (raytrace != null) {
             val (rotation, _) = raytrace
-            RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
             this.currentTarget = DestroyerTarget(pos, this.action)
             return
@@ -205,7 +179,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         ) ?: return
 
         val (rotation, _) = raytrace
-        RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+        RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
         this.currentTarget = DestroyerTarget(raytraceResult.blockPos, this.action)
     }

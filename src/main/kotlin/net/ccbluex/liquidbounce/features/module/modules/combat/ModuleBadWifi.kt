@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.util.math.Vec3d
@@ -63,9 +64,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     override fun enable() {
         if (ModuleBlink.enabled) {
             // Cannot disable on the moment it's enabled, so schedule module deactivation in the next few milliseconds.
-            EventScheduler.schedule(this, GameRenderEvent::class.java, action = {
+            EventScheduler.schedule<GameRenderEvent>(this) {
                 this.enabled = false
-            })
+            }
 
             notification("Compatibility error", "BadWIFI is incompatible with Blink", NotificationEvent.Severity.ERROR)
         }
@@ -215,6 +216,8 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
             positions.clear()
         }
     }
+
+    fun isLagging() = enabled && (packetQueue.isNotEmpty() || positions.isNotEmpty())
 
     private fun shouldLag() =
         world.findEnemy(0f..rangeToStart) != null && (!player.isUsingItem || !stopWhileUsingItem) && mc.currentScreen == null && !player.isDead

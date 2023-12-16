@@ -30,16 +30,21 @@ object SpeedPreventDeadlyJump {
         if (groundPos == null)
             return true
 
-        simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(DirectionalInput.NONE, jumping=false,
-            sprinting = false
-        );
+        simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
+            DirectionalInput.NONE, jumping = false,
+            sprinting = false, sneaking = false
+        )
 
         return wouldFallToDeath(simulatedPlayer, ticksToWaitForFall = 5, maxFallDistance = maxFallDistance)
     }
 
     fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
-        val input =
-            SimulatedPlayer.SimulatedPlayerInput(DirectionalInput(player.input), false, true)
+        val input = SimulatedPlayer.SimulatedPlayerInput(
+            DirectionalInput(player.input),
+            jumping = false,
+            sprinting = true,
+            sneaking = false
+        )
 
         return SimulatedPlayer.fromClientPlayer(input)
     }
@@ -66,17 +71,20 @@ object SpeedPreventDeadlyJump {
         }
 
         if (groundPos != null) {
-            simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(DirectionalInput.NONE, jumping=false,
-                sprinting = false
-            );
+            simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
+                DirectionalInput.NONE,
+                jumping = false,
+                sprinting = false,
+                sneaking = false
+            )
 
             for (ignored in 0..40) {
                 simulatedPlayer.tick()
 
-                if (simulatedPlayer.onGround) {
-                    groundPos = simulatedPlayer.pos;
+                groundPos = if (simulatedPlayer.onGround) {
+                    simulatedPlayer.pos
                 } else {
-                    groundPos = null;
+                    null;
                 }
             }
         }

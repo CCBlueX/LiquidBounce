@@ -2,11 +2,11 @@ accessWidener	v1	named
 
 accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 
-accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
-mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/util/Session;
+accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
+mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
 accessible field net/minecraft/client/MinecraftClient authenticationService Lcom/mojang/authlib/yggdrasil/YggdrasilAuthenticationService;
-accessible field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/util/ProfileKeys;
-mutable field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/util/ProfileKeys;
+accessible field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
+mutable field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
 
 accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
@@ -17,7 +17,8 @@ mutable field net/minecraft/util/math/Vec3d x D
 mutable field net/minecraft/util/math/Vec3d y D
 mutable field net/minecraft/util/math/Vec3d z D
 
-accessible field net/minecraft/network/packet/c2s/play/KeepAliveC2SPacket id J
+mutable field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
+accessible field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chatMessage Ljava/lang/String;
 
 accessible field net/minecraft/client/network/ClientPlayerEntity lastX D
@@ -57,7 +58,7 @@ mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLo
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingCooldown I
 
-accessible field net/minecraft/network/packet/c2s/play/ResourcePackStatusC2SPacket status Lnet/minecraft/network/packet/c2s/play/ResourcePackStatusC2SPacket$Status;
+accessible field net/minecraft/network/packet/c2s/common/ResourcePackStatusC2SPacket status Lnet/minecraft/network/packet/c2s/common/ResourcePackStatusC2SPacket$Status;
 
 accessible field net/minecraft/item/BucketItem fluid Lnet/minecraft/fluid/Fluid;
 
@@ -68,13 +69,6 @@ accessible field net/minecraft/entity/LivingEntity jumpingCooldown I
 accessible field net/minecraft/entity/projectile/PersistentProjectileEntity inGround Z
 
 accessible field net/minecraft/client/option/GameOptions enabledPlayerModelParts Ljava/util/Set;
-
-mutable field net/minecraft/network/packet/c2s/play/KeepAliveC2SPacket id J
-
-
-accessible field net/minecraft/network/packet/c2s/play/CustomPayloadC2SPacket data Lnet/minecraft/network/PacketByteBuf;
-
-mutable field net/minecraft/network/packet/c2s/play/CustomPayloadC2SPacket data Lnet/minecraft/network/PacketByteBuf;
 
 accessible method net/minecraft/entity/player/PlayerEntity getVelocityMultiplier ()F
 accessible method net/minecraft/entity/Entity movementInputToVelocity (Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;

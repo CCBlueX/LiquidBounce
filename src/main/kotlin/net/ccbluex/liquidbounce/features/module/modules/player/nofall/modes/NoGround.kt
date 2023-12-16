@@ -15,24 +15,30 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.exploit
+package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
-/**
- * GodMode module
- *
- * Allows you to be invulnerable.
- */
+internal object NoGround : Choice("NoGround") {
 
-object ModuleGodMode : Module("GodMode", Category.EXPLOIT) {
+    override val parent: ChoiceConfigurable
+        get() = ModuleNoFall.modes
 
-    val repeatable = repeatable {
-        network.sendPacket(PlayerMoveC2SPacket.Full(player.x, player.y - 0.1, player.z, player.yaw, player.pitch, true))
+    val packetHandler = handler<PacketEvent> {
+        val packet = it.packet
+
+        if (packet is PlayerMoveC2SPacket) {
+            packet.onGround = false
+        }
+
     }
+
 }
