@@ -24,13 +24,14 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
+import kotlin.math.max
 
 /**
  * AutoHead module
@@ -42,6 +43,7 @@ import net.minecraft.util.Hand
 object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
 
     private val health by int("Health", 15, 1..40)
+    private val healthToIgnoreRegen by int("HealthToIgnoreRegen", 5, 1..10)
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
     private val swapDelay by int("SwapDelay", 5, 1..100)
 
@@ -55,8 +57,9 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        if (player.health + player.absorptionAmount < health && headSlot != null && !isInInventoryScreen) {
-            if (player.hasStatusEffect(StatusEffects.REGENERATION)) {
+        val fullHealth = player.health + player.absorptionAmount
+        if (fullHealth < max(health, healthToIgnoreRegen) && headSlot != null && !isInInventoryScreen) {
+            if (player.hasStatusEffect(StatusEffects.REGENERATION) || fullHealth < healthToIgnoreRegen) {
                 return@repeatable
             }
 
@@ -69,8 +72,9 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
             }
 
             if (headSlot != player.inventory.selectedSlot) {
-                SilentHotbar.selectSlotSilently(this, headSlot,
-                    swapDelay)
+                SilentHotbar.selectSlotSilently(
+                    this, headSlot, swapDelay
+                )
             }
 
             // Use head
