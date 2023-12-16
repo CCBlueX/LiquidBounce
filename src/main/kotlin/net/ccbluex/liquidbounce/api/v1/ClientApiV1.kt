@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.api
+package net.ccbluex.liquidbounce.api.v1
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -33,7 +33,7 @@ import java.text.SimpleDateFormat
  *
  * This represents all API endpoints of the LiquidBounce API for the usage on the client.
  */
-object ClientApi {
+object ClientApiV1 {
 
     private const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
 
@@ -46,26 +46,11 @@ object ClientApi {
     fun requestNewestBuildEndpoint(branch: String = HARD_CODED_BRANCH, release: Boolean = false) =
         endpointRequest<Build>("version/newest/$branch${if (release) "/release" else ""}")
 
-    fun requestMessageOfTheDayEndpoint(branch: String = HARD_CODED_BRANCH) =
-        endpointRequest<MessageOfTheDay>("client/$branch/motd")
-
     fun requestSettingsList(branch: String = HARD_CODED_BRANCH) =
         endpointRequest<Array<AutoSettings>>("client/$branch/settings")
 
     fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) =
         plainEndpointRequest("client/$branch/settings/$settingId")
-
-    /**
-     * todo: this was not implemented yet, might be added in future versions
-     */
-    fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) =
-        endpointRequest<EmptyResponse>("client/$branch/settings/report/$settingId")
-
-    /**
-     * todo: this was not implemented yet, might be added in future versions
-     */
-    fun uploadSettings(settings: String, branch: String = HARD_CODED_BRANCH) =
-        endpointRequest<EmptyResponse>("client/$branch/settings/upload")
 
     /**
      * Request endpoint and parse JSON to data class
@@ -114,13 +99,6 @@ data class Build(
     val message: String,
     val url: String
 )
-
-/**
- * Message of the day
- *
- * Contains only a message
- */
-data class MessageOfTheDay(val message: String)
 
 /**
  * Settings

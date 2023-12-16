@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.api.AutoSettings
-import net.ccbluex.liquidbounce.api.ClientApi.requestSettingsList
-import net.ccbluex.liquidbounce.api.ClientApi.requestSettingsScript
+import net.ccbluex.liquidbounce.api.v1.AutoSettings
+import net.ccbluex.liquidbounce.api.v1.ClientApiV1.requestSettingsList
+import net.ccbluex.liquidbounce.api.v1.ClientApiV1.requestSettingsScript
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder

@@ -23,7 +23,7 @@ import com.vdurmont.semver4j.Semver
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.IN_DEVELOPMENT
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
-import net.ccbluex.liquidbounce.api.ClientApi.requestNewestBuildEndpoint
+import net.ccbluex.liquidbounce.api.v1.ClientApiV1.requestNewestBuildEndpoint
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,7 +41,7 @@ object ClientUpdate {
     }
 
     private val newestVersion by lazy {
-        // https://api.liquidbounce.net/api/v1/version/builds/legacy
+        // https://api.liquidbounce.net/api/v1/version/builds/nextgen
         try {
             requestNewestBuildEndpoint(branch = LiquidBounce.clientBranch, release = !IN_DEVELOPMENT)
         } catch (e: Exception) {

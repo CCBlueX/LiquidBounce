@@ -32,6 +32,8 @@ class ExcludeStrategy : ExclusionStrategy {
     override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(Exclude::class.java) != null
 }
 
+inline fun <reified T> encode(obj: T): String = Gson().toJson(obj, object : TypeToken<T>() {}.type)
+
 /**
  * Decode JSON content
  */
