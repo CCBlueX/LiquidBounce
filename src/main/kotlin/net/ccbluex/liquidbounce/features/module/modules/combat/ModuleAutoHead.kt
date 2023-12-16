@@ -42,6 +42,7 @@ import net.minecraft.util.Hand
 object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
 
     private val health by int("Health", 15, 1..40)
+    private val healthToIgnoreRegen by int("HealthToIgnoreRegen", 15, 1..40)
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
     private val swapDelay by int("SwapDelay", 5, 1..100)
 
@@ -56,7 +57,7 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         if (player.health + player.absorptionAmount < health && headSlot != null && !isInInventoryScreen) {
-            if (player.hasStatusEffect(StatusEffects.REGENERATION)) {
+            if (player.hasStatusEffect(StatusEffects.REGENERATION) || player.health + player.absorptionAmount < healthToIgnoreRegen) {
                 return@repeatable
             }
 
