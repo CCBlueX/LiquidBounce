@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -19,6 +20,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
+import net.minecraft.block.Block.getIdFromBlock
 import net.minecraft.init.Blocks.*
 import net.minecraft.util.BlockPos
 import java.awt.Color
@@ -30,7 +32,7 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
     private val renderMode by ListValue("LayerRenderMode", arrayOf("Current", "All"), "Current")
     private val radius by IntegerValue("Radius", 8, 0..32)
     private val maxLayers by IntegerValue("MaxProtectionLayers", 2, 1..6)
-    private val blockLimit by IntegerValue("BlockLimit", 256, 0..2056)
+    private val blockLimit by IntegerValue("BlockLimit", 256, 0..1024)
     private val down by BoolValue("BlocksUnderTarget", false)
     private val renderTargetBlocks by BoolValue("RenderTargetBlocks", true)
 
@@ -41,14 +43,13 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
 
     private val searchTimer = MSTimer()
     private val targetBlockList = mutableListOf<BlockPos>()
-    private val blocksToRender = mutableListOf<BlockPos>()
+    private val blocksToRender = mutableSetOf<BlockPos>()
     private var thread: Thread? = null
 
-    private fun getBlocksToRender(targetBlock: BlockPos, maxLayers: Int, down: Boolean, allLayers: Boolean) : Set<BlockPos> {
+    private fun getBlocksToRender(targetBlock: Block, maxLayers: Int, down: Boolean, allLayers: Boolean, blockLimit: Int) {
         // it's not necessary to make protection layers around unbreakable blocks
         val breakableBlockIDs = mutableListOf(35, 159, 121, 20, 5, 49) // wool, stained_clay, end_stone, glass, wood, obsidian
-        val targetBlockID = Block.getIdFromBlock(getBlock(targetBlock))
-        breakableBlockIDs.add(targetBlockID)
+        breakableBlockIDs.add(getIdFromBlock(targetBlock))
         if (allLayers) {
             breakableBlockIDs.add(0)    // air
         }
@@ -58,44 +59,63 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
         val cachedBlocks = mutableSetOf<BlockPos>()
         val currentLayerBlocks = LinkedList<BlockPos>()
         var currentLayer = 1
-        currentLayerBlocks.add(targetBlock)
 
 
-        while (currentLayerBlocks.isNotEmpty()) {
-            val currBlock = currentLayerBlocks.removeFirst()
-            val currBlockID = Block.getIdFromBlock(getBlock(currBlock))
+        // get blocks around each target block
+        for (block in targetBlockList) {
+            currentLayerBlocks.add(block)
 
-            if (breakableBlockIDs.contains(currBlockID)) {
-                val blocksAround = mutableListOf(
-                    currBlock.north(),
-                    currBlock.east(),
-                    currBlock.west(),
-                    currBlock.south(),
-                    currBlock.up(),
-                )
+            while (currentLayerBlocks.isNotEmpty()) {
+                val currBlock = currentLayerBlocks.removeFirst()
+                val currBlockID = getIdFromBlock(getBlock(currBlock))
 
-                if (down) {
-                    blocksAround.add(currBlock.down())
+                if (breakableBlockIDs.contains(currBlockID)) {
+                    val blocksAround = mutableListOf(
+                        currBlock.north(),
+                        currBlock.east(),
+                        currBlock.south(),
+                        currBlock.west(),
+                        currBlock.up(),
+                    )
+
+                    if (down) {
+                        blocksAround.add(currBlock.down())
+                    }
+
+                    nextLayerAirBlocks.addAll(
+                        blocksAround.filter { blockPos -> getBlock(blockPos) == air }
+                    )
+                    nextLayerBlocks.addAll(
+                        blocksAround.filter { blockPos ->
+                            (allLayers || getBlock(blockPos) != air) && !cachedBlocks.contains(
+                                blockPos
+                            )
+                        }
+                    )
                 }
 
-                nextLayerAirBlocks.addAll(
-                    blocksAround.filter { blockPos -> getBlock(blockPos) == air }
-                )
-                nextLayerBlocks.addAll(
-                    blocksAround.filter { blockPos -> (allLayers || getBlock(blockPos) != air) && !cachedBlocks.contains(blockPos) }
-                )
+                // move to the next layer
+                if (currentLayerBlocks.isEmpty() && (allLayers || nextLayerAirBlocks.isEmpty()) && currentLayer < maxLayers) {
+                    currentLayerBlocks += nextLayerBlocks
+                    cachedBlocks += nextLayerBlocks
+                    nextLayerBlocks.clear()
+                    currentLayer += 1
+                }
             }
 
-            // move to the next layer
-            if (currentLayerBlocks.isEmpty() && (allLayers || nextLayerAirBlocks.isEmpty()) && currentLayer < maxLayers) {
-                currentLayerBlocks.addAll(nextLayerBlocks)
-                cachedBlocks.addAll(nextLayerBlocks)
-                nextLayerBlocks.clear()
-                currentLayer += 1
+            nextLayerBlocks.clear()
+            cachedBlocks.clear()
+            currentLayer = 1
+
+            for (newBlock in nextLayerAirBlocks) {
+                if (blocksToRender.size >= blockLimit) {
+                    return
+                }
+                blocksToRender += newBlock
             }
+
+            nextLayerAirBlocks.clear()
         }
-
-        return nextLayerAirBlocks
     }
 
     @EventTarget
@@ -118,17 +138,7 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
                 }
                 synchronized(blocksToRender) {
                     blocksToRender.clear()
-                    for (block in targetBlockList) {
-                        val currentSize = blocksToRender.size
-                        val newBlocks = getBlocksToRender(block, maxLayers, down, allLayers)
-
-                        if (currentSize + newBlocks.size > blockLimit) {
-                            blocksToRender += newBlocks.stream().limit((blockLimit - currentSize).toLong()).toList()
-                            break
-                        }
-
-                        blocksToRender += newBlocks
-                    }
+                    getBlocksToRender(targetBlock, maxLayers, down, allLayers, blockLimit)
                 }
             }, "BedProtectionESP-BlockFinder")
 
@@ -152,4 +162,12 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
             }
         }
     }
+
+    override fun onToggle(state: Boolean) {
+        targetBlockList.clear()
+        blocksToRender.clear()
+    }
+
+    override val tag: String
+        get() = blocksToRender.size.toString()
 }
