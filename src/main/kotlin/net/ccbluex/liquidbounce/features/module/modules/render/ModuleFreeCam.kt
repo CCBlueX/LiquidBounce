@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -61,7 +61,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
         updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
     }
 
-    val tickHandler = handler<PlayerTickEvent> {
+    val tickHandler = handler<PlayerPostTickEvent> {
         if (player.age < 3) {
             updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
         }
