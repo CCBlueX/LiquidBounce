@@ -31,6 +31,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
+import kotlin.math.max
 
 /**
  * AutoHead module
@@ -57,7 +58,7 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         val fullHealth = player.health + player.absorptionAmount
-        if (fullHealth < health && headSlot != null && !isInInventoryScreen) {
+        if (fullHealth < max(health, healthToIgnoreRegen) && headSlot != null && !isInInventoryScreen) {
             if (player.hasStatusEffect(StatusEffects.REGENERATION) || fullHealth < healthToIgnoreRegen) {
                 return@repeatable
             }
