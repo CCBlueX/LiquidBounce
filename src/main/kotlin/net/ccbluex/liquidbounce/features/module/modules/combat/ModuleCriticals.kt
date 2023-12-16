@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.combat.findEnemy

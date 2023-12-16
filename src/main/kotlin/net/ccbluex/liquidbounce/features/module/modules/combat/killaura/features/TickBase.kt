@@ -1,14 +1,17 @@
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
@@ -17,13 +20,11 @@ import net.minecraft.util.math.Vec3d
 import kotlin.math.min
 
 /**
- * TickBase module
+ * TickBase
  *
  * Calls tick function to speed up, when needed
- * This module only works in combination with KillAura
  */
-
-object ModuleTickBase : Module("TickBase", Category.COMBAT) {
+internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", false) {
 
     private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
     private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
