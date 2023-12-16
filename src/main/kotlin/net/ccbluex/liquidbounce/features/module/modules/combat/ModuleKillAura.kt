@@ -81,7 +81,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val clickScheduler = tree(ClickScheduler(this, true))
 
     // Range
-    private val range by float("Range", 4.2f, 1f..8f)
+    internal val range by float("Range", 4.2f, 1f..8f)
     private val scanExtraRange by float("ScanExtraRange", 3.0f, 0.0f..7.0f)
 
     private val wallRange by float("WallRange", 3f, 0f..8f).listen {
@@ -93,7 +93,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     // Target
-    private val targetTracker = tree(TargetTracker())
+    val targetTracker = tree(TargetTracker())
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
@@ -107,7 +107,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     // Bypass techniques
     internal val swing by boolean("Swing", true)
     internal val keepSprint by boolean("KeepSprint", true)
-    internal val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
     internal val whileUsingItem by boolean("WhileUsingItem", true)
