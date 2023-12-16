@@ -47,7 +47,15 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
     }
 
-    val mode by ListValue("Mode", arrayOf("Legacy", "Modern"), "Modern")
+    val mode by object : ListValue("Mode", arrayOf("Legacy", "Modern"), "Modern") {
+        override fun onChanged(oldValue: String, newValue: String) {
+            clearPackets();
+            backtrackedPlayer.clear();
+        }
+    }
+
+    // Legacy
+    private val legacyPos by ListValue("Caching mode", arrayOf("ClientPos", "ServerPos"), "ClientPos") { mode == "Legacy" }
 
     // Modern
     private val style by ListValue("Style", arrayOf("Pulse", "Smooth"), "Smooth") { mode == "Modern" }
@@ -78,6 +86,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     private var globalTimer = MSTimer()
 
     private var shouldDraw = true
+
+    private var ignoreWholeTick = false
 
     // Legacy
     private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20) { mode == "Legacy" }
@@ -110,15 +120,37 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             System.currentTimeMillis()
                         )
                     }
-                }
+                    is S14PacketEntity -> {
+                        if (legacyPos == "ServerPos") {
+                            val entity = mc.theWorld?.getEntityByID(packet.entityId)
+                            val entityMixin = entity as? IMixinEntity
+                            if (entityMixin != null) {
+                                addBacktrackData(
+                                    entity.uniqueID,
+                                    entityMixin.trueX,
+                                    entityMixin.trueY,
+                                    entityMixin.trueZ,
+                                    System.currentTimeMillis()
+                                )
+                            }
+                        }
+                    }
 
-                backtrackedPlayer.forEach { (key, backtrackData) ->
-                    // Remove old data
-                    backtrackData.removeAll { it.time + delay < System.currentTimeMillis() }
-
-                    // Remove player if there is no data left. This prevents memory leaks.
-                    if (backtrackData.isEmpty())
-                        removeBacktrackData(key)
+                    is S18PacketEntityTeleport -> {
+                        if (legacyPos == "ServerPos") {
+                            val entity = mc.theWorld?.getEntityByID(packet.entityId)
+                            val entityMixin = entity as? IMixinEntity
+                            if (entityMixin != null) {
+                                addBacktrackData(
+                                    entity.uniqueID,
+                                    entityMixin.trueX,
+                                    entityMixin.trueY,
+                                    entityMixin.trueZ,
+                                    System.currentTimeMillis()
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -209,10 +241,21 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
+        if (mode == "Legacy") {
+            backtrackedPlayer.forEach { (key, backtrackData) ->
+                // Remove old data
+                backtrackData.removeAll { it.time + delay < System.currentTimeMillis() }
+
+                // Remove player if there is no data left. This prevents memory leaks.
+                if (backtrackData.isEmpty())
+                    removeBacktrackData(key)
+            }
+        }
+
         val target = target as? EntityLivingBase
         val targetMixin = target as? IMixinEntity
 
-        if (targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
+        if (mode == "Modern" && targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
             val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
             val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
 
@@ -228,6 +271,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                 globalTimer.reset()
             }
         }
+
+        ignoreWholeTick = false
     }
 
     @EventTarget
@@ -321,7 +366,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onEntityMove(event: EntityMovementEvent) {
-        if (mode == "Legacy") {
+        if (mode == "Legacy" && legacyPos == "ClientPos") {
             val entity = event.movedEntity
 
             // Check if entity is a player
@@ -342,10 +387,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     override fun onEnable() = reset()
 
     override fun onDisable() {
-        if (mode == "Modern") {
-            clearPackets()
-            reset()
-        }
+        clearPackets();
+        backtrackedPlayer.clear();
     }
 
     private fun handlePackets() {
@@ -409,6 +452,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         }
         positions.clear()
         shouldDraw = false
+        ignoreWholeTick = true
     }
 
     private fun addBacktrackData(id: UUID, x: Double, y: Double, z: Double, time: Long) {
@@ -505,7 +549,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     private fun shouldBacktrack() =
         target?.let {
-            !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20
+            !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
     private fun reset() {
