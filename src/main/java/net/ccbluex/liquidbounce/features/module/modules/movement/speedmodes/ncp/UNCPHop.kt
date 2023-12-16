@@ -5,12 +5,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 
+import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 
 object UNCPHop : SpeedMode("UNCPHop") {
+
+    private var keyDown = false
 
     override fun onDisable() {
         airSpeedReset()
@@ -31,10 +34,13 @@ object UNCPHop : SpeedMode("UNCPHop") {
         if (isMoving) {
             if (mc.thePlayer.onGround) {
                 mc.thePlayer.jump()
-                strafe(0.03f)
+                strafe(0.035f)
+                mc.thePlayer.speedInAir = 0.035f
             } else {
-                mc.thePlayer.speedInAir = 0.065f
-                strafe(0.2f)
+                if (!keyDown) {
+                    strafe(0.228f)
+                    mc.thePlayer.speedInAir = 0.065f
+                }
             }
 
             // Prevent from getting flag while airborne/falling & fall damage
@@ -45,6 +51,16 @@ object UNCPHop : SpeedMode("UNCPHop") {
 
         } else {
             mc.thePlayer.stopXZ()
+        }
+    }
+
+    override fun onMove(event: MoveEvent) {
+        if (mc.gameSettings.keyBindLeft.isKeyDown || mc.gameSettings.keyBindRight.isKeyDown) {
+            keyDown = true
+            strafe(0.2f)
+            mc.thePlayer.speedInAir = 0.055f
+        } else {
+            keyDown = false
         }
     }
 }
