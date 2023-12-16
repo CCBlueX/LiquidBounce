@@ -115,6 +115,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         t.draw()
         RenderSystem.setShaderTexture(0, 0)
         RenderSystem.enableDepthTest()
+        RenderSystem.defaultBlendFunc()
         RenderSystem.enableBlend()
     }
 
