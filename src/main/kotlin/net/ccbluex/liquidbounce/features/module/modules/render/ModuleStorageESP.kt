@@ -31,7 +31,13 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.entity.*
+import net.minecraft.entity.Entity
+import net.minecraft.entity.vehicle.ChestBoatEntity
+import net.minecraft.entity.vehicle.ChestMinecartEntity
+import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import java.awt.Color
@@ -74,6 +80,11 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
                     .filter { (pos, type) -> type.color().a > 0 && type.shouldRender(pos) }
                     .groupBy {it.value}
 
+            val entitiesToRender =
+                world.entities
+                    .filter { categorizeEntity(it) != null }
+                    .groupBy { categorizeEntity(it)!! }
+
             renderEnvironmentForWorld(matrixStack) {
                 for ((type, blocks) in blocksToRender) {
                     val boxRenderer = BoxesRenderer()
@@ -93,6 +104,27 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
                     boxRenderer.draw(this, baseColor, outlineColor)
                 }
+
+                for ((type, entities) in entitiesToRender) {
+                    val boxRenderer = BoxesRenderer()
+
+                    val color = type.color()
+                    val baseColor = color.alpha(50)
+                    val outlineColor = color.alpha(100)
+
+                    for (entity in entities) {
+                        val vec3 = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
+                        val dimensions = entity.getDimensions(entity.pose)
+                        val d = dimensions.width.toDouble() / 2.0
+                        val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
+
+                        withPosition(vec3) {
+                            boxRenderer.drawBox(this, box, outline)
+                        }
+                    }
+
+                    boxRenderer.draw(this, baseColor, outlineColor)
+                }
             }
         }
 
@@ -103,6 +135,15 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+    }
+
+    fun categorizeEntity(entity: Entity): ChestType? {
+        return when (entity) {
+            // This includes any storage type minecart entity including ChestMinecartEntity
+            is StorageMinecartEntity -> ChestType.CHEST
+            is ChestBoatEntity -> ChestType.CHEST
+            else -> null
+        }
     }
 
     fun categorizeBlockEntity(block: BlockEntity): ChestType? {
