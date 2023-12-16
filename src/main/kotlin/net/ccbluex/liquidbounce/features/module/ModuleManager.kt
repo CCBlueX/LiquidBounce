@@ -77,6 +77,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoLeave,
             ModuleAutoPot,
             ModuleAutoSoup,
+            ModuleAutoHead,
             ModuleAutoWeapon,
             ModuleBadWifi,
             ModuleCriticals,

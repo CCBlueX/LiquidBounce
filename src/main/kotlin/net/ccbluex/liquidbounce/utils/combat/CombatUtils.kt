@@ -61,8 +61,8 @@ object CombatManager : Listenable {
     }
 
     val attackHandler = handler<AttackEvent> {
-        // 60 ticks = 3 seconds
-        duringCombat = 60
+        // 40 ticks = 2 seconds
+        duringCombat = 40
     }
 
     fun shouldPauseCombat(): Boolean = this.pauseCombat > 0
