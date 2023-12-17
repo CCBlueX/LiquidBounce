@@ -123,6 +123,20 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         var blockingStateEnforced = false
 
+        /**
+         * Visual blocking shows a blocking state, while not actually blocking.
+         * This is useful to make the blocking animation become much smoother.
+         */
+        var visualBlocking = false
+
+        fun makeSeemBlock() {
+            if (!enabled) {
+                return
+            }
+
+            visualBlocking = true
+        }
+
         fun startBlocking() {
             if (!enabled || player.isBlocking) {
                 return
@@ -140,6 +154,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                 interaction.interactItem(player, Hand.MAIN_HAND)
                 blockingStateEnforced = true
+                visualBlocking = true
             } else if (canBlock(player.offHandStack)) {
                 if (interactWith) {
                     interactWithFront()
@@ -147,10 +162,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                 interaction.interactItem(player, Hand.OFF_HAND)
                 blockingStateEnforced = true
+                visualBlocking = true
             }
         }
 
-        fun stopBlocking() {
+        fun stopBlocking(pauses: Boolean = false) {
+            if (!pauses) {
+                visualBlocking = false
+            }
+
             // We do not want the player to stop eating or else. Only when he blocks.
             if (player.isBlocking && !mc.options.useKey.isPressed) {
                 interaction.stopUsingItem(player)
@@ -439,6 +459,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity) {
         // Attack enemy according to the attack scheduler
         if (clickScheduler.goingToClick && checkIfReadyToAttack(chosenEntity)) {
+            AutoBlock.makeSeemBlock()
+
             prepareAttackEnvironment {
                 clickScheduler.clicks {
                     // On each click, we check if we are still ready to attack
@@ -467,7 +489,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
         } else {
             if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff)) {
-                AutoBlock.stopBlocking()
+                AutoBlock.stopBlocking(pauses = true)
             } else {
                 AutoBlock.startBlocking()
             }

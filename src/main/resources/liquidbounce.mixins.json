@@ -35,6 +35,7 @@
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinLivingEntity",
     "minecraft.entity.MixinPlayerEntity",
+    "minecraft.entity.MixinPlayerEntityAccessor",
     "minecraft.fluid.MixinFlowableFluid",
     "minecraft.gui.MixinChatInputSuggestor",
     "minecraft.gui.MixinChatScreen",
