@@ -81,7 +81,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
                 AutoBlock.INSTANCE.getVisualBlocking()) {
             return true;
         }
@@ -95,7 +97,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
                 AutoBlock.INSTANCE.getVisualBlocking()) {
             return Hand.MAIN_HAND;
         }
@@ -109,7 +113,9 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private int hookItemUseItem(AbstractClientPlayerEntity instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
                 AutoBlock.INSTANCE.getVisualBlocking()) {
             return 7200;
         }

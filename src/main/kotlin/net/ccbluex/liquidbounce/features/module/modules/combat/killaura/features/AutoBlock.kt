@@ -1,6 +1,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
@@ -17,6 +19,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.wallRange
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.SlotChangedStateC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
 import net.minecraft.util.hit.HitResult
@@ -85,6 +89,14 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         }
 
         blockingStateEnforced = false
+    }
+
+    val changeSlot = handler<PacketEvent> {
+        val packet = it.packet
+
+        if (packet is UpdateSelectedSlotC2SPacket) {
+            visualBlocking = false
+        }
     }
 
     private fun interactWithFront() {
