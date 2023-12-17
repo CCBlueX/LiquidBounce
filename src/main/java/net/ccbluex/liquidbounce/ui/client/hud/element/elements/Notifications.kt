@@ -53,7 +53,8 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
 
 }
 
-class Notification(private val message: String) {
+// Default delay set to 60F
+class Notification(private val message: String, private val delay: Float = 60F) {
     var x = 0F
     var textLength = 0
 
@@ -96,11 +97,11 @@ class Notification(private val message: String) {
                     fadeStep = width
                 }
 
-                stay = 60F
+                stay = delay
             }
 
             FadeState.STAY -> if (stay > 0)
-                stay = 0F
+                stay -= delta
             else
                 fadeState = FadeState.OUT
 
