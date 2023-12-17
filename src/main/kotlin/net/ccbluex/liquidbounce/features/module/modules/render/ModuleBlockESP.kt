@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 
 /**
  * BlockESP module
@@ -58,6 +59,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
+    private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable
@@ -83,10 +85,15 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                         if (blockState.isAir) {
                             continue
                         }
-                        val box = blockState.getOutlineShape(world, blockPos).boundingBox
+                        val outlineShape = blockState.getOutlineShape(world, blockPos)
+                        val boundingBox = if (outlineShape.isEmpty) {
+                            fullBox
+                        } else {
+                            outlineShape.boundingBox
+                        }
 
                         withPosition(vec3) {
-                            boxRenderer.drawBox(this, box, outline)
+                            boxRenderer.drawBox(this, boundingBox, outline)
                         }
                     }
                 }

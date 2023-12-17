@@ -222,14 +222,27 @@
                 console.log("Account " + i + ": " + accountType + " " + accountUsername);
 
                 let row = document.createElement('tr');
+                let avatar = document.createElement('td');
                 let type = document.createElement('td');
                 let name = document.createElement('td');
                 let button = document.createElement('td');
+
+                // If account has UUID, set avatar by UUID
+                // https://avatar.liquidbounce.net/avatar/<uuid>/32
+                // Otherwise, set default https://avatar.liquidbounce.net/avatar/MHF_Steve
+
+                if (accountProfile.getUuid() !== null) {
+                    avatar.innerHTML = "<img src='https://avatar.liquidbounce.net/avatar/" + accountProfile.getUuid() + "/20' width='20' height='20' alt='head' class='head'/>";
+                } else {
+                    // fix: when username, it does not take size argument on API
+                    avatar.innerHTML = "<img src='https://avatar.liquidbounce.net/avatar/" + accountUsername + "' width='20' height='20' alt='head' class='head'/>";
+                }
 
                 type.innerText = accountType;
                 name.innerText = accountUsername;
                 button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
 
+                row.appendChild(avatar);
                 row.appendChild(type);
                 row.appendChild(name);
                 row.appendChild(button);

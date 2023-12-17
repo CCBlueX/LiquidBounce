@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.render.shaders.OutlineShader;
@@ -145,6 +146,11 @@ public abstract class MixinWorldRenderer {
             return true;
         }
 
+        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive() &&
+                ModuleStorageESP.INSTANCE.categorizeEntity(entity) != null) {
+            return true;
+        }
+
         return instance.hasOutline(entity);
     }
 
@@ -155,6 +161,13 @@ public abstract class MixinWorldRenderer {
      */
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
     private int injectTeamColor(Entity instance) {
+        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive()) {
+            var categorizedEntity = ModuleStorageESP.INSTANCE.categorizeEntity(instance);
+            if (categorizedEntity != null) {
+                return categorizedEntity.getColor().invoke().toRGBA();
+            }
+        }
+
         if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive()) {
             final Color4b color = ModuleESP.INSTANCE.getColor(instance);
             return color.toRGBA();

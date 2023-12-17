@@ -111,6 +111,12 @@ object ChunkScanner : Listenable {
                 try {
                     val chunkUpdate = this.chunkUpdateQueue.take()
 
+                    if (mc.world == null) {
+                        this.chunkUpdateQueue.clear()
+                        Thread.sleep(1000L)
+                        continue
+                    }
+
                     synchronized(ChunkScanner) {
                         when (chunkUpdate) {
                             is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)

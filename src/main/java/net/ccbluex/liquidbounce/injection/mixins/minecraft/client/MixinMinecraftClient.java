@@ -22,8 +22,9 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideClient;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
@@ -212,8 +213,8 @@ public abstract class MixinMinecraftClient {
      */
     @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z", ordinal = 2))
     private boolean hookEnforcedBlockingState(KeyBinding instance) {
-        return (ModuleKillAura.INSTANCE.getEnabled() && ModuleKillAura.AutoBlock.INSTANCE.getEnabled()
-                && ModuleKillAura.AutoBlock.INSTANCE.getBlockingStateEnforced()) || instance.isPressed();
+        return (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled()
+                && AutoBlock.INSTANCE.getBlockingStateEnforced()) || instance.isPressed();
     }
 
     /**

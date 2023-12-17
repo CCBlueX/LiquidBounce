@@ -70,6 +70,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Nullable
     public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
 
+    @Shadow public abstract void tick();
+
     /**
      * Hook anti levitation module
      */
