@@ -319,7 +319,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         val player = mc.thePlayer ?: return
 
         if (mode == "Jump" && hasReceivedVelocity) {
-            if (!mc.gameSettings.keyBindJump.isKeyDown && nextInt(endExclusive = 100) < chance && shouldJump() && player.isSprinting && player.onGround && player.hurtTime == 9) {
+            if (!player.isJumping && nextInt(endExclusive = 100) < chance && shouldJump() && player.isSprinting && player.onGround && player.hurtTime == 9) {
                 player.jump()
                 limitUntilJump = 0
             }
