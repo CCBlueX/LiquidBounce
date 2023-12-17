@@ -59,7 +59,7 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
 
         val fullHealth = player.health + player.absorptionAmount
         if (fullHealth < max(health, healthToIgnoreRegen) && headSlot != null && !isInInventoryScreen) {
-            if (player.hasStatusEffect(StatusEffects.REGENERATION) || fullHealth < healthToIgnoreRegen) {
+            if (player.hasStatusEffect(StatusEffects.REGENERATION) || fullHealth >= healthToIgnoreRegen) {
                 return@repeatable
             }
 
