@@ -5,12 +5,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.script.api.global.Chat
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -19,6 +23,10 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S12PacketEntityVelocity
+import net.minecraft.util.MathHelper.cos
+import net.minecraft.util.MathHelper.sin
+import net.minecraft.util.Vec3
+import java.awt.Color
 import kotlin.random.Random
 
 object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
@@ -26,6 +34,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private var playerTicks = 0
     private var smartTick = 0
     private var cooldownTick = 0
+
+    // Condition to confirm
     private var confirmTick = false
     private var confirmMove = false
 
@@ -64,10 +74,15 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
     private val lookThreshold by FloatValue("LookThreshold", 0.5f, 0.1f..1f) { timerBoostMode == "SmartMove" }
 
+    // Mark Option
+    private val markMode by ListValue("Mark", arrayOf("Off", "Box", "Platform"), "Off") { timerBoostMode == "SmartMove" }
+    private val outline by BoolValue("Outline", false) { timerBoostMode == "SmartMove" && markMode == "Box" }
+
     // Optional
     private val resetOnlagBack by BoolValue("ResetOnLagback", false)
     private val resetOnKnockback by BoolValue("ResetOnKnockback", false)
     private val chatDebug by BoolValue("ChatDebug", true) { resetOnlagBack || resetOnKnockback }
+    private val notificationDebug by BoolValue("NotificationDebug", false) { resetOnlagBack || resetOnKnockback }
 
     private fun timerReset() {
         mc.timer.timerSpeed = 1f
@@ -84,6 +99,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         playerTicks = 0
     }
 
+    /**
+     * Attack event
+     */
     @EventTarget
     fun onAttack(event: AttackEvent) {
         if (event.targetEntity !is EntityLivingBase || shouldResetTimer()) {
@@ -124,6 +142,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         }
     }
 
+    /**
+     * Move event (SmartMove)
+     */
     @EventTarget
     fun onMove(event: MoveEvent) {
         if (timerBoostMode != "SmartMove") {
@@ -167,6 +188,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         }
     }
 
+    /**
+     * Update event
+     */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Randomize the timer & charged delay a bit, to bypass some AntiCheat
@@ -194,11 +218,44 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     }
 
     /**
+     * Render event (Mark)
+     */
+    @EventTarget
+    fun onRender3D(event: Render3DEvent) {
+        if (timerBoostMode.lowercase() == "smartmove") {
+            getNearestEntityInRange()?.let { nearbyEntity ->
+                val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
+                if (entityDistance <= maxRange && isLookingTowardsEntities(nearbyEntity)) {
+                    if (markMode == "Box") {
+                        drawEntityBox(nearbyEntity, Color(37, 126, 255, 70), outline)
+                    } else if (markMode != "Off") {
+                        drawPlatform(nearbyEntity, Color(37, 126, 255, 70))
+                    }
+                } else if (entityDistance <= maxRange) {
+                    if (markMode == "Box") {
+                        drawEntityBox(nearbyEntity, Color(220, 80, 80, 70), outline)
+                    } else if (markMode != "Off") {
+                        drawPlatform(nearbyEntity, Color(220, 80, 80, 70))
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * This check is useful to prevent player from changing speed while looking away
      * And prevent player from changing speed toward unintended entity/target while moving.
      */
     private fun isLookingTowardsEntities(entity: Entity): Boolean {
-        val lookVec = mc.thePlayer.lookVec.normalize()
+        val playerRotation = mc.thePlayer.rotationYawHead
+
+        // Synced lookVec with the player head rotation (To sync with killaura silent rotation)
+        val lookVec = Vec3(
+            -sin(playerRotation * (Math.PI.toFloat() / 180f)).toDouble(),
+            0.0,
+            cos(playerRotation * (Math.PI.toFloat() / 180f)).toDouble()
+        ).normalize()
+
         val playerPos = mc.thePlayer.positionVector.addVector(0.0, mc.thePlayer.eyeHeight.toDouble(), 0.0)
         val entityPos = entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
 
@@ -267,6 +324,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                     if (chatDebug) {
                         Chat.print("Lagback Received | Timer Reset")
                     }
+                    if (notificationDebug) {
+                        hud.addNotification(Notification("Lagback Received | Timer Reset", 1000F))
+                    }
                 }
             }
 
@@ -278,6 +338,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                     timerReset()
                     if (chatDebug) {
                         Chat.print("Knockback Received | Timer Reset")
+                    }
+                    if (notificationDebug) {
+                        hud.addNotification(Notification("Knockback Received | Timer Reset", 1000F))
                     }
                 }
             }
