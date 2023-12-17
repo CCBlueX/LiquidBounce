@@ -226,7 +226,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         override fun onChange(oldValue: Int, newValue: Int) =
             newValue.coerceAtLeast(minimum)
     }
-
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
 
     private val micronizedValue = BoolValue("Micronized", true) { !maxTurnSpeedValue.isMinimal() }
@@ -553,6 +552,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             var distance = thePlayer.getDistanceToEntityBox(entity)
+
             if (Backtrack.handleEvents()) {
                 val trackedDistance = Backtrack.getNearestTrackedDistance(entity)
 
@@ -560,6 +560,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     distance = trackedDistance
                 }
             }
+
             val entityFov = getRotationDifference(entity)
 
             if (distance <= maxRange && (fov == 180F || entityFov <= fov)) {
@@ -569,9 +570,29 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         // Sort targets by priority
         when (priority.lowercase()) {
-            "distance" -> targets.sortBy { thePlayer.getDistanceToEntityBox(it) } // Sort by distance
+            "distance" -> {
+                targets.sortBy {
+                    var result = 0.0
+
+                    Backtrack.runWithNearestTrackedDistance(it) {
+                        result = thePlayer.getDistanceToEntityBox(it) // Sort by distance
+                    }
+
+                    result
+                }
+            }
+
+            "direction" -> targets.sortBy {
+                var result = 0f
+
+                Backtrack.runWithNearestTrackedDistance(it) {
+                    result = getRotationDifference(it) // Sort by FOV
+                }
+
+                result
+            }
+
             "health" -> targets.sortBy { it.health } // Sort by health
-            "direction" -> targets.sortBy { getRotationDifference(it) } // Sort by FOV
             "livingtime" -> targets.sortBy { -it.ticksExisted } // Sort by existence
             "armor" -> targets.sortBy { it.totalArmorValue } // Sort by armor
             "hurtresistance" -> targets.sortBy { it.hurtResistantTime } // Sort by armor hurt time
@@ -582,27 +603,20 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     Potion.regeneration
                 ).amplifier else -1
             }
-
         }
 
         // Find best target
         for (entity in targets) {
             // Update rotations to current target
-            if (!updateRotations(entity)) {
-                var success = false
-                Backtrack.loopThroughBacktrackData(entity) {
-                    if (updateRotations(entity)) {
-                        success = true
-                        return@loopThroughBacktrackData true
-                    }
+            var success = false
 
-                    return@loopThroughBacktrackData false
-                }
+            Backtrack.runWithNearestTrackedDistance(entity) {
+                success = updateRotations(entity)
+            }
 
-                if (!success) {
-                    // when failed then try another target
-                    continue
-                }
+            if (!success) {
+                // when failed then try another target
+                continue
             }
 
             // Set target to current entity

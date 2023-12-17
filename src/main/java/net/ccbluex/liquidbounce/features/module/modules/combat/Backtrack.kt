@@ -12,9 +12,12 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
+import net.ccbluex.liquidbounce.utils.realX
+import net.ccbluex.liquidbounce.utils.realY
+import net.ccbluex.liquidbounce.utils.realZ
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -49,13 +52,16 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     val mode by object : ListValue("Mode", arrayOf("Legacy", "Modern"), "Modern") {
         override fun onChanged(oldValue: String, newValue: String) {
-            clearPackets();
-            backtrackedPlayer.clear();
+            clearPackets()
+            backtrackedPlayer.clear()
         }
     }
 
     // Legacy
-    private val legacyPos by ListValue("Caching mode", arrayOf("ClientPos", "ServerPos"), "ClientPos") { mode == "Legacy" }
+    private val legacyPos by ListValue("Caching mode",
+        arrayOf("ClientPos", "ServerPos"),
+        "ClientPos"
+    ) { mode == "Legacy" }
 
     // Modern
     private val style by ListValue("Style", arrayOf("Pulse", "Smooth"), "Smooth") { mode == "Modern" }
@@ -73,10 +79,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     // ESP
     private val esp by BoolValue("ESP", true, subjective = true) { mode == "Modern" }
-        private val rainbow by BoolValue("Rainbow", true, subjective = true) { mode == "Modern" && esp }
-        private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
-        private val green by IntegerValue("G", 255, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
-        private val blue by IntegerValue("B", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+    private val rainbow by BoolValue("Rainbow", true, subjective = true) { mode == "Modern" && esp }
+    private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+    private val green by IntegerValue("G", 255, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+    private val blue by IntegerValue("B", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
@@ -120,6 +126,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                             System.currentTimeMillis()
                         )
                     }
+
                     is S14PacketEntity -> {
                         if (legacyPos == "ServerPos") {
                             val entity = mc.theWorld?.getEntityByID(packet.entityId)
@@ -288,6 +295,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
         target = event.targetEntity
     }
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         when (mode.lowercase()) {
@@ -329,7 +337,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             "modern" -> {
-                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw || !esp )
+                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw || !esp)
                     return
 
                 val renderManager = mc.renderManager
@@ -384,11 +392,12 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             clearPackets(false)
     }
 
-    override fun onEnable() = reset()
+    override fun onEnable() =
+        reset()
 
     override fun onDisable() {
-        clearPackets();
-        backtrackedPlayer.clear();
+        clearPackets()
+        backtrackedPlayer.clear()
     }
 
     private fun handlePackets() {
@@ -542,6 +551,57 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
         entity.prevPosZ = prevZ
 
         entity.setPosition(entityPosition.xCoord, entityPosition.yCoord, entityPosition.zCoord)
+    }
+
+    fun runWithNearestTrackedDistance(entity: Entity, f: () -> Unit) {
+        if (entity !is EntityPlayer)
+            return
+
+        if (!handleEvents()|| mode == "Modern") {
+            f()
+
+            return
+        }
+
+        var backtrackDataArray = getBacktrackData(entity.uniqueID)?.toMutableList() ?: return
+
+        // Filter out negatives, sort by distance
+        backtrackDataArray = backtrackDataArray.sortedBy { (x, y, z, _) ->
+            runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
+                mc.thePlayer.getDistanceToBox(entity.hitBox)
+            }
+        }.toMutableList()
+
+        val (x, y, z, _) = backtrackDataArray.first()
+
+        runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
+            f()
+
+            null
+        }
+    }
+
+    private fun runWithSimulatedPastPosition(entity: Entity, vec3: Vec3, f: () -> Double?): Double? {
+        val entityPosition = entity.positionVector
+        val (prevX, prevY, prevZ) = Triple(entity.prevPosX, entity.prevPosY, entity.prevPosZ)
+
+        val (x, y, z) = Triple(vec3.xCoord, vec3.yCoord, vec3.zCoord)
+
+        entity.setPosition(x, y, z)
+        entity.prevPosX = x
+        entity.prevPosY = y
+        entity.prevPosZ = z
+
+        val result = f()
+
+        // Reset position
+        entity.prevPosX = prevX
+        entity.prevPosY = prevY
+        entity.prevPosZ = prevZ
+
+        entity.setPosition(entityPosition.xCoord, entityPosition.yCoord, entityPosition.zCoord)
+
+        return result
     }
 
     val color

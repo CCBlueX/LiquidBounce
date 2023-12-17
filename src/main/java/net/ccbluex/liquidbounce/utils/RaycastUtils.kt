@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.times
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 
 
@@ -34,14 +35,8 @@ object RaycastUtils : MinecraftInstance() {
         val entityLook = getVectorForRotation(yaw, pitch)
         val vec = eyePosition + (entityLook * blockReachDistance)
 
-        val entityList = mc.theWorld.getEntitiesInAABBexcluding(
-            renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(
-                entityLook.xCoord * blockReachDistance,
-                entityLook.yCoord * blockReachDistance,
-                entityLook.zCoord * blockReachDistance
-            ).expand(1.0, 1.0, 1.0)
-        ) {
-            it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith()
+        val entityList = mc.theWorld.getEntities(EntityLivingBase::class.java) {
+            it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != renderViewEntity
         }
 
         var pointedEntity: Entity? = null
