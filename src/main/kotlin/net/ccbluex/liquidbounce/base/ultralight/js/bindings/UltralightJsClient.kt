@@ -56,9 +56,9 @@ object UltralightJsClient {
          *
          * TODO: pull URL service from API instead of hard coding the url
          */
-        fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuidOrNull}?size=100"
+        fun getFaceUrl() = getFaceUrlByUUID(mc.session.uuidOrNull.toString())
 
-        fun getFaceUrlByUUID(uuid: String) = "https://crafatar.com/avatars/$uuid}?size=100"
+        fun getFaceUrlByUUID(uuid: String) = "https://avatar.liquidbounce.net/avatar/$uuid/100"
 
         /**
          * Get if an account is premium or cracked
