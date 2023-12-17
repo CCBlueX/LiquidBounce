@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
@@ -464,6 +463,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         val movedEntity = event.movedEntity
 
         if (target == null || movedEntity != currentTarget) return
+
+        updateHitable()
     }
 
     /**
@@ -471,7 +472,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      */
     private fun runAttack() {
         val target = target ?: return
-        var currentTarget = this.currentTarget ?: return
 
         val thePlayer = mc.thePlayer ?: return
         val theWorld = mc.theWorld ?: return
@@ -490,7 +490,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         updateHitable()
 
-        currentTarget = this.currentTarget ?: return
+        val currentTarget = this.currentTarget ?: return
 
         // Check if enemy is not hitable or check failrate
         if (!hitable || failHit || currentTarget.hurtTime > hurtTime) {
@@ -687,13 +687,13 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 ) && thePlayer.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
                     Criticals.delay
                 ) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb
-            ) thePlayer.onCriticalHit(target)
+            ) thePlayer.onCriticalHit(entity)
 
             // Enchant Effect
             if (EnchantmentHelper.getModifierForCreature(
-                    thePlayer.heldItem, currentTarget!!.creatureAttribute
+                    thePlayer.heldItem, entity.creatureAttribute
                 ) > 0f || fakeSharp
-            ) thePlayer.onEnchantmentCritical(currentTarget!!)
+            ) thePlayer.onEnchantmentCritical(entity)
         }
 
         // Start blocking after attack
@@ -813,11 +813,43 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             return
         }
 
-        val targetToCheck = raycastedEntity ?: currentTarget!!
+        val targetToCheck = raycastedEntity ?: currentTarget ?: return
 
         // If player is inside entity, automatic yes because the intercept below cannot check for that
         // Minecraft does the same, see #EntityRenderer line 353
         if (targetToCheck.hitBox.isVecInside(eyes)) {
+            return
+        }
+
+        var checkNormally = true
+
+        if (Backtrack.handleEvents()) {
+            Backtrack.loopThroughBacktrackData(targetToCheck) {
+                if (targetToCheck.hitBox.isVecInside(eyes)) {
+                    checkNormally = false
+                    return@loopThroughBacktrackData true
+                }
+
+                // Recreate raycast logic
+                val intercept = targetToCheck.hitBox.calculateIntercept(eyes,
+                    eyes + getVectorForRotation(currentRotation) * range.toDouble()
+                )
+
+                if (intercept != null) {
+                    // Is the entity box raycast vector visible? If not, check through-wall range
+                    hitable = isVisible(intercept.hitVec) || mc.thePlayer.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
+
+                    if (hitable) {
+                        checkNormally = false
+                        return@loopThroughBacktrackData true
+                    }
+                }
+
+                return@loopThroughBacktrackData false
+            }
+        }
+
+        if (!checkNormally) {
             return
         }
 
