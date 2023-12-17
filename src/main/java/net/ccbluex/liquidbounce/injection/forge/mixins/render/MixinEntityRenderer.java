@@ -25,6 +25,9 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.util.*;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -88,7 +91,7 @@ public abstract class MixinEntityRenderer {
                 if (!mc.gameSettings.debugCamEnable) {
                     BlockPos blockPos = new BlockPos(entity);
                     IBlockState blockState = mc.theWorld.getBlockState(blockPos);
-                    net.minecraftforge.client.ForgeHooksClient.orientBedCamera(mc.theWorld, blockPos, blockState, entity);
+                    ForgeHooksClient.orientBedCamera(mc.theWorld, blockPos, blockState, entity);
 
                     rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f, 0f, -1f, 0f);
                     rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1f, 0f, 0f);
@@ -124,8 +127,8 @@ public abstract class MixinEntityRenderer {
                 }
 
                 Block block = ActiveRenderInfo.getBlockAtEntityViewpoint(mc.theWorld, entity, partialTicks);
-                net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup event = new net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup((EntityRenderer) (Object) this, entity, block, partialTicks, yaw, pitch, roll);
-                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event);
+                EntityViewRenderEvent.CameraSetup event = new EntityViewRenderEvent.CameraSetup((EntityRenderer) (Object) this, entity, block, partialTicks, yaw, pitch, roll);
+                MinecraftForge.EVENT_BUS.post(event);
                 rotate(event.roll, 0f, 0f, 1f);
                 rotate(event.pitch, 1f, 0f, 0f);
                 rotate(event.yaw, 0f, 1f, 0f);
@@ -175,7 +178,7 @@ public abstract class MixinEntityRenderer {
             double d1 = d0;
             boolean flag = false;
             if (mc.playerController.extendedReach()) {
-                d0 = 6;
+                // d0 = 6;
                 d1 = 6;
             } else if (d0 > 3) {
                 flag = true;
@@ -195,8 +198,7 @@ public abstract class MixinEntityRenderer {
 
             pointedEntity = null;
             Vec3 vec33 = null;
-            float f = 1f;
-            List<Entity> list = mc.theWorld.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().addCoord(vec31.xCoord * d0, vec31.yCoord * d0, vec31.zCoord * d0).expand(f, f, f), Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith()));
+            List<Entity> list = mc.theWorld.getEntities(EntityLivingBase.class, Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith() && p_apply_1_ != entity));
             double d2 = d1;
 
             for (Entity entity1 : list) {
@@ -208,7 +210,7 @@ public abstract class MixinEntityRenderer {
                 Backtrack.INSTANCE.loopThroughBacktrackData(entity1, () -> {
                     boxes.add(entity1.getEntityBoundingBox().expand(f1, f1, f1));
                     return false;
-                });                
+                });
 
                 for (final AxisAlignedBB axisalignedbb : boxes) {
                     MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);

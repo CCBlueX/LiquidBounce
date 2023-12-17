@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.entity.Entity
 import net.minecraft.util.Vec3
 import java.util.*
 
@@ -51,16 +52,45 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         if (onClick && (clickTimer.hasTimePassed(150) || (!mc.gameSettings.keyBindAttack.isKeyDown && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
-
         val entity = mc.theWorld.loadedEntityList.filter {
-            isSelected(it, true)
+            val distanceCheck = Backtrack.getNearestTrackedDistance(it)
+
+            return@filter isSelected(it, true)
                 && thePlayer.canEntityBeSeen(it)
-                && thePlayer.getDistanceToEntityBox(it) <= range
+                && thePlayer.getDistanceToEntityBox(it) <= range || distanceCheck != 0.0 && distanceCheck <= range
                 && getRotationDifference(it) <= fov
-        }.minByOrNull { getRotationDifference(it) } ?: return
+        }.minByOrNull { mc.thePlayer.getDistanceToEntityBox(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
         if (!lock && isFaced(entity, range.toDouble())) return
+
+        val random = Random()
+
+        var shouldReturn = false
+
+        Backtrack.runWithNearestTrackedDistance(entity) {
+            shouldReturn = !findRotation(entity, random)
+        }
+
+        if (shouldReturn) {
+            return
+        }
+
+        // Jitter
+        // Some players do jitter on their mouses causing them to shake around. This is trying to simulate this behavior.
+        if (jitter) {
+            if (random.nextBoolean()) {
+                thePlayer.fixedSensitivityYaw += (random.nextGaussian() - 0.5f).toFloat()
+            }
+
+            if (random.nextBoolean()) {
+                thePlayer.fixedSensitivityPitch += (random.nextGaussian() - 0.5f).toFloat()
+            }
+        }
+    }
+
+    private fun findRotation(entity: Entity, random: Random): Boolean {
+        val thePlayer = mc.thePlayer ?: return false
 
         val entityPrediction = Vec3(entity.posX - entity.prevPosX,
             entity.posY - entity.prevPosY,
@@ -83,10 +113,9 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
                 predict = true,
                 lookRange = range,
                 attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f
-            ) ?: return
+            ) ?: return false
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
-
         val rotationDiff = getRotationDifference(playerRotation, destinationRotation)
 
         // is enemy visible to player on screen. Fov is about to be right with that you can actually see on the screen. Still not 100% accurate, but it is fast check.
@@ -96,7 +125,6 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
             turnSpeed
         }
 
-        val random = Random()
         val gaussian = random.nextGaussian()
 
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
@@ -104,16 +132,6 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
         rotation.toPlayer(thePlayer)
 
-        // Jitter
-        // Some players do jitter on their mouses causing them to shake around. This is trying to simulate this behavior.
-        if (jitter) {
-            if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityYaw += (random.nextGaussian() - 0.5f).toFloat()
-            }
-
-            if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityPitch += (random.nextGaussian() - 0.5f).toFloat()
-            }
-        }
+        return true
     }
 }
