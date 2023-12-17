@@ -85,12 +85,15 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                         if (blockState.isAir) {
                             continue
                         }
-                        val box = runCatching {
-                            blockState.getOutlineShape(world, blockPos)?.boundingBox
-                        }.getOrNull() ?: fullBox
+                        val outlineShape = blockState.getOutlineShape(world, blockPos)
+                        val boundingBox = if (outlineShape.isEmpty) {
+                            fullBox
+                        } else {
+                            outlineShape.boundingBox
+                        }
 
                         withPosition(vec3) {
-                            boxRenderer.drawBox(this, box, outline)
+                            boxRenderer.drawBox(this, boundingBox, outline)
                         }
                     }
                 }
