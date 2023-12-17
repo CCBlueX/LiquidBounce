@@ -3,8 +3,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
@@ -31,6 +29,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
     private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20)
     private val pauseOnFlag by boolean("PauseOfFlag", true)
     private val pauseAfterTick by int("PauseAfterTick", 0, 0..100)
+    private val forceGround by boolean("ForceGround", false)
 
     private var ticksToSkip = 0
     private var tickBalance = 0f
@@ -75,6 +74,9 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
             .mapIndexed { index, tick -> index to tick }
             .filter { (_, tick) ->
                 tick.position.distanceTo(nearbyEnemy.pos) <= rangeToAttack
+            }
+            .filter { (_, tick) ->
+                !forceGround || tick.onGround
             }
 
         val criticalTick = possibleTicks
@@ -137,7 +139,8 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
             tickBuffer += TickData(
                 simulatedPlayer.pos,
                 simulatedPlayer.fallDistance,
-                simulatedPlayer.velocity
+                simulatedPlayer.velocity,
+                simulatedPlayer.onGround
             )
         }
     }
@@ -166,6 +169,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         val position: Vec3d,
         val fallDistance: Float,
         val velocity: Vec3d,
+        val onGround: Boolean
     )
 
 }
