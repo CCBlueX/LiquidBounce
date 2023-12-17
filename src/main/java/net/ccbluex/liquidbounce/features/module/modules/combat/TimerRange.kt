@@ -34,6 +34,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private var playerTicks = 0
     private var smartTick = 0
     private var cooldownTick = 0
+
+    // Condition to confirm
     private var confirmTick = false
     private var confirmMove = false
 
