@@ -37,7 +37,10 @@ class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float,
 class DeathEvent : Event()
 
 @Nameable("playerTick")
-class PlayerTickEvent : Event()
+class PlayerTickEvent : CancellableEvent()
+
+@Nameable("playerPostTick")
+class PlayerPostTickEvent : Event()
 
 @Nameable("playerMovementTick")
 class PlayerMovementTickEvent : Event()

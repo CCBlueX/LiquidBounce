@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -85,7 +85,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         return mutableList.toTypedArray()
     }
 
-    val updateHandler = handler<PlayerTickEvent> {
+    val updateHandler = handler<PlayerPostTickEvent> {
         if (player.x == lastPosX && player.y == lastPosY && player.z == lastPosZ) {
             return@handler
         }

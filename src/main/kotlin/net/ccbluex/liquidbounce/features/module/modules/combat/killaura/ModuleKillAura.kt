@@ -17,12 +17,9 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -30,15 +27,22 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.FailSwing.dealWithFakeSwing
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.TickBase
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.combat.*
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
@@ -51,22 +55,15 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
-import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
-import net.minecraft.util.UseAction
-import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
-import org.apache.commons.lang3.RandomUtils
-import org.apache.commons.lang3.tuple.MutablePair
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -81,10 +78,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val clickScheduler = tree(ClickScheduler(this, true))
 
     // Range
-    private val range by float("Range", 4.2f, 1f..8f)
+    internal val range by float("Range", 4.2f, 1f..8f)
     private val scanExtraRange by float("ScanExtraRange", 3.0f, 0.0f..7.0f)
 
-    private val wallRange by float("WallRange", 3f, 0f..8f).listen {
+    internal val wallRange by float("WallRange", 3f, 0f..8f).listen {
         if (it > range) {
             range
         } else {
@@ -93,7 +90,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     // Target
-    private val targetTracker = tree(TargetTracker())
+    val targetTracker = tree(TargetTracker())
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
@@ -106,184 +103,28 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Bypass techniques
     internal val swing by boolean("Swing", true)
-    internal val keepSprint by boolean("KeepSprint", true)
-    internal val unsprintOnCrit by boolean("UnsprintOnCrit", true)
+    private val keepSprint by boolean("KeepSprint", true)
     private val attackShielding by boolean("AttackShielding", false)
 
-    internal val whileUsingItem by boolean("WhileUsingItem", true)
-    internal val whileBlocking by boolean("WhileBlocking", true)
-
-    object AutoBlock : ToggleableConfigurable(this, "AutoBlocking", false) {
-
-        val tickOff by int("TickOff", 0, 0..5)
-        val tickOn by int("TickOn", 0, 0..5)
-        val onScanRange by boolean("OnScanRange", true)
-        val interactWith by boolean("InteractWith", true)
-        val onlyWhenInDanger by boolean("OnlyWhenInDanger", true)
-
-        var blockingStateEnforced = false
-
-        fun startBlocking() {
-            if (!enabled || player.isBlocking) {
-                return
-            }
-
-            if (onlyWhenInDanger && !isInDanger()) {
-                stopBlocking()
-                return
-            }
-
-            if (canBlock(player.mainHandStack)) {
-                if (interactWith) {
-                    interactWithFront()
-                }
-
-                interaction.interactItem(player, Hand.MAIN_HAND)
-                blockingStateEnforced = true
-            } else if (canBlock(player.offHandStack)) {
-                if (interactWith) {
-                    interactWithFront()
-                }
-
-                interaction.interactItem(player, Hand.OFF_HAND)
-                blockingStateEnforced = true
-            }
-        }
-
-        fun stopBlocking() {
-            // We do not want the player to stop eating or else. Only when he blocks.
-            if (player.isBlocking && !mc.options.useKey.isPressed) {
-                interaction.stopUsingItem(player)
-            }
-
-            blockingStateEnforced = false
-        }
-
-        private fun interactWithFront() {
-            // Raycast using the current rotation and find a block or entity that should be interacted with
-            val rotationToTheServer = RotationManager.serverRotation
-
-            val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
-                when (raycast) {
-                    TRACE_NONE -> false
-                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                    TRACE_ALL -> true
-                }
-            })
-
-            if (entity != null) {
-                // Interact with entity
-                // Check if it makes use to interactAt the entity
-                // interaction.interactEntityAtLocation()
-                interaction.interactEntity(player, entity, Hand.MAIN_HAND)
-                return
-            }
-
-            val hitResult = raycast(range.toDouble(), rotationToTheServer, includeFluids = false) ?: return
-
-            if (hitResult.type != HitResult.Type.BLOCK) {
-                return
-            }
-
-            // Interact with block
-            interaction.interactBlock(player, Hand.MAIN_HAND, hitResult)
-        }
-
-        private fun canBlock(itemStack: ItemStack) =
-            itemStack.item?.getUseAction(itemStack) == UseAction.BLOCK
-
-        private fun isInDanger() = targetTracker.enemies().any { target ->
-            facingEnemy(fromEntity = target, toEntity = player, rotation = target.rotation, range = range.toDouble(),
-                wallsRange = wallRange.toDouble())
-        }
-
-    }
+    private val whileUsingItem by boolean("WhileUsingItem", true)
+    private val whileBlocking by boolean("WhileBlocking", true)
 
     init {
         tree(AutoBlock)
+        tree(TickBase)
     }
 
-    private val raycast by enumChoice("Raycast", TRACE_ALL, values())
+    internal val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
     private val failRate by int("FailRate", 0, 0..100)
 
-    private object FailSwing : ToggleableConfigurable(this, "FailSwing", false) {
-
-        /**
-         * Additional range for fail swing to work
-         */
-        val additionalRange by float("AdditionalRange", 2f, 0f..10f)
-
-        suspend fun Sequence<*>.dealWithFakeSwing(target: Entity?) {
-            if (!enabled) {
-                return
-            }
-
-            val range = range + additionalRange
-            val entity = target ?: world.findEnemy(0f..range) ?: return
-
-            if (entity.isRemoved || entity.boxedDistanceTo(player) > range) {
-                return
-            }
-
-            if (clickScheduler.goingToClick) {
-                prepareAttackEnvironment {
-                    clickScheduler.clicks {
-                        if (swing) {
-                            player.swingHand(Hand.MAIN_HAND)
-                        } else {
-                            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
-                        }
-                        true
-                    }
-                }
-            }
-        }
-
-    }
-
     init {
         tree(FailSwing)
-    }
-
-    private object NotifyWhenFail : ToggleableConfigurable(this, "NotifyWhenFail", false) {
-        val mode = choices("Mode", Box, arrayOf(Box, Sound))
-
-        object Box : Choice("Box") {
-            override val parent: ChoiceConfigurable
-                get() = mode
-
-            val fadeSeconds by int("FadeSeconds", 4, 1..10)
-
-            val color by color("Color", Color4b(255, 179, 72, 255))
-            val colorRainbow by boolean("Rainbow", false)
-        }
-
-        object Sound : Choice("Sound") {
-            override val parent: ChoiceConfigurable
-                get() = mode
-
-            val volume by float("Volume", 50f, 0f..100f)
-
-            object NoPitchRandomization : ToggleableConfigurable(ModuleKillAura, "NoPitchRandomization", false) {
-                val pitch by float("Pitch", 0.8f, 0f..2f)
-            }
-
-            init {
-                tree(NoPitchRandomization)
-            }
-        }
-    }
-
-    init {
         tree(NotifyWhenFail)
     }
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
-
-    private val boxFadeSeconds
-        get() = 50 * NotifyWhenFail.Box.fadeSeconds
+    private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     override fun disable() {
         targetTracker.cleanup()
@@ -291,16 +132,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         AutoBlock.stopBlocking()
     }
 
-    private var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
+    private var renderTarget: Entity? = null
 
-    private var renderTarget: Entity? = null;
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
         renderTarget(matrixStack, event.partialTicks)
-
-
         renderFailedHits(matrixStack)
     }
 
@@ -308,43 +146,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val target = renderTarget ?: return
         renderEnvironmentForWorld(matrixStack) {
             targetRenderer.render(this, target, partialTicks)
-        }
-    }
-
-    private fun renderFailedHits(matrixStack: MatrixStack) {
-        if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !NotifyWhenFail.Box.isActive)) {
-            failedHits.clear()
-            return
-        }
-
-        failedHits.forEach { it.setRight(it.getRight() + 1) }
-        failedHits = failedHits.filter { it.right <= boxFadeSeconds } as ArrayList<MutablePair<Vec3d, Long>>
-
-        val markedBlocks = failedHits
-
-        val base = if (NotifyWhenFail.Box.colorRainbow) rainbow() else NotifyWhenFail.Box.color
-
-        val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
-
-        renderEnvironmentForWorld(matrixStack) {
-            for ((pos, opacity) in markedBlocks) {
-                val vec3 = Vec3(pos)
-
-                val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
-
-                val baseColor = base.alpha(fade)
-                val outlineColor = base.alpha(fade)
-
-                withPosition(vec3) {
-                    withColor(baseColor) {
-                        drawSolidBox(box)
-                    }
-
-                    withColor(outlineColor) {
-                        drawOutlinedBox(box)
-                    }
-                }
-            }
         }
     }
 
@@ -439,6 +240,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity) {
         // Attack enemy according to the attack scheduler
         if (clickScheduler.goingToClick && checkIfReadyToAttack(chosenEntity)) {
+            AutoBlock.makeSeemBlock()
+
             prepareAttackEnvironment {
                 clickScheduler.clicks {
                     // On each click, we check if we are still ready to attack
@@ -467,7 +270,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
         } else {
             if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff)) {
-                AutoBlock.stopBlocking()
+                AutoBlock.stopBlocking(pauses = true)
             } else {
                 AutoBlock.startBlocking()
             }
@@ -534,7 +337,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      * This means, we make sure we are not blocking, we are not using another item,
      * and we are not in an inventory screen depending on the configuration.
      */
-    private suspend fun Sequence<*>.prepareAttackEnvironment(attack: () -> Unit) {
+    internal suspend fun Sequence<*>.prepareAttackEnvironment(attack: () -> Unit) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
@@ -612,34 +415,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // reset cooldown
         player.resetLastAttackedTicks()
-    }
-
-    private fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
-        if (!NotifyWhenFail.enabled) {
-            return
-        }
-
-        when (NotifyWhenFail.mode.activeChoice) {
-            NotifyWhenFail.Box -> {
-                val centerDistance = entity.box.center.subtract(player.eyes).length()
-                val boxSpot = player.eyes.add(rotation.rotationVec.multiply(centerDistance))
-
-                failedHits.add(MutablePair(boxSpot, 0L))
-            }
-
-            NotifyWhenFail.Sound -> {
-                // Maybe a custom sound would be better
-                val pitch = if (NotifyWhenFail.Sound.NoPitchRandomization.enabled) {
-                    NotifyWhenFail.Sound.NoPitchRandomization.pitch
-                } else {
-                    RandomUtils.nextFloat(0f, 2f)
-                }
-
-                world.playSound(player, player.x, player.y, player.z, SoundEvents.UI_BUTTON_CLICK.value(),
-                    player.soundCategory, NotifyWhenFail.Sound.volume / 100f, pitch
-                )
-            }
-        }
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {

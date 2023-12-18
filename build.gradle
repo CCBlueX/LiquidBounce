@@ -23,10 +23,11 @@ plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
-    id 'org.jlleitschuh.gradle.ktlint' version '12.0.2'
+    id 'org.jlleitschuh.gradle.ktlint' version '12.0.3'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
     id "io.gitlab.arturbosch.detekt" version "1.23.4"
     id "com.github.node-gradle.node" version "7.0.1"
+    id 'org.jetbrains.dokka' version '1.9.10'
 }
 
 ktlint {
@@ -88,7 +89,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
-    implementation "com.viaversion:viaversion:4.8.1"
+    implementation "com.viaversion:viaversion:4.9.2"
     implementation "net.raphimc:ViaLoader:2.2.12"
 
     // Recommended mods (on IDE)

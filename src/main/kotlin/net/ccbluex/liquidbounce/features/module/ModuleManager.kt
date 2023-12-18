@@ -23,9 +23,12 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.TickBase
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
@@ -41,6 +44,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNa
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
@@ -76,6 +80,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoLeave,
             ModuleAutoPot,
             ModuleAutoSoup,
+            ModuleAutoHead,
             ModuleAutoWeapon,
             ModuleBadWifi,
             ModuleCriticals,
@@ -83,7 +88,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleKillAura,
             ModulePerfectHit,
             ModuleSuperKnockback,
-            ModuleTickBase,
             ModuleTimerRange,
             ModuleTrigger,
             ModuleVelocity,
@@ -115,6 +119,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleDankBobbing,
             ModuleDerp,
             ModuleSkinDerp,
+            ModuleHandDerp,
 
             // Misc
             ModuleAntiBot,
@@ -265,7 +270,13 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     /**
      * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
      */
+    @JvmName("getCategories")
+    @RequiredByScript
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+
+    @JvmName("getModuleByName")
+    @RequiredByScript
+    fun getModuleByName(module: String) = find { it.name.equals(module, true) }
 
     operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }
 
