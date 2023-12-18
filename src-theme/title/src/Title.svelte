@@ -9,68 +9,89 @@
     import ButtonWrapperLeft from "../../shared_res/src/menus/buttons/ButtonWrapperLeft.svelte";
     import ButtonWrapperRight from "../../shared_res/src/menus/buttons/ButtonWrapperRight.svelte";
 
+    import { listen } from "../../shared_res/src/client/ws.svelte";
+    import { getSession, getLocation, openScreen, redirect, browse, exitClient } from "../../shared_res/src/client/api.svelte";
+
+
     function openProxyManager() {
-        pages.open("proxymanager", screen);
+        redirect("proxymanager");
     }
 
     function openAltManager() {
-        pages.open("altmanager", screen);
+        redirect("altmanager");
     }
 
     function openSingleplayer() {
-        pages.open("singleplayer", screen);
+        openScreen("singleplayer").catch(console.error);
     }
 
     function openMultiplayer() {
-        pages.open("multiplayer", screen);
+        openScreen("multiplayer").catch(console.error);
     }
 
     function openRealms() {
-        pages.open("multiplayer_realms", screen);
+        openScreen("multiplayer_realms").catch(console.error);
     }
 
     function openCustomize() {
-        pages.open("customize", screen);
+        // Redirect to
+        redirect("customize");
     }
 
     function openOptions() {
-        pages.open("options", screen);
+        openScreen("options").catch(console.error);
     }
 
     function scheduleStop() {
-        client.exitClient();
+        exitClient();
     }
 
     function browseForum() {
-        utils.browse("https://forums.ccbluex.net");
+        browse("https://forums.ccbluex.net").catch(console.error);
     }
 
     function browseGitHub() {
-        utils.browse("https://github.com/CCBlueX");
+        browse("https://github.com/CCBlueX").catch(console.error);
     }
 
     function browseGuilded() {
-        utils.browse("https://guilded.gg/CCBlueX?r=pmbDp7K4");
+        browse("https://guilded.gg/CCBlueX?r=pmbDp7K4").catch(console.error);
     }
 
     function browseTwitter() {
-        utils.browse("https://twitter.com/CCBlueX");
+        browse("https://twitter.com/CCBlueX").catch(console.error);
     }
 
     function browseYouTube() {
-        utils.browse("https://youtube.com/CCBlueX");
+        browse("https://youtube.com/CCBlueX").catch(console.error);
     }
 
     function browseWebsite() {
-        utils.browse("https://liquidbounce.net");
+        browse("https://liquidbounce.net").catch(console.error);
     }
 
-    const username = client.getSessionService().getUsername();
-    const faceUrl = client.getSessionService().getFaceUrl();
-    const accountType = client.getSessionService().getAccountType();
-    const location = client.getSessionService().getLocation();
+    let username = "Loading...";
+    let faceUrl = "";
+    let accountType = "";
+    let location = "unknown";
 
-    const updateAvailable = client.isUpdateAvailable();
+    getSession().then(session => {
+        console.log(session);
+        username = session.username;
+        faceUrl = session.faceUrl;
+        accountType = session.accountType;
+    }).catch(console.error);
+
+    getLocation().then(ip => {
+        console.log(ip);
+        const country = ip.country;
+
+        // Lowercase country code
+        location = country.toLowerCase();
+    }).catch(console.error);
+
+    // todo: Check for updates
+    const updateAvailable = false;
 </script>
 
 <main>

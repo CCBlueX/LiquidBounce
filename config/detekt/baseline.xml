@@ -16,7 +16,6 @@
     <ID>CyclomaticComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
-    <ID>CyclomaticComplexMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
@@ -25,11 +24,6 @@
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
-    <ID>EmptyFunctionBlock:ViewListener.kt$ViewListener${}</ID>
-    <ID>EmptyFunctionBlock:ViewLoadListener.kt$ViewLoadListener${}</ID>
-    <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _directlyCallEvent(event: Event)</ID>
-    <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _fireViewClose(): Boolean</ID>
-    <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _unregisterEvents()</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
@@ -42,11 +36,10 @@
     <ID>LongMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>LongMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
-    <ID>LongMethod:CpuViewRenderer.kt$CpuViewRenderer$override fun render(view: UltralightView, context: DrawContext)</ID>
     <ID>LongMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
-    <ID>LongMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
+    <ID>LongMethod:SessionRestApi.kt$private fun RestNode.setupAltManagerRestApi()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
@@ -70,8 +63,9 @@
     <ID>MaxLineLength:CommandItemRename.kt$CommandItemRename$mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))</ID>
     <ID>MaxLineLength:ConfigSystem.kt$ConfigSystem$)</ID>
     <ID>MaxLineLength:Cosmetics.kt$Cosmetics$*</ID>
-    <ID>MaxLineLength:GlfwInputAdapter.kt$GlfwInputAdapter$.</ID>
-    <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.60"</ID>
+    <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
+    <ID>MaxLineLength:HttpConductor.kt$HttpConductor$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
+    <ID>MaxLineLength:HttpResponseUtil.kt$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
     <ID>MaxLineLength:LineSegment.kt$LineSegment$class</ID>
     <ID>MaxLineLength:LiquidBounce.kt$LiquidBounce$*</ID>
     <ID>MaxLineLength:Listenable.kt$// We store our sequence in this variable. That can be done because our variable will survive the scope of this function</ID>
@@ -114,6 +108,7 @@
     <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$return item is BowItem &amp;&amp; player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem</ID>
     <ID>MaxLineLength:ModuleVehicleFly.kt$ModuleVehicleFly$vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)</ID>
     <ID>MaxLineLength:ModuleVelocity.kt$ModuleVelocity$if</ID>
+    <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
     <ID>MaxLineLength:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
     <ID>MaxLineLength:Region.kt$Region$return pos.from.x >= this.from.x &amp;&amp; pos.to.x &lt;= this.to.x &amp;&amp; pos.from.y >= this.from.y &amp;&amp; pos.to.y &lt;= this.to.y &amp;&amp; pos.from.z >= this.from.z &amp;&amp; pos.to.z &lt;= this.to.z</ID>
     <ID>MaxLineLength:Region.kt$Region$return pos.x >= this.from.x &amp;&amp; pos.x &lt; this.to.x &amp;&amp; pos.y >= this.from.y &amp;&amp; pos.y &lt; this.to.y &amp;&amp; pos.z >= this.from.z &amp;&amp; pos.z &lt; this.to.z</ID>
@@ -122,13 +117,8 @@
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$// it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")</ID>
-    <ID>MaxLineLength:UltralightEngine.kt$UltralightEngine$get() = viewOverlays.find { it is ScreenViewOverlay &amp;&amp; mc.currentScreen == it.screen &amp;&amp; it.state == ViewOverlayState.VISIBLE }</ID>
-    <ID>MaxLineLength:UltralightJsClient.kt$UltralightJsClient.MinecraftSession$if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) &amp;&amp; mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Block : ListValueType</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Proxy : ListValueType</ID>
-    <ID>MaxLineLength:Value.kt$ValueType$BOOLEAN</ID>
-    <ID>MaxLineLength:ViewOverlay.kt$ScreenViewOverlay$class</ID>
-    <ID>MaxLineLength:ViewOverlay.kt$ViewOverlay$*</ID>
     <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion$o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier)</ID>
     <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion${ o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) }</ID>
     <ID>MaxLineLength:WeightedSwordItem.kt$WeightedSwordItem.Companion$return</ID>
@@ -140,7 +130,6 @@
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
-    <ID>PrintStackTrace:BrowserFileSystem.kt$BrowserFileSystem$e</ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
     <ID>PrintStackTrace:ModuleBlink.kt$ModuleBlink$e</ID>
     <ID>ReturnCount:ArmorComparator.kt$ArmorComparator$override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int</ID>
@@ -152,7 +141,6 @@
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
     <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*>) ?: emptyArray&lt;String>()).map { it as String } .toTypedArray())</ID>
-    <ID>SwallowedException:BrowserFileSystem.kt$BrowserFileSystem$e: InvalidPathException</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:ConfigSystem.kt$ConfigSystem$IllegalStateException()</ID>
@@ -176,14 +164,10 @@
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>TooManyFunctions:ModuleBlink.kt$ModuleBlink : Module</ID>
-    <ID>TooManyFunctions:UltralightEngine.kt$UltralightEngine</ID>
-    <ID>TooManyFunctions:ViewOverlay.kt$ViewOverlay</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
     <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
-    <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$mods: Int</ID>
-    <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$window: Long</ID>
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
     <ID>UnusedParameter:ModuleChestStealer.kt$ModuleChestStealer$screen: GenericContainerScreen</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
@@ -217,7 +201,6 @@
     <ID>UseRequire:LineSegment.kt$LineSegment$throw IllegalArgumentException("Phi must be in range $phiRange")</ID>
     <ID>UseRequire:NormalizedPlane.kt$NormalizedPlane.Companion$throw IllegalArgumentException("Points must not be on the same line")</ID>
     <ID>UseRequire:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
-    <ID>UseRequire:UltralightJsEvents.kt$UltralightJsEvents$throw IllegalArgumentException("$handler is not a function.")</ID>
     <ID>UseRequire:Value.kt$RangedValue$throw IllegalArgumentException()</ID>
     <ID>UseRequire:Value.kt$Value$throw IllegalArgumentException()</ID>
   </CurrentIssues>

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.socket.netty.NettyServer
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -45,7 +46,7 @@ import net.minecraft.client.gui.screen.world.SelectWorldScreen
 object IntegrationHandler : Listenable {
 
     // This is the URL that will be opened when the client is ready.
-    internal const val INTEGRATION_URL = "https://dl.ccbluex.net/test.html"
+    internal const val INTEGRATION_URL = "http://127.0.0.1:${NettyServer.PORT}/default/title/index.html"
 
     /**
      * This tab is always open and initialized. We keep this tab open to make it possible to draw on the screen,
