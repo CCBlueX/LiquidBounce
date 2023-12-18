@@ -88,7 +88,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
-    implementation "com.viaversion:viaversion:4.8.1"
+    implementation "com.viaversion:viaversion:4.9.2"
     implementation "net.raphimc:ViaLoader:2.2.12"
 
     // Recommended mods (on IDE)
