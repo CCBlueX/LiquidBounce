@@ -19,16 +19,31 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
 import net.minecraft.network.packet.c2s.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object JsNetworkUtil {
 
-    private val network
-        get() = mc.networkHandler!!
+    @JvmName("movePlayerGround")
+    fun movePlayerGround(onGround: Boolean) = network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(onGround))
 
-    fun sendPlayerMoveC2S(onGround: Boolean) = network.sendPacket(
-        PlayerMoveC2SPacket.OnGroundOnly(onGround)
-    )
+    @JvmName("movePlayerPosition")
+    fun movePlayerPosition(x: Double, y: Double, z: Double, onGround: Boolean) =
+        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround))
+
+    @JvmName("movePlayerPositionAndLook")
+    fun movePlayerPositionAndLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean) =
+        network.sendPacket(PlayerMoveC2SPacket.Full(x, y, z, yaw, pitch, onGround))
+
+    @JvmName("movePlayerLook")
+    fun movePlayerLook(yaw: Float, pitch: Float, onGround: Boolean) =
+        network.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, onGround))
+
+    @JvmName("sendChatMessage")
+    fun sendChatMessage(message: String) = network.sendChatMessage(message)
+
+    @JvmName("sendCommand")
+    fun sendCommand(command: String) = network.sendCommand(command)
 
 }

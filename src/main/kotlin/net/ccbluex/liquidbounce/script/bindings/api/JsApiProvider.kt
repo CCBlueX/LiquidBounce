@@ -6,6 +6,8 @@ import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
 import net.ccbluex.liquidbounce.script.bindings.globals.JsClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Hand
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3i
 import org.graalvm.polyglot.Value
 
 /**
@@ -21,6 +23,8 @@ object JsApiProvider {
         putMember("ParameterBuilder", ParameterBuilder)
         // -> Minecraft API
         // todo: test if this works
+        putMember("Vec3i", Vec3i::class.java)
+        putMember("BlockPos", BlockPos::class.java)
         putMember("Hand", Hand::class.java)
 
         // Variable bindings
@@ -57,5 +61,11 @@ object JsApiProvider {
 
     @JvmField
     val blockUtil = JsBlockUtil
+
+    @JvmField
+    val reflectionUtil = JsReflectionUtil
+
+    @JvmField
+    val movementUtil = JsMovementUtil
 
 }

@@ -25,8 +25,6 @@ import java.io.FileFilter
 
 object ScriptManager {
 
-    // todo: add fabricmc mappings nashorn remapper
-
     // Loaded scripts
     val loadedScripts = mutableListOf<Script>()
 
