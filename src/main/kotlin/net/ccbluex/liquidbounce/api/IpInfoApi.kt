@@ -21,16 +21,11 @@ package net.ccbluex.liquidbounce.api
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
-import io.netty.channel.ChannelFutureListener
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.ChannelOption
-import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.channel.*
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.http.*
-import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -63,6 +58,7 @@ object IpInfoApi {
                 localIpInfo = decode(it)
                 logger.info("Successfully requested IP info ${localIpInfo?.ip}")
             }.onFailure {
+                localIpInfo = null
                 logger.error("Failed to decode IP info", it)
             }
         }

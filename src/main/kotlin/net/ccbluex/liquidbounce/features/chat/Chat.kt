@@ -19,9 +19,13 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
+import com.mojang.authlib.exceptions.InvalidCredentialsException
+import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.client.Client
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -43,8 +47,9 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
     internal val client = Client()
 
-    var loggedIn = false
-    val retryChronometer = Chronometer()
+    private var isConnecting = false
+    private var loggedIn = false
+    private val retryChronometer = Chronometer()
 
     private fun createCommand() = CommandBuilder
         .begin("chat")
@@ -82,13 +87,20 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     }
 
     fun connectAsync() {
-        if (!enabled) {
+        if (!enabled || isConnecting) {
             return
         }
 
         // Async connecting using IO worker from Minecraft
         Util.getIoWorkerExecutor().execute {
-            client.connect()
+            isConnecting = true
+            runCatching {
+                client.connect()
+            }.onFailure {
+                onError(it)
+            }
+
+            isConnecting = false
         }
     }
 
@@ -100,7 +112,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         client.channel = null
     }
 
-    fun reconnect() {
+    private fun reconnect() {
         disconnect()
         connectAsync()
     }
@@ -141,7 +153,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         )
     }
 
-    internal fun onLogon() {
+    private fun onLogon() {
         notification(
             "LiquidChat",
             Text.translatable("liquidbounce.liquidchat.states.loggingIn"),
@@ -149,7 +161,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         )
     }
 
-    internal fun onLoggedIn() {
+    private fun onLoggedIn() {
         notification(
             "LiquidChat",
             Text.translatable("liquidbounce.liquidchat.states.loggedIn"),
@@ -157,12 +169,12 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         )
     }
 
-    internal fun onClientError(packet: ClientErrorPacket) {
+    private fun onClientError(packet: ClientErrorPacket) {
         // add translation support
         val message = when (packet.message) {
             "NotSupported" -> "This method is not supported!"
             "LoginFailed" -> "Login Failed!"
-            "NotLoggedIn" -> "You must be logged in to use the chat! Enable LiquidChat."
+            "NotLoggedIn" -> "You must be logged in to use the chat!"
             "AlreadyLoggedIn" -> "You are already logged in!"
             "MojangRequestMissing" -> "Mojang request missing!"
             "NotPermitted" -> "You are missing the required permissions!"
@@ -191,7 +203,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         player.sendMessage("§9§lLiquidChat §8▸ §7$message".asText(), false)
     }
 
-    internal fun onMessage(user: User, message: String) {
+    private fun onMessage(user: User, message: String) {
         EventManager.callEvent(ClientChatMessageEvent(user, message, ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT))
 
         // todo: remove when ultralight chat has been implemented
@@ -205,7 +217,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         player.sendMessage("§9§lLiquidChat §8▸ §9${user.name} §8▸§7 $message".asText(), false)
     }
 
-    internal fun onPrivateMessage(user: User, message: String) {
+    private fun onPrivateMessage(user: User, message: String) {
         EventManager.callEvent(ClientChatMessageEvent(user, message, ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT))
 
         // todo: remove when ultralight chat has been implemented
@@ -228,7 +240,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         logger.error("LiquidChat error", cause)
     }
 
-    internal fun onReceivedJwtToken(jwt: String) {
+    private fun onReceivedJwtToken(jwt: String) {
         notification(
             "LiquidChat",
             Text.translatable("liquidbounce.liquidchat.jwtTokenReceived"),
@@ -246,12 +258,12 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     /**
      * Request Mojang authentication details for login
      */
-    internal fun requestMojangLogin() = client.sendPacket(ServerRequestMojangInfoPacket())
+    private fun requestMojangLogin() = client.sendPacket(ServerRequestMojangInfoPacket())
 
     /**
      * Login to web socket via JWT
      */
-    internal fun loginViaJWT(token: String) {
+    private fun loginViaJWT(token: String) {
         onLogon()
         client.sendPacket(ServerLoginJWTPacket(token, allowMessages = true))
     }
@@ -264,19 +276,28 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             is ClientMojangInfoPacket -> {
                 onLogon()
 
-                try {
+                runCatching {
                     val sessionHash = packet.sessionHash
 
-                    mc.sessionService.joinServer(mc.session.profile, mc.session.accessToken, sessionHash)
+                    mc.sessionService.joinServer(mc.session.uuidOrNull, mc.session.accessToken, sessionHash)
                     client.sendPacket(
                         ServerLoginMojangPacket(
                             mc.session.username,
-                            mc.session.profile.id,
+                            mc.session.uuidOrNull,
                             allowMessages = true
                         )
                     )
-                } catch (throwable: Throwable) {
-                    onError(throwable)
+                }.onFailure { cause ->
+                    if (cause is InvalidCredentialsException) {
+                        notification(
+                            "LiquidChat",
+                            Text.translatable("liquidbounce.liquidchat.authenticationFailed"),
+                            NotificationEvent.Severity.ERROR
+                        )
+                        logger.warn("Failed authentication to LiquidChat")
+                    } else {
+                        onError(cause)
+                    }
                 }
                 return
             }
@@ -330,17 +351,8 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = MojangApi.getUUID(target)
-
-            if (incomingUUID.isBlank()) return ""
-
-            val uuid = StringBuffer(incomingUUID)
-                .insert(20, '-')
-                .insert(16, '-')
-                .insert(12, '-')
-                .insert(8, '-')
-
-            uuid.toString()
+            val incomingUUID = GameProfileRepository().fetchUuidByUsername(target)
+            incomingUUID.toString()
         }
     }
 

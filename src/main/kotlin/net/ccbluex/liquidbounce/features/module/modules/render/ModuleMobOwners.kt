@@ -61,7 +61,7 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
         } ?: return null
 
         return world.getPlayerByUuid(ownerId)
-            ?.let { OrderedText.styledForwardsVisitedString(it.entityName, Style.EMPTY) }
+            ?.let { OrderedText.styledForwardsVisitedString(it.nameForScoreboard, Style.EMPTY) }
             ?: getFromMojangApi(ownerId)
     }
 

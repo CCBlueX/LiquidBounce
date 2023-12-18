@@ -20,12 +20,12 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
 import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -35,7 +35,8 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.Monster
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -62,10 +63,10 @@ class EnemyConfigurable : Configurable("Enemies") {
     var players by boolean("Players", true)
 
     // Hostile mobs (like skeletons and zombies) should be considered as an enemy
-    var mobs by boolean("Mobs", true)
+    var hostile by boolean("Hostile", true)
 
-    // Animals (like cows, pigs and so on) should be considered as an enemy
-    var animals by boolean("Animals", false)
+    // Passive mobs (like cows, pigs and so on) should be considered as an enemy
+    var passive by boolean("Passive", false)
 
     // Invisible entities should be also considered as an enemy
     var invisible by boolean("Invisible", true)
@@ -78,10 +79,6 @@ class EnemyConfigurable : Configurable("Enemies") {
 
     // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
     var friends by boolean("Friends", false)
-
-    // Teammates should be also considered as enemy - same thing like Teams module -> might be replaced by this
-    // Todo: this is currently handled using the Teams module
-    var teamMates by boolean("TeamMates", false)
 
     init {
         ConfigSystem.root(this)
@@ -100,7 +97,7 @@ class EnemyConfigurable : Configurable("Enemies") {
 
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
-                if (attackable && !teamMates && ModuleTeams.isInClientPlayersTeam(suspect)) {
+                if (attackable && ModuleTeams.isInClientPlayersTeam(suspect)) {
                     return false
                 }
 
@@ -112,8 +109,7 @@ class EnemyConfigurable : Configurable("Enemies") {
 
                     if (suspect is AbstractClientPlayerEntity) {
                         if (ModuleFocus.enabled && (attackable || !ModuleFocus.combatFocus)
-                            && !ModuleFocus.isInFocus(suspect)
-                        ) {
+                            && !ModuleFocus.isInFocus(suspect)) {
                             return false
                         }
 
@@ -129,9 +125,9 @@ class EnemyConfigurable : Configurable("Enemies") {
 
                     return players
                 } else if (suspect is PassiveEntity) {
-                    return animals
-                } else if (suspect is MobEntity) {
-                    return mobs
+                    return passive
+                } else if (suspect is HostileEntity || suspect is Monster) {
+                    return hostile
                 }
             }
         }

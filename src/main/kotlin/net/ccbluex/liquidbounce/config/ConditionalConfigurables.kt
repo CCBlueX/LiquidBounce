@@ -92,14 +92,15 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
 /**
  * Allows to configure and manage modes
  */
-open class ChoiceConfigurable(
+class ChoiceConfigurable(
     @Exclude val module: Module,
     name: String,
-    var activeChoice: Choice,
+    activeChoiceCallback: (ChoiceConfigurable) -> Choice,
     choicesCallback: (ChoiceConfigurable) -> Array<Choice>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
     val choices: Array<Choice>
+    var activeChoice: Choice
     val translationBaseKey: String
         get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
@@ -108,6 +109,7 @@ open class ChoiceConfigurable(
 
     init {
         this.choices = choicesCallback(this)
+        this.activeChoice = activeChoiceCallback(this)
     }
 
     fun newState(state: Boolean) {

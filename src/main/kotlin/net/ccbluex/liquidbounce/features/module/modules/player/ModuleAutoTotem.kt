@@ -21,9 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
-import net.ccbluex.liquidbounce.utils.item.isInInventoryScreen
-import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -38,6 +36,10 @@ import net.minecraft.screen.slot.SlotActionType
 object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     val repeatable = repeatable {
+        if (!player.currentScreenHandler.isPlayerInventory) {
+            return@repeatable
+        }
+
         val offHandStack = player.offHandStack
 
         if (isItemValid(offHandStack)) {
@@ -58,7 +60,7 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
         interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
 
-        if (!isInInventoryScreen) {
+        if (canCloseMainInventory) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
     }

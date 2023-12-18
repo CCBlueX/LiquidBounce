@@ -32,6 +32,7 @@ import kotlin.random.Random
  */
 object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
+    private val sync by boolean("Sync", false)
     private val delay by int("Delay", 0, 0..20)
     private val hat by boolean("Hat", true)
     private val jacket by boolean("Jacket", true)
@@ -44,7 +45,7 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
     private var prevModelParts = emptySet<PlayerModelPart>()
 
     override fun enable() {
-        prevModelParts = mc.options.enabledPlayerModelParts
+        prevModelParts = mc.options.enabledPlayerModelParts.toSet()
     }
 
     override fun disable() {
@@ -52,7 +53,6 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
         for (modelPart in PlayerModelPart.values()) {
             mc.options.togglePlayerModelPart(modelPart, false)
         }
-
         // Enable all old model parts
         for (modelPart in prevModelParts) {
             mc.options.togglePlayerModelPart(modelPart, true)
@@ -60,27 +60,24 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
     }
 
     val repeatable = repeatable {
-        wait(delay)
-        if (hat) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
-        }
-        if (jacket) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
-        }
-        if (leftPants) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
-        }
-        if (rightPants) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
-        }
-        if (leftSleeve) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
-        }
-        if (rightSleeve) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
-        }
-        if (cape) {
-            mc.options.togglePlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
+        waitTicks(delay)
+        val partsMap = mapOf(
+            PlayerModelPart.HAT to hat,
+            PlayerModelPart.JACKET to jacket,
+            PlayerModelPart.LEFT_PANTS_LEG to leftPants,
+            PlayerModelPart.RIGHT_PANTS_LEG to rightPants,
+            PlayerModelPart.LEFT_SLEEVE to leftSleeve,
+            PlayerModelPart.RIGHT_SLEEVE to rightSleeve,
+            PlayerModelPart.CAPE to cape
+        )
+        for ((part, isEnabled) in partsMap) {
+            if (isEnabled) {
+                if (sync)
+                    mc.options.togglePlayerModelPart(part, !mc.options.isPlayerModelPartEnabled(part))
+                else
+                    mc.options.togglePlayerModelPart(part, Random.nextBoolean())
+
+            }
         }
     }
 }

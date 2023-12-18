@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
-    val modes = choices("Mode", Air) {
+    val modes = choices("Mode", { Air }) {
         arrayOf(
             Air
         )

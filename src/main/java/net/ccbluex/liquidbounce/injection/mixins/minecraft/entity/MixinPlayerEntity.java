@@ -20,24 +20,22 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
-import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
-import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
+import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Pair;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,7 +43,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(PlayerEntity.class)
 public abstract class MixinPlayerEntity extends MixinLivingEntity {
@@ -53,6 +50,8 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Shadow
     @Final
     private PlayerInventory inventory;
+
+    @Shadow public abstract void tick();
 
     /**
      * Hook player stride event
@@ -85,7 +84,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private float hookFixRotation(PlayerEntity entity) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null) {
+        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
             return entity.getYaw();
         }
 
@@ -118,37 +117,40 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @Inject(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
-    private void injectNoSlowBreak(BlockState block, CallbackInfoReturnable<Float> cir, float f) {
+    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
+    private boolean injectFatigueNoSlow(PlayerEntity instance, StatusEffect statusEffect) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this != MinecraftClient.getInstance().player) {
-            return;
+        if ((Object) this == MinecraftClient.getInstance().player &&
+                module.getEnabled() && module.getMiningFatigue() && statusEffect == StatusEffects.MINING_FATIGUE) {
+            return false;
         }
 
-        if (!module.getEnabled()) {
-            return;
+        return instance.hasStatusEffect(statusEffect);
+    }
+
+    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
+    private boolean injectWaterNoSlow(PlayerEntity instance, TagKey tagKey) {
+        ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
+        if ((Object) this == MinecraftClient.getInstance().player &&tagKey == FluidTags.WATER &&
+                module.getEnabled() && module.getWater()) {
+            return false;
         }
 
-        if (!module.getMiningFatigue() && this.hasStatusEffect(StatusEffects.MINING_FATIGUE)) {
-            float i = switch (this.getStatusEffect(StatusEffects.MINING_FATIGUE).getAmplifier()) {
-                case 0 -> 0.3F;
-                case 1 -> 0.09F;
-                case 2 -> 0.0027F;
-                default -> 8.1E-4F;
-            };
+        return instance.isSubmergedIn(tagKey);
+    }
 
-            f *= i;
+    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
+    private boolean injectOnAirNoSlow(PlayerEntity instance) {
+        ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
+        if ((Object) this == MinecraftClient.getInstance().player &&
+                module.getEnabled() && module.getOnAir()) {
+            return true;
         }
 
-        if (!module.getWater() && this.submergedInWater && !EnchantmentHelper.hasAquaAffinity((LivingEntity) (Object) this)) {
-            f /= 5.0F;
-        }
-
-        if (!module.getOnAir() && !this.isOnGround()) {
-            f /= 5.0F;
-        }
-
-        cir.setReturnValue(f);
+        return instance.isOnGround();
     }
 
     /**

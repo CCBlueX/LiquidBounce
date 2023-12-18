@@ -57,3 +57,9 @@ enum class EventState(val stateName: String) {
 }
 
 fun KClass<out Event>.name(): String = this.findAnnotation<Nameable>()!!.name
+
+/**
+ * Retrieves the name that the event is supposed to be associated with in JavaScript.
+ */
+val KClass<out Event>.eventName: String
+    get() = this.findAnnotation<Nameable>()!!.name

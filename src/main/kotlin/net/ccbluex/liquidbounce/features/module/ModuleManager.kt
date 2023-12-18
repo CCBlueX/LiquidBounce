@@ -19,22 +19,28 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.TickBase
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -73,6 +79,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoLeave,
             ModuleAutoPot,
             ModuleAutoSoup,
+            ModuleAutoHead,
             ModuleAutoWeapon,
             ModuleBadWifi,
             ModuleCriticals,
@@ -80,7 +87,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleKillAura,
             ModulePerfectHit,
             ModuleSuperKnockback,
-            ModuleTickBase,
             ModuleTimerRange,
             ModuleTrigger,
             ModuleVelocity,
@@ -96,7 +102,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleDisabler,
             ModuleForceUnicodeChat,
             ModuleGhostHand,
-            ModuleGodMode,
             ModuleKick,
             ModuleMoreCarry,
             ModuleNameCollector,
@@ -106,12 +111,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModulePortalMenu,
             ModuleResourceSpoof,
             ModuleSleepWalker,
+            ModuleSpoofer,
             ModuleVehicleOneHit,
 
             // Fun
             ModuleDankBobbing,
             ModuleDerp,
             ModuleSkinDerp,
+            ModuleHandDerp,
 
             // Misc
             ModuleAntiBot,
@@ -121,6 +128,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNameProtect,
             ModuleNotifier,
             ModuleSpammer,
+            ModuleAutoAccount,
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
@@ -155,6 +163,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSpeed,
             ModuleSprint,
             ModuleStep,
+            ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleFly,
@@ -195,6 +204,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleMobOwners,
             ModuleMurderMystery,
             ModuleAttackEffects,
+            ModuleNametags,
+            ModuleCombineMobs,
 
             // ModuleNametags,
             ModuleNoBob,
@@ -251,7 +262,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         addModule(module)
     }
 
-    fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
+    fun autoComplete(begin: String, args: List<String>, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
 

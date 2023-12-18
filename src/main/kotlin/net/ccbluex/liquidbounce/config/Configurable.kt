@@ -130,16 +130,21 @@ open class Configurable(
     protected fun items(name: String, default: MutableList<Item>) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
 
-    protected fun fonts(name: String, default: MutableList<Fonts.FontDetail>) =
+    protected fun fonts(name: String, default: MutableList<Fonts.FontInfo>) =
         value(name, default, ValueType.INVALID, ListValueType.FontDetail)
 
     protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: Choice, choices: Array<Choice>) =
-        ChoiceConfigurable(this, name, active) { choices }.apply { this@Configurable.value.add(this) }
+    protected fun choices(module: Module, name: String, active: Choice, choices: Array<Choice>) =
+        ChoiceConfigurable(module, name, { active }) { choices }.apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: Choice, choicesCallback: (ChoiceConfigurable) -> Array<Choice>) =
-        ChoiceConfigurable(this, name, active, choicesCallback).apply { this@Configurable.value.add(this) }
+    protected fun choices(
+        module: Module,
+        name: String,
+        activeCallback: (ChoiceConfigurable) -> Choice,
+        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+    ) = ChoiceConfigurable(module, name, activeCallback, choicesCallback).apply { this@Configurable.value.add(this) }
+
 
 }

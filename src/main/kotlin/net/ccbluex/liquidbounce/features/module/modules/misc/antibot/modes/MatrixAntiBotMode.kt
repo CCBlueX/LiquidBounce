@@ -1,0 +1,106 @@
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
+
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
+import java.util.*
+
+object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
+    override val parent: ChoiceConfigurable
+        get() = ModuleAntiBot.modes
+
+    private val suspectList = HashSet<UUID>()
+    private val botList = HashSet<UUID>()
+
+    val packetHandler = handler<PacketEvent> {
+        val packet = it.packet
+
+        if (packet is PlayerListS2CPacket) {
+            for (entry in packet.playerAdditionEntries) {
+                val profile = entry.profile ?: continue
+
+                if (entry.latency < 2 || profile.properties?.isEmpty == false || isGameProfileUnique(profile)) {
+                    continue
+                }
+
+                if (isADuplicate(profile)) {
+                    botList.add(entry.profileId)
+                    continue
+                }
+
+                suspectList.add(entry.profileId)
+            }
+        } else if (packet is PlayerRemoveS2CPacket) {
+            for (uuid in packet.profileIds) {
+                if (suspectList.contains(uuid)) {
+                    suspectList.remove(uuid)
+                }
+
+                if (botList.contains(uuid)) {
+                    botList.remove(uuid)
+                }
+            }
+        }
+    }
+
+    val repeatable = repeatable {
+        if (suspectList.isEmpty()) {
+            return@repeatable
+        }
+
+        for (entity in world.players) {
+            if (!suspectList.contains(entity.uuid)) {
+                continue
+            }
+
+            var armor: MutableIterable<ItemStack>? = null
+
+            if (!isFullyArmored(entity)) {
+                armor = entity.armorItems
+                waitTicks(1)
+            }
+
+            if ((isFullyArmored(entity) || updatesArmor(entity, armor)) && entity.gameProfile.properties.isEmpty) {
+                botList.add(entity.uuid)
+            }
+
+            suspectList.remove(entity.uuid)
+        }
+    }
+
+    private fun isFullyArmored(entity: PlayerEntity): Boolean {
+        return (0..3).all {
+            val stack = entity.inventory.getArmorStack(it)
+            stack.item is ArmorItem && stack.hasEnchantments()
+        }
+    }
+
+    /**
+     * Matrix spawns its bot with a random set of armor but then instantly and silently gets a new set,
+     * therefore somewhat tricking the client that the bot already had the new armor.
+     *
+     * With the help of at least 1 tick of waiting time, this function patches this "trick".
+     */
+    private fun updatesArmor(entity: PlayerEntity, prevArmor: MutableIterable<ItemStack>?): Boolean {
+        return prevArmor != entity.armorItems
+    }
+
+    override fun isBot(entity: PlayerEntity): Boolean {
+        return botList.contains(player.uuid)
+    }
+
+    override fun reset() {
+        suspectList.clear()
+        botList.clear()
+    }
+}

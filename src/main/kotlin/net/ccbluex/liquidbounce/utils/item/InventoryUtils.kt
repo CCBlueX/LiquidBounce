@@ -1,22 +1,49 @@
 package net.ccbluex.liquidbounce.utils.item
 
-import com.viaversion.viaversion.api.connection.UserConnection
+import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
 import com.viaversion.viaversion.api.type.Type
 import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
 import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
-import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
+import kotlin.math.abs
 
+/**
+ * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
+ */
+val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
+    val hotbarItems = (0 until 9).map { HotbarItemSlot(it) }
+    val offHandItem = listOf(OffHandSlot)
+    val inventoryItems = (0 until 27).map { InventoryItemSlot(it) }
+    val armorItems = (0 until 4).map { ArmorItemSlot(it) }
+
+    return@run hotbarItems + offHandItem + inventoryItems + armorItems
+}
+
+fun findClosestItem(items: Array<Item>): Int? {
+    return (0..8).filter { player.inventory.getStack(it).item in items }
+        .minByOrNull { abs(player.inventory.selectedSlot - it) }
+}
+
+fun findNonEmptySlotsInInventory(): List<ItemSlot> {
+    return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
+}
 
 fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = null): Int {
     if (screen == null) {
@@ -39,36 +66,35 @@ fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = n
 }
 
 /**
- * Sends an open inventory packet using ViaFabricPlus code. This is only for older versions.
+ * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions.
  */
 
-// https://github.com/FlorianMichael/ViaFabricPlus/blob/602d723945d011d7cd9ca6f4ed7312d85f9bdf36/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L118-L130
+// https://github.com/ViaVersion/ViaFabricPlus/blob/ecd5d188187f2ebaaad8ded0ffe53538911f7898/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L124-L130
 fun openInventorySilently() {
     if (InventoryTracker.isInventoryOpenServerSide) {
         return
     }
 
     runCatching {
-        val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
+        val isViaFabricPlusLoaded = FabricLoader.getInstance().isModLoaded("viafabricplus")
 
         if (!isViaFabricPlusLoaded) {
             return
         }
 
-        val localViaConnection = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
-
-        val viaConnection = mc.networkHandler?.connection?.channel?.attr(localViaConnection)?.get() ?: return
+        val viaConnection = Via.getManager().connectionManager.connections.firstOrNull() ?: return
 
         if (viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
-            viaConnection.channel?.eventLoop()?.submit {
-                val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_STATUS, viaConnection)
-                clientStatus.write(Type.VAR_INT, 2) // Open Inventory Achievement
+            val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_STATUS, viaConnection)
+            clientStatus.write(Type.VAR_INT, 2) // Open Inventory Achievement
 
-                runCatching {
-                    clientStatus.sendToServer(Protocol1_12To1_11_1::class.java)
-                }.onSuccess {
-                    InventoryTracker.isInventoryOpenServerSide = true
-                }
+            runCatching {
+                clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
+            }.onSuccess {
+                InventoryTracker.isInventoryOpenServerSide = true
+            }.onFailure {
+                chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
+                it.printStackTrace()
             }
         }
     }
@@ -81,43 +107,38 @@ inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
         openInventorySilently()
     }
 
-    if (closeInventory()) {
+    val shouldClose = closeInventory()
+
+    if (shouldClose) {
         mc.networkHandler?.sendPacket(CloseHandledScreenC2SPacket(0))
     }
 }
 
-fun clickHotbarOrOffhand(item: Int) {
+fun useHotbarSlotOrOffhand(item: HotbarItemSlot) {
+    // We assume whatever called this function passed the isHotBar check
     when (item) {
-        40 -> clickOffHand()
-        else -> clickHotbar(item)
+        OffHandSlot -> {
+            interactItem(Hand.OFF_HAND)
+        }
+
+        else -> {
+            interactItem(Hand.MAIN_HAND) {
+                SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, 1)
+            }
+        }
     }
 }
 
-private fun clickHotbar(item: Int) {
-    val player = mc.player!!
-    val network = mc.networkHandler!!
+fun interactItem(hand: Hand, preInteraction: () -> Unit = { }) {
+    val player = mc.player ?: return
+    val interaction = mc.interactionManager ?: return
 
-    if (item != player.inventory.selectedSlot) {
-        network.sendPacket(UpdateSelectedSlotC2SPacket(item))
-    }
+    preInteraction()
 
-    val interact = mc.interactionManager!!.interactItem(player, Hand.MAIN_HAND)
-
-    if (interact.shouldSwingHand()) {
-        player.swingHand(Hand.MAIN_HAND)
-    }
-
-    if (item != player.inventory.selectedSlot) {
-        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-    }
-}
-
-
-fun clickOffHand() {
-    val interact = mc.interactionManager!!.interactItem(mc.player!!, Hand.OFF_HAND)
-
-    if (interact.shouldSwingHand()) {
-        mc.player!!.swingHand(Hand.OFF_HAND)
+    interaction.interactItem(player, hand).let {
+        if (it.shouldSwingHand()) {
+            player.swingHand(hand)
+        }
     }
 }
 
@@ -133,12 +154,16 @@ var DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(Blocks.CAKE, Blocks.TNT, Blocks.SAND,
  * Configurable to configure the dynamic rotation engine
  */
 class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
-    internal val delay by intRange("Delay", 2..4, 0..20)
+    internal val startDelay by intRange("StartDelay", 1..2, 0..20)
+    internal val clickDelay by intRange("ClickDelay", 2..4, 0..20)
+    internal val closeDelay by intRange("CloseDelay", 1..2, 0..20)
     internal val invOpen by boolean("InvOpen", false)
     internal val noMove by boolean("NoMove", false)
+    internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
 
     val violatesNoMove
-        get() = noMove && mc.player?.moving == true
+        get() = noMove && (mc.player?.moving == true || mc.player?.input?.yAxisMovement != 0f ||
+            noRotation && !RotationManager.rotationMatchesPreviousRotation())
 }
 
 data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

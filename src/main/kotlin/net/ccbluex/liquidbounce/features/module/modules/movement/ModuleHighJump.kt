@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -80,7 +80,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         }
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
-            wait { 100 }
+            waitTicks(100)
             player.velocity.y = 0.0
             shouldGlide = true
         }

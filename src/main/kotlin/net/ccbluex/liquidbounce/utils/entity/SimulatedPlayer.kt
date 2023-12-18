@@ -16,10 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
+@file:Suppress("All")
+
 package net.ccbluex.liquidbounce.utils.entity
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -31,6 +36,9 @@ import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.block.*
 import net.minecraft.client.input.Input
+import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.client.world.ClientWorld
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffect
@@ -48,11 +56,13 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
+import net.minecraft.world.World
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
 
-@Suppress("LongParameterList")
+private const val STEP_HEIGHT = 0.5
+
 class SimulatedPlayer(
     private val player: PlayerEntity,
     var input: SimulatedPlayerInput,
@@ -63,7 +73,7 @@ class SimulatedPlayer(
     private val pitch: Float,
     private var sprinting: Boolean,
 
-    private var fallDistance: Float,
+    var fallDistance: Float,
     private var jumpingCooldown: Int,
     private var isJumping: Boolean,
     private var isFallFlying: Boolean,
@@ -77,6 +87,9 @@ class SimulatedPlayer(
     private var fluidHeight: Object2DoubleMap<TagKey<Fluid>>,
     private var submergedFluidTag: HashSet<TagKey<Fluid>>
 ) : PlayerSimulation {
+    private val world: World
+        get() = player.world!!
+
     companion object {
         fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {
             val player = mc.player!!
@@ -547,7 +560,77 @@ class SimulatedPlayer(
         return blockState.isOf(Blocks.LADDER) && blockState.get(LadderBlock.FACING) == state.get(TrapdoorBlock.FACING)
     }
 
-    private fun adjustMovementForSneaking(movement: Vec3d): Vec3d = movement
+    private fun adjustMovementForSneaking(movement: Vec3d): Vec3d {
+        var movement = movement
+        val isSelfMovement = true // (type == MovementType.SELF || type == MovementType.PLAYER)
+        val isFlying = false // abilities.isFlying
+
+        if (!isFlying && movement.y <= 0.0 && isSelfMovement && this.shouldClipAtLedge() && this.method_30263()) {
+            var d = movement.x
+            var e = movement.z
+            val f = 0.05
+            while (d != 0.0 && world.isSpaceEmpty(
+                    player,
+                    boundingBox.offset(d, -STEP_HEIGHT, 0.0)
+                )
+            ) {
+                if (d < 0.05 && d >= -0.05) {
+                    d = 0.0
+                    continue
+                }
+                if (d > 0.0) {
+                    d -= 0.05
+                    continue
+                }
+                d += 0.05
+            }
+            while (e != 0.0 && world.isSpaceEmpty(
+                    player,
+                    boundingBox.offset(0.0, -STEP_HEIGHT, e)
+                )
+            ) {
+                if (e < 0.05 && e >= -0.05) {
+                    e = 0.0
+                    continue
+                }
+                if (e > 0.0) {
+                    e -= 0.05
+                    continue
+                }
+                e += 0.05
+            }
+            while (d != 0.0 && e != 0.0 && world.isSpaceEmpty(
+                    player,
+                    boundingBox.offset(d, -STEP_HEIGHT, e)
+                )
+            ) {
+                d =
+                    if (d < 0.05 && d >= -0.05) 0.0 else (if (d > 0.0) (0.05.let { d -= it; d }) else (0.05.let { d += it; d }))
+                if (e < 0.05 && e >= -0.05) {
+                    e = 0.0
+                    continue
+                }
+                if (e > 0.0) {
+                    e -= 0.05
+                    continue
+                }
+                e += 0.05
+            }
+            movement = Vec3d(d, movement.y, e)
+        }
+        return movement
+    }
+
+    protected fun shouldClipAtLedge(): Boolean {
+        return this.input.sneaking || this.input.forceSafeWalk
+    }
+
+    private fun method_30263(): Boolean {
+        return onGround || this.fallDistance < STEP_HEIGHT && !world.isSpaceEmpty(
+            player,
+            boundingBox.offset(0.0, this.fallDistance - STEP_HEIGHT, 0.0)
+        )
+    }
 
     private fun isSprinting(): Boolean = this.sprinting
 
@@ -755,9 +838,10 @@ class SimulatedPlayer(
     class SimulatedPlayerInput(
         directionalInput: DirectionalInput,
         jumping: Boolean,
-        var sprinting: Boolean
+        var sprinting: Boolean,
+        sneaking: Boolean
     ) : Input() {
-        var slowDown: Boolean = false
+        var forceSafeWalk: Boolean = false
 
         init {
             this.pressingForward = directionalInput.forwards
@@ -765,6 +849,7 @@ class SimulatedPlayer(
             this.pressingLeft = directionalInput.left
             this.pressingRight = directionalInput.right
             this.jumping = jumping
+            this.sneaking = sneaking
         }
 
         fun update() {
@@ -776,18 +861,39 @@ class SimulatedPlayer(
 
             movementSideways = if (pressingLeft == pressingRight) 0.0f else if (pressingLeft) 1.0f else -1.0f
 
-            if (slowDown) {
+            if (sneaking) {
                 movementSideways = (movementSideways.toDouble() * 0.3).toFloat()
                 movementForward = (movementForward.toDouble() * 0.3).toFloat()
             }
         }
 
         override fun toString(): String {
-            return "SimulatedPlayerInput(forwards={${this.pressingForward}}, backwards={${this.pressingBack}}, left={${this.pressingLeft}}, right={${this.pressingRight}}, jumping={${this.jumping}}, sprinting=$sprinting, slowDown=$slowDown)"
+            return "SimulatedPlayerInput(forwards={${this.pressingForward}}, backwards={${this.pressingBack}}, left={${this.pressingLeft}}, right={${this.pressingRight}}, jumping={${this.jumping}}, sprinting=$sprinting, slowDown=$sneaking)"
         }
 
         companion object {
             private const val MAX_WALKING_SPEED = 0.121
+
+            fun fromClientPlayer(directionalInput: DirectionalInput): SimulatedPlayerInput {
+                val player = mc.player!!
+
+                val input = SimulatedPlayerInput(
+                    directionalInput,
+                    player.input.jumping,
+                    player.isSprinting,
+                    player.isSneaking
+                )
+
+                val safeWalkEvent = PlayerSafeWalkEvent()
+
+                EventManager.callEvent(safeWalkEvent)
+
+                if (safeWalkEvent.isSafeWalk) {
+                    input.forceSafeWalk = true
+                }
+
+                return input
+            }
 
             /**
              * Guesses the current input of a server player based on player position and velocity
@@ -814,8 +920,9 @@ class SimulatedPlayer(
                 return SimulatedPlayerInput(
                     input,
                     jumping,
-                    sprinting
-                ).apply { this.slowDown = entity.isSneaking }
+                    sprinting,
+                    sneaking=entity.isSneaking
+                )
             }
         }
 

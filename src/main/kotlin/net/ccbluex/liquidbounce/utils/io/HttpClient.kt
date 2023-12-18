@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.utils.io
 
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -37,7 +36,8 @@ object HttpClient {
         url: String,
         method: String,
         agent: String = DEFAULT_AGENT,
-        headers: Array<Pair<String, String>> = emptyArray()
+        headers: Array<Pair<String, String>> = emptyArray(),
+        inputData: ByteArray? = null
     ): HttpURLConnection {
         val httpConnection = URL(url).openConnection() as HttpURLConnection
 
@@ -54,6 +54,10 @@ object HttpClient {
         httpConnection.instanceFollowRedirects = true
         httpConnection.doOutput = true
 
+        if (inputData != null) {
+            httpConnection.outputStream.use { it.write(inputData) }
+        }
+
         return httpConnection
     }
 
@@ -61,9 +65,10 @@ object HttpClient {
         url: String,
         method: String,
         agent: String = DEFAULT_AGENT,
-        headers: Array<Pair<String, String>> = emptyArray()
+        headers: Array<Pair<String, String>> = emptyArray(),
+        inputData: ByteArray? = null
     ): String {
-        val connection = make(url, method, agent)
+        val connection = make(url, method, agent, headers, inputData)
         val responseCode = connection.responseCode
 
         // we want to read the error stream or the input stream
@@ -77,18 +82,15 @@ object HttpClient {
         return text
     }
 
-    fun requestStream(
-        url: String,
-        method: String,
-        agent: String = DEFAULT_AGENT,
-        headers: Array<Pair<String, String>> = emptyArray()
-    ): InputStream {
-        val connection = make(url, method, agent)
-
-        return connection.inputStream
-    }
-
     fun get(url: String) = request(url, "GET")
+
+    fun postJson(url: String, json: String) =
+        request(url, "POST", headers = arrayOf("Content-Type" to "application/json"),
+            inputData = json.toByteArray())
+
+    fun postForm(url: String, form: String) =
+        request(url, "POST", headers = arrayOf("Content-Type" to "application/x-www-form-urlencoded"),
+            inputData = form.toByteArray())
 
     fun download(url: String, file: File) = FileOutputStream(file).use { make(url, "GET").inputStream.copyTo(it) }
 

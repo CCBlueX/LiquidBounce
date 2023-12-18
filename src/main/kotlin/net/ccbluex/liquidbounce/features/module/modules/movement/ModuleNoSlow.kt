@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.block.HoneyBlock
@@ -51,7 +52,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-        val modes = choices("Choice", Reuse) {
+        val modes = choices("Choice", { Reuse }) {
             arrayOf(NoneChoice(it), Reuse, Rehold)
         }
 

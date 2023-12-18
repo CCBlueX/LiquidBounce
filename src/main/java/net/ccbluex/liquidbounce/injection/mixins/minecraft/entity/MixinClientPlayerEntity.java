@@ -19,7 +19,9 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.EventState;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDerp;
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
@@ -69,9 +72,26 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook entity tick event
      */
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V", shift = At.Shift.AFTER))
-    private void hookTickEvent(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new PlayerTickEvent());
+    @Inject(method = "tick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V",
+            shift = At.Shift.BEFORE,
+            ordinal = 0),
+    cancellable = true)
+    private void hookTickEvent(CallbackInfo ci) {
+        var tickEvent = new PlayerTickEvent();
+        EventManager.INSTANCE.callEvent(tickEvent);
+
+        if (tickEvent.isCancelled()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "tick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V",
+            shift = At.Shift.AFTER,
+            ordinal = 0))
+    private void hookPostTickEvent(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new PlayerPostTickEvent());
     }
 
     /**

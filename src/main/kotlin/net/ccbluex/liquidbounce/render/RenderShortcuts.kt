@@ -25,6 +25,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
@@ -36,6 +37,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
+import org.lwjgl.opengl.GL11C
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -45,7 +47,10 @@ import kotlin.math.sin
  *
  * @property matrixStack The matrix stack for rendering.
  */
-data class RenderEnvironment(val matrixStack: MatrixStack)
+data class RenderEnvironment(val matrixStack: MatrixStack) {
+    val currentMvpMatrix: Matrix4f
+        get() = matrixStack.peek().positionMatrix
+}
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -60,6 +65,9 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     RenderSystem.enableBlend()
     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
     RenderSystem.disableDepthTest()
+    GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
+
+
 
     matrixStack.push()
 
@@ -75,6 +83,7 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     RenderSystem.disableBlend()
     RenderSystem.enableDepthTest()
     RenderSystem.enableCull()
+    GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
 fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: RenderEnvironment.() -> Unit) {
@@ -255,10 +264,10 @@ fun RenderEnvironment.drawQuad(pos1: Vec3d, pos2: Vec3d) {
         // Begin drawing lines with position format
         begin(DrawMode.QUADS, VertexFormats.POSITION)
 
-        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), 0.0F).next()
+        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat()).next()
+        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat()).next()
+        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat()).next()
+        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat()).next()
     }
 
 
@@ -382,7 +391,8 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
  * @param colors The colors for the vertices
  */
 fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
-    require(vertices.size == 4 && colors.size == 4) { "lists must have exactly 4 elements" }
+    require(vertices.size == colors.size) { "there must be a color for every vertex" }
+    require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
@@ -423,7 +433,8 @@ fun RenderEnvironment.drawGradientCircle(
     outerRadius: Float,
     innerRadius: Float,
     outerColor4b: Color4b,
-    innerColor4b: Color4b
+    innerColor4b: Color4b,
+    innerOffset: Vec3 = Vec3(0f, 0f, 0f)
 ) {
 
     val matrix = matrixStack.peek().positionMatrix
@@ -438,13 +449,41 @@ fun RenderEnvironment.drawGradientCircle(
 
         for (p in circlePoints) {
             val outerP = p * outerRadius
-            val innerP = p * innerRadius
+            val innerP = p * innerRadius + innerOffset
 
             vertex(matrix, outerP.x, outerP.y, outerP.z)
                 .color(outerColor4b.toRGBA())
                 .next()
             vertex(matrix, innerP.x, innerP.y, innerP.z)
                 .color(innerColor4b.toRGBA())
+                .next()
+        }
+    }
+    tessellator.draw()
+}
+
+/**
+ * Function to draw the outline of a circle of the size [radius]
+ *
+ * @param radius The radius
+ * @param color The color
+ */
+fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position and color program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    with(bufferBuilder) {
+        begin(DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR)
+
+        for (p in circlePoints) {
+            val point = p * radius
+
+            vertex(matrix, point.x, point.y, point.z)
+                .color(color4b.toRGBA())
                 .next()
         }
     }

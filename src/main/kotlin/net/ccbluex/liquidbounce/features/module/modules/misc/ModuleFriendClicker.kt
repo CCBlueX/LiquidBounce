@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.event.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
@@ -49,12 +49,13 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
         val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is PlayerEntity }
             ?: return@repeatable) as PlayerEntity
 
-        val facesEnemy = facingEnemy(entity, rotation, pickUpRange.toDouble(), wallsRange = 0.0)
+        val facesEnemy = facingEnemy(toEntity = entity, rotation = rotation, range = pickUpRange.toDouble(),
+            wallsRange = 0.0)
 
         val pickup = mc.options.pickItemKey.isPressed
 
         if (facesEnemy && pickup && !clicked) {
-            val name = entity.entityName
+            val name = entity.nameForScoreboard
 
             if (FriendManager.isFriend(name)) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))

@@ -2,8 +2,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -57,7 +57,7 @@ object Spartan524GroundTimer : Choice("Spartan524GroundTimer") {
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
 
-    val repeatable = handler<PlayerTickEvent> {
+    val repeatable = handler<PlayerPostTickEvent> {
         repeat(additionalTicks) {
             player.tickMovement()
         }

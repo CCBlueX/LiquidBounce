@@ -23,8 +23,8 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
-import me.liuli.elixir.account.MinecraftAccount
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
@@ -76,7 +76,7 @@ object ConfigSystem {
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
         .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
-        .registerTypeAdapter(Fonts.FontDetail::class.javaObjectType, FontDetailSerializer)
+        .registerTypeAdapter(Fonts.FontInfo::class.javaObjectType, FontDetailSerializer)
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
@@ -90,7 +90,7 @@ object ConfigSystem {
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
         .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
-        .registerTypeAdapter(Fonts.FontDetail::class.javaObjectType, FontDetailSerializer)
+        .registerTypeAdapter(Fonts.FontInfo::class.javaObjectType, FontDetailSerializer)
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)

@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
@@ -29,8 +31,12 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.EventScheduler
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.util.math.Vec3d
@@ -58,9 +64,9 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     override fun enable() {
         if (ModuleBlink.enabled) {
             // Cannot disable on the moment it's enabled, so schedule module deactivation in the next few milliseconds.
-            EventScheduler.schedule(this, GameRenderEvent::class.java, action = {
+            EventScheduler.schedule<GameRenderEvent>(this) {
                 this.enabled = false
-            })
+            }
 
             notification("Compatibility error", "BadWIFI is incompatible with Blink", NotificationEvent.Severity.ERROR)
         }
@@ -210,6 +216,8 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
             positions.clear()
         }
     }
+
+    fun isLagging() = enabled && (packetQueue.isNotEmpty() || positions.isNotEmpty())
 
     private fun shouldLag() =
         world.findEnemy(0f..rangeToStart) != null && (!player.isUsingItem || !stopWhileUsingItem) && mc.currentScreen == null && !player.isDead

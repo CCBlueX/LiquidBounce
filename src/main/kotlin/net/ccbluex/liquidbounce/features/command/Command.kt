@@ -173,7 +173,7 @@ class Command(
 
         val handler = parameter.autocompletionHandler ?: return
 
-        for (s in handler(args.getOrElse(idx) { "" })) {
+        for (s in handler(args.getOrElse(idx) { "" }, args)) {
             builder.suggest(s)
         }
     }

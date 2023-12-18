@@ -18,11 +18,9 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.mojang.datafixers.util.Pair;
+import net.ccbluex.liquidbounce.common.SidebarEntry;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.OverlayRenderEvent;
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleScoreboard;
@@ -32,12 +30,13 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardEntry;
 import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.scoreboard.Team;
-import net.minecraft.text.MutableText;
+import net.minecraft.scoreboard.number.NumberFormat;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -48,10 +47,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHud {
@@ -80,6 +76,10 @@ public abstract class MixinInGameHud {
     @Shadow
     @Final
     private MinecraftClient client;
+
+    @Shadow
+    @Final
+    private static Comparator<ScoreboardEntry> SCOREBOARD_ENTRY_COMPARATOR;
 
     /**
      * Hook render hud event at the top layer
@@ -111,11 +111,15 @@ public abstract class MixinInGameHud {
         return ModuleFreeCam.INSTANCE.shouldRenderCrosshair(instance.isFirstPerson());
     }
 
+
     /**
-     * @author
-     * @reason
+     * Renders the scoreboard sidebar on the screen.
      *
-     * todo: use injection instead of overwrite
+     * @param context The draw context.
+     * @param objective The scoreboard objective.
+     *
+     * @author 1zuna
+     * @reason Scoreboard module
      */
     @Overwrite
     private void renderScoreboardSidebar(DrawContext context, ScoreboardObjective objective) {
@@ -123,79 +127,69 @@ public abstract class MixinInGameHud {
             return;
         }
 
-        int i;
         Scoreboard scoreboard = objective.getScoreboard();
-        Collection<ScoreboardPlayerScore> collection = scoreboard.getAllPlayerScores(objective);
-        List list = collection.stream().filter(score -> score.getPlayerName() != null &&
-                !score.getPlayerName().startsWith("#")).collect(Collectors.toList());
-        collection = list.size() > 15 ? Lists.newArrayList(Iterables.skip(list, collection.size() - 15))
-                : list;
-        ArrayList<Pair<ScoreboardPlayerScore, MutableText>> list2 = Lists.newArrayListWithCapacity(collection.size());
+        NumberFormat numberFormat = objective.getNumberFormatOr(StyledNumberFormat.RED);
+
+        SidebarEntry[] sidebarEntrys = scoreboard.getScoreboardEntries(objective)
+                .stream()
+                .filter(score -> !score.hidden())
+                .sorted(SCOREBOARD_ENTRY_COMPARATOR)
+                .limit(15L)
+                .map(scoreboardEntry -> {
+                    Team team = scoreboard.getScoreHolderTeam(scoreboardEntry.owner());
+                    Text textxx = scoreboardEntry.name();
+                    Text text2 = Team.decorateName(team, textxx);
+                    Text text3 = scoreboardEntry.formatted(numberFormat);
+                    int ixx = this.getTextRenderer().getWidth(text3);
+                    return new SidebarEntry(text2, text3, ixx);
+                })
+                .toArray(SidebarEntry[]::new);
+
         Text text = objective.getDisplayName();
+        int i = this.getTextRenderer().getWidth(text);
+        int j = i;
+        int k = this.getTextRenderer().getWidth(": ");
 
-        final TextRenderer textRenderer = getTextRenderer();
-
-        // Calculate width and height of scoreboard
-        int widthOfScoreboard = i = textRenderer.getWidth(text);
-        int joinerWidth = textRenderer.getWidth(SCOREBOARD_JOINER);
-        for (ScoreboardPlayerScore scoreboardPlayerScore : collection) {
-            final Team team = scoreboard.getPlayerTeam(scoreboardPlayerScore.getPlayerName());
-            final MutableText text2 = Team.decorateName(team, Text.literal(scoreboardPlayerScore.getPlayerName()));
-            list2.add(Pair.of(scoreboardPlayerScore, text2));
-            widthOfScoreboard = Math.max(widthOfScoreboard, textRenderer.getWidth(text2) + joinerWidth +
-                    textRenderer.getWidth(Integer.toString(scoreboardPlayerScore.getScore())));
-        }
-        int heightOfScoreboard = collection.size() * textRenderer.fontHeight;
-
-        // Figure out where to render scoreboard
-        int scoreboardPositionY = this.scaledHeight / 2 + heightOfScoreboard / 3;
-        int scoreboardPositionX = this.scaledWidth - widthOfScoreboard - 3;
-
-        if (ModuleScoreboard.INSTANCE.getEnabled()) {
-            final var alignment = ModuleScoreboard.INSTANCE.getAlignment().getBounds(widthOfScoreboard,
-                    heightOfScoreboard / 3f);
-            scoreboardPositionX = (int) alignment.getXMin();
-            scoreboardPositionY = (int) alignment.getYMin();
-        } else {
-            // By default, we add 60 to the scoreboard position, this makes the arraylist more readable
-            scoreboardPositionY += 60;
+        for(SidebarEntry sidebarEntry : sidebarEntrys) {
+            j = Math.max(j, this.getTextRenderer().getWidth(sidebarEntry.name()) + (sidebarEntry.scoreWidth() > 0 ? k + sidebarEntry.scoreWidth() : 0));
         }
 
-        int count = 0;
-        int bgColor = this.client.options.getTextBackgroundColor(0.3f);
-        int secondBgColor = this.client.options.getTextBackgroundColor(0.4f);
+        int widthOfScoreboard = j;
+        context.draw(() -> {
+            int length = sidebarEntrys.length;
+            int heightOfScoreboard = length * 9;
+            int scoreboardPositionY = this.scaledHeight / 2 + heightOfScoreboard / 3;
+            int scoreboardPositionX = this.scaledWidth - widthOfScoreboard - 3;
 
-        // Draw each scoreboard entry
-        for (Pair pair : list2) {
-            ScoreboardPlayerScore scoreboardPlayerScore2 = (ScoreboardPlayerScore) pair.getFirst();
-            Text text3 = (Text) pair.getSecond();
-            String string = "" + Formatting.RED + scoreboardPlayerScore2.getScore();
-
-            int t = scoreboardPositionY - ++count * textRenderer.fontHeight;
-            int u = this.scaledWidth - 3 + 2;
-
-            // Draw scoreboard bar
+            int p = this.scaledWidth - 3 + 2;
             if (ModuleScoreboard.INSTANCE.getEnabled()) {
                 final var alignment = ModuleScoreboard.INSTANCE.getAlignment().getBounds(widthOfScoreboard,
-                        heightOfScoreboard);
-                u = (int) alignment.getXMax() + 1;
+                        heightOfScoreboard / 3f);
+                scoreboardPositionX = (int) alignment.getXMin();
+                scoreboardPositionY = (int) alignment.getYMin();
+                p = (int) alignment.getXMax() + 1;
             } else {
-                u += 1;
+                // By default, we add 60 to the scoreboard position, this makes the arraylist more readable
+                scoreboardPositionY += 60;
             }
 
-            context.fill(scoreboardPositionX - 2, t, u, t + textRenderer.fontHeight, bgColor);
-            context.drawText(textRenderer, text3, scoreboardPositionX, t, -1, false);
-            context.drawText(textRenderer, string, u - textRenderer.getWidth(string), t, -1, false);
+            int bgColor = this.client.options.getTextBackgroundColor(0.3F);
+            int secondBgColor = this.client.options.getTextBackgroundColor(0.4F);
+            int s = scoreboardPositionY - length * 9;
 
-            if (count != collection.size()) {
-                continue;
+            context.fill(scoreboardPositionX - 2, s - 9 - 1, p, s - 1, secondBgColor);
+            context.fill(scoreboardPositionX - 2, s - 1, p, scoreboardPositionY, bgColor);
+            context.drawText(this.getTextRenderer(), text, scoreboardPositionX + widthOfScoreboard / 2 - i / 2, s - 9,
+                    Colors.WHITE, false);
+
+            for(int t = 0; t < length; ++t) {
+                SidebarEntry sidebarEntryxx = sidebarEntrys[t];
+                int u = scoreboardPositionY - (length - t) * 9;
+                context.drawText(this.getTextRenderer(), sidebarEntryxx.name(), scoreboardPositionX, u, Colors.WHITE, false);
+                context.drawText(this.getTextRenderer(), sidebarEntryxx.score(), p - sidebarEntryxx.scoreWidth(), u,
+                        Colors.WHITE, false);
             }
-
-            context.fill(scoreboardPositionX - 2, t - textRenderer.fontHeight - 1, u, t - 1, secondBgColor);
-            context.fill(scoreboardPositionX - 2, t - 1, u, t, bgColor);
-            context.drawText(textRenderer, text, scoreboardPositionX + widthOfScoreboard / 2 - i / 2,
-                    t - textRenderer.fontHeight, -1, false);
-        }
+        });
     }
 
 }

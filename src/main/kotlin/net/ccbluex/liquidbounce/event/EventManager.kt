@@ -18,12 +18,79 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
-import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.client.logger
-import java.util.ArrayList
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.KClass
+
+/**
+ * Contains all classes of events. Used to create lookup tables ahead of time
+ */
+val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
+    GameTickEvent::class,
+    BlockChangeEvent::class,
+    ChunkLoadEvent::class,
+    ChunkUnloadEvent::class,
+    WorldDisconnectEvent::class,
+    GameRenderEvent::class,
+    WorldRenderEvent::class,
+    OverlayRenderEvent::class,
+    ScreenRenderEvent::class,
+    WindowResizeEvent::class,
+    WindowFocusEvent::class,
+    MouseButtonEvent::class,
+    MouseScrollEvent::class,
+    MouseCursorEvent::class,
+    KeyboardKeyEvent::class,
+    KeyboardCharEvent::class,
+    InputHandleEvent::class,
+    MovementInputEvent::class,
+    KeyEvent::class,
+    MouseRotationEvent::class,
+    KeyBindingEvent::class,
+    AttackEvent::class,
+    SessionEvent::class,
+    ScreenEvent::class,
+    ChatSendEvent::class,
+    ChatReceiveEvent::class,
+    UseCooldownEvent::class,
+    BlockShapeEvent::class,
+    BlockBreakingProgressEvent::class,
+    BlockVelocityMultiplierEvent::class,
+    BlockSlipperinessMultiplierEvent::class,
+    EntityMarginEvent::class,
+    HealthUpdateEvent::class,
+    DeathEvent::class,
+    PlayerTickEvent::class,
+    PlayerPostTickEvent::class,
+    PlayerMovementTickEvent::class,
+    PlayerNetworkMovementTickEvent::class,
+    PlayerPushOutEvent::class,
+    PlayerMoveEvent::class,
+    PlayerJumpEvent::class,
+    PlayerUseMultiplier::class,
+    PlayerVelocityStrafe::class,
+    PlayerStrideEvent::class,
+    PlayerSafeWalkEvent::class,
+    CancelBlockBreakingEvent::class,
+    PlayerStepEvent::class,
+    PlayerStepSuccessEvent::class,
+    FluidPushEvent::class,
+    TickJumpEvent::class,
+    PipelineEvent::class,
+    PacketEvent::class,
+    ClientStartEvent::class,
+    ClientShutdownEvent::class,
+    ValueChangedEvent::class,
+    ToggleModuleEvent::class,
+    NotificationEvent::class,
+    ClientChatMessageEvent::class,
+    ClientChatErrorEvent::class,
+    WorldChangeEvent::class,
+    AltManagerUpdateEvent::class,
+    SimulatedTickEvent::class
+)
 
 /**
  * A modern and fast event handler using lambda handlers

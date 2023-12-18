@@ -19,7 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
+import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
+import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
+import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.BlockState
@@ -103,6 +108,12 @@ object ChunkScanner : Listenable {
             while (true) {
                 try {
                     val chunkUpdate = this.chunkUpdateQueue.take()
+
+                    if (mc.world == null) {
+                        this.chunkUpdateQueue.clear()
+                        Thread.sleep(1000L)
+                        continue
+                    }
 
                     synchronized(ChunkScanner) {
                         when (chunkUpdate) {

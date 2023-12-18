@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.base.ultralight.impl.renderer
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.UltralightViewConfig
+import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
@@ -119,6 +120,7 @@ class CpuViewRenderer : ViewRenderer {
         RenderSystem.setShaderTexture(0, glTexture)
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
         RenderSystem.enableBlend()
+        RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
 
         bufferBuilder
@@ -144,6 +146,7 @@ class CpuViewRenderer : ViewRenderer {
             .next()
 
         tessellator.draw()
+        RenderSystem.defaultBlendFunc()
         RenderSystem.disableBlend()
     }
 

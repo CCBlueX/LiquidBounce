@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.event.NotificationEvent
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -63,10 +63,12 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
 
         if (packet is PlayerListS2CPacket) {
             for (entry in packet.playerAdditionEntries) {
-                if (entry.profile.name != null && entry.profile.name.length > 2) {
-                    uuidNameCache[entry.profile.id] = entry.profile.name
+                val profile = entry.profile ?: continue
+
+                if (profile.name != null && profile.name.length > 2) {
+                    uuidNameCache[profile.id] = profile.name
                     if (joinMessages) {
-                        val message = joinMessageFormat.format(entry.profile.name)
+                        val message = joinMessageFormat.format(profile.name)
 
                         if (useNotification) {
                             notification("Notifier", message, NotificationEvent.Severity.INFO)

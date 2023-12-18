@@ -18,11 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.ToggleModuleEvent
+import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -154,6 +160,16 @@ open class Module(
             enabled = false
         }
     }
+
+
+    protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
+        choices(this, name, active, choices)
+
+    protected fun choices(
+        name: String,
+        activeCallback: (ChoiceConfigurable) -> Choice,
+        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+    ) = choices(this, name, activeCallback, choicesCallback)
 
     /**
      * Returns if module is hidden. Hidden modules are not displayed in the module list.
