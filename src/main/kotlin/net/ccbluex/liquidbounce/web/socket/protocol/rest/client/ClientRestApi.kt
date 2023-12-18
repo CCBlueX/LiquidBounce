@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.minecraft.util.Util
 
 internal fun RestNode.setupClientRestApi() {
     get("/info") {
@@ -60,14 +61,19 @@ internal fun RestNode.setupClientRestApi() {
         })
     }
 
+    post("/browse") {
+        val body = decode<JsonObject>(it.content)
+        val url = body["url"]?.asString ?: return@post httpForbidden("No url")
+        Util.getOperatingSystem().open(url)
+        httpOk(JsonObject())
+    }
+
     setupScreenRestApi()
 }
 
 
 
 private fun RestNode.setupScreenRestApi() {
-
-
     get("/screen") {
         val mcScreen = mc.currentScreen ?: return@get httpForbidden("No screen")
         val name = IntegrationHandler.VirtualScreenType.values().find { it.recognizer(mcScreen) }?.assignedName
