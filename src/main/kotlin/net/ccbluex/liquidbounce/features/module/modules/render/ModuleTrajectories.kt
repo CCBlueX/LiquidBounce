@@ -361,6 +361,8 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
     }
 
     private fun getTrajectoryInfo(player: PlayerEntity, item: Item): TrajectoryInfo? {
+        val trajectoryInfo: TrajectoryInfo?
+
         when (item) {
             is BowItem -> {
                 // Calculate power of bow
@@ -369,7 +371,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 power = if (alwaysShowBow && power == 0.0F) 1.0F else power
                 if (power < 0.1F) return null
 
-                return TrajectoryInfo(
+                trajectoryInfo = TrajectoryInfo(
                     0.05F,
                     0.3F,
                     motionFactor = power.coerceAtMost(1.0F) * 3.0F
@@ -377,7 +379,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             }
 
             is CrossbowItem -> {
-                return TrajectoryInfo(
+                trajectoryInfo = TrajectoryInfo(
                     0.05F,
                     0.3F,
                     motionFactor = 3.0F
@@ -385,7 +387,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             }
 
             is FishingRodItem -> {
-                return TrajectoryInfo(
+                trajectoryInfo = TrajectoryInfo(
                     0.04F,
                     0.25F,
                     motionSlowdown = 0.92F
@@ -393,7 +395,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             }
 
             is PotionItem -> {
-                return TrajectoryInfo(
+                trajectoryInfo = TrajectoryInfo(
                     0.05F,
                     0.25F,
                     motionFactor = 0.5F,
@@ -401,8 +403,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 )
             }
 
-            else -> return TrajectoryInfo(0.03F, 0.25F)
+            else -> trajectoryInfo = TrajectoryInfo(0.03F, 0.25F)
         }
+
+        return trajectoryInfo
     }
 
     data class TrajectoryInfo(
