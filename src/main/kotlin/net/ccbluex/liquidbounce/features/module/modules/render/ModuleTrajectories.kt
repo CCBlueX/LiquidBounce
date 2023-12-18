@@ -66,7 +66,9 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
 
     fun shouldDrawTrajectory(player: PlayerEntity, item: Item): Boolean {
-        return item is BowItem && (player.isUsingItem || alwaysShowBow) || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem
+        return item is BowItem && (player.isUsingItem || alwaysShowBow) || item is FishingRodItem ||
+            item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem ||
+            item is CrossbowItem
     }
 
     private fun isValidArrowEntity(entity: Entity): Boolean {
@@ -74,7 +76,8 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
     }
 
     private fun isOtherEntity(entity: Entity): Boolean {
-        return activeTrajectoryOther && (entity is EnderPearlEntity || entity is SnowballEntity || entity is PotionEntity || entity is EggEntity)
+        return activeTrajectoryOther && (entity is EnderPearlEntity || entity is SnowballEntity ||
+            entity is PotionEntity || entity is EggEntity)
     }
 
     private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
@@ -370,6 +373,14 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     0.05F,
                     0.3F,
                     motionFactor = power.coerceAtMost(1.0F) * 3.0F
+                )
+            }
+
+            is CrossbowItem -> {
+                return TrajectoryInfo(
+                    0.05F,
+                    0.3F,
+                    motionFactor = 3.0F
                 )
             }
 
