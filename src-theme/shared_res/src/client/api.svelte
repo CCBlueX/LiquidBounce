@@ -20,8 +20,14 @@
         return data
     }
 
+    // todo: normally we use a route controller for this
     export function redirect(path) {
-        window.location.href = BASE_URL + "/" + path
+        window.location.href = BASE_URL + "/default/" + path + "/"
+    }
+
+    // todo: normally we use a route controller for this
+    export function empty() {
+        redirect("empty")
     }
 
     /**

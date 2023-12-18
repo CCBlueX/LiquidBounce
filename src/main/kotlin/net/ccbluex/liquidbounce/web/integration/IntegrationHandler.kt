@@ -74,10 +74,10 @@ object IntegrationHandler : Listenable {
         TITLE("title", { it is TitleScreen }, open = {
             mc.setScreen(TitleScreen())
         }),
-        MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, open = {
+        MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, true, open = {
             mc.setScreen(MultiplayerScreen(parent))
         }),
-        SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }, open = {
+        SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }, true, open = {
             mc.setScreen(SelectWorldScreen(parent))
         }),
         OPTIONS("options", { it is OptionsScreen }, true, open = {
@@ -136,8 +136,7 @@ object IntegrationHandler : Listenable {
         if (!virtualScreenType.showAlong) {
             val emptyScreen = EmptyScreen()
             mc.setScreen(emptyScreen)
-            // TODO remove comment: when the integration is ready to be used
-            // event.cancelEvent()
+            event.cancelEvent()
         }
 
         virtualOpen(virtualScreenType.assignedName)

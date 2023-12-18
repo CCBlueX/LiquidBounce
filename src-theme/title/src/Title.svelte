@@ -9,8 +9,7 @@
     import ButtonWrapperLeft from "../../shared_res/src/menus/buttons/ButtonWrapperLeft.svelte";
     import ButtonWrapperRight from "../../shared_res/src/menus/buttons/ButtonWrapperRight.svelte";
 
-    import { listen } from "../../shared_res/src/client/ws.svelte";
-    import { getSession, getLocation, openScreen, redirect, browse, exitClient } from "../../shared_res/src/client/api.svelte";
+    import { getSession, empty, getLocation, openScreen, redirect, browse, exitClient } from "../../shared_res/src/client/api.svelte";
 
 
     function openProxyManager() {
@@ -22,15 +21,15 @@
     }
 
     function openSingleplayer() {
-        openScreen("singleplayer").catch(console.error);
+        openScreen("singleplayer").then(empty).catch(console.error);
     }
 
     function openMultiplayer() {
-        openScreen("multiplayer").catch(console.error);
+        openScreen("multiplayer").then(empty).catch(console.error);
     }
 
     function openRealms() {
-        openScreen("multiplayer_realms").catch(console.error);
+        openScreen("multiplayer_realms").then(empty).catch(console.error);
     }
 
     function openCustomize() {
@@ -39,7 +38,7 @@
     }
 
     function openOptions() {
-        openScreen("options").catch(console.error);
+        openScreen("options").then(empty).catch(console.error);
     }
 
     function scheduleStop() {
