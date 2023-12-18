@@ -80,6 +80,11 @@ class Script(val scriptFile: File) {
         // Call load event
         callGlobalEvent("load")
 
+        if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
+            logger.error("[ScriptAPI] Script '${scriptFile.name}' is missing required information!")
+            error("Script '${scriptFile.name}' is missing required information!")
+        }
+
         logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
     }
 
