@@ -6,6 +6,8 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.SuperKnockback;
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
+import net.minecraft.util.MovementInput;
 import net.minecraft.util.MovementInputFromOptions;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,5 +30,7 @@ public class MixinMovementInputFromOptions extends MixinMovementInput {
                 }
             }
         }
+
+        Scaffold.INSTANCE.handleMovementOptions(((MovementInput) (Object) this));
     }
 }

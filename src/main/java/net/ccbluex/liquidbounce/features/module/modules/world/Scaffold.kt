@@ -219,9 +219,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     }
     private val minZitterTicks by minZitterTicksValue
 
+    private val useSneakMidAir by BoolValue("UseSneakMidAir", false) { zitterMode == "Smooth" }
+
     // Game
     private val timer by FloatValue("Timer", 1f, 0.1f..10f)
     private val speedModifier by FloatValue("SpeedModifier", 1f, 0f..2f)
+    private val speedLimiter by BoolValue("SpeedLimiter", false) { !slow }
+    private val speedLimit by FloatValue("SpeedLimit", 0.11f, 0.01f..0.12f) { !slow && speedLimiter }
     private val slow by BoolValue("Slow", false)
     private val slowGround by BoolValue("SlowOnlyGround", false) { slow }
     private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
@@ -250,7 +254,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Delay
     private val delayTimer = object : DelayTimer(minDelayValue, maxDelayValue, MSTimer()) {
-        override fun hasTimePassed() = !placeDelayValue.isActive() || super.hasTimePassed()
+        override fun hasTimePassed() =
+            !placeDelayValue.isActive() || super.hasTimePassed()
     }
 
     private val zitterTickTimer = TickDelayTimer(minZitterTicksValue, maxZitterTicksValue)
@@ -377,44 +382,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (mode == "Rewinside") {
                 strafe(0.2F)
                 player.motionY = 0.0
-            }
-
-            when (zitterMode.lowercase()) {
-                "off" -> {
-                    return
-                }
-
-                "smooth" -> {
-                    if (!GameSettings.isKeyDown(mc.gameSettings.keyBindRight)) {
-                        mc.gameSettings.keyBindRight.pressed = false
-                    }
-                    if (!GameSettings.isKeyDown(mc.gameSettings.keyBindLeft)) {
-                        mc.gameSettings.keyBindLeft.pressed = false
-                    }
-
-                    if (zitterTickTimer.hasTimePassed()) {
-                        zitterDirection = !zitterDirection
-                        zitterTickTimer.reset()
-                    } else {
-                        zitterTickTimer.update()
-                    }
-
-                    if (zitterDirection) {
-                        mc.gameSettings.keyBindRight.pressed = true
-                        mc.gameSettings.keyBindLeft.pressed = false
-                    } else {
-                        mc.gameSettings.keyBindRight.pressed = false
-                        mc.gameSettings.keyBindLeft.pressed = true
-                    }
-                }
-
-                "teleport" -> {
-                    strafe(zitterSpeed)
-                    val yaw = (player.rotationYaw + if (zitterDirection) 90.0 else -90.0).toRadians()
-                    player.motionX -= sin(yaw) * zitterStrength
-                    player.motionZ += cos(yaw) * zitterStrength
-                    zitterDirection = !zitterDirection
-                }
             }
         }
     }
@@ -753,7 +720,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     fun onRender3D(event: Render3DEvent) {
         val player = mc.thePlayer ?: return
 
-        val shouldBother = !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks && isMoving
+        val shouldBother = !(shouldGoDown || mode == "Expand" && expandLength > 1) && extraClicks && (isMoving || speed > 0.03)
 
         if (shouldBother) {
             currRotation.let {
@@ -1210,6 +1177,82 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         return clickedSuccessfully
+    }
+
+    fun handleMovementOptions(input: MovementInput) {
+        if (!state) {
+            return
+        }
+
+        if (speedLimiter && speed > speedLimit) {
+            input.moveStrafe = 0f
+            input.moveForward = 0f
+            return
+        }
+
+        val player = mc.thePlayer ?: return
+
+        when (zitterMode.lowercase()) {
+            "off" -> {
+                return
+            }
+
+            "smooth" -> {
+                val notOnGround = !player.onGround || !player.isCollidedVertically
+
+                if (player.onGround) {
+                    mc.gameSettings.keyBindSneak.pressed = eagleSneaking || GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
+                }
+
+                if (input.jump || mc.gameSettings.keyBindJump.isKeyDown || notOnGround) {
+                    zitterTickTimer.reset()
+
+                    if (useSneakMidAir) {
+                        mc.gameSettings.keyBindSneak.pressed = true
+                    }
+
+                    if (!notOnGround && !input.jump) {
+                        // Attempt to move against the direction
+                        input.moveStrafe = if (zitterDirection) 1f else -1f
+                    } else {
+                        input.moveStrafe = 0f
+                    }
+
+                    zitterDirection = !zitterDirection
+
+                    // Recreate input in case the user was indeed pressing inputs
+                    if (mc.gameSettings.keyBindLeft.isKeyDown) {
+                        input.moveStrafe++
+                    }
+
+                    if (mc.gameSettings.keyBindRight.isKeyDown) {
+                        input.moveStrafe--
+                    }
+                    return
+                }
+
+                if (zitterTickTimer.hasTimePassed()) {
+                    zitterDirection = !zitterDirection
+                    zitterTickTimer.reset()
+                } else {
+                    zitterTickTimer.update()
+                }
+
+                if (zitterDirection) {
+                    input.moveStrafe = -1f
+                } else {
+                    input.moveStrafe = 1f
+                }
+            }
+
+            "teleport" -> {
+                strafe(zitterSpeed)
+                val yaw = (player.rotationYaw + if (zitterDirection) 90.0 else -90.0).toRadians()
+                player.motionX -= sin(yaw) * zitterStrength
+                player.motionZ += cos(yaw) * zitterStrength
+                zitterDirection = !zitterDirection
+            }
+        }
     }
 
     /**
