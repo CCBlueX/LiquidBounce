@@ -82,7 +82,6 @@ object CommandClient {
             // TODO: links
             // TODO: instructions
             // TODO: reset
-            // TODO: script manager
             // TODO: theme manager
             // .. other client base commands
             .build()

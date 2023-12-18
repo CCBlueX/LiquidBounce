@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.bindings.globals
+package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.item.ItemStack
@@ -24,7 +24,7 @@ import net.minecraft.item.ItemStack
 /**
  * Object used by the script API to provide an easier way of creating items.
  */
-object JsItem {
+object JsItemUtil {
 
     /**
      * Create [ItemStack] from [arguments]

@@ -224,6 +224,39 @@
   "liquidbounce.command.localconfig.subcommand.create.result.failedToCreate": "Failed to create configuration file named %s.",
   "liquidbounce.command.localconfig.subcommand.create.result.created": "Configuration file named %s has been created.",
   "liquidbounce.command.localconfig.subcommand.create.result.alreadyExists": "Configuration file named %s already exists.",
+
+  "liquidbounce.command.script.description": "Allows you to manage scripts.",
+  "liquidbounce.command.script.subcommand.load.description": "Loads a script.",
+  "liquidbounce.command.script.subcommand.load.parameter.name.description": "Name of the script.",
+
+  "liquidbounce.command.script.subcommand.load.result.notFound": "Script named %s does not exist.",
+  "liquidbounce.command.script.subcommand.load.result.failedToLoad": "Failed to load script due to '%s'.",
+  "liquidbounce.command.script.subcommand.load.result.loaded": "Script named %s has been loaded.",
+  "liquidbounce.command.script.subcommand.load.result.alreadyLoaded": "Script named %s is already loaded.",
+
+  "liquidbounce.command.script.subcommand.unload.description": "Unloads a script.",
+  "liquidbounce.command.script.subcommand.unload.parameter.name.description": "Name of the script.",
+  "liquidbounce.command.script.subcommand.unload.result.notFound": "Script named %s does not exist.",
+  "liquidbounce.command.script.subcommand.unload.result.failedToUnload": "Failed to unload script named %s.",
+  "liquidbounce.command.script.subcommand.unload.result.unloaded": "Script named %s has been unloaded.",
+  "liquidbounce.command.script.subcommand.unload.result.notLoaded": "Script named %s is not loaded.",
+  "liquidbounce.command.script.subcommand.reload.description": "Reloads all scripts.",
+
+  "liquidbounce.command.script.subcommand.reload.result.reloaded": "Reloaded all scripts.",
+  "liquidbounce.command.script.subcommand.reload.result.reloadFailed": "Reload failed due to '%s'.",
+
+  "liquidbounce.command.script.subcommand.list.description": "Lists all scripts.",
+  "liquidbounce.command.script.subcommand.list.result.noScripts": "There are no scripts.",
+  "liquidbounce.command.script.subcommand.list.result.scripts": "Scripts: %s.",
+
+  "liquidbounce.command.script.subcommand.directory.description": "Opens the scripts directory.",
+  "liquidbounce.command.script.subcommand.directory.result.scriptsDirectory": "Scripts directory: %s.",
+
+  "liquidbounce.command.script.subcommand.edit.description": "Opens a script in the editor.",
+  "liquidbounce.command.script.subcommand.edit.parameter.name.description": "Name of the script.",
+  "liquidbounce.command.script.subcommand.edit.result.notFound": "Script named %s does not exist.",
+  "liquidbounce.command.script.subcommand.edit.result.opened": "Opened script named %s.",
+
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",

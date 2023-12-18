@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRe
 import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSkull
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
+import net.ccbluex.liquidbounce.script.CommandScript
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.outputString
 import net.minecraft.text.MutableText
@@ -142,6 +144,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandConfig.createCommand())
         addCommand(CommandLocalConfig.createCommand())
         addCommand(CommandAutoDisable.createCommand())
+        addCommand(CommandScript.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
@@ -212,6 +215,8 @@ object CommandManager : Iterable<Command> {
      *
      * @param cmd The command. If there is no command in it (it is empty or only whitespaces), this method is a no op
      */
+    @RequiredByScript
+    @JvmName("execute")
     fun execute(cmd: String) {
         val args = tokenizeCommand(cmd).first
 
