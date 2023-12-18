@@ -36,9 +36,7 @@ import java.text.SimpleDateFormat
 object ClientApi {
 
     private const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
-
-    // TODO: Use our own server for this
-    const val FACE_URL = "https://crafatar.com/avatars/%s?size=100"
+    const val FACE_URL = "https://avatar.liquidbounce.net/avatar/%s/100"
 
     /**
      * This makes sense because we want forks to be able to use this API and not only the official client.
