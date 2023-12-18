@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
-import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.INTEGRATION_URL
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 
 object CommandClient {
@@ -70,7 +70,7 @@ object CommandClient {
                     ).subcommand(CommandBuilder.begin("reset")
                         .handler { command, args ->
                             chat(regular("Resetting client JCEF browser..."))
-                            clientJcef?.loadUrl(INTEGRATION_URL)
+                            IntegrationHandler.updateIntegrationBrowser()
                         }.build()
                     )
 

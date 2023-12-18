@@ -35,8 +35,11 @@ import net.ccbluex.liquidbounce.utils.client.logger
 internal class NettyServer {
 
     companion object {
+
         // TODO: find open port and pass it to the browser
         const val PORT = 15743
+        const val NETTY_ROOT = "http://localhost:$PORT"
+
     }
 
     fun startServer() {

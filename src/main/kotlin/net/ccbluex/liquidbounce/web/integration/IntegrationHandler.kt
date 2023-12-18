@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -45,11 +47,6 @@ import net.minecraft.client.gui.screen.world.SelectWorldScreen
 
 object IntegrationHandler : Listenable {
 
-    // This is the URL that will be opened when the client is ready.
-    internal const val INTEGRATION_URL = "http://127.0.0.1:${NettyServer.PORT}/default/title/index.html"
-
-    internal const val HUD_URL = "http://127.0.0.1:${NettyServer.PORT}/default/hud/index.html"
-
     /**
      * This tab is always open and initialized. We keep this tab open to make it possible to draw on the screen,
      * even when no specific tab is open.
@@ -58,7 +55,7 @@ object IntegrationHandler : Listenable {
      * The client tab will be initialized when the browser is ready.
      */
     val clientJcef by lazy {
-        BrowserManager.browser?.createInputAwareTab(INTEGRATION_URL) { mc.currentScreen != null }
+        BrowserManager.browser?.createInputAwareTab(integrationUrl) { mc.currentScreen != null }
             ?.preferOnTop()
     }
 
@@ -105,6 +102,10 @@ object IntegrationHandler : Listenable {
         EventManager.callEvent(VirtualScreenEvent(momentaryVirtualScreen?.name ?: return,
             VirtualScreenEvent.Action.CLOSE))
         momentaryVirtualScreen = null
+    }
+
+    fun updateIntegrationBrowser() {
+        clientJcef?.loadUrl(integrationUrl)
     }
 
     /**
