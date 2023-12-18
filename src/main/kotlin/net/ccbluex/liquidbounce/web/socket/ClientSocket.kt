@@ -63,6 +63,7 @@ object ClientSocket {
         socketEventHandler.register("virtualScreen")
         socketEventHandler.register("fps")
         socketEventHandler.register("playerStats")
+        socketEventHandler.register("key")
 
         // RestAPI
         restApi.setupRoutes()

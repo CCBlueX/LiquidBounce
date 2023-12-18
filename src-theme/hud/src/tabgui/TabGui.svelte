@@ -3,6 +3,11 @@
     import Category from "./Category.svelte";
     import Module from "./Module.svelte";
 
+    export let listen;
+    export let getModules;
+    //export let getCategories;
+    export let toggleModule;
+
     const categories = [
         "Movement",
         "Combat",
@@ -16,17 +21,24 @@
     const modules = [];
 
     try {
-        const moduleIterator = client.getModuleManager().iterator();
+        getModules().then(mods => {
+            for (const mod of mods) {
+                const name = mod.name;
+                const category = mod.category;
+                const enabled = mod.enabled;
 
-        while (moduleIterator.hasNext()) {
-            const m = moduleIterator.next();
-            modules.push({
-                name: m.getName(),
-                category: m.getCategory().getReadableName(),
-                enabled: m.getEnabled(),
-                setEnabled: m.setEnabled,
-            });
-        }
+                function setEnabled(enabled) {
+                    toggleModule(name, enabled);
+                }
+
+                modules.push({
+                    name: name,
+                    category: category,
+                    enabled: enabled,
+                    setEnabled: setEnabled,
+                });
+            }
+        }).catch(console.error);
     } catch (err) {
         console.log(err);
     }
@@ -43,11 +55,14 @@
     let elCategories = document.createElement("div");
 
     function handleKeydown(event) {
-        if (event.getAction() !== 1) {
+        const action = event.action;
+        if (action !== 1) {
             return;
         }
 
-        switch (event.getKey().toString()) {
+        const key = event.key.translationKey;
+
+        switch (key) {
             case "key.keyboard.down": {
                if (activeModules.length === 0) {
                     activeCategory += 1;
@@ -94,17 +109,18 @@
     }
 
     function handleToggleModule(event) {
-        modules.find(
-            (m) => m.name === event.getModule().getName()
-        ).enabled = event.getNewState();
+        const module = event.moduleName;
+        const enabled = event.enabled;
+
+        modules.find((m) => m.name === module).enabled = enabled;
         if (activeModules.length > 0) {
             activeModules = getActiveModules();
         }
     }
 
     try {
-        events.on("key", handleKeydown);
-        events.on("toggleModule", handleToggleModule);
+        listen("key", handleKeydown);
+        listen("toggleModule", handleToggleModule);
     } catch (err) {
         window.addEventListener("keydown", handleKeydown);
         console.log(err);

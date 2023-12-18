@@ -3,6 +3,8 @@
     import {fly} from "svelte/transition";
     import Notification from "./Notification.svelte";
 
+    export let listen;
+
     let notifications = [];
 
     function addNotification(title, content, severity) {
@@ -14,8 +16,12 @@
     }
 
     try {
-        events.on("notification", event => {
-            addNotification(event.getTitle(), event.getMessage(), event.getSeverity());
+        listen("notification", event => {
+            let title = event.title;
+            let message = event.message;
+            let severity = event.severity;
+
+            addNotification(title, message, severity);
         });
     } catch (err) {
         console.log(err);

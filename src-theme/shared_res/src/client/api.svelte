@@ -117,6 +117,20 @@
         return request("/player")
     }
 
+    export function getCategories() {
+        return request("/categories")
+    }
+
+    export function toggleModule(name, enabled) {
+        return request("/modules/toggle", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "name": name, "enabled": enabled })
+        })
+    }
+
     export function getModules() {
         return request("/modules")
     }

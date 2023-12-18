@@ -34,6 +34,7 @@ import net.minecraft.text.Text
 class GameTickEvent : Event()
 
 @Nameable("key")
+@WebSocketEvent
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 
 // Input events

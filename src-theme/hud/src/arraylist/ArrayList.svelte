@@ -3,6 +3,10 @@
     import {fly} from "svelte/transition";
     import Module from "./Module.svelte";
 
+    export let getModules;
+    export let listen;
+
+
     function getTextWidth(s) {
         if (getTextWidth.ruler === undefined) {
             getTextWidth.ruler = document.getElementById("ruler");
@@ -21,15 +25,17 @@
     }
 
     function handleToggleModule(event) {
-        const module = event.getModule();
-        const m = module.getName();
+        let moduleName = event.moduleName;
+        let moduleEnabled = event.enabled;
 
-        if (event.getNewState() && !module.isHidden()) {
+        // todo: add hidden attribute to module
+        if (moduleEnabled) {
             modules.push({
-                name: m,
+                name: moduleName,
+                enabled: moduleEnabled,
             });
         } else {
-            modules = modules.filter((c) => c.name != m);
+            modules = modules.filter((c) => c.name != moduleName);
         }
 
         sortModules();
@@ -37,31 +43,23 @@
 
     let modules = [];
 
-    try {
-        const moduleIterator = client.getModuleManager().iterator();
+    getModules().then(mods => {
+        for (const mod of mods) {
+            const name = mod.name;
+            const enabled = mod.enabled;
+            const hidden = mod.hidden;
 
-        while (moduleIterator.hasNext()) {
-            const m = moduleIterator.next();
-
-            if (!m.getEnabled() || m.isHidden()) {
-                continue;
+            if (enabled && !hidden) {
+                modules.push({
+                    name: name,
+                });
             }
-
-            modules.push({
-                name: m.getName(),
-            });
         }
 
         sortModules();
-    } catch (err) {
-        console.log(err);
-    }
+    }).catch(console.error);
 
-    try {
-        events.on("toggleModule", handleToggleModule);
-    } catch (err) {
-        console.log(err);
-    }
+    listen("toggleModule", handleToggleModule);
 </script>
 
 <div class="arraylist">

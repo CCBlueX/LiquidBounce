@@ -48,6 +48,8 @@ object IntegrationHandler : Listenable {
     // This is the URL that will be opened when the client is ready.
     internal const val INTEGRATION_URL = "http://127.0.0.1:${NettyServer.PORT}/default/title/index.html"
 
+    internal const val HUD_URL = "http://127.0.0.1:${NettyServer.PORT}/default/hud/index.html"
+
     /**
      * This tab is always open and initialized. We keep this tab open to make it possible to draw on the screen,
      * even when no specific tab is open.

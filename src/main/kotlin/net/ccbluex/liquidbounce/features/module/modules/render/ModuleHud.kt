@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.HUD_URL
 
 /**
  * Module HUD
@@ -41,7 +42,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         browserTab?.closeTab()
 
         // Create a new tab and open it
-        browserTab = BrowserManager.browser?.createTab("https://www.testufo.com")
+        browserTab = BrowserManager.browser?.createTab(HUD_URL)
     }
 
     override fun disable() {
