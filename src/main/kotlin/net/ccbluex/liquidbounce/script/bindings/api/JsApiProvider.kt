@@ -55,4 +55,7 @@ object JsApiProvider {
     @JvmField
     val interactionUtil = JsInteractionUtil
 
+    @JvmField
+    val blockUtil = JsBlockUtil
+
 }
