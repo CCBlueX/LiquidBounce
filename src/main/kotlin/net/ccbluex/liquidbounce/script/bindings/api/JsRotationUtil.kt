@@ -61,8 +61,7 @@ object JsRotationUtil {
      */
     @JvmName("aimAtRotation")
     fun aimAtRotation(rotation: Rotation, fixVelocity: Boolean) {
-        RotationManager.aimAt(rotation, openInventory = true, RotationsConfigurable().also {
-            it.turnSpeed = 180f..180f
+        RotationManager.aimAt(rotation, considerInventory = true, RotationsConfigurable(180f..180f).also {
             it.fixVelocity = fixVelocity
         })
     }
