@@ -54,10 +54,12 @@ import kotlin.math.sqrt
  */
 
 object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
-    const val MAX_SIMULATED_TICKS = 240
+    private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000)
+    private val alwaysShowBow by boolean("AlwaysShowBow", false)
+    private val otherPlayers by boolean("OtherPlayers", true)
 
     fun shouldDrawTrajectory(player: PlayerEntity, item: Item): Boolean {
-        return item is BowItem && player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem
+        return item is BowItem && (player.isUsingItem || alwaysShowBow) || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
@@ -95,15 +97,16 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             }
         }
 
-        for (otherPlayer in world.players) {
-            val landingPosition = drawTrajectory(otherPlayer, matrixStack, event.partialTicks)
+        if (otherPlayers) {
+            for (otherPlayer in world.players) {
+                val landingPosition = drawTrajectory(otherPlayer, matrixStack, event.partialTicks)
 
-            if (landingPosition is EntityHitResult) {
-                if (landingPosition.entity != player) {
-                    continue
-                }
+                if (landingPosition is EntityHitResult) {
+                    if (landingPosition.entity != player) {
+                        continue
+                    }
 
-                // todo: add rect support
+                    // todo: add rect support
 //                val vertexFormat = PositionColorVertexFormat()
 //
 //                vertexFormat.initBuffer(4)
@@ -116,6 +119,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 //                    RenderEngine.SCREEN_SPACE_LAYER,
 //                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
 //                )
+                }
             }
         }
 
@@ -238,7 +242,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
         var currTicks = 0
 
-        while (!hasLanded && posY > world.bottomY && currTicks < MAX_SIMULATED_TICKS) { // Set pos before and after
+        while (!hasLanded && posY > world.bottomY && currTicks < maxSimulatedTicks) { // Set pos before and after
             val posBefore = Vec3d(posX, posY, posZ)
             var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
 
@@ -327,10 +331,8 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 // Calculate power of bow
                 var power = player.itemUseTime / 20f
                 power = (power * power + power * 2F) / 3F
-
-                if (power < 0.1F) {
-                    return null
-                }
+                power = if (alwaysShowBow && power == 0.0F) 1.0F else power
+                if (power < 0.1F) return null
 
                 return TrajectoryInfo(
                     0.05F,
