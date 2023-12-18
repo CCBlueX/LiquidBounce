@@ -554,10 +554,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     fun runWithNearestTrackedDistance(entity: Entity, f: () -> Unit) {
-        if (entity !is EntityPlayer)
-            return
-
-        if (!handleEvents()|| mode == "Modern") {
+        if (entity !is EntityPlayer || !handleEvents()|| mode == "Modern") {
             f()
 
             return
@@ -565,7 +562,6 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
         var backtrackDataArray = getBacktrackData(entity.uniqueID)?.toMutableList() ?: return
 
-        // Filter out negatives, sort by distance
         backtrackDataArray = backtrackDataArray.sortedBy { (x, y, z, _) ->
             runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
                 mc.thePlayer.getDistanceToBox(entity.hitBox)
