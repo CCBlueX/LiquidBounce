@@ -1184,7 +1184,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             return
         }
 
-        if (speedLimiter && speed > speedLimit) {
+        if (!slow && speedLimiter && speed > speedLimit) {
             input.moveStrafe = 0f
             input.moveForward = 0f
             return
