@@ -26,6 +26,12 @@
 
     function onMouseDown() {
         moving = true;
+
+        // Bring panel to front
+        document.querySelectorAll(".panel").forEach(panel => {
+            panel.style.zIndex = 0;
+        });
+        this.parentElement.style.zIndex = 1;
     }
 
     function onMouseMove(e) {
@@ -114,6 +120,7 @@
     overflow: hidden;
     width: 225px;
     position: absolute;
+    backdrop-filter: blur(2px);
   }
 
   .title-wrapper {

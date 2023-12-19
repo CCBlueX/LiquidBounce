@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.screen.EmptyScreen
+import net.ccbluex.liquidbounce.web.integration.VrScreen
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -48,5 +51,11 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
         --text: ${textColor.toHex(true)}
         --text-dimmed: ${dimmedTextColor.toHex(true)}
         """.trimIndent()
+
+    override fun enable() {
+        mc.setScreen(EmptyScreen())
+        IntegrationHandler.virtualOpen("clickgui")
+        super.enable()
+    }
 
 }

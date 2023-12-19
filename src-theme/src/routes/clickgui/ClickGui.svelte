@@ -63,8 +63,8 @@
     * todo: request from clickgui settings
     * */
     let clickGuiSettings = {
-        modulesColor: "rgba(0,0,0,0.5)",
-        headerColor: "rgba(0, 0, 0, 0.68)",
+        modulesColor: "rgba(0,0,0,0.1)",
+        headerColor: "rgba(0, 0, 0, 0.4)",
         accentColor: "#4677ff",
         textColor: "#ffffff",
         textDimmed: "rgba(211,211,211,255)",
@@ -104,6 +104,10 @@
 </main>
 
 <style>
+    main {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
     .clickgui-container {
         height: 100vh;
         width: 100vw;

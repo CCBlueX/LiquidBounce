@@ -28,11 +28,8 @@ import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
-import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.socket.netty.NettyServer
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.Screen
@@ -115,7 +112,7 @@ object IntegrationHandler : Listenable {
             return@handler
         }
 
-        if (event.screen is EmptyScreen) {
+        if (event.screen is VrScreen) {
             return@handler
         }
 
@@ -133,12 +130,12 @@ object IntegrationHandler : Listenable {
         }
 
         if (!virtualScreenType.showAlong) {
-            val emptyScreen = EmptyScreen()
+            val emptyScreen = VrScreen(virtualScreenType.assignedName)
             mc.setScreen(emptyScreen)
             event.cancelEvent()
+        } else {
+            virtualOpen(virtualScreenType.assignedName)
         }
-
-        virtualOpen(virtualScreenType.assignedName)
     }
 
 }
