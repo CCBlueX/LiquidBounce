@@ -83,7 +83,6 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
             val deltaPing = pingSinceJoin - entry.latency
             val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profileId).second
 
-
             // Intave instantly sends this packet, but some servers might lag, so it might be delayed,
             // that's why the difference limit is 15 MS. The less the value, the lower the chances of producing
             // false positives, even though it's highly unlikely.
@@ -103,12 +102,12 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
                 continue
             }
 
-            suspectList[entry.profileId] = Pair(entry.latency, System.currentTimeMillis())
+            suspectList[entry.profileId] = entry.latency to System.currentTimeMillis()
         }
     }
 
     override fun isBot(entity: PlayerEntity): Boolean {
-        return botList.contains(player.uuid)
+        return botList.contains(entity.uuid)
     }
 
     override fun reset() {
