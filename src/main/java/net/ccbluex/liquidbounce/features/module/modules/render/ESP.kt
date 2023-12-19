@@ -98,14 +98,18 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
             if (entity != mc.thePlayer && isSelected(entity, false)) {
-                val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+                val distanceSquared = entity.getDistanceSq(
+                    mc.thePlayer.posX,
+                    mc.thePlayer.posY,
+                    mc.thePlayer.posZ
+                )
+
+                if (onLook && !isLookingOnEntities(entity)) {
+                    continue
+                }
 
                 if (distanceSquared <= maxDistanceSquared) {
                     val color = getColor(entity)
-
-                    if (onLook && !isLookingOnEntities(entity)) {
-                        continue
-                    }
 
                     when (mode) {
                         "Box", "OtherBox" -> drawEntityBox(entity, color, mode != "OtherBox")
@@ -203,7 +207,11 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+                    val distanceSquared = entity.getDistanceSq(
+                        mc.thePlayer.posX,
+                        mc.thePlayer.posY,
+                        mc.thePlayer.posZ
+                    )
 
                     if (distanceSquared <= maxDistanceSquared) {
 
