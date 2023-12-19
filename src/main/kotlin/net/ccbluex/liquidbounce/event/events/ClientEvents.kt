@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
@@ -37,6 +38,9 @@ class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
 class ToggleModuleEvent(val module: Module, val newState: Boolean, val ignoreCondition: Boolean = false) : Event()
+
+@Nameable("choiceChange")
+class ChoiceChangeEvent(val module: Module, val oldChoice: Choice, val newChoice: Choice) : Event()
 
 @Nameable("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
