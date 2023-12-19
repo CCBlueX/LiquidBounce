@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.LookUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
@@ -27,10 +28,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
-import net.minecraft.util.MathHelper.cos
-import net.minecraft.util.MathHelper.sin
 import net.minecraft.util.ResourceLocation
-import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
@@ -99,21 +97,21 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
+        val maxDistanceSquared = maxRenderDistance * maxRenderDistance
+
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase) continue
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
 
-            if (onLook && !isLookingOnEntities(entity)) {
-                continue
-            }
-
             val name = entity.displayName.unformattedText ?: continue
-
-            val maxDistanceSquared = maxRenderDistance * maxRenderDistance
 
             if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
                 distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+            }
+
+            if (onLook && !isLookingOnEntities(entity, lookThreshold.toDouble())) {
+                continue
             }
 
             if (distanceSquared <= maxDistanceSquared) {
@@ -290,25 +288,6 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         // Pop
         glPopMatrix()
-    }
-
-    private fun isLookingOnEntities(entity: Entity): Boolean {
-        val player = mc.thePlayer
-        val playerRotation = player.rotationYawHead
-
-        val lookVec = Vec3(
-            -sin(playerRotation * (Math.PI.toFloat() / 180f)).toDouble(),
-            0.0,
-            cos(playerRotation * (Math.PI.toFloat() / 180f)).toDouble()
-        ).normalize()
-
-        val playerPos = player.positionVector.addVector(0.0, player.eyeHeight.toDouble(), 0.0)
-        val entityPos = entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
-
-        val directionToEntity = entityPos.subtract(playerPos).normalize()
-        val dotProductThreshold = lookVec.dotProduct(directionToEntity)
-
-        return dotProductThreshold > lookThreshold
     }
 
     private fun getHealthString(entity: EntityLivingBase): String {

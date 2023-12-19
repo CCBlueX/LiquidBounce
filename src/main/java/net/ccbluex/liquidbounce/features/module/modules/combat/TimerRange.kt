@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.LookUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
@@ -23,9 +24,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.util.MathHelper.cos
-import net.minecraft.util.MathHelper.sin
-import net.minecraft.util.Vec3
 import java.awt.Color
 import kotlin.random.Random
 
@@ -169,7 +167,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         val nearbyEntity = getNearestEntityInRange()
 
         if (nearbyEntity != null && isPlayerMoving()) {
-            if (isLookingTowardsEntities(nearbyEntity)) {
+            if (isLookingOnEntities(nearbyEntity, lookThreshold.toDouble())) {
                 val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
 
                 if (confirmTick && entityDistance <= randomRange) {
@@ -225,7 +223,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         if (timerBoostMode.lowercase() == "smartmove") {
             getNearestEntityInRange()?.let { nearbyEntity ->
                 val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
-                if (entityDistance <= maxRange && isLookingTowardsEntities(nearbyEntity)) {
+                if (entityDistance <= maxRange && isLookingOnEntities(nearbyEntity, lookThreshold.toDouble())) {
                     if (markMode == "Box") {
                         drawEntityBox(nearbyEntity, Color(37, 126, 255, 70), outline)
                     } else if (markMode != "Off") {
@@ -240,30 +238,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                 }
             }
         }
-    }
-
-    /**
-     * This check is useful to prevent player from changing speed while looking away
-     * And prevent player from changing speed toward unintended entity/target while moving.
-     */
-    private fun isLookingTowardsEntities(entity: Entity): Boolean {
-        val playerRotation = mc.thePlayer.rotationYawHead
-
-        // Synced lookVec with the player head rotation (To sync with killaura silent rotation)
-        val lookVec = Vec3(
-            -sin(playerRotation * (Math.PI.toFloat() / 180f)).toDouble(),
-            0.0,
-            cos(playerRotation * (Math.PI.toFloat() / 180f)).toDouble()
-        ).normalize()
-
-        val playerPos = mc.thePlayer.positionVector.addVector(0.0, mc.thePlayer.eyeHeight.toDouble(), 0.0)
-        val entityPos = entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
-
-        val directionToEntity = entityPos.subtract(playerPos).normalize()
-        val dotProductThreshold = lookVec.dotProduct(directionToEntity)
-
-        // Player needs to be facing the entity/target with chosen dotproduct, in this case default threshold of at least 0.5
-        return dotProductThreshold > lookThreshold.toDouble()
     }
 
     /**

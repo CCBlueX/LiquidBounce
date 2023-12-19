@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.LookUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -30,9 +31,6 @@ import net.minecraft.client.renderer.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.MathHelper.cos
-import net.minecraft.util.MathHelper.sin
-import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
@@ -105,7 +103,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                     distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
                 }
 
-                if (onLook && !isLookingOnEntities(entity)) {
+                if (onLook && !isLookingOnEntities(entity, lookThreshold.toDouble())) {
                     continue
                 }
 
@@ -210,7 +208,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                 for (entity in entities) {
                     if (distanceSquared <= maxDistanceSquared) {
 
-                        if (onLook && !isLookingOnEntities(entity)) {
+                        if (onLook && !isLookingOnEntities(entity, lookThreshold.toDouble())) {
                             continue
                         }
 
@@ -244,25 +242,6 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             .filterIsInstance<EntityLivingBase>()
             .filterNot { isBot(it) && bot }
             .filter { player.getDistanceSqToEntity(it) <= maxDistanceSquared }
-    }
-
-    private fun isLookingOnEntities(entity: Entity): Boolean {
-        val player = mc.thePlayer
-        val playerRotation = player.rotationYawHead
-
-        val lookVec = Vec3(
-            -sin(playerRotation * (Math.PI.toFloat() / 180f)).toDouble(),
-            0.0,
-            cos(playerRotation * (Math.PI.toFloat() / 180f)).toDouble()
-        ).normalize()
-
-        val playerPos = player.positionVector.addVector(0.0, player.eyeHeight.toDouble(), 0.0)
-        val entityPos = entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
-
-        val directionToEntity = entityPos.subtract(playerPos).normalize()
-        val dotProductThreshold = lookVec.dotProduct(directionToEntity)
-
-        return dotProductThreshold > lookThreshold
     }
 
     fun getColor(entity: Entity? = null): Color {
