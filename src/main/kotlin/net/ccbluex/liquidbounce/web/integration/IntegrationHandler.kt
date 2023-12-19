@@ -70,7 +70,6 @@ object IntegrationHandler : Listenable {
     enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
                                  val showAlong: Boolean = false, private val open: () -> Unit = {}) {
 
-
         TITLE("title", { it is TitleScreen }, open = {
             mc.setScreen(TitleScreen())
         }),
@@ -91,14 +90,14 @@ object IntegrationHandler : Listenable {
 
     }
 
-    private fun virtualOpen(name: String) {
+    fun virtualOpen(name: String) {
         virtualClose()
         val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
         EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
             VirtualScreenEvent.Action.OPEN))
     }
 
-    private fun virtualClose() {
+    fun virtualClose() {
         EventManager.callEvent(VirtualScreenEvent(momentaryVirtualScreen?.name ?: return,
             VirtualScreenEvent.Action.CLOSE))
         momentaryVirtualScreen = null

@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.client.packet.User
@@ -52,9 +53,9 @@ class NotificationEvent(val title: String, val message: String, val severity: Se
 @WebSocketEvent
 class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
     enum class ChatGroup {
-        @Nameable("public")
+        @SerializedName("public")
         PUBLIC_CHAT,
-        @Nameable("private")
+        @SerializedName("private")
         PRIVATE_CHAT
     }
 }
@@ -72,12 +73,12 @@ class BrowserReadyEvent(val browser: IBrowser) : Event()
 
 @Nameable("virtualScreen")
 @WebSocketEvent
-class VirtualScreenEvent(val name: String, val action: Action) : Event() {
+class VirtualScreenEvent(val screenName: String, val action: Action) : Event() {
 
     enum class Action {
-        @Nameable("open")
+        @SerializedName("open")
         OPEN,
-        @Nameable("close")
+        @SerializedName("close")
         CLOSE
     }
 

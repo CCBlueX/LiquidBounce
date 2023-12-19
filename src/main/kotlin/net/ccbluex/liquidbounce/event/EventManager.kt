@@ -91,7 +91,9 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     VirtualScreenEvent::class,
     FpsChangeEvent::class,
     PlayerStatsChangeEvent::class,
-    SimulatedTickEvent::class
+    SimulatedTickEvent::class,
+    SplashOverlayEvent::class,
+    SplashProgressEvent::class
 )
 
 /**

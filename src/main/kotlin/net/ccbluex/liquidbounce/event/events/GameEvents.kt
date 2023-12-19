@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
@@ -80,3 +81,18 @@ class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatTy
     }
 
 }
+
+@Nameable("splashOverlay")
+@WebSocketEvent
+class SplashOverlayEvent(val action: Action) : Event() {
+
+    enum class Action {
+        @SerializedName("show") SHOW,
+        @SerializedName("hide") HIDE
+    }
+
+}
+
+@Nameable("splashProgress")
+@WebSocketEvent
+class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event()

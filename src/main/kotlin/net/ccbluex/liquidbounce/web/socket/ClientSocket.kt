@@ -64,6 +64,8 @@ object ClientSocket {
         socketEventHandler.register("fps")
         socketEventHandler.register("playerStats")
         socketEventHandler.register("key")
+        socketEventHandler.register("splashOverlay")
+        socketEventHandler.register("splashProgress")
 
         // RestAPI
         restApi.setupRoutes()

@@ -1,4 +1,27 @@
-<html>
+<script>
+    import { listen } from "../../client/ws.svelte";
+
+    listen("splashProgress", (data) => {
+        console.log(data);
+
+        // from 0.0 to 1.0
+        const progress = data.progress;
+        const isComplete = data.isComplete;
+        console.log("Splashscreen progress: " + data.progress);
+
+        const progressElement = document.getElementById("progress");
+        progressElement.value = progress * 100;
+
+        if (isComplete) {
+            document.getElementById("background")
+                .classList.add("background-fade-out");
+
+            let logo = document.getElementById("logo");
+            logo.classList.add("fade-out");
+            progressElement.classList.add("fade-out");
+        }
+    });
+</script>
 
 <head>
     <style>
@@ -49,50 +72,19 @@
                 opacity: 0;
             }
         }
+
+        progress {
+            margin-top: 20px;
+            width: 275px;
+            height: 20px;
+        }
     </style>
-
-    <script>
-        console.log("Splashscreen loaded");
-
-        // Do a few debugging things - this might help to figure out issues on the user-end
-        // console.log("Debugging");
-        // console.log("View Var: " + view);
-        // console.log("Events Var: " + events);
-        //
-        // try {
-        //     events.on("close", (event) => {
-        //         event.cancelEvent();
-        //
-        //         view.state("transitioning");
-        //
-        //         document.getElementById("background")
-        //             .classList.add("background-fade-out");
-        //
-        //         let logo = document.getElementById("logo");
-        //         logo.addEventListener("animationend", (ev) => {
-        //             if (ev.animationName === "fade") {
-        //                 view.state("end");
-        //             }
-        //         });
-        //         logo.classList.add("fade-out");
-        //     });
-        // } catch (e) {
-        //     console.error("Error while setting up event listener: " + e);
-        //
-        //     // This is a fallback in case the event listener fails
-        //     try {
-        //         view.state("end");
-        //     } catch (e) {
-        //         console.error("Error while setting view state on fallback: " + e);
-        //     }
-        // }
-    </script>
 </head>
 
 <body id="background">
 <div class="center">
-    <img id="logo" src="img/logo.svg" alt="logo" class="flash">
+    <img id="logo" src="img/logo.svg" alt="logo" class="flash"><br>
+
+    <progress id="progress" value="0" max="100"></progress>
 </div>
 </body>
-
-</html>
