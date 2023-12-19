@@ -42,6 +42,18 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     val hurtTime by int("HurtTime", 10, 0..10)
     val chance by int("Chance", 100, 0..100)
 
+    override fun handleEvents(): Boolean {
+        val handleEvents = super.handleEvents()
+
+        // In case during code suspension the module cannot handle events, we unblock inputs.
+        if (!handleEvents) {
+            WTap.stopMoving = false
+            SprintTap.antiSprint = false
+        }
+
+        return handleEvents
+    }
+
     object Packet : Choice("Packet") {
         override val parent: ChoiceConfigurable
             get() = modes
@@ -117,9 +129,11 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         }
     }
 
-    fun shouldBlockSprinting() = enabled && SprintTap.isActive && SprintTap.antiSprint
+    fun shouldBlockSprinting() =
+        enabled && SprintTap.isActive && SprintTap.antiSprint
 
-    fun shouldStopMoving() = enabled && WTap.isActive && WTap.stopMoving
+    fun shouldStopMoving() =
+        enabled && WTap.isActive && WTap.stopMoving
 
     private suspend fun <T : Event> Sequence<T>.shouldStopSprinting(event: AttackEvent): Boolean {
         val enemy = event.enemy

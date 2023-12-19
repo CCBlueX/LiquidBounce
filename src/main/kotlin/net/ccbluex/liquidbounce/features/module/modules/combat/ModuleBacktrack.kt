@@ -100,11 +100,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val entity = target ?: return@handler
-
         val pos = Vec3(position?.pos ?: return@handler)
 
         val dimensions = entity.getDimensions(entity.pose)
-
         val d = dimensions.width.toDouble() / 2.0
 
         val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
@@ -120,7 +118,20 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
-    val tickHandler = handler<GameTickEvent> {
+    /**
+     * When we process packets, we must imitate the game's server-packet handling logic
+     * This means the module MUST have top priority.
+     *
+     * @see net.minecraft.client.MinecraftClient.render
+     *
+     * Runnable runnable;
+     * while((runnable = (Runnable)this.renderTaskQueue.poll()) != null) {
+     *      runnable.run();
+     * }
+     *
+     * That gets called first, then the client's packets.
+     */
+    val tickHandler = handler<GameTickEvent>(priority = 1002) {
         if (shouldCancelPackets()) {
             processPackets()
         } else {
@@ -186,10 +197,12 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         position = null
     }
 
-    fun isLagging() = enabled && packetQueue.isNotEmpty()
+    fun isLagging() =
+        enabled && packetQueue.isNotEmpty()
 
     private fun shouldConsiderAsEnemy(target: Entity) =
         target.shouldBeAttacked() && target.boxedDistanceTo(player) in range && player.age > 10
 
-    private fun shouldCancelPackets() = target != null && target!!.isAlive && shouldConsiderAsEnemy(target!!)
+    private fun shouldCancelPackets() =
+        target != null && target!!.isAlive && shouldConsiderAsEnemy(target!!)
 }
