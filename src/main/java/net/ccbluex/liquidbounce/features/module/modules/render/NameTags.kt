@@ -78,6 +78,8 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val onLook by BoolValue("OnLook", false)
     private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..1f) { onLook }
 
+    private var distanceSquared = 0.0
+
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
 
@@ -109,7 +111,10 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             val name = entity.displayName.unformattedText ?: continue
 
             val maxDistanceSquared = maxRenderDistance * maxRenderDistance
-            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+
+            if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
+                distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+            }
 
             if (distanceSquared <= maxDistanceSquared) {
                 renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)

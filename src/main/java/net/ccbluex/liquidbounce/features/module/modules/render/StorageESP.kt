@@ -40,6 +40,8 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
 
     private val maxRenderDistance by IntegerValue("MaxRenderDistance", 100, 1..500)
 
+    private var distanceSquared = 0.0
+
     private val chest by BoolValue("Chest", true)
     private val enderChest by BoolValue("EnderChest", true)
     private val furnace by BoolValue("Furnace", true)
@@ -80,12 +82,15 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
             for (tileEntity in mc.theWorld.loadedTileEntityList) {
                 val color = getColor(tileEntity) ?: continue
 
-                val tileEntityPos = tileEntity.pos
-                val distanceSquared = mc.thePlayer.getDistanceSq(
-                    tileEntityPos.x.toDouble(),
-                    tileEntityPos.y.toDouble(),
-                    tileEntityPos.z.toDouble()
-                )
+                if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
+                    val tileEntityPos = tileEntity.pos
+
+                    distanceSquared = mc.thePlayer.getDistanceSq(
+                        tileEntityPos.x.toDouble(),
+                        tileEntityPos.y.toDouble(),
+                        tileEntityPos.z.toDouble()
+                    )
+                }
 
                 if (distanceSquared <= maxDistanceSquared) {
                     if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
@@ -147,13 +152,15 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                 }
             }
             for (entity in mc.theWorld.loadedEntityList) {
+                if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
+                    val entityPos = entity.position
 
-                val entityPos = entity.position
-                val distanceSquared = mc.thePlayer.getDistanceSq(
-                    entityPos.x.toDouble(),
-                    entityPos.y.toDouble(),
-                    entityPos.z.toDouble()
-                )
+                    distanceSquared = mc.thePlayer.getDistanceSq(
+                        entityPos.x.toDouble(),
+                        entityPos.y.toDouble(),
+                        entityPos.z.toDouble()
+                    )
+                }
 
                 if (distanceSquared <= maxDistanceSquared) {
                     if (entity is EntityMinecartChest) {

@@ -63,6 +63,8 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
     private val onLook by BoolValue("OnLook", false)
     private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..1f) { onLook }
 
+    private var distanceSquared = 0.0
+
     private val colorTeam by BoolValue("Team", false)
     private val bot by BoolValue("Bots", true)
 
@@ -98,11 +100,10 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
             if (entity != mc.thePlayer && isSelected(entity, false)) {
-                val distanceSquared = entity.getDistanceSq(
-                    mc.thePlayer.posX,
-                    mc.thePlayer.posY,
-                    mc.thePlayer.posZ
-                )
+
+                if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
+                    distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+                }
 
                 if (onLook && !isLookingOnEntities(entity)) {
                     continue
@@ -207,8 +208,6 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
-
                     if (distanceSquared <= maxDistanceSquared) {
 
                         if (onLook && !isLookingOnEntities(entity)) {
