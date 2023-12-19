@@ -8,6 +8,7 @@
     //export let getCategories;
     export let toggleModule;
 
+    // todo: request from API
     const categories = [
         "Movement",
         "Combat",

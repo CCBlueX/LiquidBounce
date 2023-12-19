@@ -6,15 +6,20 @@
     export let name;
     export let modules;
 
+    export let listen;
+    export let toggleModule;
+
     export let startTop;
     export let startLeft;
 
-    let expanded = storage.getItem(`clickgui.panel.${name}.expanded`) === "true" || false;
+    console.log(modules);
+
+    let expanded = localStorage.getItem(`clickgui.panel.${name}.expanded`) === "true" || false;
 
     let renderedModules = expanded ? modules : [];
 
-    let top = parseInt(storage.getItem(`clickgui.panel.${name}.top`)) || startTop;
-    let left = parseInt(storage.getItem(`clickgui.panel.${name}.left`)) || startLeft;
+    let top = parseInt(localStorage.getItem(`clickgui.panel.${name}.top`)) || startTop;
+    let left = parseInt(localStorage.getItem(`clickgui.panel.${name}.left`)) || startLeft;
     let moving = false;
     let prevX = 0;
     let prevY = 0;
@@ -43,8 +48,8 @@
 
     function onMouseUp() {
         moving = false;
-        storage.setItem(`clickgui.panel.${name}.top`, top);
-        storage.setItem(`clickgui.panel.${name}.left`, left);
+        localStorage.setItem(`clickgui.panel.${name}.top`, top);
+        localStorage.setItem(`clickgui.panel.${name}.left`, left);
     }
 
     function toggleExpanded(e) {
@@ -55,18 +60,21 @@
             expanded = true;
             renderedModules = modules;
         }
-        storage.setItem(`clickgui.panel.${name}.expanded`, expanded);
+        localStorage.setItem(`clickgui.panel.${name}.expanded`, expanded);
     }
 
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("mousemove", onMouseMove);
 
     function handleToggleModule(event) {
-        const targetModule = event.getModule().getName();
-        const found = modules.find(m => m.name === targetModule);
-        if (!found) return;
+        let moduleName = event.moduleName;
+        let moduleEnabled = event.enabled;
 
-        found.enabled = event.getNewState();
+        const mod = modules.find(m => m.name === moduleName);
+        if (!mod)
+            return;
+
+        mod.enabled = moduleEnabled;
         if (expanded) {
             renderedModules = modules;
         }
@@ -79,7 +87,7 @@
     }
 
     try {
-        events.on("toggleModule", handleToggleModule);
+        listen("toggleModule", handleToggleModule);
     } catch (err) {
         console.log(err);
     }
@@ -94,7 +102,7 @@
     <div class="modules">
         {#each renderedModules as m}
             <div transition:slide={{duration: 400, easing: sineInOut}}>
-                <Module instance={m.instance} enabled={m.enabled}/>
+                <Module name={m.name} enabled={m.enabled} toggleModule={toggleModule} />
             </div>
         {/each}
     </div>

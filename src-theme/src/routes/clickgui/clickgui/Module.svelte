@@ -4,30 +4,33 @@
 
     import GenericSetting from "./settings/GenericSetting.svelte";
 
-    export let instance;
+    export let name;
     export let enabled;
 
-    let name = instance.getName();
+    export let toggleModule;
 
     const hiddenSettings = ["Enabled", "Hidden", "Bind"];
 
-    function toJavaScriptArray(a) {
-        const v = [];
-        for (let i = 0; i < a.length; i++) {
-            if (!hiddenSettings.includes(a[i].getName())) {
-                v.push(a[i]);
-            }
-        }
+    // function toJavaScriptArray(a) {
+    //     const v = [];
+    //     for (let i = 0; i < a.length; i++) {
+    //         if (!hiddenSettings.includes(a[i].getName())) {
+    //             v.push(a[i]);
+    //         }
+    //     }
+    //
+    //     return v;
+    // }
 
-        return v;
-    }
-
-    let settings = toJavaScriptArray(instance.getContainedValues());
+    let settings = [];
 
     let expanded = false;
 
     function handleToggle(e) {
-        instance.setEnabled(!enabled);
+        toggleModule(name, !enabled);
+
+        // do not toggle here, because we want to wait for the event
+        // enabled = !enabled;
     }
 
     function handleToggleSettings(event) {
@@ -35,7 +38,7 @@
             expanded = !expanded;
 
             if (expanded) {
-                settings = toJavaScriptArray(instance.getContainedValues());
+                // settings = toJavaScriptArray(instance.getContainedValues());
             }
         }
     }

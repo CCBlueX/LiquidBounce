@@ -2,72 +2,101 @@
     import Panel from "./clickgui/Panel.svelte";
     import SearchBar from "./SearchBar.svelte";
 
-    let clickGuiOpened = true;
-    let categories = [];
-    let panels;
-    const modules = [];
+    import { listen } from "../../client/ws.svelte";
+    import { getModules, toggleModule } from "../../client/api.svelte";
 
-    let clickGuiModule;
+    let clickGuiOpened = true;
+    // todo: request from API
+    const categories = [
+        "Movement",
+        "Combat",
+        "Render",
+        "Exploit",
+        "Player",
+        "World",
+        "Misc",
+        "Fun",
+    ];
+    let panels = [];
+    let modules = [];
 
     try {
-        categories = client.getModuleManager().getCategories();
-        panels = client.getModuleManager().getCategories()
-            .map(category => {
-                return {
-                    name: category,
-                    top: 30 + categories.indexOf(category) * 45,
-                    left: 30
-                }
-            });
+        getModules().then(mods => {
+            for (const mod of mods) {
+                const name = mod.name;
+                const category = mod.category;
+                const enabled = mod.enabled;
 
-        const moduleIterator = client.getModuleManager().iterator();
-        while (moduleIterator.hasNext()) {
-            const next = moduleIterator.next();
-            const module = {
-                category: next.getCategory().getReadableName(),
-                name: next.getName(),
-                instance: next,
-                enabled: next.getEnabled()
-            };
-            modules.push(module);
-            if ("clickgui" === module.name.toLowerCase()) {
-                clickGuiModule = module;
+                const module = {
+                    category: category,
+                    name: name,
+                    enabled: enabled
+                };
+                modules.push(module);
             }
-        }
-        // console.log(JSON.stringify(modules))
 
+            panels = categories
+                .map(category => {
+                    const filtered = modules.filter(m => m.category === category);
+
+                    return {
+                        name: category,
+                        top: 30 + categories.indexOf(category) * 45,
+                        left: 30,
+                        modules: filtered
+                    }
+                });
+        }).catch(console.error);
     } catch (err) {
         console.log(err);
     }
 
-    function getModulesOfCategory(category) {
-        return modules.filter(m => m.category === category);
-    }
+    /*
+    * val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
+    val searchAutoFocus by boolean("SearchAutoFocus", true)
+    val moduleColor by color("ModuleColor", Color4b(0, 0, 0, 127)) // rgba(0, 0, 0, 0.5)
+    val headerColor by color("HeaderColor", Color4b(0, 0, 0, 173)) // rgba(0, 0, 0, 0.68)
+    val accentColor by color("AccentColor", Color4b(70, 119, 255, 255)) // #4677ff
+    val textColor by color("TextColor", Color4b(255, 255, 255, 255)) // White
+    val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
+    *
+    * todo: request from clickgui settings
+    * */
+    let clickGuiSettings = {
+        modulesColor: "rgba(0,0,0,0.5)",
+        headerColor: "rgba(0, 0, 0, 0.68)",
+        accentColor: "#4677ff",
+        textColor: "#ffffff",
+        textDimmed: "rgba(211,211,211,255)",
+        searchAlwaysOnTop: true,
+        autoFocus: true
+    };
 
-    
+    let modulesColor = clickGuiSettings.modulesColor;
+    let headerColor = clickGuiSettings.headerColor;
+    let accentColor = clickGuiSettings.accentColor;
+    let accendDimmed = clickGuiSettings.accentColor;
+    let textColor = clickGuiSettings.textColor;
+    let textDimmedColor = clickGuiSettings.textDimmed;
 
-    let modulesColor = kotlin.colorToHex(clickGuiModule.instance.getModuleColor())
-    let headerColor = kotlin.colorToHex(clickGuiModule.instance.getHeaderColor())
-    let accentColor = kotlin.colorToHex(clickGuiModule.instance.getAccentColor())
-    let accendDimmed = kotlin.colorToHex(clickGuiModule.instance.getAccentColor())
-    let textColor = kotlin.colorToHex(clickGuiModule.instance.getTextColor())
-    let textDimmedColor = kotlin.colorToHex(clickGuiModule.instance.getDimmedTextColor())
+    /**
+     *
+     */
 </script>
 
 <main>
     {#if clickGuiOpened}
-        <div class="clickgui-container" 
-        style=
-        "--modules: {modulesColor};
+        <div class="clickgui-container"
+             style=
+                     "--modules: {modulesColor};
         --header: {headerColor};
         --accent: {accentColor};
         --accent-dimmed: {accendDimmed};
         --text: {textColor};
         --textdimmed: {textDimmedColor};">
-
-            <SearchBar root="{clickGuiModule}" modules={modules}/>
+            <SearchBar settings={clickGuiSettings} modules={modules} listen={listen} toggleModule={toggleModule} />
             {#each panels as panel}
-                <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top}
+                <Panel name={panel.name} modules={panel.modules} listen={listen} toggleModule={toggleModule} startTop={panel.top}
                        startLeft={panel.left}/>
             {/each}
         </div>

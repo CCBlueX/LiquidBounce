@@ -1,10 +1,13 @@
 <script>
-    export let root;
+    export let settings;
     export let modules;
+    export let listen;
+
+    export let toggleModule;
 
     // Initial state of search bar visibility.
-    let visible = root.instance.getSearchAlwaysOnTop();
-    let autofocus = root.instance.getSearchAutoFocus();
+    let visible = settings.searchAlwaysOnTop;
+    let autofocus = settings.autoFocus;
     let value = "";
     let filteredModules = [];
     let selectedModule = null;
@@ -37,7 +40,7 @@
     }
 
     const handleToggleClick = (module) => {
-        module.instance.setEnabled(!module.enabled);
+        toggleModule(module.name, !module.enabled);
     };
 
     const handleHiglight = (module) => {
@@ -49,15 +52,19 @@
         }, 1000);
     }
 
-    try {
-        events.on("toggleModule", event => {
-            const targetModule = event.getModule().getName();
-            modules.find(module => targetModule === module.name).enabled = event.getNewState();
-            filterModules();
-        });
-    } catch (error) {
-        console.log(error);
-    }
+    listen("toggleModule", event => {
+        const targetModule = event.moduleName;
+        const moduleEnabled = event.enabled;
+
+        const mod = modules.find(module => targetModule === module.name);
+        if (!mod) {
+            console.warn(`Module ${targetModule} not found`);
+            return;
+        }
+
+        mod.enabled = moduleEnabled;
+        filterModules();
+    });
 
     window.addEventListener("keydown", event => {
         if (visible) {
