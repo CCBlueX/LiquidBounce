@@ -109,7 +109,11 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             val name = entity.displayName.unformattedText ?: continue
 
             val maxDistanceSquared = maxRenderDistance * maxRenderDistance
-            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+            val distanceSquared = entity.getDistanceSq(
+                mc.thePlayer.posX,
+                mc.thePlayer.posY,
+                mc.thePlayer.posZ
+            )
 
             if (distanceSquared <= maxDistanceSquared) {
                 renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
