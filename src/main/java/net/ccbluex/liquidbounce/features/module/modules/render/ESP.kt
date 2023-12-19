@@ -207,11 +207,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    val distanceSquared = entity.getDistanceSq(
-                        mc.thePlayer.posX,
-                        mc.thePlayer.posY,
-                        mc.thePlayer.posZ
-                    )
+                    val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
                     if (distanceSquared <= maxDistanceSquared) {
 
