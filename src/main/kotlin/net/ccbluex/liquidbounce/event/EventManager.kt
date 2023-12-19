@@ -89,7 +89,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ClientChatErrorEvent::class,
     WorldChangeEvent::class,
     AltManagerUpdateEvent::class,
-    SimulatedTickEvent::class
+    SimulatedTickEvent::class,
+    ChoiceChangeEvent::class
 )
 
 /**
