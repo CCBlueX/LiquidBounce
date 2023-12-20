@@ -36,6 +36,7 @@ import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 
 object ESP : Module("ESP", ModuleCategory.RENDER) {
 
@@ -57,6 +58,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
     private val maxRenderDistance by IntegerValue("MaxRenderDistance", 50, 1..300)
+        private var maxRenderDistanceSq: Double = maxRenderDistance.toDouble().pow(2.0)
 
     private val onLook by BoolValue("OnLook", false)
     private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..0.99f) { onLook }
@@ -93,7 +95,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             glLineWidth(1f)
         }
 
-        val maxDistanceSquared = maxRenderDistance * maxRenderDistance
+        maxRenderDistanceSq = maxRenderDistance.toDouble().pow(2.0)
 
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
@@ -105,7 +107,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                     continue
                 }
 
-                if (distanceSquared <= maxDistanceSquared) {
+                if (distanceSquared <= maxRenderDistanceSq) {
                     val color = getColor(entity)
 
                     when (mode) {
@@ -197,7 +199,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         renderNameTags = false
 
         try {
-            val maxDistanceSquared = maxRenderDistance * maxRenderDistance
+            val maxDistanceSquared = maxRenderDistanceSq
             val entitiesGrouped = getEntitiesByColor(maxDistanceSquared.toDouble())
 
             entitiesGrouped.forEach { (color, entities) ->
