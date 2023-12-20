@@ -57,13 +57,16 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow }
         private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
-    private val maxRenderDistance by IntegerValue("MaxRenderDistance", 50, 1..300)
-        private var maxRenderDistanceSq: Double = maxRenderDistance.toDouble().pow(2.0)
+    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..300) {
+        override fun onUpdate(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
+    }
 
     private val onLook by BoolValue("OnLook", false)
     private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..0.99f) { onLook }
 
-    private var distanceSquared = 0.0
+    private var maxRenderDistanceSq = 0.0
 
     private val colorTeam by BoolValue("Team", false)
     private val bot by BoolValue("Bots", true)
@@ -95,13 +98,11 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             glLineWidth(1f)
         }
 
-        maxRenderDistanceSq = maxRenderDistance.toDouble().pow(2.0)
-
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
             if (entity != mc.thePlayer && isSelected(entity, false)) {
 
-                distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+                val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
                 if (onLook && !isLookingOnEntities(entity, lookThreshold.toDouble())) {
                     continue
@@ -199,14 +200,15 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         renderNameTags = false
 
         try {
-            val maxDistanceSquared = maxRenderDistanceSq
-            val entitiesGrouped = getEntitiesByColor(maxDistanceSquared.toDouble())
+            val entitiesGrouped = getEntitiesByColor(maxRenderDistance.toDouble())
 
             entitiesGrouped.forEach { (color, entities) ->
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    if (distanceSquared <= maxDistanceSquared) {
+                    val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+
+                    if (distanceSquared <= maxRenderDistance) {
 
                         if (onLook && !isLookingOnEntities(entity, lookThreshold.toDouble())) {
                             continue

@@ -28,6 +28,7 @@ import net.minecraft.entity.item.EntityMinecartChest
 import net.minecraft.tileentity.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import kotlin.math.pow
 
 object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
     private val mode by
@@ -38,9 +39,13 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
         private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
         private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
-    private val maxRenderDistance by IntegerValue("MaxRenderDistance", 100, 1..500)
+    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..500) {
+        override fun onUpdate(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
+    }
 
-    private var distanceSquared = 0.0
+    private var maxRenderDistanceSq = 0.0
 
     private val chest by BoolValue("Chest", true)
     private val enderChest by BoolValue("EnderChest", true)
@@ -77,22 +82,18 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
 
             mc.gameSettings.gammaSetting = 100000f
 
-            val maxDistanceSquared = maxRenderDistance * maxRenderDistance
-
             for (tileEntity in mc.theWorld.loadedTileEntityList) {
                 val color = getColor(tileEntity) ?: continue
 
-                if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
-                    val tileEntityPos = tileEntity.pos
+                val tileEntityPos = tileEntity.pos
 
-                    distanceSquared = mc.thePlayer.getDistanceSq(
-                        tileEntityPos.x.toDouble(),
-                        tileEntityPos.y.toDouble(),
-                        tileEntityPos.z.toDouble()
-                    )
-                }
+                val distanceSquared = mc.thePlayer.getDistanceSq(
+                    tileEntityPos.x.toDouble(),
+                    tileEntityPos.y.toDouble(),
+                    tileEntityPos.z.toDouble()
+                )
 
-                if (distanceSquared <= maxDistanceSquared) {
+                if (distanceSquared <= maxRenderDistanceSq) {
                     if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
                         drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
 
@@ -154,13 +155,13 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
             for (entity in mc.theWorld.loadedEntityList) {
                 val entityPos = entity.position
 
-                distanceSquared = mc.thePlayer.getDistanceSq(
+                val distanceSquared = mc.thePlayer.getDistanceSq(
                     entityPos.x.toDouble(),
                     entityPos.y.toDouble(),
                     entityPos.z.toDouble()
                 )
 
-                if (distanceSquared <= maxDistanceSquared) {
+                if (distanceSquared <= maxRenderDistanceSq) {
                     if (entity is EntityMinecartChest) {
                         when (mode) {
                             "OtherBox", "Box" -> drawEntityBox(entity, Color(0, 66, 255), mode != "OtherBox")
@@ -223,8 +224,6 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
         val renderManager = mc.renderManager
         GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
-        val maxDistanceSquared = maxRenderDistance * maxRenderDistance
-
         try {
             mc.theWorld.loadedTileEntityList
                 .groupBy { getColor(it) }
@@ -241,7 +240,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                             entityPos.z.toDouble()
                         )
 
-                        if (distanceSquared <= maxDistanceSquared) {
+                        if (distanceSquared <= maxRenderDistanceSq) {
                             TileEntityRendererDispatcher.instance.renderTileEntityAt(
                                 entity,
                                 entityPos.x - renderManager.renderPosX,

@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
@@ -73,13 +72,16 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         private val borderColorBlue by IntegerValue("Border-B", 0, 0..255) { border }
         private val borderColorAlpha by IntegerValue("Border-Alpha", 100, 0..255) { border }
 
-    private val maxRenderDistance by IntegerValue("MaxRenderDistance", 100, 1..500)
-        private var maxRenderDistanceSq: Double = maxRenderDistance.toDouble().pow(2.0)
+    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..300) {
+        override fun onUpdate(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
+    }
 
     private val onLook by BoolValue("OnLook", false)
     private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..0.99f) { onLook }
 
-    private var distanceSquared = 0.0
+    private var maxRenderDistanceSq = 0.0
 
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
@@ -107,7 +109,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
             val name = entity.displayName.unformattedText ?: continue
 
-            distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
             if (onLook && !isLookingOnEntities(entity, lookThreshold.toDouble())) {
                 continue
@@ -123,11 +125,6 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         // Reset color
         glColor4f(1F, 1F, 1F, 1F)
-    }
-
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        maxRenderDistanceSq = maxRenderDistance.toDouble().pow(2.0)
     }
 
     private fun renderNameTag(entity: EntityLivingBase, name: String) {
