@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.MLG
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
@@ -41,9 +40,7 @@ import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.Items
-import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -114,7 +111,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
         // disable the module and return if the inventory is full and the setting for disabling the module is enabled
-        if(disableOnFullInventory && !hasInventorySpace()){
+        if (disableOnFullInventory && !hasInventorySpace()) {
             notification("Inventory is Full", "AutoFarm has been disabled", NotificationEvent.Severity.ERROR)
             disable()
             enabled = false
@@ -149,8 +146,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val blockPos = rayTraceResult.blockPos
 
         val state = rayTraceResult.blockPos.getState() ?: return@repeatable
-        if(isTargeted(state, blockPos)){
-            if(fortune){
+        if (isTargeted(state, blockPos)) {
+            if (fortune) {
                 Hotbar.findBestItem(1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
                     ?.let { (slot, _) ->
                         SilentHotbar.selectSlotSilently(this, slot, 2)
@@ -161,7 +158,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
-            if(mc.interactionManager!!.blockBreakingProgress == -1) {
+            if (mc.interactionManager!!.blockBreakingProgress == -1) {
                 // Only wait if the block is completely broken
                 waitTicks(interactDelay.random())
             }
@@ -169,10 +166,10 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         } else {
             val pos = blockPos.offset(rayTraceResult.side).down()
-            val state = pos.getState()?: return@repeatable
-            if(isFarmBlockWithAir(state, pos)){
+            val state = pos.getState() ?: return@repeatable
+            if (isFarmBlockWithAir(state, pos)) {
                 val item =
-                    if(state.block is FarmlandBlock) {
+                    if (state.block is FarmlandBlock) {
                         itemForFarmland
                     } else {
                         itemForSoulSand
@@ -185,6 +182,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 waitTicks(interactDelay.random())
             }
         }
+    }
 
 
     // Searches for any blocks within the radius that need to be destroyed, such as crops.
@@ -233,7 +231,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 ).squaredDistanceTo(eyesPos) <= radiusSquared
             }.sortedBy { it.first.getCenterDistanceSquared() }
 
-        for ((pos, state) in blocksToPlace) {
+        for ((pos, _) in blocksToPlace) {
             val (rotation, _) = raytracePlaceBlock(
                 player.eyes,
                 pos.up(),
