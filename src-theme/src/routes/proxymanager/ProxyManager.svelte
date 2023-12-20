@@ -1,4 +1,6 @@
 <script>
+    import { pop } from "svelte-spa-router";
+
     let proxyHost = "";
     let proxyPort = 0;
     let proxyUsername = "";
@@ -240,7 +242,7 @@
     </div>
     <footer>
         <div class="footinit">
-            <button class="back" onclick="pages.open('title', screen)">Back</button>
+            <button class="back" on:click={pop}>Back</button>
         </div>
     </footer>
 </div>
