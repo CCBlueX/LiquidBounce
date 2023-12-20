@@ -675,22 +675,22 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         sendPacket(C02PacketUseEntity(entity, ATTACK))
 
-        if (keepSprint) {
+        if (keepSprint && !KeepSprint.state) {
             // Critical Effect
             if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(
                     Potion.blindness
-                ) && !thePlayer.isRiding
-            ) thePlayer.onCriticalHit(entity)
+                ) && !thePlayer.isRiding) {
+                thePlayer.onCriticalHit(entity)
+            }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(
-                    thePlayer.heldItem, entity.creatureAttribute
-                ) > 0F
-            ) thePlayer.onEnchantmentCritical(entity)
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem, entity.creatureAttribute) > 0F) {
+                thePlayer.onEnchantmentCritical(entity)
+            }
         } else {
-            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) thePlayer.attackTargetEntityWithCurrentItem(
-                entity
-            )
+            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) {
+                thePlayer.attackTargetEntityWithCurrentItem(entity)
+            }
         }
 
         // Extra critical effects
@@ -700,14 +700,16 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     Potion.blindness
                 ) && thePlayer.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
                     Criticals.delay
-                ) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb
-            ) thePlayer.onCriticalHit(entity)
+                ) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
+                thePlayer.onCriticalHit(entity)
+            }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(
-                    thePlayer.heldItem, entity.creatureAttribute
-                ) > 0f || fakeSharp
-            ) thePlayer.onEnchantmentCritical(entity)
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem,
+                    entity.creatureAttribute
+                ) > 0f || fakeSharp) {
+                thePlayer.onEnchantmentCritical(entity)
+            }
         }
 
         // Start blocking after attack
