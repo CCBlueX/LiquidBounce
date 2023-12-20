@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.MLG
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
@@ -179,31 +180,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 item ?: return@repeatable
 
                 SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
-                placeCrop(rayTraceResult)
+                doPlacement(rayTraceResult)
+
                 waitTicks(interactDelay.random())
             }
         }
 
-    }
-    private fun placeCrop(rayTraceResult: BlockHitResult){
-        val stack = player.mainHandStack
-        val count = stack.count
-        val interactBlock = interaction.interactBlock(player, Hand.MAIN_HAND, rayTraceResult)
-
-        if (interactBlock.isAccepted) {
-            if (interactBlock.shouldSwingHand()) {
-                player.swingHand(Hand.MAIN_HAND)
-
-                if (!stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())) {
-                    mc.gameRenderer.firstPersonRenderer.resetEquipProgress(Hand.MAIN_HAND)
-                }
-            }
-
-            return
-        } else if (interactBlock == ActionResult.FAIL) {
-            return
-        }
-    }
 
     // Searches for any blocks within the radius that need to be destroyed, such as crops.
     fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
@@ -288,7 +270,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         // Can we find a placeable target?
         updateTargetToPlaceable(radius, radiusSquared, eyesPos)
-
     }
 
 
@@ -323,7 +304,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     fun hasAirAbove(pos: BlockPos) = pos.up().getState()?.isAir == true
 
-
     private fun isFarmBlock(state: BlockState, allowFarmland: Boolean, allowSoulsand: Boolean): Boolean {
         val block = state.block
         return when (block) {
@@ -336,7 +316,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
         return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
     }
-
 
     override fun enable() {
         ChunkScanner.subscribe(AutoFarmBlockTracker)
