@@ -560,7 +560,13 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             return
         }
 
-        var backtrackDataArray = getBacktrackData(entity.uniqueID)?.toMutableList() ?: return
+        var backtrackDataArray = getBacktrackData(entity.uniqueID)?.toMutableList()
+
+        if (backtrackDataArray == null) {
+            f()
+
+            return
+        }
 
         backtrackDataArray = backtrackDataArray.sortedBy { (x, y, z, _) ->
             runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
