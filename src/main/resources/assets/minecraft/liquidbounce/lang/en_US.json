@@ -329,6 +329,8 @@
         
         "module.xRay.description": "Allows you to see ores through walls.",
         
-        "module.zoot.description": "Removes all bad potion effects/fire."
+        "module.zoot.description": "Removes all bad potion effects/fire.",
+
+        "module.keepSprint.description": "Keeps you sprinting after attacking."
     }
 }
