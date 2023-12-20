@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.LookUtils.isLookingOnEntities
+import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
@@ -70,7 +70,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get())
     }
 
-    private val lookThreshold by FloatValue("LookThreshold", 0.5f, 0.1f..1f) { timerBoostMode == "SmartMove" }
+    private val lookThreshold by FloatValue("LookThreshold", 0.5f, 0.1f..0.99f) { timerBoostMode == "SmartMove" }
 
     // Mark Option
     private val markMode by ListValue("Mark", arrayOf("Off", "Box", "Platform"), "Off") { timerBoostMode == "SmartMove" }

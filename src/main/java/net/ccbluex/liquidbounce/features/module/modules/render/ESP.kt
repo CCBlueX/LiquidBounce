@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.LookUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -59,7 +59,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
     private val maxRenderDistance by IntegerValue("MaxRenderDistance", 50, 1..300)
 
     private val onLook by BoolValue("OnLook", false)
-    private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..1f) { onLook }
+    private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..0.99f) { onLook }
 
     private var distanceSquared = 0.0
 
@@ -99,9 +99,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
             if (entity != mc.thePlayer && isSelected(entity, false)) {
 
-                if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
-                    distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
-                }
+                distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
                 if (onLook && !isLookingOnEntities(entity, lookThreshold.toDouble())) {
                     continue
