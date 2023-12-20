@@ -41,34 +41,35 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
      * SETTINGS
      */
 
+    private val hypixel by BoolValue("Hypixel", false)
+
     private val block by BlockValue("Block", 26)
-    private val throughWalls by ListValue("ThroughWalls", arrayOf("None", "Raycast", "Around"), "None")
+    private val throughWalls by ListValue("ThroughWalls", arrayOf("None", "Raycast", "Around"), "None") { !hypixel }
     private val range by FloatValue("Range", 5F, 1F..7F)
 
     private val action by ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
-    private val surroundings by BoolValue("Surroundings", true)
-        private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
+    private val surroundings by BoolValue("Surroundings", true) { !hypixel }
+    private val instant by BoolValue("Instant", false) { (action == "Destroy" || surroundings) && !hypixel }
 
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
     private val swing by BoolValue("Swing", true)
     private val noHit by BoolValue("NoHit", false)
 
     private val rotations by BoolValue("Rotations", true)
-        private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
-        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+        override fun isSupported() = rotations
+    }
 
-            override fun isSupported() = rotations
-        }
-        private val maxTurnSpeed by maxTurnSpeedValue
+    private val maxTurnSpeed by maxTurnSpeedValue
 
-        private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
+    }
 
-            override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
-        }
-
-        private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
     /**
      * VALUES
@@ -104,10 +105,9 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
         val targetId = block
 
-        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId ||
-            getCenterDistance(pos!!) > range
-        )
+        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId || getCenterDistance(pos!!) > range) {
             pos = find(targetId)
+        }
 
         // Reset current breaking when there is no target block
         if (pos == null) {
@@ -119,9 +119,14 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         var currentPos = pos ?: return
         var spot = faceBlock(currentPos) ?: return
 
-        if (surroundings) {
+        if (surroundings || hypixel) {
             val eyes = player.eyes
-            val blockPos = world.rayTraceBlocks(eyes, spot.vec, false, false, true)?.blockPos
+
+            val blockPos = if (hypixel) {
+                currentPos.up()
+            } else {
+                world.rayTraceBlocks(eyes, spot.vec, false, false, true)?.blockPos
+            }
 
             if (blockPos != null && blockPos.getBlock() != air) {
                 if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z) {
@@ -196,7 +201,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 }
 
                 // Break block
-                if (instant) {
+                if (instant && !hypixel) {
                     // CivBreak style block breaking
                     sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
 
@@ -290,10 +295,10 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
                     val distance = getCenterDistance(blockPos)
 
-                    if (Block.getIdFromBlock(block) != targetID || getCenterDistance(blockPos) > range || nearestBlockDistance < distance || (!isHittable(
-                            blockPos
-                        ) && !surroundings)
-                    ) {
+                    if (Block.getIdFromBlock(block) != targetID
+                        || getCenterDistance(blockPos) > range
+                        || nearestBlockDistance < distance
+                        || !isHittable(blockPos) && !surroundings && !hypixel) {
                         continue
                     }
 
