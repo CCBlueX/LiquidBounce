@@ -195,7 +195,10 @@ fun raytraceBlockSide(
 
             chat(side.toString())
     pos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
-        for (boxShape in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
+        val sortedShapes = shape.boundingBoxes.sortedBy {
+            -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ)
+        }
+        for (boxShape in sortedShapes) {
             val box = boxShape.offset(pos)
             val visibilityPredicate = BoxVisibilityPredicate(box)
 
