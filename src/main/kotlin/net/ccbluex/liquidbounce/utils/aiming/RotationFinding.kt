@@ -183,7 +183,7 @@ fun pointOnBlockSide(
         }
     return Vec3d(spot.x * box.lengthX, spot.y * box.lengthY, spot.z * box.lengthZ)
 }
-
+@Suppress("detekt:complexity.LongParameterList")
 fun raytraceBlockSide(
     side: Direction,
     pos: BlockPos,
