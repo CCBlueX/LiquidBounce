@@ -96,7 +96,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     var currentTarget: BlockPos? = null
 
-    val repeatable = repeatable { event ->
+    val repeatable = repeatable { _ ->
         // Return if the user is inside a screen like the inventory
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
@@ -186,7 +186,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
     // Searches for any blocks within the radius that need to be destroyed, such as crops.
-    fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
+    private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
         val blocksToBreak = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && isTargeted(state, pos) && getNearestPoint(
                 eyesPos,
@@ -215,7 +215,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
     // Searches for any blocks suitable for placing crops or nether wart on
-    fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
+    // returns ture if it found a target
+    private fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
 
         val hotbarItems = Hotbar.items
         val allowFarmland = hotbarItems.any { it in itemsForFarmland }
@@ -303,8 +304,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     fun hasAirAbove(pos: BlockPos) = pos.up().getState()?.isAir == true
 
     private fun isFarmBlock(state: BlockState, allowFarmland: Boolean, allowSoulsand: Boolean): Boolean {
-        val block = state.block
-        return when (block) {
+        return when (state.block) {
                 is FarmlandBlock -> allowFarmland
                 is SoulSandBlock -> allowSoulsand
                 else -> false
