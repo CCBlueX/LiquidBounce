@@ -152,15 +152,13 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                 }
             }
             for (entity in mc.theWorld.loadedEntityList) {
-                if (mc.thePlayer.posX != mc.thePlayer.prevPosX || mc.thePlayer.posZ != mc.thePlayer.prevPosZ) {
-                    val entityPos = entity.position
+                val entityPos = entity.position
 
-                    distanceSquared = mc.thePlayer.getDistanceSq(
-                        entityPos.x.toDouble(),
-                        entityPos.y.toDouble(),
-                        entityPos.z.toDouble()
-                    )
-                }
+                distanceSquared = mc.thePlayer.getDistanceSq(
+                    entityPos.x.toDouble(),
+                    entityPos.y.toDouble(),
+                    entityPos.z.toDouble()
+                )
 
                 if (distanceSquared <= maxDistanceSquared) {
                     if (entity is EntityMinecartChest) {
