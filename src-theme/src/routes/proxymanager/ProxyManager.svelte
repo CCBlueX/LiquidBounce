@@ -1,5 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
+<script>
+    let proxyHost = "";
+    let proxyPort = 0;
+    let proxyUsername = "";
+    let proxyPassword = "";
+
+    let location = "Loading...";
+
+    function set() {
+        //document.getElementById('response').innerText = client.getProxyManager().setProxy(document.getElementById('host').value, parseInt(document.getElementById('port').value), document.getElementById('username').value, document.getElementById('password').value);
+        refresh();
+    }
+
+    function remove() {
+        //document.getElementById('response').innerText = client.getProxyManager().unsetProxy();
+        refresh();
+    }
+
+    function refresh() {
+        // let proxy = client.getProxyManager().getCurrentProxy();
+        //
+        // if (proxy != null) {
+        //     document.getElementById('proxy').innerText = proxy.getHost() + ":" + proxy.getPort();
+        //
+        //     // Fill in input fields
+        //     document.getElementById('host').value = proxy.getHost();
+        //     document.getElementById('port').value = proxy.getPort();
+        //
+        //     let creds = proxy.getCredentials();
+        //     if (creds != null) {
+        //         document.getElementById('username').value = creds.getUsername();
+        //         document.getElementById('password').value = creds.getPassword();
+        //     }
+        // } else {
+        //     document.getElementById('proxy').innerText = "No proxy.";
+        // }
+        //
+        //
+        // document.getElementById('location').innerText = client.getSessionService().getLocation();
+    }
+
+    refresh();
+</script>
+
 <head>
     <meta charset="UTF-8">
     <title>Account Manager</title>
@@ -203,41 +245,4 @@
     </footer>
 </div>
 
-<script>
-    function set() {
-        document.getElementById('response').innerText = client.getProxyManager().setProxy(document.getElementById('host').value, parseInt(document.getElementById('port').value), document.getElementById('username').value, document.getElementById('password').value);
-        refresh();
-    }
-
-    function remove() {
-        document.getElementById('response').innerText = client.getProxyManager().unsetProxy();
-        refresh();
-    }
-
-    function refresh() {
-        let proxy = client.getProxyManager().getCurrentProxy();
-
-        if (proxy != null) {
-            document.getElementById('proxy').innerText = proxy.getHost() + ":" + proxy.getPort();
-
-            // Fill in input fields
-            document.getElementById('host').value = proxy.getHost();
-            document.getElementById('port').value = proxy.getPort();
-
-            let creds = proxy.getCredentials();
-            if (creds != null) {
-                document.getElementById('username').value = creds.getUsername();
-                document.getElementById('password').value = creds.getPassword();
-            }
-        } else {
-            document.getElementById('proxy').innerText = "No proxy.";
-        }
-
-
-        document.getElementById('location').innerText = client.getSessionService().getLocation();
-    }
-
-    refresh();
-</script>
 </body>
-</html>
