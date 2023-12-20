@@ -23,7 +23,9 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.session
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.ClientApi
+import net.ccbluex.liquidbounce.api.ClientApi.formatAvatarUrl
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.utils.client.isPremium
@@ -32,6 +34,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.minecraft.client.session.Session
 
 internal fun RestNode.setupSessionRestApi() {
     setupLocalSessionRestApi()
@@ -45,7 +48,7 @@ private fun RestNode.setupLocalSessionRestApi() {
                 addProperty("username", it.username)
                 addProperty("uuid", it.uuidOrNull.toString())
                 addProperty("accountType", it.accountType.getName())
-                addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuidOrNull))
+                addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
                 addProperty("premium", it.isPremium())
             }
         })
@@ -63,14 +66,16 @@ private fun RestNode.setupAltManagerRestApi() {
     get("/accounts") {
         val accounts = JsonArray()
         for ((i, account) in AccountManager.accounts.withIndex()) {
+            val profile = account.profile ?: continue
+
             accounts.add(JsonObject().apply {
                 // Why are we not serializing the whole account?
                 // -> We do not want to share the access token or anything relevant
 
                 addProperty("id", i)
-                addProperty("username", account.profile?.username)
-                addProperty("uuid", account.profile?.uuid.toString())
-                addProperty("faceUrl", ClientApi.FACE_URL.format(account.profile?.uuid))
+                addProperty("username", profile.username)
+                addProperty("uuid", profile.uuid.toString())
+                addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
                 addProperty("type", account.type)
             })
         }
@@ -82,17 +87,15 @@ private fun RestNode.setupAltManagerRestApi() {
             val id: Int
         )
         val accountForm = decode<AccountForm>(it.content)
-        AccountManager.loginAccount(accountForm.id)
+        AccountManager.loginAccountAsync(accountForm.id)
 
-        httpOk(JsonObject().apply {
-            mc.session.let {
-                addProperty("username", it.username)
-                addProperty("uuid", it.uuidOrNull.toString())
-                addProperty("accountType", it.accountType.getName())
-                addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuidOrNull))
-                addProperty("premium", it.isPremium())
-            }
-        })
+        httpOk(JsonObject())
+    }
+
+    // Restore initial session
+    post("/account/restoreInitial") {
+        AccountManager.restoreInitial()
+        httpOk(mc.session.toJsonObject())
     }
 
     post("/accounts/new/cracked") {
@@ -136,8 +139,16 @@ private fun RestNode.setupAltManagerRestApi() {
         )
 
         val accountForm = decode<AccountForm>(it.content)
-        AccountManager.accounts.removeAt(accountForm.id)
-        httpOk(JsonObject())
+        val account = AccountManager.accounts.removeAt(accountForm.id)
+        httpOk(JsonObject().apply {
+            addProperty("id", accountForm.id)
+
+            val profile = account.profile ?: return@apply
+            addProperty("username", profile.username)
+            addProperty("uuid", profile.uuid.toString())
+            addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+            addProperty("type", account.type)
+        })
     }
 
     // Clears all accounts
@@ -146,4 +157,12 @@ private fun RestNode.setupAltManagerRestApi() {
         httpOk(JsonObject())
     }
 
+}
+
+private fun Session.toJsonObject() = JsonObject().apply {
+    addProperty("username", username)
+    addProperty("uuid", uuidOrNull.toString())
+    addProperty("accountType", accountType.getName())
+    addProperty("avatar", formatAvatarUrl(uuidOrNull, username))
+    addProperty("premium", isPremium())
 }

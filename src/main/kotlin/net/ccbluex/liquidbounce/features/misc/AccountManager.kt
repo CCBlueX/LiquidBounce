@@ -110,11 +110,26 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @RequiredByScript
     @JvmName("newCrackedAccount")
     fun newCrackedAccount(username: String) {
+        if (username.isEmpty()) {
+            error("Username is empty!")
+        }
+
+        if (username.length > 16) {
+            error("Username is too long!")
+        }
+
+        // Check if account already exists
+        if (accounts.any { it.profile?.username.equals(username, true) }) {
+            error("Account already exists!")
+        }
+
         // Create new cracked account
         accounts += CrackedAccount(username).also { it.refresh() }
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
+
+        EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: $username"))
     }
 
     /**

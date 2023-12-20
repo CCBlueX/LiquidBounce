@@ -1,5 +1,159 @@
-<!DOCTYPE html>
-<html lang="en">
+<script>
+    import {
+        deleteAccount,
+        getAccounts,
+        getLocation,
+        getSession,
+        loginAccount,
+        newAltening,
+        newAlteningGen,
+        newCrackedAccount,
+        newMicrosoftAccount,
+        restoreInitialAccount
+    } from "../../client/api.svelte";
+    import { listen } from "../../client/ws.svelte";
+    import { pop } from "svelte-spa-router";
+
+    const random = (length = 8) => {
+        // Declare all characters
+        let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+        // Pick characers randomly
+        let str = '';
+        for (let i = 0; i < length; i++) {
+            str += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        return str;
+
+    };
+
+    let crackedUsername = random();
+
+    function setRandomUsername() {
+        crackedUsername = random();
+    }
+
+    let accounts = [];
+
+    function altManagerUpdate(event) {
+        let message = event.message;
+        let success = event.success;
+
+        console.log(message);
+        feedback(message, success ? "green" : "red")
+
+        updateAccountData();
+        updateAccountList();
+    }
+
+    function updateAccountList() {
+        console.log("Account List updating...")
+        getAccounts().then(list => {
+            accounts = list.map((account, index) => {
+                return {
+                    index: index,
+                    account: account
+                }
+            });
+            console.log("Account List updated!")
+        }).catch(console.error);
+    }
+
+    let sessionUsername = "Loading...";
+    let accountType = "Loading...";
+    let avatar = "";
+    let location = "Loading...";
+
+    function updateAccountData() {
+        getSession().then(session => {
+            sessionUsername = session.username;
+            accountType = session.accountType;
+            avatar = session.avatar;
+        }).catch(console.error);
+
+        getLocation().then(ip => {
+            // Lowercase country code
+            location = ip.country;
+        }).catch(console.error);
+    }
+
+    function siteNewCrackedAccount() {
+        if (crackedUsername.trim() === "") {
+            feedback("Please enter a username", "red");
+            return;
+        }
+
+        newCrackedAccount(crackedUsername);
+    }
+    
+    let alteningAccountToken = "";
+
+    function siteNewAlteningAccount() {
+        if (alteningAccountToken.trim() === "") {
+            feedback("Please enter an account token", "red");
+            return;
+        }
+
+        feedback("Adding account...", "white");
+        newAltening(alteningAccountToken);
+    }
+
+    let alteningApiToken = "";
+
+    function siteGenerateAlteningAccount() {
+        if (alteningApiToken.trim() === "") {
+            feedback("Please enter an API token", "red");
+            return;
+        }
+
+        feedback("Generating account...", "white");
+        newAlteningGen(alteningApiToken);
+    }
+
+    function siteLoginAccount(id) {
+        feedback("Logging in...", "white")
+
+        loginAccount(id)
+            .catch(error => {
+                feedback(error, "red");
+            });
+    }
+
+    function siteDeleteAccount(id) {
+        deleteAccount(id).then(account => {
+            updateAccountList();
+            feedback("Deleted account " + account.username + "!", "green");
+        }).catch(error => {
+            feedback(error, "red");
+        });
+
+    }
+
+    function siteRestoreInitial() {
+        restoreInitialAccount().then(() => {
+            updateAccountData();
+            updateAccountList();
+            feedback("Restored initial account!", "green");
+        }).catch(error => {
+            feedback(error, "red");
+        });
+    }
+
+    let statusMessage = "Idle...";
+    let statusColor = "white";
+
+    function feedback(message, color) {
+        statusMessage = message;
+        statusColor = color;
+    }
+
+    listen("altManagerUpdate", altManagerUpdate);
+    updateAccountList();
+    updateAccountData();
+</script>
+
+
 <head>
     <meta charset="UTF-8">
     <title>Alt Manager</title>
@@ -135,7 +289,7 @@
             margin-bottom: 45px;
         }
 
-        .butto {
+        .back {
             height: 75px;
             width: 150px;
             font-size: 26px;
@@ -149,7 +303,7 @@
             transition: background-position .2s ease-out;
         }
 
-        .butto:hover, .button:hover {
+        .back:hover, .button:hover {
             background-position: left bottom;
         }
 
@@ -174,186 +328,6 @@
             text-align: right;
         }
     </style>
-    <script>
-        const random = (length = 8) => {
-            // Declare all characters
-            let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-            // Pick characers randomly
-            let str = '';
-            for (let i = 0; i < length; i++) {
-                str += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-
-            return str;
-
-        };
-
-        function setRandomUsername() {
-            document.getElementById('username').value = random();
-        }
-
-        function altManagerUpdate(event) {
-            let message = event.getMessage();
-            let success = event.getSuccess();
-
-            console.log(message);
-            feedback(message, success ? "green" : "red")
-
-            updateAccountData();
-            updateAccountList();
-        }
-
-        function updateAccountList() {
-            let accountsDiv = document.getElementById('accounts');
-            let accounts = client.getAccountManager().getAccounts().iterator();
-
-            // Clear the div
-            accountsDiv.innerHTML = "";
-
-            // Add all accounts
-            let i = 0;
-            console.log("Account List updating...")
-            while (accounts.hasNext()) {
-                let account = accounts.next();
-                let accountProfile = account.getProfile();
-                let accountUsername = accountProfile.getUsername();
-                let accountType = account.getType();
-                console.log("Account " + i + ": " + accountType + " " + accountUsername);
-
-                let row = document.createElement('tr');
-                let avatar = document.createElement('td');
-                let type = document.createElement('td');
-                let name = document.createElement('td');
-                let button = document.createElement('td');
-
-                // If account has UUID, set avatar by UUID
-                // https://avatar.liquidbounce.net/avatar/<uuid>/32
-                // Otherwise, set default https://avatar.liquidbounce.net/avatar/MHF_Steve
-
-                if (accountProfile.getUuid() !== null) {
-                    avatar.innerHTML = "<img src='https://avatar.liquidbounce.net/avatar/" + accountProfile.getUuid() + "/20' width='20' height='20' alt='head' class='head'/>";
-                } else {
-                    // fix: when username, it does not take size argument on API
-                    avatar.innerHTML = "<img src='https://avatar.liquidbounce.net/avatar/" + accountUsername + "' width='20' height='20' alt='head' class='head'/>";
-                }
-
-                type.innerText = accountType;
-                name.innerText = accountUsername;
-                button.innerHTML = "<button onclick='loginAccount(\"" + i + "\")'>Login</button><button onclick='deleteAccount(\"" + i + "\")'>Delete</button><button onclick='copyAccount(\"" + i + "\")'>Copy</button><button onclick='favoriteAccount(\"" + i + "\")'>Favorite</button>";
-
-                row.appendChild(avatar);
-                row.appendChild(type);
-                row.appendChild(name);
-                row.appendChild(button);
-                accountsDiv.appendChild(row);
-                i++;
-            }
-        }
-
-        function updateAccountData() {
-            const username = client.getSessionService().getUsername();
-            const faceUrl = client.getSessionService().getFaceUrl();
-            const accountType = client.getSessionService().getAccountType();
-            const location = client.getSessionService().getLocation();
-
-            document.getElementById('sessionUsername').innerText = username;
-            document.getElementById('face').src = faceUrl;
-            document.getElementById('accountType').innerText = accountType;
-            document.getElementById('location').innerText = location;
-        }
-
-        window.onload = function () {
-            updateAccountList();
-            updateAccountData();
-
-            // Set altening token
-            document.getElementById('apitoken').value = client.getAccountManager().getAlteningApiToken();
-        };
-
-        function newCrackedAccount() {
-            let username = document.getElementById('username').value;
-
-            if (username === "") {
-                feedback("Please enter a username", "red");
-                return;
-            }
-
-            client.getAccountManager().newCrackedAccount(username);
-            updateAccountList();
-
-            feedback("Account added!", "green");
-        }
-
-        function newAlteningAccount() {
-            let token = document.getElementById('token').value;
-
-            if (token === "") {
-                feedback("Please enter an account token", "red");
-                return;
-            }
-
-            feedback("Adding account...", "white");
-            client.getAccountManager().newAlteningAccount(token);
-            updateAccountList();
-            feedback("Account added!", "green");
-        }
-
-        function newMicrosoftAccount() {
-            client.getAccountManager().newMicrosoftAccount();
-        }
-
-        function generateAlteningAccount() {
-            let apiToken = document.getElementById('apitoken').value;
-
-            if (apiToken === "") {
-                feedback("Please enter an API token", "red");
-                return;
-            }
-
-            feedback("Generating account...", "white");
-            client.getAccountManager().setAlteningApiToken(apiToken);
-            client.getAccountManager().generateAlteningAccountAsync(apiToken);
-        }
-
-        function loginAccount(id) {
-            feedback("Logging in...", "white")
-
-            try {
-                client.getAccountManager().loginAccountAsync(parseInt(id));
-            } catch (e) {
-                console.error(e);
-                feedback("Failed to login: " + e.getMessage(), "red");
-            }
-        }
-
-        function deleteAccount(id) {
-            const account = client.getAccountManager().getAccounts().remove(parseInt(id));
-            const accountProfile = account.getProfile();
-            updateAccountList();
-
-            feedback("Deleted account: " + accountProfile.getUsername(), "green");
-        }
-
-        function restoreInitial() {
-            client.getAccountManager().restoreInitial();
-            updateAccountData();
-            feedback("Restored initial account", "green");
-        }
-
-        function feedback(message, color) {
-            let status = document.getElementById('status');
-
-            status.innerText = message;
-            status.style.color = color;
-        }
-
-        try {
-            events.on("altManagerUpdate", altManagerUpdate);
-        } catch (e) {
-            console.error(e);
-        }
-    </script>
 </head>
 <body>
 <div class="scale">
@@ -363,33 +337,33 @@
 
         <div id="buttongrid">
             <div class="button">
-                <img id="face" alt="head" class="head"/>
+                <img id="face" alt="head" class="head" src={avatar}/>
                 <br>
 
                 <label><b>Username:</b></label>
-                <div id="sessionUsername" class="username"></div>
+                <div id="sessionUsername" class="username"><p>{sessionUsername}</p></div>
                 <label><b>Account Type:</b></label>
-                <div id="accountType" class="accountType"></div>
+                <div id="accountType" class="accountType"><p>{accountType}</p></div>
                 <label><b>Location:</b></label>
-                <div id="location" class="location"></div>
+                <div id="location" class="location"><p>{location}</p></div>
 
                 <br>
-                <button onclick="restoreInitial()">
+                <button on:click={siteRestoreInitial}>
                     Restore Initial
                 </button>
 
                 <br>
-                <p class="status" id="status">Idle...</p>
+                <p class="status" id="status" style="color: {statusColor};">{statusMessage}</p>
             </div>
 
             <div class="button">
                 <h2>Cracked Login</h2>
                 <div>
                     <label for="username"></label>
-                    <input type="text" id="username" name="username" placeholder="Username">
-                    <button onclick="setRandomUsername()">Random</button>
+                    <input type="text" id="username" name="username" placeholder="Username" bind:value={crackedUsername}>
+                    <button on:click={setRandomUsername}>Random</button>
                     <br>
-                    <button onclick="newCrackedAccount()">
+                    <button on:click={siteNewCrackedAccount}>
                         Add
                     </button>
 
@@ -403,7 +377,7 @@
                 This will open your browser to sign in to your Microsoft account.<br>
                 <br>
 
-                <button onclick="newMicrosoftAccount()">
+                <button on:click={newMicrosoftAccount}>
                     Add
                 </button>
             </div>
@@ -411,27 +385,57 @@
                 <h2>Altening Login</h2>
 
                 <div>
-                    <label for="token"></label><input type="text" id="token" name="token" placeholder="Account Token">
-                    <button onclick="newAlteningAccount()">
+                    <label for="token"></label><input type="text" id="token" name="token" placeholder="Account Token" bind:value={alteningAccountToken}>
+                    <button on:click={siteNewAlteningAccount}>
                         Add
                     </button>
                     <br>
                     <label for="apitoken"></label>
-                    <input type="password" id="apitoken" name="apitoken" placeholder="API Token">
-                    <button onclick="generateAlteningAccount()">
+                    <input type="password" id="apitoken" name="apitoken" placeholder="API Token" bind:value={alteningApiToken}>
+                    <button on:click={siteGenerateAlteningAccount}>
                         Add
                     </button>
                 </div>
             </div>
 
-            <div class="accounts" id="accounts"></div>
+            <div class="accounts" id="accounts">
+                <table>
+                    <tr>
+                        <th>Avatar</th>
+                        <th>Type</th>
+                        <th>Username</th>
+                        <th>Actions</th>
+                    </tr>
+
+                    {#each accounts as entry}
+                        <tr>
+                            <td>
+                                <img src={entry.account.avatar} width="20" height="20"
+                                     alt="head" class="head"/>
+                            </td>
+                            <td>{entry.account.type}</td>
+                            <td>{entry.account.username}</td>
+                            <td>
+                                <button on:click={siteLoginAccount(entry.index)}>
+                                    Login
+                                </button>
+                                <button on:click={siteDeleteAccount(entry.index)}>
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    {/each}
+                </table>
+
+
+            </div>
         </div>
     </div>
     <footer>
         <div class="footinit">
-            <button class="butto" onclick="pages.open('title', screen)">Back</button>
+            <button class="back" on:click={pop}>Back</button>
         </div>
     </footer>
 </div>
 </body>
-</html>
+

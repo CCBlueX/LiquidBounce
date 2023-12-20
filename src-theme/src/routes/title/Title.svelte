@@ -78,7 +78,7 @@
     getSession().then(session => {
         console.log(session);
         username = session.username;
-        faceUrl = session.faceUrl;
+        faceUrl = session.avatar;
         accountType = session.accountType;
     }).catch(console.error);
 

@@ -131,6 +131,167 @@
         return request("/modules")
     }
 
+    /**
+     * get("/accounts") {
+     *         val accounts = JsonArray()
+     *         for ((i, account) in AccountManager.accounts.withIndex()) {
+     *             accounts.add(JsonObject().apply {
+     *                 // Why are we not serializing the whole account?
+     *                 // -> We do not want to share the access token or anything relevant
+     *
+     *                 addProperty("id", i)
+     *                 addProperty("username", account.profile?.username)
+     *                 addProperty("uuid", account.profile?.uuid.toString())
+     *                 addProperty("faceUrl", ClientApi.FACE_URL.format(account.profile?.uuid))
+     *                 addProperty("type", account.type)
+     *             })
+     *         }
+     *         httpOk(accounts)
+     *     }
+     * @param name
+     */
+    export function getAccounts() {
+        return request("/accounts")
+    }
+
+    /**
+     * post("/account/login") {
+     *         class AccountForm(
+     *             val id: Int
+     *         )
+     *         val accountForm = decode<AccountForm>(it.content)
+     *         AccountManager.loginAccount(accountForm.id)
+     *
+     *         httpOk(JsonObject().apply {
+     *             mc.session.let {
+     *                 addProperty("username", it.username)
+     *                 addProperty("uuid", it.uuidOrNull.toString())
+     *                 addProperty("accountType", it.accountType.getName())
+     *                 addProperty("faceUrl", ClientApi.FACE_URL.format(mc.session.uuidOrNull))
+     *                 addProperty("premium", it.isPremium())
+     *             }
+     *         })
+     *     }
+     * @param id
+     */
+    export function loginAccount(id) {
+        return request("/account/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "id": id })
+        })
+    }
+
+    /**
+     * post("/accounts/new/cracked") {
+     *         class AccountForm(
+     *             val username: String
+     *         )
+     *         val accountForm = decode<AccountForm>(it.content)
+     *
+     *         AccountManager.newCrackedAccount(accountForm.username)
+     *         httpOk(JsonObject())
+     *     }
+     * @param username
+     */
+    export function newCrackedAccount(username) {
+        return request("/accounts/new/cracked", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "username": username })
+        })
+    }
+
+    /**
+     * post("/accounts/new/microsoft") {
+     *         AccountManager.newMicrosoftAccount()
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function newMicrosoftAccount() {
+        return request("/accounts/new/microsoft", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    /**
+     *         class AlteningForm(
+     *             val token: String
+     *         )
+     *         val accountForm = decode<AlteningForm>(it.content)
+     *         AccountManager.newAlteningAccount(accountForm.token)
+     *         httpOk(JsonObject())
+     * @param token
+     */
+    export function newAltening(token) {
+        return request("/accounts/new/altening", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "token": token })
+        })
+    }
+
+    /**
+     *         class AlteningGenForm(
+     *             val apiToken: String
+     *         )
+     *         val accountForm = decode<AlteningGenForm>(it.content)
+     *
+     *         AccountManager.generateAlteningAccount(accountForm.apiToken)
+     *         httpOk(JsonObject())
+     * @param apiToken
+     */
+    export function newAlteningGen(apiToken) {
+        return request("/accounts/new/alteningGenerate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "apiToken": apiToken })
+        })
+    }
+
+    /**
+     * // Deletes a specific account
+     *     delete("/account") {
+     *         class AccountForm(
+     *             val id: Int
+     *         )
+     *
+     *         val accountForm = decode<AccountForm>(it.content)
+     *         AccountManager.accounts.removeAt(accountForm.id)
+     *         httpOk(JsonObject())
+     *     }
+     * @param name
+     */
+    export function deleteAccount(id) {
+        return request("/account", {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "id": id })
+        })
+    }
+
+    export function restoreInitialAccount() {
+        return request("/account/restoreInitial", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
     export function getModuleSettings(name) {
         const searchParams = new URLSearchParams({ name })
 
@@ -140,5 +301,7 @@
             }
         })
     }
+
+
 </script>
 
