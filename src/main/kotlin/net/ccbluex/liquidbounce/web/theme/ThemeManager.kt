@@ -53,7 +53,7 @@ object ThemeManager {
         get() = "$NETTY_ROOT/${activeTheme.name}/"
 
     val overlayUrl: String
-        get() = "$NETTY_ROOT/${activeTheme.name}/#/hud"
+        get() = "$NETTY_ROOT/${activeTheme.name}/#/hud?static"
 
 }
 
