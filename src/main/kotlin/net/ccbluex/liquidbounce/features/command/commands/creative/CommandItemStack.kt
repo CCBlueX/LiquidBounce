@@ -57,6 +57,11 @@ object CommandItemStack {
                 }
 
 
+                if (mainHandStack.count == amount) {
+                    chat(regular(command.result("needn'tChange", variable(amount.toString()))))
+                    return@handler
+                }
+
                 mainHandStack.count = amount
                 mc.player!!.inventory!!.setStack(mc.player!!.inventory.selectedSlot, mainHandStack)
                 mc.networkHandler!!.sendPacket(
