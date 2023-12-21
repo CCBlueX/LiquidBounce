@@ -9,24 +9,27 @@
     import ConfigurableSetting from "./ConfigurableSetting.svelte";
 
     export let instance;
+    export let write;
 
-    let type = instance.getValueType().toString();
+    let type = instance.valueType;
 </script>
 
 {#if type === "BOOLEAN"}
-    <BooleanSetting {instance}/>
+    <BooleanSetting {instance} write={write} />
 {:else if type === "CHOOSE"}
-    <ChooseSetting {instance}/>
+    <ChooseSetting {instance} write={write} />
 {:else if type === "TOGGLEABLE"}
-    <TogglableSetting {instance}/>
+    <TogglableSetting {instance} write={write} />
 {:else if type === "INT" || type === "INT_RANGE" || type === "FLOAT" || type === "FLOAT_RANGE"}
-    <RangeSetting {instance}/>
+    <RangeSetting {instance} write={write} />
 {:else if type === "CHOICE"}
-    <ChoiceSetting {instance}/>
-{:else if type === "CONFIGURABLE"}
-    <ConfigurableSetting {instance}/>
+    <ChoiceSetting {instance} write={write} />
 {:else if type === "TEXT"}
-    <TextSetting {instance}/>
+    <TextSetting {instance} write={write} />
 {:else if type === "COLOR"}
-    <ColorSetting {instance}/>
+    <ColorSetting {instance} write={write} />
+{:else if type === "CONFIGURABLE"}
+    <ConfigurableSetting {instance} write={write} />
 {/if}
+
+

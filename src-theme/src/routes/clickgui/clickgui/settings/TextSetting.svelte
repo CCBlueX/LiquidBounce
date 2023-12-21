@@ -1,17 +1,13 @@
 <script>
     export let instance;
+    export let write;
 
-    let name = instance.getName();
-    let value = instance.get();
-
-    function handleTextChange(e) {
-        instance.set(value);
-    }
+    let name = instance.name;
 </script>
 
 <div class="setting">
     <div class="name">{name}</div>
-    <input type="text" bind:value={value} on:change={handleTextChange} placeholder={name}/>
+    <input type="text" bind:value={instance.value} on:change={write} placeholder={name}/>
 </div>
 
 <style lang="scss">

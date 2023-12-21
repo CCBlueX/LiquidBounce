@@ -1,10 +1,12 @@
 <script>
     import {onMount} from "svelte";
+    import {rgbaToInt, intToHex} from "../../../../utils/misc.js";
 
     export let instance;
+    export let write;
 
-    let name = instance.getName();
-    let value = kotlin.colorToHex(instance.get());
+    let name = instance.name;
+    let value = intToHex(instance.value);
 
     let colorPicker = null;
     let pickr = null;
@@ -38,9 +40,10 @@
         });
 
         pickr.on("change", v => {
-            const rgba = v.toRGBA()
             value = v.toHEXA();
-            instance.set(kotlin.color(rgba[0] | 0, rgba[1] | 0, rgba[2] | 0, rgba[3]))
+            const rgba = v.toRGBA();
+            instance.value = rgbaToInt(rgba);
+            write();
         });
     });
 

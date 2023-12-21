@@ -4,39 +4,40 @@
     import GenericSetting from "./GenericSetting.svelte";
 
     export let instance;
+    export let write;
 
-    const hiddenSettings = ["Enabled", "Hidden", "Bind"];
+    let name = instance.name;
+    let choices = Object.keys(instance.choices);
+    let value = instance.active;
 
-    function toJavaScriptArray(a) {
-        const v = [];
-        for (let i = 0; i < a.length; i++) {
-            if (!hiddenSettings.includes(a[i].getName())) {
-                v.push(a[i]);
-            }
-        }
+    function getChoiceSettings(choice) {
+        const hiddenSettings = ["Enabled", "Hidden", "Bind"];
 
-        return v;
+        return instance.choices[choice].value
+            .filter(s => !hiddenSettings.includes(s.name));
     }
 
-    let name = instance.getName();
-    let values = instance.getChoicesStrings();
-    let value = instance.getActiveChoice().getChoiceName();
-    let settings = toJavaScriptArray(instance.getActiveChoice().getContainedValues());
-
+    let settings = getChoiceSettings(value);
     let expanded = false;
 
     function handleToggleExpand() {
         expanded = !expanded;
-
-        if (expanded) {
-            settings = toJavaScriptArray(instance.getActiveChoice().getContainedValues());
-        }
     }
 
     function handleValueChange(v) {
+        // Check if value is a choice
+        if (!choices.includes(v)) {
+            return;
+        }
+
         value = v;
-        instance.setFromValueName(v);
-        settings = toJavaScriptArray(instance.getActiveChoice().getContainedValues());
+        instance.active = v;
+
+        // todo: fix old settings not being updated by svelte, how to force update?
+        // svelte is buggy
+        settings = getChoiceSettings(v);
+        console.log(settings);
+        write();
     }
 </script>
 
@@ -45,7 +46,7 @@
         <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {value}</div>
         {#if expanded}
             <div class="values" transition:slide|local={{duration: 200, easing: sineInOut}}>
-                {#each values as v}
+                {#each choices as v}
                     <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === value}>{v}</div>
                 {/each}
             </div>
@@ -55,7 +56,7 @@
     {#if settings.length > 0}
         <div class="settings" transition:fade|local={{duration: 200, easing: sineInOut}}>
             {#each settings as s}
-                <GenericSetting instance={s}/>
+                <GenericSetting instance={s} write={write} />
             {/each}
         </div>
     {/if}

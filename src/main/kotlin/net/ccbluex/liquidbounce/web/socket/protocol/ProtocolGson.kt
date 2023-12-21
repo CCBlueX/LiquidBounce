@@ -26,6 +26,7 @@ import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.adapter.ConfigurableSerializer
+import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
@@ -39,6 +40,6 @@ class ProtocolExclusionStrategy : ExclusionStrategy {
 internal val protocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
-    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
+    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableSerializer)
     .create()
 

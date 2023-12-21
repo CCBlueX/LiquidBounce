@@ -120,7 +120,8 @@
     overflow: hidden;
     width: 225px;
     position: absolute;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   }
 
   .title-wrapper {

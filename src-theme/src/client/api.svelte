@@ -302,6 +302,18 @@
         })
     }
 
+    export function writeModuleSettings(name, settings) {
+        const searchParams = new URLSearchParams({ name })
+
+        return request("/modules/settings?" + searchParams.toString(), {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(settings)
+        })
+    }
+
 
 </script>
 

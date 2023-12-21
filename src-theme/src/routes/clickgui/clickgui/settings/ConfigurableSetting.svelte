@@ -2,30 +2,19 @@
     import GenericSetting from "./GenericSetting.svelte";
 
     export let instance;
+    export let write;
 
     const hiddenSettings = ["Enabled", "Hidden", "Bind"];
-
-    function toJavaScriptArray(a) {
-        const v = [];
-        for (let i = 0; i < a.length; i++) {
-            if (!hiddenSettings.includes(a[i].getName())) {
-                v.push(a[i]);
-            }
-        }
-
-        return v;
-    }
-
-    const settings = toJavaScriptArray(instance.getContainedValues());
-    const name = instance.getName();
+    const settings = instance.value.filter(s => !hiddenSettings.includes(s.name));
+    const name = instance.name;
 </script>
 
 <div class="setting">
-    <div class="name">{name}</div>
+    <div class="name"><b>{name}</b></div>
 
     <div class="settings">
         {#each settings as s}
-            <GenericSetting instance={s}/>
+            <GenericSetting instance={s} write={write} />
         {/each}
     </div>
 </div>

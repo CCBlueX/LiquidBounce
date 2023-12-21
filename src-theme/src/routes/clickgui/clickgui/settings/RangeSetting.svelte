@@ -1,21 +1,22 @@
 <script>
+    export let instance;
+    export let write;
+
     import {onMount} from "svelte";
 
-    export let instance;
+    let type = instance.valueType;
 
-    let type = instance.getValueType().toString();
-
-    let name = instance.getName();
-    let min = instance.getRange().getStart()
-    let max = instance.getRange().getEndInclusive()
+    let name = instance.name;
+    let min = instance.range.from;
+    let max = instance.range.to;
     let step = type.includes("INT") ? 1 : 0.01;
-    let multi = type.includes("RANGE");
+    let multi = type.includes("_RANGE");
 
     let value;
     if (multi) {
-        value = [instance.get().getStart(), instance.get().getEndInclusive()];
+        value = [instance.value.from, instance.value.to];
     } else {
-        value = [instance.get()];
+        value = [instance.value];
     }
 
     let valueString;
@@ -61,14 +62,14 @@
             }
 
             if (multi) {
-                if (type.includes("FLOAT")) {
-                    instance.set(kotlin.floatRange(value[0], value[1]));
-                } else {
-                    instance.set(kotlin.intRange(value[0], value[1]));
-                }
+                instance.value = {
+                    from: value[0],
+                    to: value[1]
+                };
             } else {
-                instance.set(value[0]);
+                instance.value = value[0];
             }
+            write();
 
             updateValueString();
         });

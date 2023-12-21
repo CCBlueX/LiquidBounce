@@ -1,20 +1,14 @@
 <script>
     export let instance;
-
-    let name = instance.getName();
-    let value = instance.get();
-
-    function handleValueChange() {
-        instance.set(value);
-    }
+    export let write;
 </script>
 
 <div class="setting">
     <label class="switch">
-        <input type="checkbox" bind:checked={value} on:change={handleValueChange}/>
+        <input type="checkbox" bind:checked={instance.value} on:change={write}/>
         <span class="slider"/>
 
-        <div class="name">{name}</div>
+        <div class="name">{instance.name}</div>
     </label>
 </div>
 

@@ -4,6 +4,8 @@
 
     import GenericSetting from "./settings/GenericSetting.svelte";
 
+    import { getModuleSettings, writeModuleSettings } from "../../../client/api.svelte";
+
     export let name;
     export let enabled;
 
@@ -11,17 +13,7 @@
 
     const hiddenSettings = ["Enabled", "Hidden", "Bind"];
 
-    // function toJavaScriptArray(a) {
-    //     const v = [];
-    //     for (let i = 0; i < a.length; i++) {
-    //         if (!hiddenSettings.includes(a[i].getName())) {
-    //             v.push(a[i]);
-    //         }
-    //     }
-    //
-    //     return v;
-    // }
-
+    let moduleConfigurable = {};
     let settings = [];
 
     let expanded = false;
@@ -38,10 +30,39 @@
             expanded = !expanded;
 
             if (expanded) {
-                // settings = toJavaScriptArray(instance.getContainedValues());
+                updateSettings();
             }
         }
     }
+
+    function updateSettings() {
+        getModuleSettings(name).then(configurable => {
+            // To each entry with value as parameter, add a function "set",
+            // which will write the settings to the server. If the value itself also has another value parameter,
+            // add a function "set" to that as well. And so on.
+
+            moduleConfigurable = configurable;
+            settings = moduleConfigurable.value
+                .filter(v => !hiddenSettings.includes(v.name));
+        });
+    }
+
+    function writeSettings() {
+        // merge the settings back into the moduleConfigurable
+        settings.forEach(s => {
+            moduleConfigurable.value.find(v => v.name === s.name).value = s.value;
+        });
+
+        console.log(moduleConfigurable);
+
+        writeModuleSettings(name, moduleConfigurable).then(() => {
+            updateSettings();
+        }).catch((e) => {
+            console.error(e);
+        });
+    }
+
+    updateSettings();
 </script>
 
 <div>
@@ -50,7 +71,7 @@
     {#if expanded}
         <div class="settings" transition:slide={{duration: 400, easing: sineInOut}}>
             {#each settings as s}
-                <GenericSetting instance={s}/>
+                <GenericSetting instance={s} write={writeSettings} />
             {/each}
         </div>
     {/if}

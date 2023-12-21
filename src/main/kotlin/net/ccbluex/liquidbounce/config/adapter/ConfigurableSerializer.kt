@@ -46,6 +46,24 @@ object ConfigurableSerializer : JsonSerializer<Configurable> {
 
 }
 
+object ProtocolConfigurableSerializer : JsonSerializer<Configurable> {
+
+    override fun serialize(
+        src: Configurable,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ): JsonElement {
+        val obj = JsonObject()
+
+        obj.addProperty("name", src.name)
+        obj.add("value", context.serialize(src.value))
+        obj.add("valueType", context.serialize(src.valueType))
+
+        return obj
+    }
+
+}
+
 /**
  * Assign [AutoConfigurableSerializer] serializer for Configurables that should be published publicly instead of
  * using [ConfigurableSerializer]

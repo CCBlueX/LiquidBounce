@@ -4,28 +4,20 @@
     import GenericSetting from "./GenericSetting.svelte";
 
     export let instance;
+    export let write;
 
     const hiddenSettings = ["Enabled", "Hidden", "Bind"];
 
-    function toJavaScriptArray(a) {
-        const v = [];
-        for (let i = 0; i < a.length; i++) {
-            if (!hiddenSettings.includes(a[i].getName())) {
-                v.push(a[i]);
-            }
-        }
+    let value = instance.value.find(v => v.name === "Enabled");
+    let name = instance.name;
 
-        return v;
-    }
+    let settings = value ? instance.value.filter(v => !hiddenSettings.includes(v.name)) : [];
 
-    let value = instance.getEnabledValue().get();
-    let name = instance.getName();
-
-    let settings = toJavaScriptArray(instance.getContainedValues());
-
-    function setTogglableValue(e) {
-        instance.getEnabledValue().set(value);
-        settings = toJavaScriptArray(instance.getContainedValues());
+    function refresh(e) {
+        value = e.target.checked;
+        instance.value.find(v => v.name === "Enabled").value = value;
+        settings = value ? instance.value.filter(v => !hiddenSettings.includes(v.name)) : [];
+        write();
     }
 </script>
 
@@ -33,7 +25,7 @@
     <div class="head">
         <div class="boolean">
             <label class="switch">
-                <input type="checkbox" bind:checked={value} on:change={setTogglableValue}/>
+                <input type="checkbox" bind:checked={value} on:change={refresh}/>
                 <span class="slider"/>
 
                 <div class="name">{name}</div>
@@ -44,7 +36,7 @@
     {#if value}
         <div class="settings" transition:fade|local={{duration: 200}}>
             {#each settings as s}
-                <GenericSetting instance={s}/>
+                <GenericSetting instance={s} write={write} />
             {/each}
         </div>
     {/if}

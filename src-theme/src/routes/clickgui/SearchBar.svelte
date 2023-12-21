@@ -180,6 +180,8 @@
         height: 50px;
         padding: 10px 20px;
         transition: all 0.2s ease-in-out;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
 
         &:not(:placeholder-shown) {
           border-radius: 10px 10px 0 0;
@@ -194,6 +196,8 @@
       max-height: 220px;
       overflow: auto;
       padding: 10px 0;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
 
       &-item {
         color: var(--textdimmed);

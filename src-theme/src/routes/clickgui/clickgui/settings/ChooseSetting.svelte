@@ -3,10 +3,11 @@
     import {slide} from "svelte/transition";
 
     export let instance;
+    export let write;
 
-    let name = instance.getName();
-    let values = instance.getChoicesStrings();
-    let value = instance.get().getChoiceName();
+    let name = instance.name;
+    let choices = instance.choices;
+    let value = instance.value;
 
     let expanded = false;
 
@@ -16,7 +17,8 @@
 
     function handleValueChange(v) {
         value = v;
-        instance.setFromValueName(v);
+        instance.value = v;
+        write();
     }
 </script>
 
@@ -24,7 +26,7 @@
     <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {value}</div>
     {#if expanded}
         <div class="values" transition:slide|local={{duration: 200, easing: sineInOut}}>
-            {#each values as v}
+            {#each choices as v}
                 <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === value}>{v}</div>
             {/each}
         </div>
