@@ -26,6 +26,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 
+/**
+ * Enemy Command
+ *
+ * Provides various subcommands related to the enemy configuration, such as toggling the visibility of different types of enemies.
+ */
 object CommandEnemy {
 
     fun createCommand(): Command {

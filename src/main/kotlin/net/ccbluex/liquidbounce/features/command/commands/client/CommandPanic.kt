@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -28,6 +29,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.text.MutableText
 
+/**
+ * Panic Command
+ *
+ * Allows you to disable all modules or modules in a specific category.
+ */
 object CommandPanic {
 
     fun createCommand(): Command {

@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -30,6 +31,11 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
+/**
+ * Hide Command
+ *
+ * Allows you to hide specific modules. It also provides subcommands to unhide modules, list hidden modules, and clear all hidden modules.
+ */
 object CommandHide {
 
     fun createCommand(): Command {
