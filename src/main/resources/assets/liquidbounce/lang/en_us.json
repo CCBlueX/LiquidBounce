@@ -145,7 +145,7 @@
   "liquidbounce.command.stack.result.noItem": "There is no item in your main hand.",
   "liquidbounce.command.stack.result.invalidAmount": "Invalid item amount. Item amount must be from 1 to 64.",
   "liquidbounce.command.stack.result.amountChanged": "The item amount has been changed.",
-  "liquidbounce.command.stack.result.needn'tChange": "The item amount is already %s",
+  "liquidbounce.command.stack.result.hasAlreadyAmount": "The item amount is already %s",
   "liquidbounce.command.enchant.description": "Enchants the currently selected item.",
   "liquidbounce.command.enchant.parameter.enchantment.description": "Enchantment name.",
   "liquidbounce.command.enchant.parameter.level.description": "Enchantment level.",
