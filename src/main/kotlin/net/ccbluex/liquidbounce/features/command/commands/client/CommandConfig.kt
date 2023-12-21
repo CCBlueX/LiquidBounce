@@ -38,7 +38,9 @@ import net.minecraft.text.Text
 /**
  * Config Command
  *
- * Provides various subcommands related to the configuration, such as loading configuration from an external source or an API, and listing available configurations.
+ * Provides various subcommands related to the configuration, 
+ * such as loading configuration from an external source or an API 
+ * and listing available configurations.
  */
 object CommandConfig {
 

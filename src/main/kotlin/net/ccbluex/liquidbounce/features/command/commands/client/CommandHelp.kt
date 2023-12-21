@@ -36,8 +36,7 @@ import kotlin.math.roundToInt
 /**
  * Help Command
  *
- * Provides a help command for displaying other commands. 
- * It supports pagination and throws an exception if an invalid page number is provided.
+ * Provides a help page for displaying other commands. 
  */
 object CommandHelp {
 

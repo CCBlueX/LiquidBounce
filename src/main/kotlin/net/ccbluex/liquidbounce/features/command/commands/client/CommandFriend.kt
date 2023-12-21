@@ -31,8 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Friend Command
  *
- * Provides various subcommands related to managing friends, such as adding, removing, aliasing, listing, and clearing friends.
- * Friend add (Adds a friend) Friend remove (Removes a friend) Friend alias (Creates an alias for a friend) Friend list (Lists all friends) Friend clear (Clears all friends)
+ * Provides subcommands related to managing friends, such as adding, removing, aliasing, listing, and clearing friends.
  */
 object CommandFriend {
 

@@ -34,7 +34,7 @@ import kotlin.math.roundToInt
 /**
  * Hide Command
  *
- * Allows you to hide specific modules. It also provides subcommands to unhide modules, list hidden modules, and clear all hidden modules.
+ * Allows you to hide specific modules.
  */
 object CommandHide {
 
