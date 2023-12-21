@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -25,7 +24,6 @@ import net.minecraft.init.Blocks.*
 import net.minecraft.util.BlockPos
 import java.awt.Color
 import java.util.LinkedList
-import kotlin.streams.toList
 
 object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
     private val targetBlock by ListValue("TargetBlock", arrayOf("Bed", "DragonEgg"), "Bed")
@@ -46,13 +44,10 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
     private val blocksToRender = mutableSetOf<BlockPos>()
     private var thread: Thread? = null
 
+    private val breakableBlockIDs = arrayOf(35, 159, 121, 20, 5, 49) // wool, stained_clay, end_stone, glass, wood, obsidian
+
     private fun getBlocksToRender(targetBlock: Block, maxLayers: Int, down: Boolean, allLayers: Boolean, blockLimit: Int) {
-        // it's not necessary to make protection layers around unbreakable blocks
-        val breakableBlockIDs = mutableListOf(35, 159, 121, 20, 5, 49) // wool, stained_clay, end_stone, glass, wood, obsidian
-        breakableBlockIDs.add(getIdFromBlock(targetBlock))
-        if (allLayers) {
-            breakableBlockIDs.add(0)    // air
-        }
+        val targetBlockID = getIdFromBlock(targetBlock)
 
         val nextLayerAirBlocks = mutableSetOf<BlockPos>()
         val nextLayerBlocks = mutableSetOf<BlockPos>()
@@ -69,7 +64,8 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
                 val currBlock = currentLayerBlocks.removeFirst()
                 val currBlockID = getIdFromBlock(getBlock(currBlock))
 
-                if (breakableBlockIDs.contains(currBlockID)) {
+                // it's not necessary to make protection layers around unbreakable blocks
+                if (breakableBlockIDs.contains(currBlockID) || (currBlockID == targetBlockID) || (allLayers && currBlockID == 0)) {
                     val blocksAround = mutableListOf(
                         currBlock.north(),
                         currBlock.east(),
