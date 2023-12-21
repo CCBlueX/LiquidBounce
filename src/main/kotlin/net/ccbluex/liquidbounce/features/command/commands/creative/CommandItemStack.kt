@@ -58,7 +58,7 @@ object CommandItemStack {
 
 
                 if (mainHandStack.count == amount) {
-                    chat(regular(command.result("needn'tChange", variable(amount.toString()))))
+                    chat(regular(command.result("hasAlreadyAmount", variable(amount.toString()))))
                     return@handler
                 }
 
