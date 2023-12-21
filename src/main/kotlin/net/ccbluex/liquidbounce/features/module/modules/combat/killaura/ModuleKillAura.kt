@@ -48,22 +48,16 @@ import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityGroup
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import net.minecraft.world.GameMode
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -262,7 +256,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
                     } else {
                         // Attack enemy
-                        attackEntity(chosenEntity)
+                        chosenEntity.attack(swing, keepSprint)
                     }
 
                     true
@@ -378,43 +372,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 PlayerInteractItemC2SPacket(player.activeHand, sequence)
             }
         }
-    }
-
-    private fun attackEntity(entity: Entity) {
-        entity.attack(swing)
-
-        if (keepSprint) {
-            var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
-                .toFloat()
-            var magicAttackDamage = EnchantmentHelper.getAttackDamage(
-                player.mainHandStack,
-                if (entity is LivingEntity) entity.group else EntityGroup.DEFAULT
-            )
-
-            val cooldownProgress = player.getAttackCooldownProgress(0.5f)
-            genericAttackDamage *= 0.2f + cooldownProgress * cooldownProgress * 0.8f
-            magicAttackDamage *= cooldownProgress
-
-            if (genericAttackDamage > 0.0f && magicAttackDamage > 0.0f) {
-                player.addEnchantedHitParticles(entity)
-            }
-
-            if (ModuleCriticals.wouldCrit(true)) {
-                world.playSound(
-                    null, player.x, player.y,
-                    player.z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                    player.soundCategory, 1.0f, 1.0f
-                )
-                player.addCritParticles(entity)
-            }
-        } else {
-            if (interaction.currentGameMode != GameMode.SPECTATOR) {
-                player.attack(entity)
-            }
-        }
-
-        // reset cooldown
-        player.resetLastAttackedTicks()
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
