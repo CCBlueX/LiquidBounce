@@ -27,10 +27,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemEnchant
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemGive
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRename
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSkull
+import net.ccbluex.liquidbounce.features.command.commands.creative.*
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.script.CommandScript
@@ -150,6 +147,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandItemRename.createCommand())
         addCommand(CommandItemGive.createCommand())
         addCommand(CommandItemSkull.createCommand())
+        addCommand(CommandItemStack.createCommand())
         addCommand(CommandItemEnchant.createCommand())
 
         // utility commands
