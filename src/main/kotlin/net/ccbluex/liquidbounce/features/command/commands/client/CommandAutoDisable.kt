@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -31,6 +32,12 @@ import net.minecraft.util.Formatting
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
+/**
+ * AutoDisable Command
+ *
+ * Allows you to manage the list of modules that are automatically disabled.
+ * It provides subcommands to add, remove, list and clear modules from the auto-disable list.
+ */
 object CommandAutoDisable {
 
     fun createCommand(): Command {
