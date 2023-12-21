@@ -50,7 +50,7 @@ object CommandItemStack {
                     throw CommandException(command.result("noItem"))
                 }
 
-                val amount = if (args[0] == null) 64 else args[0] as Int // args[0] CAN be null
+                val amount = args[0] as? Int ?: 64
 
                 if (amount < 1 || amount > 64) {
                     throw CommandException(command.result("invalidAmount"))
