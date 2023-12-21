@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -28,7 +29,13 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
+/**
+ * LocalConfig Command
+ *
+ * Allows you to load, list, and create local configurations.
+ */
 object CommandLocalConfig {
+
     fun createCommand(): Command {
         return CommandBuilder
             .begin("localconfig")

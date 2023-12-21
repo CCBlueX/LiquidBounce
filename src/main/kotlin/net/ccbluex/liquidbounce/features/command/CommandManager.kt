@@ -48,11 +48,13 @@ class CommandException(val text: MutableText, cause: Throwable? = null, val usag
 /**
  * Links minecraft with the command engine
  */
+
 object CommandExecutor : Listenable {
 
     /**
      * Handles command execution
      */
+
     val chatEventHandler = handler<ChatSendEvent> {
         if (it.message.startsWith(CommandManager.Options.prefix)) {
             try {
@@ -97,6 +99,7 @@ object CommandExecutor : Listenable {
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
+ 
 object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()

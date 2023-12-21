@@ -26,6 +26,11 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import org.lwjgl.glfw.GLFW
 
+/**
+ * CommandUsername
+ *
+ * Displays the current username.
+ */
 object CommandUsername {
 
     fun createCommand(): Command {
