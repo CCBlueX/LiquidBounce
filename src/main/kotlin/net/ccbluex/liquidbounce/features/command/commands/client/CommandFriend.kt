@@ -28,6 +28,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
+/**
+ * Friend Command
+ *
+ * Provides subcommands related to managing friends, such as adding, removing, aliasing, listing, and clearing friends.
+ */
 object CommandFriend {
 
     fun createCommand(): Command {

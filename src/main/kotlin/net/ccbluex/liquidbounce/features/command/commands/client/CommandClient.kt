@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -34,6 +35,11 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import java.net.MalformedURLException
 import java.net.URL
 
+/**
+ * Client Command
+ *
+ * Provides subcommands for client management.
+ */
 object CommandClient {
 
     fun createCommand(): Command {

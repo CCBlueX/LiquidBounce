@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.api.AutoSettings
@@ -34,6 +35,13 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.io.HttpClient.get
 import net.minecraft.text.Text
 
+/**
+ * Config Command
+ *
+ * Provides various subcommands related to the configuration, 
+ * such as loading configuration from an external source or an API 
+ * and listing available configurations.
+ */
 object CommandConfig {
 
     private var cachedSettingsList: Array<AutoSettings>? = null
