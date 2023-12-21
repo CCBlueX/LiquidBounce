@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 /**
  * Enemy Command
  *
- * Provides subcommands related to the enemy configuration, such as toggling the visibility of different types of enemies.
+ * Provides subcommands for enemy configuration.
  */
 object CommandEnemy {
 

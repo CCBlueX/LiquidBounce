@@ -38,7 +38,7 @@ import java.net.URL
 /**
  * Client Command
  *
- * Provides various subcommands related to the client, such as displaying client information, reloading the client, and managing the client's ultralight.
+ * Provides subcommands for client management.
  */
 object CommandClient {
 
