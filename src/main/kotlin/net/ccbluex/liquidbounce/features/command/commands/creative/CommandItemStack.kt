@@ -36,6 +36,8 @@ object CommandItemStack {
         .optional()
         .build()
 
+
+    @Suppress("detekt:ThrowsCount")
     fun createCommand(): Command {
         return CommandBuilder
             .begin("stack")
