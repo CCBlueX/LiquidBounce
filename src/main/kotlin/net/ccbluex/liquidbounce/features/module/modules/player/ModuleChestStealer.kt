@@ -47,45 +47,43 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     private var lastSlot = 0
 
-    private var shouldClose = false
     private var isFirstTime = true
 
     val repeatable = repeatable {
-        if (shouldClose) {
-            player.closeHandledScreen()
-            shouldClose = false
-            isFirstTime = true
-        }
-
-        val screen = mc.currentScreen
-
-        if (screen !is GenericContainerScreen || checkTitle && !isScreenTitleChest(screen)) {
+        if (!screenIsChest()) {
             isFirstTime = true
             return@repeatable
         }
+
+        val screen = mc.currentScreen as GenericContainerScreen
 
         val cleanupPlan = createCleanupPlan(screen)
+        val itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
+
+        val startDelay = startDelay.random()
+
+        if (isFirstTime && (cleanupPlan.swaps.isNotEmpty() || itemsToCollect.isNotEmpty())) {
+            isFirstTime = false
+
+            if (startDelay > 0) {
+                waitConditional(startDelay - 1) { !screenIsChest() }
+
+                return@repeatable
+            }
+        }
+
+        val shouldSwap = !ModuleInventoryCleaner.enabled || !ModuleInventoryCleaner.notInContainers
 
         // Quick swap items in hotbar (i.e. swords)
-        if (performQuickSwaps(cleanupPlan, screen)) {
+        if (shouldSwap && performQuickSwaps(cleanupPlan, screen) != null) {
             return@repeatable
         }
 
-        var itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
-
-        // Are there items to steal? Did we just now open the chest?
-        if (isFirstTime && itemsToCollect.isNotEmpty()) {
-            isFirstTime = false
-
-            waitTicks(startDelay.random())
-
-            // Re-check in case items are not the same as before
-            itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
-        }
-
-        var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size, screen)
+        var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
 
         val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
+
+        val delay = clickDelay.random()
 
         for (slot in sortedItemsToCollect) {
             val hasFreeSpace = (0..35).any { player.inventory.getStack(it).isNothing() }
@@ -93,8 +91,14 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             if (!hasFreeSpace && stillRequiredSpace > 0) {
                 val shouldReturn = makeSpace(cleanupPlan, 1, screen)
 
-                if (shouldReturn == true)
-                    return@repeatable
+                if (shouldReturn == true) {
+                    if (delay > 0) {
+                        waitConditional(delay - 1) { !screenIsChest() }
+                        return@repeatable
+                    }
+
+                    continue
+                }
 
                 if (shouldReturn != null)
                     stillRequiredSpace -= 1
@@ -110,16 +114,13 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             lastSlot = slot.slotInContainer
 
-            val delay = clickDelay.random()
-
             if (delay > 0) {
-                waitTicks(delay - 1)
+                waitConditional(delay - 1) { !screenIsChest() }
                 return@repeatable
             }
         }
 
-
-        waitTicks(closeDelay.random())
+        waitConditional(closeDelay.random()) { !screenIsChest() }
 
         if (sortedItemsToCollect.isEmpty()) {
             player.closeHandledScreen()
@@ -161,7 +162,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private fun getStillRequiredSpace(
         cleanupPlan: InventoryCleanupPlan,
         slotsToCollect: Int,
-        screen: GenericContainerScreen
     ): Int {
         val freeSlotsInInv = (0..35).count { player.inventory.getStack(it).isNothing() }
 
@@ -202,12 +202,13 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private suspend fun Sequence<*>.performQuickSwaps(
         cleanupPlan: InventoryCleanupPlan,
         screen: GenericContainerScreen
-    ): Boolean {
+    ): Boolean? {
         for (hotbarSwap in cleanupPlan.swaps) {
             // We only care about swaps from the chest to the hotbar
             if (hotbarSwap.from.slotType != ItemSlotType.CONTAINER) {
                 continue
             }
+
             if (hotbarSwap.to !is HotbarItemSlot) {
                 continue
             }
@@ -227,18 +228,14 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 )
             )
 
-
             val delay = clickDelay.random()
 
             if (delay > 0) {
-                waitTicks(delay - 1)
-
-                return true
+                return waitConditional(delay - 1) { !screenIsChest() }
             }
-
         }
 
-        return false
+        return null
     }
 
     /**
@@ -285,6 +282,18 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         ),
         INDEX("Index", { list -> list.sortedBy { it.slotInContainer } }),
         RANDOM("Random", List<ContainerItemSlot>::shuffled),
+    }
+
+    private fun screenIsChest(): Boolean {
+        val screen = mc.currentScreen
+
+        if (screen !is GenericContainerScreen || checkTitle && !isScreenTitleChest(screen)) {
+            isFirstTime = true
+
+            return false
+        }
+
+        return true
     }
 
 }
