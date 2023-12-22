@@ -40,10 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WorldRenderer.class)
@@ -187,6 +184,11 @@ public abstract class MixinWorldRenderer {
         }
 
         return bl3;
+    }
+
+    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;setupTerrain(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;ZZ)V"), index = 3)
+    private boolean renderSetupTerrainModifyArg(boolean spectator) {
+        return ModuleFreeCam.INSTANCE.getEnabled() || spectator;
     }
 
     @ModifyVariable(method = "renderWeather", at = @At(value = "STORE"), name = "precipitation", ordinal = 0, require = 1, allow = 1)
