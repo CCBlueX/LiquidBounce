@@ -92,4 +92,10 @@ public abstract class MixinCamera {
     private int hookCameraClip(int constant) {
         return ModuleCameraClip.INSTANCE.getEnabled() ? 0 : constant;
     }
+
+
+    @ModifyConstant(method = "update", constant = @Constant(doubleValue = 4.0))
+    private double modifyDesiredCameraDistance(double constant) {
+        return ModuleCameraClip.INSTANCE.getEnabled() ? ModuleCameraClip.INSTANCE.getDistance() : constant;
+    }
 }
