@@ -72,14 +72,14 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         private val borderColorBlue by IntegerValue("Border-B", 0, 0..255) { border }
         private val borderColorAlpha by IntegerValue("Border-Alpha", 100, 0..255) { border }
 
-    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..300) {
+    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
     }
 
     private val onLook by BoolValue("OnLook", false)
-    private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..0.99f) { onLook }
+    private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..0.8f) { onLook }
 
     private var maxRenderDistanceSq = 0.0
 

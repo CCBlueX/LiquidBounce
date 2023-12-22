@@ -70,7 +70,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get())
     }
 
-    private val lookThreshold by FloatValue("LookThreshold", 0.5f, 0.1f..0.99f) { timerBoostMode == "SmartMove" }
+    private val lookThreshold by FloatValue("LookThreshold", 0.5f, 0.1f..0.8f) { timerBoostMode == "SmartMove" }
 
     // Mark Option
     private val markMode by ListValue("Mark", arrayOf("Off", "Box", "Platform"), "Off") { timerBoostMode == "SmartMove" }
@@ -231,9 +231,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                     }
                 } else if (entityDistance <= maxRange) {
                     if (markMode == "Box") {
-                        drawEntityBox(nearbyEntity, Color(220, 80, 80, 70), outline)
+                        drawEntityBox(nearbyEntity, Color(210, 60, 60, 70), outline)
                     } else if (markMode != "Off") {
-                        drawPlatform(nearbyEntity, Color(220, 80, 80, 70))
+                        drawPlatform(nearbyEntity, Color(210, 60, 60, 70))
                     }
                 }
             }
