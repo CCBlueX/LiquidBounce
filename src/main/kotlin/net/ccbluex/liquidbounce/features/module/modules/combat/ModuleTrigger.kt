@@ -67,7 +67,6 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
                 } else {
                     crosshair.entity.attack(true)
                 }
-                player.resetLastAttackedTicks()
 
                 true
             }
