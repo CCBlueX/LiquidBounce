@@ -51,7 +51,7 @@ object GommeDuels : Choice("GommeDuels") {
 
             inQueue = true
             waitTicks(20)
-        } else if (!ModuleKillAura.enabled) {
+        } else if (!ModuleKillAura.enabled && forceKillAura) {
             ModuleKillAura.enabled = true
         }
     }
