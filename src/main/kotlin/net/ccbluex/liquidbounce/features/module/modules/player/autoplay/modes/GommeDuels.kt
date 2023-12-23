@@ -80,13 +80,13 @@ object GommeDuels : Choice("GommeDuels") {
             inMatch = false
             inQueue = false
             waitSeconds(2)
-            network.sendChatCommand(winMessage)
+            network.sendChatMessage(winMessage)
         } else if (ev.message.contains("und das Match verloren")) {
             notification("AutoPlay", "Match lost", NotificationEvent.Severity.INFO)
             inMatch = false
             inQueue = false
             waitSeconds(2)
-            network.sendChatCommand(loseMessage)
+            network.sendChatMessage(loseMessage)
         }
     }
 
