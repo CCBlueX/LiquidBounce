@@ -32,10 +32,6 @@ object GommeDuels : Choice("GommeDuels") {
     val repeatable = repeatable {
         // Check if player inventory has a head
         if (!inMatch) {
-            if (inQueue) {
-                return@repeatable
-            }
-
             ModuleKillAura.enabled = false
 
             val headSlot = findHotbarSlot(Items.PLAYER_HEAD) ?: return@repeatable
