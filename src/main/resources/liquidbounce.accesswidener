@@ -131,3 +131,6 @@ accessible field net/minecraft/entity/Entity fluidHeight Lit/unimi/dsi/fastutil/
 accessible field net/minecraft/entity/Entity submergedFluidTag Ljava/util/Set;
 
 accessible field net/minecraft/entity/TrackedPosition pos Lnet/minecraft/util/math/Vec3d;
+
+accessible field net/minecraft/client/gui/hud/PlayerListHud header Lnet/minecraft/text/Text;
+accessible field net/minecraft/client/gui/hud/PlayerListHud footer Lnet/minecraft/text/Text;
