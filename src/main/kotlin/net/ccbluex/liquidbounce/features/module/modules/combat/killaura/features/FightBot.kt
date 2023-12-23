@@ -7,9 +7,13 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clickScheduler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.entity.Entity
 
 /**
  * A fight bot, fights for you, probably better than you. Lol.
@@ -46,6 +50,13 @@ object FightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
             ev.directionalInput = ev.directionalInput.copy(left = !sideToGo, right = sideToGo)
         }
 
+    }
+
+    fun makeClientSideRotationNeeded(target: Entity): Rotation? {
+        if (!enabled) return null
+
+        // This is very basic and should be handled by the path finder in the future
+        return RotationManager.makeRotation(target.box.center, player.eyePos)
     }
 
 }

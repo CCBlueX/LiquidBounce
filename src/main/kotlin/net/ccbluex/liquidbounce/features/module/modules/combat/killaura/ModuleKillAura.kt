@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.combat.*
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
@@ -291,7 +292,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         renderTarget = null
 
         for (target in targetTracker.enemies()) {
-            if (target.squaredBoxedDistanceTo(player) > scanRange && !FightBot.enabled) {
+            if (target.squaredBoxedDistanceTo(player) > scanRange) {
+                if (FightBot.enabled) {
+                     val rotationToEnemy = FightBot.makeClientSideRotationNeeded(target) ?: continue
+                    // lock on target tracker
+                    RotationManager.aimAt(rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false))
+                    targetTracker.lock(target)
+                }
+
                 continue
             }
 
