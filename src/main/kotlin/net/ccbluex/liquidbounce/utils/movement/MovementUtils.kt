@@ -28,6 +28,7 @@ data class DirectionalInput(
     companion object {
         val NONE = DirectionalInput(forwards = false, backwards = false, left = false, right = false)
         val FORWARDS = DirectionalInput(forwards = true, backwards = false, left = false, right = false)
+        val BACKWARDS = DirectionalInput(forwards = false, backwards = true, left = false, right = false)
     }
 }
 

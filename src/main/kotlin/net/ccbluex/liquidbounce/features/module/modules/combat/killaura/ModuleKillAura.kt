@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
@@ -94,6 +94,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Predict
     private val pointTracker = tree(PointTracker())
+
+    // Fight Bot
+    private val fightBot = tree(FightBot)
 
     // Bypass techniques
     internal val swing by boolean("Swing", true)
@@ -288,7 +291,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         renderTarget = null
 
         for (target in targetTracker.enemies()) {
-            if (target.squaredBoxedDistanceTo(player) > scanRange) {
+            if (target.squaredBoxedDistanceTo(player) > scanRange && !FightBot.enabled) {
                 continue
             }
 
