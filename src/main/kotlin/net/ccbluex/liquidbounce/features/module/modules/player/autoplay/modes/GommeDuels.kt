@@ -79,15 +79,25 @@ object GommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Match won", NotificationEvent.Severity.INFO)
             inMatch = false
             inQueue = false
+
+            sync()
             waitSeconds(2)
             network.sendChatMessage(winMessage)
         } else if (ev.message.contains("und das Match verloren")) {
             notification("AutoPlay", "Match lost", NotificationEvent.Severity.INFO)
             inMatch = false
             inQueue = false
+
+            sync()
             waitSeconds(2)
             network.sendChatMessage(loseMessage)
         }
+    }
+
+    override fun disable() {
+        super.disable()
+        inMatch = false
+        inQueue = false
     }
 
 }
