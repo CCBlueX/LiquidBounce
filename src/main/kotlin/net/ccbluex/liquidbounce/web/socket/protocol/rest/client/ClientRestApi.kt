@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.minecraft.registry.Registries
 import net.minecraft.util.Util
 
 internal fun RestNode.setupClientRestApi() {
@@ -69,6 +71,7 @@ internal fun RestNode.setupClientRestApi() {
     }
 
     setupScreenRestApi()
+    blocksAndItemRestApi()
 }
 
 
@@ -100,4 +103,28 @@ private fun RestNode.setupScreenRestApi() {
         httpOk(JsonObject())
     }
 
+}
+
+private fun RestNode.blocksAndItemRestApi() {
+    get("/blocks") {
+        val jsonArray = JsonArray()
+
+        Registries.BLOCK.forEach { block ->
+            jsonArray.add(block.translationKey)
+        }
+
+        httpOk(jsonArray)
+    }
+
+    get("/items") {
+        httpOk(JsonObject().apply {
+            val jsonArray = JsonArray()
+
+            Registries.ITEM.forEach { item ->
+                jsonArray.add(item.translationKey)
+            }
+
+            httpOk(jsonArray)
+        })
+    }
 }
