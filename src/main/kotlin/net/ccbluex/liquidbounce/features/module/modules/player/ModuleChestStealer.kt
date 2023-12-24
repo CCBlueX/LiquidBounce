@@ -41,9 +41,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     val startDelay by intRange("StartDelay", 1..2, 0..20)
     val clickDelay by intRange("ClickDelay", 2..4, 0..20)
-    var closeDelay by intRange("CloseDelay", 1..5, 0..20)
-    var quickSwaps by boolean("QuickSwaps", true)
-    var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
+    val closeDelay by intRange("CloseDelay", 1..5, 0..20)
+    val quickSwaps by boolean("QuickSwaps", true)
+    val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
 
     private var lastSlot = 0
