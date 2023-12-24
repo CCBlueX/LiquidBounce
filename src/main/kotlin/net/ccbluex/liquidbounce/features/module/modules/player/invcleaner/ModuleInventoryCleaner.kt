@@ -64,7 +64,6 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         )
 
     val isGreedy by boolean("Greedy", true)
-    val notInContainers by boolean("NotInContainers", false)
 
     val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD, ItemSortChoice.values())
     val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.SWORD, ItemSortChoice.values())
