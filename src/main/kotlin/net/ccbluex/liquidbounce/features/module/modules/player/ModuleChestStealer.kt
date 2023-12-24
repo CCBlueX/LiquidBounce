@@ -88,7 +88,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             val hasFreeSpace = (0..35).any { player.inventory.getStack(it).isNothing() }
 
             if (!hasFreeSpace && stillRequiredSpace > 0) {
-                // we exit out of the loop if inventory if full
+                // we exit out of the loop if inventory is full
                 val shouldPause = throwItem(cleanupPlan, screen) ?: break
 
                 if (shouldPause && delay > 0) {
