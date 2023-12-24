@@ -74,7 +74,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         // Quick swap items in hotbar (i.e. swords), some servers hate them
         if (quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
-            // if we didn't do anything
             return@repeatable
         }
 
@@ -134,6 +133,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         return true
     }
 
+    /**
+     * @param slotsToCollect amount of items we need to take
+     */
     private fun getStillRequiredSpace(
         cleanupPlan: InventoryCleanupPlan,
         slotsToCollect: Int,
@@ -172,7 +174,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     /**
      * WARNING: Due to the remap the hotbar swaps are not valid anymore after this function.
      *
-     * @return true if the chest stealer should wait for the next tick to continue.
+     * @return true if the chest stealer should wait for the next tick to continue. null if we didn't do anything
      */
     private suspend fun Sequence<*>.performQuickSwaps(
         cleanupPlan: InventoryCleanupPlan, screen: GenericContainerScreen
