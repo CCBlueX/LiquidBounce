@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleHighJump
 
 
 /**
@@ -36,21 +38,39 @@ import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
  */
 object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
 
-    
-    val messages = listOf(
-        "Get rekt, noob!",
-        "You are so bad, lol.",
-        "GG, easy.",
+
+    private val modes = choices(
+        "Mode", toxic, arrayOf(
+            toxic, liquidbounce
+        )
+    )
+    // A list of funny messages to choose from
+    val toxic = listOf(
+        "lmao",
+        "you sit on your ass all day and still die? sad",
+        "JEW SPOTTED",
         "You should uninstall the game.",
-        "You just got owned by LiquidBounce.",
         "You are a disgrace to your team.",
         "You call that a fight?",
         "You are wasting your time and mine.",
         "You should practice more.",
-        "You are not even a challenge."
+        "You are not even a challenge.",
+        "my disabled brother could beat you in a 1v1"
     )
 
-    
+
+    val liquidbounce = listOf(
+        "Install LiquidBounce Today",
+        "You sit on your ass all day and some german developers still kill you, sad",
+        "LiquidBounce is The Next Lunar",
+        "bro, i'm legit i use LiquidBounce",
+        "ur not a sigma if u dont install the liquidbounce",
+        "LiquidBounce Gives you Wings!"
+
+
+    )
+
+    // A random number generator
     val random = java.util.Random()
 
     // A handler for chat receive events
@@ -67,7 +87,7 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
             val killedPlayer = matchResult.groupValues[1]
 
             // Choose a random message from the list
-            val message = messages.random(random)
+            val toxic = messages.random(random)
 
             // Send the message using the network handler
             network.sendChatMessage(message)
