@@ -42,6 +42,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val startDelay by intRange("StartDelay", 1..2, 0..20)
     val clickDelay by intRange("ClickDelay", 2..4, 0..20)
     var closeDelay by intRange("CloseDelay", 1..5, 0..20)
+    var quickSwaps by boolean("QuickSwaps", true)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
 
@@ -71,19 +72,17 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             }
         }
 
-        val shouldSwap = ModuleInventoryCleaner.enabled && !ModuleInventoryCleaner.notInContainers
-
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (shouldSwap && performQuickSwaps(cleanupPlan, screen) != null) {
+        if (quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
             // if we didn't do anything
             return@repeatable
         }
 
-        var stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
+        val stillRequiredSpace = getStillRequiredSpace(cleanupPlan, itemsToCollect.size)
 
         val sortedItemsToCollect = selectionMode.processor(itemsToCollect)
 
-        var delay = clickDelay.random()
+        val delay = clickDelay.random()
 
         for (slot in sortedItemsToCollect) {
             val hasFreeSpace = (0..35).any { player.inventory.getStack(it).isNothing() }
@@ -94,7 +93,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
                 if (shouldPause && delay > 0) {
                     waitConditional(delay - 1) { !screenIsChest() }
-                    delay = clickDelay.random()
+                    return@repeatable
                 }
             }
 
@@ -107,7 +106,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             if (delay > 0) {
                 waitConditional(delay - 1) { !screenIsChest() }
-                delay = clickDelay.random()
+                return@repeatable
             }
         }
 
