@@ -42,7 +42,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val startDelay by intRange("StartDelay", 1..2, 0..20)
     val clickDelay by intRange("ClickDelay", 2..4, 0..20)
     var closeDelay by intRange("CloseDelay", 1..5, 0..20)
-    var quickSwaps by boolean("QuickSwaps", true)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
 
@@ -72,10 +71,10 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             }
         }
 
-        val shouldSwap = !ModuleInventoryCleaner.enabled || !ModuleInventoryCleaner.notInContainers
+        val shouldSwap = ModuleInventoryCleaner.enabled && !ModuleInventoryCleaner.notInContainers
 
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (quickSwaps && shouldSwap && performQuickSwaps(cleanupPlan, screen) != null) {
+        if (shouldSwap && performQuickSwaps(cleanupPlan, screen) != null) {
             // if we didn't do anything
             return@repeatable
         }
