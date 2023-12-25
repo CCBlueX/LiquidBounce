@@ -18,37 +18,30 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.DummyEvent
-import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.event.SuspendableHandler
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleHighJump
 
 
 /**
  * Auto insult module
  *
- * Sends a funny message in chat when someone is killed by you.
+ * Sends an insult  in chat when someone is killed by you.
  */
 object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
 
 
     private val modes = choices(
-        "Mode", toxic, arrayOf(
-            toxic, liquidbounce
+        "Mode", Toxic, arrayOf(
+            Toxic, liquidbounce
         )
     )
     // A list of funny messages to choose from
 
-    private object toxic : Choice("toxic") {
+    private object Toxic : Choice("ToxicInsult") {
         override val parent : ChoiceConfigurable
             get() = modes
     }
@@ -66,7 +59,7 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         "my disabled brother could beat you in a 1v1"
     )
 
-    private object liquidbounce : Choice("liquidbounce") {
+    private object liquidbounce : Choice("LiquidBounceInsult") {
         override val parent: ChoiceConfigurable
             get() = modes
     }
@@ -79,15 +72,14 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         "LiquidBounce Gives you Wings!"
     )
 
-    // A random number generator
-    val random = java.util.Random()
+
 
     // A handler for chat receive events
     val onChat = handler<ChatReceiveEvent> { event ->
         val msg = event.message
 
         // A regular expression for matching kill messages
-        val killRegex = Regex("${mc.player!!.name.literalString} killed (.+)")
+        val killRegex = player.nameForScoreboard
 
         // If the message matches the kill message, send a funny message in chat
         val matchResult = killRegex.findAll(msg)
@@ -96,7 +88,7 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
             val killedPlayer = matchResult.first().groups[1]?.value ?: "someone"
 
             // Choose a random message from the list
-            val toxic = if (modes.activeChoice.name == "liquidbounce") liquidbouncechoice.random() else toxicchoice.random()
+            val toxic = if (modes.activeChoice.name == "liquidbouncec") liquidbouncechoice.random() else toxicchoice.random()
 
             // Send the message using the network handler
             network.sendChatMessage(toxic)
