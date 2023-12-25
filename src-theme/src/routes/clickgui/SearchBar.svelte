@@ -219,4 +219,8 @@
   .active {
     color: var(--accent);
   }
+
+  ::-webkit-scrollbar {
+    width: 0;
+  }
 </style>

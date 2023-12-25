@@ -110,7 +110,6 @@
 
   .switch input:checked + .slider {
     background-color: var(--accent);
-    filter: brightness(70%);
   }
 
   .switch input:checked + .slider:before {

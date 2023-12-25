@@ -72,7 +72,6 @@
 
   .switch input:checked + .slider {
     background-color: var(--accent);
-    filter: brightness(0.4);
   }
 
   .switch input:checked + .slider:before {
