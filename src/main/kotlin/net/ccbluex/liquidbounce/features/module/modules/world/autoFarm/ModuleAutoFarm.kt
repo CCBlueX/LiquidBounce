@@ -102,7 +102,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-
         updateTarget()
 
         // return if the blink module is enabled
@@ -145,7 +144,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val blockPos = rayTraceResult.blockPos
 
-        val state = rayTraceResult.blockPos.getState() ?: return@repeatable
+        var state = rayTraceResult.blockPos.getState() ?: return@repeatable
         if (isTargeted(state, blockPos)) {
             if (fortune) {
                 Hotbar.findBestItem(1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
@@ -158,7 +157,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
             }
-            if (mc.interactionManager!!.blockBreakingProgress == -1) {
+            if (interaction.blockBreakingProgress == -1) {
                 // Only wait if the block is completely broken
                 waitTicks(interactDelay.random())
             }
@@ -166,14 +165,16 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         } else {
             val pos = blockPos.offset(rayTraceResult.side).down()
-            val state = pos.getState() ?: return@repeatable
+
+            state = pos.getState() ?: return@repeatable
+
             if (isFarmBlockWithAir(state, pos)) {
-                val item =
-                    if (state.block is FarmlandBlock) {
-                        itemForFarmland
-                    } else {
-                        itemForSoulSand
-                    }
+                val item = if (state.block is FarmlandBlock) {
+                    itemForFarmland
+                } else {
+                    itemForSoulSand
+                }
+
                 item ?: return@repeatable
 
                 SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
@@ -183,7 +184,6 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             }
         }
     }
-
 
     // Searches for any blocks within the radius that need to be destroyed, such as crops.
     private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
@@ -217,12 +217,13 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     // Searches for any blocks suitable for placing crops or nether wart on
     // returns ture if it found a target
     private fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3d): Boolean {
-
         val hotbarItems = Hotbar.items
+
         val allowFarmland = hotbarItems.any { it in itemsForFarmland }
         val allowSoulsand = hotbarItems.any { it in itemsForSoulsand }
 
-        if(!allowFarmland && !allowSoulsand) return false
+        if (!allowFarmland && !allowSoulsand) return false
+
         val blocksToPlace =
             searchBlocksInCuboid(radius, eyesPos) { pos, state ->
                 !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
@@ -271,11 +272,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         updateTargetToPlaceable(radius, radiusSquared, eyesPos)
     }
 
-
     fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
-        val block = state.block
-
-        return when (block) {
+        return when (val block = state.block) {
             is PumpkinBlock -> true
             Blocks.MELON -> true
             is CropBlock -> block.isMature(state)
@@ -305,9 +303,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private fun isFarmBlock(state: BlockState, allowFarmland: Boolean, allowSoulsand: Boolean): Boolean {
         return when (state.block) {
-                is FarmlandBlock -> allowFarmland
-                is SoulSandBlock -> allowSoulsand
-                else -> false
+            is FarmlandBlock -> allowFarmland
+            is SoulSandBlock -> allowSoulsand
+            else -> false
         }
     }
 
@@ -322,7 +320,5 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     override fun disable() {
         ChunkScanner.unsubscribe(AutoFarmBlockTracker)
     }
-
-
 
 }
