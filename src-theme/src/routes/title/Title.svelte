@@ -76,14 +76,12 @@
     let location = "unknown";
 
     getSession().then(session => {
-        console.log(session);
         username = session.username;
         faceUrl = session.avatar;
         accountType = session.accountType;
     }).catch(console.error);
 
     getLocation().then(ip => {
-        console.log(ip);
         const country = ip.country;
 
         // Lowercase country code
