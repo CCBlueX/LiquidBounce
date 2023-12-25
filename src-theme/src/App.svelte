@@ -2,6 +2,7 @@
     import Router, { link, pop, push } from "svelte-spa-router";
     import { routes } from "./routes.js";
     import { listen } from "./client/ws.svelte";
+    import { getVirtualScreen } from "./client/api.svelte";
 
     let showingSplash = false;
     let nextRoute = null;
@@ -48,6 +49,10 @@
                 push(route);
             }
         }
+    });
+
+    getVirtualScreen().then((screen) => {
+        push("/" + screen.name);
     });
 </script>
 
