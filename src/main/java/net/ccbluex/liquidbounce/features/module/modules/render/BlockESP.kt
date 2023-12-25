@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
@@ -21,7 +22,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
+import net.minecraft.init.Blocks
 import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.bed
 import net.minecraft.util.BlockPos
 import java.awt.Color
 
@@ -45,34 +48,18 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
         if (searchTimer.hasTimePassed(1000) && (thread?.isAlive != true)) {
             val radius = radius
             val selectedBlock = Block.getBlockById(block)
+            val blockLimit = blockLimit
 
             if (selectedBlock == null || selectedBlock == air)
                 return
 
             thread = Thread({
-                val blockList = mutableListOf<BlockPos>()
-
-                for (x in -radius until radius) {
-                    for (y in radius downTo -radius + 1) {
-                        for (z in -radius until radius) {
-                            val thePlayer = mc.thePlayer
-
-                            val xPos = thePlayer.posX.toInt() + x
-                            val yPos = thePlayer.posY.toInt() + y
-                            val zPos = thePlayer.posZ.toInt() + z
-
-                            val blockPos = BlockPos(xPos, yPos, zPos)
-                            val block = getBlock(blockPos)
-
-                            if (block == selectedBlock && blockList.size < blockLimit) blockList += blockPos
-                        }
-                    }
-                }
+                val blocks = searchBlocks(radius, setOf(selectedBlock), blockLimit)
                 searchTimer.reset()
 
                 synchronized(posList) {
                     posList.clear()
-                    posList += blockList
+                    posList += blocks.keys
                 }
             }, "BlockESP-BlockFinder")
 

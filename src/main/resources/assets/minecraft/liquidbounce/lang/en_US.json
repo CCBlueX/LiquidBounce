@@ -104,6 +104,8 @@
         "module.avoidHazards.description": "Prevents you from walking into blocks that might be harmful to you.",
         
         "module.blink.description": "Suspends all movement packets.",
+
+        "module.bedProtectionESP.description": "Allows you to see where the blocks should be placed to protect a bed",
         
         "module.blockESP.description": "Allows you to see a selected block through walls.",
         

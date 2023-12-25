@@ -93,7 +93,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false) {
             // Default nuker
 
             val eyesPos = thePlayer.eyes
-            val validBlocks = searchBlocks(radius.roundToInt() + 1).filter { (pos, block) ->
+            val validBlocks = searchBlocks(radius.roundToInt() + 1, null).filter { (pos, block) ->
                 if (getCenterDistance(pos) <= radius && validBlock(block)) {
                     if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
                         return@filter false
@@ -194,7 +194,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false) {
                 return
 
             // Search for new blocks to break
-            searchBlocks(radius.roundToInt() + 1)
+            searchBlocks(radius.roundToInt() + 1, null)
                 .filter { (pos, block) ->
                     if (getCenterDistance(pos) <= radius && validBlock(block)) {
                         if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
