@@ -88,6 +88,11 @@ object IntegrationHandler : Listenable {
     }
 
     fun virtualOpen(name: String) {
+        // Check if the virtual screen is already open
+        if (momentaryVirtualScreen?.name == name) {
+            return
+        }
+
         virtualClose()
         val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
         EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
