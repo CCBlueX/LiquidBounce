@@ -3,21 +3,18 @@
     import {fade, slide} from "svelte/transition";
     import GenericSetting from "./GenericSetting.svelte";
 
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
-    let name = instance.name;
-    let choices = Object.keys(instance.choices);
-    let value = instance.active;
-
-    function getChoiceSettings(choice) {
-        const hiddenSettings = ["Enabled", "Hidden", "Bind"];
-
-        return instance.choices[choice].value
-            .filter(s => !hiddenSettings.includes(s.name));
-    }
-
-    let settings = getChoiceSettings(value);
+    let name = reference.name;
+    let choices = Object.keys(reference.choices);
     let expanded = false;
 
     function handleToggleExpand() {
@@ -30,35 +27,29 @@
             return;
         }
 
-        value = v;
-        instance.active = v;
-
-        // todo: fix old settings not being updated by svelte, how to force update?
-        // svelte is buggy
-        settings = getChoiceSettings(v);
-        console.log(settings);
+        reference.active = v;
         write();
     }
 </script>
 
 <div class="setting">
     <div class="choice">
-        <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {value}</div>
+        <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {reference.active}</div>
         {#if expanded}
             <div class="values" transition:slide|local={{duration: 200, easing: sineInOut}}>
                 {#each choices as v}
-                    <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === value}>{v}</div>
+                    <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === reference.active}>{v}</div>
                 {/each}
             </div>
         {/if}
     </div>
 
-    {#if settings.length > 0}
-        <div class="settings" transition:fade|local={{duration: 200, easing: sineInOut}}>
-            {#each settings as s}
-                <GenericSetting instance={s} write={write} />
-            {/each}
-        </div>
+    {#if reference.choices[reference.active].value.length > 0}
+      <div class="settings" transition:fade|local={{duration: 200, easing: sineInOut}}>
+        {#each reference.choices[reference.active].value as s}
+            <GenericSetting reference={s} write={write} />
+        {/each}
+      </div>
     {/if}
 </div>
 

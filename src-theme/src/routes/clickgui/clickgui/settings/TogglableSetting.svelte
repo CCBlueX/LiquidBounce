@@ -3,20 +3,27 @@
     import {fade} from "svelte/transition";
     import GenericSetting from "./GenericSetting.svelte";
 
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
-    const hiddenSettings = ["Enabled", "Hidden", "Bind"];
+    let name = reference.name;
+    let enabled = reference.value.find(v => v.name === "Enabled").value;
 
-    let value = instance.value.find(v => v.name === "Enabled");
-    let name = instance.name;
+    function changed() {
+        // Pass the new value to the instance
+        for (const v of reference.value) {
+            if (v.name === "Enabled") {
+                v.value = enabled;
+            }
+        }
 
-    let settings = value ? instance.value.filter(v => !hiddenSettings.includes(v.name)) : [];
-
-    function refresh(e) {
-        value = e.target.checked;
-        instance.value.find(v => v.name === "Enabled").value = value;
-        settings = value ? instance.value.filter(v => !hiddenSettings.includes(v.name)) : [];
         write();
     }
 </script>
@@ -25,7 +32,7 @@
     <div class="head">
         <div class="boolean">
             <label class="switch">
-                <input type="checkbox" bind:checked={value} on:change={refresh}/>
+                <input type="checkbox" bind:checked={enabled} on:change={changed}/>
                 <span class="slider"/>
 
                 <div class="name">{name}</div>
@@ -33,10 +40,12 @@
         </div>
     </div>
 
-    {#if value}
+    {#if enabled}
         <div class="settings" transition:fade|local={{duration: 200}}>
-            {#each settings as s}
-                <GenericSetting instance={s} write={write} />
+            {#each reference.value as s}
+              {#if s.name !== "Enabled"}
+                <GenericSetting reference={s} write={write} />
+              {/if}
             {/each}
         </div>
     {/if}

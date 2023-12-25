@@ -60,7 +60,7 @@ open class Module(
         if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
             doNotInclude()
         }
-    }
+    }.notAnOption()
 
     // Module options
     var enabled by valueEnabled.listen { new ->
@@ -101,7 +101,7 @@ open class Module(
         new
     }
 
-    var bind by int("Bind", bind, 0..0)
+    var bind by key("Bind", bind)
         .doNotInclude()
     var hidden by boolean("Hidden", hide)
         .doNotInclude()

@@ -11,10 +11,7 @@
 
     export let toggleModule;
 
-    const hiddenSettings = ["Enabled", "Hidden", "Bind"];
-
-    let moduleConfigurable = {};
-    let settings = [];
+    let configurable = {"value": []};
 
     let expanded = false;
 
@@ -36,26 +33,15 @@
     }
 
     function updateSettings() {
-        getModuleSettings(name).then(configurable => {
-            // To each entry with value as parameter, add a function "set",
-            // which will write the settings to the server. If the value itself also has another value parameter,
-            // add a function "set" to that as well. And so on.
-
-            moduleConfigurable = configurable;
-            settings = moduleConfigurable.value
-                .filter(v => !hiddenSettings.includes(v.name));
+        getModuleSettings(name).then(c => {
+          configurable = c;
+        }).catch((e) => {
+            console.error(e);
         });
     }
 
     function writeSettings() {
-        // merge the settings back into the moduleConfigurable
-        settings.forEach(s => {
-            moduleConfigurable.value.find(v => v.name === s.name).value = s.value;
-        });
-
-        console.log(moduleConfigurable);
-
-        writeModuleSettings(name, moduleConfigurable).then(() => {
+        writeModuleSettings(name, configurable).then(() => {
             updateSettings();
         }).catch((e) => {
             console.error(e);
@@ -66,12 +52,12 @@
 </script>
 
 <div>
-    <div on:mousedown={handleToggleSettings} on:click={handleToggle} class:has-settings={settings.length > 0}
+    <div on:mousedown={handleToggleSettings} on:click={handleToggle} class:has-settings={configurable.value.length > 0}
          class:enabled={enabled} class:expanded={expanded} class="module" id={name + "-module"}>{name}</div>
     {#if expanded}
         <div class="settings" transition:slide={{duration: 400, easing: sineInOut}}>
-            {#each settings as s}
-                <GenericSetting instance={s} write={writeSettings} />
+            {#each configurable.value as s}
+                <GenericSetting reference={s} write={writeSettings} />
             {/each}
         </div>
     {/if}

@@ -2,32 +2,46 @@
     import {sineInOut} from "svelte/easing";
     import {slide} from "svelte/transition";
 
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
-    let name = instance.name;
-    let choices = instance.choices;
-    let value = instance.value;
+    let name = reference.name;
+    let choices = reference.choices;
 
     let expanded = false;
 
+    /**
+     * This function handles the toggling of the expanded state.
+     */
     function handleToggleExpand() {
         expanded = !expanded;
     }
 
-    function handleValueChange(v) {
-        value = v;
-        instance.value = v;
+    /**
+     * Since we have a list of choices down below to choose from, we need to have a function that handles the change and writes it
+     * directly to the instance.
+     * 
+     * @param choice The choice to change to (e.g. "Rainbow")
+     */
+    function handleValueChange(choice) {
+        reference.value = choice;
         write();
     }
 </script>
 
 <div class="setting">
-    <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {value}</div>
+    <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {reference.value}</div>
     {#if expanded}
         <div class="values" transition:slide|local={{duration: 200, easing: sineInOut}}>
-            {#each choices as v}
-                <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === value}>{v}</div>
+            {#each choices as choice}
+                <div class="value" on:click={() => handleValueChange(choice)} class:enabled={choice === reference.value}>{choice}</div>
             {/each}
         </div>
     {/if}

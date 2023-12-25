@@ -1,20 +1,25 @@
 <script>
     import GenericSetting from "./GenericSetting.svelte";
 
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
-    const hiddenSettings = ["Enabled", "Hidden", "Bind"];
-    const settings = instance.value.filter(s => !hiddenSettings.includes(s.name));
-    const name = instance.name;
+    const name = reference.name;
 </script>
 
 <div class="setting">
     <div class="name"><b>{name}</b></div>
 
     <div class="settings">
-        {#each settings as s}
-            <GenericSetting instance={s} write={write} />
+        {#each reference.value as s}
+            <GenericSetting reference={s} write={write} />
         {/each}
     </div>
 </div>

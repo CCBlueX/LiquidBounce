@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.block.Block
@@ -61,9 +62,18 @@ open class Value<T : Any>(
 
     /**
      * If true, value will not be included in generated public config
+     *
+     * @see
      */
     @Exclude @ProtocolExclude
     var doNotInclude = false
+        private set
+
+    /**
+     * If true, value will not be included in generated RestAPI config
+     */
+    @Exclude @ProtocolExclude
+    var notAnOption = false
         private set
 
     /**
@@ -115,6 +125,11 @@ open class Value<T : Any>(
 
     fun doNotInclude(): Value<T> {
         doNotInclude = true
+        return this
+    }
+
+    fun notAnOption(): Value<T> {
+        notAnOption = true
         return this
     }
 
@@ -228,6 +243,15 @@ open class Value<T : Any>(
 
                 set(items as T)
             }
+            ValueType.KEY          -> {
+                val newValue = try {
+                    string.toInt()
+                } catch (e: NumberFormatException) {
+                    key(string)
+                }
+
+                set(newValue as T)
+            }
             else -> error("unsupported value type")
         }
     }
@@ -310,12 +334,13 @@ interface NamedChoice {
 
 enum class ValueType {
     BOOLEAN,
-    FLOAT, FLOAT_RANGE,
+    FLOAT,FLOAT_RANGE,
     INT, INT_RANGE,
     TEXT, TEXT_ARRAY,
     COLOR,
     BLOCK, BLOCKS,
     ITEM, ITEMS,
+    KEY,
     CHOICE, CHOOSE,
     INVALID,
     CONFIGURABLE,

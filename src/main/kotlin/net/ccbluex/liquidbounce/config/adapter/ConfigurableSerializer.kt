@@ -56,7 +56,9 @@ object ProtocolConfigurableSerializer : JsonSerializer<Configurable> {
         val obj = JsonObject()
 
         obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.value))
+        obj.add("value", context.serialize(src.value.filter {
+            !it.notAnOption
+        }))
         obj.add("valueType", context.serialize(src.valueType))
 
         return obj

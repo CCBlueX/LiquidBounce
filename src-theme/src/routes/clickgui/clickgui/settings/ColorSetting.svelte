@@ -2,16 +2,22 @@
     import {onMount} from "svelte";
     import {rgbaToInt, intToHex} from "../../../../utils/misc.js";
 
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
-    let name = instance.name;
-    let value = intToHex(instance.value);
+    let name = reference.name;
+    let value = intToHex(reference.value);
 
     let colorPicker = null;
     let pickr = null;
     
-
     onMount(() => {
         pickr = Pickr.create({
             el: colorPicker,
@@ -42,7 +48,7 @@
         pickr.on("change", v => {
             value = v.toHEXA();
             const rgba = v.toRGBA();
-            instance.value = rgbaToInt(rgba);
+            reference.value = rgbaToInt(rgba);
             write();
         });
     });

@@ -1,22 +1,29 @@
 <script>
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
     import {onMount} from "svelte";
 
-    let type = instance.valueType;
+    let type = reference.valueType;
 
-    let name = instance.name;
-    let min = instance.range.from;
-    let max = instance.range.to;
+    let name = reference.name;
+    let min = reference.range.from;
+    let max = reference.range.to;
     let step = type.includes("INT") ? 1 : 0.01;
     let multi = type.includes("_RANGE");
 
     let value;
     if (multi) {
-        value = [instance.value.from, instance.value.to];
+        value = [reference.value.from, reference.value.to];
     } else {
-        value = [instance.value];
+        value = [reference.value];
     }
 
     let valueString;
@@ -62,12 +69,12 @@
             }
 
             if (multi) {
-                instance.value = {
+                reference.value = {
                     from: value[0],
                     to: value[1]
                 };
             } else {
-                instance.value = value[0];
+                reference.value = value[0];
             }
             write();
 

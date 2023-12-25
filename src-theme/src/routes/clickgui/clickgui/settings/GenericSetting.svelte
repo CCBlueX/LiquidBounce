@@ -8,28 +8,35 @@
     import ChoiceSetting from "./ChoiceSetting.svelte";
     import ConfigurableSetting from "./ConfigurableSetting.svelte";
 
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
-    let type = instance.valueType;
+    let type = reference.valueType;
 </script>
 
 {#if type === "BOOLEAN"}
-    <BooleanSetting {instance} write={write} />
+    <BooleanSetting reference={reference} write={write} />
 {:else if type === "CHOOSE"}
-    <ChooseSetting {instance} write={write} />
+    <ChooseSetting reference={reference} write={write} />
 {:else if type === "TOGGLEABLE"}
-    <TogglableSetting {instance} write={write} />
+    <TogglableSetting reference={reference} write={write} />
 {:else if type === "INT" || type === "INT_RANGE" || type === "FLOAT" || type === "FLOAT_RANGE"}
-    <RangeSetting {instance} write={write} />
+    <RangeSetting reference={reference} write={write} />
 {:else if type === "CHOICE"}
-    <ChoiceSetting {instance} write={write} />
+    <ChoiceSetting reference={reference} write={write} />
 {:else if type === "TEXT"}
-    <TextSetting {instance} write={write} />
+    <TextSetting reference={reference} write={write} />
 {:else if type === "COLOR"}
-    <ColorSetting {instance} write={write} />
+    <ColorSetting reference={reference} write={write} />
 {:else if type === "CONFIGURABLE"}
-    <ConfigurableSetting {instance} write={write} />
+    <ConfigurableSetting reference={reference} write={write} />
 {/if}
 
 

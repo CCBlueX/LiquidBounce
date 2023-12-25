@@ -1,14 +1,21 @@
 <script>
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 </script>
 
 <div class="setting">
     <label class="switch">
-        <input type="checkbox" bind:checked={instance.value} on:change={write}/>
+        <input type="checkbox" bind:checked={reference.value} on:change={write}/>
         <span class="slider"/>
 
-        <div class="name">{instance.name}</div>
+        <div class="name">{reference.name}</div>
     </label>
 </div>
 

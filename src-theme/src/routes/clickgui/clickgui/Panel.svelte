@@ -12,8 +12,6 @@
     export let startTop;
     export let startLeft;
 
-    console.log(modules);
-
     let expanded = localStorage.getItem(`clickgui.panel.${name}.expanded`) === "true" || false;
 
     let renderedModules = expanded ? modules : [];

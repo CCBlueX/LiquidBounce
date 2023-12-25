@@ -1,13 +1,20 @@
 <script>
-    export let instance;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
     export let write;
 
-    let name = instance.name;
+    let name = reference.name;
 </script>
 
 <div class="setting">
     <div class="name">{name}</div>
-    <input type="text" bind:value={instance.value} on:change={write} placeholder={name}/>
+    <input type="text" bind:value={reference.value} on:change={write} placeholder={name}/>
 </div>
 
 <style lang="scss">
