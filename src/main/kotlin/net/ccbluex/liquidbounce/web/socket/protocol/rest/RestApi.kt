@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupClientRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupPlayerRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupServerApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupWorldApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.module.setupModuleRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.session.setupSessionRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupPlayerRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupServerApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupWorldApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module.setupModuleRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.session.setupSessionRestApi
 
 class RestApi {
 

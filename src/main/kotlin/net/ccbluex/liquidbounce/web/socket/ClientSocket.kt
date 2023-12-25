@@ -38,34 +38,55 @@ object ClientSocket {
     internal var socketEventHandler = SocketEventHandler()
     internal val restApi = RestApi()
 
+    /**
+     * Basic events which are always registered.
+     *
+     * These makes sense to always provide to the websocket client, as they are not causing any high traffic.
+     * In case of a high traffic event, it should be registered manually via RestAPI endpoint.
+     */
+    private val baseEvents = arrayOf(
+        // Without this event, NOTHING will work!!!
+        "virtualScreen",
+
+        // Most essential events
+        "toggleModule",
+        "notification",
+        "altManagerUpdate",
+        "session",
+        "splashOverlay",
+        "splashProgress",
+        "key",
+
+        // Statistic events
+        "fps",
+        "playerStats",
+
+        // LiquidChat events, needed for chat UI
+        "clientChatMessage",
+        "clientChatError",
+
+        // Nice to have events
+        "chatSend",
+        "chatReceive",
+
+        "death",
+        "worldDisconnect",
+
+        // Might be nice to have in case someone needs them for any reason
+        "mouseButton",
+        "mouseScroll",
+        "keyboardKey",
+        "keyboardChar",
+        // "mouseCursor", Not needed
+        // "windowResize",
+    )
+
     fun start() {
         thread(name = "netty-websocket") {
             NettyServer().startServer()
         }
 
-        // todo: register via RestAPI instead of hardcoding
-        socketEventHandler.register("worldDisconnect")
-        socketEventHandler.register("windowResize")
-        socketEventHandler.register("mouseButton")
-        socketEventHandler.register("mouseScroll")
-        socketEventHandler.register("mouseCursor")
-        socketEventHandler.register("keyboardKey")
-        socketEventHandler.register("keyboardChar")
-        socketEventHandler.register("session")
-        socketEventHandler.register("chatSend")
-        socketEventHandler.register("chatReceive")
-        socketEventHandler.register("death")
-        socketEventHandler.register("toggleModule")
-        socketEventHandler.register("notification")
-        socketEventHandler.register("clientChatMessage")
-        socketEventHandler.register("clientChatError")
-        socketEventHandler.register("altManagerUpdate")
-        socketEventHandler.register("virtualScreen")
-        socketEventHandler.register("fps")
-        socketEventHandler.register("playerStats")
-        socketEventHandler.register("key")
-        socketEventHandler.register("splashOverlay")
-        socketEventHandler.register("splashProgress")
+        baseEvents.forEach(socketEventHandler::register)
 
         // RestAPI
         restApi.setupRoutes()

@@ -314,6 +314,10 @@
         })
     }
 
+    export function getVirtualScreen() {
+        return request("/virtualScreen")
+    }
+
 
 </script>
 

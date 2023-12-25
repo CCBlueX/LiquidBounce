@@ -18,7 +18,7 @@
  *
  */
 
-package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
