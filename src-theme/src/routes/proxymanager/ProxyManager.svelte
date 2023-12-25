@@ -1,52 +1,80 @@
 <script>
     import { pop } from "svelte-spa-router";
+    import { getLocation, getProxy, setProxy, unsetProxy } from "../../client/api.svelte";
 
     let proxyHost = "";
-    let proxyPort = 0;
+    let proxyPort = 1080;
     let proxyUsername = "";
     let proxyPassword = "";
 
+    let proxy = "";
     let location = "Loading...";
+    let status = "";
 
     function set() {
-        //document.getElementById('response').innerText = client.getProxyManager().setProxy(document.getElementById('host').value, parseInt(document.getElementById('port').value), document.getElementById('username').value, document.getElementById('password').value);
-        refresh();
+        setProxy(proxyHost, proxyPort, proxyUsername, proxyPassword).then(() => {
+            status = "Proxy set.";
+            refreshLocation();
+        }).catch((e) => {
+            status = "Error: " + e;
+            console.error(e);
+        });
     }
 
     function remove() {
-        //document.getElementById('response').innerText = client.getProxyManager().unsetProxy();
-        refresh();
+        unsetProxy().then(() => {
+            status = "Proxy unset.";
+            refreshLocation();
+        }).catch((e) => {
+            status = "Error: " + e;
+            console.error(e);
+        });
     }
 
-    function refresh() {
-        // let proxy = client.getProxyManager().getCurrentProxy();
-        //
-        // if (proxy != null) {
-        //     document.getElementById('proxy').innerText = proxy.getHost() + ":" + proxy.getPort();
-        //
-        //     // Fill in input fields
-        //     document.getElementById('host').value = proxy.getHost();
-        //     document.getElementById('port').value = proxy.getPort();
-        //
-        //     let creds = proxy.getCredentials();
-        //     if (creds != null) {
-        //         document.getElementById('username').value = creds.getUsername();
-        //         document.getElementById('password').value = creds.getPassword();
-        //     }
-        // } else {
-        //     document.getElementById('proxy').innerText = "No proxy.";
-        // }
-        //
-        //
-        // document.getElementById('location').innerText = client.getSessionService().getLocation();
+    function fillInData() {
+        getProxy().then((proxy) => {
+            if (proxy.host === undefined || proxy.port === undefined) {
+                return;
+            }
+
+            proxyHost = proxy.host;
+            proxyPort = proxy.port;
+            proxyUsername = proxy.username;
+            proxyPassword = proxy.password;
+        }).catch((e) => {
+            status = "Error: " + e;
+            console.error(e);
+        });
     }
 
-    refresh();
+    function refreshLocation() {
+        location = "Loading...";
+        getProxy().then((p) => {
+            if (p.host === undefined || p.port === undefined) {
+                proxy = "None";
+            } else {
+                proxy = p.host + ":" + p.port;
+            }
+        }).catch((e) => {
+            status = "Error: " + e;
+            console.error(e);
+        });
+
+        getLocation().then(ip => {
+            const country = ip.country;
+            
+            // Lowercase country code
+            location = country;
+        }).catch(console.error);
+    }
+
+    fillInData();
+    refreshLocation();
 </script>
 
 <head>
     <meta charset="UTF-8">
-    <title>Account Manager</title>
+    <title>Proxy Manager</title>
     <style>
 
         *:focus {
@@ -210,34 +238,34 @@
                 <h2>Proxy Configuration</h2>
                 <div>
                     <label for="host"></label><input type="text" id="host" name="host"
-                                                     placeholder="Host"><br>
+                                                     placeholder="Host" bind:value={proxyHost}><br>
                     <label for="port"></label><input type="port" id="port" name="port"
-                                                     placeholder="Port"><br>
+                                                     placeholder="Port" bind:value={proxyPort}><br>
                     <label for="username"></label><input type="text" id="username" name="username"
-                                                         placeholder="Username"><br>
+                                                         placeholder="Username" bind:value={proxyUsername}><br>
                     <label for="password"></label><input type="password" id="password" name="password"
-                                                         placeholder="Password">
+                                                         placeholder="Password" bind:value={proxyPassword}>
 
                     <br><br>
 
-                    <button onclick="set()">
+                    <button on:click={set}>
                         Set proxy
                     </button>
 
-                    <button onclick="remove()">
+                    <button on:click={remove}>
                         Unset proxy
                     </button>
                 </div>
             </div>
 
-            <label id="response"></label>
+            <label id="status">{status}</label>
         </div>
 
         <div>
             <h2>Proxy Details</h2>
 
-            <label><b>Current proxy: </b><label id="proxy"></label></label><br>
-            <label><b>Location: </b><label id="location"></label></label>
+            <label><b>Current proxy: </b><label id="proxy">{proxy}</label></label><br>
+            <label><b>Location: </b><label id="location">{location}</label></label>
         </div>
     </div>
     <footer>
