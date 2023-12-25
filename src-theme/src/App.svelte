@@ -51,9 +51,12 @@
         }
     });
 
-    getVirtualScreen().then((screen) => {
-        push("/" + screen.name);
-    });
+    if (!isStatic) {
+        getVirtualScreen().then((screen) => {
+            push("/" + screen.name);
+        });
+    }
+    
 </script>
 
 <main>

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupPlayerRestApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupServerApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupWorldApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module.setupModuleRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.proxy.setupProxyRestApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.session.setupSessionRestApi
 
 class RestApi {
@@ -37,9 +38,13 @@ class RestApi {
     fun setupRoutes() {
         RouteController
             .new("/api/v1/client").apply {
+                // Client API
                 setupClientRestApi()
                 setupSessionRestApi()
                 setupModuleRestApi()
+                setupProxyRestApi()
+
+                // Game API
                 setupWorldApi()
                 setupServerApi()
                 setupPlayerRestApi()
