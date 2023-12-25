@@ -10,14 +10,18 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.client.renderer.GlStateManager.*
+import net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting
+import net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting
+import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
 
@@ -50,11 +54,14 @@ class Inventory : Element(300.0, 50.0) {
         val titleColor = if (titleRainbow) ColorUtils.rainbow() else Color(titleRed, titleGreen, titleBlue)
 
         // draw rect and borders
-        RenderUtils.drawRect(0F, startY, width, height, Color(0,0,0, backgroundAlpha))
+        drawRect(0F, startY, width, height, Color(0,0,0, backgroundAlpha))
         if (borderValue) {
-            RenderUtils.drawBorder(0f, startY, width, height, 3f, borderColor.rgb)
-            RenderUtils.drawRect(0F, 0f, width, 1f, borderColor)
+            drawBorder(0f, startY, width, height, 3f, borderColor.rgb)
+            drawRect(0F, 0f, width, 1f, borderColor)
         }
+        // Reset color
+        resetColor()
+        glColor4f(1F, 1F, 1F, 1F)
 
 
         val invDisplayName = mc.thePlayer.inventory.displayName.formattedText
@@ -65,14 +72,14 @@ class Inventory : Element(300.0, 50.0) {
         }
 
         // render items
-        RenderHelper.enableGUIStandardItemLighting()
+        enableGUIStandardItemLighting()
         renderInv(9, 17, 6, 6, font)
         renderInv(18, 26, 6, 24, font)
         renderInv(27, 35, 6, 42, font)
-        RenderHelper.disableStandardItemLighting()
-        GlStateManager.enableAlpha()
-        GlStateManager.disableBlend()
-        GlStateManager.disableLighting()
+        disableStandardItemLighting()
+        enableAlpha()
+        disableBlend()
+        disableLighting()
 
         return Border(0F, startY, width, height)
     }
