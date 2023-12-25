@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkOcclusionDataBuilder.class)
-public class ChunkOcclusionDataBuilderMixin {
+public class MixinChunkOcclusionDataBuilder {
     @Inject(method = "markClosed", at = @At("HEAD"), cancellable = true)
     private void onMarkClosed(BlockPos pos, CallbackInfo cir) {
         if(ModuleXRay.INSTANCE.getEnabled()) {
