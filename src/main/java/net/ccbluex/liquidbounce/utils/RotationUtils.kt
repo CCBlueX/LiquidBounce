@@ -408,7 +408,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param b angle point
      * @return difference between angle points
      */
-    fun getAngleDifference(a: Float, b: Float) = ((a - b) % 360f + 540f) % 360f - 180f
+    fun getAngleDifference(a: Float, b: Float) = MathHelper.wrapAngleTo180_float(a - b)
 
     /**
      * Calculate rotation to vector
