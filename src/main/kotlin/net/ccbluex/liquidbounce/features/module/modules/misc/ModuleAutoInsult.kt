@@ -1,3 +1,4 @@
+
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -47,38 +48,35 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
     )
     // A list of funny messages to choose from
 
-    private object toxic : Choice(toxic) {
+    private object toxic : Choice("toxic") {
         override val parent : ChoiceConfigurable
             get() = modes
     }
 
-        val toxicchoice = listOf(
-            "lmao",
-            "you sit on your ass all day and still die? sad",
-            "JEW SPOTTED",
-            "You should uninstall the game.",
-            "You are a disgrace to your team.",
-            "You call that a fight?",
-            "You are wasting your time and mine.",
-            "You should practice more.",
-            "You are not even a challenge.",
-            "my disabled brother could beat you in a 1v1"
-        )
+    val toxicchoice = listOf(
+        "lmao",
+        "you sit on your ass all day and still die? sad",
+        "JEW SPOTTED",
+        "You should uninstall the game.",
+        "You are a disgrace to your team.",
+        "You call that a fight?",
+        "You are wasting your time and mine.",
+        "You should practice more.",
+        "You are not even a challenge.",
+        "my disabled brother could beat you in a 1v1"
     )
 
-    private object liquidbounce : Choice(liquidbounce) {
+    private object liquidbounce : Choice("liquidbounce") {
         override val parent: ChoiceConfigurable
             get() = modes
     }
-        val liquidbouncechoice = listOf(
-            "Install LiquidBounce Today",
-            "You sit on your ass all day and some german developers still kill you, sad",
-            "LiquidBounce is The Next Lunar",
-            "bro, i'm legit i use LiquidBounce",
-            "ur not a sigma if u dont install the liquidbounce",
-            "LiquidBounce Gives you Wings!"
-
-
+    val liquidbouncechoice = listOf(
+        "Install LiquidBounce Today",
+        "You sit on your ass all day and some german developers still kill you, sad",
+        "LiquidBounce is The Next Lunar",
+        "bro, i'm legit i use LiquidBounce",
+        "ur not a sigma if u dont install the liquidbounce",
+        "LiquidBounce Gives you Wings!"
     )
 
     // A random number generator
@@ -89,19 +87,20 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         val msg = event.message
 
         // A regular expression for matching kill messages
-        val killRegex = Regex("${mc.player.name} killed (.+)")
+        val killRegex = Regex("${mc.player!!.name.literalString} killed (.+)")
 
         // If the message matches the kill message, send a funny message in chat
-        val matchResult = killRegex.matchEntire(msg)
-        if (matchResult != null) {
+        val matchResult = killRegex.findAll(msg)
+        if (matchResult.count() != 0) {
             // Get the name of the player who was killed
-            val killedPlayer = matchResult.groupValues[1]
+            val killedPlayer = matchResult.first().groups[1]?.value ?: "someone"
 
             // Choose a random message from the list
-            val toxic = messages.random(random)
+            val toxic = if (modes.activeChoice.name == "liquidbounce") liquidbouncechoice.random() else toxicchoice.random()
 
             // Send the message using the network handler
-            network.sendChatMessage(message)
+            network.sendChatMessage(toxic)
         }
     }
 }
+
