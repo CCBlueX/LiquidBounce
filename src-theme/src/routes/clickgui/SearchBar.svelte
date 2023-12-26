@@ -20,8 +20,8 @@
         }
 
         filteredModules = modules
-        .filter(module => module.name.toLowerCase().includes(value.toLowerCase()))
-        .sort((a, b) => a.name.toLowerCase().indexOf(value.toLowerCase()) - b.name.toLowerCase().indexOf(value.toLowerCase()));
+            .filter(module => module.name.toLowerCase().includes(value.toLowerCase()))
+            .sort((a, b) => a.name.toLowerCase().indexOf(value.toLowerCase()) - b.name.toLowerCase().indexOf(value.toLowerCase()));
     };
 
     function isElementVisible(container, element) {
@@ -43,8 +43,14 @@
         toggleModule(module.name, !module.enabled);
     };
 
-    const handleHiglight = (module) => {
+    const handleHighlight = (module) => {
         const elem = document.getElementById(module.name + "-module");
+
+        // Check if element exists
+        if (!elem) {
+            return;
+        }
+
         scrollToElement(elem.parentElement, elem)
         elem.classList.add("module-highlight");
         setTimeout(() => {
@@ -66,11 +72,16 @@
         filterModules();
     });
 
+    // Handles the Ctrl + F shortcut to show the search bar
+    // TODO: Replace this with a Svelte compatible shortcut
     window.addEventListener("keydown", event => {
         if (visible) {
             return;
         }
+
         const key = event.which;
+
+        // Ctrl + F
         const ctrlKey = event.ctrlKey ? event.ctrlKey : 17 === key;
         if (ctrlKey && 70 === key) {
             visible = true;
@@ -88,7 +99,8 @@
         }
     }
 
-    window.addEventListener("keydown", event => {
+    // Handles the keydown events for the search bar
+    function handleKeyDown(event) {
         const key = event.which;
 
         // Move selection up and down
@@ -103,7 +115,7 @@
                     selectedModule = filteredModules[index - 1];
                 }
             }
-        } else if (40 === event.which) {
+        } else if (40 === key) {
             if (null === selectedModule) {
                 selectedModule = filteredModules[0];
             } else {
@@ -114,12 +126,10 @@
                     selectedModule = filteredModules[index + 1];
                 }
             }
-        } else if (13 === event.which) {
+        } else if (13 === key) {
             if (null !== selectedModule) {
                 handleToggleClick(selectedModule);
             }
-        } else {
-
         }
 
         // Scroll to selected module
@@ -128,11 +138,11 @@
             const element = document.getElementsByClassName("search-bar-list-item")[index];
             element.scrollIntoView({behavior: "smooth", block: "nearest", inline: "start"});
         }
-    });
+    }
 </script>
 
 {#if visible}
-    <div class="search-bar">
+    <div class="search-bar" on:keydown={handleKeyDown}>
         <div class="search-bar-input-container">
             <input bind:value type="text" placeholder="Search" on:input={onInput} autofocus={autofocus}>
         </div>
@@ -140,7 +150,7 @@
             <div class="search-bar-list">
                 {#each filteredModules as module}
                     <div class="search-bar-list-item"
-                         on:mousedown={(e) => (e.button === 0 ? handleToggleClick : handleHiglight)(module)}
+                         on:mousedown={(e) => (e.button === 0 ? handleToggleClick : handleHighlight)(module)}
                          class:selected={selectedModule === module}>
                         <span class:active={module.enabled}>
                             {module.name}
