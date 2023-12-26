@@ -1,6 +1,5 @@
 <script context="module">
-    // todo: use window location instead
-    const BASE_URL = "http://127.0.0.1:15743" // window.location.href.replace(/\/$/, "")
+    const BASE_URL = window.location.href.match(/^(http:\/\/[^\/]+)/)[1];
     // 127.0.0.1:1337/api/v1/client
     const BASE_API_URL = BASE_URL + "/api/v1/client"
     console.log("BASE_API_URL: " + BASE_API_URL);

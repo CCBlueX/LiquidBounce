@@ -36,9 +36,8 @@ internal class NettyServer {
 
     companion object {
 
-        // TODO: find open port and pass it to the browser
-        const val PORT = 15743
-        const val NETTY_ROOT = "http://localhost:$PORT"
+        val PORT = (15000..16000).random()
+        val NETTY_ROOT = "http://localhost:$PORT"
 
     }
 

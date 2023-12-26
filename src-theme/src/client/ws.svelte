@@ -1,11 +1,9 @@
 <script context="module">
-    // Create websocket connection to server, if it disconnects it will try to reconnect
-
-    // Remove anything after the last
-    const BASE_API_URL = window.location.href
-    // todo: use window location instead
+    const BASE_URL = window.location.href.match(/^(http:\/\/[^\/]+)/)[1];
+    console.log("BASE_URL: ", BASE_URL);
     // Format should be ws://localhost:10004/, only keep the host and port
-    const BASE_WS_URL = "ws://127.0.0.1:15743/"
+    const BASE_WS_URL = BASE_URL.replace(/(http|https)/, "ws").replace(/\/$/, "")
+    console.log("BASE_WS_URL: ", BASE_WS_URL);
 
     console.log("Connecting to server at: ", BASE_WS_URL)
 
