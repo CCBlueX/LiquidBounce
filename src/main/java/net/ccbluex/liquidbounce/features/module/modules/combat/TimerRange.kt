@@ -70,7 +70,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get())
     }
 
-    private val lookThreshold by FloatValue("LookThreshold", 0.5f, 0.1f..0.8f) { timerBoostMode == "SmartMove" }
+    private val lookThreshold by FloatValue("LookThreshold", 1.0f, 0.1f..1.5f) { timerBoostMode == "SmartMove" }
 
     // Mark Option
     private val markMode by ListValue("Mark", arrayOf("Off", "Box", "Platform"), "Off") { timerBoostMode == "SmartMove" }

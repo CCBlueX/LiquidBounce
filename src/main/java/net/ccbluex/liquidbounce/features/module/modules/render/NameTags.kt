@@ -79,7 +79,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     }
 
     private val onLook by BoolValue("OnLook", false)
-    private val lookThreshold by FloatValue("LookThreshold", 0.1f, 0.1f..0.8f) { onLook }
+    private val lookThreshold by FloatValue("LookThreshold", 1.0f, 0.1f..1.5f) { onLook }
 
     private var maxRenderDistanceSq = 0.0
 
