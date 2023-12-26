@@ -158,6 +158,7 @@ object LiquidBounce : Listenable {
             // Fires up the client tab
             IntegrationHandler.clientJcef
 
+            // Register resource reloader
             val resourceManager = mc.resourceManager
             val clientResourceReloader = ClientResourceReloader()
             if (resourceManager is ReloadableResourceManagerImpl) {

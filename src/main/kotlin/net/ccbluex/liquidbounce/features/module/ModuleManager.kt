@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -64,6 +65,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             filter { it.bind == ev.key.keyCode } // modules bound to a specific key
                 .forEach { it.enabled = !it.enabled } // toggle modules
         }
+    }
+
+    val worldHandler = handler<WorldChangeEvent> {
+        ConfigSystem.storeConfigurable(modulesConfigurable)
     }
 
     /**

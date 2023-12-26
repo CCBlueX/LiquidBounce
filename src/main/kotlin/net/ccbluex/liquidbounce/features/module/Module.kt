@@ -72,9 +72,6 @@ open class Module(
             } else {
                 disable()
             }
-
-            // If successful might store configuration
-            ConfigSystem.storeConfigurable(ModuleManager.modulesConfigurable)
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {
