@@ -1,22 +1,21 @@
-<?xml version="1.0" ?>
+<?xml version='1.0' encoding='UTF-8'?>
 <SmellBaseline>
-  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ComplexCondition:ModuleAutoWeapon.kt$ModuleAutoWeapon$stack.isNothing() || (!player.isCreative &amp;&amp; stack.damage &gt;= (stack.maxDamage - 2) &amp;&amp; ignoreDurability) || (stack.getEnchantment( KNOCKBACK ) != 0 &amp;&amp; ignoreKnockback)</ID>
+    <ID>ComplexCondition:ModuleAutoWeapon.kt$ModuleAutoWeapon$stack.isNothing() || (!player.isCreative &amp;&amp; stack.damage >= (stack.maxDamage - 2) &amp;&amp; ignoreDurability) || (stack.getEnchantment( KNOCKBACK ) != 0 &amp;&amp; ignoreKnockback)</ID>
     <ID>ComplexCondition:ModuleBlink.kt$ModuleBlink$packet is PlayerMoveC2SPacket || packet is PlayerInteractBlockC2SPacket || packet is HandSwingC2SPacket || packet is PlayerActionC2SPacket || packet is PlayerInteractEntityC2SPacket</ID>
-    <ID>ComplexCondition:ModuleRegen.kt$ModuleRegen$(!noAir &amp;&amp; player.isOnGround) &amp;&amp; !player.abilities.creativeMode &amp;&amp; player.health &gt; 0 &amp;&amp; player.health &lt; health</ID>
+    <ID>ComplexCondition:ModuleRegen.kt$ModuleRegen$(!noAir &amp;&amp; player.isOnGround) &amp;&amp; !player.abilities.creativeMode &amp;&amp; player.health > 0 &amp;&amp; player.health &lt; health</ID>
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
     <ID>ComplexCondition:ModuleVelocity.kt$ModuleVelocity$(packet is EntityVelocityUpdateS2CPacket &amp;&amp; packet.id == player.id || packet is ExplosionS2CPacket) &amp;&amp; it.original &amp;&amp; Delayed.enabled</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
     <ID>CyclomaticComplexMethod:Chat.kt$Chat$private fun onClientError(packet: ClientErrorPacket)</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
-    <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String&gt;, List&lt;Int&gt;&gt;, commandIdx: Int, isNewParameter: Boolean )</ID>
-    <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$fun execute(cmd: String)</ID>
+    <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
+    <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>CyclomaticComplexMethod:ConfigSystem.kt$ConfigSystem$fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement)</ID>
     <ID>CyclomaticComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
-    <ID>CyclomaticComplexMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
@@ -25,11 +24,6 @@
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
-    <ID>EmptyFunctionBlock:ViewListener.kt$ViewListener${}</ID>
-    <ID>EmptyFunctionBlock:ViewLoadListener.kt$ViewLoadListener${}</ID>
-    <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _directlyCallEvent(event: Event)</ID>
-    <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _fireViewClose(): Boolean</ID>
-    <ID>FunctionNaming:UltralightJsEvents.kt$UltralightJsEvents$fun _unregisterEvents()</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
@@ -39,28 +33,30 @@
     <ID>LongMethod:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandLocalConfig.kt$CommandLocalConfig$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandManager.kt$CommandManager$fun execute(cmd: String)</ID>
+    <ID>LongMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>LongMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
-    <ID>LongMethod:CpuViewRenderer.kt$CpuViewRenderer$override fun render(view: UltralightView, context: DrawContext)</ID>
     <ID>LongMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
-    <ID>LongMethod:GlfwInputAdapter.kt$GlfwInputAdapter$private fun glfwToUltralightKey(key: Int)</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
+    <ID>LongMethod:SessionEndpoints.kt$private fun RestNode.setupAccountManagerRest()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
-    <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float&gt;, ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
-    <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String&gt;, val parameters: Array&lt;Parameter&lt;*&gt;&gt;, val subcommands: Array&lt;Command&gt;, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
+    <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
+    <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( x0: Float, x: Float, y: Float, z: Float, color: Color4b, through: Boolean )</ID>
+    <ID>LongParameterList:JsNetworkUtil.kt$JsNetworkUtil$(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean)</ID>
     <ID>LongParameterList:Mat4.kt$Mat4.Companion$( left: Float, top: Float, right: Float, bottom: Float, nearPlane: Float, farPlane: Float )</ID>
     <ID>LongParameterList:ModuleTrajectories.kt$ModuleTrajectories$( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack )</ID>
-    <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T&gt;?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
+    <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T>?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
     <ID>MatchingDeclarationName:CombatUtils.kt$CombatManager : Listenable</ID>
-    <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T&gt; : Comparator</ID>
+    <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
     <ID>MatchingDeclarationName:RenderShortcuts.kt$RenderEnvironment</ID>
     <ID>MaxLineLength:ArmorComparator.kt$ArmorComparator$return 1 - 20.0f.coerceAtMost((defensePoints / 5.0f).coerceAtLeast(defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f</ID>
@@ -68,8 +64,9 @@
     <ID>MaxLineLength:CommandItemRename.kt$CommandItemRename$mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))</ID>
     <ID>MaxLineLength:ConfigSystem.kt$ConfigSystem$)</ID>
     <ID>MaxLineLength:Cosmetics.kt$Cosmetics$*</ID>
-    <ID>MaxLineLength:GlfwInputAdapter.kt$GlfwInputAdapter$.</ID>
-    <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.60"</ID>
+    <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
+    <ID>MaxLineLength:HttpConductor.kt$HttpConductor$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
+    <ID>MaxLineLength:HttpResponseUtil.kt$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
     <ID>MaxLineLength:LineSegment.kt$LineSegment$class</ID>
     <ID>MaxLineLength:LiquidBounce.kt$LiquidBounce$*</ID>
     <ID>MaxLineLength:Listenable.kt$// We store our sequence in this variable. That can be done because our variable will survive the scope of this function</ID>
@@ -91,12 +88,12 @@
     <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.Instant$if</ID>
     <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.NCP$if</ID>
     <ID>MaxLineLength:ModuleFly.kt$ModuleFly.Enderpearl$if</ID>
-    <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*&gt;) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
+    <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*>) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.NoCheatPlus$if</ID>
     <ID>MaxLineLength:ModuleLiquidWalk.kt$ModuleLiquidWalk.Vanilla$if</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))</ID>
-    <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$val response = decode&lt;Array&lt;UsernameRecord&gt;&gt;(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))</ID>
+    <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$val response = decode&lt;Array&lt;UsernameRecord>>(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))</ID>
     <ID>MaxLineLength:ModuleMurderMystery.kt$ModuleMurderMystery$if</ID>
     <ID>MaxLineLength:ModuleNameCollector.kt$ModuleNameCollector$notification("NameCollector", "Captured ${network.playerList.size} players", NotificationEvent.Severity.INFO)</ID>
     <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$if</ID>
@@ -106,49 +103,43 @@
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else AdvancedRotation.DEFAULT_Y_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
-    <ID>MaxLineLength:ModuleSuperKnockback.kt$ModuleSuperKnockback$// TODO: remove this once the issue with sequence type events being a bit late to detect player.isSprinting so these modes perform even better</ID>
     <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
     <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$// vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))</ID>
-    <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$return item is BowItem &amp;&amp; player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem</ID>
     <ID>MaxLineLength:ModuleVehicleFly.kt$ModuleVehicleFly$vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)</ID>
     <ID>MaxLineLength:ModuleVelocity.kt$ModuleVelocity$if</ID>
+    <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
     <ID>MaxLineLength:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
-    <ID>MaxLineLength:Region.kt$Region$return pos.from.x &gt;= this.from.x &amp;&amp; pos.to.x &lt;= this.to.x &amp;&amp; pos.from.y &gt;= this.from.y &amp;&amp; pos.to.y &lt;= this.to.y &amp;&amp; pos.from.z &gt;= this.from.z &amp;&amp; pos.to.z &lt;= this.to.z</ID>
-    <ID>MaxLineLength:Region.kt$Region$return pos.x &gt;= this.from.x &amp;&amp; pos.x &lt; this.to.x &amp;&amp; pos.y &gt;= this.from.y &amp;&amp; pos.y &lt; this.to.y &amp;&amp; pos.z &gt;= this.from.z &amp;&amp; pos.z &lt; this.to.z</ID>
-    <ID>MaxLineLength:Region.kt$Region$return this.from.x &lt;= maxX &amp;&amp; this.to.x &gt; minX &amp;&amp; this.from.y &lt;= maxY &amp;&amp; this.to.y &gt; minY &amp;&amp; this.from.z &lt;= maxZ &amp;&amp; this.to.z &gt; minZ</ID>
+    <ID>MaxLineLength:Region.kt$Region$return pos.from.x >= this.from.x &amp;&amp; pos.to.x &lt;= this.to.x &amp;&amp; pos.from.y >= this.from.y &amp;&amp; pos.to.y &lt;= this.to.y &amp;&amp; pos.from.z >= this.from.z &amp;&amp; pos.to.z &lt;= this.to.z</ID>
+    <ID>MaxLineLength:Region.kt$Region$return pos.x >= this.from.x &amp;&amp; pos.x &lt; this.to.x &amp;&amp; pos.y >= this.from.y &amp;&amp; pos.y &lt; this.to.y &amp;&amp; pos.z >= this.from.z &amp;&amp; pos.z &lt; this.to.z</ID>
+    <ID>MaxLineLength:Region.kt$Region$return this.from.x &lt;= maxX &amp;&amp; this.to.x > minX &amp;&amp; this.from.y &lt;= maxY &amp;&amp; this.to.y > minY &amp;&amp; this.from.z &lt;= maxZ &amp;&amp; this.to.z > minZ</ID>
     <ID>MaxLineLength:RenderingFlags.kt$RenderingFlags$*</ID>
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$// it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))</ID>
     <ID>MaxLineLength:Tabs.kt$Tabs$createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")</ID>
-    <ID>MaxLineLength:UltralightEngine.kt$UltralightEngine$get() = viewOverlays.find { it is ScreenViewOverlay &amp;&amp; mc.currentScreen == it.screen &amp;&amp; it.state == ViewOverlayState.VISIBLE }</ID>
-    <ID>MaxLineLength:UltralightJsClient.kt$UltralightJsClient.MinecraftSession$if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) &amp;&amp; mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Block : ListValueType</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Proxy : ListValueType</ID>
-    <ID>MaxLineLength:Value.kt$ValueType$BOOLEAN</ID>
-    <ID>MaxLineLength:ViewOverlay.kt$ScreenViewOverlay$class</ID>
-    <ID>MaxLineLength:ViewOverlay.kt$ViewOverlay$*</ID>
     <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion$o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier)</ID>
-    <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion${ o1, o2 -&gt; o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) }</ID>
+    <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion${ o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) }</ID>
     <ID>MaxLineLength:WeightedSwordItem.kt$WeightedSwordItem.Companion$return</ID>
     <ID>MaxLineLength:WeightedToolItem.kt$WeightedToolItem.Companion$(o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.FastClimb.Motion$private val motion by float("Motion", 0.2872F, 0.1f..0.5f)</ID>
     <ID>MemberNameEqualsClassName:ModuleTerrainSpeed.kt$ModuleTerrainSpeed.IceSpeed.Motion$val motion by float("Motion", 0.5f, 0.2f..1.5f)</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
-    <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions&gt;</ID>
+    <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
-    <ID>PrintStackTrace:BrowserFileSystem.kt$BrowserFileSystem$e</ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
     <ID>PrintStackTrace:ModuleBlink.kt$ModuleBlink$e</ID>
     <ID>ReturnCount:ArmorComparator.kt$ArmorComparator$override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int</ID>
     <ID>ReturnCount:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>ReturnCount:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
+    <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(*args.map { it!!::class.java }.toTypedArray())</ID>
+    <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(name, *args.map { it!!::class.java }.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleBlink.kt$ModuleBlink$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
-    <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*&gt;) ?: emptyArray&lt;String&gt;()).map { it as String } .toTypedArray())</ID>
-    <ID>SwallowedException:BrowserFileSystem.kt$BrowserFileSystem$e: InvalidPathException</ID>
+    <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*>) ?: emptyArray&lt;String>()).map { it as String } .toTypedArray())</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:ConfigSystem.kt$ConfigSystem$IllegalStateException()</ID>
@@ -162,7 +153,7 @@
     <ID>ThrowsCount:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandManager.kt$CommandManager$fun execute(cmd: String)</ID>
+    <ID>ThrowsCount:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>ThrowsCount:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
@@ -172,29 +163,25 @@
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>TooManyFunctions:ModuleBlink.kt$ModuleBlink : Module</ID>
-    <ID>TooManyFunctions:UltralightEngine.kt$UltralightEngine</ID>
-    <ID>TooManyFunctions:ViewOverlay.kt$ViewOverlay</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
-    <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -&gt; Boolean = { true }</ID>
-    <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -&gt; Boolean = { true }</ID>
+    <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -> Boolean = { true }</ID>
+    <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
-    <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$mods: Int</ID>
-    <ID>UnusedParameter:GlfwInputAdapter.kt$GlfwInputAdapter$window: Long</ID>
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
-    <ID>UnusedParameter:ModuleChestStealer.kt$ModuleChestStealer$screen: GenericContainerScreen</ID>
-    <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String&gt;</ID>
+    <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
     <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupExploits()</ID>
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupHeads()</ID>
     <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupSpecial()</ID>
-    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent&gt; { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
-    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent&gt; { reconnect() }</ID>
+    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent> { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
+    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent> { reconnect() }</ID>
     <ID>UnusedPrivateProperty:ModuleBlink.kt$ModuleBlink$i</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>
-    <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent&gt; { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
+    <ID>UnusedPrivateProperty:ModuleKillAura.kt$ModuleKillAura$// Fight Bot private val fightBot = tree(FightBot)</ID>
+    <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent> { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Parameter already has a command")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Subcommand already has parent command")</ID>
@@ -213,7 +200,6 @@
     <ID>UseRequire:LineSegment.kt$LineSegment$throw IllegalArgumentException("Phi must be in range $phiRange")</ID>
     <ID>UseRequire:NormalizedPlane.kt$NormalizedPlane.Companion$throw IllegalArgumentException("Points must not be on the same line")</ID>
     <ID>UseRequire:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
-    <ID>UseRequire:UltralightJsEvents.kt$UltralightJsEvents$throw IllegalArgumentException("$handler is not a function.")</ID>
     <ID>UseRequire:Value.kt$RangedValue$throw IllegalArgumentException()</ID>
     <ID>UseRequire:Value.kt$Value$throw IllegalArgumentException()</ID>
   </CurrentIssues>

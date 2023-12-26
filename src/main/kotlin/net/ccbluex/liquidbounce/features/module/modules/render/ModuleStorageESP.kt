@@ -95,10 +95,21 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
                     for ((pos, _) in blocks) {
                         val vec3 = Vec3(pos)
-                        val box = pos.getState()?.getOutlineShape(world, pos)?.boundingBox ?: fullBox
+                        val state = pos.getState() ?: continue
+
+                        if (state.isAir) {
+                            continue
+                        }
+
+                        val outlineShape = state.getOutlineShape(world, pos)
+                        val boundingBox = if (outlineShape.isEmpty) {
+                            fullBox
+                        } else {
+                            outlineShape.boundingBox
+                        }
 
                         withPosition(vec3) {
-                            boxRenderer.drawBox(this, box, outline)
+                            boxRenderer.drawBox(this, boundingBox, outline)
                         }
                     }
 

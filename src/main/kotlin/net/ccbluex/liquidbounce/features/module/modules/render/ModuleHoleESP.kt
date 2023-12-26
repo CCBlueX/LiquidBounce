@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -197,7 +197,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         }
     }
 
-    val movementHandler = handler<PlayerTickEvent> { event ->
+    val movementHandler = handler<PlayerPostTickEvent> { event ->
         this.updateScanRegion()
     }
 

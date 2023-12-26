@@ -96,7 +96,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
     }
 
     override fun isBot(entity: PlayerEntity): Boolean {
-        return botList.contains(player.uuid)
+        return botList.contains(entity.uuid)
     }
 
     override fun reset() {

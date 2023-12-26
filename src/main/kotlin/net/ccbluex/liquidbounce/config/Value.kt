@@ -31,7 +31,11 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
+import net.minecraft.block.Block
+import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.awt.Color
@@ -47,20 +51,29 @@ open class Value<T : Any>(
     @SerializedName("name") open val name: String,
     @SerializedName("value") internal var value: T,
     @Exclude val valueType: ValueType,
-    @Exclude val listType: ListValueType = ListValueType.None
+    @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None
 ) {
 
     internal val loweredName
         get() = name.lowercase()
 
-    @Exclude
+    @Exclude @ProtocolExclude
     private val listeners = mutableListOf<ValueListener<T>>()
 
     /**
      * If true, value will not be included in generated public config
+     *
+     * @see
      */
-    @Exclude
+    @Exclude @ProtocolExclude
     var doNotInclude = false
+        private set
+
+    /**
+     * If true, value will not be included in generated RestAPI config
+     */
+    @Exclude @ProtocolExclude
+    var notAnOption = false
         private set
 
     /**
@@ -112,6 +125,11 @@ open class Value<T : Any>(
 
     fun doNotInclude(): Value<T> {
         doNotInclude = true
+        return this
+    }
+
+    fun notAnOption(): Value<T> {
+        notAnOption = true
         return this
     }
 
@@ -225,6 +243,15 @@ open class Value<T : Any>(
 
                 set(items as T)
             }
+            ValueType.KEY          -> {
+                val newValue = try {
+                    string.toInt()
+                } catch (e: NumberFormatException) {
+                    key(string)
+                }
+
+                set(newValue as T)
+            }
             else -> error("unsupported value type")
         }
     }
@@ -306,7 +333,18 @@ interface NamedChoice {
 }
 
 enum class ValueType {
-    BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM, ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
+    BOOLEAN,
+    FLOAT,FLOAT_RANGE,
+    INT, INT_RANGE,
+    TEXT, TEXT_ARRAY,
+    COLOR,
+    BLOCK, BLOCKS,
+    ITEM, ITEMS,
+    KEY,
+    CHOICE, CHOOSE,
+    INVALID,
+    CONFIGURABLE,
+    TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {

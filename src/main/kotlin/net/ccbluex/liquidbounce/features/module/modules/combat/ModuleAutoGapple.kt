@@ -28,7 +28,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.item.*
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
@@ -43,6 +45,9 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
     private val health by int("Health", 15, 1..20)
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+
+    private val notDuringRegeneration by boolean("NotDuringRegeneration", true)
+    private val notDuringCombat by boolean("NotDuringCombat", true)
 
     val repeatable = repeatable {
         val hotbarSlot = findHotbarSlot(Items.GOLDEN_APPLE)
@@ -62,11 +67,17 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
             }
 
             hotbarSlot.run {
+                if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
+                    return@repeatable
+                }
+
+                if (notDuringCombat && CombatManager.isInCombat()) {
+                    return@repeatable
+                }
+
                 val delay = inventoryConstraints.clickDelay.random()
 
-                waitConditional(delay) { !canUseItem() }
-
-                if (!canUseItem()) {
+                if (!waitConditional(delay) { !canUseItem() }) {
                     return@repeatable
                 }
 
@@ -75,9 +86,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                 if (player.isUsingItem) {
                     interaction.stopUsingItem(player)
 
-                    waitConditional(1) { !canUseItem() }
-
-                    if (!canUseItem()) {
+                    if (!waitConditional(1) { !canUseItem() }) {
                         SilentHotbar.resetSlot(this)
 
                         return@repeatable
@@ -154,9 +163,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         val startDelay = inventoryConstraints.startDelay.random()
 
         if (startDelay > 0) {
-            waitConditional(startDelay) { shouldCancelInvMove() }
-
-            if (shouldCancelInvMove()) {
+            if (!waitConditional(startDelay) { shouldCancelInvMove() }) {
                 return false
             }
         }

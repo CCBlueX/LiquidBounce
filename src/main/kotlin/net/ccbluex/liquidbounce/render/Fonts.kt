@@ -41,10 +41,20 @@ object Fonts {
         }
     }
 
+    private var fontQueue = mutableListOf<QueuedFont>()
+
     const val DEFAULT_FONT_SIZE: Int = 43
     val FONT_FORMATS = arrayOf("Regular", "Bold", "Italic", "BoldItalic")
     val DEFAULT_FONT = FontInfo("Montserrat")
-        .load()
+        .queueLoad()
+
+    fun loadQueuedFonts() {
+        fontQueue.forEach {
+            logger.info("Loading queued font ${it.fontInfo.name}")
+            it.loadNow()
+        }
+        fontQueue.clear()
+    }
 
     /**
      * Takes the name of the font and loads it from the filesystem
@@ -56,7 +66,7 @@ object Fonts {
          * Loads the font from the filesystem or downloads it from the cloud and
          * creates a [FontRenderer] instance from it.
          */
-        fun load(retry: Boolean = true): FontRenderer {
+        internal fun load(retry: Boolean = true): FontRenderer {
             val file = File(fontsRoot, name)
 
             if (!file.exists() || !file.isDirectory || file.listFiles().isNullOrEmpty()) {
@@ -124,6 +134,24 @@ object Fonts {
             } catch (e: Exception) {
                 throw IllegalStateException("Failed to load font from folder $basePath", e)
             }
+        }
+
+        fun queueLoad() = QueuedFont(this).also { fontQueue += it }
+
+    }
+
+    data class QueuedFont(val fontInfo: FontInfo) {
+
+        private var fontRenderer: FontRenderer? = null
+
+        fun get() = fontRenderer ?: error("Font was not loaded yet!")
+
+        fun loadNow() {
+            if (fontRenderer != null) {
+                return
+            }
+
+            fontRenderer = fontInfo.load()
         }
 
     }

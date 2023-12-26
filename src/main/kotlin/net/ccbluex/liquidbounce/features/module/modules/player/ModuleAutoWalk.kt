@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.Module
  */
 object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
 
-    val moveInputHandler = handler<MovementInputEvent> {
+    val moveInputHandler = handler<MovementInputEvent>(priority = 1000) {
         it.directionalInput = it.directionalInput.copy(forwards = true)
     }
 

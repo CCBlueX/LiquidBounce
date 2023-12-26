@@ -34,6 +34,6 @@ object ModuleOverrideWeather : Module("OverrideWeather", Category.RENDER) {
     val weather = enumChoice("Weather", WeatherType.SUNNY, WeatherType.values())
 
     enum class WeatherType(override val choiceName: String) : NamedChoice {
-        SUNNY("Sunny"), RAINY("Rainy");
+        SUNNY("Sunny"), RAINY("Rainy"), SNOWY("Snowy");
     }
 }

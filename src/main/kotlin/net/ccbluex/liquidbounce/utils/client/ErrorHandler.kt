@@ -58,7 +58,7 @@ object ErrorHandler {
 
         TinyFileDialogs.tinyfd_messageBox(
             "LiquidBounce Nextgen",
-            message,
+            message.replace("\"", "").replace("'", ""),
             "ok",
             "error",
             true

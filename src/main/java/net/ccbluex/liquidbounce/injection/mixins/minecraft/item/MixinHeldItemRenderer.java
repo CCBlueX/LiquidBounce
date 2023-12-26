@@ -1,7 +1,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimation;
 import net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -66,8 +67,8 @@ public abstract class MixinHeldItemRenderer {
     private UseAction hookUseAction(ItemStack instance) {
         var item = instance.getItem();
         if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() &&
-                ModuleKillAura.AutoBlock.INSTANCE.getEnabled() &&
-                ModuleKillAura.AutoBlock.INSTANCE.getVisualBlocking()) {
+                AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
             return UseAction.BLOCK;
         }
 
@@ -80,8 +81,10 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && ModuleKillAura.AutoBlock.INSTANCE.getEnabled() &&
-                ModuleKillAura.AutoBlock.INSTANCE.getVisualBlocking()) {
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
             return true;
         }
 
@@ -94,8 +97,10 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && ModuleKillAura.AutoBlock.INSTANCE.getEnabled() &&
-                ModuleKillAura.AutoBlock.INSTANCE.getVisualBlocking()) {
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
             return Hand.MAIN_HAND;
         }
 
@@ -108,8 +113,10 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 1
     ))
     private int hookItemUseItem(AbstractClientPlayerEntity instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && ModuleKillAura.AutoBlock.INSTANCE.getEnabled() &&
-                ModuleKillAura.AutoBlock.INSTANCE.getVisualBlocking()) {
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
             return 7200;
         }
 

@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
@@ -42,6 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNa
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
@@ -58,9 +62,13 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     val keyHandler = handler<KeyEvent> { ev ->
         if (ev.action == GLFW.GLFW_PRESS) {
-            filter { it.bind == ev.key.code } // modules bound to a specific key
+            filter { it.bind == ev.key.keyCode } // modules bound to a specific key
                 .forEach { it.enabled = !it.enabled } // toggle modules
         }
+    }
+
+    val worldHandler = handler<WorldChangeEvent> {
+        ConfigSystem.storeConfigurable(modulesConfigurable)
     }
 
     /**
@@ -77,6 +85,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoLeave,
             ModuleAutoPot,
             ModuleAutoSoup,
+            ModuleAutoHead,
             ModuleAutoWeapon,
             ModuleBadWifi,
             ModuleCriticals,
@@ -84,7 +93,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleKillAura,
             ModulePerfectHit,
             ModuleSuperKnockback,
-            ModuleTickBase,
             ModuleTimerRange,
             ModuleTrigger,
             ModuleVelocity,
@@ -184,6 +192,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleReach,
             ModuleRegen,
             ModuleZoot,
+            ModuleAutoPlay,
 
             // Render
             ModuleAnimation,
@@ -267,6 +276,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     /**
      * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
      */
+    @JvmName("getCategories")
+    @RequiredByScript
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+
+    @JvmName("getModuleByName")
+    @RequiredByScript
+    fun getModuleByName(module: String) = find { it.name.equals(module, true) }
+
+    operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }
 
 }

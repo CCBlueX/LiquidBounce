@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.world.ClientWorld
@@ -33,6 +34,7 @@ import net.minecraft.util.shape.VoxelShape
 class WorldChangeEvent(val world: ClientWorld?) : Event()
 
 @Nameable("worldDisconnect")
+@WebSocketEvent
 class WorldDisconnectEvent : Event()
 
 @Nameable("chunkUnload")

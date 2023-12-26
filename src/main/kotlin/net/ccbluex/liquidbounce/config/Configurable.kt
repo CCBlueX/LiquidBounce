@@ -106,6 +106,8 @@ open class Configurable(
 
     protected fun int(name: String, default: Int, range: IntRange) = rangedValue(name, default, range, ValueType.INT)
 
+    protected fun key(name: String, default: Int) = value(name, default, ValueType.KEY)
+
     protected fun intRange(name: String, default: IntRange, range: IntRange) =
         rangedValue(name, default, range, ValueType.INT_RANGE)
 

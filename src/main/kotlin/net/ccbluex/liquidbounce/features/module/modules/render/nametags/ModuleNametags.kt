@@ -55,8 +55,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val border by boolean("Border", true)
     val scale by float("Scale", 2F, 0.25F..4F)
 
+    val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+
     val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT
+        get() = Fonts.DEFAULT_FONT.get()
 
     val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
         renderEnvironmentForGUI {
@@ -91,6 +93,8 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
         for (entity in ModuleESP.findRenderedEntities()) {
             val nametagPos = entity.interpolateCurrentPosition(tickDelta)
                 .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
+
+            if (entity.distanceTo(mc.cameraEntity) > maximumDistance) continue
 
             val screenPos = WorldToScreen.calculateScreenPos(nametagPos) ?: continue
 
