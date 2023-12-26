@@ -77,9 +77,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
                 val delay = inventoryConstraints.clickDelay.random()
 
-                waitConditional(delay) { !canUseItem() }
-
-                if (!canUseItem()) {
+                if (!waitConditional(delay) { !canUseItem() }) {
                     return@repeatable
                 }
 
@@ -88,9 +86,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                 if (player.isUsingItem) {
                     interaction.stopUsingItem(player)
 
-                    waitConditional(1) { !canUseItem() }
-
-                    if (!canUseItem()) {
+                    if (!waitConditional(1) { !canUseItem() }) {
                         SilentHotbar.resetSlot(this)
 
                         return@repeatable
@@ -167,9 +163,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         val startDelay = inventoryConstraints.startDelay.random()
 
         if (startDelay > 0) {
-            waitConditional(startDelay) { shouldCancelInvMove() }
-
-            if (shouldCancelInvMove()) {
+            if (!waitConditional(startDelay) { shouldCancelInvMove() }) {
                 return false
             }
         }

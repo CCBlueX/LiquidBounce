@@ -59,6 +59,7 @@
     "minecraft.render.MixinBlockEntityRenderDispatcher",
     "minecraft.render.MixinBuiltinModelItemRenderer",
     "minecraft.render.MixinCamera",
+    "minecraft.render.MixinEntityRenderDispatcher",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInGameOverlayRenderer",

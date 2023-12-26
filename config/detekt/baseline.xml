@@ -52,6 +52,7 @@
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T>?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
     <ID>MatchingDeclarationName:CombatUtils.kt$CombatManager : Listenable</ID>
@@ -102,10 +103,8 @@
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.yRange.toDouble() else AdvancedRotation.DEFAULT_Y_RANGE.toDouble()</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.zRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
-    <ID>MaxLineLength:ModuleSuperKnockback.kt$ModuleSuperKnockback$// TODO: remove this once the issue with sequence type events being a bit late to detect player.isSprinting so these modes perform even better</ID>
     <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
     <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$// vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))</ID>
-    <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$return item is BowItem &amp;&amp; player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem</ID>
     <ID>MaxLineLength:ModuleVehicleFly.kt$ModuleVehicleFly$vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)</ID>
     <ID>MaxLineLength:ModuleVelocity.kt$ModuleVelocity$if</ID>
     <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
@@ -169,7 +168,6 @@
     <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
-    <ID>UnusedParameter:ModuleChestStealer.kt$ModuleChestStealer$screen: GenericContainerScreen</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
     <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
@@ -182,6 +180,7 @@
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>
+    <ID>UnusedPrivateProperty:ModuleKillAura.kt$ModuleKillAura$// Fight Bot private val fightBot = tree(FightBot)</ID>
     <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent> { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Parameter already has a command")</ID>

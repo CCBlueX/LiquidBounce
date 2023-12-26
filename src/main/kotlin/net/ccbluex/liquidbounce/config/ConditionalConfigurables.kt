@@ -20,7 +20,9 @@
 package net.ccbluex.liquidbounce.config
 
 import net.ccbluex.liquidbounce.config.util.Exclude
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -122,7 +124,11 @@ class ChoiceConfigurable(
     }
 
     fun setFromValueName(name: String) {
-        this.activeChoice = choices.first { it.choiceName == name }
+        val newChoice = choices.first { it.choiceName == name }
+
+        EventManager.callEvent(ChoiceChangeEvent(this.module, this.activeChoice, newChoice))
+
+        this.activeChoice = newChoice
     }
 
     @RequiredByScript
@@ -166,12 +172,12 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
     /**
      * Called when module is turned on
      */
-    open fun enable() { }
+    open fun enable() {}
 
     /**
      * Called when module is turned off
      */
-    open fun disable() { }
+    open fun disable() {}
 
     /**
      * Events should be handled when mode is enabled

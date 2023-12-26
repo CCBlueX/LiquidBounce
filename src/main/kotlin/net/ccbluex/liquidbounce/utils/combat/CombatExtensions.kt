@@ -23,26 +23,33 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityGroup
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.Monster
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.GameMode
 
 /**
  * Global enemy configurable
@@ -166,26 +173,6 @@ fun ClientWorld.findEnemy(
     return bestTarget
 }
 
-/**
- * Find the best enemy in the current world in a specific range.
- */
-fun ClientWorld.countEnemies(
-    range: ClosedFloatingPointRange<Float>,
-    player: Entity = mc.player!!,
-    enemyConf: EnemyConfigurable = globalEnemyConfigurable
-): Int {
-    val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
-
-    val enemiesCount =
-        getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
-            .filter { it.shouldBeAttacked(enemyConf) }
-            .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
-            .filter { (_, distance) -> distance in squaredRange }
-            .count()
-
-    return enemiesCount
-}
-
 fun ClientWorld.getEntitiesInCuboid(
     midPos: Vec3d,
     range: Double,
@@ -204,7 +191,7 @@ inline fun ClientWorld.getEntitiesBoxInRange(
     return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
 }
 
-fun Entity.attack(swing: Boolean) {
+fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
     val player = mc.player ?: return
     val network = mc.networkHandler ?: return
 
@@ -216,6 +203,37 @@ fun Entity.attack(swing: Boolean) {
     }
 
     network.sendPacket(PlayerInteractEntityC2SPacket.attack(this, player.isSneaking))
+
+    if (keepSprint) {
+        var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+        var magicAttackDamage = EnchantmentHelper.getAttackDamage(player.mainHandStack,
+            if (this is LivingEntity) this.group else EntityGroup.DEFAULT
+        )
+
+        val cooldownProgress = player.getAttackCooldownProgress(0.5f)
+        genericAttackDamage *= 0.2f + cooldownProgress * cooldownProgress * 0.8f
+        magicAttackDamage *= cooldownProgress
+
+        if (genericAttackDamage > 0.0f && magicAttackDamage > 0.0f) {
+            player.addEnchantedHitParticles(this)
+        }
+
+        if (ModuleCriticals.wouldCrit(true)) {
+            world.playSound(
+                null, player.x, player.y,
+                player.z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
+                player.soundCategory, 1.0f, 1.0f
+            )
+            player.addCritParticles(this)
+        }
+    } else {
+        if (interaction.currentGameMode != GameMode.SPECTATOR) {
+            player.attack(this)
+        }
+    }
+
+    // Reset cooldown
+    player.resetLastAttackedTicks()
 
     // Swing after attacking (on 1.9+)
     if (swing && !isOldCombat) {

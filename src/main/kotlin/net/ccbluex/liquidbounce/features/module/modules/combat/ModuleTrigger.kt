@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.item.AxeItem
 import net.minecraft.item.SwordItem
-import net.minecraft.util.Hand
 import net.minecraft.util.hit.EntityHitResult
 
 /**
@@ -40,7 +39,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
     // CPS means clicks per second
     private val clickScheduler = tree(ClickScheduler(ModuleTrigger, true))
-    private val failRate by int("FailRate", 0, 0..100)
+    // TODO: Implement FailSwing option
     private val onItemUse by enumChoice("OnItemUse", Use.WAIT, Use.values())
     private val weapon by enumChoice("Weapon", Weapon.ANY, Weapon.values())
     private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20)
@@ -62,11 +61,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
             }
 
             clickScheduler.clicks {
-                if (failRate > 0 && failRate < (0..100).random()) {
-                    player.swingHand(Hand.MAIN_HAND)
-                } else {
-                    crosshair.entity.attack(true)
-                }
+                crosshair.entity.attack(true)
 
                 true
             }

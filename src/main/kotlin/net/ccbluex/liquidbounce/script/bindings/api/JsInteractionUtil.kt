@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.*
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
@@ -37,13 +36,13 @@ import net.minecraft.util.math.Vec3i
 object JsInteractionUtil {
 
     @JvmName("attackEntity")
-    fun attackEntity(entity: Entity, swing: Boolean) {
+    fun attackEntity(entity: Entity, swing: Boolean, keepSprint: Boolean) {
         // Safety check
         if (entity == mc.player) {
             return
         }
 
-        entity.attack(swing)
+        entity.attack(swing, keepSprint)
     }
 
     @JvmName("useEntity")

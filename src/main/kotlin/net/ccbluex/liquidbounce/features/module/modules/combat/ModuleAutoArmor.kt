@@ -43,11 +43,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private val hotbar by boolean("Hotbar", true)
 
     var locked = false
-    var clickedInInventory = false
+    private var clickedInInventory = false
 
     val repeatable = repeatable {
-        val player = mc.player ?: return@repeatable
-
         // In case during swap delay something goes wrong, we check here
         if (!canOperate(player, !locked || !clickedInInventory)) {
             return@repeatable

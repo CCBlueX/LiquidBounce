@@ -73,6 +73,18 @@ class RotationsConfigurable(
             !silent
         )
 
+    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false, silent: Boolean) =
+        AimPlan(
+            rotation,
+            smoothMode,
+            turnSpeed,
+            ticksUntilReset,
+            resetThreshold,
+            considerInventory,
+            fixVelocity,
+            !silent
+        )
+
 }
 
 /**

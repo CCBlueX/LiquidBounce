@@ -26,6 +26,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 
+/**
+ * Enemy Command
+ *
+ * Provides subcommands for enemy configuration.
+ */
 object CommandEnemy {
 
     fun createCommand(): Command {

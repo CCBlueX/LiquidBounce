@@ -27,10 +27,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemEnchant
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemGive
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRename
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSkull
+import net.ccbluex.liquidbounce.features.command.commands.creative.*
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.script.CommandScript
@@ -48,11 +45,13 @@ class CommandException(val text: MutableText, cause: Throwable? = null, val usag
 /**
  * Links minecraft with the command engine
  */
+
 object CommandExecutor : Listenable {
 
     /**
      * Handles command execution
      */
+
     val chatEventHandler = handler<ChatSendEvent> {
         if (it.message.startsWith(CommandManager.Options.prefix)) {
             try {
@@ -97,6 +96,7 @@ object CommandExecutor : Listenable {
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
+ 
 object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
@@ -150,6 +150,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandItemRename.createCommand())
         addCommand(CommandItemGive.createCommand())
         addCommand(CommandItemSkull.createCommand())
+        addCommand(CommandItemStack.createCommand())
         addCommand(CommandItemEnchant.createCommand())
 
         // utility commands

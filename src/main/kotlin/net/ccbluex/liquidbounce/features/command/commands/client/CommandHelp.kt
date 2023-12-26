@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -32,6 +33,11 @@ import net.minecraft.util.Formatting
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
+/**
+ * Help Command
+ *
+ * Provides a help page for displaying other commands. 
+ */
 object CommandHelp {
 
     fun createCommand(): Command {

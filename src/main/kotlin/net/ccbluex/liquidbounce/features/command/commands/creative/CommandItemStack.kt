@@ -22,52 +22,57 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.item.createItem
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
-/**
- * CommandItemSkull
- *
- * Allows you to create a player skull item with a specified name.
- */
-object CommandItemSkull {
+object CommandItemStack {
 
+    private val amountParameter = ParameterBuilder
+        .begin<Int>("amount")
+        .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+        .autocompletedWith { begin ->
+            mutableListOf("16", "32", "64").filter { it.startsWith(begin) }
+        }
+        .optional()
+        .build()
+
+
+    @Suppress("detekt:ThrowsCount")
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("skull")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .required()
-                    .build()
-            )
+            .begin("stack")
+            .parameter(amountParameter)
             .handler { command, args ->
-                val name = args[0] as String
-
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
-                val itemStack = createItem("minecraft:player_head{SkullOwner:$name}")
-                val emptySlot = mc.player!!.inventory!!.emptySlot
-
-                if (emptySlot == -1) {
-                    throw CommandException(command.result("noEmptySlot"))
+                val mainHandStack = mc.player!!.mainHandStack
+                if (mainHandStack.isEmpty) {
+                    throw CommandException(command.result("noItem"))
                 }
 
-                mc.player!!.inventory!!.setStack(emptySlot, itemStack)
+                val amount = args[0] as? Int ?: 64
+
+                if (amount < 1 || amount > 64) {
+                    throw CommandException(command.result("invalidAmount"))
+                }
+
+
+                if (mainHandStack.count == amount) {
+                    chat(regular(command.result("hasAlreadyAmount", variable(amount.toString()))))
+                    return@handler
+                }
+
+                mainHandStack.count = amount
+                mc.player!!.inventory!!.setStack(mc.player!!.inventory.selectedSlot, mainHandStack)
                 mc.networkHandler!!.sendPacket(
                     CreativeInventoryActionC2SPacket(
-                        if (emptySlot < 9) emptySlot + 36 else emptySlot,
-                        itemStack
+                        36 + mc.player!!.inventory.selectedSlot,
+                        mainHandStack
                     )
                 )
-                chat(regular(command.result("skullGiven", variable(name))))
+                chat(regular(command.result("amountChanged", variable(amount.toString()))))
             }
             .build()
     }

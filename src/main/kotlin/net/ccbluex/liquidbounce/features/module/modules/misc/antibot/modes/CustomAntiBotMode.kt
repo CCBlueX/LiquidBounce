@@ -110,7 +110,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     }
 
     override fun isBot(entity: PlayerEntity): Boolean {
-        return meetsCustomConditions(player)
+        return meetsCustomConditions(entity)
     }
 
     override fun reset() {
