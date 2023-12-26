@@ -22,10 +22,8 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.client.session
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientApi.formatAvatarUrl
 import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.utils.client.isPremium
@@ -38,7 +36,7 @@ import net.minecraft.client.session.Session
 
 internal fun RestNode.setupSessionRestApi() {
     setupLocalSessionRestApi()
-    setupAltManagerRestApi()
+    setupAccountManagerRest()
 }
 
 private fun RestNode.setupLocalSessionRestApi() {
@@ -62,7 +60,7 @@ private fun RestNode.setupLocalSessionRestApi() {
     }
 }
 
-private fun RestNode.setupAltManagerRestApi() {
+private fun RestNode.setupAccountManagerRest() {
     get("/accounts") {
         val accounts = JsonArray()
         for ((i, account) in AccountManager.accounts.withIndex()) {
