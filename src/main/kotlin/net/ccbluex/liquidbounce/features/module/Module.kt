@@ -30,10 +30,7 @@ import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ToggleModuleEvent
 import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.outputString
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -66,6 +63,10 @@ open class Module(
     // Module options
     var enabled by valueEnabled.listen { new ->
         runCatching {
+            if (!inGame) {
+                return@runCatching
+            }
+
             // Call enable or disable function
             if (new) {
                 enable()
