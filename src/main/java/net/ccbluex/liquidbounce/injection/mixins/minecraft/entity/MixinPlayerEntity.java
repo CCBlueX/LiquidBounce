@@ -32,6 +32,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.registry.tag.FluidTags;
@@ -52,6 +53,11 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private PlayerInventory inventory;
 
     @Shadow public abstract void tick();
+
+    @Shadow public abstract HungerManager getHungerManager();
+
+    @Shadow
+    public float experienceProgress;
 
     /**
      * Hook player stride event

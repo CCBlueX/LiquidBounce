@@ -1,11 +1,5 @@
-.idea/*
-*.iml
-*.ipr
-*.iws
-/.settings/
-/.gradle/
-/out/
-/resources
-/node_modules
-/theme.zip
-*/public/build/
+/node_modules/
+/public/build/
+
+.DS_Store
+/resources/

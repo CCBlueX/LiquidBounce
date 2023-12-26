@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -48,6 +46,11 @@ import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
+import net.ccbluex.liquidbounce.web.socket.ClientSocket
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -113,7 +116,6 @@ object LiquidBounce : Listenable {
             // Features
             ModuleManager
             CommandManager
-            ThemeManager
             ScriptManager
             RotationManager
             CombatManager
@@ -124,12 +126,10 @@ object LiquidBounce : Listenable {
             WorldToScreen
             Tabs
             Chat
+            BrowserManager
 
             // Loads up fonts (requires connection to the internet on first launch)
             Fonts
-
-            // Load up a web platform
-            UltralightEngine.init()
 
             // Register commands and modules
             CommandManager.registerInbuilt()
@@ -140,6 +140,17 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
+
+            // Netty WebSocket
+            ClientSocket.start()
+
+            // Initialize browser
+            BrowserManager.initBrowser()
+            ThemeManager
+            IntegrationHandler
+
+            // Fires up the client tab
+            IntegrationHandler.clientJcef
 
             // Check for newest version
             if (updateAvailable) {
@@ -178,8 +189,8 @@ object LiquidBounce : Listenable {
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
+        BrowserManager.shutdownBrowser()
         ConfigSystem.storeAll()
-        UltralightEngine.shutdown()
 
         ChunkScanner.ChunkScannerThread.stopThread()
     }

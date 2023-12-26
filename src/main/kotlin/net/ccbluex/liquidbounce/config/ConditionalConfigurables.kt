@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -36,8 +37,8 @@ import net.minecraft.text.Text
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
  */
-open class ToggleableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
-    Configurable(name, valueType = ValueType.TOGGLEABLE) {
+open class ToggleableConfigurable(@Exclude @ProtocolExclude val module: Module? = null, name: String,
+                                  enabled: Boolean) : Listenable, Configurable(name, valueType = ValueType.TOGGLEABLE) {
 
     val translationBaseKey: String
         get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
@@ -95,7 +96,7 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
  * Allows to configure and manage modes
  */
 class ChoiceConfigurable(
-    @Exclude val module: Module,
+    @Exclude @ProtocolExclude val module: Module,
     name: String,
     activeChoiceCallback: (ChoiceConfigurable) -> Choice,
     choicesCallback: (ChoiceConfigurable) -> Array<Choice>

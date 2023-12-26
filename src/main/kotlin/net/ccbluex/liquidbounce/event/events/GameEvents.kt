@@ -20,20 +20,31 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
 class GameTickEvent : Event()
 
 @Nameable("key")
-class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
+@WebSocketEvent
+class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
+
+    data class Key(
+        @SerializedName("code")
+        val keyCode: Int,
+        @SerializedName("name")
+        val translationKey: String
+    )
+
+}
 
 // Input events
 @Nameable("inputHandle")
@@ -59,15 +70,18 @@ class CancelBlockBreakingEvent : CancellableEvent()
  */
 
 @Nameable("session")
+@WebSocketEvent
 class SessionEvent : Event()
 
 @Nameable("screen")
 class ScreenEvent(val screen: Screen?) : CancellableEvent()
 
 @Nameable("chatSend")
+@WebSocketEvent
 class ChatSendEvent(val message: String) : CancellableEvent()
 
 @Nameable("chatReceive")
+@WebSocketEvent
 class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatType) : Event() {
 
     enum class ChatType {
@@ -75,3 +89,18 @@ class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatTy
     }
 
 }
+
+@Nameable("splashOverlay")
+@WebSocketEvent
+class SplashOverlayEvent(val action: Action) : Event() {
+
+    enum class Action {
+        @SerializedName("show") SHOW,
+        @SerializedName("hide") HIDE
+    }
+
+}
+
+@Nameable("splashProgress")
+@WebSocketEvent
+class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event()

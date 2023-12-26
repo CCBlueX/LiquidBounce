@@ -65,7 +65,10 @@ public class MixinKeyboard {
     private void hookKey(long window, int key, int scancode, int i, int j, CallbackInfo callback) {
         // does if (window == this.client.getWindow().getHandle())
         if (client.currentScreen == null) {
-            EventManager.INSTANCE.callEvent(new KeyEvent(InputUtil.fromKeyCode(key, scancode), i, j));
+            var inputKey = InputUtil.fromKeyCode(key, scancode);
+
+            EventManager.INSTANCE.callEvent(new KeyEvent(new KeyEvent.Key(inputKey.getCode(),
+                    inputKey.getTranslationKey()), i, j));
         }
     }
 

@@ -1,101 +1,107 @@
-# LiquidBounce Official Theme
+# This repo is no longer maintained. Consider using `npm init vite` and selecting the `svelte` option or — if you want a full-fledged app framework — use [SvelteKit](https://kit.svelte.dev), the official application framework for Svelte.
 
-Welcome to the LiquidBounce Theme!
-This is our default theme, which is being used in our minecraft hacked-client LiquidBounce.
+---
 
-## Roadmap
+# svelte app
 
-[GitHub Issue Roadmap](https://github.com/CCBlueX/LiquidBounce/issues/1025)
+This is a project template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
 
-### Concepts:
-
-Our [Nextgen concepts](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme/concepts). They follow the same
-design guidelines and can be found in the `src-theme\concepts` folder.
-
-We use Adobe XD as a design tool, but you can also open find the concepts as a PNG file under the folder with the same
-name.
-
-- [x] Main Menu
-- [x] Singleplayer
-- [x] Multiplayer
-- [x] Alt Manager
-- [x] Proxy Manager (https://github.com/CCBlueX/LiquidBounce/issues/391)
-- [ ] Configuration (Scripts, Mods, Themes...)
-- [ ] Marketplace (https://github.com/CCBlueX/LiquidBounce/issues/1024)
-- [x] ClickGUI
-- [x] ClickGUI search bar (https://github.com/CCBlueX/LiquidBounce/issues/800)
-- [x] HUD
-
-### Implementation
-
-We are lacking Web DEVs, and therefore, the progress of implementing these design concepts into our client is a slow
-progress.
-If you are capable to work with Svelte and JS and have a good understanding of turning design concepts into HTML and
-CSS, contact us on our support@liquidbounce.net email or on GitHub (the faster way).
-
-- [x] Main Menu
-- [ ] Singleplayer
-- [ ] Multiplayer
-- [ ] Alt Manager
-- [ ] Proxy Manager (https://github.com/CCBlueX/LiquidBounce/issues/391)
-- [ ] Configuration (Scripts, Mods, Themes...)
-- [ ] Marketplace (https://github.com/CCBlueX/LiquidBounce/issues/1024)
-- [x] ClickGUI (Basics + Values)
-- [x] ClickGUI search bar (https://github.com/CCBlueX/LiquidBounce/issues/800)
-- [x] HUD (Basics)
-- [ ] HUD (Elements)
-
-## Building
-
-To build the themes, you need to have Node.js installed.
-Then run `node bundle.js` to build the theme.
-
-### Testing
-
-To test the theme in development, you can make use of the development server using:
+To create a new project based on this template using [degit](https://github.com/Rich-Harris/degit):
 
 ```bash
-npm i
+npx degit sveltejs/template svelte-app
+cd svelte-app
+```
+
+*Note that you will need to have [Node.js](https://nodejs.org) installed.*
+
+
+## Get started
+
+Install the dependencies...
+
+```bash
+cd svelte-app
+npm install
+```
+
+...then start [Rollup](https://rollupjs.org):
+
+```bash
 npm run dev
 ```
 
-and go into LiquidBounce and open the local web server using: \
+Navigate to [localhost:8080](http://localhost:8080). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
 
+By default, the server will only respond to requests from localhost. To allow connections from other computers, edit the `sirv` commands in package.json to include the option `--host 0.0.0.0`.
+
+If you're using [Visual Studio Code](https://code.visualstudio.com/) we recommend installing the official extension [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode). If you are using other editors you may need to install a plugin in order to get syntax highlighting and intellisense.
+
+## Building and running in production mode
+
+To create an optimised version of the app:
+
+```bash
+npm run build
 ```
-.client ultralight show http://localhost:10004/clickgui/public/
+
+You can run the newly built app with `npm run start`. This uses [sirv](https://github.com/lukeed/sirv), which is included in your package.json's `dependencies` so that the app will work when you deploy to platforms like [Heroku](https://heroku.com).
+
+
+## Single-page app mode
+
+By default, sirv will only respond to requests that match files in `public`. This is to maximise compatibility with static fileservers, allowing you to deploy your app anywhere.
+
+If you're building a single-page app (SPA) with multiple routes, sirv needs to be able to respond to requests for *any* path. You can make it so by editing the `"start"` command in package.json:
+
+```js
+"start": "sirv public --single"
 ```
 
-This will show the page and automatically updates when you make changes to the source code.
+## Using TypeScript
 
-### Release
+This template comes with a script to set up a TypeScript development environment, you can run it immediately after cloning the template with:
 
-This theme is directly linked to our client and is being updated with every release.
-It will automatically be built and added to the client resources.
+```bash
+node scripts/setupTypeScript.js
+```
 
-## Contributing
+Or remove the script via:
 
-If you want to contribute to this theme, you can do so by creating a pull request. \
-We will review it, and if it fits our design guidelines, we will merge it.
+```bash
+rm scripts/setupTypeScript.js
+```
 
-## License
+If you want to use `baseUrl` or `path` aliases within your `tsconfig`, you need to set up `@rollup/plugin-alias` to tell Rollup to resolve the aliases. For more info, see [this StackOverflow question](https://stackoverflow.com/questions/63427935/setup-tsconfig-path-in-svelte).
 
-This project is subject to the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html). This
-does only apply for source code located directly in this clean repository. During the development and compilation
-process, additional source code may be used to which we have obtained no rights. Such code is not covered by the GPL
-license.
+## Deploying to the web
 
-For those who are unfamiliar with the license, here is a summary of its main points. This is by no means legal advice
-nor legally binding.
+### With [Vercel](https://vercel.com)
 
-*Actions that you are allowed to do:*
+Install `vercel` if you haven't already:
 
-- Use
-- Share
-- Modify
+```bash
+npm install -g vercel
+```
 
-*If you do decide to use ANY code from the source:*
+Then, from within your project folder:
 
-- **You must disclose the source code of your modified work and the source code you took from this project. This means
-  you are not allowed to use code from this project (even partially) in a closed-source (or even obfuscated)
-  application.**
-- **Your modified application must also be licensed under the GPL** 
+```bash
+cd public
+vercel deploy --name my-project
+```
+
+### With [surge](https://surge.sh/)
+
+Install `surge` if you haven't already:
+
+```bash
+npm install -g surge
+```
+
+Then, from within your project folder:
+
+```bash
+npm run build
+surge public my-project.surge.sh
+```

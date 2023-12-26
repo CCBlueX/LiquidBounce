@@ -38,25 +38,23 @@ public class MixinMouse {
     /**
      * Hook mouse button event
      */
-    @Inject(method = "onMouseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onMouseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseButton(long window, int button, int action, int mods, CallbackInfo callbackInfo) {
-        // does if (window == this.client.getWindow().getHandle())
         EventManager.INSTANCE.callEvent(new MouseButtonEvent(button, action, mods));
     }
 
     /**
      * Hook mouse scroll event
      */
-    @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo callbackInfo) {
-        // does if (window == this.client.getWindow().getHandle())
         EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical));
     }
 
     /**
      * Hook mouse cursor event
      */
-    @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseCursorEvent(x, y));
     }

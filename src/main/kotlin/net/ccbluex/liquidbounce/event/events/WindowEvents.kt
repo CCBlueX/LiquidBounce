@@ -22,24 +22,28 @@ package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 
 @Nameable("windowResize")
+@WebSocketEvent
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
-@Nameable("windowResize")
-class WindowFocusEvent(val focused: Boolean) : Event()
-
 @Nameable("mouseButton")
+@WebSocketEvent
 class MouseButtonEvent(val button: Int, val action: Int, val mods: Int) : Event()
 
 @Nameable("mouseScroll")
+@WebSocketEvent
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
 
 @Nameable("mouseCursor")
+@WebSocketEvent
 class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
 @Nameable("keyboardKey")
+@WebSocketEvent
 class KeyboardKeyEvent(val keyCode: Int, val scanCode: Int, val action: Int, val mods: Int) : Event()
 
 @Nameable("keyboardChar")
+@WebSocketEvent
 class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event()
