@@ -1,6 +1,6 @@
 <script>
     import {onMount} from "svelte";
-    import {rgbaToInt, intToHex} from "../../../../utils/misc.js";
+    import {rgbaToInt, intToRgba, rgbaToHex} from "../../../../utils/misc.js";
 
     /**
      * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
@@ -13,8 +13,8 @@
     export let write;
 
     let name = reference.name;
-    let value = intToHex(reference.value);
-
+    let rgba = intToRgba(reference.value);
+    let hex = rgbaToHex(rgba);
     let colorPicker = null;
     let pickr = null;
     
@@ -24,8 +24,7 @@
             theme: "classic",
             showAlways: true,
             inline: true,
-            default: value,
-          
+            default: hex,
 
             components: {
                 preview: false,
@@ -46,8 +45,11 @@
         });
 
         pickr.on("change", v => {
-            value = v.toHEXA();
-            const rgba = v.toRGBA();
+            hex = v.toHEXA().toString();
+
+            const [r, g, b, a] = v.toRGBA();
+            rgba = [r, g, b, a * 255];
+            
             reference.value = rgbaToInt(rgba);
             write();
         });
@@ -74,8 +76,8 @@
 <div class="setting">
     <div class="name">{name}</div>
     <div class="value-spot">
-        <input class="value" {value} on:input={handleValueChange}>
-        <button class="color-pickr-button" on:click={togglePickr} style="background-color: {value};"></button>
+        <input class="value" value={hex} on:input={handleValueChange}>
+        <button class="color-pickr-button" on:click={togglePickr} style="background-color: {hex};"></button>
     </div>
     <div class="animation-fix color-picker" class:hidden={hidden}>
         <button bind:this={colorPicker}/>

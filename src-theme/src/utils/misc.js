@@ -1,59 +1,40 @@
 /**
- * Converts a Java integer to rgba(r, g, b, a) string.
- * @param value The integer to convert.
- * @returns The rgba(r, g, b, a) string.
- * @example
- * intToRgba(0xff000000); // "rgba(0, 0, 0, 255)"
- * intToRgba(-1); // "rgba(255, 255, 255, 255)"
+ * [r, g, b, a]
  */
 export function intToRgba(value) {
-    const alpha = value >>> 24;
-    const red = (value >>> 16) & 0xff;
-    const green = (value >>> 8) & 0xff;
-    const blue = value & 0xff;
-
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+    const red = (value >> 16) & 0xFF;
+    const green = (value >> 8) & 0xFF;
+    const blue = (value >> 0) & 0xFF;;
+    const alpha = (value >> 24) & 0xff;
+    return [red, green, blue, alpha];
 }
 
 /**
- * fun toHex(alpha: Boolean = false): String {
- *         val hex = StringBuilder("#")
- *
- *         hex.append(componentToHex(r))
- *         hex.append(componentToHex(g))
- *         hex.append(componentToHex(b))
- *         if(alpha) hex.append((componentToHex(a)))
- *
- *         return hex.toString().uppercase()
- *     }
- */
-
-export function intToHex(value) {
-    const alpha = value >>> 24;
-    const red = (value >>> 16) & 0xff;
-    const green = (value >>> 8) & 0xff;
-    const blue = value & 0xff;
-
-    // Construct hex, only add alpha if it's not 255
-    const hex = `#${componentToHex(red)}${componentToHex(green)}${componentToHex(blue)}${alpha !== 255 ? componentToHex(alpha) : ''}`;
-    return hex.toUpperCase();
-}
-
-export function componentToHex(c) {
-    const hex = c.toString(16);
-    return hex.length === 1 ? `0${hex}` : hex;
-}
-
-/**
- * Convert rgba to Java integer
- * [r, g, b, a]
- * @param rgba
+ * Returns the RGB value representing the color in the default sRGB ColorModel. 
+ * (Bits 24-31 are alpha, 16-23 are red, 8-15 are green, 0-7 are blue).
+ * 
+ * @param rgba [r, g, b, a]
  * @returns {number}
  */
 export function rgbaToInt(rgba) {
-    const r = rgba[0];
-    const g = rgba[1];
-    const b = rgba[2];
-    const a = rgba[3];
-    return ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
+    const [r, g, b, a] = rgba;
+    return ((a & 0xFF) << 24) |
+        ((r & 0xFF) << 16) |
+        ((g & 0xFF) << 8)  |
+        ((b & 0xFF) << 0);
+}
+
+/**
+ * Converts an RGB color value to hex with alpha channel, if present (not 255).
+ *
+ * Takes [r, g, b, a] (0-255, 0-255, 0-255, 0-255)
+ * For example, [255, 0, 0, 255] -> '#FF0000'
+ *
+ * @returns {string} hex color
+ * @param rgba
+ */
+export function rgbaToHex(rgba) {
+    const [r, g, b, a] = rgba;
+    const alpha = a === 255 ? '' : a.toString(16).padStart(2, '0');
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}${alpha}`;
 }
