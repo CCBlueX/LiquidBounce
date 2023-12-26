@@ -52,9 +52,9 @@ object Tabs {
      */
     fun setup() {
         if (!setup) {
-//            setupSpecial()
-//            setupExploits()
-//            setupHeads()
+            setupSpecial()
+            setupExploits()
+            setupHeads()
 
             setup = true
         }
