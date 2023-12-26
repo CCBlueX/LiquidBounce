@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
@@ -48,10 +49,16 @@ import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
-import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.minecraft.resource.ReloadableResourceManagerImpl
+import net.minecraft.resource.ResourceManager
+import net.minecraft.resource.ResourceReloader
+import net.minecraft.resource.SynchronousResourceReloader
+import net.minecraft.util.profiler.Profiler
 import org.apache.logging.log4j.LogManager
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 
 /**
  * LiquidBounce
@@ -152,6 +159,33 @@ object LiquidBounce : Listenable {
             // Fires up the client tab
             IntegrationHandler.clientJcef
 
+            val resourceManager = mc.resourceManager
+            val clientResourceReloader = ClientResourceReloader()
+            if (resourceManager is ReloadableResourceManagerImpl) {
+                resourceManager.registerReloader(clientResourceReloader)
+            } else {
+                logger.warn("Failed to register resource reloader!")
+
+                // Run resource reloader directly as fallback
+                clientResourceReloader.reload(resourceManager)
+            }
+        }.onSuccess {
+            logger.info("Successfully loaded client!")
+        }.onFailure(ErrorHandler::fatal)
+    }
+
+    /**
+     * Resource reloader which is executed on client start and reload.
+     * This is used to run async tasks without blocking the main thread.
+     *
+     * For now this is only used to check for updates and request additional information from the internet.
+     *
+     * @see SynchronousResourceReloader
+     * @see ResourceReloader
+     */
+    class ClientResourceReloader : SynchronousResourceReloader {
+
+        override fun reload(manager: ResourceManager) {
             // Check for newest version
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
@@ -176,12 +210,7 @@ object LiquidBounce : Listenable {
             CapeService.refreshCapeCarriers {
                 logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
             }
-
-            // Connect to chat server
-            Chat.connectAsync()
-        }.onSuccess {
-            logger.info("Successfully loaded client!")
-        }.onFailure(ErrorHandler::fatal)
+        }
     }
 
     /**
