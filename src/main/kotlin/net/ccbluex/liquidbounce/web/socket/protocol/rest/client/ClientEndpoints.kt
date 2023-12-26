@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.minecraft.client.gui.screen.SplashOverlay
 import net.minecraft.registry.Registries
 import net.minecraft.util.Util
 
@@ -52,6 +53,7 @@ internal fun RestNode.setupClientRestApi() {
     get("/virtualScreen") {
         httpOk(JsonObject().apply {
             addProperty("name", IntegrationHandler.momentaryVirtualScreen?.name)
+            addProperty("splash", mc.overlay is SplashOverlay)
         })
     }
 

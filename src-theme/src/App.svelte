@@ -22,7 +22,6 @@
             return;
         }
 
-        console.log("splashOverlay", action);
         if (action === "show") {
             push("/");
             showingSplash = true;
@@ -56,10 +55,16 @@
 
     if (!isStatic) {
         getVirtualScreen().then((screen) => {
-            push("/" + screen.name);
+            const screenName = screen.name;
+            const route = "/" + screenName;
+
+            if (screen.splash) {
+                nextRoute = route;
+            } else {
+                push(route);
+            }
         });
     }
-    
 </script>
 
 <main>
