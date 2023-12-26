@@ -99,13 +99,15 @@
         newAltening(alteningAccountToken);
     }
 
-    let alteningApiToken = "";
+    let alteningApiToken = localStorage.getItem("alteningApiToken") || "";
 
     function siteGenerateAlteningAccount() {
         if (alteningApiToken.trim() === "") {
             feedback("Please enter an API token", "red");
             return;
         }
+
+        localStorage.setItem("alteningApiToken", alteningApiToken);
 
         feedback("Generating account...", "white");
         newAlteningGen(alteningApiToken);
