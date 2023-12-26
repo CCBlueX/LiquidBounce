@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
@@ -59,6 +60,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
     private val health by int("Health", 14, 1..19)
     private val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
     private val doNotBenefitOthers by boolean("DoNotBenefitOthers", true)
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
 
     private val healthPotion by boolean("HealthPotion", true)
     private val regenPotion by boolean("RegenPotion", true)
@@ -112,8 +114,16 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
         val isCloseGround = player.y - (collisionBlock?.y ?: 0) <= tillGroundDistance
 
-        if (!isCloseGround || player.isBlocking) {
+        if (!isCloseGround) {
             return false
+        }
+
+        // We need to take some actions
+        CombatManager.pauseCombatForAtLeast(combatPauseTime)
+
+        if (player.isBlocking) {
+            interaction.stopUsingItem(player)
+            waitTicks(1)
         }
 
         RotationManager.aimAt(
