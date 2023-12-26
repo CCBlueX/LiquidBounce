@@ -50,9 +50,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
     val accounts by value(name, mutableListOf<MinecraftAccount>(), listType = ListValueType.Account)
 
-    // Account Generator
-    var alteningApiToken by value("TheAlteningApiToken", "")
-
     var initialSession: SessionData? = null
 
     val sessionHandler = handler<SessionEvent> {
@@ -225,13 +222,13 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
     }
 
-    fun generateAlteningAccountAsync(apiToken: String = this.alteningApiToken) = GlobalScope.launch {
+    fun generateAlteningAccountAsync(apiToken: String) = GlobalScope.launch {
         generateAlteningAccount(apiToken)
     }
 
     @RequiredByScript
     @JvmName("generateAlteningAccount")
-    fun generateAlteningAccount(apiToken: String = this.alteningApiToken) = runCatching {
+    fun generateAlteningAccount(apiToken: String) = runCatching {
         if (apiToken.isEmpty()) {
             error("Altening API Token is empty!")
         }
