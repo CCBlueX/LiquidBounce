@@ -24,7 +24,14 @@
     }
 
     // List of event listener
-    const listeners = {}
+    const alwaysListeners = {}
+    let listeners = {}
+
+    export function listenAlways(eventName, callback) {
+        if (!alwaysListeners[eventName]) alwaysListeners[eventName] = []
+
+        alwaysListeners[eventName].push(callback)
+    }
 
     export function listen(eventName, callback) {
         if (!listeners[eventName]) listeners[eventName] = []
@@ -32,15 +39,27 @@
         listeners[eventName].push(callback)
     }
 
+    export function cleanupListeners() {
+        listeners = {}
+    }
+
     ws.onmessage = (event) => {
         const json = JSON.parse(event.data);
         const eventName = json.name;
         const eventData = json.event;
 
-        if (!listeners[eventName]) return
+        if (alwaysListeners[eventName]) {
+            alwaysListeners[eventName].forEach(callback => {
+                callback(eventData)
+            })
+        }
 
-        listeners[eventName].forEach(callback => {
-            callback(eventData)
-        })
+        if (listeners[eventName]) {
+            listeners[eventName].forEach(callback => {
+                callback(eventData)
+            })
+        }
+
+
     }
 </script>
