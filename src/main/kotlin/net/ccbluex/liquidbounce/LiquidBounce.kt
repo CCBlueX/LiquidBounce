@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
+import net.ccbluex.liquidbounce.features.tabs.Tabs.headsCollection
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -134,8 +135,6 @@ object LiquidBounce : Listenable {
             Tabs
             Chat
             BrowserManager
-
-            // Loads up fonts (requires connection to the internet on first launch)
             Fonts
 
             // Register commands and modules
@@ -186,6 +185,13 @@ object LiquidBounce : Listenable {
     class ClientResourceReloader : SynchronousResourceReloader {
 
         override fun reload(manager: ResourceManager) {
+            runCatching {
+                logger.info("Loading fonts...")
+                Fonts.loadQueuedFonts()
+            }.onSuccess {
+                logger.info("Loaded fonts successfully!")
+            }.onFailure(ErrorHandler::fatal)
+
             // Check for newest version
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
@@ -210,6 +216,9 @@ object LiquidBounce : Listenable {
             CapeService.refreshCapeCarriers {
                 logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
             }
+
+            // Load Head collection
+            headsCollection
         }
     }
 

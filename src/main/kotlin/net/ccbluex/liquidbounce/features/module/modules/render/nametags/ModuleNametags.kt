@@ -58,7 +58,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
     val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT
+        get() = Fonts.DEFAULT_FONT.get()
 
     val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
         renderEnvironmentForGUI {
