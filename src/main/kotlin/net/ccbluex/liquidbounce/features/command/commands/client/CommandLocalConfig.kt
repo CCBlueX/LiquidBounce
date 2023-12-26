@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -25,9 +25,11 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.util.Util
 
 /**
  * LocalConfig Command
@@ -88,6 +90,10 @@ object CommandLocalConfig {
                     }
                     .build()
             )
+            .subcommand(CommandBuilder.begin("directory").handler { command, _ ->
+                Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
+                chat(regular(command.result("directory", variable(ConfigSystem.userConfigsFolder.absolutePath))))
+            }.build())
             .subcommand(
                 CommandBuilder
                     .begin("create")
