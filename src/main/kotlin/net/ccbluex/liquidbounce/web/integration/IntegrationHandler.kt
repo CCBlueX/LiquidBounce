@@ -41,6 +41,7 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
 import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
+import net.minecraft.client.realms.gui.screen.RealmsMainScreen
 
 object IntegrationHandler : Listenable {
 
@@ -72,6 +73,9 @@ object IntegrationHandler : Listenable {
         }),
         MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, true, open = {
             mc.setScreen(MultiplayerScreen(parent))
+        }),
+        MULTIPLAYER_REALMS("multiplayer_realms", { it is RealmsMainScreen }, true, open = {
+            mc.setScreen(RealmsMainScreen(parent))
         }),
         SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }, true, open = {
             mc.setScreen(SelectWorldScreen(parent))
