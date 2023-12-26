@@ -43,4 +43,6 @@ interface IBrowser {
 
     fun getBrowserType(): BrowserType
 
+    fun drawGlobally()
+
 }

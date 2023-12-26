@@ -42,9 +42,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         get() = browser()?.getTabs() ?: emptyList()
 
     val preRenderHandler = handler<GameRenderEvent> {
-        if (MCEF.isInitialized()) {
-            MCEF.getApp().handle.N_DoMessageLoopWork()
-        }
+        browser()?.drawGlobally()
 
         for (tab in tabs) {
             tab.drawn = false
