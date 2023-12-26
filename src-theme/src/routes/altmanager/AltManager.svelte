@@ -13,6 +13,7 @@
     } from "../../client/api.svelte";
     import { listen } from "../../client/ws.svelte";
     import { pop } from "svelte-spa-router";
+    import {fade} from "svelte/transition";
 
     const random = (length = 8) => {
         // Declare all characters
@@ -331,7 +332,7 @@
         }
     </style>
 </head>
-<body>
+<body transition:fade>
 <div class="scale">
     <div class="wrapper">
         <h1 id="title">Alt Manager</h1>

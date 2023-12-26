@@ -1,5 +1,6 @@
 <script>
     import { listen } from "../../client/ws.svelte";
+    import {fade} from "svelte/transition";
 
     listen("splashProgress", (data) => {
         console.log(data);
@@ -81,7 +82,7 @@
     </style>
 </head>
 
-<body id="background">
+<body id="background" transition:fade>
 <div class="center">
     <img id="logo" src="img/logo.svg" alt="logo" class="flash"><br>
 

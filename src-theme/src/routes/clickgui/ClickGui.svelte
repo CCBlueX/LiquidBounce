@@ -4,6 +4,7 @@
 
     import { listen } from "../../client/ws.svelte";
     import { getModules, toggleModule, getClickGuiOptions } from "../../client/api.svelte";
+    import {fade, blur} from "svelte/transition";
 
     let clickGuiOpened = true;
     // todo: request from API
@@ -66,7 +67,7 @@
     }).catch(console.error);
 </script>
 
-<main>
+<main transition:blur>
     {#if clickGuiOpened}
         <div class="clickgui-container"
              style=

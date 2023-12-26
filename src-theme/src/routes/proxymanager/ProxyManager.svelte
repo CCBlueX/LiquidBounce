@@ -1,6 +1,7 @@
 <script>
     import { pop } from "svelte-spa-router";
     import { getLocation, getProxy, setProxy, unsetProxy } from "../../client/api.svelte";
+    import {fade} from "svelte/transition";
 
     let proxyHost = "";
     let proxyPort = 1080;
@@ -228,7 +229,7 @@
 
     </style>
 </head>
-<body>
+<body transition:fade>
 <div class="scale">
     <div class="wrapper">
         <h1 id="title">Proxy Manager</h1>

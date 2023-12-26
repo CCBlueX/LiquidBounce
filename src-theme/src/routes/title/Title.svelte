@@ -11,6 +11,7 @@
 
     import { getSession, getLocation, openScreen, browse, exitClient } from "../../client/api.svelte";
     import { push } from "svelte-spa-router";
+    import {fade} from "svelte/transition";
 
 
     function openProxyManager() {
@@ -92,7 +93,7 @@
     const updateAvailable = false;
 </script>
 
-<main>
+<main transition:fade>
     <div class="scale">
         <div class="wrapper">
             {#if updateAvailable}
