@@ -189,6 +189,7 @@ object LiquidBounce : Listenable {
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
+        BrowserManager.shutdownBrowser()
         ConfigSystem.storeAll()
 
         ChunkScanner.ChunkScannerThread.stopThread()
