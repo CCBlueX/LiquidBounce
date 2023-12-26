@@ -4,7 +4,7 @@ import Hud from './routes/hud/Hud.svelte';
 import ClickGui from "./routes/clickgui/ClickGui.svelte";
 import AltManager from "./routes/altmanager/AltManager.svelte";
 import ProxyManager from "./routes/proxymanager/ProxyManager.svelte";
-import Inventory from "./routes/inventory/Inventory.svelte";
+import Container from "./routes/container/Container.svelte";
 import Customize from "./routes/customize/Customize.svelte";
 
 export const routes = {
@@ -14,6 +14,6 @@ export const routes = {
     '/clickgui': ClickGui,
     '/altmanager': AltManager,
     '/proxymanager': ProxyManager,
-    '/inventory': Inventory,
+    '/container': Container,
     '/customize': Customize
 }
