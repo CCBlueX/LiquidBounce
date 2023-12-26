@@ -105,8 +105,6 @@ object GommeDuels : Choice("GommeDuels") {
         inMatch = false
 
         val duelsEntity = world.entities.filterIsInstance<ArmorStandEntity>().find {
-            println(it.displayName?.string)
-
             it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
         }?.let { armorStand ->
             world.entities.filterIsInstance<PlayerEntity>().find {

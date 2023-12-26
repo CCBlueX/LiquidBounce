@@ -132,7 +132,6 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             return@handler
         }
 
-        println(mapName + "/" + equippedItem.name.string)
         lastMap = mapName
 
         val rgb = IntArray(128 * 128)
@@ -228,8 +227,6 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
 
         val s = output.toString().trim { it <= ' ' }.split(" ").toTypedArray()
-
-        println(s.contentToString())
 
         if (s.isNotEmpty() && s[0].startsWith("NAME:")) {
             val target = s[0].substring("NAME:".length).lowercase(Locale.getDefault()).trim()

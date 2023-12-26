@@ -46,7 +46,7 @@ internal class NettyServer {
         val workerGroup = if (Epoll.isAvailable()) EpollEventLoopGroup() else NioEventLoopGroup()
 
         try {
-            println("Starting Netty server...")
+            logger.info("Starting Netty server...")
             val b = ServerBootstrap()
             b.option(ChannelOption.SO_BACKLOG, 1024)
             b.group(bossGroup, workerGroup)
@@ -54,7 +54,7 @@ internal class NettyServer {
                 .handler(LoggingHandler(LogLevel.INFO))
                 .childHandler(HttpChannelInitializer())
             val ch = b.bind(PORT).sync().channel()
-            println("Netty server started on port $PORT.")
+            logger.info("Netty server started on port $PORT.")
             ch.closeFuture().sync()
         } catch (e: InterruptedException) {
             logger.error("Netty server interrupted", e)
@@ -63,7 +63,7 @@ internal class NettyServer {
             workerGroup.shutdownGracefully()
         }
 
-        println("Netty server stopped.")
+        logger.info("Netty server stopped.")
     }
 
 
