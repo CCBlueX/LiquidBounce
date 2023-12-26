@@ -3,7 +3,7 @@
     import SearchBar from "./SearchBar.svelte";
 
     import { listen } from "../../client/ws.svelte";
-    import { getModules, toggleModule } from "../../client/api.svelte";
+    import { getModules, toggleModule, getClickGuiOptions } from "../../client/api.svelte";
 
     let clickGuiOpened = true;
     // todo: request from API
@@ -51,18 +51,7 @@
         console.log(err);
     }
 
-    /*
-    * val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
-    val searchAutoFocus by boolean("SearchAutoFocus", true)
-    val moduleColor by color("ModuleColor", Color4b(0, 0, 0, 127)) // rgba(0, 0, 0, 0.5)
-    val headerColor by color("HeaderColor", Color4b(0, 0, 0, 173)) // rgba(0, 0, 0, 0.68)
-    val accentColor by color("AccentColor", Color4b(70, 119, 255, 255)) // #4677ff
-    val textColor by color("TextColor", Color4b(255, 255, 255, 255)) // White
-    val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
-    *
-    * todo: request from clickgui settings
-    * */
-    let clickGuiSettings = {
+    let options = {
         modulesColor: "rgba(0,0,0,0.5)",
         headerColor: "rgba(0, 0, 0, 0.68)",
         accentColor: "#4677ff",
@@ -72,29 +61,22 @@
         autoFocus: true
     };
 
-    let modulesColor = clickGuiSettings.modulesColor;
-    let headerColor = clickGuiSettings.headerColor;
-    let accentColor = clickGuiSettings.accentColor;
-    let accendDimmed = clickGuiSettings.accentColor;
-    let textColor = clickGuiSettings.textColor;
-    let textDimmedColor = clickGuiSettings.textDimmed;
-
-    /**
-     *
-     */
+    getClickGuiOptions().then(opts => {
+        options = opts;
+    }).catch(console.error);
 </script>
 
 <main>
     {#if clickGuiOpened}
         <div class="clickgui-container"
              style=
-                     "--modules: {modulesColor};
-        --header: {headerColor};
-        --accent: {accentColor};
-        --accent-dimmed: {accendDimmed};
-        --text: {textColor};
-        --textdimmed: {textDimmedColor};">
-            <SearchBar settings={clickGuiSettings} modules={modules} listen={listen} toggleModule={toggleModule} />
+                     "--modules: {options.modulesColor};
+        --header: {options.headerColor};
+        --accent: {options.accentColor};
+        --accent-dimmed: {options.accentColor};
+        --text: {options.textColor};
+        --textdimmed: {options.textDimmed};">
+            <SearchBar settings={options} modules={modules} listen={listen} toggleModule={toggleModule} />
             {#each panels as panel}
                 <Panel name={panel.name} modules={panel.modules} listen={listen} toggleModule={toggleModule} startTop={panel.top}
                        startLeft={panel.left}/>

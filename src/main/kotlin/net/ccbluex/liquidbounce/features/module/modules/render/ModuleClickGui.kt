@@ -44,14 +44,6 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
     val textColor by color("TextColor", Color4b(255, 255, 255, 255)) // White
     val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
 
-    fun getColorsAsStyle() = """
-        --module: ${moduleColor.toHex(true)}
-        --header: ${headerColor.toHex(true)}
-        --accent: ${accentColor.toHex(true)}
-        --text: ${textColor.toHex(true)}
-        --text-dimmed: ${dimmedTextColor.toHex(true)}
-        """.trimIndent()
-
     override fun enable() {
         mc.setScreen(EmptyScreen())
         IntegrationHandler.virtualOpen("clickgui")

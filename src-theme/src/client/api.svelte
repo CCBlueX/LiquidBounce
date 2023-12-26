@@ -422,5 +422,25 @@
         })
     }
 
+    /**
+     * get("/options/clickgui") {
+     *         val clickGui = ModuleClickGui
+     *
+     *         httpOk(JsonObject().apply {
+     *             addProperty("modulesColor", clickGui.moduleColor.toHex(true))
+     *             addProperty("headerColor", clickGui.headerColor.toHex(true))
+     *             addProperty("accentColor", clickGui.accentColor.toHex(true))
+     *             addProperty("textColor", clickGui.textColor.toHex(true))
+     *             addProperty("textDimmed", clickGui.dimmedTextColor.toHex(true))
+     *             addProperty("searchAlwaysOnTop", clickGui.searchAlwaysOnTop)
+     *             addProperty("autoFocus", clickGui.searchAutoFocus)
+     *         })
+     *     }
+     */
+
+    export function getClickGuiOptions() {
+        return request("/options/clickgui")
+    }
+
 </script>
 
