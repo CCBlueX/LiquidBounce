@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
@@ -36,7 +35,16 @@ class GameTickEvent : Event()
 
 @Nameable("key")
 @WebSocketEvent
-class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
+class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
+
+    data class Key(
+        @SerializedName("code")
+        val keyCode: Int,
+        @SerializedName("name")
+        val translationKey: String
+    )
+
+}
 
 // Input events
 @Nameable("inputHandle")

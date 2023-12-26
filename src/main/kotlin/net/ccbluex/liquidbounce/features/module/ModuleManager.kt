@@ -61,7 +61,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     val keyHandler = handler<KeyEvent> { ev ->
         if (ev.action == GLFW.GLFW_PRESS) {
-            filter { it.bind == ev.key.code } // modules bound to a specific key
+            filter { it.bind == ev.key.keyCode } // modules bound to a specific key
                 .forEach { it.enabled = !it.enabled } // toggle modules
         }
     }

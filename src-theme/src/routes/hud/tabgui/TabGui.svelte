@@ -61,7 +61,7 @@
             return;
         }
 
-        const key = event.key.translationKey;
+        const key = event.key.name;
 
         switch (key) {
             case "key.keyboard.down": {

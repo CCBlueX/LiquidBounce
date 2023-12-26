@@ -169,12 +169,6 @@ open class Module(
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
     ) = choices(this, name, activeCallback, choicesCallback)
 
-    /**
-     * Returns if module is hidden. Hidden modules are not displayed in the module list.
-     * Used for HTML UI. DO NOT REMOVE!
-     */
-    fun isHidden() = hidden
-
     fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
 
 }
