@@ -59,6 +59,7 @@
             const route = "/" + screenName;
 
             if (screen.splash) {
+                showingSplash = true;
                 nextRoute = route;
             } else {
                 push(route);
