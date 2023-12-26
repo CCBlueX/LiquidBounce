@@ -45,7 +45,7 @@ internal fun RestNode.setupClientRestApi() {
         })
     }
 
-    get("update") {
+    get("/update") {
         httpOk(JsonObject().apply {
             addProperty("updateAvailable", LiquidBounce.updateAvailable)
             addProperty("commit", LiquidBounce.clientCommit)
