@@ -21,7 +21,9 @@
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -37,5 +39,51 @@ internal fun RestNode.setupPlayerRestApi() {
             addProperty("experienceProgress", player.experienceProgress)
             addProperty("dead", player.isDead)
         })
+    }
+
+    get("/player/position") {
+        val player = mc.player ?: return@get httpForbidden("Player is null")
+
+        httpOk(JsonObject().apply {
+            addProperty("x", player.x)
+            addProperty("y", player.y)
+            addProperty("z", player.z)
+        })
+    }
+
+    get("/player/rotation") {
+        val player = mc.player ?: return@get httpForbidden("Player is null")
+
+        httpOk(JsonObject().apply {
+            addProperty("yaw", player.yaw)
+            addProperty("pitch", player.pitch)
+        })
+    }
+
+    get("/player/velocity") {
+        val player = mc.player ?: return@get httpForbidden("Player is null")
+
+        httpOk(JsonObject().apply {
+            addProperty("x", player.velocity.x)
+            addProperty("y", player.velocity.y)
+            addProperty("z", player.velocity.z)
+        })
+    }
+
+    // Send chat message
+    post("/player/sendChatMessage") {
+        data class ChatMessageRequest(val message: String)
+
+        val messageRequest = decode<ChatMessageRequest>(it.content)
+        network.sendChatMessage(messageRequest.message)
+        httpOk(JsonObject())
+    }
+
+    post("/player/sendCommand") {
+        data class CommandRequest(val message: String)
+
+        val commandRequest = decode<CommandRequest>(it.content)
+        network.sendChatCommand(commandRequest.message)
+        httpOk(JsonObject())
     }
 }

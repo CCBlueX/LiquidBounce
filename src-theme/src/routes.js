@@ -5,6 +5,7 @@ import ClickGui from "./routes/clickgui/ClickGui.svelte";
 import AltManager from "./routes/altmanager/AltManager.svelte";
 import ProxyManager from "./routes/proxymanager/ProxyManager.svelte";
 import Inventory from "./routes/inventory/Inventory.svelte";
+import Customize from "./routes/customize/Customize.svelte";
 
 export const routes = {
     '/': Splashscreen,
@@ -13,5 +14,6 @@ export const routes = {
     '/clickgui': ClickGui,
     '/altmanager': AltManager,
     '/proxymanager': ProxyManager,
-    '/inventory': Inventory
+    '/inventory': Inventory,
+    '/customize': Customize
 }

@@ -442,5 +442,44 @@
         return request("/options/clickgui")
     }
 
+    /**
+     * post("/player/sendChatMessage") {
+     *         data class ChatMessageRequest(val message: String)
+     *
+     *         val messageRequest = decode<ChatMessageRequest>(it.content)
+     *         network.sendChatMessage(messageRequest.message)
+     *         httpOk(JsonObject())
+     *     }
+     *
+     *     post("/player/sendCommand") {
+     *         data class CommandRequest(val message: String)
+     *
+     *         val commandRequest = decode<CommandRequest>(it.content)
+     *         network.sendChatCommand(commandRequest.message)
+     *         httpOk(JsonObject())
+     *     }
+     */
+
+    export function sendChatMessage(message) {
+        return request("/player/sendChatMessage", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "message": message })
+        })
+
+    }
+
+    export function sendCommand(message) {
+        return request("/player/sendCommand", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "message": message })
+        })
+    }
+
 </script>
 
