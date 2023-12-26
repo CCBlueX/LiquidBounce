@@ -140,8 +140,8 @@ object IntegrationHandler : Listenable {
         }
 
         if (!virtualScreenType.showAlong) {
-            val emptyScreen = VrScreen(virtualScreenType.assignedName)
-            mc.setScreen(emptyScreen)
+            val vrScreen = VrScreen(virtualScreenType.assignedName)
+            mc.setScreen(vrScreen)
             event.cancelEvent()
         } else {
             virtualOpen(virtualScreenType.assignedName)
