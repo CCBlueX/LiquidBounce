@@ -86,9 +86,10 @@ object BlockUtils : MinecraftInstance() {
         mc.thePlayer.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
 
     /**
-     * Search blocks around the player in a specific [radius]
-     */
-    fun searchBlocks(radius: Int): Map<BlockPos, Block> {
+     * Search a limited amount [maxBlocksLimit] of specific blocks [targetBlocks] around the player in a specific [radius].
+     * If [targetBlocks] is null it searches every block
+     **/
+    fun searchBlocks(radius: Int, targetBlocks: Set<Block>?, maxBlocksLimit: Int = 256): Map<BlockPos, Block> {
         val blocks = mutableMapOf<BlockPos, Block>()
 
         val thePlayer = mc.thePlayer ?: return blocks
@@ -96,11 +97,17 @@ object BlockUtils : MinecraftInstance() {
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
                 for (z in radius downTo -radius + 1) {
+                    if (blocks.size >= maxBlocksLimit) {
+                        return blocks
+                    }
+
                     val blockPos =
                         BlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
                     val block = getBlock(blockPos) ?: continue
 
-                    blocks[blockPos] = block
+                    if (targetBlocks == null || targetBlocks.contains(block)) {
+                        blocks[blockPos] = block
+                    }
                 }
             }
         }

@@ -29,6 +29,7 @@ object HUD : MinecraftInstance() {
           Arraylist::class.java,
           Effects::class.java,
           Image::class.java,
+          Inventory::class.java,
           Model::class.java,
           Notifications::class.java,
           TabGUI::class.java,

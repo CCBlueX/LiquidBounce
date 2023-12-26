@@ -64,6 +64,7 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
@@ -264,7 +265,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     }
 
     // Bypass
-    private val failRate by IntegerValue("FailRate", 0, 0..99)
     private val fakeSwing by BoolValue("FakeSwing", true) { swing }
     private val noInventoryAttack by BoolValue("NoInvAttack", false, subjective = true)
     private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500, subjective = true)
@@ -303,19 +303,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private var blockStopInDead = false
 
     /**
-     * Enable kill aura module
-     */
-    override fun onEnable() {
-        mc.thePlayer ?: return
-        mc.theWorld ?: return
-
-        if (!handleEvents())
-            return
-
-        updateTarget()
-    }
-
-    /**
      * Disable kill aura module
      */
     override fun onDisable() {
@@ -339,8 +326,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
             target ?: return
             currentTarget ?: return
-
-            updateHitable()
             return
         }
     }
@@ -353,13 +338,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         // Target
         currentTarget = target
-
-        /*
-        TODO: Remove? -> currentTarget = target = currentTarget
-
-        if (targetMode != "Switch" && isEnemy(currentTarget))
-            target = currentTarget
-         */
     }
 
     /**
@@ -455,18 +433,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     }
 
     /**
-     * Handle entity move
-     */
-    @EventTarget
-    fun onEntityMove(event: EntityMovementEvent) {
-        val movedEntity = event.movedEntity
-
-        if (target == null || movedEntity != currentTarget) return
-
-        updateHitable()
-    }
-
-    /**
      * Attack enemy
      */
     private fun runAttack() {
@@ -482,7 +448,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Settings
         val multi = targetMode == "Multi"
         val manipulateInventory = aac && serverOpenInventory
-        val failHit = failRate > 0 && nextInt(endExclusive = 100) <= failRate
 
         // Close inventory when open
         if (manipulateInventory) serverOpenInventory = false
@@ -491,9 +456,15 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         val currentTarget = this.currentTarget ?: return
 
-        // Check if enemy is not hitable or check failrate
-        if (!hitable || failHit || currentTarget.hurtTime > hurtTime) {
-            if (swing && (fakeSwing || failHit)) thePlayer.swingItem()
+        // Check if enemy is not hitable
+        if (!hitable || currentTarget.hurtTime > hurtTime) {
+            if (swing && fakeSwing) {
+                if (mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.MISS) {
+                    return
+                }
+
+                thePlayer.swingItem()
+            }
         } else {
             blockStopInDead = false
             // Attack
@@ -675,22 +646,22 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         sendPacket(C02PacketUseEntity(entity, ATTACK))
 
-        if (keepSprint) {
+        if (keepSprint && !KeepSprint.state) {
             // Critical Effect
             if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(
                     Potion.blindness
-                ) && !thePlayer.isRiding
-            ) thePlayer.onCriticalHit(entity)
+                ) && !thePlayer.isRiding) {
+                thePlayer.onCriticalHit(entity)
+            }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(
-                    thePlayer.heldItem, entity.creatureAttribute
-                ) > 0F
-            ) thePlayer.onEnchantmentCritical(entity)
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem, entity.creatureAttribute) > 0F) {
+                thePlayer.onEnchantmentCritical(entity)
+            }
         } else {
-            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) thePlayer.attackTargetEntityWithCurrentItem(
-                entity
-            )
+            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) {
+                thePlayer.attackTargetEntityWithCurrentItem(entity)
+            }
         }
 
         // Extra critical effects
@@ -700,14 +671,16 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     Potion.blindness
                 ) && thePlayer.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
                     Criticals.delay
-                ) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb
-            ) thePlayer.onCriticalHit(entity)
+                ) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
+                thePlayer.onCriticalHit(entity)
+            }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(
-                    thePlayer.heldItem, entity.creatureAttribute
-                ) > 0f || fakeSharp
-            ) thePlayer.onEnchantmentCritical(entity)
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem,
+                    entity.creatureAttribute
+                ) > 0f || fakeSharp) {
+                thePlayer.onEnchantmentCritical(entity)
+            }
         }
 
         // Start blocking after attack

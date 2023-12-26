@@ -82,6 +82,7 @@ object ModuleManager : Listenable {
             AvoidHazards,
             Backtrack,
             BedGodMode,
+            BedProtectionESP,
             Blink,
             BlockESP,
             BlockOverlay,
@@ -202,7 +203,8 @@ object ModuleManager : Listenable {
             WallClimb,
             WaterSpeed,
             XRay,
-            Zoot
+            Zoot,
+            KeepSprint,
         )
 
         InventoryManager.startCoroutine()
