@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
+import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 
 object BrowserManager : Configurable("browser") {
 
@@ -48,6 +49,10 @@ object BrowserManager : Configurable("browser") {
     private val browserDrawer = BrowserDrawer { browser }
     @Suppress("UnusedPrivateProperty")
     private val browserInput = BrowserInput { browser }
+
+    init {
+        PersistentLocalStorage
+    }
 
     /**
      * Initializes the browser.

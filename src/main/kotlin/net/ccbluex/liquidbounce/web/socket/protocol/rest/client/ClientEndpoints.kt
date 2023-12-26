@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -72,8 +73,64 @@ internal fun RestNode.setupClientRestApi() {
 
     setupScreenRestApi()
     blocksAndItemRestApi()
+    setupLocalStorage()
 }
 
+private fun RestNode.setupLocalStorage() {
+    get("/localStorage") {
+        val key = it.params["key"] ?: return@get httpForbidden("No key")
+        val value = PersistentLocalStorage.getItem(key) ?: return@get httpForbidden("No value for key $key")
+
+        httpOk(JsonObject().apply {
+            addProperty("value", value)
+        })
+    }
+
+    put("/localStorage") {
+        val body = decode<JsonObject>(it.content)
+        val key = body["key"]?.asString ?: return@put httpForbidden("No key")
+        val value = body["value"]?.asString ?: return@put httpForbidden("No value")
+
+        PersistentLocalStorage.setItem(key, value)
+        httpOk(JsonObject())
+    }
+
+    delete("/localStorage") {
+        val key = it.params["key"] ?: return@delete httpForbidden("No key")
+        PersistentLocalStorage.removeItem(key)
+        httpOk(JsonObject())
+    }
+
+    // PUT and GET whole localStorage
+    get("/localStorage/all") {
+        httpOk(JsonObject().apply {
+            val jsonArray = JsonArray()
+
+            PersistentLocalStorage.map.forEach { (key, value) ->
+                jsonArray.add(JsonObject().apply {
+                    addProperty("key", key)
+                    addProperty("value", value)
+                })
+            }
+
+            add("items", jsonArray)
+        })
+    }
+
+    put("/localStorage/all") {
+        data class Item(val key: String, val value: String)
+        data class StoragePutRequest(val items: List<Item>)
+
+        val body = decode<StoragePutRequest>(it.content)
+
+        PersistentLocalStorage.clear()
+        body.items.forEach { item ->
+            PersistentLocalStorage.setItem(item.key, item.value)
+        }
+
+        httpOk(JsonObject())
+    }
+}
 
 
 private fun RestNode.setupScreenRestApi() {

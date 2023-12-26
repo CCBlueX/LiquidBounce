@@ -3,6 +3,9 @@
     import { routes } from "./routes.js";
     import { listen } from "./client/ws.svelte";
     import { getVirtualScreen } from "./client/api.svelte";
+    import { insertPersistentData } from "./client/persistentStorage.svelte";
+
+    insertPersistentData();
 
     let showingSplash = false;
     let nextRoute = null;

@@ -379,5 +379,48 @@
     }
 
 
+    export function getPersistentStorage(key) {
+        const searchParams = new URLSearchParams({ key })
+
+        return request("/localStorage?" + searchParams.toString())
+    }
+
+    export function setPersistentStorage(key, value) {
+        return request("/localStorage", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "key": key, "value": value })
+        })
+    }
+
+    export function deletePersistentStorage(key) {
+        const searchParams = new URLSearchParams({ key })
+
+        return request("/localStorage?" + searchParams.toString(), {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export async function getPersistentStorageItems() {
+        const res = await request("/localStorage/all");
+
+        return res.items;
+    }
+
+    export function setPersistentStorageItems(items) {
+        return request("/localStorage/all", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "items": items })
+        })
+    }
+
 </script>
 
