@@ -9,7 +9,7 @@
     import ButtonWrapperLeft from "../../elements/buttons/ButtonWrapperLeft.svelte";
     import ButtonWrapperRight from "../../elements/buttons/ButtonWrapperRight.svelte";
 
-    import { getSession, getLocation, openScreen, browse, exitClient } from "../../client/api.svelte";
+    import { getSession, getLocation, openScreen, browse, exitClient, getUpdate } from "../../client/api.svelte";
     import { push } from "svelte-spa-router";
     import {fade} from "svelte/transition";
 
@@ -89,8 +89,10 @@
         location = country.toLowerCase();
     }).catch(console.error);
 
-    // todo: Check for updates
-    const updateAvailable = false;
+    let updateAvailable = false;
+    getUpdate().then(update => {
+        updateAvailable = update.updateAvailable;
+    }).catch(console.error);
 </script>
 
 <main transition:fade>

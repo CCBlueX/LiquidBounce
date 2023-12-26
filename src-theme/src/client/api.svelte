@@ -480,5 +480,16 @@
         })
     }
 
+    /**
+     * get("update") {
+     *         httpOk(JsonObject().apply {
+     *             addProperty("updateAvailable", LiquidBounce.updateAvailable)
+     *             addProperty("commit", LiquidBounce.clientCommit)
+     *         })
+     *     }
+     */
+    export function getUpdate() {
+        return request("/update")
+    }
 </script>
 

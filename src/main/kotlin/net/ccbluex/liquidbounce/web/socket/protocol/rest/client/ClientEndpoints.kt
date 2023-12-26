@@ -45,6 +45,13 @@ internal fun RestNode.setupClientRestApi() {
         })
     }
 
+    get("update") {
+        httpOk(JsonObject().apply {
+            addProperty("updateAvailable", LiquidBounce.updateAvailable)
+            addProperty("commit", LiquidBounce.clientCommit)
+        })
+    }
+
     get("/exit") {
         mc.scheduleStop()
         httpOk(JsonObject())
