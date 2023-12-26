@@ -3,12 +3,9 @@
     import {fade} from "svelte/transition";
 
     listen("splashProgress", (data) => {
-        console.log(data);
-
         // from 0.0 to 1.0
         const progress = data.progress;
         const isComplete = data.isComplete;
-        console.log("Splashscreen progress: " + data.progress);
 
         const progressElement = document.getElementById("progress");
         progressElement.value = progress * 100;

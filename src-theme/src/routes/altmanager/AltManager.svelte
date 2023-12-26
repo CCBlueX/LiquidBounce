@@ -41,7 +41,6 @@
         let message = event.message;
         let success = event.success;
 
-        console.log(message);
         feedback(message, success ? "green" : "red")
 
         updateAccountData();
@@ -49,7 +48,6 @@
     }
 
     function updateAccountList() {
-        console.log("Account List updating...")
         getAccounts().then(list => {
             accounts = list.map((account, index) => {
                 return {
@@ -57,7 +55,6 @@
                     account: account
                 }
             });
-            console.log("Account List updated!")
         }).catch(console.error);
     }
 

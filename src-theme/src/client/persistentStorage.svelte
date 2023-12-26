@@ -13,7 +13,6 @@
     export async function insertPersistentData() {
         // Array of {key, value} objects
         const items = await getPersistentStorageItems();
-        console.log(items);
 
         for (const item of items) {
             localStorage.setItem(item.key, item.value);

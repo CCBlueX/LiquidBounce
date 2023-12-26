@@ -6,13 +6,9 @@
     function handleSendMessage() {
         if (chatMessage.trim().length > 0) {
             if (chatMessage.startsWith("/")) {
-                sendCommand(chatMessage.substring(1)).catch((err) => {
-                    console.log(err);
-                });
+                sendCommand(chatMessage.substring(1)).catch(console.log);
             } else {
-                sendChatMessage(chatMessage).catch((err) => {
-                    console.log(err);
-                });
+                sendChatMessage(chatMessage).catch(console.log);
             }
         }
     }

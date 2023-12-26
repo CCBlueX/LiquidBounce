@@ -15,17 +15,13 @@
         }, 3000);
     }
 
-    try {
-        listen("notification", event => {
-            let title = event.title;
-            let message = event.message;
-            let severity = event.severity;
+    listen("notification", event => {
+        let title = event.title;
+        let message = event.message;
+        let severity = event.severity;
 
-            addNotification(title, message, severity);
-        });
-    } catch (err) {
-        console.log(err);
-    }
+        addNotification(title, message, severity);
+    });
 </script>
 
 <div class="notifications">

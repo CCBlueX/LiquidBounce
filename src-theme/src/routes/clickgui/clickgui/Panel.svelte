@@ -90,11 +90,7 @@
         }
     }
 
-    try {
-        listen("toggleModule", handleToggleModule);
-    } catch (err) {
-        console.log(err);
-    }
+    listen("toggleModule", handleToggleModule);
 </script>
 
 <div class="panel" style="left: {left}px; top: {top}px;">
