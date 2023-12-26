@@ -41,7 +41,11 @@ class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
 @WebSocketEvent
-class ToggleModuleEvent(val moduleName: String, val enabled: Boolean) : Event()
+class ToggleModuleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event()
+
+@Nameable("refreshArrayList")
+@WebSocketEvent
+class RefreshArrayListEvent : Event()
 
 @Nameable("choiceChange")
 class ChoiceChangeEvent(val module: Module, val oldChoice: Choice, val newChoice: Choice) : Event()

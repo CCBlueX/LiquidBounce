@@ -27,9 +27,9 @@
     function handleToggleModule(event) {
         let moduleName = event.moduleName;
         let moduleEnabled = event.enabled;
+        let hidden = event.hidden;
 
-        // todo: add hidden attribute to module
-        if (moduleEnabled) {
+        if (moduleEnabled && !hidden) {
             modules.push({
                 name: moduleName,
                 enabled: moduleEnabled,
@@ -43,23 +43,28 @@
 
     let modules = [];
 
-    getModules().then(mods => {
-        for (const mod of mods) {
-            const name = mod.name;
-            const enabled = mod.enabled;
-            const hidden = mod.hidden;
+    function constructArray() {
+        getModules().then(mods => {
+            modules = [];
+            for (const mod of mods) {
+                const name = mod.name;
+                const enabled = mod.enabled;
+                const hidden = mod.hidden;
 
-            if (enabled && !hidden) {
-                modules.push({
-                    name: name,
-                });
+                if (enabled && !hidden) {
+                    modules.push({
+                        name: name,
+                    });
+                }
             }
-        }
 
-        sortModules();
-    }).catch(console.error);
+            sortModules();
+        }).catch(console.error);
+    }
+    constructArray();
 
     listen("toggleModule", handleToggleModule);
+    listen("refreshArrayList", constructArray);
 </script>
 
 <div class="arraylist">

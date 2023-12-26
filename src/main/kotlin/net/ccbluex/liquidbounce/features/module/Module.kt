@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ToggleModuleEvent
 import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -87,7 +88,7 @@ open class Module(
             )
 
             // Call out module event
-            EventManager.callEvent(ToggleModuleEvent(name, new))
+            EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
 
             // Call to choices
             value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
@@ -105,6 +106,10 @@ open class Module(
         .doNotInclude()
     var hidden by boolean("Hidden", hide)
         .doNotInclude()
+        .listen {
+            EventManager.callEvent(RefreshArrayListEvent())
+            it
+        }
 
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"

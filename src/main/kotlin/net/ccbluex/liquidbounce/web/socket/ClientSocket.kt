@@ -56,6 +56,7 @@ object ClientSocket {
         "splashOverlay",
         "splashProgress",
         "key",
+        "refreshArrayList",
 
         // Statistic events
         "fps",
