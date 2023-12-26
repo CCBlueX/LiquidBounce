@@ -121,16 +121,19 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         // We need to take some actions
         CombatManager.pauseCombatForAtLeast(combatPauseTime)
 
-        if (player.isBlocking) {
-            interaction.stopUsingItem(player)
-            waitTicks(1)
-        }
-
         RotationManager.aimAt(
             Rotation(player.yaw, (85f..90f).random().toFloat()),
             configurable = rotations,
         )
+
+        if (player.isBlocking) {
+            interaction.stopUsingItem(player)
+        }
         waitTicks(1)
+
+
+
+
         if (RotationManager.serverRotation.pitch < 85) {
             return false
         }
