@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -36,22 +36,22 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
     }
 
     val repeatable = repeatable {
+        val timerSpeed = updateTimerSpeed()
+
+        if (timerSpeed != null) {
+            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
+        }
+
         val balanceChange = mc.timer.timerSpeed / balanceRecoveryIncrement - 1
         if ((balanceTimer > 0 || balanceChange > 0) && (balanceTimer < timerBalanceLimit * 2 || balanceChange < 0))
             balanceTimer += balanceChange
 
         if (balanceTimer <= 0)
             reachedTheLimit = false
-
-        val timerSpeed = updateTimerSpeed()
-
-        if (timerSpeed != null) {
-            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
-        }
     }
 
     private fun updateTimerSpeed(): Float? {
-        if (world.findEnemy(0f..distanceToStartWorking) == null || reachedTheLimit) {
+        if (world.findEnemy(0f..distanceToStartWorking) == null) {
             return null
         }
 
@@ -59,12 +59,13 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
             return normalSpeed
         }
 
-        return if (balanceTimer < timerBalanceLimit * 2)
+        return if (balanceTimer < timerBalanceLimit * 2 && !reachedTheLimit)
             boostSpeed
         else {
             reachedTheLimit = true
 
-            normalSpeed
+            // if we slowdown while enemy is close we might easily loose
+            1.0f
         }
     }
 

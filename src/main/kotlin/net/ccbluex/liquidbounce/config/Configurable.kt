@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.Curves
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 
@@ -105,6 +106,8 @@ open class Configurable(
 
     protected fun int(name: String, default: Int, range: IntRange) = rangedValue(name, default, range, ValueType.INT)
 
+    protected fun key(name: String, default: Int) = value(name, default, ValueType.KEY)
+
     protected fun intRange(name: String, default: IntRange, range: IntRange) =
         rangedValue(name, default, range, ValueType.INT_RANGE)
 
@@ -113,7 +116,9 @@ open class Configurable(
     protected fun textArray(name: String, default: MutableList<String>) =
         value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
 
-    protected fun curve(name: String, default: Array<Float>) = value(name, default, ValueType.CURVE)
+    protected fun curve(name: String, default: Curves) =
+        ChooseListValue(name, default, Curves.values()).apply { this@Configurable.value.add(this) }
+
 
     protected fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 
@@ -127,16 +132,21 @@ open class Configurable(
     protected fun items(name: String, default: MutableList<Item>) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
 
-    protected fun fonts(name: String, default: MutableList<Fonts.FontDetail>) =
+    protected fun fonts(name: String, default: MutableList<Fonts.FontInfo>) =
         value(name, default, ValueType.INVALID, ListValueType.FontDetail)
 
     protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: Choice, choices: Array<Choice>) =
-        ChoiceConfigurable(this, name, active) { choices }.apply { this@Configurable.value.add(this) }
+    protected fun choices(module: Module, name: String, active: Choice, choices: Array<Choice>) =
+        ChoiceConfigurable(module, name, { active }) { choices }.apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: Choice, choicesCallback: (ChoiceConfigurable) -> Array<Choice>) =
-        ChoiceConfigurable(this, name, active, choicesCallback).apply { this@Configurable.value.add(this) }
+    protected fun choices(
+        module: Module,
+        name: String,
+        activeCallback: (ChoiceConfigurable) -> Choice,
+        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+    ) = ChoiceConfigurable(module, name, activeCallback, choicesCallback).apply { this@Configurable.value.add(this) }
+
 
 }

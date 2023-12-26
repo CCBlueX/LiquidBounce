@@ -19,15 +19,20 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.minecraft.client.MinecraftClient;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.event.events.SplashOverlayEvent;
+import net.ccbluex.liquidbounce.event.events.SplashProgressEvent;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.resource.ResourceReload;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.Optional;
-import java.util.function.Consumer;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Custom ultralight splash screen
@@ -35,8 +40,48 @@ import java.util.function.Consumer;
 @Mixin(SplashOverlay.class)
 public class MixinSplashOverlay {
 
-    @Shadow @Final private MinecraftClient client;
-    @Shadow @Final private ResourceReload reload;
-    @Shadow @Final private Consumer<Optional<Throwable>> exceptionHandler;
+    @Shadow
+    @Final
+    private ResourceReload reload;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void hookInit(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(SplashOverlayEvent.Action.SHOW));
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setOverlay(Lnet/minecraft/client/gui/screen/Overlay;)V"))
+    private void hookEnd(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(SplashOverlayEvent.Action.HIDE));
+    }
+
+    @Unique
+    private float splashProgressBefore = -1;
+
+    @Unique
+    private boolean hasBeenCompleted = false;
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ResourceReload;getProgress()F"))
+    private void hookProgress(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        var progress = reload.getProgress();
+        var isComplete = reload.isComplete();
+
+        if (hasBeenCompleted) {
+            return;
+        }
+
+        if (splashProgressBefore != progress || isComplete) {
+            EventManager.INSTANCE.callEvent(new SplashProgressEvent(progress, isComplete));
+            splashProgressBefore = progress;
+
+            if (isComplete) {
+                hasBeenCompleted = true;
+            }
+        }
+    }
+
+    @Inject(method = "render", at = @At("RETURN"))
+    private void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(null, context, mouseX, mouseY, delta));
+    }
 
 }

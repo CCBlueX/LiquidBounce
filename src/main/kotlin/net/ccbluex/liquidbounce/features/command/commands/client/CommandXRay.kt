@@ -16,13 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.blockParameter
+import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -34,6 +36,11 @@ import net.minecraft.util.Identifier
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
+/**
+ * XRay Command
+ *
+ * Allows you to add, remove, list, clear, and reset blocks for the XRay module.
+ */
 object CommandXRay {
 
     fun createCommand(): Command {
@@ -44,9 +51,7 @@ object CommandXRay {
                 CommandBuilder
                     .begin("add")
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("block")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                        blockParameter()
                             .required()
                             .build()
                     )
@@ -71,9 +76,7 @@ object CommandXRay {
                 CommandBuilder
                     .begin("remove")
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("block")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                        blockParameter()
                             .required()
                             .build()
                     )
@@ -98,9 +101,7 @@ object CommandXRay {
                 CommandBuilder
                     .begin("list")
                     .parameter(
-                        ParameterBuilder
-                            .begin<Int>("page")
-                            .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
+                        pageParameter()
                             .optional()
                             .build()
                     )
@@ -154,6 +155,15 @@ object CommandXRay {
                     .handler { command, _ ->
                         ModuleXRay.blocks.clear()
                         chat(regular(command.result("blocksCleared")))
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("reset")
+                    .handler {command, _ ->
+                        ModuleXRay.resetBlocks()
+                        chat(regular(command.result("Reset the blocks to the default values")))
                     }
                     .build()
             )

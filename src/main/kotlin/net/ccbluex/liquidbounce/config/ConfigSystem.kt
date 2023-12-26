@@ -18,12 +18,13 @@
  */
 package net.ccbluex.liquidbounce.config
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
-import me.liuli.elixir.account.MinecraftAccount
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.block.Block
 import net.minecraft.item.Item
+import net.minecraft.text.Text
 import java.io.File
 import java.io.Reader
 import java.io.Writer
@@ -63,22 +65,44 @@ object ConfigSystem {
         }
     }
 
-    // A mutable list of all root configurable classes (and their sub-classes)
+    // A mutable list of all root configurable classes (and their subclasses)
     private val configurables: MutableList<Configurable> = mutableListOf()
 
     // Gson
     private val confType = TypeToken.get(Configurable::class.java).type
-    private val gson = GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(ExcludeStrategy(false))
-        .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
-        .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
-        .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
-        .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
-        .registerTypeAdapter(Fonts.FontDetail::class.javaObjectType, FontDetailSerializer)
-        .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
-        .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
-        .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountSerializer)
-        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer).create()
+    private val clientGson: Gson = GsonBuilder()
+        .addSerializationExclusionStrategy(ExcludeStrategy())
+        .registerCommonTypeAdapters()
+        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
+        .create()
+    val autoConfigGson: Gson = GsonBuilder()
+        .setPrettyPrinting()
+        .addSerializationExclusionStrategy(ExcludeStrategy())
+        .registerCommonTypeAdapters()
+        // A configurable serializer which will not include values with doNotInclude = true
+        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, AutoConfigurableSerializer)
+        .create()
+
+    /**
+     * Register common type adapters
+     * These adapters include anything from Kotlin classes to Minecraft and LiquidBounce types
+     * They are safe to use on any GSON instance. (clientGson, autoConfigGson, ...)
+     * It does not include any configurable serializers, which means you need to add them yourself if needed!
+     *
+     * @see GsonBuilder.registerTypeHierarchyAdapter
+     * @see GsonBuilder.registerTypeAdapter
+     */
+    internal fun GsonBuilder.registerCommonTypeAdapters() =
+        registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeSerializer)
+            .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
+            .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
+            .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
+            .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
+            .registerTypeHierarchyAdapter(Text::class.javaObjectType, Text.Serializer())
+            .registerTypeAdapter(Fonts.FontInfo::class.javaObjectType, FontDetailSerializer)
+            .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
+            .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
+            .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountSerializer)
 
     /**
      * Create new root configurable
@@ -150,16 +174,22 @@ object ConfigSystem {
     /**
      * Serialize a configurable to a writer
      */
-    fun serializeConfigurable(configurable: Configurable, writer: Writer) {
+    fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = this.clientGson) {
         gson.newJsonWriter(writer).use {
             gson.toJson(configurable, confType, it)
         }
     }
 
     /**
+     * Serialize a configurable to a writer
+     */
+    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson)
+        = gson.toJsonTree(configurable, confType)
+
+    /**
      * Deserialize a configurable from a reader
      */
-    fun deserializeConfigurable(configurable: Configurable, reader: Reader) {
+    fun deserializeConfigurable(configurable: Configurable, reader: Reader, gson: Gson = this.clientGson) {
         JsonParser.parseReader(gson.newJsonReader(reader))?.let {
             deserializeConfigurable(configurable, it)
         }
@@ -209,23 +239,32 @@ object ConfigSystem {
                             for (choice in value.choices) {
                                 runCatching {
                                     val choiceElement = choices[choice.name]
+                                        ?: error("Choice ${choice.name} not found")
 
                                     deserializeConfigurable(choice, choiceElement)
-                                }.onFailure { it.printStackTrace() }
+                                }.onFailure {
+                                    logger.error("Unable to deserialize choice ${choice.name}", it)
+                                }
                             }
                         }
-                    }.onFailure { it.printStackTrace() }
+                    }.onFailure {
+                        logger.error("Unable to deserialize configurable ${value.name}", it)
+                    }
 
                     deserializeConfigurable(value, currentElement)
                 } else {
                     val currentElement = values[value.name] ?: continue
 
                     runCatching {
-                        value.deserializeFrom(gson, currentElement["value"])
-                    }.onFailure { it.printStackTrace() }
+                        value.deserializeFrom(clientGson, currentElement["value"])
+                    }.onFailure {
+                        logger.error("Unable to deserialize value ${value.name}", it)
+                    }
                 }
 
             }
-        }.onFailure { it.printStackTrace() }
+        }.onFailure {
+            logger.error("Unable to deserialize configurable ${configurable.name}", it)
+        }
     }
 }

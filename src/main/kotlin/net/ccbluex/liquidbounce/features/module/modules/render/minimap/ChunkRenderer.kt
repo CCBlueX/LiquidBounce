@@ -7,9 +7,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor.Brightness
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
-import net.minecraft.world.World
 import java.awt.Color
 import kotlin.math.PI
 import kotlin.math.roundToInt
@@ -108,7 +106,13 @@ object ChunkRenderer {
             val surfaceBlockPos = BlockPos(pos.x, height, pos.z)
             val surfaceBlockState = world.getBlockState(surfaceBlockPos)
 
-            val color = Color(surfaceBlockState.getMapColor(world, surfaceBlockPos).getRenderColor(Brightness.HIGH))
+            if (surfaceBlockState.isAir) {
+                return Color(255, 207, 179).rgb
+            }
+
+            val baseColor = surfaceBlockState.getMapColor(world, surfaceBlockPos).getRenderColor(Brightness.HIGH)
+
+            val color = Color(baseColor)
 
             return Color(
                 (color.red * brightness).roundToInt(),

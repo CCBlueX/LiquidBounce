@@ -19,77 +19,12 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
-import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
 import kotlin.math.cos
 import kotlin.math.sin
-
-/**
- * Used to draw multiple render tasks at once
- */
-abstract class BatchRenderer
-
-/**
- * A super class of structs that can be fed to the render engine.
- */
-abstract class RenderTask {
-    /**
-     * Was this render task uploaded to VRAM?
-     */
-    private var uploaded = false
-    var storageType = VBOStorageType.Stream
-
-    /**
-     * Can this render task render multiple
-     *
-     * @return Returns the batch renderer, if not supported, `null`
-     */
-    abstract fun getBatchRenderer(): BatchRenderer?
-
-    /**
-     * Sets up everything needed for rendering
-     */
-    abstract fun initRendering(mvpMatrix: Mat4)
-
-    /**
-     * Executes the current render task. Always called after [initRendering] was called. Since some render tasks
-     * can share their initialization methods, it is possible that not this instance's [initRendering] is called.
-     */
-    abstract fun draw()
-
-    /**
-     * Calls [upload] if this function hasn't been called yet
-     */
-    fun uploadIfNotUploaded() {
-        if (!this.uploaded) {
-            this.upload()
-
-            this.uploaded = true
-        }
-    }
-
-    /**
-     * Uploads the current state to VRAM
-     */
-    open fun upload() {}
-
-    /**
-     * Sets up everything needed for rendering.
-     */
-    abstract fun cleanupRendering()
-
-}
-
-data class Point2f(val x: Float, val y: Float) {
-    fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
-        buffer.putFloat(idx, x)
-        buffer.putFloat(idx + 4, y)
-    }
-}
 
 data class Vec4(val x: Float, val y: Float, val z: Float, val w: Float) {
     constructor(vec: Vec3, w: Float) : this(vec.x, vec.y, vec.z, w)
@@ -140,6 +75,8 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
 
         return Vec3(d0, d1, d2)
     }
+
+    fun toVec3d() = Vec3d(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
 }
 
 /**
@@ -159,6 +96,8 @@ data class UV2s(val u: Short, val v: Short) {
     }
 }
 
+data class UV2f(val u: Float, val v: Float)
+
 data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     companion object {
         val WHITE = Color4b(255, 255, 255, 255)
@@ -170,6 +109,8 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
     constructor(hex: String) : this(Color(hex.toInt(16)))
+
+    constructor(hex: Int, hasAlpha: Boolean = false) : this(Color(hex, hasAlpha))
     constructor(r: Int, g: Int, b: Int) : this(r, g, b, 255)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
@@ -206,51 +147,3 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 }
 
-class VAOData(storageType: VBOStorageType) {
-    val arrayBuffer = VertexBufferObject(VBOTarget.ArrayBuffer, storageType)
-    val elementBuffer = VertexBufferObject(VBOTarget.ElementArrayBuffer, storageType)
-    val vao = VertexAttributeObject()
-
-    fun bind() {
-        this.vao.bind()
-    }
-
-    fun unbind() {
-        this.vao.unbind()
-    }
-}
-
-class InstancedVAOData(storageType: VBOStorageType) {
-    val baseUploader = VAOData(storageType)
-    val instanceData = VertexBufferObject(VBOTarget.ArrayBuffer, storageType)
-
-    fun bind() {
-        this.baseUploader.bind()
-    }
-
-    fun unbind() {
-        this.baseUploader.unbind()
-    }
-}
-
-enum class PrimitiveType(val verticesPerPrimitive: Int, val mode: Int) {
-    /**
-     * Lines; 2 vertices per primitive
-     */
-    Lines(2, GL11.GL_LINES),
-
-    /**
-     * Triangles; 3 vertices per primitive
-     */
-    Triangles(3, GL11.GL_TRIANGLES),
-
-    /**
-     * Triangle strip; 1 vertices per primitive
-     */
-    TriangleStrip(1, GL11.GL_TRIANGLE_STRIP),
-
-    /**
-     * Line loop; 1 vertices per primitive
-     */
-    LineLoop(1, GL11.GL_LINE_LOOP), LineStrip(1, GL11.GL_LINE_STRIP), Points(1, GL11.GL_POINTS)
-}

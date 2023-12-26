@@ -16,13 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -32,15 +33,18 @@ import net.minecraft.util.Formatting
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
+/**
+ * Help Command
+ *
+ * Provides a help page for displaying other commands. 
+ */
 object CommandHelp {
 
     fun createCommand(): Command {
         return CommandBuilder
             .begin("help")
             .parameter(
-                ParameterBuilder
-                    .begin<Int>("page")
-                    .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                pageParameter()
                     .optional()
                     .build()
             )

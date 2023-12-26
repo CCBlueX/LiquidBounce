@@ -18,8 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.web.theme.ThemeManager.overlayUrl
 
 /**
  * Module HUD
@@ -29,7 +34,32 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
+    private var browserTab: ITab? = null
+
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
+
+    val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {
+        if (!enabled || mc.world == null) {
+            browserTab?.closeTab()
+            browserTab = null
+        } else if (browserTab == null) {
+            browserTab = BrowserManager.browser?.createTab(overlayUrl)
+        }
+    }
+
+    override fun enable() {
+        // Should not happen, but in-case there is already a tab open, close it
+        browserTab?.closeTab()
+
+        // Create a new tab and open it
+        browserTab = BrowserManager.browser?.createTab(overlayUrl)
+    }
+
+    override fun disable() {
+        // Closes tab entirely
+        browserTab?.closeTab()
+        browserTab = null
+    }
 
 }

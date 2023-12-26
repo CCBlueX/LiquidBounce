@@ -16,12 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
+import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
 import net.ccbluex.liquidbounce.utils.client.*
@@ -29,6 +32,12 @@ import net.minecraft.util.Formatting
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
+/**
+ * AutoDisable Command
+ *
+ * Allows you to manage the list of modules that are automatically disabled.
+ * It provides subcommands to add, remove, list and clear modules from the auto-disable list.
+ */
 object CommandAutoDisable {
 
     fun createCommand(): Command {
@@ -39,10 +48,7 @@ object CommandAutoDisable {
                 CommandBuilder
                     .begin("add")
                     .parameter(
-                        ParameterBuilder
-                            .begin<String>("name")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith(ModuleManager::autoComplete)
+                        moduleParameter()
                             .required()
                             .build()
                     )
@@ -64,9 +70,11 @@ object CommandAutoDisable {
                     .begin("remove")
                     .parameter(
                         ParameterBuilder
-                            .begin<String>("name")
+                            .begin<String>("module")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith { ModuleManager.autoComplete(it) { mod -> mod.bind != -1 } }
+                            .autocompletedWith { begin ->
+                                ModuleAutoDisable.listOfModules.map { it.name }.toList().filter { it.startsWith(begin) }
+                            }
                             .required()
                             .build()
                     )
@@ -94,9 +102,7 @@ object CommandAutoDisable {
                 CommandBuilder
                     .begin("list")
                     .parameter(
-                        ParameterBuilder
-                            .begin<Int>("page")
-                            .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                        pageParameter()
                             .optional()
                             .build()
                     )
@@ -145,11 +151,7 @@ object CommandAutoDisable {
                 CommandBuilder
                     .begin("clear")
                     .handler { command, _ ->
-                        ModuleAutoDisable.listOfModules.let { list ->
-                            list.forEach {
-                                list.remove(it)
-                            }
-                        }
+                        ModuleAutoDisable.listOfModules.clear()
                         chat(command.result("modulesCleared"))
                     }
                     .build()

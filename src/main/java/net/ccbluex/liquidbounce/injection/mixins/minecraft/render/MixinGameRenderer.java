@@ -19,33 +19,29 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import com.mojang.datafixers.util.Pair;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.GameRenderEvent;
-import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
-import net.ccbluex.liquidbounce.event.WorldRenderEvent;
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
+import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
-import net.ccbluex.liquidbounce.web.WebController;
-import net.fabricmc.fabric.impl.client.rendering.FabricShaderProgram;
+import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
+import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
@@ -57,11 +53,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.function.Consumer;
 
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer implements IMixinGameRenderer {
@@ -87,40 +78,45 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     @Shadow
     protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void hookRenderHead(float tickDelta, long startTime, boolean tick, CallbackInfo callbackInfo) {
-        WebController.INSTANCE.update();
-        WebController.INSTANCE.render();
-    }
+    @Shadow
+    public abstract MinecraftClient getClient();
 
     /**
      * Hook game render event
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;render(Lnet/minecraft/client/gui/DrawContext;F)V"))
-    public void hookInGameRender(InGameHud instance, DrawContext context, float tickDelta) {
-        WebController.INSTANCE.renderInGame(context);
+    @Inject(method = "render", at = @At("HEAD"))
+    public void hookGameRender(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameRenderEvent());
-        instance.render(context, tickDelta);
     }
 
     /**
-     * Hook overlay render event
+     * We change crossHairTarget according to server side rotations
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Overlay;render(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
-    public void hookOverlayRender(Overlay instance, DrawContext context, int mouseX, int mouseY, float delta) {
-        instance.render(context, mouseX, mouseY, delta);
-        WebController.INSTANCE.renderOverlay(context);
+    @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
+    private HitResult hookRaycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
+        if (instance != client.player) return instance.raycast(maxDistance, tickDelta, includeFluids);
+
+        Rotation rotation = (RotationManager.INSTANCE.getCurrentRotation() != null) ?
+                RotationManager.INSTANCE.getCurrentRotation() :
+                ModuleFreeCam.INSTANCE.getEnabled() ?
+                        RotationManager.INSTANCE.getServerRotation() :
+                        new Rotation(instance.getYaw(tickDelta), instance.getPitch(tickDelta));
+
+        return RaytracingExtensionsKt.raycast(maxDistance, rotation, includeFluids);
+    }
+
+    @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
+    private Vec3d hookRotationVector(Entity instance, float tickDelta) {
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+
+        return rotation != null ? rotation.getRotationVec() : instance.getRotationVec(tickDelta);
     }
 
     /**
      * Hook world render event
      */
-    @Inject(method = "renderWorld", at = @At(value = "FIELD",
-            target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z",
-            opcode = Opcodes.GETFIELD,
-            ordinal = 0))
-    public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack,
-                                final CallbackInfo callbackInfo) {
+    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
+    public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, partialTicks));
     }
 
@@ -135,28 +131,28 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Override
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
-        final MatrixStack matrices = new MatrixStack();
+        MatrixStack matrices = new MatrixStack();
 
-        final double fov = this.getFov(camera, tickDelta, true);
-        matrices.multiplyPositionMatrix(this.getBasicProjectionMatrix(fov));
+        double fov = getFov(camera, tickDelta, true);
+        matrices.multiplyPositionMatrix(getBasicProjectionMatrix(fov));
 
         if (bobbing) {
-            this.tiltViewWhenHurt(matrices, tickDelta);
+            tiltViewWhenHurt(matrices, tickDelta);
 
-            if (this.client.options.getBobView().getValue()) {
-                this.bobView(matrices, tickDelta);
+            if (client.options.getBobView().getValue()) {
+                bobView(matrices, tickDelta);
             }
 
-            float f = MathHelper.lerp(tickDelta, this.client.player.prevNauseaIntensity, this.client.player.nauseaIntensity) * this.client.options.getDistortionEffectScale().getValue().floatValue() * this.client.options.getDistortionEffectScale().getValue().floatValue();
+            float f = MathHelper.lerp(tickDelta, client.player.prevNauseaIntensity, client.player.nauseaIntensity) * client.options.getDistortionEffectScale().getValue().floatValue() * client.options.getDistortionEffectScale().getValue().floatValue();
             if (f > 0.0F) {
-                int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
+                int i = client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
                 float g = 5.0F / (f * f + 5.0F) - f * 0.04F;
                 g *= g;
 
                 RotationAxis vec3f = RotationAxis.of(new Vector3f(0.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F));
-                matrices.multiply(vec3f.rotationDegrees(((float) this.ticks + tickDelta) * (float) i));
+                matrices.multiply(vec3f.rotationDegrees((ticks + tickDelta) * i));
                 matrices.scale(1.0F / g, 1.0F, 1.0F);
-                float h = -((float) this.ticks + tickDelta) * (float) i;
+                float h = -(ticks + tickDelta) * i;
                 matrices.multiply(vec3f.rotationDegrees(h));
             }
         }
@@ -164,9 +160,9 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
 
-        final Vec3d cameraPosition = this.camera.getPos();
+        Vec3d cameraPosition = camera.getPos();
 
-        final Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
         matrix4f.mul(new Matrix4f().translate((float) -cameraPosition.x, (float) -cameraPosition.y, (float) -cameraPosition.z));
         return matrix4f;
     }
@@ -189,7 +185,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
             return;
         }
 
-        if (!(this.client.getCameraEntity() instanceof PlayerEntity playerEntity)) {
+        if (!(client.getCameraEntity() instanceof PlayerEntity playerEntity)) {
             return;
         }
 
@@ -214,13 +210,13 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @ModifyConstant(method = "updateTargetedEntity", constant = @Constant(doubleValue = 9.0))
     private double hookReachModifyCombatReach(double constant) {
-        return ModuleReach.INSTANCE.getEnabled() ? (double) (ModuleReach.INSTANCE.getCombatReach() * ModuleReach.INSTANCE.getCombatReach()) : constant;
+        return ModuleReach.INSTANCE.getEnabled() ? (ModuleReach.INSTANCE.getCombatReach() * ModuleReach.INSTANCE.getCombatReach()) : constant;
     }
 
     @Inject(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
     private void hookReachModifyBlockReach(float tickDelta, CallbackInfo ci) {
         if (ModuleReach.INSTANCE.getEnabled()) {
-            this.client.crosshairTarget = this.client.player.raycast(ModuleReach.INSTANCE.getBlockReach(), tickDelta, false);
+            client.crosshairTarget = client.player.raycast(ModuleReach.INSTANCE.getBlockReach(), tickDelta, false);
         }
     }
 
@@ -246,4 +242,5 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     public ShaderProgram getBgraPositionTextureShader() {
         return bgraPositionTextureShader;
     }
+
 }

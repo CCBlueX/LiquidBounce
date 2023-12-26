@@ -18,7 +18,6 @@ class RequestHandlerTest {
 
         assertNull(requestHandler.getActiveRequestValue())
 
-
         requestHandler.request(RequestHandler.Request(3, 0, "requestB"))
         requestHandler.request(RequestHandler.Request(2, 1, "requestC"))
         requestHandler.request(RequestHandler.Request(1, 100, "requestD"))

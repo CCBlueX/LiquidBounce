@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
+import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
@@ -62,16 +62,17 @@ public abstract class MixinCamera {
 
             this.setRotation(this.yaw + 180.0f, -this.pitch);
 
-            this.moveBy(-this.clipToSpace(4.0), 0.0, 0.0);
+            var desiredCameraDistance = ModuleCameraClip.INSTANCE.getEnabled() ? ModuleCameraClip.INSTANCE.getDistance() : 4.0;
+            this.moveBy(-this.clipToSpace(desiredCameraDistance), 0.0, 0.0);
             return;
         }
 
-        RotationsConfigurable configurable = RotationManager.INSTANCE.getActiveConfigurable();
+        AimPlan aimPlan = RotationManager.INSTANCE.getAimPlan();
 
         var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
-        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getPov() || configurable != null && !configurable.getSilent();
+        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getEnabled() && ModuleRotations.INSTANCE.getPov() || aimPlan != null && aimPlan.getApplyClientSide();
 
         if (currentRotation == null || previousRotation == null || !shouldModifyRotation) {
             return;
@@ -91,5 +92,11 @@ public abstract class MixinCamera {
     @ModifyConstant(method = "clipToSpace", constant = @Constant(intValue = 8))
     private int hookCameraClip(int constant) {
         return ModuleCameraClip.INSTANCE.getEnabled() ? 0 : constant;
+    }
+
+
+    @ModifyConstant(method = "update", constant = @Constant(doubleValue = 4.0))
+    private double modifyDesiredCameraDistance(double constant) {
+        return ModuleCameraClip.INSTANCE.getEnabled() ? ModuleCameraClip.INSTANCE.getDistance() : constant;
     }
 }

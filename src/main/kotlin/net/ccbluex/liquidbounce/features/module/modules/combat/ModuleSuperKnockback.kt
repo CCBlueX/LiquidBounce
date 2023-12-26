@@ -21,13 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.DummyEvent
+import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import kotlin.random.Random
 
 /**
  * SuperKnockback module
@@ -40,6 +42,28 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     val hurtTime by int("HurtTime", 10, 0..10)
     val chance by int("Chance", 100, 0..100)
 
+    var sequence: Sequence<DummyEvent>? = null
+
+    // Reset on mode change
+    val choiceChangeHandler = handler<ChoiceChangeEvent> {
+        if (it.module != this) {
+            return@handler
+        }
+
+        reset()
+    }
+
+    override fun handleEvents(): Boolean {
+        val handleEvents = super.handleEvents()
+
+        // Reset if the module is not handling events anymore
+        if (!handleEvents) {
+            reset()
+        }
+
+        return handleEvents
+    }
+
     object Packet : Choice("Packet") {
         override val parent: ChoiceConfigurable
             get() = modes
@@ -47,10 +71,8 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         val attackHandler = handler<AttackEvent> { event ->
             val enemy = event.enemy
 
-            if (enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance > Random.nextInt(
-                    0, 99
-                ) && !ModuleCriticals.wouldCrit()
-            ) {
+            if (enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random() &&
+                !ModuleCriticals.wouldCrit()) {
                 if (player.isSprinting) {
                     network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 }
@@ -73,22 +95,19 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         var antiSprint = false
 
-        override fun enable() {
-            antiSprint = false
-        }
-
-        val attackHandler = sequenceHandler<AttackEvent> { event ->
-            if (!shouldStopSprinting(event)) {
-                return@sequenceHandler
+        val attackHandler = handler<AttackEvent> { event ->
+            if (!shouldStopSprinting(event) || sequence != null) {
+                return@handler
             }
 
-            antiSprint = true
+            runWithDummyEvent {
+                antiSprint = true
 
-            waitUntil { !player.isSprinting && !player.lastSprinting }
+                it.waitUntil { !player.isSprinting && !player.lastSprinting }
+                it.waitTicks(reSprintTicks.random())
 
-            waitTicks(reSprintTicks.random())
-
-            antiSprint = false
+                antiSprint = false
+            }
         }
     }
 
@@ -101,24 +120,18 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         var stopMoving = false
 
-        override fun enable() {
-            stopMoving = false
-        }
-
-        val attackHandler = sequenceHandler<AttackEvent> { event ->
-            if (!shouldStopSprinting(event)) {
-                return@sequenceHandler
+        val attackHandler = handler<AttackEvent> { event ->
+            if (!shouldStopSprinting(event) || sequence != null) {
+                return@handler
             }
 
-            waitTicks(ticksUntilMovementBlock.random())
-
-            stopMoving = true
-
-            waitUntil { !player.input.hasForwardMovement() }
-
-            waitTicks(ticksUntilAllowedMovement.random())
-
-            stopMoving = false
+            runWithDummyEvent {
+                it.waitTicks(ticksUntilMovementBlock.random())
+                stopMoving = true
+                it.waitUntil { !player.input.hasForwardMovement() }
+                it.waitTicks(ticksUntilAllowedMovement.random())
+                stopMoving = false
+            }
         }
     }
 
@@ -126,39 +139,31 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
     fun shouldStopMoving() = enabled && WTap.isActive && WTap.stopMoving
 
-    private suspend fun <T : Event> Sequence<T>.waitTicks(ticks: Int) {
-        if (ticks > 0) {
-            val time = System.currentTimeMillis() + ticks * 50L
-
-            waitUntil { System.currentTimeMillis() >= time }
-        }
-    }
-
-    private suspend fun <T : Event> Sequence<T>.shouldStopSprinting(event: AttackEvent): Boolean {
+    private fun shouldStopSprinting(event: AttackEvent): Boolean {
         val enemy = event.enemy
-
-        if (!player.isSprinting && !player.lastSprinting) {
-            return false
-        }
-
-        val doWorkaround = !player.isSprinting && player.lastSprinting
-
-        // TODO: remove this once the issue with sequence type events being a bit late to detect player.isSprinting so these modes perform even better
-        if (doWorkaround) {
-            sync()
-        }
 
         if (!player.isSprinting || !player.lastSprinting) {
             return false
         }
 
-        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance > Random.nextInt(
-            0, 99
-        ) && !ModuleCriticals.wouldCrit()
+        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
+            && !ModuleCriticals.wouldCrit()
     }
 
-    enum class SprintStopMode(override val choiceName: String) : NamedChoice {
-        Packet("Packet"), SprintTap("SprintTap"), WTap("WTap")
+    private fun reset() {
+        sequence?.cancel()
+        sequence = null
+
+        WTap.stopMoving = false
+        SprintTap.antiSprint = false
+    }
+
+    private fun runWithDummyEvent(action: suspend (Sequence<DummyEvent>) -> Unit) {
+        sequence = Sequence(this, {
+            action(this)
+        }, DummyEvent())
+
+        sequence = null
     }
 
 }

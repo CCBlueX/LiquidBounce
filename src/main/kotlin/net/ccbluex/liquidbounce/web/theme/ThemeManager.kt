@@ -22,89 +22,68 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
 import java.io.File
 
-/**
- * Keeps track of themes and provides access to them.
- */
 object ThemeManager {
 
-    private val themesFolder = File(ConfigSystem.rootFolder, "themes")
-    val themes = mutableMapOf<String, Theme>()
-    private val defaultTheme = initDefault()
+    val themesFolder = File(ConfigSystem.rootFolder, "themes")
+    val defaultTheme = Theme.defaults()
 
     var activeTheme = defaultTheme
-        private set
-
-    fun load() {
-        if (!themesFolder.exists()) {
-            themesFolder.mkdirs()
-        }
-
-        themesFolder.listFiles()?.forEach {
-            if (it.isDirectory) {
-                loadTheme(it)
+        set(value) {
+            if (!value.exists) {
+                logger.warn("Unable to set theme to ${value.name}, theme does not exist")
+                return
             }
-        }
-    }
 
-    /**
-     * Loads a theme from a folder.
-     */
-    private fun loadTheme(folder: File) = runCatching {
-        // Skip if theme is already loaded.
-        if (themes.containsKey(folder.name)) {
-            return@runCatching themes[folder.name]
+            field = value
+
+            // Update integration browser
+            IntegrationHandler.updateIntegrationBrowser()
         }
 
-        // Otherwise load theme.
-        val theme = Theme(folder.name, folder)
-        themes[folder.name] = theme
-
-        theme
-    }.onFailure {
-        logger.error("Unable to load theme ${folder.name}", it)
-    }.getOrNull()
-
     /**
-     * Init default theme.
+     * The integration URL represents the URL to the integration page of the active theme.
      *
-     * Loads default theme from resources and extracts it to the themes folder.
+     * todo: remove title parameter, this should default to the root of the theme
      */
-    private fun initDefault(): Theme {
-        if (!themesFolder.exists()) {
-            themesFolder.mkdirs()
-        }
+    val integrationUrl: String
+        get() = "$NETTY_ROOT/${activeTheme.name}/"
 
-        val defaultFolder = File(themesFolder, "default")
+    val overlayUrl: String
+        get() = "$NETTY_ROOT/${activeTheme.name}/#/hud?static"
 
-        runCatching {
-            // Delete default theme folder if it exists, it might be outdated.
-            if (defaultFolder.exists()) {
-                defaultFolder.deleteRecursively()
+}
+
+class Theme(val name: String) {
+
+    internal val themeFolder = File(ThemeManager.themesFolder, name)
+
+    val exists: Boolean
+        get() = themeFolder.exists()
+
+    companion object {
+
+        fun defaults() = Theme("default").apply {
+            runCatching {
+                val stream = resource("/assets/liquidbounce/default_theme.zip")
+
+                if (exists) {
+                    themeFolder.deleteRecursively()
+                }
+
+                extractZip(stream, themeFolder)
+                themeFolder.deleteOnExit()
+            }.onFailure {
+                logger.error("Unable to extract default theme", it)
+            }.onSuccess {
+                logger.info("Successfully extracted default theme")
             }
 
-            // Extract default theme from resources.
-            val stream = resource("/assets/liquidbounce/default_theme.zip")
-            extractZip(stream, defaultFolder)
-
-            // Delete zip file when process exits, but this is not guaranteed to work.
-            // That's why we delete the folder above.
-            defaultFolder.deleteOnExit()
-        }.onFailure {
-            logger.error("Unable to extract default theme", it)
-        }.onSuccess {
-            logger.info("Successfully extracted default theme")
         }
 
-        // An error should never happen.
-        // If it does, the client is unable to function properly. Crash if this happens or notify the user.
-        return loadTheme(defaultFolder) ?: error("Unable to load default theme")
     }
-
-    /**
-     * Returns page by name from the active theme or the default theme if the page does not exist in the active theme.
-     */
-    fun page(name: String) = activeTheme.page(name) ?: defaultTheme.page(name)
 
 }

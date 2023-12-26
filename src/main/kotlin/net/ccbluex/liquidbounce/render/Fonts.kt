@@ -21,83 +21,138 @@ package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient.download
+import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.awt.Font
 import java.io.File
-import java.io.FileInputStream
 
 /**
  * Font loader
  */
 object Fonts {
 
-    val loadedFonts = mutableMapOf<FontDetail, AbstractFontRenderer>()
-
-    private val fontsRoot = File(ConfigSystem.rootFolder, "fonts").apply {
+    // .minecraft/LiquidBounce/fonts
+    private val fontsRoot = ConfigSystem.rootFolder.resolve("fonts").apply {
         if (!exists()) {
             mkdir()
         }
     }
 
-    private object Options : Configurable("Fonts") {
+    private var fontQueue = mutableListOf<QueuedFont>()
 
-        val fonts by value(
-            "Fonts",
-            arrayOf(
-                // Default fonts
-                FontDetail("Roboto-Medium.ttf", 40),
-                FontDetail("Roboto-Bold.ttf", 180)
-            )
-        )
+    const val DEFAULT_FONT_SIZE: Int = 43
+    val FONT_FORMATS = arrayOf("Regular", "Bold", "Italic", "BoldItalic")
+    val DEFAULT_FONT = FontInfo("Montserrat")
+        .queueLoad()
 
-    }
-
-    // todo: replace by font selectors
-    val bodyFont: AbstractFontRenderer
-        get() = loadedFonts.values.first()
-
-    init {
-        ConfigSystem.root(Options)
-    }
-
-    fun loadFonts() {
-        Options.fonts.forEach { font ->
-            loadedFonts[font] = font.loadFont()
+    fun loadQueuedFonts() {
+        fontQueue.forEach {
+            logger.info("Loading queued font ${it.fontInfo.name}")
+            it.loadNow()
         }
+        fontQueue.clear()
     }
 
-    data class FontDetail(val name: String, val size: Int) {
+    /**
+     * Takes the name of the font and loads it from the filesystem
+     * or downloads it from the cloud.
+     */
+    data class FontInfo(val name: String) {
 
-        fun loadFont(): AbstractFontRenderer {
+        /**
+         * Loads the font from the filesystem or downloads it from the cloud and
+         * creates a [FontRenderer] instance from it.
+         */
+        internal fun load(retry: Boolean = true): FontRenderer {
             val file = File(fontsRoot, name)
 
-            if (!file.exists()) {
-                // Try to download font. Might be in our cloud.
-                downloadFont()
+            if (!file.exists() || !file.isDirectory || file.listFiles().isNullOrEmpty()) {
+                runCatching {
+                    downloadFont()
+                }.onFailure {
+                    logger.error("Failed to download font $name", it)
+                }
             }
 
-            return FontRenderer.createFontRenderer(getAwtFont())
+            return runCatching {
+                createFontFromFolder(file)
+            }.getOrElse {
+                logger.error("Failed to load font $name", it)
+
+                // Might retry to download the font if it's corrupted
+                file.deleteRecursively()
+                if (retry) {
+                    return load(retry = false)
+                }
+
+                error("Failed to load font $name")
+            }
         }
 
+        /**
+         * Downloads the font from the cloud and extracts it to the filesystem.
+         */
         private fun downloadFont() {
-            runCatching {
-                logger.info("Downloading required font $name...")
-                download("${LiquidBounce.CLIENT_CLOUD}/fonts/$name", File(fontsRoot, name))
-            }.onFailure {
-                logger.error("Unable to download font $name!", it)
+            logger.info("Downloading required font $name...")
+            val fontFolder = fontsRoot.resolve(name).apply {
+                if (exists()) {
+                    deleteRecursively()
+                }
+
+                mkdir()
+            }
+
+            val fontZip = fontFolder.resolve("font.zip")
+            logger.info("Downloading font $name to $fontZip")
+            download("${LiquidBounce.CLIENT_CLOUD}/fonts/$name.zip", fontZip)
+
+            logger.info("Extracting font $name to $fontFolder")
+            extractZip(fontZip, fontFolder)
+            fontZip.delete()
+
+            logger.info("Successfully downloaded font $name")
+        }
+
+        /**
+         * Creates a [FontRenderer] instance from the given folder.
+         */
+        private fun createFontFromFolder(basePath: File): FontRenderer {
+            try {
+                return FontRenderer(
+                    FONT_FORMATS.map {
+                        val font = Font
+                            .createFont(Font.TRUETYPE_FONT, basePath.resolve("$name-$it.ttf"))
+                            .deriveFont(DEFAULT_FONT_SIZE.toFloat())
+
+                        GlyphPage.createAscii(font)
+                    }.toTypedArray(),
+                    DEFAULT_FONT_SIZE.toFloat()
+                )
+            } catch (e: Exception) {
+                throw IllegalStateException("Failed to load font from folder $basePath", e)
             }
         }
 
-        private fun getAwtFont() = runCatching {
-            FileInputStream(File(fontsRoot, name)).use {
-                Font.createFont(Font.TRUETYPE_FONT, it).deriveFont(Font.PLAIN, size.toFloat())
+        fun queueLoad() = QueuedFont(this).also { fontQueue += it }
+
+    }
+
+    data class QueuedFont(val fontInfo: FontInfo) {
+
+        private var fontRenderer: FontRenderer? = null
+
+        fun get() = fontRenderer ?: error("Font was not loaded yet!")
+
+        fun loadNow() {
+            if (fontRenderer != null) {
+                return
             }
-        }.onFailure {
-            logger.error("Unable to load font $name. Falling back to default.", it)
-        }.getOrElse { Font("default", Font.PLAIN, size) }
+
+            fontRenderer = fontInfo.load()
+        }
 
     }
 

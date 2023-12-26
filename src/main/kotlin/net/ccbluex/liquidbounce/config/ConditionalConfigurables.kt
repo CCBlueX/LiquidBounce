@@ -20,10 +20,13 @@
 package net.ccbluex.liquidbounce.config
 
 import net.ccbluex.liquidbounce.config.util.Exclude
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -34,8 +37,8 @@ import net.minecraft.text.Text
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
  */
-open class ToggleableConfigurable(@Exclude val module: Module? = null, name: String, enabled: Boolean) : Listenable,
-    Configurable(name, valueType = ValueType.TOGGLEABLE) {
+open class ToggleableConfigurable(@Exclude @ProtocolExclude val module: Module? = null, name: String,
+                                  enabled: Boolean) : Listenable, Configurable(name, valueType = ValueType.TOGGLEABLE) {
 
     val translationBaseKey: String
         get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
@@ -92,14 +95,15 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
 /**
  * Allows to configure and manage modes
  */
-open class ChoiceConfigurable(
-    @Exclude val module: Module,
+class ChoiceConfigurable(
+    @Exclude @ProtocolExclude val module: Module,
     name: String,
-    var activeChoice: Choice,
+    activeChoiceCallback: (ChoiceConfigurable) -> Choice,
     choicesCallback: (ChoiceConfigurable) -> Array<Choice>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
     val choices: Array<Choice>
+    var activeChoice: Choice
     val translationBaseKey: String
         get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
@@ -108,6 +112,7 @@ open class ChoiceConfigurable(
 
     init {
         this.choices = choicesCallback(this)
+        this.activeChoice = activeChoiceCallback(this)
     }
 
     fun newState(state: Boolean) {
@@ -119,7 +124,11 @@ open class ChoiceConfigurable(
     }
 
     fun setFromValueName(name: String) {
-        this.activeChoice = choices.first { it.choiceName == name }
+        val newChoice = choices.first { it.choiceName == name }
+
+        EventManager.callEvent(ChoiceChangeEvent(this.module, this.activeChoice, newChoice))
+
+        this.activeChoice = newChoice
     }
 
     @RequiredByScript
@@ -163,12 +172,12 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
     /**
      * Called when module is turned on
      */
-    open fun enable() { }
+    open fun enable() {}
 
     /**
      * Called when module is turned off
      */
-    open fun disable() { }
+    open fun disable() {}
 
     /**
      * Events should be handled when mode is enabled

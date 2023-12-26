@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 
 /**
  * Breadcrumbs module
@@ -80,11 +81,11 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         for (i in 0 until positions.size / 3 - 1) {
             mutableList += Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
         }
-        mutableList += player.interpolateCurrentPosition(tickDelta)
+        mutableList += player.interpolateCurrentPosition(tickDelta).toVec3()
         return mutableList.toTypedArray()
     }
 
-    val updateHandler = handler<PlayerTickEvent> {
+    val updateHandler = handler<PlayerPostTickEvent> {
         if (player.x == lastPosX && player.y == lastPosY && player.z == lastPosZ) {
             return@handler
         }

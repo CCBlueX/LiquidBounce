@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.RenderTask
+import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 
 abstract class AbstractFontRenderer {
     abstract val size: Float
@@ -38,20 +38,23 @@ abstract class AbstractFontRenderer {
      * @param shadow Add a shadow to the font?
      * @return The width of the font, without considering the scaling
      */
+    @Suppress("LongParameterList")
     abstract fun draw(
         text: String,
         x0: Float,
         y0: Float,
-        defaultColor: Color4b,
+        defaultColor: Color4b = Color4b.WHITE,
         shadow: Boolean = false,
         z: Float = 0.0f,
         scale: Float = 1.0f
     ): Float
 
     /**
-     * Packs all the pending operations into [RenderTask]s
      */
-    abstract fun commit(): Array<RenderTask>
+    abstract fun commit(
+        env: RenderEnvironment,
+        buffers: FontRendererBuffers
+    )
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting

@@ -22,8 +22,8 @@ import com.google.common.collect.Lists
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -37,20 +37,35 @@ object SequenceManager : Listenable {
 
     /**
      * Tick sequences
+     *
+     * We want it to run before everything else, so we set the priority to 1000
+     * This is because we want to tick the existing sequences before new ones are added and might be ticked
+     * in the same tick
      */
-    val entityTickHandler = handler<PlayerMovementTickEvent> {
+    val tickSequences = handler<GameTickEvent>(priority = 1000) {
         for (sequence in sequences) {
+            // Prevent modules handling events when not supposed to
+            if (!sequence.owner.handleEvents()) {
+                sequence.cancel()
+                continue
+            }
+
             sequence.tick()
         }
     }
 
 }
 
-open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val event: T) {
+open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHandler<T>, protected val event: T) {
 
     private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
         SequenceManager.sequences += this@Sequence
         coroutineRun()
+        SequenceManager.sequences -= this@Sequence
+    }
+
+    open fun cancel() {
+        coroutine.cancel()
         SequenceManager.sequences -= this@Sequence
     }
 
@@ -59,37 +74,24 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
     private var totalTicks: () -> Int = { 0 }
 
     internal open suspend fun coroutineRun() {
-        runCatching {
-            handler(event)
-        }.onFailure {
-            logger.error("Exception occurred during subroutine", it)
+        if (owner.handleEvents()) {
+            runCatching {
+                handler(event)
+            }.onFailure {
+                logger.error("Exception occurred during subroutine", it)
+            }
         }
     }
 
-    fun tick() {
-        if (this.elapsedTicks < this.totalTicks()) {
-            this.elapsedTicks++
-        } else {
+    internal fun tick() {
+        if (++this.elapsedTicks >= this.totalTicks()) {
             this.continuation?.resume(Unit)
         }
     }
 
-    suspend fun wait(ticks: Int) {
-        this.wait { ticks }
-    }
-
     /**
-     * Waits for the amount of ticks that is retrieved via [ticksToWait]
+     * Waits until the [case] is true, then continues. Checks every tick.
      */
-    suspend fun wait(ticksToWait: () -> Int) {
-        elapsedTicks = 0
-        totalTicks = ticksToWait
-
-        suspendCoroutine { continuation = it }
-    }
-
-    internal suspend fun sync() = wait(0)
-
     suspend fun waitUntil(case: () -> Boolean) {
         while (!case()) {
             sync()
@@ -97,50 +99,76 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, protected val
     }
 
     /**
-     * Waits for the requested [ticks]
-     *
-     * @param breakLoop In case it must exit early
+     * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
      */
-
-    // Somehow implement this only with the help of this class
-    suspend fun wait(ticks: Int, breakLoop: () -> Boolean = { false }) {
-        val player = mc.player ?: return
-        val ticksToWait = player.age + ticks
-
-        while (player.age < ticksToWait) {
-            if (breakLoop()) {
-                break
-            }
-
-            sync()
+    suspend fun waitConditional(ticks: Int, breakLoop: () -> Boolean = { false }): Boolean {
+        // Don't wait if ticks is 0
+        if (ticks == 0) {
+            return true
         }
+
+        wait { if (breakLoop()) 0 else ticks }
+
+        return elapsedTicks >= ticks
     }
+
+    /**
+     * Waits a fixed amount of ticks before continuing.
+     * Re-entry at the game tick.
+     */
+    suspend fun waitTicks(ticks: Int) {
+        // Don't wait if ticks is 0
+        if (ticks == 0) {
+            return
+        }
+
+        this.wait { ticks }
+    }
+
+    /**
+     * Waits a fixed amount of seconds on tick level before continuing.
+     * Re-entry at the game tick.
+     */
+    suspend fun waitSeconds(ticks: Int) {
+        this.wait { ticks * 20 }
+    }
+
+    /**
+     * Waits for the amount of ticks that is retrieved via [ticksToWait]
+     */
+    private suspend fun wait(ticksToWait: () -> Int) {
+        elapsedTicks = 0
+        totalTicks = ticksToWait
+
+        suspendCoroutine { continuation = it }
+    }
+
+    /**
+     * Syncs the coroutine to the game tick.
+     * It does not matter if we wait 0 or 1 ticks, it will always sync to the next tick.
+     */
+    internal suspend fun sync() = wait { 0 }
 
 }
 
 class DummyEvent : Event()
 
-class RepeatingSequence(handler: SuspendableHandler<DummyEvent>) : Sequence<DummyEvent>(handler, DummyEvent()) {
+class RepeatingSequence(owner: Listenable, handler: SuspendableHandler<DummyEvent>)
+    : Sequence<DummyEvent>(owner, handler, DummyEvent()) {
 
-    private var repeat = true
+    private var continueLoop = true
 
     override suspend fun coroutineRun() {
         sync()
 
-        while (repeat) {
-            runCatching {
-                handler(event)
-            }.onFailure {
-                logger.error("Exception occurred during subroutine", it)
-            }
-
+        while (continueLoop && owner.handleEvents()) {
+            super.coroutineRun()
             sync()
         }
-
     }
 
-    fun cancel() {
-        repeat = false
+    override fun cancel() {
+        continueLoop = false
     }
 
 }

@@ -41,6 +41,13 @@ fun ClosedFloatingPointRange<Float>.random(): Double {
     return start + (endInclusive - start) * Math.random()
 }
 
+// Due to name conflicts, we have to rename the function
+fun ClosedFloatingPointRange<Double>.randomDouble(): Double {
+    require(start.isFinite())
+    require(endInclusive.isFinite())
+    return start + (endInclusive - start) * Math.random()
+}
+
 fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {
     require(start.isFinite())
     require(endInclusive.isFinite())

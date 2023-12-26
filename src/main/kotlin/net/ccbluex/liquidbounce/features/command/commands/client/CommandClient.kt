@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -23,62 +24,69 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.web.integration.BrowserScreen
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 
+/**
+ * Client Command
+ *
+ * Provides subcommands for client management.
+ */
 object CommandClient {
 
     fun createCommand(): Command {
-        return CommandBuilder
-            .begin("client")
+        return CommandBuilder.begin("client")
             .hub()
             .subcommand(
-                CommandBuilder
-                    .begin("info")
-                    .handler { command, _ ->
-                        chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))),
-                            prefix = false)
-                        chat(regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))),
-                            prefix = false)
-                        chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))),
-                            prefix = false)
-                    }
-                    .build()
+                CommandBuilder.begin("info").handler { command, _ ->
+                    chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))),
+                        prefix = false)
+                    chat(regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))),
+                        prefix = false)
+                    chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))),
+                        prefix = false)
+                }.build()
             )
             .subcommand(
-                CommandBuilder
-                    .begin("reload")
-                    .handler { _, _ ->
-                        // todo: reload client
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("ultralight")
+                CommandBuilder.begin("browser")
                     .hub()
                     .subcommand(
-                        CommandBuilder
-                            .begin("show")
+                        CommandBuilder.begin("open")
                             .parameter(
-                                ParameterBuilder
-                                    .begin<String>("name")
-                                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                                    .required()
+                                ParameterBuilder.begin<String>("name")
+                                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
                                     .build()
-                            )
-                            .handler { command, args ->
-                            }
-                            .build()
+                            ).handler { command, args ->
+                                chat(regular("Opening browser..."))
+                                mc.setScreen(BrowserScreen(args[0] as String))
+                            }.build()
+                    ).subcommand(CommandBuilder.begin("override")
+                        .parameter(
+                            ParameterBuilder.begin<String>("name")
+                                .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                                .build()
+                        ).handler { command, args ->
+                            chat(regular("Overrides client JCEF browser..."))
+                            clientJcef?.loadUrl(args[0] as String)
+                        }.build()
+                    ).subcommand(CommandBuilder.begin("reset")
+                        .handler { command, args ->
+                            chat(regular("Resetting client JCEF browser..."))
+                            IntegrationHandler.updateIntegrationBrowser()
+                        }.build()
                     )
+
                     .build()
-            )
-            // todo: contributors
-            // todo: links
-            // todo: instructions
-            // todo: reset
-            // todo: script manager
-            // todo: theme manager
+        )
+            // TODO: contributors
+            // TODO: links
+            // TODO: instructions
+            // TODO: reset
+            // TODO: theme manager
             // .. other client base commands
             .build()
     }

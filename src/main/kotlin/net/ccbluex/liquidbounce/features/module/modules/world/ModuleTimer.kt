@@ -18,13 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.WorldDisconnectEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
@@ -33,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  *
  * Changes the speed of the entire game.
  */
-object ModuleTimer : Module("Timer", Category.WORLD) {
+object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
     private val normalSpeedTicks by int("NormalSpeedTicks", 20, 1..500)
@@ -50,13 +47,13 @@ object ModuleTimer : Module("Timer", Category.WORLD) {
         when (currentTimerState) {
             TimerState.NormalSpeed -> {
                 Timer.requestTimerSpeed(normalSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = normalSpeedTicks)
-                wait(normalSpeedTicks)
+                waitTicks(normalSpeedTicks)
                 currentTimerState = TimerState.BoostSpeed
             }
 
             TimerState.BoostSpeed -> {
                 Timer.requestTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = boostSpeedTicks)
-                wait(boostSpeedTicks)
+                waitTicks(boostSpeedTicks)
                 currentTimerState = TimerState.NormalSpeed
             }
         }
@@ -66,10 +63,6 @@ object ModuleTimer : Module("Timer", Category.WORLD) {
 
     override fun disable() {
         currentTimerState = TimerState.NormalSpeed
-    }
-
-    val disconnectHandler = handler<WorldDisconnectEvent> {
-        enabled = false
     }
 
     enum class TimerState {

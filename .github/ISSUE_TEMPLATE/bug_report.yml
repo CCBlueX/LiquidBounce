@@ -13,14 +13,16 @@ body:
         - Keep your issue focused on one single problem. If you have multiple bug reports, please create separate issues for each of them.
         - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
 
-  - type: input
+  - type: dropdown
     attributes:
       label: LiquidBounce Branch
       description: Which edition of LiquidBounce does this bug affect?
-      placeholder: legacy or nextgen
+      options:
+        - Nextgen
+        - Legacy
+        - Both
     validations:
       required: true
-
   - type: input
     attributes:
       label: LiquidBounce Build/Version

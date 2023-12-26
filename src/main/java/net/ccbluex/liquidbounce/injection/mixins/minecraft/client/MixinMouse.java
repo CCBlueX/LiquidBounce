@@ -19,7 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent;
+import net.ccbluex.liquidbounce.event.events.MouseCursorEvent;
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent;
+import net.ccbluex.liquidbounce.event.events.MouseScrollEvent;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,25 +38,25 @@ public class MixinMouse {
     /**
      * Hook mouse button event
      */
-    @Inject(method = "onMouseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onMouseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseButton(long window, int button, int action, int mods, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseButtonEvent(window, button, action, mods));
+        EventManager.INSTANCE.callEvent(new MouseButtonEvent(button, action, mods));
     }
 
     /**
      * Hook mouse scroll event
      */
-    @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseScrollEvent(window, horizontal, vertical));
+        EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical));
     }
 
     /**
      * Hook mouse cursor event
      */
-    @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseCursorEvent(window, x, y));
+        EventManager.INSTANCE.callEvent(new MouseCursorEvent(x, y));
     }
 
     /**

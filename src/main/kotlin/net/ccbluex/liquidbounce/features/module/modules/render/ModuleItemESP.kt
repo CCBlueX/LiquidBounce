@@ -20,14 +20,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.BoxesRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
@@ -64,20 +67,20 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
+            val boxRenderer = BoxesRenderer()
+
             renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
 
                     withPosition(pos) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
-
-                        withColor(outlineColor) {
-                            drawOutlinedBox(box)
-                        }
+                        boxRenderer.drawBox(this, box, true)
                     }
                 }
+
+
+                boxRenderer.draw(this, baseColor, outlineColor)
+
 
             }
         }

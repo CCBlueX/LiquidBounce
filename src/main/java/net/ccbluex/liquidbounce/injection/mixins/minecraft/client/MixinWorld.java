@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.ccbluex.liquidbounce.event.BlockChangeEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideTime;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideWeather;
 import net.minecraft.block.BlockState;
@@ -61,8 +61,13 @@ public class MixinWorld {
     @Inject(method = "getRainGradient", cancellable = true, at = @At("HEAD"))
     private void injectOverrideWeather(float delta, CallbackInfoReturnable<Float> cir) {
         ModuleOverrideWeather module = ModuleOverrideWeather.INSTANCE;
+        var desiredWeather = module.getWeather().get();
         if (module.getEnabled()) {
-            cir.setReturnValue(module.getWeather().get() == ModuleOverrideWeather.WeatherType.SUNNY ? 0.0f : 1.0f);
+            switch (desiredWeather) {
+                case SUNNY -> cir.setReturnValue(0.0f);
+                case RAINY -> cir.setReturnValue(1.0f);
+                case SNOWY -> cir.setReturnValue(0.9f);
+            }
             cir.cancel();
         }
     }

@@ -20,17 +20,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.utils.ColorUtils
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -48,7 +48,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.esp"
 
-    private val modes = choices("Mode", OutlineMode, arrayOf(BoxMode, OutlineMode, GlowMode))
+    private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, OutlineMode, GlowMode))
 
     private val colorModes = choices("ColorMode", StaticMode, arrayOf(StaticMode, RainbowMode))
 
@@ -87,7 +87,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 entitiesWithBoxes.forEach { box, entities ->
                     for (entity in entities) {
-                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
                         val color = getColor(entity)
 
                         val baseColor = color.alpha(50)
@@ -123,7 +123,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val width by float("Width", 3F, 0.5F..5F)
+        val width by float("Width", 1F, 0.5F..1.5F)
     }
 
     private fun getBaseColor(): Color4b {
@@ -151,28 +151,8 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         return getBaseColor()
     }
 
-    fun getTeamColor(entity: Entity): Color4b? {
-        val chars: CharArray = (entity.displayName ?: return null).string.toCharArray()
-        var color = Int.MAX_VALUE
-
-        val colors = "0123456789abcdef"
-
-        for (i in 0 until chars.size - 1) {
-            if (chars[i] != '§') {
-                continue
-            }
-
-            val index = colors.indexOf(chars[i + 1])
-
-            if (index !in 0..15) {
-                continue
-            }
-
-            color = ColorUtils.hexColors[index]
-            break
-        }
-
-        return Color4b(Color(color))
+    private fun getTeamColor(entity: Entity): Color4b? {
+        return Color4b(Color(entity.displayName!!.style.color?.rgb ?: return null))
     }
 
 }

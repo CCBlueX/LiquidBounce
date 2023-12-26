@@ -1,23 +1,22 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.utils.item.ItemStackWithSlot
 import kotlin.math.ceil
 
 object ItemMerge {
     /**
      * Find all item stack ids which should be double-clicked in order to merge them
      */
-    internal fun findStacksToMerge(cleanupPlan: InventoryCleanupPlan): List<Int> {
-        val itemsToMerge = mutableListOf<Int>()
+    internal fun findStacksToMerge(cleanupPlan: InventoryCleanupPlan): List<ItemSlot> {
+        val itemsToMerge = mutableListOf<ItemSlot>()
 
         for (mergeableItem in cleanupPlan.mergeableItems) {
-            val maxStackSize = mergeableItem.key.maxCount
+            val maxStackSize = mergeableItem.key.item.maxCount
 
             if (!canMerge(mergeableItem.value, maxStackSize)) {
                 continue
             }
 
-            val stacks = mergeableItem.value.map { MergeableStack(it.slot, it.itemStack.count) }
+            val stacks = mergeableItem.value.map { MergeableStack(it, it.itemStack.count) }
 
             mergeStacks(itemsToMerge, stacks.toMutableList(), maxStackSize)
         }
@@ -25,10 +24,10 @@ object ItemMerge {
         return itemsToMerge
     }
 
-    class MergeableStack(val slot: Int, var count: Int)
+    class MergeableStack(val slot: ItemSlot, var count: Int)
 
     private fun mergeStacks(
-        itemsToDoubleclick: MutableList<Int>,
+        itemsToDoubleclick: MutableList<ItemSlot>,
         stacks: MutableList<MergeableStack>,
         maxStackSize: Int,
     ) {
@@ -69,7 +68,7 @@ object ItemMerge {
     }
 
     private fun canMerge(
-        items: List<ItemStackWithSlot>,
+        items: List<ItemSlot>,
         maxStackSize: Int,
     ): Boolean {
         val totalCount = items.sumOf { it.itemStack.count }

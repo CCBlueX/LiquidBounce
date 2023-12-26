@@ -20,12 +20,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
@@ -40,6 +42,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
     private object AllowRotationChange : ToggleableConfigurable(this, "AllowRotationChange", false) {
         val allowJump by boolean("AllowJump", true)
     }
+
     private object AllowTimer : ToggleableConfigurable(this, "AllowTimer", false) {
         val timerSpeed by float("TimerSpeed", 2.0F, 1.0F..10.0F)
     }
@@ -49,47 +52,52 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         tree(AllowTimer)
     }
 
-    val tickRep =
-        handler<MovementInputEvent> { event ->
-            // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
-            if (ModuleBlink.enabled) {
-                return@handler
-            }
-            if (ModuleMurderMystery.disallowsArrowDodge()) {
-                return@handler
-            }
+    val tickRep = handler<MovementInputEvent> { event ->
+        // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
+        if (ModuleBlink.enabled) {
+            return@handler
+        }
+        if (ModuleMurderMystery.disallowsArrowDodge()) {
+            return@handler
+        }
 
-            val world = world
+        val world = world
 
-            val arrows = findFlyingArrows(world)
+        val arrows = findFlyingArrows(world)
 
-            val input =
-                SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping, player.isSprinting)
+        val input = SimulatedPlayer.SimulatedPlayerInput(
+            event.directionalInput,
+            player.input.jumping,
+            player.isSprinting,
+            player.isSneaking
+        )
 
-            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
-            val inflictedHit =
-                getInflictedHits(simulatedPlayer, arrows, hitboxExpansion = DodgePlanner.SAFE_DISTANCE_WITH_PADDING) {}
-                    ?: return@handler
+        val inflictedHit =
+            getInflictedHits(simulatedPlayer, arrows, hitboxExpansion = DodgePlanner.SAFE_DISTANCE_WITH_PADDING) {}
+                ?: return@handler
 
-            val dodgePlan =
-                planEvasion(DodgePlannerConfig(allowRotations = AllowRotationChange.enabled), inflictedHit)
-                    ?: return@handler
+        val dodgePlan =
+            planEvasion(DodgePlannerConfig(allowRotations = AllowRotationChange.enabled), inflictedHit)
+                ?: return@handler
 
-            event.directionalInput = dodgePlan.directionalInput
+        event.directionalInput = dodgePlan.directionalInput
 
-            dodgePlan.yawChange?.let { yawChange ->
-                player.yaw = yawChange
-            }
+        dodgePlan.yawChange?.let { yawChange ->
+            player.yaw = yawChange
+        }
 
-            if (dodgePlan.shouldJump && AllowRotationChange.allowJump && player.isOnGround) {
-                player.jump()
-            }
-
-            if (AllowTimer.enabled && dodgePlan.useTimer) {
-                Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE)
+        if (dodgePlan.shouldJump && AllowRotationChange.allowJump && player.isOnGround) {
+            EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                it.jumping = true
             }
         }
+
+        if (AllowTimer.enabled && dodgePlan.useTimer) {
+            Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE)
+        }
+    }
 
     fun findFlyingArrows(world: ClientWorld): List<ArrowEntity> {
         return world.entities.mapNotNull {

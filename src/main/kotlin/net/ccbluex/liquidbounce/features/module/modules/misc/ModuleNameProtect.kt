@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.GameRenderEvent
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
@@ -52,6 +52,9 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     init {
         tree(ReplaceFriendNames)
+
+        // Entirely keep out from public config
+        doNotInclude()
     }
 
     val replacements = ArrayList<ReplacementMapping>()
@@ -194,7 +197,9 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                         if (canReplace) {
                             this.mappedCharacters.addAll(replacement.replacement.map {
                                 MappedCharacter(
-                                    originalChar.style.withColor(TextColor.parse(replacement.color4b.toHex())), it.code
+                                    originalChar.style.withColor(TextColor.parse(replacement.color4b.toHex()).getOrThrow(true) {
+                                        "Invalid color: ${replacement.color4b.toHex()}"
+                                    }), it.code
                                 )
                             })
                             index += replacement.originalName.length

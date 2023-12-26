@@ -18,32 +18,47 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
+import net.ccbluex.liquidbounce.event.events.ClientStartEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
+import net.ccbluex.liquidbounce.features.cosmetic.CapeService
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
+import net.ccbluex.liquidbounce.features.tabs.Tabs.headsCollection
+import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
-import net.ccbluex.liquidbounce.web.WebController
+import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
-
+import net.minecraft.resource.ReloadableResourceManagerImpl
+import net.minecraft.resource.ResourceManager
+import net.minecraft.resource.ResourceReloader
+import net.minecraft.resource.SynchronousResourceReloader
 import org.apache.logging.log4j.LogManager
-import kotlin.system.exitProcess
 
 /**
  * LiquidBounce
@@ -92,12 +107,6 @@ object LiquidBounce : Listenable {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
-            // Initialize web view
-            WebController
-
-            // Load themes
-            ThemeManager.load()
-
             // Load mappings
             McMappings.load()
 
@@ -121,11 +130,11 @@ object LiquidBounce : Listenable {
             ProxyManager
             AccountManager
             InventoryTracker
+            WorldToScreen
             Tabs
             Chat
-
-            // Initialize the render engine
-            RenderEngine.init()
+            BrowserManager
+            Fonts
 
             // Register commands and modules
             CommandManager.registerInbuilt()
@@ -137,6 +146,53 @@ object LiquidBounce : Listenable {
             // Load config system from disk
             ConfigSystem.load()
 
+            // Netty WebSocket
+            ClientSocket.start()
+
+            // Initialize browser
+            BrowserManager.initBrowser()
+            ThemeManager
+            IntegrationHandler
+
+            // Fires up the client tab
+            IntegrationHandler.clientJcef
+
+            // Register resource reloader
+            val resourceManager = mc.resourceManager
+            val clientResourceReloader = ClientResourceReloader()
+            if (resourceManager is ReloadableResourceManagerImpl) {
+                resourceManager.registerReloader(clientResourceReloader)
+            } else {
+                logger.warn("Failed to register resource reloader!")
+
+                // Run resource reloader directly as fallback
+                clientResourceReloader.reload(resourceManager)
+            }
+        }.onSuccess {
+            logger.info("Successfully loaded client!")
+        }.onFailure(ErrorHandler::fatal)
+    }
+
+    /**
+     * Resource reloader which is executed on client start and reload.
+     * This is used to run async tasks without blocking the main thread.
+     *
+     * For now this is only used to check for updates and request additional information from the internet.
+     *
+     * @see SynchronousResourceReloader
+     * @see ResourceReloader
+     */
+    class ClientResourceReloader : SynchronousResourceReloader {
+
+        override fun reload(manager: ResourceManager) {
+            runCatching {
+                logger.info("Loading fonts...")
+                Fonts.loadQueuedFonts()
+            }.onSuccess {
+                logger.info("Loaded fonts successfully!")
+            }.onFailure(ErrorHandler::fatal)
+
+            // Check for newest version
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
             }
@@ -145,13 +201,34 @@ object LiquidBounce : Listenable {
             logger.info("Refreshing local IP info...")
             IpInfoApi.refreshLocalIpInfo()
 
-            // Connect to chat server
-            Chat.connectAsync()
-        }.onSuccess {
-            logger.info("Successfully loaded client!")
-        }.onFailure {
-            logger.error("Unable to load client.", it)
-            exitProcess(1)
+            // Login into known token if not empty
+            if (CapeService.knownToken.isNotBlank()) {
+                runCatching {
+                    CapeService.login(CapeService.knownToken)
+                }.onFailure {
+                    logger.error("Failed to login into known cape token.", it)
+                }.onSuccess {
+                    logger.info("Successfully logged in into known cape token.")
+                }
+            }
+
+            // Refresh cape service
+            CapeService.refreshCapeCarriers {
+                logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
+            }
+
+            // Load Head collection
+            headsCollection
+
+            // Load settings list from API
+            runCatching {
+                logger.info("Loading settings list from API...")
+                CommandConfig.cachedSettingsList = ClientApi.requestSettingsList()
+            }.onSuccess {
+                logger.info("Loaded ${CommandConfig.cachedSettingsList?.size} settings from API.")
+            }.onFailure {
+                logger.error("Failed to load settings list from API", it)
+            }
         }
     }
 
@@ -160,6 +237,7 @@ object LiquidBounce : Listenable {
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
+        BrowserManager.shutdownBrowser()
         ConfigSystem.storeAll()
 
         ChunkScanner.ChunkScannerThread.stopThread()

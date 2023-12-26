@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractClientPlayerEntity.class)
 public abstract class MixinAbstractClientPlayerEntity {
 
-    @Inject(method = "getFovMultiplier", cancellable = true, at = @At("HEAD"))
+    @Inject(method = "getFovMultiplier", cancellable = true, at = @At("RETURN"))
     private void injectFovMultiplier(CallbackInfoReturnable<Float> cir) {
         if (ModuleNoFov.INSTANCE.getEnabled())
-            cir.setReturnValue(ModuleNoFov.INSTANCE.getFov());
+            cir.setReturnValue(ModuleNoFov.INSTANCE.getFov(cir.getReturnValue()));
     }
 }

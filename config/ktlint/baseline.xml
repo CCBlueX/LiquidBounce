@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<baseline version="1.0">
+    <file name="src/main/kotlin/net/ccbluex/liquidbounce/features/command/commands/creative/CommandItemEnchant.kt">
+        <error line="141" column="1" source="no-blank-lines-in-chained-method-calls" />
+    </file>
+    <file name="src/main/kotlin/net/ccbluex/liquidbounce/features/module/modules/movement/ModuleLongJump.kt">
+        <error line="44" column="19" source="experimental:comment-wrapping" />
+    </file>
+    <file name="src/main/kotlin/net/ccbluex/liquidbounce/features/module/modules/player/invcleaner/items/WeightedFoodItem.kt">
+        <error line="26" column="27" source="no-trailing-spaces" />
+        <error line="26" column="28" source="no-multi-spaces" />
+    </file>
+    <file name="src/main/kotlin/net/ccbluex/liquidbounce/features/module/modules/world/ModuleNuker.kt">
+        <error line="451" column="1" source="indent" />
+    </file>
+    <file name="src/main/kotlin/net/ccbluex/liquidbounce/utils/client/Curves.kt">
+        <error line="19" column="5" source="enum-entry-name-case" />
+    </file>
+    <file name="src/main/kotlin/net/ccbluex/liquidbounce/utils/combat/CombatUtils.kt">
+        <error line="1" column="1" source="filename" />
+    </file>
+    <file name="src/main/kotlin/net/ccbluex/liquidbounce/utils/entity/SimulatedPlayer.kt">
+        <error line="239" column="67" source="experimental:comment-wrapping" />
+        <error line="269" column="67" source="experimental:comment-wrapping" />
+    </file>
+</baseline>

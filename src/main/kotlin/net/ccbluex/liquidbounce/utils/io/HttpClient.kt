@@ -20,14 +20,13 @@ package net.ccbluex.liquidbounce.utils.io
 
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
 object HttpClient {
 
-    private const val DEFAULT_AGENT =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.60"
+    const val DEFAULT_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
 
     init {
         HttpURLConnection.setFollowRedirects(true)
@@ -37,7 +36,8 @@ object HttpClient {
         url: String,
         method: String,
         agent: String = DEFAULT_AGENT,
-        headers: Array<Pair<String, String>> = emptyArray()
+        headers: Array<Pair<String, String>> = emptyArray(),
+        inputData: ByteArray? = null
     ): HttpURLConnection {
         val httpConnection = URL(url).openConnection() as HttpURLConnection
 
@@ -54,6 +54,10 @@ object HttpClient {
         httpConnection.instanceFollowRedirects = true
         httpConnection.doOutput = true
 
+        if (inputData != null) {
+            httpConnection.outputStream.use { it.write(inputData) }
+        }
+
         return httpConnection
     }
 
@@ -61,25 +65,32 @@ object HttpClient {
         url: String,
         method: String,
         agent: String = DEFAULT_AGENT,
-        headers: Array<Pair<String, String>> = emptyArray()
+        headers: Array<Pair<String, String>> = emptyArray(),
+        inputData: ByteArray? = null
     ): String {
-        val connection = make(url, method, agent)
+        val connection = make(url, method, agent, headers, inputData)
+        val responseCode = connection.responseCode
 
-        return connection.inputStream.reader().readText()
-    }
+        // we want to read the error stream or the input stream
+        val stream = if (connection.responseCode < 400) connection.inputStream else connection.errorStream
+        val text = stream.bufferedReader().use { it.readText() }
 
-    fun requestStream(
-        url: String,
-        method: String,
-        agent: String = DEFAULT_AGENT,
-        headers: Array<Pair<String, String>> = emptyArray()
-    ): InputStream {
-        val connection = make(url, method, agent)
+        if (responseCode != 200) {
+            error(text)
+        }
 
-        return connection.inputStream
+        return text
     }
 
     fun get(url: String) = request(url, "GET")
+
+    fun postJson(url: String, json: String) =
+        request(url, "POST", headers = arrayOf("Content-Type" to "application/json"),
+            inputData = json.toByteArray())
+
+    fun postForm(url: String, form: String) =
+        request(url, "POST", headers = arrayOf("Content-Type" to "application/x-www-form-urlencoded"),
+            inputData = form.toByteArray())
 
     fun download(url: String, file: File) = FileOutputStream(file).use { make(url, "GET").inputStream.copyTo(it) }
 

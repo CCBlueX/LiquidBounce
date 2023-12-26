@@ -52,9 +52,9 @@ object Tabs {
      */
     fun setup() {
         if (!setup) {
-//            setupSpecial()
-//            setupExploits()
-//            setupHeads()
+            setupSpecial()
+            setupExploits()
+            setupHeads()
 
             setup = true
         }
@@ -144,37 +144,41 @@ object Tabs {
     /**
      * Heads item group allows you to decorate your world with different heads
      */
-    private class Head(val name: String, val uuid: UUID, val value: String)
-    private class HeadsService(val enabled: Boolean, val url: String)
+    class Head(val name: String, val uuid: UUID, val value: String)
 
-    private var headsDb = runCatching {
-        logger.info("Loading heads...")
-        // Load head service from cloud
-        //  Makes it possible to disable service or change domain in case of an emergency
-        val headService: HeadsService = decode(HttpClient.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
 
-        if (headService.enabled) {
-            // Load heads from service
-            //  Syntax based on HeadDB (headdb.org)
-            val heads: HashMap<String, Head> = decode(HttpClient.get(headService.url))
+    val headsCollection by lazy {
+        runCatching {
+            class HeadsService(val enabled: Boolean, val url: String)
 
-            heads.map { it.value }
-                .toTypedArray()
-                .also {
-                    logger.info("Successfully loaded ${it.size} heads from the database")
-                }
-        } else {
-            error("Head service has been disabled")
-        }
-    }.onFailure {
-        logger.error("Unable to load heads database", it)
-    }.getOrElse { emptyArray() }
+            logger.info("Loading heads...")
+            // Load head service from cloud
+            // Makes it possible to disable service or change domain in case of an emergency
+            val headService: HeadsService = decode(HttpClient.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
+
+            if (headService.enabled) {
+                // Load heads from service
+                //  Syntax based on HeadDB (headdb.org)
+                val heads: HashMap<String, Head> = decode(HttpClient.get(headService.url))
+
+                heads.map { it.value }
+                    .toTypedArray()
+                    .also {
+                        logger.info("Successfully loaded ${it.size} heads from the database")
+                    }
+            } else {
+                error("Head service has been disabled")
+            }
+        }.onFailure {
+            logger.error("Unable to load heads database", it)
+        }.getOrElse { emptyArray() }
+    }
 
     private fun setupHeads() = LiquidsItemGroup(
         "Heads",
         icon = { ItemStack(Items.SKELETON_SKULL) },
         items = {
-            it.addAll(headsDb
+            it.addAll(headsCollection
                 .distinctBy { it.name }
                 .map { head ->
                     createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")
