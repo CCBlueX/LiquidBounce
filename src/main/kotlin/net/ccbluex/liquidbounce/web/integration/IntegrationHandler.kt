@@ -114,6 +114,7 @@ object IntegrationHandler : Listenable {
      */
     private val screenHandler = handler<ScreenEvent> { event ->
         if (HideClient.isHidingNow || ModuleHideClient.enabled) {
+            virtualClose()
             return@handler
         }
 
