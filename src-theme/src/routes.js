@@ -6,6 +6,7 @@ import AltManager from "./routes/altmanager/AltManager.svelte";
 import ProxyManager from "./routes/proxymanager/ProxyManager.svelte";
 import Container from "./routes/container/Container.svelte";
 import Customize from "./routes/customize/Customize.svelte";
+import Inventory from "./routes/inventory/Inventory.svelte";
 
 export const routes = {
     '/': Splashscreen,
@@ -15,5 +16,6 @@ export const routes = {
     '/altmanager': AltManager,
     '/proxymanager': ProxyManager,
     '/container': Container,
+    '/inventory': Inventory,
     '/customize': Customize
 }
