@@ -28,6 +28,10 @@ import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Text
+import net.minecraft.text.TextColor
 import net.minecraft.util.Util
 
 /**
@@ -81,11 +85,61 @@ object CommandClient {
 
     private fun integrationCommand() = CommandBuilder.begin("integration")
         .hub()
-        .subcommand(CommandBuilder.begin("url")
+        .subcommand(CommandBuilder.begin("menu")
+            .alias("url")
             .handler { command, args ->
-                chat(regular("Opening integration URL on your default browser..."))
-                browseUrl(ThemeManager.integrationUrl)
-                chat(regular("Integration URL: ${ThemeManager.integrationUrl}"))
+                chat(gold("Client Integration"))
+                chat(
+                    regular("URL: ")
+                        .append(variable(ThemeManager.integrationUrl).styled {
+                            it.withUnderline(true)
+                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, ThemeManager.integrationUrl))
+                                .withHoverEvent(
+                                    HoverEvent(
+                                        HoverEvent.Action.SHOW_TEXT,
+                                        regular("Click to open the integration URL in your browser.")
+                                    )
+                                )
+                        }),
+                    prefix = false
+                )
+
+                chat(prefix = false)
+                chat(regular("Integration Menu:"))
+                for (menu in IntegrationHandler.VirtualScreenType.values()) {
+                    val url = "${ThemeManager.integrationUrl}/#/${menu.assignedName}?static"
+                    val name = menu.assignedName.replaceFirstChar { it.uppercase() }
+
+                    chat(
+                        regular("-> $name (")
+                            .append(gold("Browser").styled {
+                                it.withUnderline(true)
+                                    .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url))
+                                    .withHoverEvent(
+                                        HoverEvent(
+                                            HoverEvent.Action.SHOW_TEXT,
+                                            regular("Click to open the URL in your browser.")
+                                        )
+                                    )
+                            })
+                            .append(regular(", "))
+                            .append(gold("Clipboard").styled {
+                                it.withUnderline(true)
+                                    .withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, url))
+                                    .withHoverEvent(
+                                        HoverEvent(
+                                            HoverEvent.Action.SHOW_TEXT,
+                                            regular("Click to copy the URL to your clipboard.")
+                                        )
+                                    )
+                            })
+                            .append(regular(")")),
+                        prefix = false
+                    )
+                }
+
+                chat(gold("Hint: You can also access the integration from another device.")
+                    .styled { it.withItalic(true) })
             }.build()
         )
         .subcommand(CommandBuilder.begin("override")
