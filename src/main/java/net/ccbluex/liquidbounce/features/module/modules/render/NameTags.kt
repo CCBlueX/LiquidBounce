@@ -73,11 +73,6 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         private val borderColorAlpha by IntegerValue("Border-Alpha", 100, 0..255) { border }
 
     private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
-        // TODO: find better way?
-        override fun onInit(value: Int) {
-            maxRenderDistanceSq = value.toDouble().pow(2.0)
-        }
-
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
@@ -86,7 +81,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val onLook by BoolValue("OnLook", false)
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { onLook }
 
-    private var maxRenderDistanceSq = 0.0
+    private var maxRenderDistanceSq = 10000.0
 
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
