@@ -102,7 +102,7 @@ public class WebWindow {
     }
 
 
-    public void onMouseButton(int button, int action, int mods) {
+    public void onMouseButton(int button, int action) {
         UlMouseButton ulButton;
 
         switch (button) {

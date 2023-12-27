@@ -46,11 +46,11 @@ class UjrTab(
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
-        ujrWindow.onMouseButton(mouseX.toInt(), mouseY.toInt(), mouseButton)
+        ujrWindow.onMouseButton(mouseButton, GLFW.GLFW_PRESS)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) {
-        ujrWindow.onMouseButton(mouseX.toInt(), mouseY.toInt(), mouseButton)
+        ujrWindow.onMouseButton(mouseButton, GLFW.GLFW_RELEASE)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
