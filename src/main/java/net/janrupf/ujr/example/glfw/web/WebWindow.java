@@ -2,7 +2,6 @@ package net.janrupf.ujr.example.glfw.web;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
-import net.ccbluex.liquidbounce.web.LayerDistribution;
 import net.janrupf.ujr.api.*;
 import net.janrupf.ujr.api.event.UlKeyEvent;
 import net.janrupf.ujr.api.event.UlKeyEventType;
@@ -18,11 +17,10 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Supplier;
 
-import static net.ccbluex.liquidbounce.utils.client.ClientUtilsKt.getMc;
+import static net.ccbluex.liquidbounce.utils.client.MinecraftExtensionsKt.getMc;
 
 public class WebWindow {
 
-    private final LayerDistribution layer;
     private final UltralightView view;
     private final Supplier<Integer> width;
     private final Supplier<Integer> height;
@@ -31,16 +29,12 @@ public class WebWindow {
     private int lastWidth;//use this instead of view.width, because this is technically faster
     private int lastHeight;
 
-    private boolean takesInput;
-
-    public WebWindow(Supplier<Integer> width, Supplier<Integer> height, LayerDistribution layer) {
+    public WebWindow(Supplier<Integer> width, Supplier<Integer> height) {
         this.lastWidth = width.get();
         this.lastHeight = height.get();
-        this.layer = layer;
         this.view = UltralightRenderer.getOrCreate().createView(this.lastWidth, this.lastHeight, new UltralightViewConfigBuilder().transparent(true).build());
         this.width = width;
         this.height = height;
-        this.takesInput = layer == LayerDistribution.SCREEN_LAYER;
 
         // Make sure we receive all events
         this.view.setViewListener(new WebViewListener(this));
@@ -109,10 +103,6 @@ public class WebWindow {
 
 
     public void onMouseButton(int button, int action, int mods) {
-        if (!this.takesInput) {
-            return;
-        }
-
         UlMouseButton ulButton;
 
         switch (button) {
@@ -146,10 +136,6 @@ public class WebWindow {
     }
 
     public void onScroll(double x, double y) {
-        if (!this.takesInput) {
-            return;
-        }
-
         // The 50 down below is an arbitrary value that seems to work well,
         // feel free to adjust this value as "scroll sensitivity"
 
@@ -157,20 +143,12 @@ public class WebWindow {
     }
 
     public void onChar(int codepoint) {
-        if (!this.takesInput) {
-            return;
-        }
-
         String text = new String(Character.toChars(codepoint));
 
         this.view.fireKeyEvent(UltralightKeyEventBuilder.character().unmodifiedText(text).text(text).build());
     }
 
     public void onKey(int key, int scancode, int action, int mods) {
-        if (!this.takesInput) {
-            return;
-        }
-
         UltralightKeyEventBuilder builder;
 
         if (action == GLFW.GLFW_PRESS) {
@@ -199,7 +177,4 @@ public class WebWindow {
         return view;
     }
 
-    public LayerDistribution getLayer() {
-        return layer;
-    }
 }
