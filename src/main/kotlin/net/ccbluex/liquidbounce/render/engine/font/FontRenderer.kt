@@ -20,9 +20,13 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.AbstractFontRenderer
+import net.ccbluex.liquidbounce.render.RenderBufferBuilder
+import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.VertexInputType
+import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.engine.*
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.Vec3d

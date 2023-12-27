@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 
 class CleanupPlanGenerator(

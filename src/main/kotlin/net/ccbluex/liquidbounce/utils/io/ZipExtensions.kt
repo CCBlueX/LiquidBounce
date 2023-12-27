@@ -27,7 +27,7 @@ import java.util.zip.ZipInputStream
 
 fun extractZip(zipStream: InputStream, folder: File) {
     if (!folder.exists()) {
-        folder.mkdirs()
+        folder.mkdir()
     }
 
     ZipInputStream(zipStream).use { zipInputStream ->

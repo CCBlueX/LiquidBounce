@@ -1,8 +1,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoPot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
+import net.minecraft.screen.ScreenHandler
 import java.util.*
 
 /**

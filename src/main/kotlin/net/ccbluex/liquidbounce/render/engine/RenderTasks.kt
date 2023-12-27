@@ -19,8 +19,11 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
+import net.ccbluex.liquidbounce.utils.math.Mat4
+import net.minecraft.client.render.Tessellator
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
 import kotlin.math.cos

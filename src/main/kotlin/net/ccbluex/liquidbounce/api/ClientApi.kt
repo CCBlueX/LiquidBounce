@@ -27,7 +27,7 @@ import net.minecraft.util.Formatting
 import org.apache.commons.lang3.RandomStringUtils
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.UUID
 
 /**
  * LiquidBounce Client API

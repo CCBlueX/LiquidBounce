@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import org.joml.Matrix4f
 
 abstract class AbstractFontRenderer {
     abstract val size: Float

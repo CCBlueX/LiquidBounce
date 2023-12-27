@@ -25,6 +25,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer

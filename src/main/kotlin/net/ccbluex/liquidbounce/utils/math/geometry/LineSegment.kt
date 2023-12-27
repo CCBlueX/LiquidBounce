@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import kotlin.math.abs
 
 class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatingPointRange<Double>): Line(position, direction) {
     val length: Double

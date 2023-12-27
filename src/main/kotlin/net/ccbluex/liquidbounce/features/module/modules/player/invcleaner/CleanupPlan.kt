@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.minecraft.item.Item
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtElement
 
 class InventorySwap(val from: ItemSlot, val to: ItemSlot)
 

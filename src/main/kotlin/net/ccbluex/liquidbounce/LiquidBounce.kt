@@ -58,7 +58,10 @@ import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
+import net.minecraft.util.profiler.Profiler
 import org.apache.logging.log4j.LogManager
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 
 /**
  * LiquidBounce

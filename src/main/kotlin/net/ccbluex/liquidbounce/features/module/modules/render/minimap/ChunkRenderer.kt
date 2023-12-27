@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.minimap
 
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Vec2i
@@ -7,7 +8,10 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor.Brightness
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
+import net.minecraft.world.World
 import java.awt.Color
 import kotlin.math.PI
 import kotlin.math.roundToInt
