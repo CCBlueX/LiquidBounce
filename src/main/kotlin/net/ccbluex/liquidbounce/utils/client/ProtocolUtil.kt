@@ -29,7 +29,10 @@ val usesViaFabricPlus = runCatching {
     true
 }.getOrDefault(false)
 
-val defaultProtocolVersion = "1.20.4" to 765
+/**
+ * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
+ */
+val defaultProtocolVersion = "1.20.3" to 765
 
 val protocolVersion: Pair<String, Int>
     get() = runCatching {

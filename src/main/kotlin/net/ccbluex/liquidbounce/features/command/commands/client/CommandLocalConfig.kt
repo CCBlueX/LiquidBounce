@@ -19,20 +19,17 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.AutoSettingsStatusType
-import net.ccbluex.liquidbounce.api.AutoSettingsType
+import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.script.ScriptManager
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * LocalConfig Command
@@ -132,44 +129,7 @@ object CommandLocalConfig {
                                 createNewFile()
                             }
 
-                            // Store the config
-                            val json = ConfigSystem.serializeConfigurable(ModuleManager.modulesConfigurable,
-                                ConfigSystem.autoConfigGson)
-
-                            if (!json.isJsonObject) {
-                                chat(regular(command.result("failedToCreate", variable(name))))
-                                return@handler
-                            }
-
-                            val jsonObject = json.asJsonObject
-
-                            val author = mc.session.username
-
-                            val dateFormatter = SimpleDateFormat("dd/MM/yyyy")
-                            val timeFormatter = SimpleDateFormat("HH:mm:ss")
-                            val date = dateFormatter.format(Date())
-                            val time = timeFormatter.format(Date())
-
-                            val (protocolName, protocolVersion) = protocolVersion
-
-                            jsonObject.addProperty("author", author)
-                            jsonObject.addProperty("date", date)
-                            jsonObject.addProperty("time", time)
-                            jsonObject.addProperty("clientVersion", LiquidBounce.clientVersion)
-                            jsonObject.addProperty("clientCommit", LiquidBounce.clientCommit)
-                            mc.currentServerEntry?.let {
-                                jsonObject.addProperty("serverAddress", it.address)
-                            }
-                            jsonObject.addProperty("protocolName", protocolName)
-                            jsonObject.addProperty("protocolVersion", protocolVersion)
-
-                            // todo: add options
-                            jsonObject.add("type",
-                                ConfigSystem.autoConfigGson.toJsonTree(AutoSettingsType.RAGE))
-                            jsonObject.add("status",
-                                ConfigSystem.autoConfigGson.toJsonTree(AutoSettingsStatusType.BYPASSING))
-
-                            writeText(ConfigSystem.autoConfigGson.toJson(jsonObject))
+                            serializeAutoConfig(writer())
                         }.onFailure {
                             chat(regular(command.result("failedToCreate", variable(name))))
                         }.onSuccess {

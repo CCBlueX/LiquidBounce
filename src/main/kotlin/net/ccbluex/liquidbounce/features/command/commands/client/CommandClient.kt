@@ -20,19 +20,18 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
-import net.minecraft.util.Util
 
 /**
  * Client Command
@@ -88,7 +87,7 @@ object CommandClient {
         .subcommand(CommandBuilder.begin("menu")
             .alias("url")
             .handler { command, args ->
-                chat(gold("Client Integration"))
+                chat(variable("Client Integration"))
                 chat(
                     regular("URL: ")
                         .append(variable(ThemeManager.integrationUrl).styled {
@@ -112,7 +111,7 @@ object CommandClient {
 
                     chat(
                         regular("-> $name (")
-                            .append(gold("Browser").styled {
+                            .append(variable("Browser").styled {
                                 it.withUnderline(true)
                                     .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url))
                                     .withHoverEvent(
@@ -123,7 +122,7 @@ object CommandClient {
                                     )
                             })
                             .append(regular(", "))
-                            .append(gold("Clipboard").styled {
+                            .append(variable("Clipboard").styled {
                                 it.withUnderline(true)
                                     .withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, url))
                                     .withHoverEvent(
@@ -138,7 +137,7 @@ object CommandClient {
                     )
                 }
 
-                chat(gold("Hint: You can also access the integration from another device.")
+                chat(variable("Hint: You can also access the integration from another device.")
                     .styled { it.withItalic(true) })
             }.build()
         )
