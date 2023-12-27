@@ -55,7 +55,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
             addProperty("searchAlwaysOnTop", searchAlwaysOnTop)
             addProperty("autoFocus", searchAutoFocus)
             addProperty("shadow", shadow)
-    }
+        }
 
     override fun enable() {
         // Pretty sure we are not in a game, so we can't open the clickgui
