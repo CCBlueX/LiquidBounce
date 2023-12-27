@@ -58,10 +58,14 @@ class JcefBrowser : IBrowser, Listenable {
                 userAgent = HttpClient.DEFAULT_AGENT
             }
 
-            thread(name = "mcef-downloader") {
-                val downloader = MCEFDownloader.newDownloader()
-                downloader.downloadJcef(librariesFolder)
-                RenderSystem.recordRenderCall(whenAvailable)
+            val downloader = MCEFDownloader.newDownloader()
+            if (downloader.requiresDownload(librariesFolder)) {
+                thread(name = "mcef-downloader") {
+                    downloader.downloadJcef(librariesFolder)
+                    RenderSystem.recordRenderCall(whenAvailable)
+                }
+            } else {
+                whenAvailable()
             }
         }
     }
