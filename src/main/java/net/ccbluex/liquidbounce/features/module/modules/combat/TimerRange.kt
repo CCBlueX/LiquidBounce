@@ -70,7 +70,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get())
     }
 
-    private val lookThreshold by FloatValue("LookThreshold", 1.0f, 0.1f..1.5f) { timerBoostMode == "SmartMove" }
+    private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { timerBoostMode == "SmartMove" }
 
     // Mark Option
     private val markMode by ListValue("Mark", arrayOf("Off", "Box", "Platform"), "Off") { timerBoostMode == "SmartMove" }
@@ -167,7 +167,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         val nearbyEntity = getNearestEntityInRange()
 
         if (nearbyEntity != null && isPlayerMoving()) {
-            if (isLookingOnEntities(nearbyEntity, lookThreshold.toDouble())) {
+            if (isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
                 val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
 
                 if (confirmTick && entityDistance <= randomRange) {
@@ -223,7 +223,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         if (timerBoostMode.lowercase() == "smartmove") {
             getNearestEntityInRange()?.let { nearbyEntity ->
                 val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
-                if (entityDistance <= maxRange && isLookingOnEntities(nearbyEntity, lookThreshold.toDouble())) {
+                if (entityDistance <= maxRange && isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
                     if (markMode == "Box") {
                         drawEntityBox(nearbyEntity, Color(37, 126, 255, 70), outline)
                     } else if (markMode != "Off") {

@@ -11,12 +11,12 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
-import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -58,22 +58,26 @@ object EntityUtils : MinecraftInstance() {
         return false
     }
 
-    fun isLookingOnEntities(entity: Entity, lookThresholdValue: Double): Boolean {
+    fun isLookingOnEntities(entity: Entity, maxAngleDifference: Double): Boolean {
         val player = mc.thePlayer ?: return false
+        val playerRotation = player.rotationYawHead
+        val playerPitch = player.rotationPitch
 
-        val playerPos = player.getPositionEyes(1.0F)
-        val entityPos = entity.getPositionEyes(1.0F)
+        val maxAngleDifferenceRadians = Math.toRadians(maxAngleDifference)
 
-        val lookVec = entityPos.subtract(playerPos).normalize()
+        val lookVec = Vec3(
+            -sin(playerRotation.toRadians().toDouble()),
+            -sin(playerPitch.toRadians().toDouble()),
+            cos(playerRotation.toRadians().toDouble())
+        ).normalize()
 
-        val pitch = Math.toRadians(player.rotationPitch.toDouble())
-        val yawHead = Math.toRadians(player.rotationYawHead.toDouble())
+        val playerPos = player.positionVector.addVector(0.0, player.eyeHeight.toDouble(), 0.0)
+        val entityPos = entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
 
-        val calculatePlayerHead = Vec3(-sin(yawHead) * cos(pitch), -sin(pitch), cos(yawHead) * cos(pitch))
+        val directionToEntity = entityPos.subtract(playerPos).normalize()
+        val dotProductThreshold = lookVec.dotProduct(directionToEntity)
 
-        val angle = acos(lookVec.dotProduct(calculatePlayerHead))
-
-        return angle < lookThresholdValue
+        return dotProductThreshold > cos(maxAngleDifferenceRadians)
     }
 
     fun getHealth(entity: EntityLivingBase, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {

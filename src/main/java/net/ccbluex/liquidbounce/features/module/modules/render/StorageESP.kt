@@ -40,6 +40,11 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
         private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
     private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..500) {
+        // TODO: find better way?
+        override fun onInit(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
+
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
