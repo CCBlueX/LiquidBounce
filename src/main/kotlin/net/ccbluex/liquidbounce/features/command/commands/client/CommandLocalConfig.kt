@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.AutoSettingsType
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -154,6 +155,11 @@ object CommandLocalConfig {
                             jsonObject.addProperty("author", author)
                             jsonObject.addProperty("date", date)
                             jsonObject.addProperty("time", time)
+                            jsonObject.addProperty("clientVersion", LiquidBounce.clientVersion)
+                            jsonObject.addProperty("clientCommit", LiquidBounce.clientCommit)
+                            mc.currentServerEntry?.let {
+                                jsonObject.addProperty("serverAddress", it.address)
+                            }
                             jsonObject.addProperty("protocolName", protocolName)
                             jsonObject.addProperty("protocolVersion", protocolVersion)
 
