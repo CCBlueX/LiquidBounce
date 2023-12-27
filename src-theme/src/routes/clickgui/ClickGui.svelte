@@ -2,7 +2,7 @@
     import Panel from "./clickgui/Panel.svelte";
     import SearchBar from "./SearchBar.svelte";
 
-    import { listen } from "../../client/ws.svelte";
+    
     import { getModules, toggleModule, getClickGuiOptions } from "../../client/api.svelte";
     import {fade, blur} from "svelte/transition";
 
@@ -59,7 +59,8 @@
         textColor: "#ffffff",
         textDimmed: "rgba(211,211,211,255)",
         searchAlwaysOnTop: true,
-        autoFocus: true
+        autoFocus: true,
+        shadow: true
     };
 
     getClickGuiOptions().then(opts => {
@@ -77,9 +78,9 @@
         --accent-dimmed: {options.accentColor};
         --text: {options.textColor};
         --textdimmed: {options.textDimmed};">
-            <SearchBar settings={options} modules={modules} listen={listen} toggleModule={toggleModule} />
+            <SearchBar settings={options} {modules} toggleModule={toggleModule} />
             {#each panels as panel}
-                <Panel name={panel.name} modules={panel.modules} listen={listen} toggleModule={toggleModule} startTop={panel.top}
+                <Panel name={panel.name} modules={panel.modules} settings={options} toggleModule={toggleModule} startTop={panel.top}
                        startLeft={panel.left}/>
             {/each}
         </div>
@@ -98,5 +99,9 @@
         -ms-user-select: none;
         user-select: none;
         cursor: default;
+    }
+
+    :global(.clickgui-shadow) {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
 </style>
