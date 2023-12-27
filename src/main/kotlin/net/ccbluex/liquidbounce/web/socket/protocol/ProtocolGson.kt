@@ -25,6 +25,7 @@ import com.google.gson.FieldAttributes
 import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.adapter.ConfigurableSerializer
 import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
 
 @Retention(AnnotationRetention.RUNTIME)
