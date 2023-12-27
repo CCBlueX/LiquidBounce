@@ -153,12 +153,9 @@ object LiquidBounce : Listenable {
             ClientSocket.start()
 
             // Initialize browser
-            BrowserManager.initBrowser()
             ThemeManager
             IntegrationHandler
-
-            // Fires up the client tab
-            IntegrationHandler.clientJcef
+            BrowserManager.initBrowser()
 
             // Register resource reloader
             val resourceManager = mc.resourceManager

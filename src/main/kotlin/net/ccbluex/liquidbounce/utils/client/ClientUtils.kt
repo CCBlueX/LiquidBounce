@@ -49,6 +49,8 @@ fun variable(text: MutableText) = text.styled { it.withColor(Formatting.DARK_GRA
 
 fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
 
+fun gold(text: String) = text.asText().styled { it.withColor(Formatting.GOLD) }
+
 fun chat(vararg texts: Text, prefix: Boolean = true) {
     val literalText = if (prefix) clientPrefix.copy() else Text.literal("")
     texts.forEach { literalText.append(it) }
