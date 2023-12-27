@@ -157,9 +157,6 @@ object LiquidBounce : Listenable {
             ThemeManager
             IntegrationHandler
 
-            // Fires up the client tab
-            IntegrationHandler.clientJcef
-
             // Register resource reloader
             val resourceManager = mc.resourceManager
             val clientResourceReloader = ClientResourceReloader()

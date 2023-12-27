@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
  */
 interface IBrowser {
 
-    fun makeDependenciesAvailable()
+    fun makeDependenciesAvailable(whenAvailable: () -> Unit)
 
     fun initBrowserBackend()
 

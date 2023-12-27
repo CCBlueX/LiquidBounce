@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
@@ -61,12 +62,14 @@ object BrowserManager : Configurable("browser") {
         val browser = browserType.getBrowser().apply { browser = this }
 
         // Be aware, this will block the execution of the client until the browser dependencies are available.
-        browser.makeDependenciesAvailable()
+        browser.makeDependenciesAvailable {
+            runCatching {
+                // Initialize the browser backend
+                browser.initBrowserBackend()
 
-        // Initialize the browser backend
-        browser.initBrowserBackend()
-
-        EventManager.callEvent(BrowserReadyEvent(browser))
+                EventManager.callEvent(BrowserReadyEvent(browser))
+            }.onFailure(ErrorHandler::fatal)
+        }
     }
 
     /**
