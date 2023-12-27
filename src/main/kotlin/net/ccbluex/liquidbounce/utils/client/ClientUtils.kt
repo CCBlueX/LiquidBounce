@@ -33,6 +33,9 @@ import org.lwjgl.glfw.GLFW
 val logger: Logger
     get() = LiquidBounce.logger
 
+val inGame: Boolean
+    get() = mc.player != null
+
 // Chat formatting
 private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
 

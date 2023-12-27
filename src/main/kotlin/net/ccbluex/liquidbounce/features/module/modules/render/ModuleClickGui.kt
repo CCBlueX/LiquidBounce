@@ -19,12 +19,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.web.integration.VrScreen
-import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -45,8 +44,14 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
     val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
 
     override fun enable() {
-        mc.setScreen(EmptyScreen())
-        IntegrationHandler.virtualOpen("clickgui")
+        // Pretty sure we are not in a game, so we can't open the clickgui
+        if (mc.player == null || mc.world == null) {
+            return
+        }
+
+        RenderSystem.recordRenderCall {
+            mc.setScreen(VrScreen("clickgui"))
+        }
         super.enable()
     }
 

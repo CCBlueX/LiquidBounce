@@ -84,5 +84,7 @@
         display: flex;
         flex-direction: column;
         align-items: flex-end;
+        -webkit-filter: drop-shadow( 3px 3px 2px rgba(0, 0, 0, .4));
+        filter: drop-shadow( 3px 3px 2px rgba(0, 0, 0, .4));
     }
 </style>

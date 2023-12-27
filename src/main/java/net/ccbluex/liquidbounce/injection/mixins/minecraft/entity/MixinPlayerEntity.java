@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -104,10 +105,12 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z", shift = At.Shift.BEFORE))
+    @Inject(method = "tick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z",
+            ordinal = 1,
+            shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        this.noClip = player != null && player.noClip;
+        this.noClip = ModuleNoClip.INSTANCE.getEnabled();
     }
 
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)

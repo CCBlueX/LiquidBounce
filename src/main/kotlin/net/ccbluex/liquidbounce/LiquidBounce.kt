@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -220,6 +222,16 @@ object LiquidBounce : Listenable {
 
             // Load Head collection
             headsCollection
+
+            // Load settings list from API
+            runCatching {
+                logger.info("Loading settings list from API...")
+                CommandConfig.cachedSettingsList = ClientApi.requestSettingsList()
+            }.onSuccess {
+                logger.info("Loaded ${CommandConfig.cachedSettingsList?.size} settings from API.")
+            }.onFailure {
+                logger.error("Failed to load settings list from API", it)
+            }
         }
     }
 

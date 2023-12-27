@@ -1,7 +1,7 @@
 <script>
     import Router, { link, pop, push } from "svelte-spa-router";
     import { routes } from "./routes.js";
-    import { listen } from "./client/ws.svelte";
+    import { listenAlways, cleanupListeners } from "./client/ws.svelte";
     import { getVirtualScreen } from "./client/api.svelte";
     import { insertPersistentData } from "./client/persistentStorage.svelte";
 
@@ -15,7 +15,7 @@
     const staticTag = url.split("?")[1];
     const isStatic = staticTag === "static";
 
-    listen("splashOverlay", function (event) {
+    listenAlways("splashOverlay", function (event) {
         const action = event.action;
 
         if (isStatic) {
@@ -23,16 +23,18 @@
         }
 
         if (action === "show") {
+            cleanupListeners();
             push("/");
             showingSplash = true;
         } else if (action === "hide" && nextRoute != null) {
+            cleanupListeners();
             push(nextRoute);
             showingSplash = false;
             nextRoute = null;
         }
     });
 
-    listen("virtualScreen", function (event) {
+    listenAlways("virtualScreen", function (event) {
         const screenName = event.screenName;
         const action = event.action;
 
@@ -41,6 +43,7 @@
         }
 
         if (action === "close") {
+            cleanupListeners();
             push("/closed");
         } else if (action === "open") {
             const route = "/" + screenName;
@@ -48,6 +51,7 @@
             if (showingSplash) {
                 nextRoute = route;
             } else {
+                cleanupListeners();
                 push(route);
             }
         }
@@ -62,6 +66,7 @@
                 showingSplash = true;
                 nextRoute = route;
             } else {
+                cleanupListeners();
                 push(route);
             }
         });

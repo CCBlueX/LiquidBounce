@@ -25,15 +25,9 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
-import net.ccbluex.liquidbounce.event.events.ToggleModuleEvent
-import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.outputString
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -63,9 +57,17 @@ open class Module(
         }
     }.notAnOption()
 
+    private var calledSinceStartup = false
+
     // Module options
     var enabled by valueEnabled.listen { new ->
         runCatching {
+            if (!inGame) {
+                return@runCatching
+            }
+
+            calledSinceStartup = true
+
             // Call enable or disable function
             if (new) {
                 enable()
@@ -161,6 +163,12 @@ open class Module(
         }
     }
 
+    val onWorldChange = handler<WorldChangeEvent>(ignoreCondition = true) {
+        if (enabled && !calledSinceStartup && it.world != null) {
+            calledSinceStartup = true
+            enable()
+        }
+    }
 
     protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
         choices(this, name, active, choices)
