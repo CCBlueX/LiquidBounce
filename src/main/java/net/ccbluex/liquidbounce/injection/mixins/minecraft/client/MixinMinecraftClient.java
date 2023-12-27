@@ -96,6 +96,9 @@ public abstract class MixinMinecraftClient {
     @Shadow
     public abstract void setScreen(@org.jetbrains.annotations.Nullable Screen screen);
 
+    @Shadow
+    public abstract int getCurrentFps();
+
     /**
      * Entry point of our hacked client
      *
@@ -265,5 +268,12 @@ public abstract class MixinMinecraftClient {
     private int getFramerateLimit(int original) {
         return getWindow().getFramerateLimit();
     }
+
+    @Inject(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentFps:I",
+            ordinal = 0, shift = At.Shift.AFTER))
+    private void hookFpsChange(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new FpsChangeEvent(this.getCurrentFps()));
+    }
+
 
 }

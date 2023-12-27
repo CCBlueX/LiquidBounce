@@ -26,11 +26,13 @@ import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ToggleModuleEvent
 import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.outputString
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -59,7 +61,7 @@ open class Module(
         if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
             doNotInclude()
         }
-    }
+    }.notAnOption()
 
     // Module options
     var enabled by valueEnabled.listen { new ->
@@ -70,9 +72,6 @@ open class Module(
             } else {
                 disable()
             }
-
-            // If successful might store configuration
-            ConfigSystem.storeConfigurable(ModuleManager.modulesConfigurable)
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {
@@ -85,11 +84,8 @@ open class Module(
                 if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
             )
 
-            // Ignore handleEvents condition to prevent enabled modules from freezing post game load
-            val notInGame = (mc.player == null || mc.world == null) && new
-
             // Call out module event
-            EventManager.callEvent(ToggleModuleEvent(this, new, notInGame))
+            EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
 
             // Call to choices
             value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
@@ -103,16 +99,20 @@ open class Module(
         new
     }
 
-    var bind by int("Bind", bind, 0..0)
+    var bind by key("Bind", bind)
         .doNotInclude()
     var hidden by boolean("Hidden", hide)
         .doNotInclude()
+        .listen {
+            EventManager.callEvent(RefreshArrayListEvent())
+            it
+        }
 
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
     open val description: String
-        get() = "$translationBaseKey.description"
+        get() = Text.translatable("$translationBaseKey.description").outputString()
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -170,12 +170,6 @@ open class Module(
         activeCallback: (ChoiceConfigurable) -> Choice,
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
     ) = choices(this, name, activeCallback, choicesCallback)
-
-    /**
-     * Returns if module is hidden. Hidden modules are not displayed in the module list.
-     * Used for HTML UI. DO NOT REMOVE!
-     */
-    fun isHidden() = hidden
 
     fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
 

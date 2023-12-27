@@ -84,7 +84,6 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
     }
 
     override fun disable() {
-        println(calculatePlayerPartValue())
         if (mc.options.mainArm.value != originalHand) {
             switchHand()
         }

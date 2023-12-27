@@ -53,7 +53,7 @@ object ProxyManager : Configurable("proxy"), Listenable {
         ConfigSystem.root(this)
     }
 
-    fun setProxy(host: String, port: Int, username: String, password: String): String {
+    fun setProxy(host: String, port: Int, username: String, password: String) {
         proxy = Proxy(host, port,
             if (username.isNotBlank())
                 ProxyCredentials(username, password)
@@ -64,16 +64,14 @@ object ProxyManager : Configurable("proxy"), Listenable {
 
         // Refreshes local IP info when proxy is set
         IpInfoApi.refreshLocalIpInfo()
-        return "Successfully set proxy"
     }
 
-    fun unsetProxy(): String {
+    fun unsetProxy() {
         proxy = noProxy
         ConfigSystem.storeConfigurable(this)
 
         // Refreshes local IP info when proxy is unset
         IpInfoApi.refreshLocalIpInfo()
-        return "Successfully unset proxy"
     }
 
     /**

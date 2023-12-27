@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -61,9 +62,13 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     val keyHandler = handler<KeyEvent> { ev ->
         if (ev.action == GLFW.GLFW_PRESS) {
-            filter { it.bind == ev.key.code } // modules bound to a specific key
+            filter { it.bind == ev.key.keyCode } // modules bound to a specific key
                 .forEach { it.enabled = !it.enabled } // toggle modules
         }
+    }
+
+    val worldHandler = handler<WorldChangeEvent> {
+        ConfigSystem.storeConfigurable(modulesConfigurable)
     }
 
     /**
@@ -278,5 +283,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     @JvmName("getModuleByName")
     @RequiredByScript
     fun getModuleByName(module: String) = find { it.name.equals(module, true) }
+
+    operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }
 
 }

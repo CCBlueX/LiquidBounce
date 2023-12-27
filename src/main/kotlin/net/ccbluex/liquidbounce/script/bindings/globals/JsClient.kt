@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.script.bindings.globals
 
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -20,8 +19,6 @@ object JsClient {
     val moduleManager = ModuleManager
     @JvmField
     val commandManager = CommandManager
-    @JvmField
-    val themeManager = ThemeManager
     @JvmField
     val scriptManager = ScriptManager
 

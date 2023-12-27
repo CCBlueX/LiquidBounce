@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
+import net.ccbluex.liquidbounce.web.integration.VrScreen
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -44,22 +44,10 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
     val textColor by color("TextColor", Color4b(255, 255, 255, 255)) // White
     val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
 
-    fun getColorsAsStyle() = """
-        --module: ${moduleColor.toHex(true)}
-        --header: ${headerColor.toHex(true)}
-        --accent: ${accentColor.toHex(true)}
-        --text: ${textColor.toHex(true)}
-        --text-dimmed: ${dimmedTextColor.toHex(true)}
-        """.trimIndent()
-
     override fun enable() {
-        val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
-
-        val emptyScreen = EmptyScreen()
-        UltralightEngine.newScreenView(emptyScreen).apply {
-            loadPage(page)
-        }
-        mc.setScreen(emptyScreen)
+        mc.setScreen(EmptyScreen())
+        IntegrationHandler.virtualOpen("clickgui")
+        super.enable()
     }
 
 }

@@ -38,7 +38,6 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     OverlayRenderEvent::class,
     ScreenRenderEvent::class,
     WindowResizeEvent::class,
-    WindowFocusEvent::class,
     MouseButtonEvent::class,
     MouseScrollEvent::class,
     MouseCursorEvent::class,
@@ -89,8 +88,14 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ClientChatErrorEvent::class,
     WorldChangeEvent::class,
     AltManagerUpdateEvent::class,
+    VirtualScreenEvent::class,
+    FpsChangeEvent::class,
+    PlayerStatsChangeEvent::class,
     SimulatedTickEvent::class,
-    ChoiceChangeEvent::class
+    SplashOverlayEvent::class,
+    SplashProgressEvent::class,
+    ChoiceChangeEvent::class,
+    RefreshArrayListEvent::class
 )
 
 /**

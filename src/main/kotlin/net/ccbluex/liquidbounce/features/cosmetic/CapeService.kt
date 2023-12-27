@@ -140,6 +140,10 @@ object CapeService : Listenable, Configurable("Cape") {
     }
 
     fun login(token: String) {
+        if (clientCapeUser != null && clientCapeUser?.token == token) {
+            return
+        }
+
         val httpClient = HttpClients.createDefault()
         val headers = arrayOf(
             BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),

@@ -20,20 +20,16 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import java.net.MalformedURLException
-import java.net.URL
+import net.ccbluex.liquidbounce.web.integration.BrowserScreen
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 
 /**
  * Client Command
@@ -43,46 +39,48 @@ import java.net.URL
 object CommandClient {
 
     fun createCommand(): Command {
-        return CommandBuilder.begin("client").hub().subcommand(CommandBuilder.begin("info").handler { command, _ ->
-            chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))), prefix = false)
-            chat(
-                regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))), prefix = false
-            )
-            chat(
-                regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))), prefix = false
-            )
-        }.build()).subcommand(CommandBuilder.begin("reload").handler { _, _ ->
-            // TODO: reload client
-        }.build()).subcommand(
-            CommandBuilder.begin("ultralight").hub().subcommand(
-                CommandBuilder.begin("show").parameter(
-                    ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                        .build()
-                ).handler { command, args ->
-                    val open: (ScreenViewOverlay) -> Unit = try {
-                        val url = URL(args[0] as String)
-
-                        ({
-                            it.loadUrl(url.toString())
-                        })
-                    } catch (_: MalformedURLException) {
-                        val name = args[0] as String
-                        val page = ThemeManager.page(name) ?: throw CommandException(
-                            command.result(
-                                "pageNotFound", name
-                            )
-                        )
-
-                        ({
-                            it.loadPage(page)
-                        })
-                    }
-
-                    val emptyScreen = EmptyScreen()
-                    open(UltralightEngine.newScreenView(emptyScreen))
-                    mc.setScreen(emptyScreen)
+        return CommandBuilder.begin("client")
+            .hub()
+            .subcommand(
+                CommandBuilder.begin("info").handler { command, _ ->
+                    chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))),
+                        prefix = false)
+                    chat(regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))),
+                        prefix = false)
+                    chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))),
+                        prefix = false)
                 }.build()
-            ).build()
+            )
+            .subcommand(
+                CommandBuilder.begin("browser")
+                    .hub()
+                    .subcommand(
+                        CommandBuilder.begin("open")
+                            .parameter(
+                                ParameterBuilder.begin<String>("name")
+                                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                                    .build()
+                            ).handler { command, args ->
+                                chat(regular("Opening browser..."))
+                                mc.setScreen(BrowserScreen(args[0] as String))
+                            }.build()
+                    ).subcommand(CommandBuilder.begin("override")
+                        .parameter(
+                            ParameterBuilder.begin<String>("name")
+                                .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                                .build()
+                        ).handler { command, args ->
+                            chat(regular("Overrides client JCEF browser..."))
+                            clientJcef?.loadUrl(args[0] as String)
+                        }.build()
+                    ).subcommand(CommandBuilder.begin("reset")
+                        .handler { command, args ->
+                            chat(regular("Resetting client JCEF browser..."))
+                            IntegrationHandler.updateIntegrationBrowser()
+                        }.build()
+                    )
+
+                    .build()
         )
             // TODO: contributors
             // TODO: links

@@ -166,8 +166,10 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private fun isScreenTitleChest(screen: GenericContainerScreen): Boolean {
         val titleString = screen.title.string
 
-        return titleString == Text.translatable("container.chest").string ||
-                titleString == Text.translatable("container.chestDouble").string
+        return arrayOf("container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
+            "container.barrel")
+            .map { Text.translatable(it); }
+            .any { it.string == titleString }
     }
 
 

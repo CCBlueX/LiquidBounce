@@ -72,6 +72,10 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow public abstract void tick();
 
+    @Shadow public abstract float getHealth();
+
+    @Shadow public abstract float getMaxHealth();
+
     /**
      * Hook anti levitation module
      */
