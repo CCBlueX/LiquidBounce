@@ -24,18 +24,20 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.utils.array
+import net.ccbluex.liquidbounce.authlib.utils.int
+import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import java.io.File
 import java.io.Reader
 import java.io.Writer
@@ -202,19 +204,49 @@ object ConfigSystem {
         runCatching {
             val jsonObject = jsonElement.asJsonObject
 
-            val chatMessages = jsonObject.getAsJsonArray("chat")
-            if (chatMessages != null) {
+            // Auto Config
+            val pName = jsonObject.string("protocolName")
+            val pVersion = jsonObject.int("protocolVersion")
+
+            if (pName != null && pVersion != null) {
+                // Check if protocol is identical
+                val (protocolName, protocolVersion) = protocolVersion
+
+                // Give user notification about the protocol of the config and his current protocol,
+                // if they are not identical, make the message red and bold to make it more visible
+                // also, if the protocol is identical, make the message green to make it more visible
+
+                chat(
+                    regular("Config was created for protocol "),
+                    variable("$pName $pVersion")
+                        .styled {
+                            if (protocolName != pName || protocolVersion != pVersion) {
+                                it.withFormatting(Formatting.RED, Formatting.BOLD)
+                            } else {
+                                it.withFormatting(Formatting.GREEN)
+                            }
+                        },
+                    regular(" and your current protocol is "),
+                    variable("$protocolName $protocolVersion"),
+                    regular(".")
+                )
+            }
+
+            jsonObject.array("chat")?.let { chatMessages ->
                 for (messages in chatMessages) {
                     chat(messages.asString)
                 }
             }
 
-            val date = jsonObject.getAsJsonPrimitive("date").let { if (it == null) "" else it.asString }
-            val time = jsonObject.getAsJsonPrimitive("time").let { if (it == null) "" else it.asString }
-            val author = jsonObject.getAsJsonPrimitive("author").let { if (it == null) "" else "by $it" }
-            if (date != "" || time != "" || author != "") {
-                chat(regular("Config was created ${if (date != "" || time != "") "on $date $time" else ""} $author"))
+            val date = jsonObject.string("date")
+            val time = jsonObject.string("time")
+            val author = jsonObject.string("author")
+            if (date != null || time != null || author != null) {
+                chat(regular("Config was created " +
+                    "${if (!date.isNullOrBlank() || !time.isNullOrBlank()) "on $date $time " else ""}$author"))
             }
+
+            // Check if the name is the same as the configurable name
             if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
                 throw IllegalStateException()
             }

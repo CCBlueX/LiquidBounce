@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -53,7 +54,11 @@ open class Module(
     val valueEnabled = boolean("Enabled", state).also {
         // Might not include the enabled state of the module depending on the category
         if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
-            doNotInclude()
+            if (this is ModuleAntiBot) {
+                return@also
+            }
+
+            it.doNotInclude()
         }
     }.notAnOption()
 
