@@ -107,7 +107,7 @@ object CommandClient {
                 chat(prefix = false)
                 chat(regular("Integration Menu:"))
                 for (menu in IntegrationHandler.VirtualScreenType.values()) {
-                    val url = "${ThemeManager.integrationUrl}/#/${menu.assignedName}?static"
+                    val url = "${ThemeManager.integrationUrl}#/${menu.assignedName}?static"
                     val name = menu.assignedName.replaceFirstChar { it.uppercase() }
 
                     chat(
