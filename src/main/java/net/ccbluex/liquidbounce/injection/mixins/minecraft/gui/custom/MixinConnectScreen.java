@@ -46,9 +46,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinConnectScreen extends MixinScreen {
 
     @Shadow
-    private Text status;
-
-    @Shadow
     private volatile @Nullable ClientConnection connection;
 
     @Unique
@@ -99,9 +96,13 @@ public abstract class MixinConnectScreen extends MixinScreen {
 
         var client = Text.literal("Client").formatted(Formatting.BLUE);
         if (ipInfo != null) {
-            client.append(Text.literal(" (").formatted(Formatting.DARK_GRAY));
-            client.append(Text.literal(ipInfo.getCountry()).formatted(Formatting.BLUE));
-            client.append(Text.literal(")").formatted(Formatting.DARK_GRAY));
+            var country = ipInfo.getCountry();
+
+            if (country != null) {
+                client.append(Text.literal(" (").formatted(Formatting.DARK_GRAY));
+                client.append(Text.literal(country).formatted(Formatting.BLUE));
+                client.append(Text.literal(")").formatted(Formatting.DARK_GRAY));
+            }
         }
         var spacer = Text.literal(" ⟺ ").formatted(Formatting.DARK_GRAY);
 
