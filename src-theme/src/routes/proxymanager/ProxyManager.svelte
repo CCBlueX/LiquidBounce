@@ -1,6 +1,6 @@
 <script>
-    import {pop} from "svelte-spa-router";
-    import {getLocation, getProxy, setProxy, unsetProxy} from "../../client/api.svelte";
+    import { pop } from "svelte-spa-router";
+    import { getLocation, getProxy, setProxy, unsetProxy } from "../../client/api.svelte";
     import {fade} from "svelte/transition";
 
     let proxyHost = "";

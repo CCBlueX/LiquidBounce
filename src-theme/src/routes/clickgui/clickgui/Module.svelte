@@ -4,7 +4,7 @@
 
     import GenericSetting from "./settings/GenericSetting.svelte";
 
-    import {getModuleSettings, writeModuleSettings} from "../../../client/api.svelte";
+    import { getModuleSettings, writeModuleSettings } from "../../../client/api.svelte";
 
     export let name;
     export let enabled;

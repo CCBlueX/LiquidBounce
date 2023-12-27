@@ -1,6 +1,6 @@
 <script>
-    import {pop} from "svelte-spa-router";
-    import {fade} from "svelte/transition";
+    import { pop } from "svelte-spa-router";
+    import { fade } from "svelte/transition";
 </script>
 
 <head>

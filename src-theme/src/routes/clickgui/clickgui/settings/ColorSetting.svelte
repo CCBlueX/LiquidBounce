@@ -1,6 +1,6 @@
 <script>
     import {onMount} from "svelte";
-    import {intToRgba, rgbaToHex, rgbaToInt} from "../../../../utils/misc.js";
+    import {rgbaToInt, intToRgba, rgbaToHex} from "../../../../utils/misc.js";
 
     /**
      * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.

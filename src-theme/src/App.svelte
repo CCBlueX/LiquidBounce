@@ -1,9 +1,9 @@
 <script>
-    import Router, {push} from "svelte-spa-router";
-    import {routes} from "./routes.js";
-    import {cleanupListeners, listenAlways} from "./client/ws.svelte";
-    import {getVirtualScreen} from "./client/api.svelte";
-    import {insertPersistentData} from "./client/persistentStorage.svelte";
+    import Router, { link, pop, push } from "svelte-spa-router";
+    import { routes } from "./routes.js";
+    import { listenAlways, cleanupListeners } from "./client/ws.svelte";
+    import { getVirtualScreen } from "./client/api.svelte";
+    import { insertPersistentData } from "./client/persistentStorage.svelte";
 
     insertPersistentData();
 

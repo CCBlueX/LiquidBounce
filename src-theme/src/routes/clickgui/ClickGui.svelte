@@ -2,9 +2,9 @@
     import Panel from "./clickgui/Panel.svelte";
     import SearchBar from "./SearchBar.svelte";
 
-    import {listen} from "../../client/ws.svelte";
-    import {getClickGuiOptions, getModules, toggleModule} from "../../client/api.svelte";
-    import {blur} from "svelte/transition";
+    import { listen } from "../../client/ws.svelte";
+    import { getModules, toggleModule, getClickGuiOptions } from "../../client/api.svelte";
+    import {fade, blur} from "svelte/transition";
 
     let clickGuiOpened = true;
     // todo: request from API

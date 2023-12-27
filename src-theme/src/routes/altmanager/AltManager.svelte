@@ -11,8 +11,8 @@
         newMicrosoftAccount,
         restoreInitialAccount
     } from "../../client/api.svelte";
-    import {listen} from "../../client/ws.svelte";
-    import {pop} from "svelte-spa-router";
+    import { listen } from "../../client/ws.svelte";
+    import { pop } from "svelte-spa-router";
     import {fade} from "svelte/transition";
 
     const random = (length = 8) => {

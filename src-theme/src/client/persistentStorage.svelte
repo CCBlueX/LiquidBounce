@@ -1,5 +1,5 @@
 <script context="module">
-    import {getPersistentStorageItems, setPersistentStorageItems} from './api.svelte';
+    import { getPersistentStorageItems, setPersistentStorageItems } from './api.svelte';
 
     let loadedOnce = false;
 

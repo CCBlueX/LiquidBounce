@@ -1,5 +1,5 @@
 <script>
-    import {sendChatMessage, sendCommand} from "../../client/api.svelte";
+    import { sendChatMessage, sendCommand } from "../../client/api.svelte";
 
     let chatMessage = "";
 

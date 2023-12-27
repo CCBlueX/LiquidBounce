@@ -4,8 +4,8 @@
     import ArrayList from "./arraylist/ArrayList.svelte";
     import Notifications from "./notification/Notifications.svelte";
 
-    import {listen} from "../../client/ws.svelte";
-    import {getModules, toggleModule} from "../../client/api.svelte";
+    import { listen } from "../../client/ws.svelte";
+    import { getModules, toggleModule } from "../../client/api.svelte";
 </script>
 
 <main>

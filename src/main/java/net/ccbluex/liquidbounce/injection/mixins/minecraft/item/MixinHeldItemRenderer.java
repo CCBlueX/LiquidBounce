@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimation;
 import net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt;

@@ -26,13 +26,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Box;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt.getGlobalEnemyConfigurable;
-import static net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt.shouldBeAttacked;
+import static net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt.*;
 
 @Mixin(EntityRenderDispatcher.class)
 public abstract class MixinEntityRenderDispatcher {
