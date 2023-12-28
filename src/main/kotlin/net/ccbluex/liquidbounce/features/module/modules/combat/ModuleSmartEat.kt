@@ -18,17 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
-import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.minecraft.client.option.KeyBinding
+import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.item.ItemStack
 import net.minecraft.util.ActionResult
-import net.minecraft.util.hit.HitResult
+import net.minecraft.util.UseAction
+import kotlin.math.max
 
 /**
  * AutoClicker module
@@ -36,57 +35,40 @@ import net.minecraft.util.hit.HitResult
  * Clicks automatically when holding down a mouse button.
  */
 
-object ModuleSmartEat : Module("SmartEat", Category.COMBAT) {
+object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
-    object Right : ToggleableConfigurable(this, "Right", false) {
-        val clickScheduler = tree(ClickScheduler(ModuleSmartEat, false))
-    }
 
-    init {
-        tree(Right)
-    }
+    private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
 
-    val foodSlot: Int
-        get() = Hotbar
+    val food: Pair<Int, ItemStack>?
+        get() = Hotbar.findBestItem(0) { _, itemStack ->
+            val foodComp =
+                itemStack.item.foodComponent ?: return@findBestItem -1
+
+            if(foodComp.statusEffects.any {it.first == StatusEffects.HUNGER})
+                return@findBestItem 0
+            foodComp.hunger
+        }
 
     fun onInteraction(actionResult: ActionResult) {
+
         if(!enabled)
             return
-        if(actionResult != ActionResult.PASS) {
-            // if we are already eating, we want to keep the silent slot
-            if(actionResult != ActionResult.CONSUME)
-                return
-            if(!SilentHotbar.isSlotModified(this)
-                return
-
-            SilentHotbar.selectSlotSilently(this, SilentHotbar.serversideSlot, 4)
+        if(actionResult != ActionResult.PASS)
             return
-        }
-        SilentHotbar.selectSlotSilently(this, foodSlot, 4)
 
-        chat(actionResult.toString())
+        val currentFood = food ?: return
 
-        if(actionResult == ActionResult.PASS || actionResult == ActionResult.FAIL) {
-            chat("should swap to food")
-        } else if(actionResult == ActionResult.CONSUME) {
-            chat("already eating")
-        }
+        SilentHotbar.selectSlotSilently(this@ModuleSmartEat, currentFood.first, max(swapBackDelay, 5))
     }
 
-
-
-    val attack: Boolean
-        get() = mc.options.attackKey.isPressed
-
-    val use: Boolean
-        get() = mc.options.useKey.isPressed
-
-    private val shouldTargetBlock: Boolean
-        get() = player.abilities.creativeMode || mc.crosshairTarget?.type != HitResult.Type.BLOCK
-
-
     val tickHandler = repeatable {
-
+        if(player.activeItem.useAction != UseAction.EAT)
+            return@repeatable
+        if(!SilentHotbar.isSlotModified(this@ModuleSmartEat))
+            return@repeatable
+        // if we are already eating, we want to keep the silent slot
+        SilentHotbar.selectSlotSilently(this@ModuleSmartEat, SilentHotbar.serversideSlot, swapBackDelay)
 
 
     }
