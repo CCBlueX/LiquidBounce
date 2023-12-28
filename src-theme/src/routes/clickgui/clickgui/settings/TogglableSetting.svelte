@@ -46,7 +46,9 @@
       {#if s.name !== "Enabled"}
         <SubSettings
           settings={reference.value}
-          validator={s.name !== "Enabled"}
+          validator={(s) => {
+            s.name !== "Enabled";
+          }}
         />
       {/if}
     </div>

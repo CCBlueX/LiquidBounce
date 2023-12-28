@@ -6,7 +6,7 @@
   export let settings;
 
   export let validator = (setting) => {
-    true;
+    return true;
   };
 </script>
 
