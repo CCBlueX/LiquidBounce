@@ -104,12 +104,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         updateTarget()
 
-        // return if the blink module is enabled
+        // Return if the blink module is enabled
         if (ModuleBlink.enabled) {
             return@repeatable
         }
 
-        // disable the module and return if the inventory is full and the setting for disabling the module is enabled
+        // Disable the module and return if the inventory is full and the setting for disabling the module is enabled
         if (disableOnFullInventory && !hasInventorySpace()) {
             notification("Inventory is Full", "AutoFarm has been disabled", NotificationEvent.Severity.ERROR)
             disable()
@@ -124,7 +124,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-        autoWalk.stopWalk() // resetting walkTarget to null to stop the walking and rendering
+        autoWalk.stopWalk() // Stop walking if we found a target close enough to interact with it
 
         val currentRotation = RotationManager.serverRotation
 
@@ -150,7 +150,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 Hotbar.findBestItem(1) { _, itemStack -> itemStack.getEnchantment(Enchantments.FORTUNE) }
                     ?.let { (slot, _) ->
                         SilentHotbar.selectSlotSilently(this, slot, 2)
-                    } // swap to a fortune item to increase drops
+                    } // Swap to a fortune item to increase drops
             }
             val direction = rayTraceResult.side
 

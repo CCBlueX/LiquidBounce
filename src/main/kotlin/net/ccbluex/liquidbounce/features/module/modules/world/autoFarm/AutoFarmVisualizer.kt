@@ -67,14 +67,12 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
-//                val baseForFarmBlocks = if (colorRainbow) rainbow() else farmBlockColor
 
             val fillColor = baseColor.alpha(50)
             val outlineColor = baseColor.alpha(100)
 
 
             val markedBlocks = AutoFarmBlockTracker.trackedBlockMap
-//                val markedFarmBlocks = FarmBlockTracker.trackedBlockMap.keys
             renderEnvironmentForWorld(matrixStack) {
                 CurrentTarget.render(this)
                 for ((pos, type) in markedBlocks) {
