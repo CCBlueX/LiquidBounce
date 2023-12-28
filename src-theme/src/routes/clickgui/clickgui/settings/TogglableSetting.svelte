@@ -1,58 +1,54 @@
 <script>
-  import { sineInOut } from "svelte/easing";
-  import { fade } from "svelte/transition";
-  import GenericSetting from "./GenericSetting.svelte";
-  import SubSettings from "./SubSettings.svelte";
+    import {sineInOut} from "svelte/easing";
+    import {fade} from "svelte/transition";
+    import GenericSetting from "./GenericSetting.svelte";
 
-  /**
-   * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
-   */
-  export let reference;
-  /**
-   * This function is passed from the parent component and is used to write the new configurable to the client.
-   * This will result in a request to the server.
-   */
-  export let write;
+    /**
+     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+     */
+    export let reference;
+    /**
+     * This function is passed from the parent component and is used to write the new configurable to the client.
+     * This will result in a request to the server.
+     */
+    export let write;
 
-  let name = reference.name;
-  let enabled = reference.value.find((v) => v.name === "Enabled").value;
+    let name = reference.name;
+    let enabled = reference.value.find(v => v.name === "Enabled").value;
 
-  function changed() {
-    // Pass the new value to the instance
-    for (const v of reference.value) {
-      if (v.name === "Enabled") {
-        v.value = enabled;
-      }
+    function changed() {
+        // Pass the new value to the instance
+        for (const v of reference.value) {
+            if (v.name === "Enabled") {
+                v.value = enabled;
+            }
+        }
+
+        write();
     }
-
-    write();
-  }
 </script>
 
 <div class="setting">
-  <div class="head">
-    <div class="boolean">
-      <label class="switch">
-        <input type="checkbox" bind:checked={enabled} on:change={changed} />
-        <span class="slider" />
+    <div class="head">
+        <div class="boolean">
+            <label class="switch">
+                <input type="checkbox" bind:checked={enabled} on:change={changed}/>
+                <span class="slider"/>
 
-        <div class="name">{name}</div>
-      </label>
+                <div class="name">{name}</div>
+            </label>
+        </div>
     </div>
-  </div>
 
-  {#if enabled}
-    <div class="settings" transition:fade|local={{ duration: 200 }}>
-      {#if s.name !== "Enabled"}
-        <SubSettings
-          settings={reference.value}
-          validator={(s) => {
-            s.name !== "Enabled";
-          }}
-        />
-      {/if}
-    </div>
-  {/if}
+    {#if enabled}
+        <div class="settings" transition:fade|local={{duration: 200}}>
+            {#each reference.value as s}
+              {#if s.name !== "Enabled"}
+                <GenericSetting reference={s} write={write} />
+              {/if}
+            {/each}
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -72,7 +68,7 @@
 
   .name {
     font-weight: 500;
-    color: var(--text);
+    color: var(--text);;
     font-size: 12px;
     margin-left: 30px;
   }
