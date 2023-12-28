@@ -78,7 +78,8 @@ internal object MLG : Choice("MLG") {
             listOf(Vec3i(0, 0, 0)),
             player.inventory.getStack(itemForMLG!!),
             CenterTargetPositionFactory,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            player.pos
         )
 
         currentTarget = findBestBlockPlacementTarget(collision.up(), options)

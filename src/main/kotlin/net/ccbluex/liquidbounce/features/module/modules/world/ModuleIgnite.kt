@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.MLG
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
@@ -70,7 +71,8 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
                 listOf(Vec3i(0, 0, 0)),
                 player.inventory.getStack(slot),
                 CenterTargetPositionFactory,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                player.pos
             )
 
             val currentTarget = findBestBlockPlacementTarget(pos, options) ?: continue

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.MLG
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
@@ -66,7 +67,8 @@ object JsInteractionUtil {
             listOf(Vec3i(0, 0, 0)),
             player.inventory.mainHandStack,
             CenterTargetPositionFactory,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            player.pos
         )
 
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)

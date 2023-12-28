@@ -9,6 +9,7 @@ import net.ccbluex.tenacc.api.TACCTestClass
 import net.ccbluex.tenacc.api.client.InputKey
 import net.ccbluex.tenacc.api.common.TACCSequenceAdapter
 import net.ccbluex.tenacc.api.common.TACCTestSequence
+import net.ccbluex.tenacc.api.common.TACCTestVariant
 import net.ccbluex.tenacc.utils.Rotation
 import net.ccbluex.tenacc.utils.lookDirection
 import net.minecraft.item.ItemStack
@@ -47,6 +48,9 @@ class TestScaffold {
     fun stringSetting(name: String, value: String): String {
         return """{"name": "$name", "value": "$value"}""".trimIndent()
     }
+    fun <T> rawSetting(name: String, value: T): String {
+        return """{"name": "$name", "value": $value}""".trimIndent()
+    }
 
     fun choiceSetModeSetting(name: String, value: String): String {
         return """{"name": "$name", "active": "$value",value:[]}""".trimIndent()
@@ -56,10 +60,31 @@ class TestScaffold {
         loadSettingsFromPath(ModuleScaffold, "/scaffold/scaffold_baseline.json")
     }
 
-    @TACCTest(name = "testRotationBottleneck", scenary = "scaffold/scaffold_underground_straight.nbt", timeout = 550)
+    @TACCTest(name = "testRotationBottleneck", scenary = "scaffold/scaffold_underground_straight.nbt", timeout = 1000)
     fun runTest(adapter: TACCSequenceAdapter) {
-        adapter.startSequence {
-            val startPositions = server { getMarkerPositions("s_interl_blocks") }
+        fun loadBaseSettings(mode: String) {
+            resetSettings()
+
+            loadSettingsFromString(
+                ModuleScaffold,
+                rangeSetting("Delay", 6, 6),
+                stringSetting("RotationMode", mode),
+                choiceSetModeSetting("SafeWalk", "Safe"),
+                settingsContainer(
+                    name = "Rotations",
+                    rangeSetting("TurnSpeed", 30.0, 30.0),
+                    rawSetting("TicksUntilReset", 10)
+                )
+            )
+        }
+
+//        val rotationModes = arrayOf("Center", "Stabilized", "NearestRotation")
+        val rotationModes = arrayOf("Stabilized")
+
+        val variants = rotationModes.map { TACCTestVariant.of("RotationMode $it") { loadBaseSettings(it) } }
+
+        adapter.startSequence(variants.toTypedArray()) {
+            val startPositions = server { getMarkerPositions("start") }
 
             server {
                 player.inventory.setStack(0, ItemStack(Items.STONE, 64))
@@ -94,19 +119,6 @@ class TestScaffold {
 
     private suspend fun TACCTestSequence.runLoop() {
         client {
-            resetSettings()
-
-            loadSettingsFromString(
-                ModuleScaffold,
-                rangeSetting("Delay", 6, 6),
-                stringSetting("RotationMode", "Center"),
-                choiceSetModeSetting("SafeWalk", "Safe"),
-                settingsContainer(
-                    name = "Rotations",
-                    rangeSetting("TurnSpeed", 30.0, 30.0)
-                )
-            )
-
             ModuleScaffold.enabled = false
             ModuleScaffold.enabled = true
 

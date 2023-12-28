@@ -40,15 +40,20 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
+import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
@@ -189,6 +194,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
+        var predictedPos = getPredictedPlacementPos() ?: player.pos
+
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double =
             if (optimalLine != null) {
@@ -205,6 +212,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 bestStack,
                 getFacePositionFactoryForConfig(),
                 priorityGetter,
+                predictedPos
             )
 
         currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
@@ -243,6 +251,43 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             considerInventory = !ignoreOpenInventory,
             configurable = rotationsConfigurable,
         )
+    }
+
+    /**
+     * Calculates where the player will stand when he places the block. Useful for rotations
+     *
+     * @return the predicted pos or `null` if the prediction failed
+     */
+    private fun getPredictedPlacementPos(): Vec3d? {
+        val optimalLine = this.currentOptimalLine ?: return null
+
+        val optimalEdgeDist = 0.2
+
+        // When we are close to the edge, we are able to place right now. Thus, we don't want to use a future position
+        if (player.isCloseToEdge(DirectionalInput(player.input), distance = optimalEdgeDist))
+            return null
+
+        // TODO Check if the player is moving away from the line and implement another prediction method for that case
+
+        val nearestPosToPlayer = optimalLine.getNearestPointTo(player.pos)
+
+        val fromLine = nearestPosToPlayer + Vec3d(0.0, -0.1, 0.0)
+        val toLine = fromLine + optimalLine.direction.normalize().multiply(3.0)
+
+        val edgeCollision = findEdgeCollision(fromLine, toLine)
+
+        // The next placement point is far in the future. Don't predict for now
+        if (edgeCollision == null)
+            return null
+
+        val fallOffPoint = Vec3d(edgeCollision.x, player.pos.y, edgeCollision.z)
+        val fallOffPointToPlayer = fallOffPoint - player.pos
+
+        // Move the point where we want to place a bit more to the player since we ideally want to place at an edge
+        // distance of 0.2 or so
+        val vec3d = fallOffPoint - fallOffPointToPlayer.normalize() * optimalEdgeDist
+
+        return vec3d
     }
 
     var currentOptimalLine: Line? = null
