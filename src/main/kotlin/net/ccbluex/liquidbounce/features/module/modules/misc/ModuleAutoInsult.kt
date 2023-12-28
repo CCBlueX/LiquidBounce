@@ -81,8 +81,6 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         // If the message matches the kill message, send a funny message in chat
         val matchResult = killRegex.matchEntire(msg)
         if (matchResult != null) {
-            // Get the name of the player who was killed
-            val killedPlayer = matchResult.groupValues[1]
 
             // Choose a random message from the list based on the active choice
             val insult = when (modes.activeChoice) {
