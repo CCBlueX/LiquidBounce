@@ -45,7 +45,7 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
             get() = modes
     }
 
-    val toxicInsults = listOf(
+    val ToxicInsults = listOf(
         "lmao",
         "you sit on your ass all day and still die? sad",
         "JEW SPOTTED",
@@ -62,7 +62,7 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         override val parent: ChoiceConfigurable
             get() = modes
     }
-    val liquidBounceInsults = listOf(
+    val LiquidBounceInsults = listOf(
         "Install LiquidBounce Today",
         "You sit on your ass all day and some german developers still kill you, sad",
         "LiquidBounce is The Next Lunar",
@@ -86,8 +86,8 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
 
             // Choose a random message from the list based on the active choice
             val insult = when (modes.activeChoice) {
-                Toxic -> toxicInsults.random()
-                LiquidBounce -> liquidBounceInsults.random()
+                Toxic -> ToxicInsults.random()
+                LiquidBounce -> LiquidBounceInsults.random()
                 else -> "oops, something went wrong"
             }
 
