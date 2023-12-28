@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { forwardRef } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
@@ -26,20 +27,51 @@ const DialogContent = forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ children, ...props }, ref) => (
   <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content ref={ref} className={styles.content} {...props}>
-      {children}
+    <DialogOverlay>
       <DialogPrimitive.Close className={styles.close}>
         <X className={styles.closeIcon} />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
+    </DialogOverlay>
+
+    <motion.div
+      className={styles.dialog}
+      variants={{
+        show: {
+          opacity: 1,
+          y: 0,
+        },
+        hide: {
+          opacity: 0,
+          y: 10,
+        },
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 500,
+        damping: 30,
+        duration: 0.2,
+      }}
+      initial="hide"
+      animate="show"
+      exit="hide"
+    >
+      <DialogPrimitive.Content ref={ref} className={styles.content} {...props}>
+        {children}
+      </DialogPrimitive.Content>
+    </motion.div>
   </DialogPortal>
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader = (props: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={styles.header} {...props} />
+const DialogHeader = ({
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={styles.header} {...props}>
+    {children}
+    <div className={styles.divider} />
+  </div>
 );
 DialogHeader.displayName = "DialogHeader";
 

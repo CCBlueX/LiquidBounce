@@ -1,6 +1,5 @@
+import { Account } from "~/utils/api";
 import { ListItem } from "..";
-
-import type { Account } from "~/utils/types";
 
 type AccountEntryProps = {
   account: Account;
@@ -13,7 +12,7 @@ export default function AccountEntry({ account }: AccountEntryProps) {
       <div className="relative h-[68px] w-[68px]">
         {/* Account Head */}
         <img
-          src={`https://crafatar.com/avatars/${account.uuid}?size=100`}
+          src={account.faceUrl}
           alt="Account Head"
           className="rounded-full"
         />
@@ -28,7 +27,7 @@ export default function AccountEntry({ account }: AccountEntryProps) {
 
         {/* E-mail */}
         <div className="text-white/50 text-xl font-semibold">
-          {account.email}
+          example@placeholder.com
         </div>
       </div>
     </ListItem>

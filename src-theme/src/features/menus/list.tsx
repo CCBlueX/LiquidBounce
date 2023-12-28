@@ -5,16 +5,23 @@ import styles from "./list.module.css";
 type ListProps = {
   children: React.ReactNode;
   loading?: boolean;
+  error?: string;
 };
 
-export default function List({ children, loading }: ListProps) {
+export default function List({ children, loading, error }: ListProps) {
   return (
     <motion.div className={styles.listContainer}>
-      <motion.div className={styles.list} data-loading={loading}>
+      <motion.div
+        className={styles.list}
+        data-loading={loading}
+        data-error={!!error}
+      >
         {loading &&
           Array.from({ length: 50 }).map((_, idx) => (
             <ListItem key={idx} loading />
           ))}
+
+        {error && <div className={styles.error}>{error}</div>}
 
         <AnimatePresence initial={false} mode="popLayout">
           {children}

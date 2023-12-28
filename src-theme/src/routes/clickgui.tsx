@@ -67,7 +67,7 @@ export default function ClickGUI() {
           vertical: 16,
         }}
       >
-        <AlignmentGrid />
+        {/* <AlignmentGrid /> */}
         {/* <img
           src="./background.png"
           className="absolute inset-0 w-full h-full -z-10"

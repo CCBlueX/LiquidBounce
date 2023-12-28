@@ -13,14 +13,14 @@ import WorldEntry from "~/features/menus/singleplayer/world-entry";
 // Left Footer Buttons
 import { ReactComponent as Add } from "~/assets/icons/add.svg";
 
-import { getWorlds } from "~/utils/api";
+import { World, getWorlds } from "~/utils/api";
 
 function useWorlds() {
-  return useQuery("worlds", getWorlds);
+  return useQuery<World[], Error>("worlds", getWorlds);
 }
 
 export default function Singleplayer() {
-  const { state, data: worlds, error } = useWorlds();
+  const { status, data: worlds, error } = useWorlds();
   const [search, setSearch] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [gameModes, setGameModes] = useState<Option[]>([
@@ -156,7 +156,10 @@ export default function Singleplayer() {
             World Type
           </Combobox>
         </Header>
-        <List>
+        <List
+          loading={status === "loading"}
+          error={error?.message}
+        >
           {filteredWorlds?.map((world) => (
             <WorldEntry key={world.name} world={world} />
           ))}

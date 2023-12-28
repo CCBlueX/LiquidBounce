@@ -1,10 +1,19 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 
 import { TooltipProvider } from "./components/tooltip";
+import { useWebsocket } from "./contexts/websocket-context";
+
+type VirtualScreenData = {
+  screenName: string;
+  action: "close" | "open";
+};
 
 export default function Root() {
+  const { listen } = useWebsocket();
+  const navigate = useNavigate();
+
   function updateScaleFactor(windowWidth: number, windowHeight: number) {
     const baseResolutionWidth = 854;
     const baseResolutionHeight = 480;
@@ -54,16 +63,30 @@ export default function Root() {
   }
 
   useEffect(() => {
-    window.addEventListener("resize", () => {
-      updateScaleFactor(window.innerWidth, window.innerHeight);
-    });
+    const virtualScreenCleanup = listen(
+      "virtualScreen",
+      ({ action, screenName }: VirtualScreenData) => {
+        if (action === "close") {
+          navigate("/closed");
+        } else if (action === "open") {
+          navigate(`/${screenName}`);
+        }
+      }
+    );
 
-    updateScaleFactor(window.innerWidth, window.innerHeight);
+    function handleResize() {
+      updateScaleFactor(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    handleResize();
 
     return () => {
-      // TODO: Unsubscribe from events
+      virtualScreenCleanup();
+      window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [listen, navigate]);
 
   const queryClient = new QueryClient();
 

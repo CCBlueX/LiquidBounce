@@ -1,0 +1,51 @@
+.container {
+  display: flex;
+  border-radius: 6px;
+  margin: 12px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
+  background: var(--brand);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  fill: #fff;
+}
+
+.input {
+  flex: 1;
+  padding: 20px;
+  height: 64px;
+  font-size: 18px;
+  outline: none;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.show-password {
+  cursor: pointer;
+  padding-right: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease-in-out;
+}
+
+.show-password:hover {
+  color: #fff;
+}
+
+.show-password svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}

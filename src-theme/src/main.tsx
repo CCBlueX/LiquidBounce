@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import {RouterProvider, createHashRouter} from "react-router-dom";
+import { RouterProvider, createHashRouter } from "react-router-dom";
 
 import Root from "./root.tsx";
 
@@ -19,6 +19,8 @@ import ClickGUI from "./routes/clickgui.tsx";
 
 import "./globals.css";
 import ModMenu from "~/routes/modmenu.tsx";
+import HUD from "./routes/hud.tsx";
+import { WebsocketProvider } from "./contexts/websocket-context.tsx";
 
 const router = createHashRouter([
   {
@@ -61,13 +63,19 @@ const router = createHashRouter([
       {
         path: "/modmenu",
         element: <ModMenu />,
-      }
+      },
+      {
+        path: "/hud",
+        element: <HUD />,
+      },
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <WebsocketProvider>
+      <RouterProvider router={router} />
+    </WebsocketProvider>
   </React.StrictMode>
 );

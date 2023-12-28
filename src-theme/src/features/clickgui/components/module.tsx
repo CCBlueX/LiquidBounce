@@ -1,27 +1,25 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { CSSProperties, useRef, useState } from "react";
+import { useMutation } from "react-query";
 
-import { ModuleSetting, useModules } from "../use-modules";
+import ModuleSettings from "./settings";
+
+import { Module } from "~/utils/api";
 
 import { ReactComponent as Chevron } from "~/assets/icons/chevron.svg";
 
-import BooleanModuleSetting from "./settings/boolean-setting";
-import UnknownModuleSetting from "./settings/unknown-setting";
-import SliderModuleSetting from "./settings/slider-setting";
-import EnumModuleSetting from "./settings/enum-setting";
-import StringModuleSetting from "./settings/string-setting";
-import ColorModuleSetting from "./settings/color-setting";
-
 import styles from "./module.module.scss";
-import { Module } from "~/utils/api";
-import ModuleSettings from "./module-setting";
 
 type ModuleProps = {
   module: Module;
 };
 
 export default function ModuleItem({ module }: ModuleProps) {
-  const { toggleModule } = useModules();
+  const { mutate: toggleModule } = useMutation((name: string) => {
+    return fetch(`/api/module/${name}`, {
+      method: "PATCH",
+    });
+  });
 
   const [expanded, setExpanded] = useState(() => {
     const expanded = localStorage.getItem(
@@ -30,12 +28,35 @@ export default function ModuleItem({ module }: ModuleProps) {
     return expanded === "true";
   });
 
+  const [hovered, setHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState([0, 0]);
+
+  const headerRef = useRef<HTMLDivElement>(null);
+
   function toggleExpanded() {
     setExpanded(!expanded);
     localStorage.setItem(
       `clickgui.module.${module.name}.expanded`,
       `${!expanded}`
     );
+
+    if (!expanded) {
+      // scroll to top of module
+      setTimeout(() => {
+        headerRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 25);
+    } else {
+      // scroll to bottom of module
+      setTimeout(() => {
+        headerRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }, 25);
+    }
   }
 
   function handleContextMenu(event: React.MouseEvent<HTMLDivElement>) {
@@ -43,37 +64,69 @@ export default function ModuleItem({ module }: ModuleProps) {
     toggleExpanded();
   }
 
-  return (
-    <motion.div
-      variants={{
-        hidden: {
-          opacity: 0,
-          y: -10,
-        },
-        visible: {
-          opacity: 1,
-          y: 0,
-        },
-      }}
-      transition={{
-        bounce: 0,
-        ease: "easeOut",
-      }}
-    >
-      <div
-        data-enabled={module.enabled}
-        data-expanded={expanded}
-        className={styles.module}
-        onContextMenu={handleContextMenu}
-        onClickCapture={() => toggleModule(module.name)}
-      >
-        {module.name}
-        <Chevron className={styles.chevron} />
-      </div>
+  function handleMouseEnter() {
+    setHovered(true);
+  }
 
-      <AnimatePresence initial={false} mode="popLayout">
-        {expanded && <ModuleSettings module={module} />}
-      </AnimatePresence>
-    </motion.div>
+  function handleMouseLeave() {
+    setHovered(false);
+  }
+
+  function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
+    setMousePosition([event.clientX, event.clientY]);
+  }
+
+  return (
+    <>
+      <motion.div
+        variants={{
+          hidden: {
+            opacity: 0,
+            y: -10,
+          },
+          visible: {
+            opacity: 1,
+            y: 0,
+          },
+        }}
+        transition={{
+          bounce: 0,
+          ease: "easeOut",
+        }}
+      >
+        <div
+          ref={headerRef}
+          data-enabled={module.enabled}
+          data-expanded={expanded}
+          className={styles.module}
+          onContextMenu={handleContextMenu}
+          onClickCapture={() => toggleModule(module.name)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onMouseMove={handleMouseMove}
+        >
+          {module.name}
+          <Chevron className={styles.chevron} />
+        </div>
+
+        <AnimatePresence initial={false} mode="popLayout">
+          {expanded && <ModuleSettings module={module} />}
+        </AnimatePresence>
+      </motion.div>
+
+      {hovered && (
+        <div
+          className={styles.description}
+          style={
+            {
+              "--mouse-x": `${mousePosition[0]}px`,
+              "--mouse-y": `${mousePosition[1]}px`,
+            } as CSSProperties
+          }
+        >
+          {module.description}
+        </div>
+      )}
+    </>
   );
 }

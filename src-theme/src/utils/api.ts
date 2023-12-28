@@ -3,7 +3,11 @@ const BASE_API_URL = "http://localhost:15743/api/v1/client";
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_API_URL}${path}`, {
     ...options,
+  }).catch((error) => {
+    console.error(error);
+    throw new Error("An unknown error occurred");
   });
+
   const data = await response.json();
 
   if (!response.ok) {
@@ -50,6 +54,36 @@ export type Server = {
 
 export async function getServers(): Promise<Server[]> {
   return request("/servers");
+}
+
+export type Account = {
+  id: string;
+  username: string;
+  uuid: string;
+  faceUrl: string;
+  type: string;
+};
+
+export function getAccounts(): Promise<Account[]> {
+  return request("/accounts");
+}
+
+type AccountLoginResponse = {
+  username: string;
+  uuid: string;
+  accountType: string;
+  faceUrl: string;
+  premium: boolean;
+};
+
+export function loginAccount(id: number): Promise<AccountLoginResponse> {
+  return request("/account/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id }),
+  });
 }
 
 /**
@@ -212,9 +246,7 @@ export interface ChoiceValue extends Value {
 export interface ChooseValue extends Value {
   name: string;
   value: string;
-  choices: {
-    [key: string]: Value;
-  };
+  choices: string[];
   valueType: "CHOOSE";
 }
 
@@ -232,7 +264,7 @@ export interface ConfigurableValue extends Value {
 
 export interface ToggleableValue extends Value {
   name: string;
-  value: boolean;
+  value: Values[];
   valueType: "TOGGLEABLE";
 }
 
@@ -264,4 +296,16 @@ export function getModuleSettings(name: string): Promise<ConfigurableValue> {
       "Content-Type": "application/json",
     },
   });
+}
+
+type Session = {
+  username: string;
+  uuid: string | null;
+  accountType: string;
+  avatar: string;
+  premium: boolean;
+};
+
+export function getCurrentSession(): Promise<Session> {
+  return request("/session");
 }

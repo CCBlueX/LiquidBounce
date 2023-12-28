@@ -1,5 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { type CSSProperties, useState, createContext, useContext } from "react";
+import {
+  type CSSProperties,
+  useState,
+  createContext,
+  useContext,
+  useEffect,
+} from "react";
 
 import Resizable from "~/components/resizable";
 
@@ -69,6 +75,8 @@ export default function Panel({
     return expanded === "true";
   });
 
+  const [showResizeHandles, setShowResizeHandles] = useState(false);
+
   function toggleExpanded() {
     setExpanded(!expanded);
     localStorage.setItem(`clickgui.panel.${category}.expanded`, `${!expanded}`);
@@ -78,6 +86,28 @@ export default function Panel({
     event.preventDefault();
     toggleExpanded();
   }
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Shift") {
+        setShowResizeHandles(true);
+      }
+    }
+
+    function handleKeyUp(event: KeyboardEvent) {
+      if (event.key === "Shift") {
+        setShowResizeHandles(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   const style = {
     "--x": `${position[0]}px`,
@@ -93,6 +123,7 @@ export default function Panel({
         style={style}
         data-expanded={expanded}
         data-dragging={isDragging}
+        data-resizing={showResizeHandles && expanded}
       >
         <header
           className={styles.header}
@@ -111,55 +142,55 @@ export default function Panel({
         </header>
         <AnimatePresence initial={false}>
           {expanded && (
-            <motion.div
-              className={styles.modules}
-              variants={{
-                hidden: {
-                  opacity: 0,
-                  height: 0,
-                },
-                visible: {
-                  opacity: 1,
-                  height: "auto",
-                },
-              }}
-              transition={{
-                bounce: 0,
-                ease: "easeInOut",
-                duration: 0.2,
-              }}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-            >
-              <Resizable
-                className={styles.resizable}
-                width={width}
-                height={height}
-                minHeight={100}
-                minWidth={230}
-                maxHeight={800}
-                maxWidth={400}
-                resizeHandles={["e", "s", "se"]}
-                onResize={(_event, { size }) => {
-                  setDimensions(() => ({
-                    width: size.width,
-                    height: size.height,
-                  }));
+            <Resizable
+              className={styles.resizable}
+              width={width}
+              height={expanded ? height : 42}
+              minHeight={100}
+              minWidth={230}
+              maxHeight={800}
+              maxWidth={400}
+              resizeHandles={["e", "s", "se"]}
+              onResize={(_event, { size }) => {
+                setDimensions(() => ({
+                  width: size.width,
+                  height: size.height,
+                }));
 
-                  localStorage.setItem(
-                    `clickgui.panel.${category}.dimensions`,
-                    `${size.width},${size.height}`
-                  );
+                localStorage.setItem(
+                  `clickgui.panel.${category}.dimensions`,
+                  `${size.width},${size.height}`
+                );
+              }}
+            >
+              <motion.div
+                className={styles.modules}
+                variants={{
+                  hidden: {
+                    opacity: 0,
+                    height: 0,
+                  },
+                  visible: {
+                    opacity: 1,
+                    height: "100%",
+                  },
                 }}
+                transition={{
+                  bounce: 0,
+                  ease: "easeInOut",
+                  duration: 0.2,
+                }}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
               >
                 <div className={styles.moduleList}>
                   {modules.map((module) => (
                     <ModuleItem module={module} key={module.name} />
                   ))}
                 </div>
-              </Resizable>
-            </motion.div>
+              </motion.div>
+            </Resizable>
           )}
         </AnimatePresence>
       </div>

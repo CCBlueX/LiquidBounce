@@ -91,15 +91,21 @@
   }
 }
 
-.resizable {
-  background-color: var(--module);
+.panel[data-resizing="true"] .resizable {
+  position: relative;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
 }
 
+.panel[data-resizing="false"] .resizable :global(.react-resizable-handle) {
+  display: none;
+}
+
 .modules {
   overflow: auto;
-  height: var(--height);
+  max-height: var(--height);
+  background-color: var(--module);
+  padding-bottom: 8px;
 }
 
 ::-webkit-scrollbar {

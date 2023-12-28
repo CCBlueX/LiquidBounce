@@ -4,7 +4,6 @@
   font-weight: 600;
   font-size: 12px;
   padding: 10px;
-  padding-right: 32px;
   transition: ease background-color 0.2s, ease color 0.2s;
   position: relative;
 
@@ -30,24 +29,17 @@
   }
 }
 
-.settings {
-  border-left: solid 6px var(--accent);
-  padding: 8px 12px;
-  padding-right: 44px;
-  background-color: var(--module);
-
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  .loading {
-    color: var(--text-dimmed);
-    text-align: center;
-    font-weight: 600;
-    font-size: 12px;
-    padding: 10px;
-    padding-right: 32px;
-    transition: ease background-color 0.2s, ease color 0.2s;
-    position: relative;
-  }
+.description {
+  position: fixed;
+  left: calc(var(--mouse-x));
+  top: calc(var(--mouse-y) - 36px);
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 400;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  padding: 8px;
+  z-index: 1000;
+  pointer-events: none;
 }

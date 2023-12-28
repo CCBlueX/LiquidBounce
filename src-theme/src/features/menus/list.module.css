@@ -14,11 +14,25 @@
   height: 100%;
 }
 
-.list[data-loading="true"] {
+.list[data-loading="true"],
+.list[data-error="true"] {
   overflow: hidden;
 }
 
-.list-item-wrapper {
+.list .error {
+  width: 100%;
+  height: 100%;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.list .list-item-wrapper {
   border-radius: 6px;
   transition: background-color 0.2s ease-in-out;
   background-color: rgba(0, 0, 0, 0.4);

@@ -3,12 +3,12 @@ import { useQuery } from "react-query";
 
 import { Module, Value, Values, getModuleSettings } from "~/utils/api";
 
-import BooleanModuleSetting from "./settings/boolean-setting";
-import ColorModuleSetting from "./settings/color-setting";
-import EnumModuleSetting from "./settings/enum-setting";
-import SliderModuleSetting from "./settings/slider-setting";
-import StringModuleSetting from "./settings/string-setting";
-import UnknownModuleSetting from "./settings/unknown-setting";
+import BooleanModuleSetting from "./boolean-setting";
+import ColorModuleSetting from "./color-setting";
+import EnumModuleSetting from "./enum-setting";
+import SliderModuleSetting from "./slider-setting";
+import StringModuleSetting from "./string-setting";
+import UnknownModuleSetting from "./unknown-setting";
 
 import styles from "./module.module.scss";
 

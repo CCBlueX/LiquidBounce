@@ -1,0 +1,76 @@
+.account-types {
+  display: flex;
+
+  gap: 8px;
+
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.account-type {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  height: 72px;
+  flex: 1;
+
+  transition: background-color 0.2s ease-in-out;
+  border-radius: 6px;
+}
+
+.account-type .border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  border: 1px solid var(--brand);
+
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.account-type .icon {
+  width: 32px;
+  height: 32px;
+}
+
+.account-type .label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 17px;
+  text-align: center;
+  color: white;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 48px;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  padding-bottom: 24px;
+  padding-top: 16px;
+}
+
+.submit {
+  width: 400px;
+  height: 80px;
+  background-color: var(--brand) !important;
+  color: white;
+  border-radius: 6px;
+  margin: 0 auto;
+  z-index: 1;
+}

@@ -1,6 +1,13 @@
 import { motion } from "framer-motion";
 
-import styles from "./settings.module.scss";
+import { ModuleSetting } from "../../use-modules";
+
+import styles from "./setting.module.scss";
+import { Value } from "~/utils/api";
+
+export type ModuleSettingProps = {
+  value: Value;
+};
 
 type ModuleSettingItemProps = {
   children: React.ReactNode;
