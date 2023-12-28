@@ -194,6 +194,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleRegen,
             ModuleZoot,
             ModuleAutoPlay,
+            ModuleSmartEat,
 
             // Render
             ModuleAnimation,
