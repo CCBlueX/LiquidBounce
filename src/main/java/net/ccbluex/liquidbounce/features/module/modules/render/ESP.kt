@@ -66,7 +66,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
     private val onLook by BoolValue("OnLook", false)
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { onLook }
 
-    private var maxRenderDistanceSq = 10000.0
+    private var maxRenderDistanceSq = 0.0
 
     private val colorTeam by BoolValue("Team", false)
     private val bot by BoolValue("Bots", true)

@@ -45,7 +45,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
         }
     }
 
-    private var maxRenderDistanceSq = 10000.0
+    private var maxRenderDistanceSq = 0.0
 
     private val chest by BoolValue("Chest", true)
     private val enderChest by BoolValue("EnderChest", true)
