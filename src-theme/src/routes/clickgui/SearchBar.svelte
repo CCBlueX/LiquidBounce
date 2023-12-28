@@ -1,173 +1,193 @@
 <script>
-    export let settings;
-    export let modules;
-    import { listen } from "../../client/ws.svelte";
+  export let settings;
+  export let modules;
+  import { listen } from "../../client/ws.svelte";
 
-    export let toggleModule;
+  export let toggleModule;
 
-    // Initial state of search bar visibility.
-    let visible = settings.searchAlwaysOnTop;
-    let autofocus = settings.autoFocus;
-    let value = "";
-    let filteredModules = [];
-    let selectedModule = null;
+  // Initial state of search bar visibility.
+  let visible = settings.searchAlwaysOnTop;
+  let autofocus = settings.autoFocus;
+  let value = "";
+  let filteredModules = [];
+  let selectedModule = null;
 
-    const filterModules = () => {
-        // If the input is empty, show nothing
-        if (value.length === 0) {
-            filteredModules = [];
-            return;
-        }
-
-        filteredModules = modules
-            .filter(module => module.name.toLowerCase().includes(value.toLowerCase()))
-            .sort((a, b) => a.name.toLowerCase().indexOf(value.toLowerCase()) - b.name.toLowerCase().indexOf(value.toLowerCase()));
-    };
-
-    function isElementVisible(container, element) {
-        const containerTop = container.scrollTop;
-        const containerBottom = containerTop + container.clientHeight;
-        const elementTop = element.offsetTop;
-        const elementBottom = elementTop + element.clientHeight;
-
-        return elementTop >= containerTop && elementBottom <= containerBottom;
+  const filterModules = () => {
+    // If the input is empty, show nothing
+    if (value.length === 0) {
+      filteredModules = [];
+      return;
     }
 
-    function scrollToElement(container, element) {
-        if (!isElementVisible(container, element)) {
-            element.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-        }
+    filteredModules = modules
+      .filter((module) =>
+        module.name.toLowerCase().includes(value.toLowerCase()),
+      )
+      .sort(
+        (a, b) =>
+          a.name.toLowerCase().indexOf(value.toLowerCase()) -
+          b.name.toLowerCase().indexOf(value.toLowerCase()),
+      );
+  };
+
+  function isElementVisible(container, element) {
+    const containerTop = container.scrollTop;
+    const containerBottom = containerTop + container.clientHeight;
+    const elementTop = element.offsetTop;
+    const elementBottom = elementTop + element.clientHeight;
+
+    return elementTop >= containerTop && elementBottom <= containerBottom;
+  }
+
+  function scrollToElement(container, element) {
+    if (!isElementVisible(container, element)) {
+      element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  const handleToggleClick = (module) => {
+    toggleModule(module.name, !module.enabled);
+  };
+
+  const handleHighlight = (module) => {
+    const elem = document.getElementById(module.name + "-module");
+
+    // Check if element exists
+    if (!elem) {
+      return;
     }
 
-    const handleToggleClick = (module) => {
-        toggleModule(module.name, !module.enabled);
-    };
+    scrollToElement(elem.parentElement, elem);
+    elem.classList.add("module-highlight");
+    setTimeout(() => {
+      elem.classList.remove("module-highlight");
+    }, 1000);
+  };
 
-    const handleHighlight = (module) => {
-        const elem = document.getElementById(module.name + "-module");
+  listen("toggleModule", (event) => {
+    const targetModule = event.moduleName;
+    const moduleEnabled = event.enabled;
 
-        // Check if element exists
-        if (!elem) {
-            return;
-        }
-
-        scrollToElement(elem.parentElement, elem)
-        elem.classList.add("module-highlight");
-        setTimeout(() => {
-            elem.classList.remove("module-highlight");
-        }, 1000);
+    const mod = modules.find((module) => targetModule === module.name);
+    if (!mod) {
+      console.warn(`Module ${targetModule} not found`);
+      return;
     }
 
-    listen("toggleModule", event => {
-        const targetModule = event.moduleName;
-        const moduleEnabled = event.enabled;
+    mod.enabled = moduleEnabled;
+    filterModules();
+  });
 
-        const mod = modules.find(module => targetModule === module.name);
-        if (!mod) {
-            console.warn(`Module ${targetModule} not found`);
-            return;
-        }
+  // Handles the Ctrl + F shortcut to show the search bar
+  // TODO: Replace this with a Svelte compatible shortcut
+  window.addEventListener("keydown", (event) => {
+    if (visible) {
+      return;
+    }
 
-        mod.enabled = moduleEnabled;
-        filterModules();
-    });
+    const key = event.which;
 
-    // Handles the Ctrl + F shortcut to show the search bar
-    // TODO: Replace this with a Svelte compatible shortcut
-    window.addEventListener("keydown", event => {
-        if (visible) {
-            return;
-        }
+    // Ctrl + F
+    const ctrlKey = event.ctrlKey ? event.ctrlKey : 17 === key;
+    if (ctrlKey && 70 === key) {
+      visible = true;
+    }
+  });
 
-        const key = event.which;
+  function onInput() {
+    filterModules();
 
-        // Ctrl + F
-        const ctrlKey = event.ctrlKey ? event.ctrlKey : 17 === key;
-        if (ctrlKey && 70 === key) {
-            visible = true;
-        }
-    });
+    if (0 < filteredModules.length) {
+      selectedModule = filteredModules[0];
+    } else {
+      selectedModule = null;
+    }
+  }
 
+  // Handles the keydown events for the search bar
+  function handleKeyDown(event) {
+    const key = event.which;
 
-    function onInput() {
-        filterModules();
-
-        if (0 < filteredModules.length) {
-            selectedModule = filteredModules[0];
+    // Move selection up and down
+    if (38 === key) {
+      if (null === selectedModule) {
+        selectedModule = filteredModules[filteredModules.length - 1];
+      } else {
+        const index = filteredModules.indexOf(selectedModule);
+        if (0 === index) {
+          selectedModule = filteredModules[filteredModules.length - 1];
         } else {
-            selectedModule = null;
+          selectedModule = filteredModules[index - 1];
         }
+      }
+    } else if (40 === key) {
+      if (null === selectedModule) {
+        selectedModule = filteredModules[0];
+      } else {
+        const index = filteredModules.indexOf(selectedModule);
+        if (filteredModules.length - 1 === index) {
+          selectedModule = filteredModules[0];
+        } else {
+          selectedModule = filteredModules[index + 1];
+        }
+      }
+    } else if (13 === key) {
+      if (null !== selectedModule) {
+        handleToggleClick(selectedModule);
+      }
     }
 
-    // Handles the keydown events for the search bar
-    function handleKeyDown(event) {
-        const key = event.which;
-
-        // Move selection up and down
-        if (38 === key) {
-            if (null === selectedModule) {
-                selectedModule = filteredModules[filteredModules.length - 1];
-            } else {
-                const index = filteredModules.indexOf(selectedModule);
-                if (0 === index) {
-                    selectedModule = filteredModules[filteredModules.length - 1];
-                } else {
-                    selectedModule = filteredModules[index - 1];
-                }
-            }
-        } else if (40 === key) {
-            if (null === selectedModule) {
-                selectedModule = filteredModules[0];
-            } else {
-                const index = filteredModules.indexOf(selectedModule);
-                if (filteredModules.length - 1 === index) {
-                    selectedModule = filteredModules[0];
-                } else {
-                    selectedModule = filteredModules[index + 1];
-                }
-            }
-        } else if (13 === key) {
-            if (null !== selectedModule) {
-                handleToggleClick(selectedModule);
-            }
-        }
-
-        // Scroll to selected module
-        if (null !== selectedModule) {
-            const index = filteredModules.indexOf(selectedModule);
-            const element = document.getElementsByClassName("search-bar-list-item")[index];
-            element.scrollIntoView({behavior: "smooth", block: "nearest", inline: "start"});
-        }
+    // Scroll to selected module
+    if (null !== selectedModule) {
+      const index = filteredModules.indexOf(selectedModule);
+      const element = document.getElementsByClassName("search-bar-list-item")[
+        index
+      ];
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "start",
+      });
     }
+  }
 </script>
 
 {#if visible}
-    <div class="search-bar" class:shadow={settings.shadow} on:keydown={handleKeyDown}>
-        <div class="search-bar-input-container">
-            <input bind:value type="text" placeholder="Search" on:input={onInput} autofocus={autofocus}>
-        </div>
-        {#if 0 < filteredModules.length}
-            <div class="search-bar-list">
-                {#each filteredModules as module}
-                    <div class="search-bar-list-item"
-                         on:mousedown={(e) => (e.button === 0 ? handleToggleClick : handleHighlight)(module)}
-                         class:selected={selectedModule === module}>
-                        <span class:active={module.enabled}>
-                            {module.name}
-                        </span>
-                    </div>
-                {/each}
-            </div>
-        {:else}
-            {#if 0 < value.length}
-                <div class="search-bar-list">
-                    <div class="search-bar-list-item">
-                        No modules found
-                    </div>
-                </div>
-            {/if}
-        {/if}
+  <div
+    class="search-bar"
+    class:shadow={settings.shadow}
+    on:keydown={handleKeyDown}
+  >
+    <div class="search-bar-input-container">
+      <input
+        bind:value
+        type="text"
+        placeholder="Search"
+        on:input={onInput}
+        {autofocus}
+      />
     </div>
+    {#if 0 < filteredModules.length}
+      <div class="search-bar-list">
+        {#each filteredModules as module}
+          <div
+            class="search-bar-list-item"
+            on:mousedown={(e) =>
+              (e.button === 0 ? handleToggleClick : handleHighlight)(module)}
+            class:selected={selectedModule === module}
+          >
+            <span class:active={module.enabled}>
+              {module.name}
+            </span>
+          </div>
+        {/each}
+      </div>
+    {:else if 0 < value.length}
+      <div class="search-bar-list">
+        <div class="search-bar-list-item">No modules found</div>
+      </div>
+    {/if}
+  </div>
 {/if}
 
 <style lang="scss">
@@ -197,13 +217,13 @@
         }
 
         &:shadow {
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
       }
     }
 
     &-list {
-      background-color: rgba(0, 0, 0, 0.60);
+      background-color: rgba(0, 0, 0, 0.6);
       border-radius: 0 0 10px 10px;
       border-top: solid 2px var(--accent);
       max-height: 220px;

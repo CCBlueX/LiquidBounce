@@ -1,70 +1,66 @@
 <script>
-    import {sineInOut} from "svelte/easing";
-    import {fade, slide} from "svelte/transition";
-    import GenericSetting from "./GenericSetting.svelte";
+  import { sineInOut } from "svelte/easing";
+  import { fade, slide } from "svelte/transition";
+  import GenericSetting from "./GenericSetting.svelte";
 
-    /**
-     * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
-     */
-    export let reference;
-    /**
-     * This function is passed from the parent component and is used to write the new configurable to the client.
-     * This will result in a request to the server.
-     */
-    export let write;
+  /**
+   * A reference to the value instance of this setting. It is part of the module configurable and should NOT lose its reference.
+   */
+  export let reference;
+  /**
+   * This function is passed from the parent component and is used to write the new configurable to the client.
+   * This will result in a request to the server.
+   */
+  export let write;
 
-    let name = reference.name;
-    let choices = Object.keys(reference.choices);
-    let expanded = false;
+  let name = reference.name;
+  let choices = Object.keys(reference.choices);
+  let expanded = false;
 
-    function handleToggleExpand() {
-        expanded = !expanded;
+  function handleToggleExpand() {
+    expanded = !expanded;
+  }
+
+  function handleValueChange(v) {
+    // Check if value is a choice
+    if (!choices.includes(v)) {
+      return;
     }
 
-    function handleValueChange(v) {
-        // Check if value is a choice
-        if (!choices.includes(v)) {
-            return;
-        }
-
-        reference.active = v;
-        write();
-    }
+    reference.active = v;
+    write();
+  }
 </script>
 
 <div class="setting">
-    <div class="choice">
-        <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {reference.active}</div>
-        {#if expanded}
-            <div class="values" transition:slide|local={{duration: 200, easing: sineInOut}}>
-                {#each choices as v}
-                    <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === reference.active}>{v}</div>
-                {/each}
-            </div>
-        {/if}
+  <div class="choice">
+    <div on:click={handleToggleExpand} class:expanded class="name">
+      {name} - {reference.active}
     </div>
-
-    {#if reference.choices[reference.active].value.length > 0}
-      <div class="settings" transition:fade|local={{duration: 200, easing: sineInOut}}>
-        {#each reference.choices[reference.active].value as s}
-            <GenericSetting reference={s} write={write} />
+    {#if expanded}
+      <div
+        class="values"
+        transition:slide|local={{ duration: 200, easing: sineInOut }}
+      >
+        {#each choices as v}
+          <div
+            class="value"
+            on:click={() => handleValueChange(v)}
+            class:enabled={v === reference.active}
+          >
+            {v}
+          </div>
         {/each}
       </div>
     {/if}
+  </div>
+
+  {#if reference.choices[reference.active].value.length > 0}
+    <SubSettings settings={reference.choices[reference.active].value} />
+  {/if}
 </div>
 
 <style lang="scss">
-  .settings {
-    background-color: rgba(0, 0, 0, 0.36);
-    border-right: solid 4px var(--accent);
-    overflow: hidden;
-    margin-top: 10px;
-  }
-
-  .setting {
-    overflow: hidden;
-  }
-
   .choice {
     padding: 7px 10px;
   }
@@ -77,7 +73,7 @@
     color: var(--text);
     font-size: 12px;
     border-radius: 5px;
-    transition: ease border-radius .2s;
+    transition: ease border-radius 0.2s;
 
     &.expanded {
       border-radius: 5px 5px 0 0;
@@ -95,7 +91,7 @@
       width: 10px;
       right: 10px;
       top: 50%;
-      transition: ease transform .2s;
+      transition: ease transform 0.2s;
       transform: translateY(-50%);
       background-image: url("../img/settings-expand.svg");
       background-position: center;
@@ -114,7 +110,7 @@
       font-size: 12px;
       text-align: center;
       padding: 7px;
-      transition: ease color .2s;
+      transition: ease color 0.2s;
 
       &.enabled {
         color: var(--accent);
