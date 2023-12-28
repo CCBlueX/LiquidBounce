@@ -109,7 +109,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             return@repeatable
         }
 
-        // Disable the module and return if the inventory is full and the setting for disabling the module is enabled
+        // Disable the module and return if the inventory is full, and the setting for disabling the module is enabled
         if (disableOnFullInventory && !hasInventorySpace()) {
             notification("Inventory is Full", "AutoFarm has been disabled", NotificationEvent.Severity.ERROR)
             disable()
@@ -239,7 +239,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
                 pos.up(),
                 range = range.toDouble() - 0.1,
                 wallsRange = wallRange.toDouble() - 0.1
-            ) ?: continue // We don't have a free angle at the block? Well let me see the next.
+            ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
 
             // set currentTarget to the new target
             currentTarget = pos
