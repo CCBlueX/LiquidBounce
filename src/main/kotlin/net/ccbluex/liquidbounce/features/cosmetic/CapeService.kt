@@ -41,6 +41,7 @@ object CapeService : Listenable, Configurable("Cape") {
      * The client cape user
      */
     var knownToken by text("Token", "")
+        .doNotInclude()
 
     var clientCapeUser: CapeSelfUser? = null
 
