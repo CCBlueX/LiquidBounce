@@ -29,6 +29,11 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
+/**
+ * CommandItemSkull
+ *
+ * Allows you to create a player skull item with a specified name.
+ */
 object CommandItemSkull {
 
     fun createCommand(): Command {

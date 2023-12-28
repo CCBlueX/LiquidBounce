@@ -78,7 +78,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             return@repeatable
         }
 
-        val clicks = clickScheduler.clicks {
+        clickScheduler.clicks {
             target.attack(swing)
             true
         }

@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
+import org.spongepowered.asm.mixin.Unique;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -69,6 +70,15 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Shadow
     protected abstract boolean isWalking();
 
+    @Unique
+    private float lastKnownHealth;
+    @Unique
+    private float lastKnownMaxHealth;
+    @Unique
+    private float lastKnownFoodLevel;
+    @Unique
+    private float lastKnownExperienceProgress;
+
     /**
      * Hook entity tick event
      */
@@ -76,7 +86,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
             target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;tick()V",
             shift = At.Shift.BEFORE,
             ordinal = 0),
-    cancellable = true)
+            cancellable = true)
     private void hookTickEvent(CallbackInfo ci) {
         var tickEvent = new PlayerTickEvent();
         EventManager.INSTANCE.callEvent(tickEvent);
@@ -92,6 +102,22 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
             ordinal = 0))
     private void hookPostTickEvent(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new PlayerPostTickEvent());
+
+        var health = this.getHealth();
+        var maxHealth = this.getMaxHealth();
+        var foodLevel = this.getHungerManager().getFoodLevel();
+        var experienceProgress = this.experienceProgress;
+
+        // Call event if any of the values changed
+        if (health != this.lastKnownHealth || maxHealth != this.lastKnownMaxHealth ||
+                foodLevel != this.lastKnownFoodLevel || experienceProgress != this.lastKnownExperienceProgress) {
+            EventManager.INSTANCE.callEvent(new PlayerStatsChangeEvent(health, maxHealth, foodLevel, experienceProgress));
+        }
+
+        this.lastKnownHealth = health;
+        this.lastKnownMaxHealth = maxHealth;
+        this.lastKnownFoodLevel = foodLevel;
+        this.lastKnownExperienceProgress = experienceProgress;
     }
 
     /**

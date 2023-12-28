@@ -42,6 +42,7 @@ object ChoiceConfigurableSerializer : JsonSerializer<ChoiceConfigurable> {
         }
 
         obj.add("choices", choices)
+        obj.add("valueType", context.serialize(src.valueType))
 
         return obj
     }

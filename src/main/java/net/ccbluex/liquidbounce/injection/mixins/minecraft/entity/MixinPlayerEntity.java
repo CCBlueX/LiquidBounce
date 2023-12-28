@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -32,6 +33,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.registry.tag.FluidTags;
@@ -52,6 +54,11 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private PlayerInventory inventory;
 
     @Shadow public abstract void tick();
+
+    @Shadow public abstract HungerManager getHungerManager();
+
+    @Shadow
+    public float experienceProgress;
 
     /**
      * Hook player stride event
@@ -98,10 +105,12 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z", shift = At.Shift.BEFORE))
+    @Inject(method = "tick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z",
+            ordinal = 1,
+            shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        this.noClip = player != null && player.noClip;
+        this.noClip = ModuleNoClip.INSTANCE.getEnabled();
     }
 
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)

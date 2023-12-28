@@ -101,13 +101,15 @@ open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHa
     /**
      * Waits until the fixed amount of ticks ran out or the [breakLoop] says to continue.
      */
-    suspend fun waitConditional(ticks: Int, breakLoop: () -> Boolean = { false }) {
+    suspend fun waitConditional(ticks: Int, breakLoop: () -> Boolean = { false }): Boolean {
         // Don't wait if ticks is 0
         if (ticks == 0) {
-            return
+            return true
         }
 
         wait { if (breakLoop()) 0 else ticks }
+
+        return elapsedTicks >= ticks
     }
 
     /**

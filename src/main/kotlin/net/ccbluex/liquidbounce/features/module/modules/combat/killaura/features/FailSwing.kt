@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.prepareAttackEnvironment
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
@@ -12,6 +13,7 @@ import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.Hand
+import net.minecraft.util.hit.HitResult
 
 internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", false) {
 
@@ -25,10 +27,12 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
             return
         }
 
+        val raycastType = mc.crosshairTarget?.type
+
         val range = ModuleKillAura.range + additionalRange
         val entity = target ?: world.findEnemy(0f..range) ?: return
 
-        if (entity.isRemoved || entity.boxedDistanceTo(player) > range) {
+        if (entity.isRemoved || entity.boxedDistanceTo(player) > range || raycastType != HitResult.Type.MISS) {
             return
         }
 

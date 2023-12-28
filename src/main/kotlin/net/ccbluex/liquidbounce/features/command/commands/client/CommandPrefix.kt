@@ -26,6 +26,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
+/**
+ * Prefix Command
+ *
+ * Allows you to change the prefix used for commands.
+ */
 object CommandPrefix {
 
     fun createCommand(): Command {

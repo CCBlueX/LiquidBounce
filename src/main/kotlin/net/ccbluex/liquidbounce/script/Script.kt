@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.script.bindings.api.JsApiProvider
 import net.ccbluex.liquidbounce.script.bindings.features.JsModule
 import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
 import net.ccbluex.liquidbounce.script.bindings.globals.JsClient
-import net.ccbluex.liquidbounce.script.bindings.globals.JsItem
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import org.graalvm.polyglot.Context
@@ -47,16 +47,8 @@ class Script(val scriptFile: File) {
         .build().apply {
             // Global instances
             val jsBindings = getBindings("js")
-            jsBindings.putMember("Setting", JsSetting)
-            jsBindings.putMember("Item", JsItem)
 
-            // Direct access to CommandBuilder and ParameterBuilder required for commands
-            // todo: remove this as soon we figured out a more JS-like way to create commands
-            jsBindings.putMember("CommandBuilder", CommandBuilder)
-            jsBindings.putMember("ParameterBuilder", ParameterBuilder)
-
-            jsBindings.putMember("mc", mc)
-            jsBindings.putMember("client", JsClient)
+            JsApiProvider.setupUsefulContext(jsBindings)
 
             // Global functions
             jsBindings.putMember("registerScript", RegisterScript())
@@ -87,6 +79,11 @@ class Script(val scriptFile: File) {
 
         // Call load event
         callGlobalEvent("load")
+
+        if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
+            logger.error("[ScriptAPI] Script '${scriptFile.name}' is missing required information!")
+            error("Script '${scriptFile.name}' is missing required information!")
+        }
 
         logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
     }

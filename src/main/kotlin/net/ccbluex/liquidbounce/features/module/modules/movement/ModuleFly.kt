@@ -166,7 +166,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                 waitTicks(1)
                 strafeSince = startStrafe
-            } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
+            } else if (packet is ExplosionS2CPacket) { // Check if explosion affects velocity
                 packet.playerVelocityX = 0f
                 packet.playerVelocityY *= vertical
                 packet.playerVelocityZ = 0f
@@ -184,8 +184,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
      * @note NA
      */
 
-    private object VulcanGlide : Choice ("VulcanGlide") {
-
+    private object VulcanGlide : Choice("VulcanGlide") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -196,7 +195,6 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
                     player.velocity.y = -0.155
                 }
             } else player.velocity.y = -0.1
-
         }
     }
 

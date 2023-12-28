@@ -241,7 +241,7 @@ fun doPlacement(
             return
         }
 
-        interactionResult.isAccepted           -> {
+        interactionResult.isAccepted -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
 
             handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)

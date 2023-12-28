@@ -26,6 +26,11 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import org.lwjgl.glfw.GLFW
 
+/**
+ * CommandPosition
+ *
+ * Displays the player's current position in the game.
+ */
 object CommandPosition {
 
     fun createCommand(): Command {

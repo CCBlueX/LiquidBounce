@@ -37,6 +37,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         IntaveHeavyAntiBotMode,
         HorizonAntiBotMode
     ))
+
     private val literalNPC by boolean("LiteralNPC", false)
 
     override fun disable() {
@@ -65,6 +66,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         if (!enabled) {
             return false
         }
+
         if (player !is PlayerEntity) {
             return false
         }

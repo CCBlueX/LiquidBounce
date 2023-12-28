@@ -27,6 +27,7 @@ import net.minecraft.util.Formatting
 import org.apache.commons.lang3.RandomStringUtils
 import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.util.UUID
 
 /**
  * LiquidBounce Client API
@@ -36,6 +37,16 @@ import java.text.SimpleDateFormat
 object ClientApi {
 
     private const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
+    private const val AVATAR_UUID_URL = "https://avatar.liquidbounce.net/avatar/%s/100"
+    private const val AVATAR_USERNAME_URL = "https://avatar.liquidbounce.net/avatar/%s"
+
+    fun formatAvatarUrl(uuid: UUID?, username: String): String {
+        return if (uuid != null) {
+            AVATAR_UUID_URL.format(uuid)
+        } else {
+            AVATAR_USERNAME_URL.format(username)
+        }
+    }
 
     /**
      * This makes sense because we want forks to be able to use this API and not only the official client.

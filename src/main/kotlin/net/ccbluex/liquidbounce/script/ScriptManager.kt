@@ -25,8 +25,6 @@ import java.io.FileFilter
 
 object ScriptManager {
 
-    // todo: add fabricmc mappings nashorn remapper
-
     // Loaded scripts
     val loadedScripts = mutableListOf<Script>()
 
@@ -41,7 +39,7 @@ object ScriptManager {
      * Loads all scripts inside the scripts folder.
      */
     fun loadScripts() {
-        scriptsRoot.listFiles(FileFilter { it.name.endsWith(".js") })?.forEach(ScriptManager::loadScript)
+        scriptsRoot.listFiles(FileFilter { it.name.endsWith(".js") })?.forEach(ScriptManager::loadSafely)
     }
 
     /**
@@ -52,17 +50,27 @@ object ScriptManager {
         loadedScripts.clear()
     }
 
-    /**
-     * Loads a script from a file.
-     */
-    fun loadScript(file: File) = runCatching {
-        val script = Script(file).also { loadedScripts += it }
-        script.initScript()
-
-        script
+    fun loadSafely(file: File) = runCatching {
+        loadScript(file)
     }.onFailure {
         logger.error("Unable to load script ${file.name}.", it)
     }.getOrNull()
+
+    /**
+     * Loads a script from a file.
+     */
+    fun loadScript(file: File): Script {
+        val script = Script(file)
+        script.initScript()
+
+        loadedScripts += script
+        return script
+    }
+
+    fun unloadScript(script: Script) {
+        script.disable()
+        loadedScripts.remove(script)
+    }
 
     /**
      * Enables all scripts.

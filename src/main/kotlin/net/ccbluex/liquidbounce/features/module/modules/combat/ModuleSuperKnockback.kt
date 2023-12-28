@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity
@@ -41,6 +41,28 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap))
     val hurtTime by int("HurtTime", 10, 0..10)
     val chance by int("Chance", 100, 0..100)
+
+    var sequence: Sequence<DummyEvent>? = null
+
+    // Reset on mode change
+    val choiceChangeHandler = handler<ChoiceChangeEvent> {
+        if (it.module != this) {
+            return@handler
+        }
+
+        reset()
+    }
+
+    override fun handleEvents(): Boolean {
+        val handleEvents = super.handleEvents()
+
+        // Reset if the module is not handling events anymore
+        if (!handleEvents) {
+            reset()
+        }
+
+        return handleEvents
+    }
 
     object Packet : Choice("Packet") {
         override val parent: ChoiceConfigurable
@@ -73,21 +95,19 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         var antiSprint = false
 
-        override fun enable() {
-            antiSprint = false
-        }
-
-        val attackHandler = sequenceHandler<AttackEvent> { event ->
-            if (!shouldStopSprinting(event)) {
-                return@sequenceHandler
+        val attackHandler = handler<AttackEvent> { event ->
+            if (!shouldStopSprinting(event) || sequence != null) {
+                return@handler
             }
 
-            antiSprint = true
+            runWithDummyEvent {
+                antiSprint = true
 
-            waitUntil { !player.isSprinting && !player.lastSprinting }
-            waitTicks(reSprintTicks.random())
+                it.waitUntil { !player.isSprinting && !player.lastSprinting }
+                it.waitTicks(reSprintTicks.random())
 
-            antiSprint = false
+                antiSprint = false
+            }
         }
     }
 
@@ -100,20 +120,18 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         var stopMoving = false
 
-        override fun enable() {
-            stopMoving = false
-        }
-
-        val attackHandler = sequenceHandler<AttackEvent> { event ->
-            if (!shouldStopSprinting(event)) {
-                return@sequenceHandler
+        val attackHandler = handler<AttackEvent> { event ->
+            if (!shouldStopSprinting(event) || sequence != null) {
+                return@handler
             }
 
-            waitTicks(ticksUntilMovementBlock.random())
-            stopMoving = true
-            waitUntil { !player.input.hasForwardMovement() }
-            waitTicks(ticksUntilAllowedMovement.random())
-            stopMoving = false
+            runWithDummyEvent {
+                it.waitTicks(ticksUntilMovementBlock.random())
+                stopMoving = true
+                it.waitUntil { !player.input.hasForwardMovement() }
+                it.waitTicks(ticksUntilAllowedMovement.random())
+                stopMoving = false
+            }
         }
     }
 
@@ -121,19 +139,8 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
     fun shouldStopMoving() = enabled && WTap.isActive && WTap.stopMoving
 
-    private suspend fun <T : Event> Sequence<T>.shouldStopSprinting(event: AttackEvent): Boolean {
+    private fun shouldStopSprinting(event: AttackEvent): Boolean {
         val enemy = event.enemy
-
-        if (!player.isSprinting && !player.lastSprinting) {
-            return false
-        }
-
-        val doWorkaround = !player.isSprinting && player.lastSprinting
-
-        // TODO: remove this once the issue with sequence type events being a bit late to detect player.isSprinting so these modes perform even better
-        if (doWorkaround) {
-            sync()
-        }
 
         if (!player.isSprinting || !player.lastSprinting) {
             return false
@@ -141,6 +148,22 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
             && !ModuleCriticals.wouldCrit()
+    }
+
+    private fun reset() {
+        sequence?.cancel()
+        sequence = null
+
+        WTap.stopMoving = false
+        SprintTap.antiSprint = false
+    }
+
+    private fun runWithDummyEvent(action: suspend (Sequence<DummyEvent>) -> Unit) {
+        sequence = Sequence(this, {
+            action(this)
+        }, DummyEvent())
+
+        sequence = null
     }
 
 }
