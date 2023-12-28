@@ -118,7 +118,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
     private val timer by float("Timer", 1f, 0.01f..10f)
 
-    val sameY by boolean("SameY", false)
+    var sameY by boolean("SameY", false)
     private var currentTarget: BlockPlacementTarget? = null
 
     private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
