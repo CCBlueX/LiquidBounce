@@ -1,4 +1,3 @@
-
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -27,26 +26,26 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 
 
 /**
- * Auto insult module
+ * Auto insult on kill module
  *
- * Sends an insult  in chat when someone is killed by you.
+ * Sends an insult in chat when someone is killed by you.
  */
 object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
 
 
     private val modes = choices(
         "Mode", Toxic, arrayOf(
-            Toxic, liquidbounce
+            Toxic, LiquidBounce
         )
     )
-    // A list of funny messages to choose from
 
-    private object Toxic : Choice("ToxicInsult") {
+
+    private object Toxic : Choice("Toxic") {
         override val parent : ChoiceConfigurable
             get() = modes
     }
 
-    val toxicchoice = listOf(
+    val toxicInsults = listOf(
         "lmao",
         "you sit on your ass all day and still die? sad",
         "JEW SPOTTED",
@@ -59,11 +58,11 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         "my disabled brother could beat you in a 1v1"
     )
 
-    private object liquidbounce : Choice("LiquidBounceInsult") {
+    private object LiquidBounce : Choice("LiquidBounce") {
         override val parent: ChoiceConfigurable
             get() = modes
     }
-    val liquidbouncechoice = listOf(
+    val liquidBounceInsults = listOf(
         "Install LiquidBounce Today",
         "You sit on your ass all day and some german developers still kill you, sad",
         "LiquidBounce is The Next Lunar",
@@ -72,27 +71,28 @@ object ModuleAutoInsult : Module("AutoInsult", Category.MISC) {
         "LiquidBounce Gives you Wings!"
     )
 
-
+    // A regular expression for matching kill messages
+    private val killRegex = Regex("(\\w+) was slain by ${player.nameForScoreboard}")
 
     // A handler for chat receive events
     val onChat = handler<ChatReceiveEvent> { event ->
         val msg = event.message
 
-        // A regular expression for matching kill messages
-        val killRegex = player.nameForScoreboard
-
         // If the message matches the kill message, send a funny message in chat
-        val matchResult = killRegex.findAll(msg)
-        if (matchResult.count() != 0) {
+        val matchResult = killRegex.matchEntire(msg)
+        if (matchResult != null) {
             // Get the name of the player who was killed
-            val killedPlayer = matchResult.first().groups[1]?.value ?: "someone"
+            val killedPlayer = matchResult.groupValues[1]
 
-            // Choose a random message from the list
-            val toxic = if (modes.activeChoice.name == "liquidbouncec") liquidbouncechoice.random() else toxicchoice.random()
+            // Choose a random message from the list based on the active choice
+            val insult = when (modes.activeChoice) {
+                Toxic -> toxicInsults.random()
+                LiquidBounce -> liquidBounceInsults.random()
+                else -> "oops, something went wrong"
+            }
 
             // Send the message using the network handler
-            network.sendChatMessage(toxic)
+            network.sendChatMessage(insult)
         }
     }
 }
-
