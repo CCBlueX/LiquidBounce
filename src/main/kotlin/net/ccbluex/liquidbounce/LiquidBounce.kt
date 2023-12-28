@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -31,26 +30,38 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
+import net.ccbluex.liquidbounce.features.tabs.Tabs.headsCollection
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.client.IS_MAC
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.socket.ClientSocket
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.minecraft.resource.ReloadableResourceManagerImpl
+import net.minecraft.resource.ResourceManager
+import net.minecraft.resource.ResourceReloader
+import net.minecraft.resource.SynchronousResourceReloader
+import net.minecraft.util.profiler.Profiler
 import org.apache.logging.log4j.LogManager
-import org.lwjgl.util.tinyfd.TinyFileDialogs
-import kotlin.system.exitProcess
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 
 /**
  * LiquidBounce
@@ -99,19 +110,6 @@ object LiquidBounce : Listenable {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
-            // Restrict OS (to notify user that macOS is not supported)
-            if (IS_MAC) {
-                TinyFileDialogs.tinyfd_messageBox(
-                    "LiquidBounce Nextgen",
-                    "LiquidBounce Nextgen is not supported on macOS. Please use Windows or Linux instead.",
-                    "ok",
-                    "error",
-                    true
-                )
-                logger.error("LiquidBounce Nextgen is not supported on macOS. Please use Windows or Linux instead.")
-                exitProcess(1)
-            }
-
             // Load mappings
             McMappings.load()
 
@@ -128,7 +126,6 @@ object LiquidBounce : Listenable {
             // Features
             ModuleManager
             CommandManager
-            ThemeManager
             ScriptManager
             RotationManager
             CombatManager
@@ -139,12 +136,8 @@ object LiquidBounce : Listenable {
             WorldToScreen
             Tabs
             Chat
-
-            // Loads up fonts (requires connection to the internet on first launch)
+            BrowserManager
             Fonts
-
-            // Load up a web platform
-            UltralightEngine.init()
 
             // Register commands and modules
             CommandManager.registerInbuilt()
@@ -155,6 +148,49 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
+
+            // Netty WebSocket
+            ClientSocket.start()
+
+            // Initialize browser
+            ThemeManager
+            IntegrationHandler
+            BrowserManager.initBrowser()
+
+            // Register resource reloader
+            val resourceManager = mc.resourceManager
+            val clientResourceReloader = ClientResourceReloader()
+            if (resourceManager is ReloadableResourceManagerImpl) {
+                resourceManager.registerReloader(clientResourceReloader)
+            } else {
+                logger.warn("Failed to register resource reloader!")
+
+                // Run resource reloader directly as fallback
+                clientResourceReloader.reload(resourceManager)
+            }
+        }.onSuccess {
+            logger.info("Successfully loaded client!")
+        }.onFailure(ErrorHandler::fatal)
+    }
+
+    /**
+     * Resource reloader which is executed on client start and reload.
+     * This is used to run async tasks without blocking the main thread.
+     *
+     * For now this is only used to check for updates and request additional information from the internet.
+     *
+     * @see SynchronousResourceReloader
+     * @see ResourceReloader
+     */
+    class ClientResourceReloader : SynchronousResourceReloader {
+
+        override fun reload(manager: ResourceManager) {
+            runCatching {
+                logger.info("Loading fonts...")
+                Fonts.loadQueuedFonts()
+            }.onSuccess {
+                logger.info("Loaded fonts successfully!")
+            }.onFailure(ErrorHandler::fatal)
 
             // Check for newest version
             if (updateAvailable) {
@@ -181,22 +217,18 @@ object LiquidBounce : Listenable {
                 logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
             }
 
-            // Connect to chat server
-            Chat.connectAsync()
-        }.onSuccess {
-            logger.info("Successfully loaded client!")
-        }.onFailure {
-            logger.error("Unable to load client.", it)
-            TinyFileDialogs.tinyfd_messageBox(
-                "LiquidBounce Nextgen",
-                "LiquidBounce Nextgen failed to launch.\n" +
-                    "If the issue persists, report to the developers.\n" +
-                    "${it.message}",
-                "ok",
-                "error",
-                true
-            )
-            exitProcess(1)
+            // Load Head collection
+            headsCollection
+
+            // Load settings list from API
+            runCatching {
+                logger.info("Loading settings list from API...")
+                CommandConfig.cachedSettingsList = ClientApi.requestSettingsList()
+            }.onSuccess {
+                logger.info("Loaded ${CommandConfig.cachedSettingsList?.size} settings from API.")
+            }.onFailure {
+                logger.error("Failed to load settings list from API", it)
+            }
         }
     }
 
@@ -205,8 +237,8 @@ object LiquidBounce : Listenable {
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
+        BrowserManager.shutdownBrowser()
         ConfigSystem.storeAll()
-        UltralightEngine.shutdown()
 
         ChunkScanner.ChunkScannerThread.stopThread()
     }

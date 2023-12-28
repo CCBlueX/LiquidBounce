@@ -33,6 +33,9 @@ import org.lwjgl.glfw.GLFW
 val logger: Logger
     get() = LiquidBounce.logger
 
+val inGame: Boolean
+    get() = mc.player != null
+
 // Chat formatting
 private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
 
@@ -42,9 +45,9 @@ fun regular(text: MutableText) = text.styled { it.withColor(Formatting.GRAY) }
 
 fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
 
-fun variable(text: MutableText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: MutableText) = text.styled { it.withColor(Formatting.GOLD) }
 
-fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: String) = text.asText().styled { it.withColor(Formatting.GOLD) }
 
 fun chat(vararg texts: Text, prefix: Boolean = true) {
     val literalText = if (prefix) clientPrefix.copy() else Text.literal("")

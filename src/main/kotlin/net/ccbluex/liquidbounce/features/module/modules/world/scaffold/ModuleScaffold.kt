@@ -18,13 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import com.viaversion.viaversion.api.connection.UserConnection
-import com.viaversion.viaversion.api.minecraft.Position
-import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
-import com.viaversion.viaversion.api.type.Type
-import com.viaversion.viaversion.protocols.protocol1_8.ServerboundPackets1_8
-import com.viaversion.viaversion.protocols.protocol1_9to1_8.Protocol1_9To1_8
-import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -77,7 +70,7 @@ import kotlin.random.Random
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
-        internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 50))
+        internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 100))
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
@@ -194,7 +187,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.inventory.getStack(blockInHotbar)
             }
 
-            val optimalLine = this.currentOptimalLine
+        val optimalLine = this.currentOptimalLine
 
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double =
@@ -202,8 +195,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 {
                     vec -> -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5))
                 }
-            }
-            else {
+            } else {
                 BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
             }
 
@@ -313,15 +305,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             && SimulatePlacementAttempts.clickScheduler.goingToClick) {
             SimulatePlacementAttempts.clickScheduler.clicks {
                 // By the time this reaches here, the variables are already non-null
-                if (!viaFabricFailPlace()) {
-                    doPlacement(
-                        currentCrosshairTarget!!,
-                        suitableHand!!,
-                        ModuleScaffold::swing,
-                        ModuleScaffold::swing,
-                    )
-                }
-
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, ModuleScaffold::swing, ModuleScaffold::swing)
                 true
             }
         }
@@ -396,38 +380,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             if (stack.item is BlockItem) Pair(it, stack) else null
         }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }?.first
-    }
-
-    private fun viaFabricFailPlace(): Boolean {
-        runCatching {
-            val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
-
-            if (!isViaFabricPlusLoaded) {
-                return false
-            }
-
-            val localViaConnection = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
-
-            val viaConnection = mc.networkHandler?.connection?.channel?.attr(localViaConnection)?.get() ?: return false
-
-            if (viaConnection.protocolInfo.pipeline.contains(Protocol1_9To1_8::class.java)) {
-                val clientStatus = PacketWrapper.create(ServerboundPackets1_8.PLAYER_BLOCK_PLACEMENT, viaConnection)
-
-                clientStatus.write(Type.POSITION, Position(-1, (-1).toShort(), -1))
-                clientStatus.write(Type.UNSIGNED_BYTE, 255.toShort())
-
-                clientStatus.write(Type.ITEM, Protocol1_9To1_8.getHandItem(viaConnection))
-
-                clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
-                clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
-                clientStatus.write(Type.UNSIGNED_BYTE, 0.toShort())
-
-                runCatching {
-                    clientStatus.sendToServer(Protocol1_9To1_8::class.java)
-                }
-            }
-        }
-        return true
     }
 
     private fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {

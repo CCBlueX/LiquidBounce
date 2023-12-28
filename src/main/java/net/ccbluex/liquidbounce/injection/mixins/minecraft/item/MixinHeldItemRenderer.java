@@ -1,6 +1,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimation;
 import net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -12,11 +14,13 @@ import net.minecraft.item.ShieldItem;
 import net.minecraft.item.SwordItem;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
+import net.minecraft.util.UseAction;
 import net.minecraft.util.math.RotationAxis;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -54,6 +58,72 @@ public abstract class MixinHeldItemRenderer {
             ci.cancel();
         }
     }
+
+    @Redirect(method = "renderFirstPersonItem", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/item/ItemStack;getUseAction()Lnet/minecraft/util/UseAction;",
+            ordinal = 0
+    ))
+    private UseAction hookUseAction(ItemStack instance) {
+        var item = instance.getItem();
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
+            return UseAction.BLOCK;
+        }
+
+        return instance.getUseAction();
+    }
+
+    @Redirect(method = "renderFirstPersonItem", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isUsingItem()Z",
+            ordinal = 1
+    ))
+    private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
+            return true;
+        }
+
+        return instance.isUsingItem();
+    }
+
+    @Redirect(method = "renderFirstPersonItem", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getActiveHand()Lnet/minecraft/util/Hand;",
+            ordinal = 1
+    ))
+    private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
+            return Hand.MAIN_HAND;
+        }
+
+        return instance.getActiveHand();
+    }
+
+    @Redirect(method = "renderFirstPersonItem", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getItemUseTimeLeft()I",
+            ordinal = 1
+    ))
+    private int hookItemUseItem(AbstractClientPlayerEntity instance) {
+        var item = instance.getMainHandStack().getItem();
+
+        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
+                AutoBlock.INSTANCE.getVisualBlocking()) {
+            return 7200;
+        }
+
+        return instance.getItemUseTimeLeft();
+    }
+
+
 
     /**
      * Taken from ViaFabricPlus

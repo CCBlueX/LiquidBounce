@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+ 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -36,6 +37,11 @@ import net.minecraft.util.Identifier
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
+/**
+ * Items Command
+ *
+ * Allows you to add, remove, list, and clear blocks from the disallowed list.
+ */
 object CommandItems {
 
     fun createCommand(): Command {

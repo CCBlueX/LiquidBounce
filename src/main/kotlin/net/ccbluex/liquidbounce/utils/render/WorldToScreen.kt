@@ -37,7 +37,8 @@ object WorldToScreen: Listenable {
             Vector3f()
         )
 
-        val guiScaleMul = 0.5f / mc.options.guiScale.value.toFloat()
+        val scaleFactor = mc.window.scaleFactor
+        val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
             .mul(guiScaleMul * mc.framebuffer.viewportWidth, guiScaleMul * mc.framebuffer.viewportHeight, 1.0F)

@@ -30,6 +30,11 @@ import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import kotlin.math.max
 
+/**
+ * ItemGive Command
+ *
+ * Allows you to give items to the player.
+ */
 object CommandItemGive {
 
     fun createCommand(): Command {

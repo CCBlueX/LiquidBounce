@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -52,7 +52,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
             gamma = mc.options.gamma.value
         }
 
-        val tickHandler = handler<PlayerTickEvent> {
+        val tickHandler = handler<PlayerPostTickEvent> {
             if (gamma <= 100) {
                 gamma += 0.1
             }
@@ -65,7 +65,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val tickHandler = handler<PlayerTickEvent> {
+        val tickHandler = handler<PlayerPostTickEvent> {
             player.addStatusEffect(StatusEffectInstance(StatusEffects.NIGHT_VISION, 1337))
         }
 

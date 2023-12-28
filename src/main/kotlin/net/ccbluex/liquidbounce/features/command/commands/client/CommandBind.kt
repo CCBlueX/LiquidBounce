@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -26,6 +27,11 @@ import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
 
+/**
+ * Bind Command
+ *
+ * Allows you to bind a key to a module, which means that the module will be activated when the key is pressed.
+ */
 object CommandBind {
     fun createCommand(): Command {
         return CommandBuilder

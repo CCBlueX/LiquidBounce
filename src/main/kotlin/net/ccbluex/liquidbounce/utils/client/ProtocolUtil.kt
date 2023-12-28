@@ -29,6 +29,27 @@ val usesViaFabricPlus = runCatching {
     true
 }.getOrDefault(false)
 
+/**
+ * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
+ */
+val defaultProtocolVersion = "1.20.3" to 765
+
+val protocolVersion: Pair<String, Int>
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        if (!usesViaFabricPlus) {
+            return@runCatching defaultProtocolVersion
+        }
+
+        val clazz = Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
+        val method = clazz.getMethod("getTargetVersion")
+        val version = method.invoke(null) as VersionEnum
+
+        return version.protocol.name to version.protocol.version
+    }.onFailure {
+        logger.error("Failed to get protocol version", it)
+    }.getOrDefault(defaultProtocolVersion)
+
 val isOldCombat: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions

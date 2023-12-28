@@ -31,3 +31,4 @@ val isInInventoryScreen
 
 val canCloseMainInventory
     get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
+        && InventoryTracker.isInventoryOpenServerSide

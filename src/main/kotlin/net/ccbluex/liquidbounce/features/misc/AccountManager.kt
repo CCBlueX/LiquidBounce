@@ -50,9 +50,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
     val accounts by value(name, mutableListOf<MinecraftAccount>(), listType = ListValueType.Account)
 
-    // Account Generator
-    var alteningApiToken by value("TheAlteningApiToken", "")
-
     var initialSession: SessionData? = null
 
     val sessionHandler = handler<SessionEvent> {
@@ -110,11 +107,26 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @RequiredByScript
     @JvmName("newCrackedAccount")
     fun newCrackedAccount(username: String) {
+        if (username.isEmpty()) {
+            error("Username is empty!")
+        }
+
+        if (username.length > 16) {
+            error("Username is too long!")
+        }
+
+        // Check if account already exists
+        if (accounts.any { it.profile?.username.equals(username, true) }) {
+            error("Account already exists!")
+        }
+
         // Create new cracked account
         accounts += CrackedAccount(username).also { it.refresh() }
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
+
+        EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: $username"))
     }
 
     /**
@@ -156,7 +168,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
      * Create a new Microsoft Account using the OAuth2 flow which opens a browser window to authenticate the user
      */
     private fun newMicrosoftAccount(url: (String) -> Unit, success: (account: MicrosoftAccount) -> Unit,
-                            error: (error: String) -> Unit) {
+                                    error: (error: String) -> Unit) {
         MicrosoftAccount.buildFromOpenBrowser(object : MicrosoftAccount.OAuthHandler {
 
             /**
@@ -210,13 +222,13 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
     }
 
-    fun generateAlteningAccountAsync(apiToken: String = this.alteningApiToken) = GlobalScope.launch {
+    fun generateAlteningAccountAsync(apiToken: String) = GlobalScope.launch {
         generateAlteningAccount(apiToken)
     }
 
     @RequiredByScript
     @JvmName("generateAlteningAccount")
-    fun generateAlteningAccount(apiToken: String = this.alteningApiToken) = runCatching {
+    fun generateAlteningAccount(apiToken: String) = runCatching {
         if (apiToken.isEmpty()) {
             error("Altening API Token is empty!")
         }

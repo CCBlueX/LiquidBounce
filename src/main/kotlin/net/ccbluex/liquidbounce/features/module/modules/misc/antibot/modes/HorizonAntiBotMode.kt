@@ -41,7 +41,7 @@ object HorizonAntiBotMode : Choice("Horizon"), ModuleAntiBot.IAntiBotMode {
     }
 
     override fun isBot(entity: PlayerEntity): Boolean {
-        return botList.contains(player.uuid)
+        return botList.contains(entity.uuid)
     }
 
     override fun reset() {
