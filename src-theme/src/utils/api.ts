@@ -61,7 +61,7 @@ export type Account = {
   id: string;
   username: string;
   uuid: string;
-  faceUrl: string;
+  avatar: string;
   type: string;
 };
 
@@ -73,7 +73,7 @@ type AccountLoginResponse = {
   username: string;
   uuid: string;
   accountType: string;
-  faceUrl: string;
+  avatar: string;
   premium: boolean;
 };
 

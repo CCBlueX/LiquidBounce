@@ -12,7 +12,7 @@ export default function AccountEntry({ account }: AccountEntryProps) {
       <div className="relative h-[68px] w-[68px]">
         {/* Account Head */}
         <img
-          src={account.faceUrl}
+          src={account.avatar}
           alt="Account Head"
           className="rounded-full"
         />
