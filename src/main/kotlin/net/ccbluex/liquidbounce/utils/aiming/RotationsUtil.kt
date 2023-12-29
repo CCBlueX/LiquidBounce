@@ -197,7 +197,9 @@ object RotationManager : Listenable {
         }
 
         // Update reset ticks
-        if (aimPlan.ticksLeft > 0) {
+        if (aimPlan.applyClientSide) {
+            aimPlan.ticksLeft = 0
+        } else if (aimPlan.ticksLeft > 0) {
             aimPlan.ticksLeft--
         }
     }
