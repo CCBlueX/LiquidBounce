@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager.angleDifference
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -22,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.Entity
+import kotlin.math.abs
 import kotlin.random.Random
 
 /**
@@ -29,12 +31,17 @@ import kotlin.random.Random
  */
 object FightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
 
-    val safeRange by float("SafeRange", 4f, 0.1f..5f)
-    var sideToGo = false
+    private val safeRange by float("SafeRange", 4f, 0.1f..5f)
+    private var sideToGo = false
 
     val repeatable = repeatable {
         sideToGo = !sideToGo
-        waitTicks((10..35).random())
+
+        waitTicks(if (player.horizontalCollision) {
+            (60..90).random()
+        } else {
+            (10..35).random()
+        })
     }
 
     val inputHandler = handler<MovementInputEvent>(priority = 1000) { ev ->
@@ -56,7 +63,14 @@ object FightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
 
         // We are now in range of the player, so try to circle around him
         ev.directionalInput = ev.directionalInput.copy(left = !sideToGo, right = sideToGo)
+
+        // Jump if we are stuck
+        if (player.horizontalCollision) {
+            ev.jumping = true
+        }
     }
+
+    private val maximumDriftRandom = (10f..30f).random()
 
     fun makeClientSideRotationNeeded(target: Entity): Rotation? {
         if (!enabled) return null
@@ -80,8 +94,12 @@ object FightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
         val directRotation = RotationManager.makeRotation(box, player.eyePos)
 
         if (directRotation != player.rotation) {
-            // Introduce pitch drift
-            directRotation.pitch = player.rotation.pitch + (-0.12f..0.12f).random().toFloat()
+            val pitchDifference = abs(directRotation.pitch - player.rotation.pitch)
+
+            // Limit pitch difference
+            if (pitchDifference < maximumDriftRandom) {
+                directRotation.pitch = player.rotation.pitch + (-2f..2f).random().toFloat()
+            }
         }
 
         // This is very basic and should be handled by the path finder in the future

@@ -293,13 +293,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         for (target in targetTracker.enemies()) {
             if (target.squaredBoxedDistanceTo(player) > scanRange) {
-                if (FightBot.enabled) {
-                     val rotationToEnemy = FightBot.makeClientSideRotationNeeded(target) ?: continue
-                    // lock on target tracker
-                    RotationManager.aimAt(rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false))
-                    targetTracker.lock(target)
-                }
-
                 continue
             }
 
@@ -322,6 +315,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // aim at target
             RotationManager.aimAt(rotations.toAimPlan(spot.rotation, !ignoreOpenInventory))
             break
+        }
+
+        // Choose enemy for fight bot
+        if (FightBot.enabled && targetTracker.lockedOnTarget == null) {
+            // Because target tracker enemies are sorted by priority, we can just take the first one
+            val targetByPriority = targetTracker.enemies().firstOrNull() ?: return
+
+            val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
+            // lock on target tracker
+            RotationManager.aimAt(rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false))
+            targetTracker.lock(targetByPriority)
         }
     }
 
