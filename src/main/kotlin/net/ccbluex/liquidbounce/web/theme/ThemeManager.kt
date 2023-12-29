@@ -50,7 +50,7 @@ object ThemeManager {
      * todo: remove title parameter, this should default to the root of the theme
      */
     val integrationUrl: String
-        get() = "$NETTY_ROOT/${activeTheme.name}/"
+        get() = "http://localhost:5173"
 
     val overlayUrl: String
         get() = "$NETTY_ROOT/${activeTheme.name}/#/hud?static"
