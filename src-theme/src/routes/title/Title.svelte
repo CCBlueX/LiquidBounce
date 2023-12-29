@@ -79,7 +79,12 @@
     getSession().then(session => {
         username = session.username;
         faceUrl = session.avatar;
-        accountType = session.accountType;
+
+        if (session.premium) {
+            accountType = "Premium";
+        } else {
+            accountType = "Cracked";
+        }
     }).catch(console.error);
 
     getLocation().then(ip => {
