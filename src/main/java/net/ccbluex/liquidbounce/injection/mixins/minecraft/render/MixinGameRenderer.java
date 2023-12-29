@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.GameRenderEvent;
-import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
-import net.ccbluex.liquidbounce.event.WorldRenderEvent;
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
+import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -96,12 +96,11 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private HitResult hookRaycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
         if (instance != client.player) return instance.raycast(maxDistance, tickDelta, includeFluids);
 
-        Rotation rotation =
-                (RotationManager.INSTANCE.getCurrentRotation() != null) ?
-                        RotationManager.INSTANCE.getCurrentRotation() :
-                        ModuleFreeCam.INSTANCE.getEnabled() ?
-                            RotationManager.INSTANCE.getServerRotation() :
-                            new Rotation(client.player.getYaw(tickDelta), client.player.getPitch(tickDelta));
+        Rotation rotation = (RotationManager.INSTANCE.getCurrentRotation() != null) ?
+                RotationManager.INSTANCE.getCurrentRotation() :
+                ModuleFreeCam.INSTANCE.getEnabled() ?
+                        RotationManager.INSTANCE.getServerRotation() :
+                        new Rotation(instance.getYaw(tickDelta), instance.getPitch(tickDelta));
 
         return RaytracingExtensionsKt.raycast(maxDistance, rotation, includeFluids);
     }

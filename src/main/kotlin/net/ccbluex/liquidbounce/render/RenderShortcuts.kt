@@ -25,6 +25,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
@@ -36,14 +37,20 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
-import java.nio.Buffer
+import org.lwjgl.opengl.GL11C
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Data class representing the rendering environment.
  *
  * @property matrixStack The matrix stack for rendering.
  */
-data class RenderEnvironment(val matrixStack: MatrixStack)
+data class RenderEnvironment(val matrixStack: MatrixStack) {
+    val currentMvpMatrix: Matrix4f
+        get() = matrixStack.peek().positionMatrix
+}
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -58,6 +65,9 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     RenderSystem.enableBlend()
     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
     RenderSystem.disableDepthTest()
+    GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
+
+
 
     matrixStack.push()
 
@@ -72,6 +82,8 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
     RenderSystem.disableBlend()
     RenderSystem.enableDepthTest()
+    RenderSystem.enableCull()
+    GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
 fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: RenderEnvironment.() -> Unit) {
@@ -94,8 +106,9 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
     with(matrixStack) {
         push()
         translate(pos.x, pos.y, pos.z)
-        draw()
-        pop()
+        try { draw() }
+        finally { pop() }
+
     }
 }
 
@@ -107,8 +120,20 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
  */
 fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
     RenderSystem.setShaderColor(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f)
-    draw()
-    RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
+    try { draw() }
+    finally { RenderSystem.setShaderColor(1f, 1f, 1f, 1f) }
+}
+
+/**
+ * Extension function to disable cull
+ * Good for rendering faces that should be visible from both sides
+ *
+ * @param draw The block of code to be executed with cull disabled.
+ */
+fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
+    RenderSystem.disableCull()
+    try { draw() }
+    finally { RenderSystem.enableCull() }
 }
 
 /**
@@ -116,6 +141,7 @@ fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> 
  *
  * @param lines The vectors representing the lines.
  */
+
 fun RenderEnvironment.drawLines(vararg lines: Vec3) {
     drawLines(*lines, mode = DrawMode.DEBUG_LINES)
 }
@@ -238,10 +264,10 @@ fun RenderEnvironment.drawQuad(pos1: Vec3d, pos2: Vec3d) {
         // Begin drawing lines with position format
         begin(DrawMode.QUADS, VertexFormats.POSITION)
 
-        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), 0.0F).next()
-        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), 0.0F).next()
+        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat()).next()
+        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat()).next()
+        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat()).next()
+        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat()).next()
     }
 
 
@@ -285,8 +311,9 @@ fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Ve
  *
  * @param box The bounding box of the side.
  * @param side The direction of the side.
+ * @param onlyOutline Determines if the function only should draw the outline of the [side] or only fill it in
  */
-fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
+fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolean = false){
     val matrix = matrixStack.peek().positionMatrix
     val tessellator = RenderSystem.renderThreadTesselator()
     val bufferBuilder = tessellator.buffer
@@ -296,8 +323,12 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
 
     // Draw the vertices of the box
     with(bufferBuilder) {
-        // Begin drawing lines with position format
-        begin(DrawMode.QUADS, VertexFormats.POSITION)
+        // Begin drawing lines or quads with position format
+        begin(
+            if (onlyOutline) DrawMode.DEBUG_LINE_STRIP
+                else DrawMode.QUADS,
+            VertexFormats.POSITION
+        )
 
         // Draw the vertices of the box
         val vertices = when (side) {
@@ -342,11 +373,126 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction) {
         vertices.forEach { (x, y, z) ->
             vertex(matrix, x, y, z).next()
         }
+
+        if(onlyOutline){
+            vertex(matrix, vertices[0].x, vertices[0].y, vertices[0].z).next()
+
+        }
     }
 
     // Draw the outlined box
     tessellator.draw()
 }
+
+/**
+ * Function to render a gradient quad using specified [vertices] and [colors]
+ *
+ * @param vertices The four vectors to draw the quad
+ * @param colors The colors for the vertices
+ */
+fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
+    require(vertices.size == colors.size) { "there must be a color for every vertex" }
+    require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    with(bufferBuilder) {
+        begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR)
+
+        vertices.forEachIndexed { index, (x, y, z) ->
+            val color4b = colors[index]
+            vertex(matrix, x, y, z).color(color4b.toRGBA())
+                .next()
+        }
+    }
+    tessellator.draw()
+}
+
+const val CIRCLE_RES = 40
+// using a val instead of a function for better performance
+val circlePoints =
+    (0..CIRCLE_RES).map {
+        val theta = 2 * PI * it / CIRCLE_RES
+        Vec3(cos(theta), 0.0, sin(theta))
+    }
+
+
+/**
+ * Function to draw a circle of the size [outerRadius] with a cutout of size [innerRadius]
+ *
+ * @param outerRadius The radius of the circle
+ * @param innerRadius The radius inside the circle (the cutout)
+ * @param outerColor4b The color of the outer edges
+ * @param innerColor4b The color of the inner edges
+ */
+fun RenderEnvironment.drawGradientCircle(
+    outerRadius: Float,
+    innerRadius: Float,
+    outerColor4b: Color4b,
+    innerColor4b: Color4b,
+    innerOffset: Vec3 = Vec3(0f, 0f, 0f)
+) {
+
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position and color program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    with(bufferBuilder) {
+        begin(DrawMode.TRIANGLE_STRIP, VertexFormats.POSITION_COLOR)
+
+        for (p in circlePoints) {
+            val outerP = p * outerRadius
+            val innerP = p * innerRadius + innerOffset
+
+            vertex(matrix, outerP.x, outerP.y, outerP.z)
+                .color(outerColor4b.toRGBA())
+                .next()
+            vertex(matrix, innerP.x, innerP.y, innerP.z)
+                .color(innerColor4b.toRGBA())
+                .next()
+        }
+    }
+    tessellator.draw()
+}
+
+/**
+ * Function to draw the outline of a circle of the size [radius]
+ *
+ * @param radius The radius
+ * @param color The color
+ */
+fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
+    val matrix = matrixStack.peek().positionMatrix
+    val tessellator = RenderSystem.renderThreadTesselator()
+    val bufferBuilder = tessellator.buffer
+
+    // Set the shader to the position and color program
+    RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+    with(bufferBuilder) {
+        begin(DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR)
+
+        for (p in circlePoints) {
+            val point = p * radius
+
+            vertex(matrix, point.x, point.y, point.z)
+                .color(color4b.toRGBA())
+                .next()
+        }
+    }
+    tessellator.draw()
+}
+
+
+
+
 
 /**
  * Function to draw an outlined box using the specified [box].

@@ -2,16 +2,15 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
-import net.ccbluex.liquidbounce.utils.client.opposite
-import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.client.option.KeyBinding
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -46,55 +45,47 @@ object ScaffoldZitterFeature {
         override val parent: ChoiceConfigurable
             get() = ModuleScaffold.zitterModes
 
-        private val zitterDelay by int("Delay", 100, 0..500)
-        private val groundOnly by boolean("GroundOnly", true)
-        private val zitterTimer = Chronometer()
-        private var zitterDirection = false
+        // Move direction (false = right, true = left)
+        private var moveDirection = false
+        private var movesAway = false
 
-        val repeatable =
-            repeatable {
-                if (!player.isOnGround && groundOnly) {
-                    return@repeatable
-                }
+        val moveInputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
+            val directionalInput = event.directionalInput
 
-                val pressedOnKeyboardKeys = moveKeys.filter { it.pressedOnKeyboard }
-
-                when (pressedOnKeyboardKeys.size) {
-                    0 -> {
-                        moveKeys.forEach {
-                            it.enforced = null
-                        }
-                    }
-
-                    1 -> {
-                        val key = pressedOnKeyboardKeys.first()
-                        val possible = moveKeys.filter { it != key && it != key.opposite }
-                        zitter(possible)
-                        key.opposite!!.enforced = false
-                        key.enforced = true
-                    }
-
-                    2 -> {
-                        zitter(pressedOnKeyboardKeys)
-                        moveKeys.filter { pressedOnKeyboardKeys.contains(it) }.forEach {
-                            it.opposite!!.enforced = false
-                        }
-                    }
-                }
-                if (zitterTimer.hasElapsed(zitterDelay.toLong())) {
-                    zitterDirection = !zitterDirection
-                    zitterTimer.reset()
-                }
+            // Check if we are moving forwards or backwards
+            if (!directionalInput.forwards && !directionalInput.backwards) {
+                return@handler
             }
 
-        private fun zitter(first: List<KeyBinding>) {
-            if (zitterDirection) {
-                first.first().enforced = true
-                first.last().enforced = false
-            } else {
-                first.first().enforced = false
-                first.last().enforced = true
+            if (player.isOnGround) {
+                // Check if we are too close to the right or left of the block we are scaffold walking on
+                val onlySideDirection = DirectionalInput(
+                    right = moveDirection,
+                    left = !moveDirection,
+                    forwards = false,
+                    backwards = false
+                )
+
+                val isCloseToEdge = player.isCloseToEdge(onlySideDirection, 0.9)
+                ModuleDebug.debugParameter(ModuleScaffold, "Zitter->isCloseToEdge", isCloseToEdge)
+
+                if (isCloseToEdge) {
+                    if (!movesAway) {
+                        // Set the move direction to the opposite of the current move direction
+                        moveDirection = !moveDirection
+                        movesAway = true
+                    }
+                } else {
+                    movesAway = false
+                }
+
+                // Set the move keys to the opposite of the current move direction
+                event.directionalInput = event.directionalInput.copy(
+                    right = !moveDirection,
+                    left = moveDirection
+                )
             }
         }
+
     }
 }

@@ -135,33 +135,32 @@ fun canSeePointFrom(
  * Allows you to check if your enemy is behind a wall
  */
 fun facingEnemy(
-    enemy: Entity,
+    toEntity: Entity,
     range: Double,
     rotation: Rotation,
 ): Boolean {
-    return raytraceEntity(range, rotation) { it == enemy } != null
+    return raytraceEntity(range, rotation) { it == toEntity } != null
 }
 
 fun facingEnemy(
-    enemy: Entity,
+    fromEntity: Entity = mc.cameraEntity!!,
+    toEntity: Entity,
     rotation: Rotation,
     range: Double,
     wallsRange: Double,
 ): Boolean {
-    val entity = mc.cameraEntity ?: return false
-
-    val cameraVec = entity.eyes
+    val cameraVec = fromEntity.eyes
     val rotationVec = rotation.rotationVec
 
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
 
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
-    val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
+    val box = fromEntity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
 
     val entityHitResult =
         ProjectileUtil.raycast(
-            entity, cameraVec, vec3d3, box, { !it.isSpectator && it.canHit() && it == enemy }, rangeSquared,
+            fromEntity, cameraVec, vec3d3, box, { !it.isSpectator && it.canHit() && it == toEntity }, rangeSquared,
         ) ?: return false
 
     val distance = cameraVec.squaredDistanceTo(entityHitResult.pos)
@@ -182,7 +181,7 @@ fun facingBlock(
     val searchedPos =
         mc.world?.raycast(
             RaycastContext(
-                eyes, vec3, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player,
+                eyes, vec3, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player,
             ),
         ) ?: return false
 

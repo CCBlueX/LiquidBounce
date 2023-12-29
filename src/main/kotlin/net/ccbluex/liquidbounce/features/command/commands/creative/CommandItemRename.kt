@@ -27,6 +27,11 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.util.Hand
 
+/**
+ * ItemRename Command 
+ *
+ * Allows you to rename an item held in the player's hand.
+ */
 object CommandItemRename {
 
     fun createCommand(): Command {

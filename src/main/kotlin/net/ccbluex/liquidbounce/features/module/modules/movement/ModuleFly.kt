@@ -21,16 +21,23 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.block.Block
 import net.minecraft.block.FluidBlock
 import net.minecraft.item.Items
@@ -38,6 +45,8 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.shape.VoxelShapes
 import org.apache.commons.lang3.RandomUtils
@@ -52,8 +61,22 @@ import kotlin.math.sin
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, VerusOld, Enderpearl, Spartan524,
-        Sentinel27thOct))
+    private val modes = choices(
+        "Mode", Vanilla, arrayOf(
+            // Generic fly modes
+            Vanilla,
+            Jetpack,
+            Enderpearl,
+            Explosion,
+
+            // Anti-cheat specific fly modes
+            Spartan524,
+            Sentinel27thOct,
+            VerusOld,
+            VerusDamage,
+            VulcanGlide
+        )
+    )
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -91,13 +114,90 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             // Most basic bypass for vanilla fly check
             // This can also be done via packets, but this is easier.
             if (bypassVanillaCheck && player.age % 40 == 0) {
-                wait(1)
+                waitTicks(1)
                 player.velocity.y = -0.04
-                wait(1)
+                waitTicks(1)
             }
         }
 
     }
+
+    /**
+     * Explode yourself to fly
+     * Takes any kind of damage, preferably explosion damage.
+     * Might bypass some anti-cheats.
+     */
+    private object Explosion : Choice("Explosion") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val vertical by float("Vertical", 4f, 0f..10f)
+        val startStrafe by float("StartStrafe", 1f, 0.6f..4f)
+        val strafeDecrease by float("StrafeDecrease", 0.005f, 0.001f..0.1f)
+
+        private var strafeSince = 0.0f
+
+        override fun enable() {
+            chat("You need to be damaged by an explosion to fly.")
+            super.enable()
+        }
+
+        val repeatable = repeatable {
+            if (strafeSince > 0) {
+                if (!player.isOnGround) {
+                    player.strafe(speed = strafeSince.toDouble())
+                    strafeSince -= strafeDecrease
+                } else {
+                    strafeSince = 0f
+                }
+            }
+        }
+
+        val packetHandler = sequenceHandler<PacketEvent> { event ->
+            val packet = event.packet
+
+            // Check if this is a regular velocity update
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+                // Modify packet according to the specified values
+                packet.velocityX = 0
+                packet.velocityY = (packet.velocityY * vertical).toInt()
+                packet.velocityZ = 0
+
+                waitTicks(1)
+                strafeSince = startStrafe
+            } else if (packet is ExplosionS2CPacket) { // Check if explosion affects velocity
+                packet.playerVelocityX = 0f
+                packet.playerVelocityY *= vertical
+                packet.playerVelocityZ = 0f
+
+                waitTicks(1)
+                strafeSince = startStrafe
+            }
+        }
+    }
+
+    /**
+     * @anticheat Vulcan
+     * @anticheat Version 2.7.7
+     * @testedOn anticheat-test.com
+     * @note NA
+     */
+
+    private object VulcanGlide : Choice("VulcanGlide") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            if (player.fallDistance > 0.1) {
+                if (player.age % 2 == 0) {
+                    player.velocity.y = -0.155
+                }
+            } else player.velocity.y = -0.1
+        }
+    }
+
 
     private object Jetpack : Choice("Jetpack") {
 
@@ -176,7 +276,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
                         )
                     }
 
-                    wait(2)
+                    waitTicks(2)
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
                     }
@@ -253,9 +353,60 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         val repeatable = repeatable {
             player.velocity.y = 0.2
             player.strafe(speed = 0.34)
-            wait(4)
+            waitTicks(5)
         }
 
     }
 
+    /**
+     * @anticheat Verus
+     * @anticheatVersion b3896
+     * @testedOn eu.loyisa.cn
+     * @note it gives you ~2 flags for damage
+     */
+    private object VerusDamage : Choice("VerusDamage") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        var flyTicks = 0
+        var shouldStop = false
+        var gotDamage = false
+
+        override fun enable() {
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+        }
+
+        val failRepeatable = repeatable {
+            if (!gotDamage) {
+                waitTicks(20)
+                if (!gotDamage) {
+                    chat("Failed to self-damage")
+                    shouldStop = true
+                }
+            }
+        }
+        val repeatable = repeatable {
+            if (player.hurtTime > 0)
+                gotDamage = true
+            if (!gotDamage) {
+                return@repeatable
+            }
+            if (++flyTicks > 20 || shouldStop) {
+                enabled = false
+                return@repeatable
+            }
+            player.strafe(speed = 9.95)
+            player.velocity.y = 0.0
+            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE)
+        }
+
+        override fun disable() {
+            flyTicks = 0
+            player.zeroXZ()
+        }
+    }
 }

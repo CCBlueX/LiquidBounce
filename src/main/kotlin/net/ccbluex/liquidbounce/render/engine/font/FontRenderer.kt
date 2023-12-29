@@ -19,12 +19,17 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
+import net.ccbluex.liquidbounce.render.RenderBufferBuilder
+import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.VertexInputType
+import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.*
-import net.ccbluex.liquidbounce.render.engine.memory.*
-import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
-import net.ccbluex.liquidbounce.render.shaders.TexturedPrimitiveShader
-import net.ccbluex.liquidbounce.utils.render.quad
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.util.math.Vec3d
 import java.awt.Font
 import java.util.*
 import kotlin.math.max
@@ -60,13 +65,10 @@ class FontRenderer(
      *
      * [Font.BOLD] | [Font.ITALIC] -> 3 (Can be null)
      */
-    private val glyphPages: Array<GlyphPage?>,
+    val glyphPages: Array<GlyphPage?>,
     override val size: Float
 ) : AbstractFontRenderer() {
 
-    /**
-     * The cache the drawn structures are stored in until they are packed into a [RenderTask]
-     */
     private val cache = FontRendererCache()
     override val height: Float
     val ascent: Float
@@ -113,6 +115,18 @@ class FontRenderer(
          *
          * It generates glyph pages for all possible styles.
          */
+        fun createFontRenderer(name: String, size: Int): FontRenderer {
+            return FontRenderer(
+                Array(4) { style -> GlyphPage.create('\u0000'..'\u00FF', Font(name, style, size)) },
+                size.toFloat()
+            )
+        }
+
+        /**
+         * Creates a FontRenderer that can render every ASCII character.
+         *
+         * It generates glyph pages for all possible styles.
+         */
         fun createFontRendererWithStyles(font: Font, vararg styles: Int): FontRenderer {
             return FontRenderer(
                 Array(4) { style ->
@@ -141,7 +155,7 @@ class FontRenderer(
 
     override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
-            this.commit()
+//            this.commit()
 
             throw IllegalStateException("Can't begin a build a new batch when there are pending operations.")
         }
@@ -164,7 +178,7 @@ class FontRenderer(
             len = drawInternal(text, x0 + 2.0f * scale, y0 + 2.0f * scale, Color4b(0, 0, 0, 150), true, seed, z, scale)
         }
 
-        return max(len, drawInternal(text, x0, y0, defaultColor, false, seed, z, scale))
+        return max(len, drawInternal(text, x0, y0, defaultColor, false, seed, z * 2.0F, scale))
     }
 
     /**
@@ -418,72 +432,65 @@ class FontRenderer(
 
     }
 
-    override fun commit(): Array<RenderTask> {
-        val tasks = ArrayList<RenderTask>(5)
+    override fun commit(
+        env: RenderEnvironment,
+        buffers: FontRendererBuffers,
+    ) {
         val renderTasks = this.cache.renderedGlyphs.groupByTo(TreeMap<Int, MutableList<RenderedGlyph>>()) { it.style }
 
         for ((style, glyphs) in renderTasks) {
-            val vertexFormat = PositionColorUVVertexFormat()
-
-            vertexFormat.initBuffer(glyphs.size * 4)
-
-            val indexBuffer = IndexBuffer(glyphs.size * 3 * 2, VertexFormatComponentDataType.GlUnsignedShort)
+            val textBuilder = buffers.textBuffers[style]
 
             for (glyph in glyphs) {
                 val color = glyph.color
                 val atlasLocation = glyph.glyph.atlasLocation!!
 
-                vertexFormat.quad(
-                    indexBuffer,
-                    {
-                        this.position = Vec3(glyph.x1, glyph.y1, glyph.z)
-                        this.color = color
-                        this.texturePosition = UV2s(atlasLocation.min.u, atlasLocation.min.v)
-                    },
-                    {
-                        this.position = Vec3(glyph.x1, glyph.y2, glyph.z)
-                        this.color = color
-                        this.texturePosition = UV2s(atlasLocation.min.u, atlasLocation.max.v)
-                    },
-                    {
-                        this.position = Vec3(glyph.x2, glyph.y2, glyph.z)
-                        this.color = color
-                        this.texturePosition = UV2s(atlasLocation.max.u, atlasLocation.max.v)
-                    },
-                    {
-                        this.position = Vec3(glyph.x2, glyph.y1, glyph.z)
-                        this.color = color
-                        this.texturePosition = UV2s(atlasLocation.max.u, atlasLocation.min.v)
-                    }
+                textBuilder.drawQuad(
+                    env,
+                    Vec3d(glyph.x1.toDouble(), glyph.y1.toDouble(), glyph.z.toDouble()),
+                    atlasLocation.min,
+                    Vec3d(glyph.x2.toDouble(), glyph.y2.toDouble(), glyph.z.toDouble()),
+                    atlasLocation.max,
+                    color
                 )
             }
-
-            tasks.add(VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, TexturedPrimitiveShader, indexBuffer = indexBuffer, texture = glyphPages[style]!!.texture, state = GlRenderState(texture2d = true, depthTest = false)))
         }
 
         if (this.cache.lines.isNotEmpty()) {
-            val vertexFormat = PositionColorVertexFormat()
-
-            vertexFormat.initBuffer(this.cache.lines.size * 2)
-
             for (line in this.cache.lines) {
-                vertexFormat.putVertex {
-                    this.position = line.p1
-                    this.color = line.color
-                }
-                vertexFormat.putVertex {
-                    this.position = line.p2
-                    this.color = line.color
-                }
+                buffers.lineBufferBuilder.drawLine(env, line.p1, line.p2, line.color)
             }
-
-            tasks.add(VertexFormatRenderTask(vertexFormat, PrimitiveType.Lines, ColoredPrimitiveShader))
         }
 
         this.cache.lines.clear()
         this.cache.renderedGlyphs.clear()
-
-        return tasks.toTypedArray()
     }
 
+}
+
+
+class FontRendererBuffers {
+    companion object {
+        private val TEXT_TESSELATORS = Array(5) { Tessellator(0xA00000) }
+    }
+
+    val textBuffers = Array(4) {
+        RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, TEXT_TESSELATORS[it + 1])
+    }
+    val lineBufferBuilder =
+        RenderBufferBuilder(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.PosColor, TEXT_TESSELATORS[0])
+
+    fun draw(renderer: FontRenderer) {
+        this.textBuffers.forEachIndexed { style, bufferBuilder ->
+            val tex = renderer.glyphPages[style]!!.texture
+
+            RenderSystem.bindTexture(tex.glId)
+
+            RenderSystem.setShaderTexture(0, tex.glId)
+
+            bufferBuilder.draw()
+        }
+
+        this.lineBufferBuilder.draw()
+    }
 }

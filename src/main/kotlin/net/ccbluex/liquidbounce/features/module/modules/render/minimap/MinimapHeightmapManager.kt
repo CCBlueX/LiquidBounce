@@ -24,6 +24,10 @@ class MinimapHeightmapManager {
     }
 
     fun updateChunk(chunkPos: ChunkPos) {
+        if (mc.world == null) {
+            return
+        }
+
         val heightmap = HeightmapForChunk()
 
         heightmaps[chunkPos] = heightmap

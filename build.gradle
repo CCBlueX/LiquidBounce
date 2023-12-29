@@ -17,13 +17,17 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
-    id 'org.jlleitschuh.gradle.ktlint' version '11.5.1'
+    id 'org.jlleitschuh.gradle.ktlint' version '12.0.3'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id "io.gitlab.arturbosch.detekt" version "1.23.1"
+    id "io.gitlab.arturbosch.detekt" version "1.23.4"
+    id "com.github.node-gradle.node" version "7.0.1"
+    id 'org.jetbrains.dokka' version '1.9.10'
 }
 
 ktlint {
@@ -53,13 +57,18 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven { url = 'https://maven.fabricmc.net/' }
-    maven { url = 'https://jitpack.io' }
+    maven {
+        name = 'Jitpack'
+        url = 'https://jitpack.io'
+    }
     maven {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
-    maven { url = 'https://repo.viaversion.com/' }
-
+    maven {
+        name = 'ViaVersion'
+        url = 'https://repo.viaversion.com/'
+    }
     maven {
         name = "modrinth"
         url = "https://api.modrinth.com/maven"
@@ -79,42 +88,47 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    modImplementation 'com.viaversion:viaversion:4.7.1-SNAPSHOT'
-    modImplementation 'com.github.FlorianMichael:ViaLoadingBase:4.4.8'
+    implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
+    implementation "com.viaversion:viaversion:4.9.2"
+    implementation "net.raphimc:ViaLoader:2.2.12"
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
+    // modImplementation "maven.modrinth:viafabricplus:3.0.2"
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation('com.thealtening.api:api:4.1.0') {
+    implementation('com.github.CCBlueX:mc-authlib:v1.3.3') {
         exclude group: 'com.google.code.gson', module: 'gson'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+        exclude group: 'com.mojang', module: 'authlib'
     }
+    implementation "com.github.CCBlueX:mcef:1.0.9-1.20.4"
 
-    implementation 'com.github.CCBlueX:Elixir:1.2.6'
-
-    implementation 'com.labymedia:ultralight-java-base:0.4.12'
-    implementation 'com.labymedia:ultralight-java-databind:0.4.12'
-    implementation 'com.labymedia:ultralight-java-gpu:0.4.12'
-    implementation 'com.labymedia:ultralight-java-glfw-opengl-util:0.4.12'
-
-    implementation 'org.graalvm.sdk:graal-sdk:23.0.1'
-    implementation 'org.graalvm.truffle:truffle-api:23.0.1'
-    implementation 'org.graalvm.js:js:23.0.1'
+    implementation 'org.graalvm.sdk:graal-sdk:23.0.2'
+    implementation 'org.graalvm.truffle:truffle-api:23.0.2'
+    implementation 'org.graalvm.js:js:23.0.2'
 
     runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
     runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
 
+    // https://mvnrepository.com/artifact/io.netty/netty-codec
+    implementation 'io.netty:netty-codec:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
     implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
+    // https://mvnrepository.com/artifact/io.netty/netty-codec-socks
+    implementation 'io.netty:netty-codec-socks:4.1.82.Final'
+
 
     implementation 'com.vdurmont:semver4j:3.1.0'
-    implementation 'org.apache.tika:tika-core:2.9.1'
 
     // Test libraries
 
@@ -143,21 +157,30 @@ processResources {
 
 // The following code will include the theme into the build
 
-tasks.register('npmInstallTheme', Exec) {
-    workingDir file('src-theme')
-    commandLine 'npm', 'i'
+tasks.register('npmInstallTheme', NpmTask) {
+    workingDir = file('src-theme')
+    args = ['i']
     doLast {
         println 'Successfully installed dependencies for theme'
     }
+
+    // Incremental stuff
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
+    outputs.dir("src-theme/node_modules")
 }
 
-tasks.register('bundleTheme', Exec) {
+tasks.register('bundleTheme', NodeTask) {
     dependsOn 'npmInstallTheme'
-    workingDir file('src-theme')
-    commandLine 'npm', 'run', 'build'
+    workingDir = file('src-theme')
+    script = file('src-theme/bundle.cjs')
     doLast {
         println 'Successfully attached theme to build'
     }
+
+    // Incremental stuff
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
+    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 
 sourceSets {
@@ -217,9 +240,9 @@ java {
 }
 
 compileKotlin {
-    kotlinOptions {
+    compilerOptions {
         suppressWarnings = true
-        jvmTarget = 17
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
@@ -230,17 +253,17 @@ shadowJar {
     exclude 'native-binaries/*'
 
     dependencies {
-        include(dependency('com.labymedia:ultralight-java-base'))
-        include(dependency('com.labymedia:ultralight-java-databind'))
-        include(dependency('com.labymedia:ultralight-java-gpu'))
-        include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
+        include(dependency('com.github.CCBlueX:mcef'))
+        include(dependency('com.github.CCBlueX:mc-authlib'))
         include(dependency('com.thealtening.api:api'))
-        include(dependency('com.github.CCBlueX:Elixir'))
-        include(dependency('org.graalvm.sdk:graal-sdk:23.0.1'))
-        include(dependency('org.graalvm.truffle:truffle-api:23.0.1'))
-        include(dependency('org.graalvm.js:js:23.0.1'))
+        include(dependency('net.fabricmc:tiny-mappings-parser'))
+        include(dependency('org.graalvm.sdk:graal-sdk:23.0.2'))
+        include(dependency('org.graalvm.truffle:truffle-api:23.0.2'))
+        include(dependency('org.graalvm.js:js:23.0.2'))
+        include(dependency('io.netty:netty-codec'))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
+        include(dependency('io.netty:netty-codec-socks'))
         include(dependency('com.vdurmont:semver4j:3.1.0'))
     }
 }
@@ -258,4 +281,5 @@ tasks.register('copyZipInclude', Copy) {
     into 'build/libs/zip'
 }
 
+sourcesJar.dependsOn bundleTheme
 build.dependsOn copyZipInclude

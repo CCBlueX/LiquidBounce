@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.ScreenEvent
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -37,7 +37,7 @@ object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
     val screenHandler = sequenceHandler<ScreenEvent> {
         if (it.screen is DeathScreen) {
             if (delay > 0) {
-                wait(delay)
+                waitTicks(delay)
             }
 
             player.requestRespawn()

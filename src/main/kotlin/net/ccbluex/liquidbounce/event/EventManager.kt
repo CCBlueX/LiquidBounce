@@ -18,71 +18,95 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.logger
-import kotlin.reflect.full.findAnnotation
+import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.reflect.KClass
+
+/**
+ * Contains all classes of events. Used to create lookup tables ahead of time
+ */
+val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
+    GameTickEvent::class,
+    BlockChangeEvent::class,
+    ChunkLoadEvent::class,
+    ChunkUnloadEvent::class,
+    WorldDisconnectEvent::class,
+    GameRenderEvent::class,
+    WorldRenderEvent::class,
+    OverlayRenderEvent::class,
+    ScreenRenderEvent::class,
+    WindowResizeEvent::class,
+    MouseButtonEvent::class,
+    MouseScrollEvent::class,
+    MouseCursorEvent::class,
+    KeyboardKeyEvent::class,
+    KeyboardCharEvent::class,
+    InputHandleEvent::class,
+    MovementInputEvent::class,
+    KeyEvent::class,
+    MouseRotationEvent::class,
+    KeyBindingEvent::class,
+    AttackEvent::class,
+    SessionEvent::class,
+    ScreenEvent::class,
+    ChatSendEvent::class,
+    ChatReceiveEvent::class,
+    UseCooldownEvent::class,
+    BlockShapeEvent::class,
+    BlockBreakingProgressEvent::class,
+    BlockVelocityMultiplierEvent::class,
+    BlockSlipperinessMultiplierEvent::class,
+    EntityMarginEvent::class,
+    HealthUpdateEvent::class,
+    DeathEvent::class,
+    PlayerTickEvent::class,
+    PlayerPostTickEvent::class,
+    PlayerMovementTickEvent::class,
+    PlayerNetworkMovementTickEvent::class,
+    PlayerPushOutEvent::class,
+    PlayerMoveEvent::class,
+    RotatedMovementInputEvent::class,
+    PlayerJumpEvent::class,
+    PlayerUseMultiplier::class,
+    PlayerVelocityStrafe::class,
+    PlayerStrideEvent::class,
+    PlayerSafeWalkEvent::class,
+    CancelBlockBreakingEvent::class,
+    PlayerStepEvent::class,
+    PlayerStepSuccessEvent::class,
+    FluidPushEvent::class,
+    TickJumpEvent::class,
+    PipelineEvent::class,
+    PacketEvent::class,
+    ClientStartEvent::class,
+    ClientShutdownEvent::class,
+    ValueChangedEvent::class,
+    ToggleModuleEvent::class,
+    NotificationEvent::class,
+    ClientChatMessageEvent::class,
+    ClientChatErrorEvent::class,
+    WorldChangeEvent::class,
+    AltManagerUpdateEvent::class,
+    VirtualScreenEvent::class,
+    FpsChangeEvent::class,
+    PlayerStatsChangeEvent::class,
+    SimulatedTickEvent::class,
+    SplashOverlayEvent::class,
+    SplashProgressEvent::class,
+    ChoiceChangeEvent::class,
+    RefreshArrayListEvent::class,
+    BrowserReadyEvent::class
+)
 
 /**
  * A modern and fast event handler using lambda handlers
  */
 object EventManager {
 
-    private val registry = mutableMapOf<Class<out Event>, ArrayList<EventHook<in Event>>>()
-
-    val mappedEvents = arrayOf(
-        GameTickEvent::class,
-        BlockChangeEvent::class,
-        ChunkLoadEvent::class,
-        ChunkUnloadEvent::class,
-        WorldDisconnectEvent::class,
-        GameRenderEvent::class,
-        WorldRenderEvent::class,
-        EngineRenderEvent::class,
-        OverlayRenderEvent::class,
-        ScreenRenderEvent::class,
-        WindowResizeEvent::class,
-        WindowFocusEvent::class,
-        MouseButtonEvent::class,
-        MouseScrollEvent::class,
-        MouseCursorEvent::class,
-        KeyboardKeyEvent::class,
-        KeyboardCharEvent::class,
-        InputHandleEvent::class,
-        MovementInputEvent::class,
-        KeyEvent::class,
-        MouseRotationEvent::class,
-        AttackEvent::class,
-        SessionEvent::class,
-        ScreenEvent::class,
-        ChatSendEvent::class,
-        UseCooldownEvent::class,
-        BlockShapeEvent::class,
-        BlockBreakingProgressEvent::class,
-        BlockVelocityMultiplierEvent::class,
-        BlockSlipperinessMultiplierEvent::class,
-        EntityMarginEvent::class,
-        PlayerTickEvent::class,
-        PlayerMovementTickEvent::class,
-        PlayerNetworkMovementTickEvent::class,
-        PlayerPushOutEvent::class,
-        PlayerMoveEvent::class,
-        PlayerJumpEvent::class,
-        PlayerUseMultiplier::class,
-        PlayerVelocityStrafe::class,
-        PlayerStrideEvent::class,
-        PlayerSafeWalkEvent::class,
-        CancelBlockBreakingEvent::class,
-        PlayerStepEvent::class,
-        FluidPushEvent::class,
-        PacketEvent::class,
-        ClientStartEvent::class,
-        ClientShutdownEvent::class,
-        ValueChangedEvent::class,
-        ToggleModuleEvent::class,
-        NotificationEvent::class,
-        ClientChatMessageEvent::class,
-        ClientChatErrorEvent::class
-    ).map { Pair(it.findAnnotation<Nameable>()!!.name, it) }
+    private val registry: Map<Class<out Event>, CopyOnWriteArrayList<EventHook<in Event>>> =
+        ALL_EVENT_CLASSES.associate { Pair(it.java, CopyOnWriteArrayList()) }
 
     init {
         SequenceManager
@@ -92,8 +116,10 @@ object EventManager {
      * Used by handler methods
      */
     fun <T : Event> registerEventHook(eventClass: Class<out Event>, eventHook: EventHook<T>) {
-        val handlers = registry.computeIfAbsent(eventClass) { ArrayList() }
+        val handlers = registry[eventClass]
+            ?: error("The event '${eventClass.name}' is not registered in Events.kt::ALL_EVENT_CLASSES.")
 
+        @Suppress("UNCHECKED_CAST")
         val hook = eventHook as EventHook<in Event>
 
         if (!handlers.contains(hook)) {
@@ -111,17 +137,12 @@ object EventManager {
     }
 
     /**
-     * Unregister listener
-     *
-     * @param listenable for unregister
+     * Unregisters event handlers.
      */
-    fun unregisterListener(listenable: Listenable) {
-        for ((key, handlerList) in registry) {
-            handlerList.removeIf { it.handlerClass == listenable }
-
-            registry[key] = handlerList
-        }
+    fun unregisterEventHooks(eventClass: Class<out Event>, hooks: ArrayList<EventHook<in Event>>) {
+        registry[eventClass]?.removeAll(hooks.toSet())
     }
+
 
     /**
      * Call event to listeners
@@ -132,6 +153,8 @@ object EventManager {
         val target = registry[event.javaClass] ?: return event
 
         for (eventHook in target) {
+            EventScheduler.process(event)
+
             if (!eventHook.ignoresCondition && !eventHook.handlerClass.handleEvents()) {
                 continue
             }
@@ -145,5 +168,4 @@ object EventManager {
 
         return event
     }
-
 }

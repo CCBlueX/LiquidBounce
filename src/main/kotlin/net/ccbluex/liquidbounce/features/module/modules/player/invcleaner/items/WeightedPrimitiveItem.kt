@@ -1,13 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.item.ItemStack
 
-class WeightedPrimitiveItem(itemStack: ItemStack, slot: Int, override val category: ItemCategory, val worth: Int = 0) :
-    WeightedItem(itemStack, slot) {
+class WeightedPrimitiveItem(itemSlot: ItemSlot, override val category: ItemCategory, val worth: Int = 0) :
+    WeightedItem(itemSlot) {
     companion object {
         private val COMPARATOR =
             ComparatorChain<WeightedPrimitiveItem>(

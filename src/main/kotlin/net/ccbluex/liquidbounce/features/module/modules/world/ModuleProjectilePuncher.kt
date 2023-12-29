@@ -19,26 +19,23 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
+import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.util.Hand
+import kotlin.math.cos
 
 /**
  * ProjectilePuncher module
@@ -48,7 +45,8 @@ import net.minecraft.util.Hand
 
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
-    private val cps by intRange("CPS", 5..8, 1..20)
+    private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
+
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -59,14 +57,12 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     // Rotation
     private val rotations = tree(RotationsConfigurable())
 
-    private val cpsTimer = tree(CpsScheduler())
-
     override fun disable() {
         targetTracker.cleanup()
     }
 
-    val tickHandler = handler<PlayerNetworkMovementTickEvent> {
-        if (it.state != EventState.PRE || player.isSpectator) {
+    val tickHandler = handler<SimulatedTickEvent> {
+        if (player.isSpectator) {
             return@handler
         }
 
@@ -75,38 +71,35 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     val repeatable = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
-        val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        val clicks = cpsTimer.clicks(condition = {
-            target.boxedDistanceTo(player) <= range && facingEnemy(
-                target, rotation, range.toDouble(), 0.0
-            )
-        }, cps)
+        if (target.boxedDistanceTo(player) > range ||
+            !facingEnemy(toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
+                wallsRange = 0.0)) {
+            return@repeatable
+        }
 
-        repeat(clicks) {
-            attackEntity(target)
+        clickScheduler.clicks {
+            target.attack(swing)
+            true
         }
     }
 
     private fun updateTarget() {
-        val player = mc.player ?: return
-        val world = mc.world ?: return
-
         val rangeSquared = range * range
 
         targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
         for (entity in world.entities) {
-            if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
+            if (!shouldAttack(entity)) {
                 continue
             }
 
-            val distanceSquared = entity.squaredBoxedDistanceTo(player)
+            val nextTickFireballPosition = entity.pos.add(entity.pos.subtract(entity.prevPos))
 
+            val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
+            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyes)
 
-            // Avoid fireball if its speed-predicted next position goes further than the normal distance.
-            // Useful in preventing the user from changing their own thrown fireball's direction
-            if (distanceSquared > rangeSquared || !shouldAttack(entity)) {
+            if (distanceSquared > rangeSquared) {
                 continue
             }
 
@@ -119,39 +112,21 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             targetTracker.lock(entity)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
             break
         }
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is FireballEntity)
-            return true
+        if (entity !is FireballEntity && entity !is ShulkerBulletEntity)
+            return false
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = entity.pos.subtract(player.pos)
+        val vecToPlayer = player.pos.subtract(entity.pos)
 
-        val dot = vecToPlayer.dotProduct(player.velocity)
+        val dot = vecToPlayer.dotProduct(entity.pos.subtract(entity.prevPos))
 
-        return dot > 0.0
+        return dot > -cos(Math.toRadians(30.0))
     }
 
-    private fun attackEntity(entity: Entity) {
-        EventManager.callEvent(AttackEvent(entity))
-
-        // Swing before attacking (on 1.8)
-        if (swing && protocolVersion == MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
-
-        // Swing after attacking (on 1.9+)
-        if (swing && protocolVersion != MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        // Reset cool down
-        player.resetLastAttackedTicks()
-    }
 }

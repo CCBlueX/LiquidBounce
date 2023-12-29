@@ -20,16 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.ccbluex.liquidbounce.utils.client.moveKeys
+
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
@@ -78,8 +82,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
 
         val moveHandler = handler<PlayerMoveEvent> {
             if (!player.moving && jumped) {
-                player.velocity.x = 0.0
-                player.velocity.z = 0.0
+                player.zeroXZ()
             }
         }
     }
@@ -103,18 +106,24 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         val speed by float("Speed", 2.5f, 0f..20f)
         val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
         val fallDistance by float("FallDistanceToJump", 0.42f, 0f..2f)
-        val ticks by int("TicksToWork", 10, 3..500)
 
-        val repeatable = repeatable {
+        var stopMovement = false
+
+        val movementInputHandler = handler<MovementInputEvent> {
+            if (stopMovement) {
+                it.directionalInput = DirectionalInput.NONE
+                stopMovement = false
+            }
+        }
+        
+        val tickJumpHandler = sequenceHandler<TickJumpEvent> {
             if (arrowBoost <= arrowsToShoot) {
                 mc.options.useKey.isPressed = true
                 RotationManager.aimAt(
                     Rotation(player.yaw, -90f), configurable = rotations
                 )
                 // Stops moving
-                moveKeys.forEach {
-                    it.enforced = false
-                }
+                stopMovement = true
                 // Shoots arrow
                 if (player.itemUseTime >= charged) {
                     interaction.stopUsingItem(player)
@@ -124,23 +133,26 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
                 mc.options.useKey.isPressed = false
                 if (player.isUsingItem) interaction.stopUsingItem(player)
                 shotArrows = 0f
-                wait { 5 }
+                waitTicks(5)
                 player.jump()
                 player.strafe(speed = speed.toDouble())
-                wait { ticks }
+                waitTicks(5)
                 arrowBoost = 0f
             }
         }
 
-        val movementRepeatable = repeatable {
-            if (arrowBoost <= arrowsToShoot) return@repeatable
+        // what, why two events here?
+        val tickHandler = handler<TickJumpEvent> {
+            if (arrowBoost <= arrowsToShoot) return@handler
             if (player.fallDistance >= fallDistance) {
                 player.jump()
                 player.fallDistance = 0f
             }
         }
+
         val velocityHandler = handler<PacketEvent> {
             val packet = it.packet
+
             if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && shotArrows > 0.0) {
                 shotArrows--
                 arrowBoost++
@@ -153,7 +165,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         }
     }
 
-    val repeatable = repeatable {
+    val tickHandler = handler<TickJumpEvent> {
         if (jumped) {
             if (player.isOnGround || player.abilities.flying) {
                 if (autoDisable && boosted) enabled = false

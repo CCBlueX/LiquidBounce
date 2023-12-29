@@ -1,8 +1,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.network.message;
 
 import com.mojang.authlib.GameProfile;
-import net.ccbluex.liquidbounce.event.ChatReceiveEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent;
 import net.minecraft.client.network.message.MessageHandler;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;

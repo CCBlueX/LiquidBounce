@@ -23,17 +23,17 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 import com.mojang.brigadier.StringReader
-import me.liuli.elixir.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.ValueChangedEvent
+import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.block.Block
-import net.minecraft.item.Item
+import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.awt.Color
@@ -49,20 +49,29 @@ open class Value<T : Any>(
     @SerializedName("name") open val name: String,
     @SerializedName("value") internal var value: T,
     @Exclude val valueType: ValueType,
-    @Exclude val listType: ListValueType = ListValueType.None
+    @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None
 ) {
 
     internal val loweredName
         get() = name.lowercase()
 
-    @Exclude
+    @Exclude @ProtocolExclude
     private val listeners = mutableListOf<ValueListener<T>>()
 
     /**
      * If true, value will not be included in generated public config
+     *
+     * @see
      */
-    @Exclude
+    @Exclude @ProtocolExclude
     var doNotInclude = false
+        private set
+
+    /**
+     * If true, value will not be included in generated RestAPI config
+     */
+    @Exclude @ProtocolExclude
+    var notAnOption = false
         private set
 
     /**
@@ -117,6 +126,11 @@ open class Value<T : Any>(
         return this
     }
 
+    fun notAnOption(): Value<T> {
+        notAnOption = true
+        return this
+    }
+
     /**
      * Deserialize value from JSON
      */
@@ -149,23 +163,94 @@ open class Value<T : Any>(
     }
 
     open fun setByString(string: String) {
-        if (this.value is Boolean) {
-            val newValue = when (string.lowercase(Locale.ROOT)) {
-                "true", "on" -> true
-                "false", "off" -> false
-                else -> throw IllegalArgumentException()
-            }
+        when(this.valueType) {
+            ValueType.BOOLEAN      -> {
+                val newValue = when (string.lowercase(Locale.ROOT)) {
+                    "true", "on" -> true
+                    "false", "off" -> false
+                    else -> throw IllegalArgumentException()
+                }
 
-            set(newValue as T)
-        } else if (this.value is Color4b) {
-            if (string.startsWith("#")) set(Color4b(Color(string.substring(1).toInt(16))) as T)
-            else set(Color4b(Color(string.toInt())) as T)
-        } else if (this.value is Block) {
-            set(Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
-        } else if (this.value is Item) {
-            set(Registries.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
-        } else {
-            throw IllegalStateException()
+                set(newValue as T)
+            }
+            ValueType.FLOAT        -> {
+                val newValue = string.toFloat()
+
+                set(newValue as T)
+            }
+            ValueType.FLOAT_RANGE  -> {
+                val split = string.split("..")
+                if (split.size != 2) throw IllegalArgumentException()
+                val newValue = split[0].toFloat()..split[1].toFloat()
+
+                set(newValue as T)
+            }
+            ValueType.INT          -> {
+                val newValue = string.toInt()
+
+                set(newValue as T)
+            }
+            ValueType.INT_RANGE    -> {
+                val split = string.split("..")
+                if (split.size != 2) throw IllegalArgumentException()
+                val newValue = split[0].toInt()..split[1].toInt()
+
+                set(newValue as T)
+            }
+            ValueType.TEXT         -> {
+                this.value = string as T
+            }
+            ValueType.TEXT_ARRAY   -> {
+                val newValue = string.split(",").toMutableList()
+                set(newValue as T)
+            }
+            ValueType.COLOR        -> {
+                if (string.startsWith("#"))  {
+                    set(Color4b(Color(string.substring(1).toInt(16))) as T)
+                } else {
+                    set(Color4b(Color(string.toInt())) as T)
+                }
+            }
+            ValueType.BLOCK        -> {
+                set(Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
+            }
+            ValueType.BLOCKS       -> {
+                val blocks = string.split(",").map {
+                    Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(it)))
+                }.filter {
+                    !it.defaultState.isAir
+                }.toMutableSet()
+
+                if (blocks.isEmpty()) {
+                    error("No blocks found")
+                }
+
+                set(blocks as T)
+            }
+            ValueType.ITEM         -> {
+                set(Registries.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
+            }
+            ValueType.ITEMS        -> {
+                val items = string.split(",").map {
+                    Registries.ITEM.get(Identifier.fromCommandInput(StringReader(it)))
+                }.toMutableList()
+
+                if (items.isEmpty()) {
+                    error("No items found")
+                }
+
+                set(items as T)
+            }
+            ValueType.KEY          -> {
+                val newValue = try {
+                    string.toInt()
+                } catch (e: NumberFormatException) {
+                    key(string)
+                }
+
+                set(newValue as T)
+            }
+            else -> error("unsupported value type")
         }
     }
 
@@ -246,14 +331,25 @@ interface NamedChoice {
 }
 
 enum class ValueType {
-    BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM, ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
+    BOOLEAN,
+    FLOAT,FLOAT_RANGE,
+    INT, INT_RANGE,
+    TEXT, TEXT_ARRAY,
+    COLOR,
+    BLOCK, BLOCKS,
+    ITEM, ITEMS,
+    KEY,
+    CHOICE, CHOOSE,
+    INVALID,
+    CONFIGURABLE,
+    TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {
     Block(net.minecraft.block.Block::class.java), Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java), Friend(
         FriendManager.Friend::class.java
     ),
-    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontDetail::class.java), None(
+    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontInfo::class.java), None(
         null
     )
 }

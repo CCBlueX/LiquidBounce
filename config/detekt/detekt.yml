@@ -13,6 +13,19 @@ complexity:
   NamedArguments:
     active: true
     threshold: 4
+  ComplexCondition:
+    threshold: 5
+
+performance:
+  active: true
+  CouldBeSequence:
+    active: true
+  UnnecessaryPartOfBinaryExpression:
+    active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
 
 style:
   MagicNumber:

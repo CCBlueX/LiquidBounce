@@ -19,14 +19,14 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.MovementInputEvent;
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
+import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
-import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
@@ -60,8 +60,8 @@ public class MixinKeyboardInput extends MixinInput {
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
-        Boolean enforced = KeybindExtensionsKt.getEnforced(keyBinding);
-        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? (enforced != null ? enforced : KeybindExtensionsKt.getPressedOnKeyboard(keyBinding)) : (enforced != null ? enforced : keyBinding.isPressed());
+        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding)
+                ? KeybindExtensionsKt.getPressedOnKeyboard(keyBinding) : keyBinding.isPressed();
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingBack:Z", ordinal = 0))
@@ -71,9 +71,9 @@ public class MixinKeyboardInput extends MixinInput {
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER, ordinal = 0), allow = 1)
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER), allow = 1)
     private void injectMovementInputEvent(boolean slowDown, float f, CallbackInfo ci) {
-        var event = new MovementInputEvent(new DirectionalInput(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight), this.jumping);
+        var event = new MovementInputEvent(new DirectionalInput(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight), this.jumping, this.sneaking);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -83,41 +83,45 @@ public class MixinKeyboardInput extends MixinInput {
         this.pressingBack = directionalInput.getBackwards();
         this.pressingLeft = directionalInput.getLeft();
         this.pressingRight = directionalInput.getRight();
+        this.movementForward = KeyboardInput.getMovementMultiplier(directionalInput.getForwards(), directionalInput.getBackwards());
+        this.movementSideways = KeyboardInput.getMovementMultiplier(directionalInput.getLeft(), directionalInput.getRight());
+
+        this.fixStrafeMovement();
+
+        if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
+            this.movementForward = 0f;
+        }
+
         this.jumping = event.getJumping();
+        this.sneaking = event.getSneaking();
     }
 
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.BEFORE))
-    private void injectStrafing(boolean slowDown, float f, CallbackInfo ci) {
+    private void fixStrafeMovement() {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null || player == null) {
-            return;
-        }
 
-        float deltaYaw = player.getYaw() - rotation.getYaw();
-
-        float x = this.movementSideways;
         float z = this.movementForward;
+        float x = this.movementSideways;
 
-        float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
-        float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
+        final RotatedMovementInputEvent MoveInputEvent;
 
-        this.movementSideways = Math.round(newX);
-        this.movementForward = Math.round(newZ);
-    }
+        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null || player == null) {
+            MoveInputEvent = new RotatedMovementInputEvent(z, x);
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
+        } else {
+            float deltaYaw = player.getYaw() - rotation.getYaw();
 
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;sneakKey:Lnet/minecraft/client/option/KeyBinding;", shift = At.Shift.AFTER))
-    private void hookSuperKnockbackStopMoving(boolean slowDown, float f, CallbackInfo ci) {
-        if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
-            this.movementForward = 0.0f;
+            float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
+            float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
+
+            MoveInputEvent = new RotatedMovementInputEvent(Math.round(newZ), Math.round(newX));
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
         }
-    }
 
-    @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
-    private void injectForcedState(KeyboardInput instance, boolean value) {
-        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
-        instance.sneaking = enforceEagle != null ? enforceEagle : value;
+
+        this.movementSideways = MoveInputEvent.getSideways();
+        this.movementForward = MoveInputEvent.getForward();
     }
 
 }

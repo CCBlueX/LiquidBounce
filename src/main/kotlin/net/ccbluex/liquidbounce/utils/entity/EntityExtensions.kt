@@ -18,13 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.client.input.Input
@@ -36,6 +34,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
@@ -45,17 +44,52 @@ import kotlin.math.sqrt
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
+fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
+    val hitbox =
+        this.dimensions
+        .getBoxAt(position)
+        .expand(-0.05, 0.0, -0.05)
+        .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
 
-fun ClientPlayerEntity.isCloseToEdge(distance: Double = 0.1): Boolean {
-    if (!this.pos.add(0.0, -1.0, 0.0).toBlockPos().canStandOn())
-        return true
+    return world.isSpaceEmpty(this, hitbox)
+}
 
-    val alpha = (this.directionYaw + 90.0F).toRadians()
+fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distance: Double = 0.1): Boolean {
+    val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
+
+    val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
+
+    simulatedInput.jumping = false
+    simulatedInput.sneaking = false
+
+    val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+        simulatedInput
+    )
+
+    simulatedPlayer.tick()
+
+    val nextVelocity = simulatedPlayer.velocity
+
+    val direction = if (nextVelocity.horizontalLengthSquared() > 0.003 * 0.003) {
+        nextVelocity.multiply(1.0, 0.0, 1.0).normalize()
+    } else {
+        Vec3d(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
+    }
 
     val from = this.pos + Vec3d(0.0, -0.1, 0.0)
-    val to = from + Vec3d(cos(alpha) * distance, 0.0, sin(alpha) * distance)
+    val to = from + direction.multiply(distance)
 
-    return findEdgeCollision(from, to) != null
+    if (findEdgeCollision(from, to) != null) {
+        return true
+    }
+
+    val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.multiply(1.0, 0.0, 1.0))
+
+    if (wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)) {
+        return true
+    }
+
+    return false
 }
 
 val ClientPlayerEntity.pressingMovementButton
@@ -163,7 +197,10 @@ val Input.yAxisMovement: Float
     }
 
 val Entity?.rotation: Rotation
-    get() = Rotation(this?.yaw ?: 0f, this?.pitch ?: 0f)
+    get() = this?.let { Rotation(it.yaw, it.pitch) } ?: Rotation.ZERO
+
+val ClientPlayerEntity?.lastRotation: Rotation
+    get() = this?.let { Rotation(it.lastYaw, it.lastPitch) } ?: Rotation.ZERO
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())
@@ -176,11 +213,15 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    return this.squaredBoxedDistanceTo(entity.getCameraPosVec(1.0F))
+    return this.squaredBoxedDistanceTo(entity.eyes)
 }
 
 fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
-    return this.boundingBox.squaredBoxedDistanceTo(otherPos)
+    return this.box.squaredBoxedDistanceTo(otherPos)
+}
+
+fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3d): Double {
+    return this.box.offset(offsetPos - this.pos).squaredBoxedDistanceTo(entity.eyes)
 }
 
 fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
@@ -189,8 +230,12 @@ fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
     return pos.squaredDistanceTo(otherPos)
 }
 
-fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
-    return Vec3(
+fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
+    if (this.age == 0) {
+        return this.pos
+    }
+
+    return Vec3d(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
         this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta
@@ -198,6 +243,10 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
 }
 
 fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
+    if (this.age == 0) {
+        return this.rotation
+    }
+
     return Rotation(
         this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
         this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
@@ -218,6 +267,27 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
     }
 
     return Vec3d(origin[0], origin[1], origin[2])
+}
+
+fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
+    val nearestPointInBlock = getNearestPoint(eyes, box)
+
+    val x = nearestPointInBlock.x
+    val y = nearestPointInBlock.y
+    val z = nearestPointInBlock.z
+
+    val nearestPointOnSide =
+        when(side) {
+            Direction.DOWN -> Vec3d(x, box.minY, z)
+            Direction.UP -> Vec3d(x, box.maxY, z)
+            Direction.NORTH -> Vec3d(x, y, box.minZ)
+            Direction.SOUTH -> Vec3d(x, y,  box.maxZ)
+            Direction.WEST -> Vec3d(box.maxX, y, z)
+            Direction.EAST -> Vec3d(box.minX, y, z)
+        }
+
+    return nearestPointOnSide
+
 }
 
 fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {

@@ -28,3 +28,7 @@ val ScreenHandler.isPlayerInventory: Boolean
 
 val isInInventoryScreen
     get() = mc.currentScreen is InventoryScreen
+
+val canCloseMainInventory
+    get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
+        && InventoryTracker.isInventoryOpenServerSide

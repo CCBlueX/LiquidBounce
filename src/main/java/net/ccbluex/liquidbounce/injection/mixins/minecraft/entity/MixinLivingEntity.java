@@ -20,16 +20,17 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.event.events.TickJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
+import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -68,6 +69,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     @Nullable
     public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
+
+    @Shadow public abstract void tick();
+
+    @Shadow public abstract float getHealth();
+
+    @Shadow public abstract float getMaxHealth();
 
     /**
      * Hook anti levitation module
@@ -114,7 +121,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return instance.add(x, y, z);
         }
 
-        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null) {
+        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
             return instance.add(x, y, z);
         }
 
@@ -178,13 +185,13 @@ public abstract class MixinLivingEntity extends MixinEntity {
     /**
      * Fall flying using modified-rotation
      */
-    @Redirect(method = "travel", at  = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
+    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getPitch()F"))
     private float hookModifyFallFlyingPitch(LivingEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        RotationsConfigurable configurable = rotationManager.getActiveConfigurable();
+        AimPlan configurable = rotationManager.getAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getFixVelocity() || !configurable.getSilent()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
             return instance.getPitch();
         }
 
@@ -194,16 +201,30 @@ public abstract class MixinLivingEntity extends MixinEntity {
     /**
      * Fall flying using modified-rotation
      */
-    @Redirect(method = "travel", at  = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;"))
+    @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookModifyFallFlyingRotationVector(LivingEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        RotationsConfigurable configurable = rotationManager.getActiveConfigurable();
+        AimPlan configurable = rotationManager.getAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getFixVelocity() || !configurable.getSilent()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
             return instance.getRotationVector();
         }
 
         return rotation.getRotationVec();
+    }
+
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 2))
+    private void hookTickJumpEvent(CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        // No need to call event if player is already jumping.
+        if (this.jumping) {
+            return;
+        }
+
+        EventManager.INSTANCE.callEvent(new TickJumpEvent());
     }
 }

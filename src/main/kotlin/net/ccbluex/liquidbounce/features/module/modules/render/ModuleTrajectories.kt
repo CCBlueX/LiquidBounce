@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -27,15 +27,18 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.ProjectileUtil
+import net.minecraft.entity.projectile.thrown.EggEntity
+import net.minecraft.entity.projectile.thrown.EnderPearlEntity
+import net.minecraft.entity.projectile.thrown.PotionEntity
+import net.minecraft.entity.projectile.thrown.SnowballEntity
 import net.minecraft.item.*
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
@@ -55,25 +58,70 @@ import kotlin.math.sqrt
  */
 
 object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
-    const val MAX_SIMULATED_TICKS = 240
+    private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000)
+    private val alwaysShowBow by boolean("AlwaysShowBow", false)
+    private val otherPlayers by boolean("OtherPlayers", true)
+    private val activeTrajectoryArrow by boolean("ActiveTrajectoryArrow", true)
+    private val activeTrajectoryOther by boolean("ActiveTrajectoryOther", false)
+
 
     fun shouldDrawTrajectory(player: PlayerEntity, item: Item): Boolean {
-        return item is BowItem && player.isUsingItem || item is FishingRodItem || item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem
+        return item is BowItem && (player.isUsingItem || alwaysShowBow) || item is FishingRodItem ||
+            item is ThrowablePotionItem || item is SnowballItem || item is EnderPearlItem || item is EggItem ||
+            item is CrossbowItem
+    }
+
+    private fun isValidArrowEntity(entity: Entity): Boolean {
+        return activeTrajectoryArrow && entity is ArrowEntity && !entity.inGround
+    }
+
+    private fun isOtherEntity(entity: Entity): Boolean {
+        return activeTrajectoryOther && (entity is EnderPearlEntity || entity is SnowballEntity ||
+            entity is PotionEntity || entity is EggEntity)
+    }
+
+    private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
+        val currPos = blockHitResult.blockPos
+        val currState = currPos.getState()!!
+
+        val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
+            .map { it.offset(currPos) }
+            .filter { blockHitResult.pos in it.expand(0.01, 0.01, 0.01) }
+            .minByOrNull { it.center.squaredDistanceTo(blockHitResult.pos) }
+
+        if (bestBox != null) {
+            renderEnvironmentForWorld(matrixStack) {
+                withColor(color) {
+                    drawSideBox(bestBox, blockHitResult.side)
+                }
+            }
+        }
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
-        world.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
+        world.entities.filter { isValidArrowEntity(it) || isOtherEntity(it) }.forEach {
             val landingPosition = drawTrajectoryForProjectile(
                 it.velocity,
-                TrajectoryInfo(0.05F, 0.3F),
+                if (it is ArrowEntity) TrajectoryInfo(0.05F, 0.3F) else TrajectoryInfo(0.03F, 0.25F),
                 it.pos,
                 it,
                 Vec3(0.0, 0.0, 0.0),
-                Color4b(255, 0, 0, 200),
+                when (it) {
+                    is ArrowEntity -> Color4b(255, 0, 0, 200)
+                    is EnderPearlEntity -> Color4b(128, 0, 128, 200)
+                    else -> Color4b(200, 200, 200, 200)
+                },
                 matrixStack
             )
+            if (landingPosition is BlockHitResult) {
+                renderHitBlockFace(matrixStack, landingPosition, when (it) {
+                    is ArrowEntity -> Color4b(255, 0, 0, 200)
+                    is EnderPearlEntity -> Color4b(128, 0, 128, 200)
+                    else -> Color4b(200, 200, 200, 200)
+                })
+            }
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player) {
@@ -96,15 +144,17 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             }
         }
 
-        for (otherPlayer in world.players) {
-            val landingPosition = drawTrajectory(otherPlayer, matrixStack, event.partialTicks)
 
-            if (landingPosition is EntityHitResult) {
-                if (landingPosition.entity != player) {
-                    continue
-                }
+        if (otherPlayers) {
+            for (otherPlayer in world.players) {
+                val landingPosition = drawTrajectory(otherPlayer, matrixStack, event.partialTicks)
 
-                // todo: add rect support
+                if (landingPosition is EntityHitResult) {
+                    if (landingPosition.entity != player) {
+                        continue
+                    }
+
+                    // todo: add rect support
 //                val vertexFormat = PositionColorVertexFormat()
 //
 //                vertexFormat.initBuffer(4)
@@ -117,6 +167,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 //                    RenderEngine.SCREEN_SPACE_LAYER,
 //                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
 //                )
+                }
             }
         }
 
@@ -124,35 +175,21 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
         if (landingPosition != null) {
             if (landingPosition is BlockHitResult) {
-                val currPos = landingPosition.blockPos
-                val currState = currPos.getState()!!
-
-                val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
-                    .map { it.offset(currPos) }
-                    .filter { landingPosition.pos in it.expand(0.01, 0.01, 0.01) }
-                    .minByOrNull { it.center.squaredDistanceTo(landingPosition.pos) }
-
-                if (bestBox != null) {
-                    renderEnvironmentForWorld(matrixStack) {
-                        withColor(Color4b(0, 160, 255, 150)) {
-                            drawSideBox(bestBox, landingPosition.side)
-                        }
-                    }
-                }
+                renderHitBlockFace(matrixStack, landingPosition, Color4b(0, 160, 255, 150))
             } else if (landingPosition is EntityHitResult) {
                 renderEnvironmentForWorld(matrixStack) {
-                    val vec = landingPosition.entity
+                    val pos = landingPosition.entity
                         .interpolateCurrentPosition(event.partialTicks)
 
-                    withPosition(vec) {
-                        withColor(Color4b(255, 0, 0, 100)) {
-                            drawSolidBox(landingPosition.entity.box)
-                        }
+                    withColor(Color4b(255, 0, 0, 100)) {
+                        drawSolidBox(landingPosition.entity.getDimensions(landingPosition.entity.pose)!!.getBoxAt(pos))
                     }
+
                 }
             }
         }
     }
+
 
     private fun drawTrajectory(otherPlayer: PlayerEntity, matrixStack: MatrixStack, partialTicks: Float): HitResult? {
         val heldItem = otherPlayer.handItems.find { shouldDrawTrajectory(otherPlayer, it.item) } ?: return null
@@ -164,7 +201,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val yaw: Float
         val pitch: Float
 
-        val targetRotation = RotationManager.targetRotation
+        val targetRotation = RotationManager.aimPlan?.rotation
 
         if (targetRotation == null) {
             yaw = otherPlayer.yaw
@@ -239,7 +276,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
         var currTicks = 0
 
-        while (!hasLanded && posY > world.bottomY && currTicks < MAX_SIMULATED_TICKS) { // Set pos before and after
+        while (!hasLanded && posY > world.bottomY && currTicks < maxSimulatedTicks) { // Set pos before and after
             val posBefore = Vec3d(posX, posY, posZ)
             var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
 
@@ -253,6 +290,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     player
                 )
             )
+
 
             val entityHitResult = ProjectileUtil.getEntityCollision(
                 world,
@@ -323,25 +361,33 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
     }
 
     private fun getTrajectoryInfo(player: PlayerEntity, item: Item): TrajectoryInfo? {
+        val trajectoryInfo: TrajectoryInfo?
+
         when (item) {
             is BowItem -> {
                 // Calculate power of bow
                 var power = player.itemUseTime / 20f
                 power = (power * power + power * 2F) / 3F
+                power = if (alwaysShowBow && power == 0.0F) 1.0F else power
+                if (power < 0.1F) return null
 
-                if (power < 0.1F) {
-                    return null
-                }
-
-                return TrajectoryInfo(
+                trajectoryInfo = TrajectoryInfo(
                     0.05F,
                     0.3F,
                     motionFactor = power.coerceAtMost(1.0F) * 3.0F
                 )
             }
 
+            is CrossbowItem -> {
+                trajectoryInfo = TrajectoryInfo(
+                    0.05F,
+                    0.3F,
+                    motionFactor = 3.0F
+                )
+            }
+
             is FishingRodItem -> {
-                return TrajectoryInfo(
+                trajectoryInfo = TrajectoryInfo(
                     0.04F,
                     0.25F,
                     motionSlowdown = 0.92F
@@ -349,7 +395,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             }
 
             is PotionItem -> {
-                return TrajectoryInfo(
+                trajectoryInfo = TrajectoryInfo(
                     0.05F,
                     0.25F,
                     motionFactor = 0.5F,
@@ -357,8 +403,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 )
             }
 
-            else -> return TrajectoryInfo(0.03F, 0.25F)
+            else -> trajectoryInfo = TrajectoryInfo(0.03F, 0.25F)
         }
+
+        return trajectoryInfo
     }
 
     data class TrajectoryInfo(

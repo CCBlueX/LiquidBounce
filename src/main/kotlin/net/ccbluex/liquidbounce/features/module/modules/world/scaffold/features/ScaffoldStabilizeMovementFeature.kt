@@ -1,11 +1,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldMovementPlanner
-import net.ccbluex.liquidbounce.utils.client.QuickAccess.player
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
@@ -16,16 +16,10 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ModuleScaffold,
     private const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075
 
     val moveEvent =
-        handler<MovementInputEvent> { event ->
+        handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
+            val optimalLine = ModuleScaffold.currentOptimalLine ?: return@handler
             val currentInput = event.directionalInput
 
-            if (currentInput == DirectionalInput.NONE) {
-                return@handler
-            }
-
-            val optimalLine =
-                ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
-                    ?: return@handler
             val nearestPointOnLine = optimalLine.getNearestPointTo(player.pos)
 
             val vecToLine = nearestPointOnLine.subtract(player.pos)

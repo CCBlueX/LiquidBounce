@@ -21,17 +21,20 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.angle
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotationsConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.enforced
-import net.minecraft.client.option.KeyBinding
+import net.ccbluex.liquidbounce.utils.client.EventScheduler
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
 import kotlin.random.Random
@@ -56,10 +59,16 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             get() = modes
 
         val repeatable = repeatable {
-            mc.options.forwardKey.enforced = true
-            wait { 10 }
+            waitTicks(10)
             player.yaw += 180f
         }
+
+        val movementInputEvent = handler<MovementInputEvent> {
+            it.directionalInput = it.directionalInput.copy(
+                forwards = true
+            )
+        }
+
     }
 
     private object RandomMode : Choice("Random") {
@@ -67,12 +76,13 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val repeatable = repeatable {
+        var randomDirection = DirectionalInput.NONE
 
+        val repeatable = repeatable {
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
-                    if (player.isOnGround) {
-                        player.jump()
+                    EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                        it.jumping = true
                     }
                 }
 
@@ -83,10 +93,15 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 }
 
                 2 -> {
-                    val key = randomKeyBind()
-                    key.enforced = true
-                    wait { RandomUtils.nextInt(3, 7) }
-                    key.enforced = false
+                    // Allows every kind of direction
+                    randomDirection = DirectionalInput(
+                        Random.nextBoolean(),
+                        Random.nextBoolean(),
+                        Random.nextBoolean(),
+                        Random.nextBoolean()
+                    )
+                    waitTicks((3..7).random())
+                    randomDirection = DirectionalInput.NONE
                 }
 
                 3 -> {
@@ -101,22 +116,19 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                     player.pitch = (RandomUtils.nextFloat(0f, 10f) - 5f + player.pitch).coerceIn(-90f, 90f)
                 }
             }
-            wait { RandomUtils.nextInt(4, 7) }
+            waitTicks((4..7).random())
         }
-    }
 
-    private fun randomKeyBind(): KeyBinding {
-        return when (RandomUtils.nextInt(0, 3)) {
-            0 -> mc.options.rightKey
-            1 -> mc.options.leftKey
-            2 -> mc.options.backKey
-            else -> mc.options.forwardKey
+        val movementInputEvent = handler<MovementInputEvent> {
+            it.directionalInput = randomDirection
         }
+
     }
 
     private object CustomMode : Choice("Custom") {
         override val parent: ChoiceConfigurable
             get() = modes
+
 
         private object Rotate : ToggleableConfigurable(ModuleAntiAFK, "Rotate", true) {
             val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -139,26 +151,29 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         val swingRepeatable = repeatable {
             if (Swing.enabled && !player.handSwinging) {
-                wait { Swing.delay }
+                waitTicks(Swing.delay)
                 player.swingHand(Hand.MAIN_HAND)
             }
         }
+
         val repeatable = repeatable {
             if (move) {
                 mc.options.forwardKey.isPressed = true
             }
 
             if (jump && player.isOnGround) {
-                player.jump()
+                EventScheduler.schedule<MovementInputEvent>(ModuleScaffold) {
+                    it.jumping = true
+                }
             }
 
             if (Rotate.enabled) {
-                wait { Rotate.delay }
-                val serverRotation = RotationManager.serverRotation
+                waitTicks(Rotate.delay)
+                val currentRotation = RotationManager.serverRotation
                 val pitchRandomization = Random.nextDouble(-5.0, 5.0).toFloat()
                 RotationManager.aimAt(
                     Rotation(
-                        serverRotation.yaw + angle, (serverRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
+                        currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
                     ), ignoreOpenInventory, rotationsConfigurable
                 )
             }

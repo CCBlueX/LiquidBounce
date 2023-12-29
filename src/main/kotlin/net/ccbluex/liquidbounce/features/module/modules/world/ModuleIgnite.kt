@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
@@ -55,7 +54,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         val slot = findHotbarSlot(Items.LAVA_BUCKET) ?: return@repeatable
 
         for (enemy in targetTracker.enemies()) {
-            if (enemy.squaredBoxedDistanceTo(player) > 6.0 * 6.0) {
+            if (enemy.squaredBoxedDistanceTo(player) !in 1.0..6.0 * 6.0) {
                 continue
             }
 

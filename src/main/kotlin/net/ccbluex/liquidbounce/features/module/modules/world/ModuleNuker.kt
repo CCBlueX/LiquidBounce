@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -39,8 +39,6 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -94,8 +92,10 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
                 for (x in -size..size) {
                     for (z in -size..size) {
-                        val vec3 = Vec3(playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
-                            playerPosition.z.toDouble() + z)
+                        val vec3 = Vec3(
+                            playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
+                            playerPosition.z.toDouble() + z
+                        )
                         val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                         val baseColor = base.alpha(50)
@@ -150,7 +150,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         val repeat = repeatable {
             if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-                wait { switchDelay }
+                waitTicks(switchDelay)
                 return@repeatable
             }
 
@@ -237,12 +237,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             for ((pos, state) in targets) {
                 val raytrace = raytraceBlock(
                     ModuleNuker.player.eyes, pos, state, range = range.toDouble(),
-                    wallsRange = wallRange.toDouble())
+                    wallsRange = wallRange.toDouble()
+                )
 
                 // Check if there is a free angle to the block.
                 if (raytrace != null) {
                     val (rotation, _) = raytrace
-                    RotationManager.aimAt(rotation, openInventory = ignoreOpenInventory, configurable = rotations)
+                    RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
 
                     currentTarget = DestroyerTarget(pos, rotation)
                     return
@@ -323,16 +324,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         }
 
 
-        private val cps by intRange("CPS", 40..50, 1..200)
+        private val bps by intRange("BPS", 40..50, 1..200)
         private val doNotStop by boolean("DoNotStop", false)
-
-        // Do not put into CPS scheuduler into tree - we do not want user to change it
-        private val cpsScheduler = CpsScheduler()
-
-        // Chat feedback for the user
-        // TODO: Move this to separate module?
-        private var sendOutPackets = 0
-        private val packetChronometer = Chronometer()
 
         private val highlightBlocks by boolean("HighlightBlocks", true)
         private val highlightedBlocks = mutableListOf<BlockPos>()
@@ -372,7 +365,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             highlightedBlocks.clear()
 
             if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
-                wait { switchDelay }
+                waitTicks(switchDelay)
                 return@repeatable
             }
 
@@ -386,9 +379,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 return@repeatable
             }
 
-            val cps = cpsScheduler.clicks({ ModuleNuker.enabled }, cps)
-
-            for ((pos, _) in targets.take(cps)) {
+            for ((pos, _) in targets.take(bps.random())) {
                 if (highlightBlocks) {
                     highlightedBlocks += pos
                 }
@@ -396,24 +387,14 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 network.sendPacket(
                     PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
                 )
-                sendOutPackets++
 
-                if (Swing.enabled) {
-                    sendOutPackets++
-                }
                 swingHand()
 
                 if (!doNotStop) {
                     network.sendPacket(
                         PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
                     )
-                    sendOutPackets++
-               }
-            }
-
-            if (packetChronometer.hasElapsed(1000)) {
-                sendOutPackets = 0
-                packetChronometer.reset()
+                }
             }
         }
 
@@ -436,9 +417,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        return searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        return searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && !blacklistedBlocks.contains(state.block) && !isOnPlatform(pos)
-                && getNearestPoint(eyesPos, Box(pos, pos.add(1, 1, 1)))
+                && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1)))
                 .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {
@@ -446,10 +427,12 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                     RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
                     RotationManager.serverRotation
                 )
+
                 ComparisonMode.CLIENT_ROTATION -> RotationManager.rotationDifference(
                     RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
                     player.rotation
                 )
+
                 ComparisonMode.DISTANCE -> pos.getCenterDistanceSquared()
                 ComparisonMode.HARDNESS -> state.getHardness(world, pos).toDouble()
             }

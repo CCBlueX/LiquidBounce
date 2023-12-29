@@ -19,24 +19,20 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.base.ultralight.RenderLayer;
-import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine;
-import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay;
-import net.ccbluex.liquidbounce.base.ultralight.theme.Page;
-import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager;
-import net.minecraft.client.MinecraftClient;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.event.events.SplashOverlayEvent;
+import net.ccbluex.liquidbounce.event.events.SplashProgressEvent;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.resource.ResourceReload;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * Custom ultralight splash screen
@@ -46,51 +42,46 @@ public class MixinSplashOverlay {
 
     @Shadow
     @Final
-    private MinecraftClient client;
-    @Shadow
-    @Final
     private ResourceReload reload;
-    @Shadow
-    @Final
-    private Consumer<Optional<Throwable>> exceptionHandler;
-    private ViewOverlay viewOverlay = null;
-    private boolean closing = false;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void hookSplashInit(CallbackInfo callbackInfo) {
-        final Page page = ThemeManager.INSTANCE.page("splashscreen");
-        if (page == null) return;
-
-        viewOverlay = UltralightEngine.INSTANCE.newSplashView();
-        viewOverlay.loadPage(page);
+    private void hookInit(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(SplashOverlayEvent.Action.SHOW));
     }
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void hookSplashRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (viewOverlay != null) {
-            if (this.reload.isComplete()) {
-                if (this.client.currentScreen != null) {
-                    this.client.currentScreen.render(context, 0, 0, delta);
-                }
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setOverlay(Lnet/minecraft/client/gui/screen/Overlay;)V"))
+    private void hookEnd(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(SplashOverlayEvent.Action.HIDE));
+    }
 
-                if (!closing) {
-                    closing = true;
-                    this.client.setOverlay(null);
+    @Unique
+    private float splashProgressBefore = -1;
 
-                    UltralightEngine.INSTANCE.removeView(viewOverlay);
-                }
+    @Unique
+    private boolean hasBeenCompleted = false;
 
-                try {
-                    this.reload.throwException();
-                    this.exceptionHandler.accept(Optional.empty());
-                } catch (Throwable throwable) {
-                    this.exceptionHandler.accept(Optional.of(throwable));
-                }
-            }
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ResourceReload;getProgress()F"))
+    private void hookProgress(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        var progress = reload.getProgress();
+        var isComplete = reload.isComplete();
 
-            UltralightEngine.INSTANCE.render(RenderLayer.SPLASH_LAYER, context);
-            ci.cancel();
+        if (hasBeenCompleted) {
+            return;
         }
+
+        if (splashProgressBefore != progress || isComplete) {
+            EventManager.INSTANCE.callEvent(new SplashProgressEvent(progress, isComplete));
+            splashProgressBefore = progress;
+
+            if (isComplete) {
+                hasBeenCompleted = true;
+            }
+        }
+    }
+
+    @Inject(method = "render", at = @At("RETURN"))
+    private void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(null, context, mouseX, mouseY, delta));
     }
 
 }

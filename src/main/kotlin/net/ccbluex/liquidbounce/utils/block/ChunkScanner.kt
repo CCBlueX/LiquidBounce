@@ -19,7 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
+import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
+import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
+import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.BlockState
@@ -71,6 +77,7 @@ object ChunkScanner : Listenable {
 
         this.subscriber.add(newSubscriber)
 
+
         val world = mc.world ?: return
 
         logger.debug("Scanning ${this.loadedChunks.size} chunks for ${newSubscriber.javaClass.simpleName}")
@@ -103,6 +110,12 @@ object ChunkScanner : Listenable {
             while (true) {
                 try {
                     val chunkUpdate = this.chunkUpdateQueue.take()
+
+                    if (mc.world == null) {
+                        this.chunkUpdateQueue.clear()
+                        Thread.sleep(1000L)
+                        continue
+                    }
 
                     synchronized(ChunkScanner) {
                         when (chunkUpdate) {
@@ -163,7 +176,7 @@ object ChunkScanner : Listenable {
             for (x in 0 until 16) {
                 for (y in 0 until chunk.height) {
                     for (z in 0 until 16) {
-                        val pos = BlockPos(x + chunk.pos.startX, y, z + chunk.pos.startZ)
+                        val pos = BlockPos(x + chunk.pos.startX, y + chunk.bottomY, z + chunk.pos.startZ)
                         val blockState = chunk.getBlockState(pos)
 
                         for (sub in subscribersForRecordBlock) {

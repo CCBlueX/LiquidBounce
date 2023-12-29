@@ -38,8 +38,12 @@ import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import kotlin.math.min
 
+/**
+ * ItemEnchant Command
+ *
+ * Allows you to add, remove, clear, and enchant all possible enchantments on an item.
+ */
 object CommandItemEnchant {
-
 
     val levelParameter= ParameterBuilder
         .begin<String>("level")
@@ -159,8 +163,6 @@ object CommandItemEnchant {
         )
     }
 
-
-
     private fun creativeOrThrow(command: Command) {
         if (mc.interactionManager?.hasCreativeInventory() == false) {
             throw CommandException(command.result("mustBeCreative"))
@@ -201,8 +203,5 @@ object CommandItemEnchant {
 
         }
     }
-
-
-
 
 }

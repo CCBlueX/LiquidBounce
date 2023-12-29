@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -101,7 +104,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
              * @see net.minecraft.world.entity.EntityIndex.add
              */
             clone.uuid = UUID.randomUUID()
-            world.addEntity(clone.id, clone)
+            world.addEntity(clone)
 
             fakePlayer = clone
         }
@@ -146,7 +149,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         fakePlayer = null
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
+    val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
             return@handler
         }
@@ -180,7 +183,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     val repeatable = repeatable {
         if (Pulse.enabled) {
-            wait(Pulse.delay)
+            waitTicks(Pulse.delay)
             blink()
         } else if (evadeArrows) {
             val firstPositionPacket = (packets.firstOrNull { it is PlayerMoveC2SPacket && it.changePosition } ?: return@repeatable) as PlayerMoveC2SPacket
@@ -375,6 +378,8 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
         player.updatePositionAndAngles(start.x, start.y, start.z, player.yaw, player.pitch)
     }
+
+    fun isLagging() = enabled && (packets.isNotEmpty() || positions.isNotEmpty())
 
     private inline fun runWithDisabledLogger(fn: () -> Unit) {
         disablelogger = true

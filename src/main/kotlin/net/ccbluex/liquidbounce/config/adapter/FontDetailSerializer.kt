@@ -23,14 +23,11 @@ import com.google.gson.*
 import net.ccbluex.liquidbounce.render.Fonts
 import java.lang.reflect.Type
 
-object FontDetailSerializer : JsonSerializer<Fonts.FontDetail>, JsonDeserializer<Fonts.FontDetail> {
+object FontDetailSerializer : JsonSerializer<Fonts.FontInfo>, JsonDeserializer<Fonts.FontInfo> {
 
-    override fun serialize(src: Fonts.FontDetail, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+    override fun serialize(src: Fonts.FontInfo, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val obj = JsonObject()
-
-        obj.addProperty("file", src.name)
-        obj.addProperty("size", src.size)
-
+        obj.addProperty("name", src.name)
         return obj
     }
 
@@ -38,10 +35,9 @@ object FontDetailSerializer : JsonSerializer<Fonts.FontDetail>, JsonDeserializer
         json: JsonElement,
         typeOfT: Type?,
         context: JsonDeserializationContext?
-    ): Fonts.FontDetail {
+    ): Fonts.FontInfo {
         val obj = json.asJsonObject
-
-        return Fonts.FontDetail(obj.get("file").asString, obj.get("size").asInt)
+        return Fonts.FontInfo(obj.get("name").asString)
     }
 
 }

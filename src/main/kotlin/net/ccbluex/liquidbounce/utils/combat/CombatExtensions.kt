@@ -20,28 +20,36 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.minecraft.client.network.ClientPlayerEntity
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
+import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityGroup
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.entity.mob.HostileEntity
+import net.minecraft.entity.mob.Monster
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.GameMode
 
 /**
  * Global enemy configurable
@@ -62,23 +70,22 @@ class EnemyConfigurable : Configurable("Enemies") {
     var players by boolean("Players", true)
 
     // Hostile mobs (like skeletons and zombies) should be considered as an enemy
-    var mobs by boolean("Mobs", true)
+    var hostile by boolean("Hostile", true)
 
-    // Animals (like cows, pigs and so on) should be considered as an enemy
-    var animals by boolean("Animals", false)
+    // Passive mobs (like cows, pigs and so on) should be considered as an enemy
+    var passive by boolean("Passive", false)
 
     // Invisible entities should be also considered as an enemy
     var invisible by boolean("Invisible", true)
 
-    // Dead entities should be also considered as an enemy to bypass modern anti cheat techniques
+    // Dead entities should NOT be considered as an enemy - but this is useful to bypass anti-cheats
     var dead by boolean("Dead", false)
+
+    // Sleeping entities should NOT be considered as an enemy
+    var sleeping by boolean("Sleeping", false)
 
     // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
     var friends by boolean("Friends", false)
-
-    // Teammates should be also considered as enemy - same thing like Teams module -> might be replaced by this
-    // Todo: this is currently handled using the Teams module
-    var teamMates by boolean("TeamMates", false)
 
     init {
         ConfigSystem.root(this)
@@ -90,9 +97,14 @@ class EnemyConfigurable : Configurable("Enemies") {
     fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
         // Check if the enemy is living and not dead (or ignore being dead)
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
+            // Check if enemy is sleeping (or ignore being sleeping)
+            if (suspect.isSleeping && !sleeping) {
+                return false
+            }
+
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
-                if (attackable && !teamMates && ModuleTeams.isInClientPlayersTeam(suspect)) {
+                if (attackable && ModuleTeams.isInClientPlayersTeam(suspect)) {
                     return false
                 }
 
@@ -102,6 +114,17 @@ class EnemyConfigurable : Configurable("Enemies") {
                         return false
                     }
 
+                    if (suspect is AbstractClientPlayerEntity) {
+                        if (ModuleFocus.enabled && (attackable || !ModuleFocus.combatFocus)
+                            && !ModuleFocus.isInFocus(suspect)) {
+                            return false
+                        }
+
+                        if (attackable && ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(suspect)) {
+                            return false
+                        }
+                    }
+
                     // Check if player might be a bot
                     if (ModuleAntiBot.isBot(suspect)) {
                         return false
@@ -109,9 +132,9 @@ class EnemyConfigurable : Configurable("Enemies") {
 
                     return players
                 } else if (suspect is PassiveEntity) {
-                    return animals
-                } else if (suspect is MobEntity) {
-                    return mobs
+                    return passive
+                } else if (suspect is HostileEntity || suspect is Monster) {
+                    return hostile
                 }
             }
         }
@@ -168,21 +191,52 @@ inline fun ClientWorld.getEntitiesBoxInRange(
     return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
 }
 
-fun Entity.attack(swing: Boolean) {
+fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
     val player = mc.player ?: return
     val network = mc.networkHandler ?: return
 
     EventManager.callEvent(AttackEvent(this))
 
     // Swing before attacking (on 1.8)
-    if (swing && protocolVersion == MC_1_8) {
+    if (swing && isOldCombat) {
         player.swingHand(Hand.MAIN_HAND)
     }
 
     network.sendPacket(PlayerInteractEntityC2SPacket.attack(this, player.isSneaking))
 
+    if (keepSprint) {
+        var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+        var magicAttackDamage = EnchantmentHelper.getAttackDamage(player.mainHandStack,
+            if (this is LivingEntity) this.group else EntityGroup.DEFAULT
+        )
+
+        val cooldownProgress = player.getAttackCooldownProgress(0.5f)
+        genericAttackDamage *= 0.2f + cooldownProgress * cooldownProgress * 0.8f
+        magicAttackDamage *= cooldownProgress
+
+        if (genericAttackDamage > 0.0f && magicAttackDamage > 0.0f) {
+            player.addEnchantedHitParticles(this)
+        }
+
+        if (ModuleCriticals.wouldCrit(true)) {
+            world.playSound(
+                null, player.x, player.y,
+                player.z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
+                player.soundCategory, 1.0f, 1.0f
+            )
+            player.addCritParticles(this)
+        }
+    } else {
+        if (interaction.currentGameMode != GameMode.SPECTATOR) {
+            player.attack(this)
+        }
+    }
+
+    // Reset cooldown
+    player.resetLastAttackedTicks()
+
     // Swing after attacking (on 1.9+)
-    if (swing && protocolVersion != MC_1_8) {
+    if (swing && !isOldCombat) {
         player.swingHand(Hand.MAIN_HAND)
     }
 }

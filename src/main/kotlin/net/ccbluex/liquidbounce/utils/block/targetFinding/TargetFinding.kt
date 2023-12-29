@@ -5,19 +5,25 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.client.getFace
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.minecraft.block.*
 import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 
 
 enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
+    GODBRIDGE("GodBridge"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
     NEAREST_ROTATION("NearestRotation"),
@@ -62,7 +68,10 @@ enum class BlockTargetingMode {
     REPLACE_EXISTING_BLOCK
 }
 
-private fun findBestTargetPlanForTargetPosition(posToInvestigate: BlockPos, mode: BlockTargetingMode): BlockTargetPlan? {
+private fun findBestTargetPlanForTargetPosition(
+    posToInvestigate: BlockPos,
+    mode: BlockTargetingMode
+): BlockTargetPlan? {
     val directions = Direction.values()
 
     val options = directions.mapNotNull { direction ->
@@ -83,8 +92,12 @@ private fun findBestTargetPlanForTargetPosition(posToInvestigate: BlockPos, mode
 /**
  * @return null if it is impossible to target the block with the given parameters
  */
-fun getTargetPlanForPositionAndDirection(pos: BlockPos, direction: Direction, mode: BlockTargetingMode): BlockTargetPlan? {
-     when (mode) {
+fun getTargetPlanForPositionAndDirection(
+    pos: BlockPos,
+    direction: Direction,
+    mode: BlockTargetingMode
+): BlockTargetPlan? {
+    when (mode) {
         BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
             val currPos = pos.add(direction.opposite.vector)
             val currState = currPos.getState() ?: return null
@@ -95,6 +108,7 @@ fun getTargetPlanForPositionAndDirection(pos: BlockPos, direction: Direction, mo
 
             return BlockTargetPlan(currPos, direction)
         }
+
         BlockTargetingMode.REPLACE_EXISTING_BLOCK -> {
             return BlockTargetPlan(pos, direction)
         }
@@ -103,7 +117,10 @@ fun getTargetPlanForPositionAndDirection(pos: BlockPos, direction: Direction, mo
 
 class PointOnFace(val face: Face, val point: Vec3d)
 
-fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
+fun findBestBlockPlacementTarget(
+    pos: BlockPos,
+    options: BlockPlacementTargetFindingOptions
+): BlockPlacementTarget? {
     val state = pos.getState()!!
 
     // We cannot place blocks when there is already a block at that position
@@ -111,10 +128,9 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
         return null
     }
 
-    val offsetsToInvestigate =
-        options.offsetsToInvestigate.sortedByDescending {
-            options.offsetPriorityGetter(pos.add(it))
-        }
+    val offsetsToInvestigate = options.offsetsToInvestigate.sortedByDescending {
+        options.offsetPriorityGetter(pos.add(it))
+    }
 
     for (offset in offsetsToInvestigate) {
         val posToInvestigate = pos.add(offset)
@@ -125,13 +141,16 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
             continue
         }
 
+        // Do we want to replace a block or place a block at a neighbor? This makes a difference as we would need to
+        // target the block in order to replace it. If there is no block at the target position yet, we need to target
+        // a neighboring block
         val targetMode = if (blockStateToInvestigate.isAir) {
             BlockTargetingMode.PLACE_AT_NEIGHBOR
         } else {
             BlockTargetingMode.REPLACE_EXISTING_BLOCK
         }
 
-        // Check if we can actually replace the block
+        // Check if we can actually replace the block?
         if (targetMode == BlockTargetingMode.REPLACE_EXISTING_BLOCK
             && !blockStateToInvestigate.canBeReplacedWith(posToInvestigate, options.stackToPlaceWith)
         )
@@ -142,15 +161,17 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
         val currPos = targetPlan.blockPosToInteractWith
 
-        val face = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
+        // We found the optimal block to place the block/face to place at. Now we need to find a point on the face.
+        // to rotate to
+        val pointOnFace = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
 
-        val rotation = RotationManager.makeRotation(face.point.add(Vec3d.of(currPos)), mc.player!!.eyes)
+        val rotation = RotationManager.makeRotation(pointOnFace.point.add(Vec3d.of(currPos)), mc.player!!.eyes)
 
         return BlockPlacementTarget(
             currPos,
             posToInvestigate,
             targetPlan.interactionDirection,
-            face.face.from.y + currPos.y,
+            pointOnFace.face.from.y + currPos.y,
             rotation
         )
     }
@@ -167,7 +188,7 @@ private fun findTargetPointOnFace(
     val currBlock = currPos.getState()!!.block
     val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
 
-    val shapeBBs = currState.getOutlineShape(mc.world!!, currPos, ShapeContext.of(mc.player!!)).boundingBoxes
+    val shapeBBs = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
 
     val face = shapeBBs.mapNotNull {
         var face = it.getFace(targetPlan.interactionDirection)
@@ -214,7 +235,7 @@ data class BlockPlacementTarget(
     val minPlacementY: Double,
     val rotation: Rotation
 ) {
-    fun doesCrosshairTargetFullfitRequirements(crosshairTarget: BlockHitResult): Boolean {
+    fun doesCrosshairTargetFullFillRequirements(crosshairTarget: BlockHitResult): Boolean {
         if (crosshairTarget.type != HitResult.Type.BLOCK)
             return false
         if (crosshairTarget.blockPos != this.interactedBlockPos)

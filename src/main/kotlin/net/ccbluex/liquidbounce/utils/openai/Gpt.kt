@@ -68,8 +68,6 @@ class Gpt(val openAiKey: String, val model: String, val prompt: String) {
             }
         """.trimIndent()
 
-        println("Sending request to OpenAI: $json")
-
         // Set entity to JSON body
         httpPost.entity = EntityBuilder.create().setText(json).build()
 
@@ -79,8 +77,6 @@ class Gpt(val openAiKey: String, val model: String, val prompt: String) {
         response.close()
 
         // Parse OpenAI response
-        println(responseBody)
-
         val responseJson = JsonParser.parseString(responseBody).asJsonObject
 
         return responseJson["choices"].asJsonArray[0].asJsonObject["message"].asJsonObject["content"].asString

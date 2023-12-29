@@ -19,8 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.block.HoneyBlock
@@ -28,6 +32,8 @@ import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -41,25 +47,121 @@ import net.minecraft.util.math.Direction
 object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     private object Block : ToggleableConfigurable(this, "Blocking", true) {
+
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
+        val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-        val packet by boolean("Packet", true)
+        val modes = choices("Choice", { Reuse }) {
+            arrayOf(NoneChoice(it), Reuse, Rehold)
+        }
 
-        val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-            if (packet && player.isBlocking) {
-                when (event.state) {
-                    EventState.PRE -> network.sendPacket(
-                        PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                            BlockPos.ORIGIN,
-                            Direction.DOWN
-                        )
-                    )
+        /**
+         * The hand that is currently blocking on the server
+         *
+         * Why are we not using [player.isBlocking] instead? Because on certain modules, we do block client-side,
+         * but not server-side. This is the case for [ModuleKillAura] for example.
+         */
+        var blockingHand: Hand? = null
+        private var nextIsIgnored = false
 
-                    EventState.POST -> interaction.sendSequencedPacket(world) { sequence ->
-                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
+        object Reuse : Choice("Reuse") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (blockingHand != null) {
+                    when (event.state) {
+                        EventState.PRE -> {
+                            nextIsIgnored = true
+                            network.sendPacket(
+                                PlayerActionC2SPacket(
+                                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                                    BlockPos.ORIGIN,
+                                    Direction.DOWN
+                                )
+                            )
+                        }
+
+                        EventState.POST -> {
+                            nextIsIgnored = true
+                            interaction.sendSequencedPacket(world) { sequence ->
+                                PlayerInteractItemC2SPacket(blockingHand, sequence)
+                            }
+                        }
                     }
+                }
+            }
+
+
+        }
+
+        object Rehold : Choice("Rehold") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (blockingHand == Hand.MAIN_HAND) {
+                    when (event.state) {
+                        EventState.PRE -> {
+                            nextIsIgnored = true
+                            network.sendPacket(UpdateSelectedSlotC2SPacket((0..8).random()))
+                        }
+
+                        EventState.POST -> {
+                            nextIsIgnored = true
+                            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+
+                            nextIsIgnored = true
+                            interaction.sendSequencedPacket(world) { sequence ->
+                                PlayerInteractItemC2SPacket(blockingHand, sequence)
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        val packetHandler = handler<PacketEvent> {
+            val packet = it.packet
+
+            when (packet) {
+                is PlayerActionC2SPacket -> {
+                    // Ignores our own module packets
+                    if (nextIsIgnored) {
+                        nextIsIgnored = false
+                        return@handler
+                    }
+
+                    if (packet.action == PlayerActionC2SPacket.Action.RELEASE_USE_ITEM) {
+                        blockingHand = null
+                    }
+                }
+
+                is PlayerInteractItemC2SPacket -> {
+                    // Ignores our own module packets
+                    if (nextIsIgnored) {
+                        nextIsIgnored = false
+                        return@handler
+                    }
+
+                    if (player.getStackInHand(packet.hand).useAction == UseAction.BLOCK) {
+                        blockingHand = packet.hand
+                    }
+                }
+
+                is UpdateSelectedSlotC2SPacket -> {
+                    // Ignores our own module packets
+                    if (nextIsIgnored) {
+                        nextIsIgnored = false
+                        return@handler
+                    }
+
+                    blockingHand = null
                 }
             }
         }
@@ -150,10 +252,11 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             Consume.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
 
-        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> if (Block.enabled) Pair(
-            Block.forwardMultiplier,
-            Block.sidewaysMultiplier
-        ) else Pair(0.2f, 0.2f)
+        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH ->
+            if (Block.enabled && (!Block.onlySlowOnServerSide || Block.blockingHand == null))
+                Pair(Block.forwardMultiplier, Block.sidewaysMultiplier)
+            else
+                Pair(0.2f, 0.2f)
 
         UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> if (Bow.enabled) Pair(
             Bow.forwardMultiplier,

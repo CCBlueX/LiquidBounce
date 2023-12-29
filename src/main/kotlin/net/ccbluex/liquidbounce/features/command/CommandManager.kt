@@ -23,16 +23,15 @@ import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.ChatSendEvent
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemEnchant
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemGive
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemRename
-import net.ccbluex.liquidbounce.features.command.commands.creative.CommandItemSkull
+import net.ccbluex.liquidbounce.features.command.commands.creative.*
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
+import net.ccbluex.liquidbounce.script.CommandScript
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.outputString
 import net.minecraft.text.MutableText
@@ -46,11 +45,13 @@ class CommandException(val text: MutableText, cause: Throwable? = null, val usag
 /**
  * Links minecraft with the command engine
  */
+
 object CommandExecutor : Listenable {
 
     /**
      * Handles command execution
      */
+
     val chatEventHandler = handler<ChatSendEvent> {
         if (it.message.startsWith(CommandManager.Options.prefix)) {
             try {
@@ -95,6 +96,7 @@ object CommandExecutor : Listenable {
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
+ 
 object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
@@ -140,12 +142,15 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandXRay.createCommand())
         addCommand(CommandEnemy.createCommand())
         addCommand(CommandConfig.createCommand())
+        addCommand(CommandLocalConfig.createCommand())
         addCommand(CommandAutoDisable.createCommand())
+        addCommand(CommandScript.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
         addCommand(CommandItemGive.createCommand())
         addCommand(CommandItemSkull.createCommand())
+        addCommand(CommandItemStack.createCommand())
         addCommand(CommandItemEnchant.createCommand())
 
         // utility commands
@@ -211,6 +216,8 @@ object CommandManager : Iterable<Command> {
      *
      * @param cmd The command. If there is no command in it (it is empty or only whitespaces), this method is a no op
      */
+    @RequiredByScript
+    @JvmName("execute")
     fun execute(cmd: String) {
         val args = tokenizeCommand(cmd).first
 

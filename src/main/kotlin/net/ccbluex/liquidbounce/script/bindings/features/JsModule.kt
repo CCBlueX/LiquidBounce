@@ -19,12 +19,11 @@
 package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.config.Value
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.event.EventHook
-import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.logger
+import kotlin.reflect.KClass
 
 class JsModule(moduleObject: Map<String, Any>) : Module(
     name = moduleObject["name"] as String,
@@ -93,7 +92,8 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
      * Register new event hook
      */
     private fun hookHandler(eventName: String) {
-        val (_, clazz) = EventManager.mappedEvents.find { (name, _) -> name.equals(eventName, true) } ?: return
+        // Get event case-insensitive
+        val clazz = LOWERCASE_NAME_EVENT_MAP[eventName.lowercase()] ?: return
 
         EventManager.registerEventHook(
             clazz.java,
@@ -107,4 +107,12 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
         )
     }
 
+
+    companion object {
+        /**
+         * Maps the lowercase name of the event to the event's kotlin class
+         */
+        private val LOWERCASE_NAME_EVENT_MAP: Map<String, KClass<out Event>> =
+            ALL_EVENT_CLASSES.associateBy { it.eventName.lowercase() }
+    }
 }

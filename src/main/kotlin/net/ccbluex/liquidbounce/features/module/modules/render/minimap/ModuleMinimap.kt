@@ -1,33 +1,25 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.minimap
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.event.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.coloredTriangle
-import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.drawLines
-import net.ccbluex.liquidbounce.render.drawTextureQuad
-import net.ccbluex.liquidbounce.render.drawTriangle
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
-import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.math.Vec2i
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.AlignmentConfigurable
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
@@ -39,6 +31,8 @@ import org.joml.Quaternionf
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
+
+const val LINE_WIDTH: Float = 1.0F
 
 object ModuleMinimap : Module("Minimap", Category.RENDER) {
     private val size by int("Size", 96, 1..256)
@@ -87,10 +81,10 @@ object ModuleMinimap : Module("Minimap", Category.RENDER) {
 
             val scale = minimapSize / (2.0F * viewDistance)
 
+            matStack.push()
+
             matStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
             matStack.scale(scale, scale, scale)
-
-            matStack.push()
 
             matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
             matStack.translate(-playerOffX, -playerOffZ, 0.0)
@@ -129,17 +123,101 @@ object ModuleMinimap : Module("Minimap", Category.RENDER) {
 
             matStack.pop()
 
+            val centerBB = Vec2f(
+                boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
+                boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
+            )
+            GL11.glDisable(GL11.GL_SCISSOR_TEST)
+
             renderEnvironmentForGUI(matStack) {
+
+                val from = Color4b(0, 0, 0, 100)
+                val to = Color4b(0, 0, 0, 0)
+
+                drawShadowForBB(boundingBox, from, to)
                 drawLines(
-                    Vec3(-chunksToRenderAround.toDouble(), 0.0, 0.0),
-                    Vec3(chunksToRenderAround.toDouble(), 0.0, 0.0),
-                    Vec3(0.0, -chunksToRenderAround.toDouble(), 0.0),
-                    Vec3(0.0, chunksToRenderAround.toDouble(), 0.0),
+                    // Cursor
+                    Vec3(boundingBox.xMin, centerBB.y, 0.0F),
+                    Vec3(boundingBox.xMax, centerBB.y, 0.0F),
+                    Vec3(centerBB.x, boundingBox.yMin, 0.0F),
+                    Vec3(centerBB.x, boundingBox.yMax, 0.0F),
+                    // Border
+                    Vec3(boundingBox.xMin, boundingBox.yMin, 0.0F),
+                    Vec3(boundingBox.xMax, boundingBox.yMin, 0.0F),
+                    Vec3(boundingBox.xMin, boundingBox.yMax, 0.0F),
+                    Vec3(boundingBox.xMax, boundingBox.yMax, 0.0F),
+
+                    Vec3(boundingBox.xMin, boundingBox.yMin, 0.0F),
+                    Vec3(boundingBox.xMin, boundingBox.yMax, 0.0F),
+                    Vec3(boundingBox.xMax, boundingBox.yMin, 0.0F),
+                    Vec3(boundingBox.xMax, boundingBox.yMax, 0.0F),
                 )
             }
 
-            GL11.glDisable(GL11.GL_SCISSOR_TEST)
         }
+
+    private fun RenderEnvironment.drawShadowForBB(
+        boundingBox: BoundingBox2f,
+        from: Color4b,
+        to: Color4b,
+        offset: Float = 3.0F,
+        width: Float = 3.0F
+    ) {
+        drawGradientQuad(
+            listOf(
+                Vec3(boundingBox.xMin + offset, boundingBox.yMax, -1.0F),
+                Vec3(boundingBox.xMin + offset, boundingBox.yMax + width, -1.0F),
+                Vec3(boundingBox.xMax, boundingBox.yMax + width, -1.0F),
+                Vec3(boundingBox.xMax, boundingBox.yMax, -1.0F),
+
+                Vec3(boundingBox.xMax, boundingBox.yMin + offset, -1.0F),
+                Vec3(boundingBox.xMax, boundingBox.yMax, -1.0F),
+                Vec3(boundingBox.xMax + width, boundingBox.yMax, -1.0F),
+                Vec3(boundingBox.xMax + width, boundingBox.yMin + offset, -1.0F),
+
+                Vec3(boundingBox.xMax, boundingBox.yMax, -1.0F),
+                Vec3(boundingBox.xMax, boundingBox.yMax + width, -1.0F),
+                Vec3(boundingBox.xMax + width, boundingBox.yMax + width, -1.0F),
+                Vec3(boundingBox.xMax + width, boundingBox.yMax, -1.0F),
+
+                Vec3(boundingBox.xMin + offset - width, boundingBox.yMax, -1.0F),
+                Vec3(boundingBox.xMin + offset - width, boundingBox.yMax + width, -1.0F),
+                Vec3(boundingBox.xMin + offset, boundingBox.yMax + width, -1.0F),
+                Vec3(boundingBox.xMin + offset, boundingBox.yMax, -1.0F),
+
+                Vec3(boundingBox.xMax, boundingBox.yMin + offset - width, -1.0F),
+                Vec3(boundingBox.xMax, boundingBox.yMin + offset, -1.0F),
+                Vec3(boundingBox.xMax + width, boundingBox.yMin + offset, -1.0F),
+                Vec3(boundingBox.xMax + width, boundingBox.yMin + offset - width, -1.0F),
+            ),
+            listOf(
+                from,
+                to,
+                to,
+                from,
+
+                from,
+                from,
+                to,
+                to,
+
+                from,
+                to,
+                to,
+                to,
+
+                to,
+                to,
+                to,
+                from,
+
+                to,
+                from,
+                to,
+                to,
+            )
+        )
+    }
 
     private fun buildMinimapMesh(
         builder: BufferBuilder,
