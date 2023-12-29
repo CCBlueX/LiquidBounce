@@ -1,3 +1,3 @@
-export default function HUD() {
+export function Component() {
   return <div>HUD</div>;
 }

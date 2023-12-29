@@ -10,7 +10,7 @@ import background from "~/assets/background.png";
 
 import styles from "./_menus.module.css";
 
-export default function MenuWrapper() {
+export function Component() {
   const location = useLocation();
 
   return (
@@ -49,3 +49,5 @@ export default function MenuWrapper() {
     </div>
   );
 }
+
+Component.displayName = "MenuWrapper";

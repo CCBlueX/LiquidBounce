@@ -181,20 +181,6 @@ tasks.register('buildTheme', NpmTask) {
     outputs.dir('src-theme/public')
 }
 
-tasks.register('bundleTheme', NodeTask) {
-    dependsOn 'buildTheme'
-    workingDir = file('src-theme')
-    script = file('src-theme/bundle.cjs')
-    doLast {
-        println 'Successfully attached theme to build'
-    }
-
-    // Incremental stuff
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
-    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
-    outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
-}
-
 sourceSets {
     main {
         resources {
@@ -203,7 +189,7 @@ sourceSets {
     }
 }
 
-processResources.dependsOn bundleTheme
+processResources.dependsOn buildTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
@@ -293,5 +279,5 @@ tasks.register('copyZipInclude', Copy) {
     into 'build/libs/zip'
 }
 
-sourcesJar.dependsOn bundleTheme
+sourcesJar.dependsOn buildTheme
 build.dependsOn copyZipInclude

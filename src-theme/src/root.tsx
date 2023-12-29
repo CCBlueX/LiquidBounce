@@ -10,7 +10,7 @@ type VirtualScreenData = {
   action: "close" | "open";
 };
 
-export default function Root() {
+export function Component() {
   const { listen } = useWebsocket();
   const navigate = useNavigate();
 
@@ -66,6 +66,8 @@ export default function Root() {
     const virtualScreenCleanup = listen(
       "virtualScreen",
       ({ action, screenName }: VirtualScreenData) => {
+        console.log("virtualScreen", action, screenName);
+
         if (action === "close") {
           navigate("/closed");
         } else if (action === "open") {
@@ -98,3 +100,5 @@ export default function Root() {
     </QueryClientProvider>
   );
 }
+
+Component.displayName = "Root";

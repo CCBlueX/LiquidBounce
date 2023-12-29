@@ -23,7 +23,7 @@ import { ReactComponent as Shuffle } from "~/assets/icons/shuffle.svg";
 import { ReactComponent as Check } from "~/assets/icons/check.svg";
 import LoginButton from "~/features/menus/accounts/login-button";
 
-export default function AccountManager() {
+export function Component() {
   const {
     status,
     data: accounts,
@@ -102,3 +102,5 @@ export default function AccountManager() {
     </Menu>
   );
 }
+
+Component.displayName = "AccountManager";

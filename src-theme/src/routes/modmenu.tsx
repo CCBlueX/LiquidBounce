@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 
+import Tooltip from "~/components/tooltip";
+
 import { useModules } from "~/features/clickgui/use-modules";
 
 import styles from "./modmenu.module.css";
-import Tooltip from "~/components/tooltip";
 
-export default function ModMenu() {
+export function Component() {
   const { modulesByCategory, toggleModule } = useModules();
   const [activeCategory, setActiveCategory] = useState(
     Object.keys(modulesByCategory)[0]
@@ -17,7 +18,10 @@ export default function ModMenu() {
 
   return (
     <div className={styles.wrapper}>
-      <img src="./background.png" className="absolute inset-0 w-full h-full -z-10" />
+      <img
+        src="./background.png"
+        className="absolute inset-0 w-full h-full -z-10"
+      />
       <div className={styles.container}>
         <ul className={styles.categories}>
           {Object.keys(modulesByCategory).map((category) => (
@@ -56,7 +60,10 @@ export default function ModMenu() {
                   {module.description}
                 </span>
                 <button className={styles.settings}>Settings</button>
-                <button className={styles.toggle} onClick={() => toggleModule(module.name)}>
+                <button
+                  className={styles.toggle}
+                  onClick={() => toggleModule(module.name)}
+                >
                   {module.enabled ? "Enabled" : "Disabled"}
                 </button>
               </div>
@@ -67,3 +74,5 @@ export default function ModMenu() {
     </div>
   );
 }
+
+Component.displayName = "ModMenu";

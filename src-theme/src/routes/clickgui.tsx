@@ -12,7 +12,7 @@ import { Module, getModuleSettings, getModules } from "~/utils/api";
 import styles from "./clickgui.module.css";
 import { intToRgba } from "~/utils/misc";
 
-export default function ClickGUI() {
+export function Component() {
   // const { modulesByCategory } = useModules();
 
   const { data: modules } = useQuery("modules", getModules, {
@@ -85,3 +85,5 @@ export default function ClickGUI() {
     </div>
   );
 }
+
+Component.displayName = "ClickGUI";

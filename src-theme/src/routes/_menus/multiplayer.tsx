@@ -25,7 +25,7 @@ import { ReactComponent as DirectConnect } from "~/assets/icons/direct-connect.s
 import { ReactComponent as Change } from "~/assets/icons/change.svg";
 import { ReactComponent as Refresh } from "~/assets/icons/refresh.svg";
 
-export default function Multiplayer() {
+export function Component() {
   const {
     status,
     data: servers,
@@ -92,3 +92,5 @@ export default function Multiplayer() {
     </Menu>
   );
 }
+
+Component.displayName = "MultiplayerMenu";

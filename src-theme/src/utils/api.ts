@@ -1,4 +1,5 @@
-const BASE_API_URL = "http://localhost:15743/api/v1/client";
+const BASE_API_PATH = "/api/v1/client";
+const BASE_API_URL = new URL(BASE_API_PATH, window.location.origin).href;
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_API_URL}${path}`, {

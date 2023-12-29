@@ -27,7 +27,7 @@ import { ReactComponent as External } from "~/assets/icons/external.svg";
 
 import styles from "./title.module.css";
 
-export default function TitleScreen() {
+export function Component() {
   return (
     <Menu>
       <Menu.Content
@@ -76,3 +76,5 @@ export default function TitleScreen() {
     </Menu>
   );
 }
+
+Component.displayName = "TitleScreen";

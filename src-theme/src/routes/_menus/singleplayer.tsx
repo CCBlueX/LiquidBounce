@@ -19,7 +19,7 @@ function useWorlds() {
   return useQuery<World[], Error>("worlds", getWorlds);
 }
 
-export default function Singleplayer() {
+export function Component() {
   const { status, data: worlds, error } = useWorlds();
   const [search, setSearch] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -156,10 +156,7 @@ export default function Singleplayer() {
             World Type
           </Combobox>
         </Header>
-        <List
-          loading={status === "loading"}
-          error={error?.message}
-        >
+        <List loading={status === "loading"} error={error?.message}>
           {filteredWorlds?.map((world) => (
             <WorldEntry key={world.name} world={world} />
           ))}
@@ -174,3 +171,5 @@ export default function Singleplayer() {
     </Menu>
   );
 }
+
+Component.displayName = "SingleplayerMenu";

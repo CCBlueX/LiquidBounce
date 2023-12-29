@@ -3,70 +3,55 @@ import ReactDOM from "react-dom/client";
 
 import { RouterProvider, createHashRouter } from "react-router-dom";
 
-import Root from "./root.tsx";
-
-import SplashScreen from "./routes/index.tsx";
-import MenuWrapper from "./routes/_menus.tsx";
-import TitleScreen from "./routes/_menus/title.tsx";
-
-import Singleplayer from "./routes/_menus/singleplayer.tsx";
-import Multiplayer from "./routes/_menus/multiplayer.tsx";
-
-import AccountManager from "./routes/_menus/accounts.tsx";
-import ProxyManager from "./routes/_menus/proxies.tsx";
-
-import ClickGUI from "./routes/clickgui.tsx";
+import { WebsocketProvider } from "./contexts/websocket-context.tsx";
 
 import "./globals.css";
-import ModMenu from "~/routes/modmenu.tsx";
-import HUD from "./routes/hud.tsx";
-import { WebsocketProvider } from "./contexts/websocket-context.tsx";
 
 const router = createHashRouter([
   {
     path: "/",
-    element: <Root />,
+    lazy: () => import("./root.tsx"),
     children: [
       {
         path: "/",
-        element: <SplashScreen />,
+        lazy: () => import("./routes/index.tsx"),
       },
       {
-        element: <MenuWrapper />,
+        lazy: () => import("./routes/_menus.tsx"),
         children: [
           {
             path: "/title",
-            element: <TitleScreen />,
+            lazy: () => import("./routes/_menus/title.tsx"),
           },
           {
             path: "/singleplayer",
-            element: <Singleplayer />,
+            lazy: () => import("./routes/_menus/singleplayer.tsx"),
           },
           {
             path: "/multiplayer",
-            element: <Multiplayer />,
+            lazy: () => import("./routes/_menus/multiplayer.tsx"),
           },
           {
             path: "/accounts",
-            element: <AccountManager />,
+            lazy: () => import("./routes/_menus/accounts.tsx"),
           },
           {
             path: "/proxies",
-            element: <ProxyManager />,
+            lazy: () => import("./routes/_menus/proxies.tsx"),
           },
         ],
       },
       {
         path: "/clickgui",
-        element: <ClickGUI />,
+        lazy: () => import("./routes/clickgui.tsx"),
       },
       {
         path: "/modmenu",
-        element: <ModMenu />,
+        lazy: () => import("./routes/modmenu.tsx"),
       },
       {
         path: "/hud",
-        element: <HUD />,
+        lazy: () => import("./routes/hud.tsx"),
       },
     ],
   },

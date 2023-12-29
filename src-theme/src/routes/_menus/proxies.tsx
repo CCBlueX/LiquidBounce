@@ -21,7 +21,7 @@ import { ReactComponent as Import } from "~/assets/icons/import.svg";
 import { ReactComponent as Shuffle } from "~/assets/icons/shuffle.svg";
 import { ReactComponent as Check } from "~/assets/icons/check.svg";
 
-export default function ProxyManager() {
+export function Component() {
   const { proxies } = useProxies();
   const [search, setSearch] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -95,3 +95,5 @@ export default function ProxyManager() {
     </Menu>
   );
 }
+
+Component.displayName = "ProxyManager";

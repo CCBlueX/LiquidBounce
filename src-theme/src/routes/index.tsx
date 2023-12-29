@@ -6,7 +6,7 @@ import { ReactComponent as Logo } from "~/assets/logo.svg";
 
 import styles from "./index.module.css";
 
-export default function SplashScreen() {
+export function Component() {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,8 +15,8 @@ export default function SplashScreen() {
     }, 1500);
 
     return () => {
-        clearTimeout(timeout);
-    }
+      clearTimeout(timeout);
+    };
   });
 
   return (
@@ -45,3 +45,5 @@ export default function SplashScreen() {
     </motion.div>
   );
 }
+
+Component.displayName = "SplashScreen";
