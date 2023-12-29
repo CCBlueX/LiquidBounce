@@ -132,7 +132,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val blockToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             targets.contains(state.block) && getNearestPoint(
                 eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared

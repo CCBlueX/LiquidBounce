@@ -181,7 +181,7 @@ fun facingBlock(
     val searchedPos =
         mc.world?.raycast(
             RaycastContext(
-                eyes, vec3, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player,
+                eyes, vec3, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player,
             ),
         ) ?: return false
 

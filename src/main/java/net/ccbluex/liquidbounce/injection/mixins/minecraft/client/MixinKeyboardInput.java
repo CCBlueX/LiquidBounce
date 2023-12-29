@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
+import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -99,20 +100,28 @@ public class MixinKeyboardInput extends MixinInput {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
+
+        float z = this.movementForward;
+        float x = this.movementSideways;
+
+        final RotatedMovementInputEvent MoveInputEvent;
+
         if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null || player == null) {
-            return;
+            MoveInputEvent = new RotatedMovementInputEvent(z, x);
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
+        } else {
+            float deltaYaw = player.getYaw() - rotation.getYaw();
+
+            float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
+            float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
+
+            MoveInputEvent = new RotatedMovementInputEvent(Math.round(newZ), Math.round(newX));
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
         }
 
-        float deltaYaw = player.getYaw() - rotation.getYaw();
 
-        float x = this.movementSideways;
-        float z = this.movementForward;
-
-        float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
-        float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
-
-        this.movementSideways = Math.round(newX);
-        this.movementForward = Math.round(newZ);
+        this.movementSideways = MoveInputEvent.getSideways();
+        this.movementForward = MoveInputEvent.getForward();
     }
 
 }

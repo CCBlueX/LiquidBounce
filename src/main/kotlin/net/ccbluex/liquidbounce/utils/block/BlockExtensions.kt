@@ -33,6 +33,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
@@ -49,19 +51,22 @@ fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance
  */
 @Suppress("NestedBlockDepth")
 inline fun searchBlocksInCuboid(
-    a: Int,
-    filter: (BlockPos, BlockState) -> Boolean,
+    a: Float,
+    eyes: Vec3d,
+    filter: (BlockPos, BlockState) -> Boolean
 ): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
-    val thePlayer = mc.player ?: return blocks
+//    val (eyeX, eyeY, eyeZ) = Triple(eyes.x.roundToInt(), eyes.y.roundToInt(), eyes.z.roundToInt())
+    val xRange = floor(a + eyes.x).toInt() downTo floor(-a + eyes.x).toInt()
+    val yRange = floor(a + eyes.y).toInt() downTo floor(-a + eyes.y).toInt()
+    val zRange = floor(a + eyes.z).toInt() downTo floor(-a + eyes.z).toInt()
 
-    for (x in a downTo -a + 1) {
-        for (y in a downTo -a + 1) {
-            for (z in a downTo -a + 1) {
-                val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
+    for (x in xRange) {
+        for (y in yRange) {
+            for (z in zRange) {
+                val blockPos = BlockPos(x, y, z)
                 val state = blockPos.getState() ?: continue
-
                 if (!filter(blockPos, state)) {
                     continue
                 }

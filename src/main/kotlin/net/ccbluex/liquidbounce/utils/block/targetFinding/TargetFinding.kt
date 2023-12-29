@@ -7,6 +7,8 @@ import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.minecraft.block.*
@@ -186,7 +188,7 @@ private fun findTargetPointOnFace(
     val currBlock = currPos.getState()!!.block
     val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
 
-    val shapeBBs = currState.getOutlineShape(mc.world!!, currPos, ShapeContext.of(mc.player!!)).boundingBoxes
+    val shapeBBs = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
 
     val face = shapeBBs.mapNotNull {
         var face = it.getFace(targetPlan.interactionDirection)

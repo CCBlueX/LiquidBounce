@@ -168,7 +168,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyes
 
-        val blocksToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val blocksToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             targetedBlocks.contains(state.block) && pos !in clickedBlocks && getNearestPoint(
                 eyesPos,
                 Box.enclosing(pos, pos.add(1, 1, 1))

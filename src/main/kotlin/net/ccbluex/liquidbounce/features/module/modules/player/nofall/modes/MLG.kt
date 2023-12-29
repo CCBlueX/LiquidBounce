@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFa
 import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.findClosestItem
+import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
 import net.minecraft.util.hit.HitResult
@@ -54,7 +54,7 @@ internal object MLG : Choice("MLG") {
     private var currentTarget: BlockPlacementTarget? = null
 
     private val itemForMLG
-        get() = findClosestItem(
+        get() = Hotbar.findClosestItem(
             arrayOf(
                 Items.WATER_BUCKET, Items.COBWEB, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK
             )
