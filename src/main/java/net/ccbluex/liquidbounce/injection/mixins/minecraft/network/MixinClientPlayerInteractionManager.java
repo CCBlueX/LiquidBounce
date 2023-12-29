@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.AttackEvent;
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent;
+import net.ccbluex.liquidbounce.event.events.PlayerInteractedItem;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSmartEat;
@@ -127,7 +128,8 @@ public class MixinClientPlayerInteractionManager {
     }
     @Inject(method = "interactItem", at = @At("RETURN"))
     private void hookItemInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        ModuleSmartEat.INSTANCE.onInteraction(cir.getReturnValue());
+        final PlayerInteractedItem cancelEvent = new PlayerInteractedItem(player, hand, cir.getReturnValue());
+        EventManager.INSTANCE.callEvent(cancelEvent);
     }
 
 
