@@ -164,13 +164,25 @@ tasks.register('npmInstallTheme', NpmTask) {
         println 'Successfully installed dependencies for theme'
     }
 
-    // Incremental stuff
     inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
     outputs.dir("src-theme/node_modules")
 }
 
-tasks.register('bundleTheme', NodeTask) {
+tasks.register('buildTheme', NpmTask) {
     dependsOn 'npmInstallTheme'
+    workingDir = file('src-theme')
+    args = ['run', 'build']
+    doLast {
+        println 'Successfully build theme'
+    }
+
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
+    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    outputs.dir('src-theme/public')
+}
+
+tasks.register('bundleTheme', NodeTask) {
+    dependsOn 'buildTheme'
     workingDir = file('src-theme')
     script = file('src-theme/bundle.cjs')
     doLast {
