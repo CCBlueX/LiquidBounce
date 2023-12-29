@@ -1,5 +1,5 @@
 const fs = require('fs');
-let archiver= require('archiver');
+const archiver= require('archiver');
 
 const success = (message) => console.log('\x1b[32m%s\x1b[0m', message); // Green color for success
 const log = (message) => console.log('\x1b[36m%s\x1b[0m', message); // Cyan color for logs
