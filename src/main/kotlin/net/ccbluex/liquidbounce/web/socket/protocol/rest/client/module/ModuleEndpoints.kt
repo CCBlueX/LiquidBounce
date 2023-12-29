@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -97,12 +98,11 @@ data class ModuleRequest(val name: String) {
         if (module.enabled == supposedNew) {
             return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
         }
-        module.enabled = supposedNew
 
-        return httpOk(JsonObject().apply {
-            addProperty("name", module.name)
-            addProperty("enabled", module.enabled)
-        })
+        RenderSystem.recordRenderCall {
+            module.enabled = supposedNew
+        }
+        return httpOk(JsonObject())
     }
 
     fun acceptGetSettingsRequest(): FullHttpResponse {
