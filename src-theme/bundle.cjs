@@ -1,20 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+let archiver= require('archiver');
 
 const success = (message) => console.log('\x1b[32m%s\x1b[0m', message); // Green color for success
 const log = (message) => console.log('\x1b[36m%s\x1b[0m', message); // Cyan color for logs
 const error = (message) => console.log('\x1b[31m%s\x1b[0m', message); // Red color for errors
-
-let archiver;
-
-try {
-    archiver = require('archiver');
-} catch (error) {
-    error('Error: The "archiver" package is not installed. Please run the following command to install it:');
-    error('-> npm install archiver\n');
-    process.exit(1); // Exit with code 1 to indicate an error
-}
 
 function cleanUp() {
     log("=> Cleaning up\n====================\n")
