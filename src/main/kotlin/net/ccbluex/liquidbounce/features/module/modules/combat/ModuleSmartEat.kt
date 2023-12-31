@@ -56,9 +56,9 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
         private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
 
-        private val preferGappleHealth by float("PreferGappleHealth", 7f, 0f..20f)
-        private val preferNotchAppleHealth by float("PreferNotchAppleHealth", 7f, 0f..20f)
-        private val preferHealthPotHealth by float("PreferHealthPotHealth", 7f, 0f..20f)
+        private val preferGappleHealth by float("PreferGappleHealth", 9f, 0f..20f)
+        private val preferNotchAppleHealth by float("PreferNotchAppleHealth", 2f, 0f..20f)
+        private val preferHealthPotHealth by float("PreferHealthPotHealth", 12f, 0f..20f)
 
         private val food: Pair<Int, ItemStack>?
             get() = Hotbar.findBestItem(0) { _, itemStack ->
