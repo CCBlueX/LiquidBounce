@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.TickJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
@@ -106,6 +107,15 @@ public abstract class MixinLivingEntity extends MixinEntity {
         final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
         EventManager.INSTANCE.callEvent(jumpEvent);
         return jumpEvent.getMotion();
+    }
+
+    @Inject(method = "jump", at = @At("RETURN"))
+    private void hookAfterJumpEvent(CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        EventManager.INSTANCE.callEvent(new PlayerAfterJumpEvent());
     }
 
     /**

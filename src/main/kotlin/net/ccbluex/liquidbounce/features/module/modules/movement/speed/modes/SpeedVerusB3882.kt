@@ -19,7 +19,7 @@ import net.minecraft.entity.MovementType
  * @anticheatVersion b3882
  * @testedOn eu.anticheat-test.com
  */
-object Verus : Choice("Verus") {
+object SpeedVerusB3882 : Choice("VerusB3882") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes

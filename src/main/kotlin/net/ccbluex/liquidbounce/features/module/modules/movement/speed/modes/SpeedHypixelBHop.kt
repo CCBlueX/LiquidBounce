@@ -44,7 +44,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
-object HypixelBHop : Choice("HypixelBHop") {
+object SpeedHypixelBHop : Choice("HypixelBHop") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
@@ -136,7 +136,7 @@ object HypixelBHop : Choice("HypixelBHop") {
         it.jumping = true
     }
 
-    val packetHandler = sequenceHandler<PacketEvent>() {
+    val packetHandler = sequenceHandler<PacketEvent> {
         val packet = it.packet
 
         if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
