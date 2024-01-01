@@ -11,10 +11,14 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
+import net.minecraft.util.Vec3
+import kotlin.math.cos
+import kotlin.math.sin
 
 object EntityUtils : MinecraftInstance() {
 
@@ -52,6 +56,28 @@ object EntityUtils : MinecraftInstance() {
             }
         }
         return false
+    }
+
+    fun isLookingOnEntities(entity: Entity, maxAngleDifference: Double): Boolean {
+        val player = mc.thePlayer ?: return false
+        val playerRotation = player.rotationYawHead
+        val playerPitch = player.rotationPitch
+
+        val maxAngleDifferenceRadians = Math.toRadians(maxAngleDifference)
+
+        val lookVec = Vec3(
+            -sin(playerRotation.toRadians().toDouble()),
+            -sin(playerPitch.toRadians().toDouble()),
+            cos(playerRotation.toRadians().toDouble())
+        ).normalize()
+
+        val playerPos = player.positionVector.addVector(0.0, player.eyeHeight.toDouble(), 0.0)
+        val entityPos = entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
+
+        val directionToEntity = entityPos.subtract(playerPos).normalize()
+        val dotProductThreshold = lookVec.dotProduct(directionToEntity)
+
+        return dotProductThreshold > cos(maxAngleDifferenceRadians)
     }
 
     fun getHealth(entity: EntityLivingBase, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {

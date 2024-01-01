@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
+import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -33,10 +34,10 @@ import java.awt.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 object NameTags : Module("NameTags", ModuleCategory.RENDER) {
-
     private val health by BoolValue("Health", true)
         private val healthFromScoreboard by BoolValue("HealthFromScoreboard", false) { health }
         private val absorption by BoolValue("Absorption", false) { health || healthBar }
@@ -71,6 +72,17 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         private val borderColorBlue by IntegerValue("Border-B", 0, 0..255) { border }
         private val borderColorAlpha by IntegerValue("Border-Alpha", 100, 0..255) { border }
 
+    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
+        override fun onUpdate(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
+    }
+
+    private val onLook by BoolValue("OnLook", false)
+    private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { onLook }
+
+    private var maxRenderDistanceSq = 0.0
+
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
 
@@ -97,7 +109,15 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
             val name = entity.displayName.unformattedText ?: continue
 
-            renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
+            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+
+            if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) {
+                continue
+            }
+
+            if (distanceSquared <= maxRenderDistanceSq) {
+                renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
+            }
         }
 
         glPopMatrix()

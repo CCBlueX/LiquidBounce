@@ -28,6 +28,7 @@ import net.minecraft.entity.item.EntityMinecartChest
 import net.minecraft.tileentity.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import kotlin.math.pow
 
 object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
     private val mode by
@@ -37,6 +38,14 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
         private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
         private val glowFade by IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
         private val glowTargetAlpha by FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
+
+    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..500) {
+        override fun onUpdate(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
+    }
+
+    private var maxRenderDistanceSq = 0.0
 
     private val chest by BoolValue("Chest", true)
     private val enderChest by BoolValue("EnderChest", true)
@@ -76,79 +85,41 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
             for (tileEntity in mc.theWorld.loadedTileEntityList) {
                 val color = getColor(tileEntity) ?: continue
 
-                if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
-                    drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
+                val tileEntityPos = tileEntity.pos
 
-                    if (tileEntity !is TileEntityEnchantmentTable)
-                        continue
-                }
-                when (mode) {
-                    "OtherBox", "Box" -> drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
+                val distanceSquared = mc.thePlayer.getDistanceSq(
+                    tileEntityPos.x.toDouble(),
+                    tileEntityPos.y.toDouble(),
+                    tileEntityPos.z.toDouble()
+                )
 
-                    "2D" -> draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
-                    "Outline" -> {
-                        glColor(color)
-                        OutlineUtils.renderOne(3F)
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderTwo()
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderThree()
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderFour(color)
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderFive()
+                if (distanceSquared <= maxRenderDistanceSq) {
+                    if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
+                        drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
 
-                        OutlineUtils.setColor(Color.WHITE)
+                        if (tileEntity !is TileEntityEnchantmentTable)
+                            continue
                     }
-
-                    "WireFrame" -> {
-                        glPushMatrix()
-                        glPushAttrib(GL_ALL_ATTRIB_BITS)
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-                        glDisable(GL_TEXTURE_2D)
-                        glDisable(GL_LIGHTING)
-                        glDisable(GL_DEPTH_TEST)
-                        glEnable(GL_LINE_SMOOTH)
-                        glEnable(GL_BLEND)
-                        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-                        glColor(color)
-                        glLineWidth(1.5f)
-                        TileEntityRendererDispatcher.instance.renderTileEntity(
-                            tileEntity,
-                            event.partialTicks,
-                            -1
-                        ) //TODO: render twice?
-                        glPopAttrib()
-                        glPopMatrix()
-                    }
-                }
-            }
-            for (entity in mc.theWorld.loadedEntityList) {
-                if (entity is EntityMinecartChest) {
                     when (mode) {
-                        "OtherBox", "Box" -> drawEntityBox(entity, Color(0, 66, 255), mode != "OtherBox")
+                        "OtherBox", "Box" -> drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
 
-                        "2d" -> draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
+                        "2D" -> draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
                         "Outline" -> {
-                            val entityShadow = mc.gameSettings.entityShadows
-                            mc.gameSettings.entityShadows = false
-                            glColor(Color(0, 66, 255))
-                            OutlineUtils.renderOne(3f)
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                            glColor(color)
+                            OutlineUtils.renderOne(3F)
+                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderTwo()
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderThree()
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-                            OutlineUtils.renderFour(Color(0, 66, 255))
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            OutlineUtils.renderFour(color)
+                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderFive()
+
                             OutlineUtils.setColor(Color.WHITE)
-                            mc.gameSettings.entityShadows = entityShadow
                         }
 
                         "WireFrame" -> {
-                            val entityShadow = mc.gameSettings.entityShadows
-                            mc.gameSettings.entityShadows = false
                             glPushMatrix()
                             glPushAttrib(GL_ALL_ATTRIB_BITS)
                             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
@@ -158,14 +129,82 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                             glEnable(GL_LINE_SMOOTH)
                             glEnable(GL_BLEND)
                             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-                            glColor(Color(0, 66, 255))
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
-                            glColor(Color(0, 66, 255))
+                            glColor(color)
                             glLineWidth(1.5f)
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+
+                            // Render tiles the first time
+                            TileEntityRendererDispatcher.instance.renderTileEntity(
+                                tileEntity,
+                                event.partialTicks,
+                                -1
+                            )
+
                             glPopAttrib()
                             glPopMatrix()
-                            mc.gameSettings.entityShadows = entityShadow
+
+                            // Render tiles the second time
+                            TileEntityRendererDispatcher.instance.renderTileEntity(
+                                tileEntity,
+                                event.partialTicks,
+                                -1
+                            )
+                        }
+                    }
+                }
+            }
+            for (entity in mc.theWorld.loadedEntityList) {
+                val entityPos = entity.position
+
+                val distanceSquared = mc.thePlayer.getDistanceSq(
+                    entityPos.x.toDouble(),
+                    entityPos.y.toDouble(),
+                    entityPos.z.toDouble()
+                )
+
+                if (distanceSquared <= maxRenderDistanceSq) {
+                    if (entity is EntityMinecartChest) {
+                        when (mode) {
+                            "OtherBox", "Box" -> drawEntityBox(entity, Color(0, 66, 255), mode != "OtherBox")
+
+                            "2d" -> draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
+                            "Outline" -> {
+                                val entityShadow = mc.gameSettings.entityShadows
+                                mc.gameSettings.entityShadows = false
+                                glColor(Color(0, 66, 255))
+                                OutlineUtils.renderOne(3f)
+                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                OutlineUtils.renderTwo()
+                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                OutlineUtils.renderThree()
+                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                OutlineUtils.renderFour(Color(0, 66, 255))
+                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                OutlineUtils.renderFive()
+                                OutlineUtils.setColor(Color.WHITE)
+                                mc.gameSettings.entityShadows = entityShadow
+                            }
+
+                            "WireFrame" -> {
+                                val entityShadow = mc.gameSettings.entityShadows
+                                mc.gameSettings.entityShadows = false
+                                glPushMatrix()
+                                glPushAttrib(GL_ALL_ATTRIB_BITS)
+                                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                                glDisable(GL_TEXTURE_2D)
+                                glDisable(GL_LIGHTING)
+                                glDisable(GL_DEPTH_TEST)
+                                glEnable(GL_LINE_SMOOTH)
+                                glEnable(GL_BLEND)
+                                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+                                glColor(Color(0, 66, 255))
+                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                glColor(Color(0, 66, 255))
+                                glLineWidth(1.5f)
+                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                glPopAttrib()
+                                glPopMatrix()
+                                mc.gameSettings.entityShadows = entityShadow
+                            }
                         }
                     }
                 }
@@ -173,7 +212,7 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
 
             glColor(Color(255, 255, 255, 255))
             mc.gameSettings.gammaSetting = gamma
-        } catch (ignored: Exception) {
+            } catch (ignored: Exception) {
         }
     }
 
@@ -194,13 +233,22 @@ object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
                     GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                     for (entity in tileEntities) {
-                        TileEntityRendererDispatcher.instance.renderTileEntityAt(
-                            entity,
-                            entity.pos.x - renderManager.renderPosX,
-                            entity.pos.y - renderManager.renderPosY,
-                            entity.pos.z - renderManager.renderPosZ,
-                            event.partialTicks
+                        val entityPos = entity.pos
+                        val distanceSquared = mc.thePlayer.getDistanceSq(
+                            entityPos.x.toDouble(),
+                            entityPos.y.toDouble(),
+                            entityPos.z.toDouble()
                         )
+
+                        if (distanceSquared <= maxRenderDistanceSq) {
+                            TileEntityRendererDispatcher.instance.renderTileEntityAt(
+                                entity,
+                                entityPos.x - renderManager.renderPosX,
+                                entityPos.y - renderManager.renderPosY,
+                                entityPos.z - renderManager.renderPosZ,
+                                event.partialTicks
+                            )
+                        }
                     }
 
                     GlowShader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
