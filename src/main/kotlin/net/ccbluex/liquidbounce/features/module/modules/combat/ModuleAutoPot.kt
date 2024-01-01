@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
 import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
 import net.minecraft.entity.LivingEntity
@@ -124,6 +125,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         RotationManager.aimAt(
             Rotation(player.yaw, (85f..90f).random().toFloat()),
             configurable = rotations,
+            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
         )
 
         if (player.isBlocking) {
@@ -183,7 +185,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         when (effect.effectType) {
             StatusEffects.INSTANT_HEALTH -> healthPotion && healthIsLow
             StatusEffects.REGENERATION -> regenPotion &&
-                healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
+                    healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
 
             StatusEffects.STRENGTH -> strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
             StatusEffects.SPEED -> speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
@@ -215,7 +217,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         world.entities.filterIsInstance<AreaEffectCloudEntity>().any {
             it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potion.effects.any { effect ->
                 effect.effectType == StatusEffects.REGENERATION || effect.effectType == StatusEffects.INSTANT_HEALTH
-                    || effect.effectType == StatusEffects.STRENGTH
+                        || effect.effectType == StatusEffects.STRENGTH
             }
         }
 

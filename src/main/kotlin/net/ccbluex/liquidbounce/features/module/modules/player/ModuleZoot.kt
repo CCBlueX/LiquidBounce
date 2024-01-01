@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
@@ -56,7 +55,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
             }
 
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1)
 
             // Skip to next tick
             return@repeatable
@@ -73,7 +72,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                     network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                 }
 
-                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1)
             }
         }
 

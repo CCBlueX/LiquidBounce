@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
 import net.minecraft.util.hit.HitResult
@@ -60,8 +61,9 @@ internal object MLG : Choice("MLG") {
             )
         )
 
-    private val fallDamageBlockingBlocks = arrayOf(Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW,
-        Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK)
+    private val fallDamageBlockingBlocks = arrayOf(
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
+    )
 
     val tickMovementHandler = handler<SimulatedTickEvent> {
         if (player.fallDistance <= minFallDist || itemForMLG == null) {
@@ -84,7 +86,9 @@ internal object MLG : Choice("MLG") {
         currentTarget = findBestBlockPlacementTarget(collision.up(), options)
 
         val target = currentTarget ?: return@handler
-        RotationManager.aimAt(target.rotation, configurable = rotationsConfigurable)
+        RotationManager.aimAt(
+            target.rotation, configurable = rotationsConfigurable, priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+        )
     }
 
     val tickHandler = repeatable {

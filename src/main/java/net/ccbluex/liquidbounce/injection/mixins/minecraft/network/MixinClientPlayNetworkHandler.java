@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.kotlin.Priority;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.network.ClientCommonNetworkHandler;
@@ -154,7 +155,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
             // Changes your server side rotation and then resets it with provided settings
             var aimPlan = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().toAimPlan(new Rotation(j, k), true);
-            RotationManager.INSTANCE.aimAt(aimPlan);
+            RotationManager.INSTANCE.aimAt(aimPlan, Priority.NOT_IMPORTANT);
         } else {
             // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotation server-side.
             playerEntity.setYaw(playerEntity.prevYaw + 0.000001f);

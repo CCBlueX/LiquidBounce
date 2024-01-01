@@ -46,13 +46,13 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
         when (currentTimerState) {
             TimerState.NormalSpeed -> {
-                Timer.requestTimerSpeed(normalSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = normalSpeedTicks)
+                Timer.requestTimerSpeed(normalSpeed, Priority.IMPORTANT_FOR_USAGE_1, resetAfterTicks = normalSpeedTicks)
                 waitTicks(normalSpeedTicks)
                 currentTimerState = TimerState.BoostSpeed
             }
 
             TimerState.BoostSpeed -> {
-                Timer.requestTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = boostSpeedTicks)
+                Timer.requestTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE_1, resetAfterTicks = boostSpeedTicks)
                 waitTicks(boostSpeedTicks)
                 currentTimerState = TimerState.NormalSpeed
             }

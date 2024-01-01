@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
@@ -115,12 +116,12 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
                 stopMovement = false
             }
         }
-        
+
         val tickJumpHandler = sequenceHandler<TickJumpEvent> {
             if (arrowBoost <= arrowsToShoot) {
                 mc.options.useKey.isPressed = true
                 RotationManager.aimAt(
-                    Rotation(player.yaw, -90f), configurable = rotations
+                    Rotation(player.yaw, -90f), configurable = rotations, priority = Priority.IMPORTANT_FOR_USAGE_2
                 )
                 // Stops moving
                 stopMovement = true

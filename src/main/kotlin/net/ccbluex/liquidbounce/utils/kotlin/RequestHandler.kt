@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import java.util.PriorityQueue
+import java.util.*
 import kotlin.math.max
 
 class RequestHandler<T> {
@@ -20,6 +20,18 @@ class RequestHandler<T> {
             return null
 
         return this.activeRequests.peek().value
+    }
+
+    fun remove(element: Request<T>) {
+        if (this.activeRequests.isNotEmpty()) {
+            this.activeRequests.remove(element)
+        }
+    }
+
+    fun removeActive() {
+        if (this.activeRequests.isNotEmpty()) {
+            this.activeRequests.remove(this.activeRequests.peek())
+        }
     }
 
     /**

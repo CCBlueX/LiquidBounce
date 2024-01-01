@@ -31,16 +31,13 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import kotlin.math.sqrt
 
 /**
  * @anticheat Watchdog (NCP)
@@ -88,7 +85,7 @@ object HypixelBHop : Choice("HypixelBHop") {
                     return@repeatable
                 }
 
-                Timer.requestTimerSpeed(0.6f, Priority.IMPORTANT_FOR_USAGE)
+                Timer.requestTimerSpeed(0.6f, Priority.IMPORTANT_FOR_USAGE_1)
                 timeBoostCapable = (timeBoostCapable + 1).coerceAtMost(timeBoostTicks)
             }
             return@repeatable
@@ -113,7 +110,7 @@ object HypixelBHop : Choice("HypixelBHop") {
 
         // Time boost feature
         if (timeBoostCapable > 0) {
-            Timer.requestTimerSpeed(1.3f, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = timeBoostCapable)
+            Timer.requestTimerSpeed(1.3f, Priority.IMPORTANT_FOR_USAGE_1, resetAfterTicks = timeBoostCapable)
             timeBoostCapable = 0
         }
     }

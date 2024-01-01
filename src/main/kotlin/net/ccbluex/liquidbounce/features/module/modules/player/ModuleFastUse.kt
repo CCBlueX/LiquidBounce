@@ -116,7 +116,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
                 if (player.isUsingItem) {
-                    Timer.requestTimerSpeed(1.22F, Priority.IMPORTANT_FOR_USAGE)
+                    Timer.requestTimerSpeed(1.22F, Priority.IMPORTANT_FOR_USAGE_1)
                 }
             }
         }
@@ -149,7 +149,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 return@repeatable
             }
 
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1)
 
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
                 if (player.isUsingItem) {

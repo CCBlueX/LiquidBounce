@@ -242,6 +242,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             rotation,
             considerInventory = !ignoreOpenInventory,
             configurable = rotationsConfigurable,
+            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
         )
     }
 
@@ -286,7 +287,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val moveHandler = repeatable {
-        Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+        Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1)
     }
 
     val networkTickHandler = repeatable {

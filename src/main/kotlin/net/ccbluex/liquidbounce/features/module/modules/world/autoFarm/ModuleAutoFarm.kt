@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.Enchantments
@@ -207,7 +208,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(rotation, configurable = rotations, priority = Priority.IMPORTANT_FOR_USAGE_1)
 
             return true // We got a free angle at the block? No need to see more of them.
         }
@@ -227,7 +228,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val blocksToPlace =
             searchBlocksInCuboid(radius, eyesPos) { pos, state ->
                 !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
-                    && getNearestPoint(
+                        && getNearestPoint(
                     eyesPos,
                     Box.enclosing(pos, pos.add(1, 1, 1))
                 ).squaredDistanceTo(eyesPos) <= radiusSquared
@@ -244,7 +245,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(rotation, configurable = rotations, priority = Priority.IMPORTANT_FOR_USAGE_1)
 
             return true // We got a free angle at the block? No need to see more of them.
         }

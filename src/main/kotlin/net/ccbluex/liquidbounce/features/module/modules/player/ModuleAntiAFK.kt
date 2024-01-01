@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
@@ -174,7 +175,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 RotationManager.aimAt(
                     Rotation(
                         currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
-                    ), ignoreOpenInventory, rotationsConfigurable
+                    ), ignoreOpenInventory, rotationsConfigurable, Priority.IMPORTANT_FOR_USAGE_1
                 )
             }
 

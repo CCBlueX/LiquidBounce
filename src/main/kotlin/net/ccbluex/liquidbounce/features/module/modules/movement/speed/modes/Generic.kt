@@ -35,7 +35,7 @@ object Custom : Choice("Custom") {
             return@repeatable
         }
 
-        Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
+        Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE_1)
 
         when {
             player.isOnGround -> {

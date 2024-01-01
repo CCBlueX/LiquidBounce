@@ -121,7 +121,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return instance.add(x, y, z);
         }
 
-        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
+        if (rotationManager.getAimPlanHandler() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
             return instance.add(x, y, z);
         }
 

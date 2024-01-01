@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.HungerManager;
@@ -91,7 +90,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private float hookFixRotation(PlayerEntity entity) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
+        if (rotationManager.getAimPlanHandler() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
             return entity.getYaw();
         }
 

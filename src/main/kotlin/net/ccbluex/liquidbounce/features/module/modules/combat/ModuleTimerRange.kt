@@ -39,7 +39,7 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         val timerSpeed = updateTimerSpeed()
 
         if (timerSpeed != null) {
-            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE_1)
         }
 
         val balanceChange = mc.timer.timerSpeed / balanceRecoveryIncrement - 1

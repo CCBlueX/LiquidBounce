@@ -35,6 +35,8 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -61,29 +63,13 @@ class RotationsConfigurable(
     val ticksUntilReset by int("TicksUntilReset", 5, 1..30)
     val silent by boolean("Silent", true)
 
-    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) =
-        AimPlan(
-            rotation,
-            smoothMode,
-            turnSpeed,
-            ticksUntilReset,
-            resetThreshold,
-            considerInventory,
-            fixVelocity,
-            !silent
-        )
+    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) = AimPlan(
+        rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, !silent
+    )
 
-    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false, silent: Boolean) =
-        AimPlan(
-            rotation,
-            smoothMode,
-            turnSpeed,
-            ticksUntilReset,
-            resetThreshold,
-            considerInventory,
-            fixVelocity,
-            !silent
-        )
+    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false, silent: Boolean) = AimPlan(
+        rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, !silent
+    )
 
 }
 
@@ -95,7 +81,10 @@ object RotationManager : Listenable {
     /**
      * Our final target rotation. This rotation is only used to define our current rotation.
      */
-    var aimPlan: AimPlan? = null
+    val aimPlan
+        get() = aimPlanHandler.getActiveRequestValue()
+
+    var aimPlanHandler = RequestHandler<AimPlan>()
 
     /**
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
@@ -127,15 +116,18 @@ object RotationManager : Listenable {
     var theoreticalServerRotation = Rotation.ZERO
         private set
 
-    fun aimAt(rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable) =
-        aimAt(configurable.toAimPlan(rotation, considerInventory))
+    fun aimAt(
+        rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable, priority: Priority
+    ) {
+        aimAt(configurable.toAimPlan(rotation, considerInventory), priority)
+    }
 
-    fun aimAt(plan: AimPlan) {
+    fun aimAt(plan: AimPlan, priority: Priority) {
         if (!allowedToUpdate()) {
             return
         }
 
-        aimPlan = plan
+        aimPlanHandler.request(RequestHandler.Request<AimPlan>(plan.ticksLeft, priority.priority, plan))
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -172,7 +164,7 @@ object RotationManager : Listenable {
             val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: serverRotation, playerRotation)
 
             if (differenceFromCurrentToPlayer < aimPlan.resetThreshold || aimPlan.applyClientSide) {
-                this.aimPlan = null
+                this.aimPlanHandler.removeActive()
 
                 currentRotation?.let { rotation ->
                     player.let { player ->
@@ -205,8 +197,7 @@ object RotationManager : Listenable {
     /**
      * Checks if it should update the server-side rotations
      */
-    private fun allowedToUpdate() =
-        !CombatManager.shouldPauseRotation()
+    private fun allowedToUpdate() = !CombatManager.shouldPauseRotation()
 
     fun rotationMatchesPreviousRotation(): Boolean {
         val player = mc.player ?: return false
@@ -237,8 +228,7 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two angle points
      */
-    fun angleDifference(a: Float, b: Float) =
-        MathHelper.wrapDegrees(a - b)
+    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (aimPlan?.applyVelocityFix == true) {
@@ -282,7 +272,7 @@ object RotationManager : Listenable {
         val packet = it.packet
 
         val rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
-             Rotation(packet.yaw, packet.pitch)
+            Rotation(packet.yaw, packet.pitch)
         } else if (packet is PlayerPositionLookS2CPacket) {
             Rotation(packet.yaw, packet.pitch)
         } else {

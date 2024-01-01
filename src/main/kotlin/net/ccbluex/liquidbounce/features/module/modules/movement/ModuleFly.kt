@@ -64,17 +64,10 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
     private val modes = choices(
         "Mode", Vanilla, arrayOf(
             // Generic fly modes
-            Vanilla,
-            Jetpack,
-            Enderpearl,
-            Explosion,
+            Vanilla, Jetpack, Enderpearl, Explosion,
 
             // Anti-cheat specific fly modes
-            Spartan524,
-            Sentinel27thOct,
-            VerusOld,
-            VerusDamage,
-            VulcanGlide
+            Spartan524, Sentinel27thOct, VerusOld, VerusDamage, VulcanGlide
         )
     )
 
@@ -272,7 +265,9 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                     if (player.pitch <= 80) {
                         RotationManager.aimAt(
-                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)), configurable = rotations
+                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
+                            configurable = rotations,
+                            priority = Priority.IMPORTANT_FOR_USAGE_2
                         )
                     }
 
@@ -390,8 +385,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
         val repeatable = repeatable {
-            if (player.hurtTime > 0)
-                gotDamage = true
+            if (player.hurtTime > 0) gotDamage = true
             if (!gotDamage) {
                 return@repeatable
             }
@@ -401,7 +395,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
             player.strafe(speed = 9.95)
             player.velocity.y = 0.0
-            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2)
         }
 
         override fun disable() {

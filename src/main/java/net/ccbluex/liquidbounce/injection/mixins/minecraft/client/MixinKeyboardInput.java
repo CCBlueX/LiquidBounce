@@ -106,7 +106,7 @@ public class MixinKeyboardInput extends MixinInput {
 
         final RotatedMovementInputEvent MoveInputEvent;
 
-        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null || player == null) {
+        if (rotationManager.getAimPlanHandler() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null || player == null) {
             MoveInputEvent = new RotatedMovementInputEvent(z, x);
             EventManager.INSTANCE.callEvent(MoveInputEvent);
         } else {

@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.util.ActionResult
@@ -109,7 +110,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         // Check if the raytrace result includes a block, if not we don't want to deal with it.
         if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos) {
+            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos
+        ) {
             return@repeatable
         }
 
@@ -147,7 +149,12 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // Check if we got a free angle to the block
         if (raytrace != null) {
             val (rotation, _) = raytrace
-            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotations,
+                priority = Priority.IMPORTANT_FOR_USAGE_1
+            )
 
             this.currentTarget = DestroyerTarget(pos, this.action)
             return
@@ -179,7 +186,12 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         ) ?: return
 
         val (rotation, _) = raytrace
-        RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+        RotationManager.aimAt(
+            rotation,
+            considerInventory = !ignoreOpenInventory,
+            configurable = rotations,
+            Priority.IMPORTANT_FOR_USAGE_1
+        )
 
         this.currentTarget = DestroyerTarget(raytraceResult.blockPos, this.action)
     }
