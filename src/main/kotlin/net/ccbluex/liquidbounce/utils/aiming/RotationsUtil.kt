@@ -127,7 +127,7 @@ object RotationManager : Listenable {
             return
         }
 
-        aimPlanHandler.request(RequestHandler.Request<AimPlan>(plan.ticksLeft, priority.priority, plan))
+        aimPlanHandler.request(RequestHandler.Request(1, priority.priority, plan))
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -148,22 +148,23 @@ object RotationManager : Listenable {
         }
 
     /**
-     * Update current rotation to new rotation step
+     * Update current rotation to a new rotation step
      */
     fun update() {
         val player = mc.player ?: return
-        val aimPlan = aimPlan ?: return
+        val storedAimPlan = aimPlan ?: return
+        aimPlanHandler.tick()
 
         // Prevents any rotation changes when inventory is opened
         val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
-            mc.currentScreen !is GenericContainerScreen) || !aimPlan.considerInventory) && allowedToUpdate()
+            mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
 
         val playerRotation = player.rotation
 
-        if (aimPlan.ticksLeft == 0) {
+        if (storedAimPlan.ticksLeft == 0) {
             val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: serverRotation, playerRotation)
 
-            if (differenceFromCurrentToPlayer < aimPlan.resetThreshold || aimPlan.applyClientSide) {
+            if (differenceFromCurrentToPlayer < storedAimPlan.resetThreshold || storedAimPlan.applyClientSide) {
                 this.aimPlanHandler.removeActive()
 
                 currentRotation?.let { rotation ->
@@ -179,20 +180,20 @@ object RotationManager : Listenable {
         }
 
         if (allowedRotation) {
-            aimPlan.nextRotation(currentRotation ?: playerRotation).fixedSensitivity().let {
+            storedAimPlan.nextRotation(currentRotation ?: playerRotation).fixedSensitivity().let {
                 currentRotation = it
 
-                if (aimPlan.applyClientSide) {
+                if (storedAimPlan.applyClientSide) {
                     player.applyRotation(it)
                 }
             }
         }
 
         // Update reset ticks
-        if (aimPlan.applyClientSide) {
-            aimPlan.ticksLeft = 0
-        } else if (aimPlan.ticksLeft > 0) {
-            aimPlan.ticksLeft--
+        if (storedAimPlan.applyClientSide) {
+            storedAimPlan.ticksLeft = 0
+        } else if (storedAimPlan.ticksLeft > 0) {
+            storedAimPlan.ticksLeft--
         }
     }
 
