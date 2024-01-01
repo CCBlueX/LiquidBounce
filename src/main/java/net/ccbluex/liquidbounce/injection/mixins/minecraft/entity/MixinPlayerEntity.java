@@ -90,7 +90,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private float hookFixRotation(PlayerEntity entity) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotationManager.getAimPlanHandler() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
+        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
             return entity.getYaw();
         }
 
