@@ -57,7 +57,8 @@ object SubmoduleCrystalDestroyer {
         RotationManager.aimAt(
             rotation,
             configurable = ModuleCrystalAura.rotations,
-            priority = Priority.IMPORTANT_FOR_USER_SAFETY
+            priority = Priority.IMPORTANT_FOR_USER_SAFETY,
+            provider = ModuleCrystalAura
         )
 
         if (!facingEnemy(target, range, RotationManager.serverRotation)) {

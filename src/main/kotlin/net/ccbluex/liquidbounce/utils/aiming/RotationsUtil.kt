@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
@@ -117,17 +118,21 @@ object RotationManager : Listenable {
         private set
 
     fun aimAt(
-        rotation: Rotation, considerInventory: Boolean = true, configurable: RotationsConfigurable, priority: Priority
+        rotation: Rotation,
+        considerInventory: Boolean = true,
+        configurable: RotationsConfigurable,
+        priority: Priority,
+        provider: Module
     ) {
-        aimAt(configurable.toAimPlan(rotation, considerInventory), priority)
+        aimAt(configurable.toAimPlan(rotation, considerInventory), priority, provider)
     }
 
-    fun aimAt(plan: AimPlan, priority: Priority) {
+    fun aimAt(plan: AimPlan, priority: Priority, provider: Module) {
         if (!allowedToUpdate()) {
             return
         }
 
-        aimPlanHandler.request(RequestHandler.Request(1, priority.priority, plan))
+        aimPlanHandler.request(RequestHandler.Request(plan.ticksLeft, priority.priority, provider, plan))
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -157,7 +162,7 @@ object RotationManager : Listenable {
 
         // Prevents any rotation changes when inventory is opened
         val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
-            mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
+                mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
 
         val playerRotation = player.rotation
 

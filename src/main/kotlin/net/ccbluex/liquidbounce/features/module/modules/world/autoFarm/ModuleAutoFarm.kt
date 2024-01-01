@@ -208,7 +208,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
-            RotationManager.aimAt(rotation, configurable = rotations, priority = Priority.IMPORTANT_FOR_USAGE_1)
+            RotationManager.aimAt(
+                rotation,
+                configurable = rotations,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider = this@ModuleAutoFarm
+            )
 
             return true // We got a free angle at the block? No need to see more of them.
         }
@@ -245,7 +250,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             // set currentTarget to the new target
             currentTarget = pos
             // aim at target
-            RotationManager.aimAt(rotation, configurable = rotations, priority = Priority.IMPORTANT_FOR_USAGE_1)
+            RotationManager.aimAt(
+                rotation,
+                configurable = rotations,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider = this@ModuleAutoFarm
+            )
 
             return true // We got a free angle at the block? No need to see more of them.
         }

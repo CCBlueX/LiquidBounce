@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -267,6 +268,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
                         RotationManager.aimAt(
                             Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
                             configurable = rotations,
+                            provider = ModuleFastUse,
                             priority = Priority.IMPORTANT_FOR_USAGE_2
                         )
                     }
@@ -395,7 +397,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
             player.strafe(speed = 9.95)
             player.velocity.y = 0.0
-            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2)
+            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly)
         }
 
         override fun disable() {

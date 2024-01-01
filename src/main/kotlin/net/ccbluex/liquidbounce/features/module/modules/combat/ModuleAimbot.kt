@@ -50,7 +50,15 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
         targetRotation = findNextTargetRotation()
-        targetRotation?.let { RotationManager.aimAt(it, true, rotationsConfigurable, Priority.IMPORTANT_FOR_USAGE_1) }
+        targetRotation?.let {
+            RotationManager.aimAt(
+                it,
+                true,
+                rotationsConfigurable,
+                Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleAimbot
+            )
+        }
     }
 
     private fun findNextTargetRotation(): Rotation? {

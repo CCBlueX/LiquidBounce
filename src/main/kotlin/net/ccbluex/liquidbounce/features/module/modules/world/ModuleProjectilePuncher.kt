@@ -120,7 +120,8 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,
-                Priority.IMPORTANT_FOR_USER_SAFETY
+                Priority.IMPORTANT_FOR_USER_SAFETY,
+                this@ModuleProjectilePuncher
             )
             break
         }

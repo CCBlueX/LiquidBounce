@@ -260,6 +260,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             RotationManager.aimAt(
                 rotation,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider = ModuleAutoBow,
                 configurable = rotationConfigurable
             )
         }

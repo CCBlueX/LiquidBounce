@@ -53,7 +53,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
             }
 
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1)
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleRegen)
         }
     }
 }

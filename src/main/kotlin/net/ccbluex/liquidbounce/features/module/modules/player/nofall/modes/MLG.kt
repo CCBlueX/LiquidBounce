@@ -87,7 +87,10 @@ internal object MLG : Choice("MLG") {
 
         val target = currentTarget ?: return@handler
         RotationManager.aimAt(
-            target.rotation, configurable = rotationsConfigurable, priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+            target.rotation,
+            configurable = rotationsConfigurable,
+            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
+            provider = ModuleNoFall
         )
     }
 
@@ -98,7 +101,8 @@ internal object MLG : Choice("MLG") {
         val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.interactedBlockPos
-            || rayTraceResult.side != target.direction) {
+            || rayTraceResult.side != target.direction
+        ) {
             return@repeatable
         }
 

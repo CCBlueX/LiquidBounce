@@ -192,7 +192,8 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,
-                Priority.IMPORTANT_FOR_USAGE_1
+                Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleChestAura
             )
             nextBlock = pos
             break

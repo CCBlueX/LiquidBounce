@@ -121,7 +121,10 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
             if (arrowBoost <= arrowsToShoot) {
                 mc.options.useKey.isPressed = true
                 RotationManager.aimAt(
-                    Rotation(player.yaw, -90f), configurable = rotations, priority = Priority.IMPORTANT_FOR_USAGE_2
+                    Rotation(player.yaw, -90f),
+                    configurable = rotations,
+                    priority = Priority.IMPORTANT_FOR_USAGE_2,
+                    provider = ModuleLongJump
                 )
                 // Stops moving
                 stopMovement = true

@@ -181,7 +181,7 @@ object SpeedCustom : Choice("Custom") {
         }
 
         if (timerSpeed != 1f) {
-            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE_1)
+            Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
         }
     }
 

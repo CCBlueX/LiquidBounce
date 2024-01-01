@@ -52,7 +52,8 @@ object AutoFarmAutoWalk : ToggleableConfigurable(ModuleAutoFarm, "AutoWalk", fal
         RotationManager.aimAt(
             RotationManager.makeRotation(target, player.eyes),
             configurable = ModuleAutoFarm.rotations,
-            priority = Priority.IMPORTANT_FOR_USAGE_1
+            priority = Priority.IMPORTANT_FOR_USAGE_1,
+            provider = ModuleAutoFarm
         )
         return true
     }

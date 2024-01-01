@@ -125,6 +125,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         RotationManager.aimAt(
             Rotation(player.yaw, (85f..90f).random().toFloat()),
             configurable = rotations,
+            provider = this@ModuleAutoPot,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
         )
 

@@ -175,7 +175,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 RotationManager.aimAt(
                     Rotation(
                         currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
-                    ), ignoreOpenInventory, rotationsConfigurable, Priority.IMPORTANT_FOR_USAGE_1
+                    ), ignoreOpenInventory, rotationsConfigurable, Priority.IMPORTANT_FOR_USAGE_1, ModuleAntiAFK
                 )
             }
 

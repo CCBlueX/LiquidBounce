@@ -319,7 +319,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // aim at target
             RotationManager.aimAt(
                 rotations.toAimPlan(spot.rotation, !ignoreOpenInventory),
-                priority = Priority.IMPORTANT_FOR_USAGE_2
+                priority = Priority.IMPORTANT_FOR_USAGE_2,
+                provider = this@ModuleKillAura
             )
             break
         }
@@ -333,7 +334,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // lock on target tracker
             RotationManager.aimAt(
                 rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false),
-                priority = Priority.IMPORTANT_FOR_USAGE_2
+                priority = Priority.IMPORTANT_FOR_USAGE_2,
+                provider = this@ModuleKillAura
             )
             targetTracker.lock(targetByPriority)
         }

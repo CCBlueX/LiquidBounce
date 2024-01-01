@@ -55,7 +55,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
             }
 
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1)
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleZoot)
 
             // Skip to next tick
             return@repeatable
@@ -72,7 +72,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                     network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                 }
 
-                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1)
+                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleZoot)
             }
         }
 

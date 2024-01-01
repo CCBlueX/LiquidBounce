@@ -65,7 +65,8 @@ object SubmoduleCrystalPlacer {
         RotationManager.aimAt(
             rotation.rotation,
             configurable = ModuleCrystalAura.rotations,
-            priority = Priority.IMPORTANT_FOR_USER_SAFETY
+            priority = Priority.IMPORTANT_FOR_USER_SAFETY,
+            provider = ModuleCrystalAura
         )
 
         val serverRotation = RotationManager.serverRotation

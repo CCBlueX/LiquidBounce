@@ -46,13 +46,17 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
         when (currentTimerState) {
             TimerState.NormalSpeed -> {
-                Timer.requestTimerSpeed(normalSpeed, Priority.IMPORTANT_FOR_USAGE_1, resetAfterTicks = normalSpeedTicks)
+                Timer.requestTimerSpeed(
+                    normalSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimer, resetAfterTicks = normalSpeedTicks
+                )
                 waitTicks(normalSpeedTicks)
                 currentTimerState = TimerState.BoostSpeed
             }
 
             TimerState.BoostSpeed -> {
-                Timer.requestTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE_1, resetAfterTicks = boostSpeedTicks)
+                Timer.requestTimerSpeed(
+                    boostSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimer, resetAfterTicks = boostSpeedTicks
+                )
                 waitTicks(boostSpeedTicks)
                 currentTimerState = TimerState.NormalSpeed
             }
@@ -63,6 +67,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     override fun disable() {
         currentTimerState = TimerState.NormalSpeed
+        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimer)
     }
 
     enum class TimerState {

@@ -41,7 +41,7 @@ object SpeedVerusB3882 : Choice("VerusB3882") {
     }
 
     val timerRepeatable = repeatable {
-        Timer.requestTimerSpeed(2.0F, priority = Priority.IMPORTANT_FOR_USAGE_1)
+        Timer.requestTimerSpeed(2.0F, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
         waitTicks(101)
     }
 }

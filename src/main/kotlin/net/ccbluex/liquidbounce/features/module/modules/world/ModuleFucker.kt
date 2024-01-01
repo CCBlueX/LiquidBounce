@@ -153,7 +153,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,
-                priority = Priority.IMPORTANT_FOR_USAGE_1
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleFucker
             )
 
             this.currentTarget = DestroyerTarget(pos, this.action)
@@ -190,7 +191,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             rotation,
             considerInventory = !ignoreOpenInventory,
             configurable = rotations,
-            Priority.IMPORTANT_FOR_USAGE_1
+            Priority.IMPORTANT_FOR_USAGE_1,
+            this@ModuleFucker
         )
 
         this.currentTarget = DestroyerTarget(raytraceResult.blockPos, this.action)

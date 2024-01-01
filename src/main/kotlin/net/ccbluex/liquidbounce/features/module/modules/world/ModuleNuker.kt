@@ -248,7 +248,8 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                         rotation,
                         considerInventory = !ignoreOpenInventory,
                         configurable = rotations,
-                        priority = Priority.IMPORTANT_FOR_USAGE_1
+                        priority = Priority.IMPORTANT_FOR_USAGE_1,
+                        ModuleNuker
                     )
 
                     currentTarget = DestroyerTarget(pos, rotation)
