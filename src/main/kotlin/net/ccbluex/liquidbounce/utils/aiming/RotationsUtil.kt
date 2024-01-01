@@ -79,6 +79,8 @@ class RotationsConfigurable(
  */
 object RotationManager : Listenable {
 
+    var previousAimPlan: AimPlan? = null
+
     /**
      * Our final target rotation. This rotation is only used to define our current rotation.
      */
@@ -132,7 +134,14 @@ object RotationManager : Listenable {
             return
         }
 
-        aimPlanHandler.request(RequestHandler.Request(plan.ticksLeft, priority.priority, provider, plan))
+        aimPlanHandler.request(
+            RequestHandler.Request(
+                if (plan.applyClientSide) 0 else plan.ticksUntilReset,
+                priority.priority,
+                provider,
+                plan
+            )
+        )
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -157,49 +166,44 @@ object RotationManager : Listenable {
      */
     fun update() {
         val player = mc.player ?: return
-        val storedAimPlan = aimPlan ?: return
-        aimPlanHandler.tick()
-
-        // Prevents any rotation changes when inventory is opened
-        val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
-                mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
+        val storedAimPlan = (aimPlan ?: previousAimPlan) ?: return
 
         val playerRotation = player.rotation
 
-        if (storedAimPlan.ticksLeft == 0) {
+        if (aimPlan == null) {
             val differenceFromCurrentToPlayer = rotationDifference(currentRotation ?: serverRotation, playerRotation)
 
-            if (differenceFromCurrentToPlayer < storedAimPlan.resetThreshold || storedAimPlan.applyClientSide) {
-                this.aimPlanHandler.removeActive()
-
-                currentRotation?.let { rotation ->
+            if (differenceFromCurrentToPlayer < previousAimPlan!!.resetThreshold || previousAimPlan!!.applyClientSide) {
+                currentRotation?.let { (yaw, _) ->
                     player.let { player ->
-                        player.yaw = rotation.yaw + angleDifference(player.yaw, rotation.yaw)
+                        player.yaw = yaw + angleDifference(player.yaw, yaw)
                         player.renderYaw = player.yaw
                         player.lastRenderYaw = player.yaw
                     }
                 }
                 currentRotation = null
+                previousAimPlan = null
                 return
             }
         }
 
+        // Prevents any rotation changes when inventory is opened
+        val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
+                mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
+
         if (allowedRotation) {
-            storedAimPlan.nextRotation(currentRotation ?: playerRotation).fixedSensitivity().let {
-                currentRotation = it
+            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null)
+                .fixedSensitivity().let {
+                    currentRotation = it
+                    previousAimPlan = storedAimPlan
 
-                if (storedAimPlan.applyClientSide) {
-                    player.applyRotation(it)
+                    if (storedAimPlan.applyClientSide) {
+                        player.applyRotation(it)
+                    }
                 }
-            }
         }
-
         // Update reset ticks
-        if (storedAimPlan.applyClientSide) {
-            storedAimPlan.ticksLeft = 0
-        } else if (storedAimPlan.ticksLeft > 0) {
-            storedAimPlan.ticksLeft--
-        }
+        aimPlanHandler.tick()
     }
 
     /**

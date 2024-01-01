@@ -155,7 +155,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         if (activeChoice.equals(ModuleNoRotateSet.ResetRotation.INSTANCE)) {
             // Changes your server side rotation and then resets it with provided settings
             var aimPlan = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotationsConfigurable().toAimPlan(new Rotation(j, k), true);
-            RotationManager.INSTANCE.aimAt(aimPlan, Priority.NOT_IMPORTANT);
+            RotationManager.INSTANCE.aimAt(aimPlan, Priority.NOT_IMPORTANT, ModuleNoRotateSet.INSTANCE);
         } else {
             // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotation server-side.
             playerEntity.setYaw(playerEntity.prevYaw + 0.000001f);

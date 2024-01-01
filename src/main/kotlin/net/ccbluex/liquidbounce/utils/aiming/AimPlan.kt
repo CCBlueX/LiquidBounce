@@ -39,7 +39,7 @@ class AimPlan(
     val rotation: Rotation,
     smootherMode: SmootherMode,
     baseTurnSpeed: ClosedFloatingPointRange<Float>,
-    ticksUntilReset: Int,
+    val ticksUntilReset: Int,
     /**
      * The reset threshold defines the threshold at which we are going to reset the aim plan.
      * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim.
@@ -53,8 +53,7 @@ class AimPlan(
     val applyClientSide: Boolean
 ) {
 
-    val angleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
-    var ticksLeft = ticksUntilReset
+    val angleSmooth: AngleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
 
     /**
      * Calculates the next rotation to aim at.
@@ -63,8 +62,8 @@ class AimPlan(
      *
      * We might even return null if we do not want to aim at anything yet.
      */
-    fun nextRotation(fromRotation: Rotation): Rotation {
-        if (ticksLeft <= 0) {
+    fun nextRotation(fromRotation: Rotation, isResetting: Boolean): Rotation {
+        if (isResetting) {
             return angleSmooth.limitAngleChange(fromRotation, mc.player!!.rotation)
         }
 
@@ -83,7 +82,7 @@ enum class SmootherMode(override val choiceName: String) : NamedChoice {
  */
 class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPointRange<Float>) {
 
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation) = when (mode) {
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation): Rotation = when (mode) {
         // Aims at a constant speed towards the target rotation
         SmootherMode.LINEAR -> linearAngleChange(currentRotation, targetRotation)
         // Aims at a relative speed towards the target rotation
