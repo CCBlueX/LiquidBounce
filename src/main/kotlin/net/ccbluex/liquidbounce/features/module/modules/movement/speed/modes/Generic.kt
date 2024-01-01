@@ -9,56 +9,12 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
-import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.downwards
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.upwards
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 
-
-object Custom : Choice("Custom") {
-    override val parent: ChoiceConfigurable
-        get() = ModuleSpeed.modes
-
-    private val horizontalSpeed by float("HorizontalSpeed", 1f, 0.1f..10f)
-    private val resetHorizontalSpeed by boolean("ResetHorizontalSpeed", true)
-    private val customStrafe by boolean("CustomStrafe", false)
-    private val strafe by float("Strafe", 1f, 0.1f..10f)
-    private val verticalSpeed by float("VerticalSpeed", 0.42f, 0.0f..3f)
-    private val resetVerticalSpeed by boolean("ResetVerticalSpeed", true)
-    private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
-
-    val repeatable = repeatable {
-        if (!player.moving) {
-            return@repeatable
-        }
-
-        Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
-
-        when {
-            player.isOnGround -> {
-                player.strafe(speed = horizontalSpeed.toDouble())
-                if (verticalSpeed > 0) player.velocity.y = verticalSpeed.toDouble()
-            }
-
-            customStrafe -> player.strafe(speed = strafe.toDouble())
-            else -> player.strafe()
-        }
-
-    }
-
-    override fun enable() {
-        if (resetHorizontalSpeed) {
-            player.zeroXZ()
-        }
-
-        if (resetVerticalSpeed) player.velocity.y = 0.0
-    }
-}
-
-object SpeedYPort : Choice("YPort") {
+object SpeedSpeedYPort : Choice("YPort") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
@@ -74,7 +30,7 @@ object SpeedYPort : Choice("YPort") {
 
 }
 
-object LegitHop : Choice("LegitHop") {
+object SpeedLegitHop : Choice("LegitHop") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
