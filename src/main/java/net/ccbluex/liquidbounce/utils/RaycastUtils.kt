@@ -6,7 +6,9 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack
+import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack.loopThroughBacktrackData
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.isVisible
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
@@ -14,8 +16,13 @@ import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.times
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.item.EntityItemFrame
 import net.minecraft.entity.player.EntityPlayer
-
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
+import java.util.*
 
 object RaycastUtils : MinecraftInstance() {
     @JvmOverloads
@@ -73,9 +80,126 @@ object RaycastUtils : MinecraftInstance() {
             // Check newest entity first
             checkEntity()
             if (Backtrack.mode == "Legacy")
-                Backtrack.loopThroughBacktrackData(entity, checkEntity)
+                loopThroughBacktrackData(entity, checkEntity)
         }
 
         return pointedEntity
+    }
+
+    /**
+     * Modified mouse object pickup
+     */
+    fun runWithModifiedRaycastResult(rotation: Rotation, range: Double, wallRange: Double, action: (MovingObjectPosition) -> Unit) {
+        val entity = mc.renderViewEntity
+
+        val prevPointedEntity = mc.pointedEntity
+        val prevObjectMouseOver = mc.objectMouseOver
+
+        if (entity != null && mc.theWorld != null) {
+            mc.pointedEntity = null
+
+            val buildReach = if (mc.playerController.currentGameType.isCreative) 5.0 else 4.5
+
+            val vec3 = entity.eyes
+            val vec31 = getVectorForRotation(rotation)
+            val vec32 = vec3.addVector(vec31.xCoord * buildReach, vec31.yCoord * buildReach, vec31.zCoord * buildReach)
+
+            mc.objectMouseOver = entity.worldObj.rayTraceBlocks(vec3, vec32, false, false, true)
+
+            var d1 = buildReach
+            var flag = false
+
+            if (mc.playerController.extendedReach()) {
+                d1 = 6.0
+            } else if (buildReach > 3) {
+                flag = true
+            }
+
+            if (mc.objectMouseOver != null) {
+                d1 = mc.objectMouseOver.hitVec.distanceTo(vec3)
+            }
+
+            var pointedEntity: Entity? = null
+            var vec33: Vec3? = null
+
+            val list = mc.theWorld.getEntities(EntityLivingBase::class.java) {
+                it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != entity
+            }
+
+            var d2 = d1
+
+            for (entity1 in list) {
+                val f1 = entity1.collisionBorderSize
+                val boxes = ArrayList<AxisAlignedBB>()
+
+                boxes.add(entity1.entityBoundingBox.expand(f1.toDouble(), f1.toDouble(), f1.toDouble()))
+
+                loopThroughBacktrackData(entity1) {
+                    boxes.add(entity1.entityBoundingBox.expand(f1.toDouble(), f1.toDouble(), f1.toDouble()))
+                    false
+                }
+
+                for (box in boxes) {
+                    val intercept = box.calculateIntercept(vec3, vec32)
+
+                    if (box.isVecInside(vec3)) {
+                        if (d2 >= 0) {
+                            pointedEntity = entity1
+                            vec33 = if (intercept == null) vec3 else intercept.hitVec
+                            d2 = 0.0
+                        }
+                    } else if (intercept != null) {
+                        val d3 = vec3.distanceTo(intercept.hitVec)
+
+                        if (!isVisible(intercept.hitVec)) {
+                            if (d3 <= wallRange) {
+                                if (d3 < d2 || d2 == 0.0) {
+                                    pointedEntity = entity1
+                                    vec33 = intercept.hitVec
+                                    d2 = d3
+                                }
+                            }
+
+                            continue
+                        }
+
+                        if (d3 < d2 || d2 == 0.0) {
+                            if (entity1 === entity.ridingEntity && !entity.canRiderInteract()) {
+                                if (d2 == 0.0) {
+                                    pointedEntity = entity1
+                                    vec33 = intercept.hitVec
+                                }
+                            } else {
+                                pointedEntity = entity1
+                                vec33 = intercept.hitVec
+                                d2 = d3
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > range) {
+                pointedEntity = null
+                mc.objectMouseOver = MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS,
+                    Objects.requireNonNull(vec33),
+                    null,
+                    BlockPos(vec33)
+                )
+            }
+
+            if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
+                mc.objectMouseOver = MovingObjectPosition(pointedEntity, vec33)
+
+                if (pointedEntity is EntityLivingBase || pointedEntity is EntityItemFrame) {
+                    mc.pointedEntity = pointedEntity
+                }
+            }
+
+            action(mc.objectMouseOver)
+
+            mc.objectMouseOver = prevObjectMouseOver
+            mc.pointedEntity = prevPointedEntity
+        }
     }
 }

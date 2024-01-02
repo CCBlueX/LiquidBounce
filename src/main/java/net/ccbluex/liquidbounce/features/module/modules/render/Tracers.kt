@@ -30,9 +30,9 @@ import java.awt.Color
 object Tracers : Module("Tracers", ModuleCategory.RENDER) {
 
     private val colorMode by ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom")
-        private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }
-        private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
-        private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
+    private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }
+    private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
     private val thickness by FloatValue("Thickness", 2F, 1F..5F)
 
@@ -86,15 +86,16 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
         val thePlayer = mc.thePlayer ?: return
 
         val x = (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * mc.timer.renderPartialTicks
-                - mc.renderManager.renderPosX)
+            - mc.renderManager.renderPosX)
         val y = (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * mc.timer.renderPartialTicks
-                - mc.renderManager.renderPosY)
+            - mc.renderManager.renderPosY)
         val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * mc.timer.renderPartialTicks
-                - mc.renderManager.renderPosZ)
+            - mc.renderManager.renderPosZ)
 
-        val eyeVector = Vec3(0.0, 0.0, 1.0)
-            .rotatePitch(-thePlayer.rotationPitch.toRadians())
-            .rotateYaw(-thePlayer.rotationYaw.toRadians())
+        val yaw = thePlayer.prevRotationYaw + (thePlayer.rotationYaw - thePlayer.prevRotationYaw) * mc.timer.renderPartialTicks
+        val pitch = thePlayer.prevRotationPitch + (thePlayer.rotationPitch - thePlayer.prevRotationPitch) * mc.timer.renderPartialTicks
+
+        val eyeVector = Vec3(0.0, 0.0, 1.0).rotatePitch(-pitch.toRadians()).rotateYaw(-yaw.toRadians())
 
         glColor(color)
 
