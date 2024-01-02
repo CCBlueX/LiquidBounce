@@ -165,6 +165,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     }
 
     override fun disable() {
+        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, ModuleSpeed)
         timeBoostCapable = 0
         wasFlagged = false
     }
