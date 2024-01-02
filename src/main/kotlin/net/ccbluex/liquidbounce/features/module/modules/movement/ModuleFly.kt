@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -64,17 +65,10 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
     private val modes = choices(
         "Mode", Vanilla, arrayOf(
             // Generic fly modes
-            Vanilla,
-            Jetpack,
-            Enderpearl,
-            Explosion,
+            Vanilla, Jetpack, Enderpearl, Explosion,
 
             // Anti-cheat specific fly modes
-            Spartan524,
-            Sentinel27thOct,
-            VerusOld,
-            VerusDamage,
-            VulcanGlide
+            Spartan524, Sentinel27thOct, VerusOld, VerusDamage, VulcanGlide
         )
     )
 
@@ -272,7 +266,10 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                     if (player.pitch <= 80) {
                         RotationManager.aimAt(
-                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)), configurable = rotations
+                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
+                            configurable = rotations,
+                            provider = ModuleFastUse,
+                            priority = Priority.IMPORTANT_FOR_USAGE_2
                         )
                     }
 
@@ -390,8 +387,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
         val repeatable = repeatable {
-            if (player.hurtTime > 0)
-                gotDamage = true
+            if (player.hurtTime > 0) gotDamage = true
             if (!gotDamage) {
                 return@repeatable
             }
@@ -401,7 +397,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
             player.strafe(speed = 9.95)
             player.velocity.y = 0.0
-            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly)
         }
 
         override fun disable() {

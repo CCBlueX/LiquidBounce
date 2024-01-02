@@ -29,7 +29,7 @@ object SpeedSpartan524 : Choice("Spartan524") {
             return@repeatable
         }
 
-        Timer.requestTimerSpeed(1.1f, priority = Priority.IMPORTANT_FOR_USAGE)
+        Timer.requestTimerSpeed(1.1f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
 
         when {
             player.isOnGround -> {

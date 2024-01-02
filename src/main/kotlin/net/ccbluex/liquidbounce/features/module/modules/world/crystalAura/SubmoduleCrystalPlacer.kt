@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesInCuboid
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
@@ -61,7 +62,12 @@ object SubmoduleCrystalPlacer {
                 target,
             ) ?: return
 
-        RotationManager.aimAt(rotation.rotation, configurable = ModuleCrystalAura.rotations)
+        RotationManager.aimAt(
+            rotation.rotation,
+            configurable = ModuleCrystalAura.rotations,
+            priority = Priority.IMPORTANT_FOR_USER_SAFETY,
+            provider = ModuleCrystalAura
+        )
 
         val serverRotation = RotationManager.serverRotation
 
@@ -127,9 +133,9 @@ object SubmoduleCrystalPlacer {
         val possibleTargets =
             searchBlocksInRadius(ModuleCrystalAura.PlaceOptions.range) { pos, state ->
                 return@searchBlocksInRadius (state.block == Blocks.OBSIDIAN || state.block == Blocks.BEDROCK) &&
-                    pos !in blockedPositions &&
-                    pos.up().getState()?.isAir == true &&
-                    canSeeUpperBlockSide(playerEyePos, pos, range, 0.0)
+                        pos !in blockedPositions &&
+                        pos.up().getState()?.isAir == true &&
+                        canSeeUpperBlockSide(playerEyePos, pos, range, 0.0)
             }
 
         val bestTarget =

@@ -56,6 +56,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     private var timeBoostCapable = 0
 
     private const val BASE_HORIZONTAL_MODIFIER = 0.0004
+
     // todo: check if we can do more with this
     private const val HORIZONTAL_SPEED_AMPLIFIER = 0.0007
     private const val VERTICAL_SPEED_AMPLIFIER = 0.0004
@@ -85,7 +86,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
                     return@repeatable
                 }
 
-                Timer.requestTimerSpeed(0.6f, Priority.IMPORTANT_FOR_USAGE)
+                Timer.requestTimerSpeed(0.6f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
                 timeBoostCapable = (timeBoostCapable + 1).coerceAtMost(timeBoostTicks)
             }
             return@repeatable
@@ -93,9 +94,9 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {
                 BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
-                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
             } else {
-               0.0
+                0.0
             }
 
             // Vertical acceleration, this makes sense to get a little bit more speed again
@@ -110,7 +111,12 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
 
         // Time boost feature
         if (timeBoostCapable > 0) {
-            Timer.requestTimerSpeed(1.3f, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = timeBoostCapable)
+            Timer.requestTimerSpeed(
+                1.3f,
+                Priority.IMPORTANT_FOR_USAGE_1,
+                ModuleSpeed,
+                resetAfterTicks = timeBoostCapable
+            )
             timeBoostCapable = 0
         }
     }
@@ -159,6 +165,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     }
 
     override fun disable() {
+        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, ModuleSpeed)
         timeBoostCapable = 0
         wasFlagged = false
     }
