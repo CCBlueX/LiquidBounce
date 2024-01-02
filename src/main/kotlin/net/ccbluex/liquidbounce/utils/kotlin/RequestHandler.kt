@@ -26,12 +26,6 @@ class RequestHandler<T> {
         return this.activeRequests.peek().value
     }
 
-    fun remove(element: Request<T>) {
-        if (this.activeRequests.isNotEmpty()) {
-            this.activeRequests.remove(element)
-        }
-    }
-
     fun removeActive() {
         if (this.activeRequests.isNotEmpty()) {
             this.activeRequests.remove(this.activeRequests.peek())
