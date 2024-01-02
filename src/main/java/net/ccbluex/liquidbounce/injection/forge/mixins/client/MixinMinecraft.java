@@ -259,7 +259,7 @@ public abstract class MixinMinecraft {
      * @author CCBlueX
      */
     @Overwrite
-    private void sendClickBlockToController(boolean leftClick) {
+    public void sendClickBlockToController(boolean leftClick) {
         if (!leftClick) leftClickCounter = 0;
 
         if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
