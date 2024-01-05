@@ -10,6 +10,8 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.Hand
@@ -24,6 +26,13 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
 
     suspend fun Sequence<*>.dealWithFakeSwing(target: Entity?) {
         if (!enabled) {
+            return
+        }
+
+        val isInInventoryScreen =
+            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+
+        if (isInInventoryScreen && !ModuleKillAura.ignoreOpenInventory && !ModuleKillAura.simulateInventoryClosing) {
             return
         }
 
