@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
@@ -100,13 +101,14 @@ public class MixinKeyboardInput extends MixinInput {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
+        AimPlan configurable = rotationManager.getStoredAimPlan();
 
         float z = this.movementForward;
         float x = this.movementSideways;
 
         final RotatedMovementInputEvent MoveInputEvent;
 
-        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null || player == null) {
+        if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null || player == null) {
             MoveInputEvent = new RotatedMovementInputEvent(z, x);
             EventManager.INSTANCE.callEvent(MoveInputEvent);
         } else {
@@ -118,7 +120,6 @@ public class MixinKeyboardInput extends MixinInput {
             MoveInputEvent = new RotatedMovementInputEvent(Math.round(newZ), Math.round(newX));
             EventManager.INSTANCE.callEvent(MoveInputEvent);
         }
-
 
         this.movementSideways = MoveInputEvent.getSideways();
         this.movementForward = MoveInputEvent.getForward();

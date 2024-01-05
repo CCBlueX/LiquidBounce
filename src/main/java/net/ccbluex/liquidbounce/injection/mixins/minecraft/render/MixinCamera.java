@@ -67,7 +67,7 @@ public abstract class MixinCamera {
             return;
         }
 
-        AimPlan aimPlan = RotationManager.INSTANCE.getAimPlan();
+        AimPlan aimPlan = RotationManager.INSTANCE.getStoredAimPlan();
 
         var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();

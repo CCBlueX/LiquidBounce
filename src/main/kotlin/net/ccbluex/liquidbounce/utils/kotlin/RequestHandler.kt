@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import java.util.*
 import kotlin.math.max
 

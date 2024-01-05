@@ -118,8 +118,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         tree(NotifyWhenFail)
     }
 
-    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
+    internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     override fun disable() {
         targetTracker.cleanup()
@@ -344,12 +344,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
         val critical = !ModuleCriticals.shouldWaitForCrit() || choosenEntity.velocity.lengthSquared() > 0.25 * 0.25
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
-                !choosenEntity.wouldBlockHit(player)
+            !choosenEntity.wouldBlockHit(player)
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         return critical && shielding &&
-                !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+            !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
     }
 
     /**
