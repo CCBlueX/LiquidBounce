@@ -26,14 +26,15 @@ import net.ccbluex.liquidbounce.event.events.SplashProgressEvent;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.resource.ResourceReload;
+import net.minecraft.util.math.ColorHelper;
 import org.checkerframework.checker.units.qual.A;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.function.IntSupplier;
 
 /**
  * Custom ultralight splash screen
@@ -45,9 +46,15 @@ public class MixinSplashOverlay {
     @Final
     private ResourceReload reload;
 
+    @Mutable
+    @Shadow
+    @Final
+    private static IntSupplier BRAND_ARGB;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void hookInit(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new SplashOverlayEvent(SplashOverlayEvent.Action.SHOW));
+        BRAND_ARGB = () -> ColorHelper.Argb.getArgb(255, 24, 26, 27);
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setOverlay(Lnet/minecraft/client/gui/screen/Overlay;)V"))
@@ -84,5 +91,14 @@ public class MixinSplashOverlay {
     private void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(null, context, mouseX, mouseY, delta));
     }
+
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIFFIIII)V"))
+    private void drawTexture(DrawContext context, net.minecraft.util.Identifier identifier,
+                             int x, int y, int width, int height, float u1, float v1, int u2,
+                             int v2, int textureWidth, int textureHeight) {
+        // do not draw
+    }
+
+
 
 }
