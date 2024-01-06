@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.Spee
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import kotlin.math.cos
 import kotlin.math.sin
 
