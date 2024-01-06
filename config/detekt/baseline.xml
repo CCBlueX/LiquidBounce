@@ -15,6 +15,7 @@
     <ID>CyclomaticComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
+    <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$private fun updateEnemySelection()</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
@@ -23,7 +24,6 @@
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
-    <ID>EmptyKtFile:ModuleBetterToolTip.kt$.ModuleBetterToolTip.kt</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
@@ -53,6 +53,7 @@
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T>?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
     <ID>MatchingDeclarationName:CombatUtils.kt$CombatManager : Listenable</ID>
