@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,30 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.MLG
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3i
 
@@ -44,26 +52,49 @@ import net.minecraft.util.math.Vec3i
  */
 object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
-    var delay by int("Delay", 20, 0..400)
+    private val range by floatRange("Range", 3.0f..4.5f, 2f..6f)
+    private val delay by int("Delay", 20, 0..400)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    // Target
     private val targetTracker = tree(TargetTracker())
 
-    val networkTickHandler = repeatable { event ->
-        val player = mc.player ?: return@repeatable
+    private val rotationsConfigurable = tree(RotationsConfigurable())
 
-        val slot = findHotbarSlot(Items.LAVA_BUCKET) ?: return@repeatable
+    private val itemToTrapEnemy
+        get() = Hotbar.findClosestItem(arrayOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL))
 
-        for (enemy in targetTracker.enemies()) {
-            if (enemy.squaredBoxedDistanceTo(player) !in 1.0..6.0 * 6.0) {
+    private val trapWorthyBlocks = arrayOf(Blocks.LAVA, Blocks.FIRE)
+
+    private var hasToWait = false
+
+    // override fun toggle() { hasToWait = false }
+
+    override fun enable() {
+        hasToWait = false
+    }
+
+    override fun disable() {
+        hasToWait = false
+    }
+
+    val rotationUpdateHandler = handler<SimulatedTickEvent> {
+        if (hasToWait) {
+            return@handler
+        }
+
+        targetTracker.validateLock { it.shouldBeAttacked() && it.boxedDistanceTo(player) in range }
+
+        val slot = itemToTrapEnemy ?: return@handler
+
+        for (target in targetTracker.enemies()) {
+            if (target.boxedDistanceTo(player) !in range) {
                 continue
             }
 
-            val pos = enemy.blockPos
+            val pos = target.blockPos
+            val state = pos.getState() ?: continue
 
-            val state = pos.getState()
-
-            if (state?.block == Blocks.LAVA) {
+            if (state.block in trapWorthyBlocks) {
                 continue
             }
 
@@ -77,23 +108,42 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
             val currentTarget = findBestBlockPlacementTarget(pos, options) ?: continue
 
-            val rotation = currentTarget.rotation.fixedSensitivity()
-            val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
+            targetTracker.lock(target)
 
-            if (rayTraceResult.type != HitResult.Type.BLOCK) {
-                continue
-            }
-
-            player.networkHandler.sendPacket(
-                PlayerMoveC2SPacket.LookAndOnGround(
-                    rotation.yaw, rotation.pitch, player.isOnGround
-                )
+            RotationManager.aimAt(
+                currentTarget.rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotationsConfigurable,
+                Priority.IMPORTANT_FOR_PLAYER_LIFE,
+                this
             )
 
-            clickBlockWithSlot(player, rayTraceResult, slot)
+            return@handler
+        }
+    }
 
-            break
+    val placementHandler = repeatable {
+        val target = targetTracker.lockedOnTarget ?: return@repeatable
+        val raycast = raycast(4.5, RotationManager.serverRotation) ?: return@repeatable
+
+        if (raycast.type != HitResult.Type.BLOCK || raycast.blockPos != target.blockPos.down()) {
+            return@repeatable
         }
 
+        val slot = itemToTrapEnemy ?: return@repeatable
+
+        CombatManager.pauseCombatForAtLeast(1)
+
+        SilentHotbar.selectSlotSilently(this, slot, 1)
+
+        doPlacement(raycast, Hand.MAIN_HAND)
+
+        hasToWait = true
+
+        targetTracker.cleanup()
+
+        waitTicks(delay)
+
+        hasToWait = false
     }
 }

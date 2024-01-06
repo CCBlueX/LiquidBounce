@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,17 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.integration
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
+import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
@@ -91,6 +92,14 @@ object IntegrationHandler : Listenable {
 
     }
 
+    private var browserIsReady = false
+
+    val handleBrowserReady = handler<BrowserReadyEvent> {
+        // Fires up the client tab
+        clientJcef
+        browserIsReady = true
+    }
+
     fun virtualOpen(name: String) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.name == name) {
@@ -119,6 +128,14 @@ object IntegrationHandler : Listenable {
     private val screenHandler = handler<ScreenEvent> { event ->
         if (HideClient.isHidingNow || ModuleHideClient.enabled) {
             virtualClose()
+            return@handler
+        }
+
+        if (!browserIsReady && event.screen !is MCEFDownloaderMenu) {
+            RenderSystem.recordRenderCall {
+                mc.setScreen(MCEFDownloaderMenu(event.screen))
+            }
+            event.cancelEvent()
             return@handler
         }
 

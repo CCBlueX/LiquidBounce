@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
@@ -56,7 +54,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
             }
 
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleZoot)
 
             // Skip to next tick
             return@repeatable
@@ -73,7 +71,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                     network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                 }
 
-                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleZoot)
             }
         }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
+import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
@@ -99,20 +101,28 @@ public class MixinKeyboardInput extends MixinInput {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null || player == null) {
-            return;
+        AimPlan configurable = rotationManager.getStoredAimPlan();
+
+        float z = this.movementForward;
+        float x = this.movementSideways;
+
+        final RotatedMovementInputEvent MoveInputEvent;
+
+        if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null || player == null) {
+            MoveInputEvent = new RotatedMovementInputEvent(z, x);
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
+        } else {
+            float deltaYaw = player.getYaw() - rotation.getYaw();
+
+            float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
+            float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
+
+            MoveInputEvent = new RotatedMovementInputEvent(Math.round(newZ), Math.round(newX));
+            EventManager.INSTANCE.callEvent(MoveInputEvent);
         }
 
-        float deltaYaw = player.getYaw() - rotation.getYaw();
-
-        float x = this.movementSideways;
-        float z = this.movementForward;
-
-        float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
-        float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);
-
-        this.movementSideways = Math.round(newX);
-        this.movementForward = Math.round(newZ);
+        this.movementSideways = MoveInputEvent.getSideways();
+        this.movementForward = MoveInputEvent.getForward();
     }
 
 }

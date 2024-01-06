@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.DummyEvent
@@ -36,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
 import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
 import net.minecraft.entity.LivingEntity
@@ -124,6 +124,8 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         RotationManager.aimAt(
             Rotation(player.yaw, (85f..90f).random().toFloat()),
             configurable = rotations,
+            provider = this@ModuleAutoPot,
+            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
         )
 
         if (player.isBlocking) {
@@ -183,7 +185,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         when (effect.effectType) {
             StatusEffects.INSTANT_HEALTH -> healthPotion && healthIsLow
             StatusEffects.REGENERATION -> regenPotion &&
-                healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
+                    healthIsLow && !player.hasStatusEffect(StatusEffects.REGENERATION)
 
             StatusEffects.STRENGTH -> strengthPotion && !player.hasStatusEffect(StatusEffects.STRENGTH)
             StatusEffects.SPEED -> speedPotion && !player.hasStatusEffect(StatusEffects.SPEED)
@@ -215,7 +217,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         world.entities.filterIsInstance<AreaEffectCloudEntity>().any {
             it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potion.effects.any { effect ->
                 effect.effectType == StatusEffects.REGENERATION || effect.effectType == StatusEffects.INSTANT_HEALTH
-                    || effect.effectType == StatusEffects.STRENGTH
+                        || effect.effectType == StatusEffects.STRENGTH
             }
         }
 

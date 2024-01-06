@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -45,9 +44,9 @@ fun regular(text: MutableText) = text.styled { it.withColor(Formatting.GRAY) }
 
 fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
 
-fun variable(text: MutableText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: MutableText) = text.styled { it.withColor(Formatting.GOLD) }
 
-fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: String) = text.asText().styled { it.withColor(Formatting.GOLD) }
 
 fun chat(vararg texts: Text, prefix: Boolean = true) {
     val literalText = if (prefix) clientPrefix.copy() else Text.literal("")

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -51,7 +50,9 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             if (!player.isUsingItem) {
                 return@repeatable
             }
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
                 if (player.isUsingItem) {
                     repeat(35) {
                         network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
@@ -62,13 +63,16 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
 
         val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (noMove) {
-                if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
-                    if (player.isUsingItem) {
-                        event.movement.x = 0.0
-                        event.movement.y = 0.0
-                        event.movement.z = 0.0
-                    }
+            if (!noMove) {
+                return@handler
+            }
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
+                if (player.isUsingItem) {
+                    event.movement.x = 0.0
+                    event.movement.y = 0.0
+                    event.movement.z = 0.0
                 }
             }
         }
@@ -82,7 +86,9 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             if (!player.isUsingItem) {
                 return@repeatable
             }
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
                 if (player.itemUseTime > 14) {
                     repeat(20) {
                         network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
@@ -93,13 +99,16 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
 
         val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (noMove) {
-                if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
-                    if (player.isUsingItem) {
-                        event.movement.x = 0.0
-                        event.movement.y = 0.0
-                        event.movement.z = 0.0
-                    }
+            if (!noMove) {
+                return@handler
+            }
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
+                if (player.isUsingItem) {
+                    event.movement.x = 0.0
+                    event.movement.y = 0.0
+                    event.movement.z = 0.0
                 }
             }
         }
@@ -114,9 +123,11 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 return@repeatable
             }
 
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
                 if (player.isUsingItem) {
-                    Timer.requestTimerSpeed(1.22F, Priority.IMPORTANT_FOR_USAGE)
+                    Timer.requestTimerSpeed(1.22F, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse)
                 }
             }
         }
@@ -126,7 +137,9 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 return@handler
             }
 
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
                 if (player.isUsingItem) {
                     event.movement.x = 0.0
                     event.movement.y = 0.0
@@ -149,9 +162,11 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 return@repeatable
             }
 
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse)
 
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
                 if (player.isUsingItem) {
                     waitTicks(delay)
                     repeat(speed) {
@@ -163,13 +178,16 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
 
         val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (noMove) {
-                if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
-                    if (player.isUsingItem) {
-                        event.movement.x = 0.0
-                        event.movement.y = 0.0
-                        event.movement.z = 0.0
-                    }
+            if (!noMove) {
+                return@handler
+            }
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
+                if (player.isUsingItem) {
+                    event.movement.x = 0.0
+                    event.movement.y = 0.0
+                    event.movement.z = 0.0
                 }
             }
         }

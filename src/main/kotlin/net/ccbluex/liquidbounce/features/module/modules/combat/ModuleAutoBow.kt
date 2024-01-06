@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.minecraft.client.network.AbstractClientPlayerEntity
@@ -141,7 +142,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                     return@handler
                 }
 
-                val targetRotation = RotationManager.aimPlan ?: return@handler
+                val targetRotation = RotationManager.storedAimPlan ?: return@handler
 
                 val aimDifference = RotationManager.rotationDifference(
                     RotationManager.serverRotation, targetRotation.rotation
@@ -203,7 +204,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayer>> {
             return world.players.filter {
                 it != mc.player &&
-                    Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
+                        Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
             }.map {
                 Pair(it, SimulatedPlayer.fromOtherPlayer(it, SimulatedPlayer.SimulatedPlayerInput.guessInput(it)))
             }
@@ -227,6 +228,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(targetTracker)
             tree(rotationConfigurable)
         }
+
         private val targetRenderer = tree(OverlayTargetRenderer(this.module!!))
 
 
@@ -255,7 +257,12 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 return@repeatable
             }
 
-            RotationManager.aimAt(rotation, configurable = rotationConfigurable)
+            RotationManager.aimAt(
+                rotation,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider = ModuleAutoBow,
+                configurable = rotationConfigurable
+            )
         }
 
         val renderHandler = handler<OverlayRenderEvent> { event ->
@@ -382,12 +389,12 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             Rotation(
                 (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
                 (
-                    -Math.toDegrees(
-                        atan(
-                            (velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX),
-                        ),
-                    )
-                    ).toFloat(),
+                        -Math.toDegrees(
+                            atan(
+                                (velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX),
+                            ),
+                        )
+                        ).toFloat(),
             ),
             velocity,
             travelledOnX,

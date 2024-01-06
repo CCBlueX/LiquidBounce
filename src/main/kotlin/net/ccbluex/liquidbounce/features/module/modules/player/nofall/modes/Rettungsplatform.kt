@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -29,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.findClosestItem
+import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
 import net.minecraft.item.Items
 
@@ -53,7 +51,7 @@ internal object Rettungsplatform : Choice("Rettungsplatform") {
      * We are not checking for the item name, as there are different language options causing issues.
      */
     private val itemToPlatform
-        get() = findClosestItem(arrayOf(Items.BLAZE_ROD, Items.MAGMA_CREAM))
+        get() = Hotbar.findClosestItem(arrayOf(Items.BLAZE_ROD, Items.MAGMA_CREAM))
 
     val repatable = repeatable {
         if (player.fallDistance > 2f) {

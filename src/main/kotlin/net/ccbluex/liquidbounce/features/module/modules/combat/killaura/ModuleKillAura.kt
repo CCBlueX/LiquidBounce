@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
@@ -30,22 +29,20 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.*
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.TickBase
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.*
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
@@ -89,6 +86,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
+    private val flick by boolean("Flick", false)
 
     // Target rendering
     private val targetRenderer = tree(WorldTargetRenderer(this))
@@ -121,8 +119,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         tree(NotifyWhenFail)
     }
 
-    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
+    internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     override fun disable() {
         targetTracker.cleanup()
@@ -226,8 +224,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Are we actually facing the choosen entity?
-        if (!facingEnemy(toEntity = chosenEntity, rotation = rotation, range = range.toDouble(),
-                wallsRange = wallRange.toDouble())) {
+        if (!facingEnemy(
+                toEntity = chosenEntity, rotation = rotation, range = range.toDouble(),
+                wallsRange = wallRange.toDouble()
+            )
+        ) {
             dealWithFakeSwing(chosenEntity)
             return@repeatable
         }
@@ -293,24 +294,21 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         for (target in targetTracker.enemies()) {
             if (target.squaredBoxedDistanceTo(player) > scanRange) {
-                if (FightBot.enabled) {
-                     val rotationToEnemy = FightBot.makeClientSideRotationNeeded(target) ?: continue
-                    // lock on target tracker
-                    RotationManager.aimAt(rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false))
-                    targetTracker.lock(target)
-                }
-
                 continue
             }
 
-            val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
-                clickScheduler.isClickOnNextTick(1))
+            val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(
+                target,
+                clickScheduler.isClickOnNextTick(1)
+            )
             val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
             // find best spot
-            val spot = raytraceBox(eyes, cutOffBox, range = sqrt(scanRange),
+            val spot = raytraceBox(
+                eyes, cutOffBox, range = sqrt(scanRange),
                 wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
-            ) ?: raytraceBox(eyes, box, range = sqrt(scanRange),
+            ) ?: raytraceBox(
+                eyes, box, range = sqrt(scanRange),
                 wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
             ) ?: continue
 
@@ -320,8 +318,32 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(rotations.toAimPlan(spot.rotation, !ignoreOpenInventory))
+            val ticks = rotations.howLongItTakes(spot.rotation)
+            if (flick && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
+                break
+            }
+
+            RotationManager.aimAt(
+                rotations.toAimPlan(spot.rotation, !ignoreOpenInventory),
+                priority = Priority.IMPORTANT_FOR_USAGE_2,
+                provider = this@ModuleKillAura
+            )
             break
+        }
+
+        // Choose enemy for fight bot
+        if (FightBot.enabled && targetTracker.lockedOnTarget == null) {
+            // Because target tracker enemies are sorted by priority, we can just take the first one
+            val targetByPriority = targetTracker.enemies().firstOrNull() ?: return
+
+            val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
+            // lock on target tracker
+            RotationManager.aimAt(
+                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false),
+                priority = Priority.IMPORTANT_FOR_USAGE_2,
+                provider = this@ModuleKillAura
+            )
+            targetTracker.lock(targetByPriority)
         }
     }
 
@@ -356,7 +378,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             network.sendPacket(
-                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                PlayerActionC2SPacket(
+                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
                     BlockPos.ORIGIN, Direction.DOWN
                 )
             )

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
+import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.script.RequiredByScript

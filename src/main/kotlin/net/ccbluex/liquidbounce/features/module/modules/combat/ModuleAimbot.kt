@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
  * Aimbot module
@@ -47,9 +48,17 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         targetRotation = null
     }
 
-    val tickHandler = handler<SimulatedTickEvent> { event ->
+    val tickHandler = handler<SimulatedTickEvent> { _ ->
         targetRotation = findNextTargetRotation()
-        targetRotation?.let { RotationManager.aimAt(it, true, rotationsConfigurable) }
+        targetRotation?.let {
+            RotationManager.aimAt(
+                it,
+                true,
+                rotationsConfigurable,
+                Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleAimbot
+            )
+        }
     }
 
     private fun findNextTargetRotation(): Rotation? {
@@ -62,14 +71,20 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)
                 val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, toPoint)
 
-                val spot = raytraceBox(fromPoint, cutOffBox, range = range.toDouble(),
-                    wallsRange = 0.0, rotationPreference = rotationPreference
-                ) ?: raytraceBox(fromPoint, box, range = range.toDouble(),
-                    wallsRange = 0.0, rotationPreference = rotationPreference
+                val spot = raytraceBox(
+                    fromPoint,
+                    cutOffBox,
+                    range = range.toDouble(),
+                    wallsRange = 0.0,
+                    rotationPreference = rotationPreference
+                ) ?: raytraceBox(
+                    fromPoint, box, range = range.toDouble(), wallsRange = 0.0, rotationPreference = rotationPreference
                 ) ?: continue
 
-                if (RotationManager.rotationDifference(player.rotation, spot.rotation) <=
-                    rotationsConfigurable.resetThreshold) {
+                if (RotationManager.rotationDifference(
+                        player.rotation, spot.rotation
+                    ) <= rotationsConfigurable.resetThreshold
+                ) {
                     break
                 }
 

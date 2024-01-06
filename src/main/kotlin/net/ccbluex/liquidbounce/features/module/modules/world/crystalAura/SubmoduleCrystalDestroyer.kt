@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.world.crystalAura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -26,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.decoration.EndCrystalEntity
@@ -53,7 +53,12 @@ object SubmoduleCrystalDestroyer {
             ) ?: return
 
         // aim on target
-        RotationManager.aimAt(rotation, configurable = ModuleCrystalAura.rotations)
+        RotationManager.aimAt(
+            rotation,
+            configurable = ModuleCrystalAura.rotations,
+            priority = Priority.IMPORTANT_FOR_USER_SAFETY,
+            provider = ModuleCrystalAura
+        )
 
         if (!facingEnemy(target, range, RotationManager.serverRotation)) {
             return

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.util.ActionResult
@@ -109,7 +110,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         // Check if the raytrace result includes a block, if not we don't want to deal with it.
         if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos) {
+            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos
+        ) {
             return@repeatable
         }
 
@@ -132,7 +134,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val blockToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             targets.contains(state.block) && getNearestPoint(
                 eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
@@ -147,7 +149,13 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // Check if we got a free angle to the block
         if (raytrace != null) {
             val (rotation, _) = raytrace
-            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotations,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleFucker
+            )
 
             this.currentTarget = DestroyerTarget(pos, this.action)
             return
@@ -179,7 +187,13 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         ) ?: return
 
         val (rotation, _) = raytrace
-        RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+        RotationManager.aimAt(
+            rotation,
+            considerInventory = !ignoreOpenInventory,
+            configurable = rotations,
+            Priority.IMPORTANT_FOR_USAGE_1,
+            this@ModuleFucker
+        )
 
         this.currentTarget = DestroyerTarget(raytraceResult.blockPos, this.action)
     }

@@ -1,7 +1,7 @@
 <script>
     export let settings;
     export let modules;
-    export let listen;
+    import { listen } from "../../client/ws.svelte";
 
     export let toggleModule;
 
@@ -142,7 +142,7 @@
 </script>
 
 {#if visible}
-    <div class="search-bar" on:keydown={handleKeyDown}>
+    <div class="search-bar" class:shadow={settings.shadow} on:keydown={handleKeyDown}>
         <div class="search-bar-input-container">
             <input bind:value type="text" placeholder="Search" on:input={onInput} autofocus={autofocus}>
         </div>
@@ -190,11 +190,14 @@
         height: 50px;
         padding: 10px 20px;
         transition: all 0.2s ease-in-out;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
 
         &:not(:placeholder-shown) {
           border-radius: 10px 10px 0 0;
+        }
+
+        &:shadow {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
       }
     }

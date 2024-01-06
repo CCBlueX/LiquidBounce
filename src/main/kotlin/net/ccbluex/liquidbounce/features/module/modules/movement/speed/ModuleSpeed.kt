@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,16 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     val modes = choices(
-        "Mode", SpeedYPort, arrayOf(
-            Verus, SpeedYPort, LegitHop, Custom, HypixelBHop, Spartan524, Spartan524GroundTimer
+        "Mode", SpeedLegitHop, arrayOf(
+            SpeedLegitHop,
+            SpeedCustom,
+            SpeedSpeedYPort,
+
+            SpeedVerusB3882,
+            SpeedHypixelBHop,
+
+            SpeedSpartan524,
+            SpeedSpartan524GroundTimer
         )
     )
 

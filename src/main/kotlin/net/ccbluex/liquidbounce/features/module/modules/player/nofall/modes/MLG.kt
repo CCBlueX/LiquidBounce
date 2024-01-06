@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -37,7 +35,8 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFa
 import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.findClosestItem
+import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
 import net.minecraft.util.hit.HitResult
@@ -54,14 +53,15 @@ internal object MLG : Choice("MLG") {
     private var currentTarget: BlockPlacementTarget? = null
 
     private val itemForMLG
-        get() = findClosestItem(
+        get() = Hotbar.findClosestItem(
             arrayOf(
                 Items.WATER_BUCKET, Items.COBWEB, Items.POWDER_SNOW_BUCKET, Items.HAY_BLOCK, Items.SLIME_BLOCK
             )
         )
 
-    private val fallDamageBlockingBlocks = arrayOf(Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW,
-        Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK)
+    private val fallDamageBlockingBlocks = arrayOf(
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
+    )
 
     val tickMovementHandler = handler<SimulatedTickEvent> {
         if (player.fallDistance <= minFallDist || itemForMLG == null) {
@@ -85,7 +85,12 @@ internal object MLG : Choice("MLG") {
         currentTarget = findBestBlockPlacementTarget(collision.up(), options)
 
         val target = currentTarget ?: return@handler
-        RotationManager.aimAt(target.rotation, configurable = rotationsConfigurable)
+        RotationManager.aimAt(
+            target.rotation,
+            configurable = rotationsConfigurable,
+            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
+            provider = ModuleNoFall
+        )
     }
 
     val tickHandler = repeatable {
@@ -95,7 +100,8 @@ internal object MLG : Choice("MLG") {
         val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.interactedBlockPos
-            || rayTraceResult.side != target.direction) {
+            || rayTraceResult.side != target.direction
+        ) {
             return@repeatable
         }
 

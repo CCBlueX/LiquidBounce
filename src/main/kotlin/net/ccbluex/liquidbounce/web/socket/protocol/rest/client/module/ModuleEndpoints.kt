@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -83,15 +83,7 @@ internal fun RestNode.setupOptions() {
     get("/options/clickgui") {
         val clickGui = ModuleClickGui
 
-        httpOk(JsonObject().apply {
-            addProperty("modulesColor", clickGui.moduleColor.toHex(true))
-            addProperty("headerColor", clickGui.headerColor.toHex(true))
-            addProperty("accentColor", clickGui.accentColor.toHex(true))
-            addProperty("textColor", clickGui.textColor.toHex(true))
-            addProperty("textDimmed", clickGui.dimmedTextColor.toHex(true))
-            addProperty("searchAlwaysOnTop", clickGui.searchAlwaysOnTop)
-            addProperty("autoFocus", clickGui.searchAutoFocus)
-        })
+        httpOk(clickGui.settingsAsJson())
     }
 }
 
@@ -105,12 +97,11 @@ data class ModuleRequest(val name: String) {
         if (module.enabled == supposedNew) {
             return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
         }
-        module.enabled = supposedNew
 
-        return httpOk(JsonObject().apply {
-            addProperty("name", module.name)
-            addProperty("enabled", module.enabled)
-        })
+        RenderSystem.recordRenderCall {
+            module.enabled = supposedNew
+        }
+        return httpOk(JsonObject())
     }
 
     fun acceptGetSettingsRequest(): FullHttpResponse {

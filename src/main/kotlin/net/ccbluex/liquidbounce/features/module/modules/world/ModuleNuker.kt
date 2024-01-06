@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -243,7 +244,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 // Check if there is a free angle to the block.
                 if (raytrace != null) {
                     val (rotation, _) = raytrace
-                    RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+                    RotationManager.aimAt(
+                        rotation,
+                        considerInventory = !ignoreOpenInventory,
+                        configurable = rotations,
+                        priority = Priority.IMPORTANT_FOR_USAGE_1,
+                        ModuleNuker
+                    )
 
                     currentTarget = DestroyerTarget(pos, rotation)
                     return
@@ -417,9 +424,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        return searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        return searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && !blacklistedBlocks.contains(state.block) && !isOnPlatform(pos)
-                && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1)))
+                    && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1)))
                 .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {
@@ -440,9 +447,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
     }
 
     private fun isOnPlatform(block: BlockPos) = Platform.enabled
-        && block.x <= player.blockPos.x + Platform.size && block.x >= player.blockPos.x - Platform.size
-        && block.z <= player.blockPos.z + Platform.size && block.z >= player.blockPos.z - Platform.size
-        && block.y == player.blockPos.down().y // Y level is the same as the player's feet
+            && block.x <= player.blockPos.x + Platform.size && block.x >= player.blockPos.x - Platform.size
+            && block.z <= player.blockPos.z + Platform.size && block.z >= player.blockPos.z - Platform.size
+            && block.y == player.blockPos.down().y // Y level is the same as the player's feet
 
     data class DestroyerTarget(val pos: BlockPos, val rotation: Rotation)
 

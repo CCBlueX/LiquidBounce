@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.client.session
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.ClientApi.formatAvatarUrl
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.AltManagerUpdateEvent
 import net.ccbluex.liquidbounce.features.misc.AccountManager
+import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.isPremium
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
@@ -33,6 +36,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import net.minecraft.client.session.Session
+import org.lwjgl.glfw.GLFW
 
 internal fun RestNode.setupSessionRestApi() {
     setupLocalSessionRestApi()
@@ -107,7 +111,20 @@ private fun RestNode.setupAccountManagerRest() {
     }
 
     post("/accounts/new/microsoft") {
-        AccountManager.newMicrosoftAccount()
+        AccountManager.newMicrosoftAccount {
+            browseUrl(it)
+            EventManager.callEvent(AltManagerUpdateEvent(true, "Opened login url in browser"))
+        }
+        httpOk(JsonObject())
+    }
+
+    post("/accounts/new/microsoft/url") {
+        AccountManager.newMicrosoftAccount {
+            RenderSystem.recordRenderCall {
+                GLFW.glfwSetClipboardString(mc.window.handle, it)
+                EventManager.callEvent(AltManagerUpdateEvent(true, "Copied login url to clipboard"))
+            }
+        }
         httpOk(JsonObject())
     }
 

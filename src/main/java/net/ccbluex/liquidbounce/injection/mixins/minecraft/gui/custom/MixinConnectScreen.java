@@ -2,7 +2,7 @@
  *
  *  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *  *
- *  * Copyright (c) 2015 - 2023 CCBlueX
+ *  * Copyright (c) 2015 - 2024 CCBlueX
  *  *
  *  * LiquidBounce is free software: you can redistribute it and/or modify
  *  * it under the terms of the GNU General Public License as published by
@@ -44,9 +44,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen extends MixinScreen {
-
-    @Shadow
-    private Text status;
 
     @Shadow
     private volatile @Nullable ClientConnection connection;
@@ -99,9 +96,13 @@ public abstract class MixinConnectScreen extends MixinScreen {
 
         var client = Text.literal("Client").formatted(Formatting.BLUE);
         if (ipInfo != null) {
-            client.append(Text.literal(" (").formatted(Formatting.DARK_GRAY));
-            client.append(Text.literal(ipInfo.getCountry()).formatted(Formatting.BLUE));
-            client.append(Text.literal(")").formatted(Formatting.DARK_GRAY));
+            var country = ipInfo.getCountry();
+
+            if (country != null) {
+                client.append(Text.literal(" (").formatted(Formatting.DARK_GRAY));
+                client.append(Text.literal(country).formatted(Formatting.BLUE));
+                client.append(Text.literal(")").formatted(Formatting.DARK_GRAY));
+            }
         }
         var spacer = Text.literal(" ⟺ ").formatted(Formatting.DARK_GRAY);
 

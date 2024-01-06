@@ -12,21 +12,22 @@
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
     <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
-    <ID>CyclomaticComplexMethod:ConfigSystem.kt$ConfigSystem$fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement)</ID>
     <ID>CyclomaticComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
+    <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$private fun updateEnemySelection()</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(target, clickScheduler.isClickOnNextTick(1))</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( target, clickScheduler.isClickOnNextTick(1) )</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
     <ID>LongMethod:CommandConfig.kt$CommandConfig$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandEnemy.kt$CommandEnemy$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
@@ -41,7 +42,7 @@
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>LongMethod:SessionEndpoints.kt$private fun RestNode.setupAccountManagerRest()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
-    <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
+    <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, val ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float )</ID>
@@ -83,10 +84,6 @@
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$!player.isInLava &amp;&amp; !player.isTouchingWater &amp;&amp; !player.isClimbing &amp;&amp; !player.hasNoGravity()</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$)</ID>
     <ID>MaxLineLength:ModuleDisabler.kt$ModuleDisabler.VulcanMovement$return (offhand.item == Items.TRIDENT &amp;&amp; offhand.hasEnchantments() &amp;&amp; offhand.getEnchantment(Enchantments.RIPTIDE) != 0)</ID>
-    <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.AAC$if</ID>
-    <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.Custom$if</ID>
-    <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.Instant$if</ID>
-    <ID>MaxLineLength:ModuleFastUse.kt$ModuleFastUse.NCP$if</ID>
     <ID>MaxLineLength:ModuleFly.kt$ModuleFly.Enderpearl$if</ID>
     <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*>) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
@@ -171,9 +168,6 @@
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
     <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
-    <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupExploits()</ID>
-    <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupHeads()</ID>
-    <ID>UnusedPrivateMember:Tabs.kt$Tabs$private fun setupSpecial()</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent> { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
     <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent> { reconnect() }</ID>
     <ID>UnusedPrivateProperty:ModuleBlink.kt$ModuleBlink$i</ID>
