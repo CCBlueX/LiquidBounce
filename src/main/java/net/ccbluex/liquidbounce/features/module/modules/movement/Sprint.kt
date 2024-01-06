@@ -150,6 +150,10 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
+        if (mode == "Legit") {
+            return
+        }
+
         val packet = event.packet
         if (packet !is C0BPacketEntityAction || !noPackets || event.isCancelled) {
             return
