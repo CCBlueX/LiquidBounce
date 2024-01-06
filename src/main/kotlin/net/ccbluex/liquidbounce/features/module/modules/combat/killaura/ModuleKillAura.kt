@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -85,6 +86,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
+    private val flick by boolean("Flick", false)
 
     // Target rendering
     private val targetRenderer = tree(WorldTargetRenderer(this))
@@ -316,6 +318,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
+            val ticks = rotations.howLongItTakes(spot.rotation)
+            if (flick && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
+                break
+            }
+
             RotationManager.aimAt(
                 rotations.toAimPlan(spot.rotation, !ignoreOpenInventory),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,

@@ -47,6 +47,7 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
 import kotlin.math.hypot
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 /**
@@ -70,6 +71,26 @@ class RotationsConfigurable(
     fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false, silent: Boolean) = AimPlan(
         rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, !silent
     )
+
+    /**
+     * How long it takes to rotate to a rotation in ticks
+     *
+     * Calculates the difference from the server rotation to the target rotation and divides it by the
+     * minimum turn speed (to make sure we are always there in time)
+     *
+     * @param rotation The rotation to rotate to
+     * @return The amount of ticks it takes to rotate to the rotation
+     */
+    fun howLongItTakes(rotation: Rotation): Int {
+        val difference = RotationManager.rotationDifference(rotation, RotationManager.actualServerRotation)
+        val turnSpeed = turnSpeed.start
+
+        if (difference <= 0.0 || turnSpeed <= 0.0) {
+            return 0
+        }
+
+        return (difference / turnSpeed).roundToInt()
+    }
 
 }
 
