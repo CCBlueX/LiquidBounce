@@ -97,7 +97,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
             fastHop = false
 
             if (slime && (getBlock(blockPos.down()) is BlockSlime || getBlock(blockPos) is BlockSlime)) {
-                thePlayer.jump()
+                thePlayer.tryJump()
 
                 thePlayer.motionX = thePlayer.motionY * 1.132
                 thePlayer.motionY = 0.08
@@ -115,7 +115,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                     "new" -> {
                         fastHop = true
                         if (legitHop) {
-                            thePlayer.jump()
+                            thePlayer.tryJump()
                             thePlayer.onGround = false
                             legitHop = false
                             return
@@ -124,7 +124,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
 
                         strafe(0.375f)
 
-                        thePlayer.jump()
+                        thePlayer.tryJump()
                         thePlayer.motionY = 0.41
                         return
                     }
@@ -140,7 +140,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                         fastHop = true
 
                         if (legitHop) {
-                            thePlayer.jump()
+                            thePlayer.tryJump()
                             thePlayer.onGround = false
                             legitHop = false
                             return
@@ -148,7 +148,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
 
                         thePlayer.onGround = false
                         strafe(0.375f)
-                        thePlayer.jump()
+                        thePlayer.tryJump()
                         thePlayer.motionY = 0.41
                         return
                     }
@@ -170,7 +170,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                 if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) {
                     boost(snowBoost)
                 } else {
-                    thePlayer.jump()
+                    thePlayer.tryJump()
                     forceDown = true
                 }
                 return
@@ -184,7 +184,7 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
                     }
                     "new" ->
                         if (isNearBlock && !thePlayer.movementInput.jump) {
-                            thePlayer.jump()
+                            thePlayer.tryJump()
                             thePlayer.motionY = 0.08
                             thePlayer.motionX *= 0.99
                             thePlayer.motionZ *= 0.99

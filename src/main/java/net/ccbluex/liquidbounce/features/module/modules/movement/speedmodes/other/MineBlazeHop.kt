@@ -14,7 +14,7 @@ object MineBlazeHop : SpeedMode("MineBlazeHop") {
             return
         }
         if (mc.thePlayer.onGround && isMoving) {
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
         }
         if (mc.thePlayer.motionY > 0.003) {
             mc.thePlayer.motionX *= 1.0015

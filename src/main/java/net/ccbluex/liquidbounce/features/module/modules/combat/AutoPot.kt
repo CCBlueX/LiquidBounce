@@ -61,7 +61,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                 if (potionInHotbar != null && thePlayer.health <= health) {
                     if (thePlayer.onGround) {
                         when (mode.lowercase()) {
-                            "jump" -> thePlayer.jump()
+                            "jump" -> thePlayer.tryJump()
                             "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
                         }
                     }

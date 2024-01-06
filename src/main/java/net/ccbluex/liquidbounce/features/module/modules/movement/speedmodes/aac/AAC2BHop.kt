@@ -18,7 +18,7 @@ object AAC2BHop : SpeedMode("AAC2BHop") {
 
         if (isMoving) {
             if (thePlayer.onGround) {
-                thePlayer.jump()
+                thePlayer.tryJump()
                 thePlayer.motionX *= 1.02
                 thePlayer.motionZ *= 1.02
             } else if (thePlayer.motionY > -0.2) {

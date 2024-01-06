@@ -24,7 +24,7 @@ object AAC3BHop : SpeedMode("AAC3BHop") {
             when {
                 thePlayer.onGround -> {
                     if (legitJump) {
-                        thePlayer.jump()
+                        thePlayer.tryJump()
                         legitJump = false
                         return
                     }

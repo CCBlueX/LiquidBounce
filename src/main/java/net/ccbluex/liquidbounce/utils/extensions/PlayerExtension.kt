@@ -198,3 +198,9 @@ fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
         true
     } else false
 }
+
+fun EntityPlayerSP.tryJump() {
+    if (!mc.gameSettings.keyBindJump.isKeyDown) {
+        this.jump()
+    }
+}

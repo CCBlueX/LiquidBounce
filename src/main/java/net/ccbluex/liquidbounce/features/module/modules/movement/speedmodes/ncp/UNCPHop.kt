@@ -33,7 +33,7 @@ object UNCPHop : SpeedMode("UNCPHop") {
 
         if (isMoving) {
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 strafe(0.035f)
                 mc.thePlayer.speedInAir = 0.035f
             } else {

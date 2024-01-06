@@ -15,7 +15,7 @@ object AACYPort2 : SpeedMode("AACYPort2") {
 
             thePlayer.cameraPitch = 0f
             if (thePlayer.onGround) {
-                thePlayer.jump()
+                thePlayer.tryJump()
                 thePlayer.motionY = 0.3851
                 thePlayer.motionX *= 1.01
                 thePlayer.motionZ *= 1.01

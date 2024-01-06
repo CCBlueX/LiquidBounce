@@ -327,7 +327,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
         if (mode == "Jump" && hasReceivedVelocity) {
             if (!player.isJumping && nextInt(endExclusive = 100) < chance && shouldJump() && player.isSprinting && player.onGround && player.hurtTime == 9) {
-                player.jump()
+                player.tryJump()
                 limitUntilJump = 0
             }
             hasReceivedVelocity = false

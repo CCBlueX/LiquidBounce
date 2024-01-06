@@ -39,12 +39,12 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
     override fun onEnable() {
         if (mode == "NoGround")
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
     }
 
     private fun verusJump() {
         mc.thePlayer.isInWeb = true
-        mc.thePlayer.jump()
+        mc.thePlayer.tryJump()
         mc.thePlayer.prevPosY = mc.thePlayer.posY
 
         mc.thePlayer.isInWeb = false

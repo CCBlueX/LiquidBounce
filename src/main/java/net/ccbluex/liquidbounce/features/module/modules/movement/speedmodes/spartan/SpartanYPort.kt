@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 object SpartanYPort : SpeedMode("SpartanYPort") {
     private var airMoves = 0
     override fun onMotion() {
-        if (mc.gameSettings.keyBindForward.isKeyDown && !mc.gameSettings.keyBindJump.isKeyDown) {
+        if (mc.gameSettings.keyBindForward.isKeyDown) {
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 airMoves = 0
             } else {
                 mc.timer.timerSpeed = 1.08f

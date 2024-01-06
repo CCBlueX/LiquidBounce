@@ -26,7 +26,7 @@ object Jump : FlyMode("Jump") {
         if (mc.thePlayer == null)
             return
         if (mc.thePlayer.onGround && !mc.thePlayer.isJumping)
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
         if ((mc.gameSettings.keyBindJump.isKeyDown && !mc.gameSettings.keyBindSneak.isKeyDown) || mc.thePlayer.onGround)
             jumpY = mc.thePlayer.posY
     }

@@ -61,7 +61,7 @@ object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER, gameDetecting = false)
                 randomTimerDelay = 500L
                 when (nextInt(0, 6)) {
                     0 -> {
-                        if (thePlayer.onGround) thePlayer.jump()
+                        if (thePlayer.onGround) thePlayer.tryJump()
                         delayTimer.reset()
                     }
                     1 -> {
@@ -93,7 +93,7 @@ object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER, gameDetecting = false)
                     mc.gameSettings.keyBindForward.pressed = true
 
                 if (jump && thePlayer.onGround)
-                    thePlayer.jump()
+                    thePlayer.tryJump()
 
                 if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelay)) {
                     thePlayer.fixedSensitivityYaw += rotationAngle

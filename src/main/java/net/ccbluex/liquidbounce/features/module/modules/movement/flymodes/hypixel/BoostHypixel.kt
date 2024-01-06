@@ -59,7 +59,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 
 		sendPacket(C04PacketPlayerPosition(x, y, z, true))
 
-		mc.thePlayer.jump()
+		mc.thePlayer.tryJump()
 
 		mc.thePlayer.posY += 0.42f // Visual
 		

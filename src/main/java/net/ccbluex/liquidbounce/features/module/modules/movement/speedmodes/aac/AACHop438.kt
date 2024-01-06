@@ -18,7 +18,7 @@ object AACHop438 : SpeedMode("AACHop4.3.8") {
             return
 
         if (thePlayer.onGround)
-            thePlayer.jump()
+            thePlayer.tryJump()
         else {
             if (thePlayer.fallDistance <= 0.1)
                 mc.timer.timerSpeed = 1.5f

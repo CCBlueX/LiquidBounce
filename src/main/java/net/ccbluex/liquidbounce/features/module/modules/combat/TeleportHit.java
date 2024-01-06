@@ -65,7 +65,7 @@ public class TeleportHit extends Module {
                 shouldHit = false;
                 targetEntity = null;
             } else if (thePlayer.onGround)
-                thePlayer.jump();
+                thePlayer.tryJump();
         } else
             shouldHit = false;
     }

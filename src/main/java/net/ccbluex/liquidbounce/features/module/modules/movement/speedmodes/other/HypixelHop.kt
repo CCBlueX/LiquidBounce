@@ -16,9 +16,9 @@ object HypixelHop : SpeedMode("HypixelHop") {
 
         if (mc.thePlayer.onGround && isMoving) {
             if (mc.thePlayer.isUsingItem) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
             } else {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 strafe(0.4f)
             }
         }

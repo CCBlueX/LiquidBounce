@@ -18,7 +18,7 @@ object Frame : SpeedMode("Frame") {
         if (isMoving) {
             val speed = 4.25
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 if (motionTicks == 1) {
                     tickTimer.reset()
                     if (move) {

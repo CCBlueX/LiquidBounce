@@ -19,6 +19,6 @@ object LAAC : NoWebMode("LAAC") {
             mc.thePlayer.motionY = 0.0
 
         if (mc.thePlayer.onGround)
-            mc.thePlayer.jump()    
+            mc.thePlayer.tryJump()    
     }
 }

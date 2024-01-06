@@ -18,7 +18,7 @@ object MineBlazeTimer : SpeedMode("MineBlazeTimer") {
             return
 
         if (thePlayer.onGround)
-            thePlayer.jump()
+            thePlayer.tryJump()
         else {
             if (thePlayer.fallDistance <= 0.1)
                 mc.timer.timerSpeed = 1.7f

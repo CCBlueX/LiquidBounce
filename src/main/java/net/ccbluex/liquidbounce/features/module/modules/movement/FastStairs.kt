@@ -79,7 +79,7 @@ object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
             canJump = true
         } else if (mode.startsWith("AAC") && canJump) {
             if (longJump) {
-                thePlayer.jump()
+                thePlayer.tryJump()
                 thePlayer.motionX *= 1.35
                 thePlayer.motionZ *= 1.35
             }

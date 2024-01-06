@@ -54,7 +54,7 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
                 if (thePlayer.isCollidedHorizontally) {
                     when (clipMode.lowercase()) {
                         "jump" -> if (thePlayer.onGround)
-                            thePlayer.jump()
+                            thePlayer.tryJump()
                         "fast" -> if (thePlayer.onGround)
                             thePlayer.motionY = 0.42
                         else if (thePlayer.motionY < 0)

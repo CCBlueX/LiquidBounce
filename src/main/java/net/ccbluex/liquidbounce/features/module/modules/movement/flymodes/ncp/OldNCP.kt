@@ -27,7 +27,7 @@ object OldNCP : FlyMode("OldNCP") {
 			)
 		}
 
-		mc.thePlayer.jump()
+		mc.thePlayer.tryJump()
 		mc.thePlayer.swingItem()
 	}
 

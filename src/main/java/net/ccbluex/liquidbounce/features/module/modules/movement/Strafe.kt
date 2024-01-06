@@ -45,7 +45,7 @@ object Strafe : Module("Strafe", ModuleCategory.MOVEMENT, gameDetecting = false)
             }
             val yaw = mc.thePlayer.rotationYaw
             mc.thePlayer.rotationYaw = direction.toDegreesF()
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
             mc.thePlayer.rotationYaw = yaw
             jump = true
             if (wasDown) {

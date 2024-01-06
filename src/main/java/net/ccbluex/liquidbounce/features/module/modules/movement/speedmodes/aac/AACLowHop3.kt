@@ -28,7 +28,7 @@ object AACLowHop3 : SpeedMode("AACLowHop3") {
                 if (thePlayer.onGround) {
                     waitForGround = false
                     if (!firstJump) firstJump = true
-                    thePlayer.jump()
+                    thePlayer.tryJump()
                     thePlayer.motionY = 0.41
                 } else {
                     if (waitForGround) return

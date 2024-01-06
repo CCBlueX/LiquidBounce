@@ -21,7 +21,7 @@ object AACHop350 : SpeedMode("AACHop3.5.0") {
             thePlayer.jumpMovementFactor += 0.00208f
             if (thePlayer.fallDistance <= 1f) {
                 if (thePlayer.onGround) {
-                    thePlayer.jump()
+                    thePlayer.tryJump()
                     thePlayer.motionX *= 1.0118f
                     thePlayer.motionZ *= 1.0118f
                 } else {

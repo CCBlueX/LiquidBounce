@@ -164,7 +164,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
         when (mode.lowercase()) {
             "jump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelay)) {
                 fakeJump()
-                thePlayer.jump()
+                thePlayer.tryJump()
             } else if (!thePlayer.onGround) {
                 thePlayer.isAirBorne = false
                 tickTimer.reset()

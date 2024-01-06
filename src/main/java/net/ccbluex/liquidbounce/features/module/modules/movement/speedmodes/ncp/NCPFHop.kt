@@ -24,7 +24,7 @@ object NCPFHop : SpeedMode("NCPFHop") {
     override fun onUpdate() {
         if (isMoving) {
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 mc.thePlayer.motionX *= 1.01
                 mc.thePlayer.motionZ *= 1.01
                 mc.thePlayer.speedInAir = 0.0223f

@@ -44,7 +44,7 @@ object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
     private val blocksToRender = mutableSetOf<BlockPos>()
     private var thread: Thread? = null
 
-    private val breakableBlockIDs = arrayOf(35, 159, 121, 20, 5, 49) // wool, stained_clay, end_stone, glass, wood, obsidian
+    private val breakableBlockIDs = arrayOf(35, 24, 159, 121, 20, 5, 49) // wool, sandstone, stained_clay, end_stone, glass, wood, obsidian
 
     private fun getBlocksToRender(targetBlock: Block, maxLayers: Int, down: Boolean, allLayers: Boolean, blockLimit: Int) {
         val targetBlockID = getIdFromBlock(targetBlock)

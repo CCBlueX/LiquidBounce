@@ -18,7 +18,7 @@ object VerusLowHop : SpeedMode("VerusLowHop") {
                     && mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
                         0.5f else 0.36f
 
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
             } else {
                 if (airTicks == 0) {
                     mc.thePlayer.motionY = -0.09800000190734863

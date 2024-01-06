@@ -13,7 +13,7 @@ object SlowHop : SpeedMode("SlowHop") {
     override fun onMotion() {
         if (mc.thePlayer.isInWater) return
         if (isMoving) {
-            if (mc.thePlayer.onGround) mc.thePlayer.jump() else speed *= 1.011f
+            if (mc.thePlayer.onGround) mc.thePlayer.tryJump() else speed *= 1.011f
         } else {
             mc.thePlayer.motionX = 0.0
             mc.thePlayer.motionZ = 0.0

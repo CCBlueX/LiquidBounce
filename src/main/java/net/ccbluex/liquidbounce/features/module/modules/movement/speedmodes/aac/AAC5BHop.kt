@@ -23,7 +23,7 @@ object AAC5BHop : SpeedMode("AAC5BHop") {
             when {
                 thePlayer.onGround -> {
                     if (legitJump) {
-                        thePlayer.jump()
+                        thePlayer.tryJump()
                         legitJump = false
                         return
                     }

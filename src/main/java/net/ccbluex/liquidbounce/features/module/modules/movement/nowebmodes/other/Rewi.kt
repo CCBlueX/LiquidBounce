@@ -15,6 +15,6 @@ object Rewi : NoWebMode("Rewi") {
         mc.thePlayer.jumpMovementFactor = 0.42f
 
         if (mc.thePlayer.onGround)
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
     }
 }

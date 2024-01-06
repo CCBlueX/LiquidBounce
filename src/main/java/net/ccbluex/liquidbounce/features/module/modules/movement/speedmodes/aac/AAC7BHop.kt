@@ -20,7 +20,7 @@ object AAC7BHop : SpeedMode("AAC7BHop") {
             return
 
         if (thePlayer.onGround) {
-            thePlayer.jump()
+            thePlayer.tryJump()
             thePlayer.motionY = 0.405
             thePlayer.motionX *= 1.004
             thePlayer.motionZ *= 1.004

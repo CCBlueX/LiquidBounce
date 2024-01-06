@@ -22,7 +22,7 @@ object AACLowHop : SpeedMode("AACLowHop") {
         if (isMoving) {
             if (thePlayer.onGround) {
                 if (legitJump) {
-                    thePlayer.jump()
+                    thePlayer.tryJump()
                     legitJump = false
                     return
                 }

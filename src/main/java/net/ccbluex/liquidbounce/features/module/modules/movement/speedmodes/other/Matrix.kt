@@ -15,7 +15,7 @@ object Matrix : SpeedMode("Matrix") {
         if (mc.thePlayer.isInWater) return
         if (isMoving) {
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 mc.thePlayer.speedInAir = 0.02098f
                 mc.timer.timerSpeed = 1.055f
             } else {

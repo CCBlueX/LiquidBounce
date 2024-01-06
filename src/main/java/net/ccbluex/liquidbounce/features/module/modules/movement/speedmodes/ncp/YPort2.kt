@@ -13,7 +13,7 @@ object YPort2 : SpeedMode("YPort2") {
     override fun onMotion() {
         if (mc.thePlayer.isOnLadder || mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isInWeb || !isMoving)
             return
-        if (mc.thePlayer.onGround) mc.thePlayer.jump() else mc.thePlayer.motionY = -1.0
+        if (mc.thePlayer.onGround) mc.thePlayer.tryJump() else mc.thePlayer.motionY = -1.0
         strafe()
     }
 

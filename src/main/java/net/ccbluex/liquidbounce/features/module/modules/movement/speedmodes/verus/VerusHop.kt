@@ -19,7 +19,7 @@ object VerusHop : SpeedMode("VerusHop") {
                     && mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
                         0.46f else 0.34f
 
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
             } else {
                 speed *= 0.98f
             }

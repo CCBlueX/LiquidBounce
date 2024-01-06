@@ -77,7 +77,7 @@ object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
         }
         if (autoJump && mc.thePlayer.onGround && isMoving) {
             jumped = true
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
         }
     }
 

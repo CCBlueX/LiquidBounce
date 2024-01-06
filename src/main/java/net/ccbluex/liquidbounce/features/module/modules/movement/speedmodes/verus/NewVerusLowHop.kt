@@ -15,7 +15,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
 
         if (isMoving) {
             if (mc.thePlayer.onGround) {
-                player.jump()
+                player.tryJump()
                 airTicks = 0
 
                 // Checks the presence of Speed potion effect 1 & 2+

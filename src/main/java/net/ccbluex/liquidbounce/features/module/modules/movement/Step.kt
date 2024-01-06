@@ -95,7 +95,7 @@ object Step : Module("Step", ModuleCategory.MOVEMENT, gameDetecting = false) {
                     if (thePlayer.onGround && couldStep()) {
                         thePlayer.motionX *= 1.26
                         thePlayer.motionZ *= 1.26
-                        thePlayer.jump()
+                        thePlayer.tryJump()
                         isAACStep = true
                     }
 
