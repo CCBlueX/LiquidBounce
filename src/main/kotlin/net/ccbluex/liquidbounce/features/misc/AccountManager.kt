@@ -135,11 +135,11 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
     @RequiredByScript
     @JvmName("newMicrosoftAccount")
-    fun newMicrosoftAccount() {
+    fun newMicrosoftAccount(url: (String) -> Unit) {
         // Prevents you from starting multiple login attempts
         val activeUrl = activeUrl
         if (activeUrl != null) {
-            browseUrl(activeUrl)
+            url(activeUrl)
             return
         }
 
@@ -147,7 +147,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
             newMicrosoftAccount(url = {
                 this.activeUrl = it
 
-                browseUrl(it)
+                url(it)
             }, success = { account ->
                 EventManager.callEvent(AltManagerUpdateEvent(true,
                     "Added new account: ${account.profile?.username}"))
