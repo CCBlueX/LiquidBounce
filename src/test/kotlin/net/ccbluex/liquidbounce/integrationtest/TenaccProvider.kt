@@ -9,10 +9,11 @@ import net.ccbluex.tenacc.utils.chat
 import net.minecraft.server.network.ServerPlayerEntity
 
 class TenaccProvider: TACCTestProvider {
-    var a = 0
+    override val headlessMode: Boolean
+        get() = false
 
     override val structureTemplateBasePath: String
-        get() = "C:\\Users\\David\\IdeaProjects\\LiquidBounce\\src\\test\\resources\\"
+        get() = "/"
 
     override fun init(scheduler: TACCTestScheduler?) {}
 

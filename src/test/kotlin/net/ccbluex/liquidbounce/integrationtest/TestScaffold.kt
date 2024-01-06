@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.integrationtest
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.integrationtest.util.applySettings
 import net.ccbluex.liquidbounce.integrationtest.util.isStandingOn
 import net.ccbluex.tenacc.api.TACCTest
 import net.ccbluex.tenacc.api.TACCTestClass
@@ -62,24 +63,24 @@ class TestScaffold {
 
     @TACCTest(name = "testRotationBottleneck", scenary = "scaffold/scaffold_underground_straight.nbt", timeout = 1000)
     fun runTest(adapter: TACCSequenceAdapter) {
+
         fun loadBaseSettings(mode: String) {
             resetSettings()
 
-            loadSettingsFromString(
-                ModuleScaffold,
-                rangeSetting("Delay", 6, 6),
-                stringSetting("RotationMode", mode),
-                choiceSetModeSetting("SafeWalk", "Safe"),
-                settingsContainer(
-                    name = "Rotations",
-                    rangeSetting("TurnSpeed", 30.0, 30.0),
-                    rawSetting("TicksUntilReset", 10)
-                )
-            )
+            applySettings(ModuleScaffold) {
+                intRange("Delay", 6..6)
+                choice("RotationMode", mode)
+                choice("SafeWalk", "Safe")
+
+                configurable("Rotations") {
+                    floatRange("TurnSpeed", 30.0F..30.0F)
+                    int("TicksUntilReset", 10)
+                }
+            }
         }
 
-//        val rotationModes = arrayOf("Center", "Stabilized", "NearestRotation")
-        val rotationModes = arrayOf("Stabilized")
+        val rotationModes = arrayOf("Center", "Stabilized", "NearestRotation")
+//        val rotationModes = arrayOf("Stabilized")
 
         val variants = rotationModes.map { TACCTestVariant.of("RotationMode $it") { loadBaseSettings(it) } }
 

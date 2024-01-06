@@ -316,7 +316,14 @@ class ChooseListValue<T : NamedChoice>(
     }
 
     fun setFromValueName(name: String?) {
-        this.value = choices.first { it.choiceName == name }
+        val newValue = choices.firstOrNull { it.choiceName == name }
+
+        if (newValue == null) {
+            throw IllegalArgumentException("ChooseListValue `${this.name}` has no option named $name" +
+                " (available options are ${this.choices.joinToString { it.choiceName }})")
+        }
+
+        this.value = newValue
     }
 
     fun getChoicesStrings(): Array<String> {
