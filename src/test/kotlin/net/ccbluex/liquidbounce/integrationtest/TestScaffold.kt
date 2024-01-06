@@ -22,45 +22,6 @@ import java.io.StringReader
 @TACCTestClass("TestScaffold")
 class TestScaffold {
 
-    fun loadSettingsFromPath(module: Module, path: String) {
-        ConfigSystem.deserializeConfigurable(
-            module,
-            InputStreamReader(TestScaffold::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Path $path was not found"))
-        )
-    }
-
-    fun loadSettingsFromString(module: Module, vararg values: String) {
-        ConfigSystem.deserializeConfigurable(
-            module,
-            StringReader(settingsContainer(module.name, *values))
-        )
-    }
-
-    fun settingsContainer(name: String, vararg values: String): String {
-        val valuesFormatted = values.joinToString(",") { it }
-
-        return "{\"name\": \"${name}\", \"value\": [$valuesFormatted]}"
-    }
-
-    fun <T> rangeSetting(name: String, from: T, to: T): String {
-        return """{"name": "$name", "value": {"from": $from,"to": $to}}"""
-    }
-
-    fun stringSetting(name: String, value: String): String {
-        return """{"name": "$name", "value": "$value"}""".trimIndent()
-    }
-    fun <T> rawSetting(name: String, value: T): String {
-        return """{"name": "$name", "value": $value}""".trimIndent()
-    }
-
-    fun choiceSetModeSetting(name: String, value: String): String {
-        return """{"name": "$name", "active": "$value",value:[]}""".trimIndent()
-    }
-
-    fun resetSettings() {
-        loadSettingsFromPath(ModuleScaffold, "/scaffold/scaffold_baseline.json")
-    }
-
     @TACCTest(name = "testRotationBottleneck", scenary = "scaffold/scaffold_underground_straight.nbt", timeout = 1000)
     fun runTest(adapter: TACCSequenceAdapter) {
 
@@ -145,11 +106,21 @@ class TestScaffold {
             }
 
             server.log("Player reached goal")
-
-            permitFencePassage(1)
         }
 
-        waitForFencePassage(1)
+        sync()
     }
+
+    fun loadSettingsFromPath(module: Module, path: String) {
+        ConfigSystem.deserializeConfigurable(
+            module,
+            InputStreamReader(TestScaffold::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Path $path was not found"))
+        )
+    }
+
+    fun resetSettings() {
+        loadSettingsFromPath(ModuleScaffold, "/scaffold/scaffold_baseline.json")
+    }
+
 
 }
