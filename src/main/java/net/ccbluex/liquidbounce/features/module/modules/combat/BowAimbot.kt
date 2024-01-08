@@ -40,28 +40,33 @@ object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
     private val snowball by BoolValue("Snowball", true, subjective = true)
     private val pearl by BoolValue("EnderPearl", false, subjective = true)
 
-    private val priority by ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction", subjective = true)
+    private val priority by ListValue("Priority",
+        arrayOf("Health", "Distance", "Direction"),
+        "Direction",
+        subjective = true
+    )
 
     private val predict by BoolValue("Predict", true)
-        private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F) { predict }
+    private val predictSize by FloatValue("PredictSize", 2F, 0.1F..5F) { predict }
 
     private val throughWalls by BoolValue("ThroughWalls", false, subjective = true)
     private val mark by BoolValue("Mark", true, subjective = true)
 
     private val silent by BoolValue("Silent", true)
-        private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silent }
-        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silent }
+    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative")
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
 
-            override fun isSupported() = silent
-        }
-        private val maxTurnSpeed by maxTurnSpeedValue
+        override fun isSupported() = silent
+    }
+    private val maxTurnSpeed by maxTurnSpeedValue
 
-        private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
 
-            override fun isSupported() = !maxTurnSpeedValue.isMinimal() && silent
-        }
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && silent
+    }
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { silent }
 
@@ -95,14 +100,20 @@ object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
 
                 target = getTarget(throughWalls, priority)
 
-                targetRotation = faceTrajectory(target ?: return, predict, predictSize, gravity = 0.03f, velocity = 0.5f)
+                targetRotation = faceTrajectory(target ?: return,
+                    predict,
+                    predictSize,
+                    gravity = 0.03f,
+                    velocity = 0.5f
+                )
             }
         }
 
         val limitedRotation = limitAngleChange(
             currentRotation ?: mc.thePlayer.rotation,
             targetRotation ?: return,
-            nextFloat(minTurnSpeed, maxTurnSpeed)
+            nextFloat(minTurnSpeed, maxTurnSpeed),
+            smootherMode
         )
 
         if (silent) {
@@ -111,7 +122,8 @@ object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
                 strafe = strafe != "Off",
                 strict = strafe == "Strict",
                 resetSpeed = minTurnSpeed to maxTurnSpeed,
-                angleThresholdForReset = angleThresholdUntilReset
+                angleThresholdForReset = angleThresholdUntilReset,
+                smootherMode = this.smootherMode
             )
         } else {
             limitedRotation.toPlayer(mc.thePlayer)

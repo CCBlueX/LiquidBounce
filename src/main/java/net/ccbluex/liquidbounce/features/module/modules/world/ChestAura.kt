@@ -24,26 +24,32 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenContainer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.timing.MSTimer
-import net.ccbluex.liquidbounce.value.*
-import net.minecraft.block.BlockChest
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.tileentity.TileEntity
-import net.minecraft.tileentity.TileEntityChest
-import net.minecraft.util.BlockPos
-import net.minecraft.util.Vec3
-import kotlin.math.pow
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.ccbluex.liquidbounce.utils.realX
 import net.ccbluex.liquidbounce.utils.realY
 import net.ccbluex.liquidbounce.utils.realZ
+import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockChest
 import net.minecraft.block.BlockEnderChest
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.network.play.server.*
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.play.server.S0EPacketSpawnObject
+import net.minecraft.network.play.server.S24PacketBlockAction
+import net.minecraft.network.play.server.S29PacketSoundEffect
+import net.minecraft.network.play.server.S45PacketTitle
+import net.minecraft.tileentity.TileEntity
+import net.minecraft.tileentity.TileEntityChest
 import net.minecraft.tileentity.TileEntityEnderChest
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
@@ -60,14 +66,15 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
     private val delay by IntegerValue("Delay", 200, 50..500)
 
     private val throughWalls by BoolValue("ThroughWalls", true)
-        private val wallsRange: Float by object : FloatValue("ThroughWallsRange", 3F, 1F..5F) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(this@ChestAura.range)
-            override fun onUpdate(value: Float) {
-                wallsRangeSq = value.pow(2)
-            }
+    private val wallsRange: Float by object : FloatValue("ThroughWallsRange", 3F, 1F..5F) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(this@ChestAura.range)
 
-            override fun isSupported() = throughWalls
+        override fun onUpdate(value: Float) {
+            wallsRangeSq = value.pow(2)
         }
+
+        override fun isSupported() = throughWalls
+    }
 
     private val minDistanceFromOpponent: Float by object : FloatValue("MinDistanceFromOpponent", 10F, 0F..30F) {
         override fun onUpdate(value: Float) {
@@ -81,24 +88,26 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
     private val detectRefill by BoolValue("DetectChestRefill", true)
 
     private val rotations by BoolValue("Rotations", true)
-        private val silentRotation by BoolValue("SilentRotation", true) { rotations }
-        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+    private val silentRotation by BoolValue("SilentRotation", true) { rotations }
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+        override fun isSupported() = rotations
+    }
+    private val maxTurnSpeed by maxTurnSpeedValue
 
-            override fun isSupported() = rotations
-        }
-        private val maxTurnSpeed by maxTurnSpeedValue
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
+    }
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silentRotation && rotations }
+    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
 
-        private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+    private val keepRotation by IntegerValue("KeepRotationTicks", 5, 1..20) { silentRotation && rotations }
 
-            override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
-        }
-            private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silentRotation && rotations }
-
-            private val keepRotation by IntegerValue("KeepRotationTicks", 5, 1..20) { silentRotation && rotations }
-
-            private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { silentRotation && rotations }
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset",
+        5f,
+        0.1f..180f
+    ) { silentRotation && rotations }
 
     private val openInfo by ListValue("OpenInfo", arrayOf("Off", "Self", "Other", "Everyone"), "Off")
 
@@ -201,7 +210,8 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
                     strafe = strafe != "Off",
                     strict = strafe == "Strict",
                     resetSpeed = minTurnSpeed to maxTurnSpeed,
-                    angleThresholdForReset = angleThresholdUntilReset
+                    angleThresholdForReset = angleThresholdUntilReset,
+                    smootherMode
                 )
             else limitedRotation.toPlayer(thePlayer)
 

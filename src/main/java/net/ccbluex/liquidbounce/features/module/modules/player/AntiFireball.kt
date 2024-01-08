@@ -33,20 +33,20 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
     private val swing by ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
 
     private val rotations by BoolValue("Rotations", true)
-        private val strafe by BoolValue("Strafe", false) { rotations }
+    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
+    private val strafe by BoolValue("Strafe", false) { rotations }
 
-        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
-        }
-        private val maxTurnSpeed by maxTurnSpeedValue
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+    }
+    private val maxTurnSpeed by maxTurnSpeedValue
 
-        private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal()
+    }
 
-            override fun isSupported() = !maxTurnSpeedValue.isMinimal()
-        }
-
-        private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
     private var target: Entity? = null
 
@@ -86,7 +86,8 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
                     limitAngleChange(
                         currentRotation ?: player.rotation,
                         toRotation(nearestPoint, true).fixedSensitivity(),
-                        nextFloat(minTurnSpeed, maxTurnSpeed)
+                        nextFloat(minTurnSpeed, maxTurnSpeed),
+                        smootherMode
                     ),
                     strafe = this.strafe,
                     resetSpeed = minTurnSpeed to maxTurnSpeed,
