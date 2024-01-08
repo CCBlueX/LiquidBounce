@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object NCPHop : SpeedMode("NCPHop") {
     override fun onEnable() {
@@ -24,7 +25,7 @@ object NCPHop : SpeedMode("NCPHop") {
     override fun onUpdate() {
         if (isMoving) {
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 mc.thePlayer.speedInAir = 0.0223f
             }
             strafe()

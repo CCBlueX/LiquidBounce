@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.NoWebMode
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object LAAC : NoWebMode("LAAC") {
     override fun onUpdate() {
@@ -19,6 +20,6 @@ object LAAC : NoWebMode("LAAC") {
             mc.thePlayer.motionY = 0.0
 
         if (mc.thePlayer.onGround)
-            mc.thePlayer.jump()    
+            mc.thePlayer.tryJump()
     }
 }

@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
@@ -16,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInvento
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.potion.Potion
 import net.minecraft.util.MovementInput
 import kotlin.math.abs
@@ -42,6 +45,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
         private val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
         private val checkServerSideGround by BoolValue("CheckServerSideOnlyGround", false)
             { mode == "Vanilla" && checkServerSide }
+        private val noPackets by BoolValue("NoPackets", false) { mode == "Vanilla" }
 
     private var isSprinting = false
 
@@ -142,5 +146,20 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false)
         }
 
         return modifiedForward < threshold
+    }
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        if (mode == "Legit") {
+            return
+        }
+
+        val packet = event.packet
+        if (packet !is C0BPacketEntityAction || !noPackets || event.isCancelled) {
+            return
+        }
+        if (packet.action == C0BPacketEntityAction.Action.STOP_SPRINTING || packet.action == C0BPacketEntityAction.Action.START_SPRINTING) {
+            event.cancelEvent()
+        }
     }
 }

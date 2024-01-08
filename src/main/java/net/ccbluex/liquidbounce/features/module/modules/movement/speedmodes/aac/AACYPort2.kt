@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object AACYPort2 : SpeedMode("AACYPort2") {
     override fun onMotion() {
@@ -15,7 +16,7 @@ object AACYPort2 : SpeedMode("AACYPort2") {
 
             thePlayer.cameraPitch = 0f
             if (thePlayer.onGround) {
-                thePlayer.jump()
+                thePlayer.tryJump()
                 thePlayer.motionY = 0.3851
                 thePlayer.motionX *= 1.01
                 thePlayer.motionZ *= 1.01

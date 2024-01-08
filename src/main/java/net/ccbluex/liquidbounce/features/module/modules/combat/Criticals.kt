@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -39,12 +40,12 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
     override fun onEnable() {
         if (mode == "NoGround")
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
     }
 
     private fun verusJump() {
         mc.thePlayer.isInWeb = true
-        mc.thePlayer.jump()
+        mc.thePlayer.tryJump()
         mc.thePlayer.prevPosY = mc.thePlayer.posY
 
         mc.thePlayer.isInWeb = false

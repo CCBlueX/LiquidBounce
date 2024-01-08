@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object AACHop438 : SpeedMode("AACHop4.3.8") {
     override fun onUpdate() {
@@ -18,7 +19,7 @@ object AACHop438 : SpeedMode("AACHop4.3.8") {
             return
 
         if (thePlayer.onGround)
-            thePlayer.jump()
+            thePlayer.tryJump()
         else {
             if (thePlayer.fallDistance <= 0.1)
                 mc.timer.timerSpeed = 1.5f

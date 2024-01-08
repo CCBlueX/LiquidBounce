@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ver
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.minecraft.potion.Potion
 
 object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
@@ -15,7 +16,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
 
         if (isMoving) {
             if (mc.thePlayer.onGround) {
-                player.jump()
+                player.tryJump()
                 airTicks = 0
 
                 // Checks the presence of Speed potion effect 1 & 2+

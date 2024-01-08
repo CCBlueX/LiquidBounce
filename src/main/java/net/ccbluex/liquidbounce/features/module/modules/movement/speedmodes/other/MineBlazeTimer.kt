@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.oth
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object MineBlazeTimer : SpeedMode("MineBlazeTimer") {
     override fun onUpdate() {
@@ -18,7 +19,7 @@ object MineBlazeTimer : SpeedMode("MineBlazeTimer") {
             return
 
         if (thePlayer.onGround)
-            thePlayer.jump()
+            thePlayer.tryJump()
         else {
             if (thePlayer.fallDistance <= 0.1)
                 mc.timer.timerSpeed = 1.7f

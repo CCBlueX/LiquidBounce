@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockStairs
@@ -79,7 +80,7 @@ object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
             canJump = true
         } else if (mode.startsWith("AAC") && canJump) {
             if (longJump) {
-                thePlayer.jump()
+                thePlayer.tryJump()
                 thePlayer.motionX *= 1.35
                 thePlayer.motionZ *= 1.35
             }

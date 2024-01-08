@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.Spee
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -20,7 +21,7 @@ object AAC7BHop : SpeedMode("AAC7BHop") {
             return
 
         if (thePlayer.onGround) {
-            thePlayer.jump()
+            thePlayer.tryJump()
             thePlayer.motionY = 0.405
             thePlayer.motionX *= 1.004
             thePlayer.motionZ *= 1.004

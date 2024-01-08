@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.inventory.isSplashPotion
@@ -61,7 +62,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                 if (potionInHotbar != null && thePlayer.health <= health) {
                     if (thePlayer.onGround) {
                         when (mode.lowercase()) {
-                            "jump" -> thePlayer.jump()
+                            "jump" -> thePlayer.tryJump()
                             "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
                         }
                     }

@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -95,7 +96,7 @@ object Step : Module("Step", ModuleCategory.MOVEMENT, gameDetecting = false) {
                     if (thePlayer.onGround && couldStep()) {
                         thePlayer.motionX *= 1.26
                         thePlayer.motionZ *= 1.26
-                        thePlayer.jump()
+                        thePlayer.tryJump()
                         isAACStep = true
                     }
 

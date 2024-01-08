@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
 
 object Frame : SpeedMode("Frame") {
@@ -18,7 +19,7 @@ object Frame : SpeedMode("Frame") {
         if (isMoving) {
             val speed = 4.25
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 if (motionTicks == 1) {
                     tickTimer.reset()
                     if (move) {

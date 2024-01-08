@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.oth
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object MineBlazeHop : SpeedMode("MineBlazeHop") {
     override fun onUpdate() {
@@ -14,7 +15,7 @@ object MineBlazeHop : SpeedMode("MineBlazeHop") {
             return
         }
         if (mc.thePlayer.onGround && isMoving) {
-            mc.thePlayer.jump()
+            mc.thePlayer.tryJump()
         }
         if (mc.thePlayer.motionY > 0.003) {
             mc.thePlayer.motionX *= 1.0015

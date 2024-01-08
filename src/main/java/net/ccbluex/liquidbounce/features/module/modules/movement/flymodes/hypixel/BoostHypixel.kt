@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -59,7 +60,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 
 		sendPacket(C04PacketPlayerPosition(x, y, z, true))
 
-		mc.thePlayer.jump()
+		mc.thePlayer.tryJump()
 
 		mc.thePlayer.posY += 0.42f // Visual
 		

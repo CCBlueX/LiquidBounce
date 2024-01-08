@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object Parkour : Module("Parkour", ModuleCategory.MOVEMENT, subjective = true, gameDetecting = false) {
 
@@ -17,9 +18,9 @@ object Parkour : Module("Parkour", ModuleCategory.MOVEMENT, subjective = true, g
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (isMoving && thePlayer.onGround && !thePlayer.isSneaking && !mc.gameSettings.keyBindSneak.isKeyDown && !mc.gameSettings.keyBindJump.isKeyDown &&
+        if (isMoving && thePlayer.onGround && !thePlayer.isSneaking && !mc.gameSettings.keyBindSneak.isKeyDown &&
                 mc.theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox
                         .offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty())
-            thePlayer.jump()
+            thePlayer.tryJump()
     }
 }

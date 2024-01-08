@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks
@@ -54,7 +55,7 @@ object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
                 if (thePlayer.isCollidedHorizontally) {
                     when (clipMode.lowercase()) {
                         "jump" -> if (thePlayer.onGround)
-                            thePlayer.jump()
+                            thePlayer.tryJump()
                         "fast" -> if (thePlayer.onGround)
                             thePlayer.motionY = 0.42
                         else if (thePlayer.motionY < 0)

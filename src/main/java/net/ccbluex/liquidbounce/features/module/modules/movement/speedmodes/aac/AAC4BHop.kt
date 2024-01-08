@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object AAC4BHop : SpeedMode("AAC4BHop") {
     private var legitHop = false
@@ -22,7 +23,7 @@ object AAC4BHop : SpeedMode("AAC4BHop") {
         if (isMoving) {
             if (legitHop) {
                 if (thePlayer.onGround) {
-                    thePlayer.jump()
+                    thePlayer.tryJump()
                     thePlayer.onGround = false
                     legitHop = false
                 }
@@ -31,7 +32,7 @@ object AAC4BHop : SpeedMode("AAC4BHop") {
             if (thePlayer.onGround) {
                 thePlayer.onGround = false
                 strafe(0.375f)
-                thePlayer.jump()
+                thePlayer.tryJump()
                 thePlayer.motionY = 0.41
             } else thePlayer.speedInAir = 0.0211f
         } else {

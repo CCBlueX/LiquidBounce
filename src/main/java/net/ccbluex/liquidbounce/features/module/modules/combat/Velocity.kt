@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.realMotionX
 import net.ccbluex.liquidbounce.utils.realMotionY
@@ -327,7 +328,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
         if (mode == "Jump" && hasReceivedVelocity) {
             if (!player.isJumping && nextInt(endExclusive = 100) < chance && shouldJump() && player.isSprinting && player.onGround && player.hurtTime == 9) {
-                player.jump()
+                player.tryJump()
                 limitUntilJump = 0
             }
             hasReceivedVelocity = false

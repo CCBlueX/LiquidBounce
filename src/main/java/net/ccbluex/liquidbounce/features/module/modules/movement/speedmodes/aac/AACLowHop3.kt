@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.forward
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -28,7 +29,7 @@ object AACLowHop3 : SpeedMode("AACLowHop3") {
                 if (thePlayer.onGround) {
                     waitForGround = false
                     if (!firstJump) firstJump = true
-                    thePlayer.jump()
+                    thePlayer.tryJump()
                     thePlayer.motionY = 0.41
                 } else {
                     if (waitForGround) return

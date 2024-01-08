@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object AACLowHop2 : SpeedMode("AACLowHop2") {
     private var legitJump = false
@@ -34,7 +35,7 @@ object AACLowHop2 : SpeedMode("AACLowHop2") {
 
             if (thePlayer.onGround) {
                 if (legitJump) {
-                    thePlayer.jump()
+                    thePlayer.tryJump()
                     legitJump = false
 
                     return

@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.Spee
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object UNCPHop : SpeedMode("UNCPHop") {
 
@@ -33,7 +34,7 @@ object UNCPHop : SpeedMode("UNCPHop") {
 
         if (isMoving) {
             if (mc.thePlayer.onGround) {
-                mc.thePlayer.jump()
+                mc.thePlayer.tryJump()
                 strafe(0.035f)
                 mc.thePlayer.speedInAir = 0.035f
             } else {
