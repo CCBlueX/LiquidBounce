@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.PortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.fun.Derp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.InventoryMove;
@@ -128,7 +129,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final InventoryMove inventoryMove = InventoryMove.INSTANCE;
         final Sneak sneak = Sneak.INSTANCE;
-        final boolean fakeSprint = (inventoryMove.handleEvents() && inventoryMove.getAacAdditionPro()) || AntiHunger.INSTANCE.handleEvents() || (sneak.handleEvents() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMove()) && sneak.getMode().equals("MineSecure"));
+        final boolean fakeSprint = inventoryMove.handleEvents() && inventoryMove.getAacAdditionPro()
+                || AntiHunger.INSTANCE.handleEvents()
+                || sneak.handleEvents() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMove()) && sneak.getMode().equals("MineSecure")
+                || Disabler.INSTANCE.handleEvents() && Disabler.INSTANCE.getMode().equals("StartSprint");
 
         boolean sprinting = isSprinting() && !fakeSprint;
 

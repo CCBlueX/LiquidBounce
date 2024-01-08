@@ -333,6 +333,8 @@
         
         "module.zoot.description": "Removes all bad potion effects/fire.",
 
-        "module.keepSprint.description": "Keeps you sprinting after attacking."
+        "module.keepSprint.description": "Keeps you sprinting after attacking.",
+
+        "module.disabler.description": "Disables either a server or a specific anticheat detection."
     }
 }

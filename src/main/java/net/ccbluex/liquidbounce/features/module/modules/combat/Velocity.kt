@@ -21,8 +21,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockAir
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
+import net.minecraft.util.AxisAlignedBB
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -35,7 +37,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     private val mode by ListValue(
         "Mode", arrayOf(
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
-            "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"
+            "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
+            "GhostBlock"
         ), "Simple"
     )
 
@@ -61,18 +64,29 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     // Jump
     private val jumpCooldownMode by ListValue("JumpCooldownMode", arrayOf("Ticks", "ReceivedHits"), "Ticks")
-        { mode == "Jump" }
+    { mode == "Jump" }
     private val ticksUntilJump by IntegerValue("TicksUntilJump", 4, 0..20)
-        { jumpCooldownMode == "Ticks" && mode == "Jump" }
+    { jumpCooldownMode == "Ticks" && mode == "Jump" }
     private val hitsUntilJump by IntegerValue("ReceivedHitsUntilJump", 2, 0..5)
-        { jumpCooldownMode == "ReceivedHits" && mode == "Jump" }
+    { jumpCooldownMode == "ReceivedHits" && mode == "Jump" }
+
+    // Ghost Block
+    private val maxHurtTime: IntegerValue = object : IntegerValue("MaxHurtTime", 9, 1..10) {
+        override fun isSupported() = mode == "GhostBlock"
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minHurtTime.get())
+    }
+
+    private val minHurtTime: IntegerValue = object : IntegerValue("MinHurtTime", 1, 1..10) {
+        override fun isSupported() = mode == "GhostBlock" && !maxHurtTime.isMinimal()
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(0, maxHurtTime.get())
+    }
 
     // TODO: Could this be useful in other modes? (Jump?)
     // Limits
     private val limitMaxMotionValue = BoolValue("LimitMaxMotion", false) { mode == "Simple" }
-        private val maxXZMotion by FloatValue("MaxXZMotion", 0.4f, 0f..1.9f) { limitMaxMotionValue.isActive() }
-        private val maxYMotion by FloatValue("MaxYMotion", 0.36f, 0f..0.46f) { limitMaxMotionValue.isActive() }
-        //0.00075 is added silently
+    private val maxXZMotion by FloatValue("MaxXZMotion", 0.4f, 0f..1.9f) { limitMaxMotionValue.isActive() }
+    private val maxYMotion by FloatValue("MaxYMotion", 0.36f, 0f..0.46f) { limitMaxMotionValue.isActive() }
+    //0.00075 is added silently
 
     // Vanilla XZ limits
     // Non-KB: 0.4 (no sprint), 0.9 (sprint)
@@ -243,24 +257,15 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         if (event.isCancelled)
             return
 
-        if (
-            (
-                packet is S12PacketEntityVelocity
-                    && thePlayer.entityId == packet.entityID
-                    && packet.motionY > 0
-                    && (packet.motionX != 0 || packet.motionZ != 0)
-            ) || (
-                packet is S27PacketExplosion
-                    && (thePlayer.motionY + packet.field_149153_g) > 0.0
-                    && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0)
-            )
-        ) {
+        if ((packet is S12PacketEntityVelocity && thePlayer.entityId == packet.entityID && packet.motionY > 0 && (packet.motionX != 0 || packet.motionZ != 0))
+            || (packet is S27PacketExplosion && (thePlayer.motionY + packet.field_149153_g) > 0.0
+                && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0))) {
             velocityTimer.reset()
 
             when (mode.lowercase()) {
                 "simple" -> handleVelocity(event)
 
-                "aac", "reverse", "smoothreverse", "aaczero" -> hasReceivedVelocity = true
+                "aac", "reverse", "smoothreverse", "aaczero", "ghostblock" -> hasReceivedVelocity = true
 
                 "jump" -> {
                     // TODO: Recode and make all velocity modes support velocity direction checks
@@ -272,6 +277,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
                             packetDirection = atan2(motionX, motionZ)
                         }
+
                         is S27PacketExplosion -> {
                             val motionX = thePlayer.motionX + packet.field_149152_f
                             val motionZ = thePlayer.motionZ + packet.field_149159_h
@@ -284,7 +290,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     var angle = abs(degreePacket + degreePlayer)
                     val threshold = 120.0
                     angle = Math.floorMod(angle.toInt(), 360).toDouble()
-                    val inRange = angle in 180-threshold/2..180+threshold/2
+                    val inRange = angle in 180 - threshold / 2..180 + threshold / 2
                     if (inRange)
                         hasReceivedVelocity = true
                 }
@@ -337,6 +343,30 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         when (jumpCooldownMode.lowercase()) {
             "ticks" -> limitUntilJump++
             "receivedhits" -> if (player.hurtTime == 9) limitUntilJump++
+        }
+    }
+
+    @EventTarget
+    fun onBlockBB(event: BlockBBEvent) {
+        val player = mc.thePlayer ?: return
+
+        if (mode == "GhostBlock") {
+            if (hasReceivedVelocity) {
+                if (player.hurtTime in minHurtTime.get()..maxHurtTime.get()) {
+                    // Check if there is air exactly 1 level above the player's Y position
+                    if (event.block is BlockAir && event.y == mc.thePlayer.posY.toInt() + 1) {
+                        event.boundingBox = AxisAlignedBB(event.x.toDouble(),
+                            event.y.toDouble(),
+                            event.z.toDouble(),
+                            event.x + 1.0,
+                            event.y + 1.0,
+                            event.z + 1.0
+                        )
+                    }
+                } else if (player.hurtTime == 0) {
+                    hasReceivedVelocity = false
+                }
+            }
         }
     }
 
