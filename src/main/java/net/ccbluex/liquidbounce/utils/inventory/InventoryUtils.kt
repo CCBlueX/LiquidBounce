@@ -80,7 +80,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         Blocks.tnt,
         Blocks.standing_banner,
         Blocks.wall_banner,
-        Blocks.redstone_torch
+        Blocks.redstone_torch,
+        Blocks.ladder
     )
 
     fun findItem(startInclusive: Int, endInclusive: Int, item: Item): Int? {
