@@ -19,13 +19,18 @@ import kotlin.math.*
 
 object RotationUtils : MinecraftInstance(), Listenable {
 
+    private val randomGaussian
+        get() = abs(random.nextGaussian() % 1.0)
+
+    private var aimUp = false
+
     /**
      * Handle minecraft tick
      *
      * @param event Update event
      */
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
+    @EventTarget(priority = 1)
+    fun onTick(event: TickEvent) {
         currentRotation?.let { rotation ->
             setbackRotation?.let {
                 if (it.middle) {
@@ -49,14 +54,55 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     resetRotation()
                 } else {
                     val speed = RandomUtils.nextFloat(speedForReset.first, speedForReset.second)
-                    currentRotation = limitAngleChange(rotation, mc.thePlayer.rotation, speed).fixedSensitivity()
+                    currentRotation = limitAngleChange(rotation,
+                        mc.thePlayer.rotation,
+                        speed,
+                        smoothMode?.name ?: "Linear"
+                    ).fixedSensitivity()
                 }
             }
         }
 
-        if (random.nextGaussian() > 0.8) x = Math.random()
-        if (random.nextGaussian() > 0.8) y = Math.random()
-        if (random.nextGaussian() > 0.8) z = Math.random()
+        updateTargetSpot()
+
+        val speed = MovementUtils.speed
+
+        val chance = if (speed > 0.03) {
+            0.5 - if (speed > 0.1) 0.3 else 0.0
+        } else {
+            0.8
+        }
+
+        if (randomGaussian > chance) {
+            val (newX, newY, newZ) = generateSpot()
+
+            x += (newX - x) * 0.75
+            y += (newY - y) * 0.5
+            z += (newZ - z) * 0.75
+        }
+    }
+
+    private fun updateTargetSpot() {
+        // Change target spot (from lower to higher) every random seconds
+        val randomSeconds = RandomUtils.nextInt(5, 10) * 20
+
+        if (mc.thePlayer.ticksExisted % randomSeconds == 0) {
+            aimUp = !aimUp
+        }
+    }
+
+    /**
+     * Generate a new spot depending on aimUp
+     *
+     * aimUp true -> stomach and above
+     * aimUp false -> stomach until knees
+     */
+    private fun generateSpot(): Vec3 {
+        return if (aimUp) {
+            Vec3(1 - randomGaussian, RandomUtils.nextDouble(0.65, 0.9), 1 - randomGaussian)
+        } else {
+            Vec3(1 - randomGaussian, RandomUtils.nextDouble(0.4, 0.65), 1 - randomGaussian)
+        }
     }
 
     /**
@@ -110,6 +156,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     var currentRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
+
+    private var smoothMode: SmootherMode? = null
 
     // (The priority, the active check and the original rotation)
     var setbackRotation: MutableTriple<Rotation, Boolean, Rotation>? = null
@@ -258,9 +306,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param bb your box
      * @return center of box
      */
-    fun getCenter(bb: AxisAlignedBB) = Vec3(
-        (bb.minX + bb.maxX) * 0.5, (bb.minY + bb.maxY) * 0.5, (bb.minZ + bb.maxZ) * 0.5
-    )
+    fun getCenter(bb: AxisAlignedBB) =
+        Vec3((bb.minX + bb.maxX) * 0.5, (bb.minY + bb.maxY) * 0.5, (bb.minZ + bb.maxZ) * 0.5)
 
     /**
      * Search good center
@@ -300,12 +347,30 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val eyes = mc.thePlayer.eyes
 
-        // TODO: Doesn't have GCD treatment as rotations below, but it is random rotation, what do you expect?
+        val isInsideEnemy = bb.isVecInside(eyes)
+
         if (random) {
             val dist = eyes.distanceTo(randomVec)
 
             if (dist <= attackRange && (dist <= throughWallsRange || isVisible(randomVec)))
                 return randomRotation
+        }
+
+        val currRotation = currentRotation ?: mc.thePlayer.rotation
+        val vector = eyes + getVectorForRotation(currRotation) * attackRange.toDouble()
+
+        val intercept = if (isInsideEnemy) {
+            return currRotation
+        } else {
+            bb.calculateIntercept(eyes, vector)
+        }
+
+        if (intercept != null && random) {
+            val spot = intercept.hitVec
+            val dist = eyes.distanceTo(spot)
+
+            if (dist <= attackRange && (dist <= throughWallsRange || isVisible(spot)))
+                return currRotation
         }
 
         var attackRotation: Pair<Rotation, Float>? = null
@@ -325,9 +390,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     val rotation = toRotation(vec, predict).fixedSensitivity()
 
                     // Calculate actual hit vec after applying fixed sensitivity to rotation
-                    val gcdVec =
-                        bb.calculateIntercept(eyes, eyes + getVectorForRotation(rotation) * lookRange.toDouble())?.hitVec
-                            ?: continue
+                    val gcdVec = bb.calculateIntercept(eyes,
+                        eyes + getVectorForRotation(rotation) * lookRange.toDouble()
+                    )?.hitVec ?: continue
 
                     val distance = eyes.distanceTo(gcdVec)
 
@@ -370,10 +435,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return difference between rotation
      */
     fun getRotationDifference(entity: Entity) =
-        getRotationDifference(
-            toRotation(getCenter(entity.hitBox), true),
-            mc.thePlayer.rotation
-        )
+        getRotationDifference(toRotation(getCenter(entity.hitBox), true), mc.thePlayer.rotation)
 
     /**
      * Calculate difference between two rotations
@@ -393,13 +455,57 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param turnSpeed your turn speed
      * @return limited rotation
      */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float) = Rotation(
-        currentRotation.yaw + getAngleDifference(targetRotation.yaw, currentRotation.yaw).coerceIn(
-            -turnSpeed, turnSpeed
-        ), currentRotation.pitch + getAngleDifference(targetRotation.pitch, currentRotation.pitch).coerceIn(
-            -turnSpeed, turnSpeed
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float, smootherMode: String = "Linear"): Rotation {
+        chooseSmootherMode(smootherMode)
+
+        return if (smoothMode == SmootherMode.LINEAR) {
+            linearAngleChange(currentRotation, targetRotation, turnSpeed)
+        } else {
+            relativeAngleChange(currentRotation, targetRotation, turnSpeed)
+        }
+    }
+
+    private fun linearAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
+        val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
+        val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
+
+        val rotationDifference = hypot(yawDifference, pitchDifference)
+
+        val straightLineYaw = abs(yawDifference / rotationDifference) * turnSpeed
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * turnSpeed
+
+        return Rotation(
+            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
+            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
         )
-    )
+    }
+
+    private fun relativeAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
+        val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
+        val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
+
+        val rotationDifference = hypot(yawDifference, pitchDifference)
+
+        val factor = computeFactor(rotationDifference, turnSpeed)
+
+        val straightLineYaw = abs(yawDifference / rotationDifference) * factor
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * factor
+
+        return Rotation(
+            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
+            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
+        )
+    }
+
+    private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
+        return (rotationDifference / 180 * turnSpeed)
+            .coerceAtMost(180f)
+            .coerceAtLeast((4f..6f).random().toFloat())
+    }
+
+    private fun chooseSmootherMode(mode: String) {
+        smoothMode = if (mode == "Linear") SmootherMode.LINEAR else SmootherMode.RELATIVE
+    }
 
     /**
      * Calculate difference between two angle points
@@ -413,7 +519,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Calculate rotation to vector
      *
-     * @param rotation your rotation
+     * @param [yaw] [pitch] your rotation
      * @return target vector
      */
     fun getVectorForRotation(yaw: Float, pitch: Float): Vec3 {
@@ -447,9 +553,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) =
-        raycastEntity(blockReachDistance, rotation.yaw, rotation.pitch)
-            { entity: Entity -> targetEntity == entity } != null
+    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) = raycastEntity(
+        blockReachDistance,
+        rotation.yaw,
+        rotation.pitch
+    ) { entity: Entity -> targetEntity == entity } != null
 
     /**
      * Allows you to check if your enemy is behind a wall
@@ -467,7 +575,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         strafe: Boolean = false,
         strict: Boolean = false,
         resetSpeed: Pair<Float, Float> = 180f to 180f,
-        angleThresholdForReset: Float = 180f
+        angleThresholdForReset: Float = 180f,
+        smootherMode: String = "Linear"
     ) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) return
 
@@ -478,6 +587,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         this.keepLength = keepLength
         this.speedForReset = resetSpeed
         this.angleThresholdForReset = angleThresholdForReset
+        this.smoothMode = SmootherMode.values().first { it.modeName == smootherMode }
     }
 
     fun resetRotation() {
@@ -488,6 +598,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                 syncRotations()
             }
         }
+        smoothMode = null
         currentRotation = null
         strafe = false
         strict = false
@@ -527,9 +638,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     fun performRayTrace(blockPos: BlockPos, vec: Vec3, eyes: Vec3 = mc.thePlayer.eyes) =
-        mc.theWorld?.let {
-            blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec)
-        }
+        mc.theWorld?.let { blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec) }
 
     fun syncRotations() {
         val player = mc.thePlayer ?: return
@@ -541,4 +650,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         player.prevRenderArmYaw = player.rotationYaw
         player.prevRotationPitch = player.rotationPitch
     }
+
+    enum class SmootherMode(val modeName: String) { LINEAR("Linear"), RELATIVE("Relative") }
 }

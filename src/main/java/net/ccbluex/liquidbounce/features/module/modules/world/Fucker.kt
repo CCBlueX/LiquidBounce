@@ -57,6 +57,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
     private val rotations by BoolValue("Rotations", true)
     private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
         override fun isSupported() = rotations
@@ -162,7 +163,8 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
             val limitedRotation = limitAngleChange(
                 currentRotation ?: player.rotation,
                 spot.rotation,
-                nextFloat(minTurnSpeed, maxTurnSpeed)
+                nextFloat(minTurnSpeed, maxTurnSpeed),
+                smootherMode
             )
 
             setTargetRotation(
@@ -170,7 +172,8 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 strafe = strafe != "Off",
                 strict = strafe == "Strict",
                 resetSpeed = minTurnSpeed to maxTurnSpeed,
-                angleThresholdForReset = angleThresholdUntilReset
+                angleThresholdForReset = angleThresholdUntilReset,
+                smootherMode = this.smootherMode
             )
         }
     }

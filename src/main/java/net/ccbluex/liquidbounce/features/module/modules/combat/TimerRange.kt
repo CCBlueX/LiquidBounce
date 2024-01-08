@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -111,8 +112,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
         val targetEntity = event.targetEntity
         val entityDistance = mc.thePlayer.getDistanceToEntityBox(targetEntity)
-        val randomTickDelay = Random.nextInt(minTickDelay.get(), maxTickDelay.get())
-        val randomRange = Random.nextDouble(minRange.toDouble(), maxRange.toDouble())
+        val randomTickDelay = RandomUtils.nextInt(minTickDelay.get(), maxTickDelay.get() + 1)
+        val randomRange = RandomUtils.nextDouble(minRange.toDouble(), maxRange.toDouble())
 
         smartTick++
         cooldownTick++
@@ -149,8 +150,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             return
         }
 
-        val randomTickDelay = Random.nextInt(minTickDelay.get(), maxTickDelay.get())
-        val randomRange = Random.nextDouble(minRange.toDouble(), maxRange.toDouble())
+        val randomTickDelay = RandomUtils.nextInt(minTickDelay.get(), maxTickDelay.get())
+        val randomRange = RandomUtils.nextDouble(minRange.toDouble(), maxRange.toDouble())
 
         if (isPlayerMoving()) {
             smartTick++

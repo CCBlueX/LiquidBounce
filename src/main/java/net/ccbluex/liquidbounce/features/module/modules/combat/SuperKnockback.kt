@@ -27,6 +27,17 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
     private val hurtTime by IntegerValue("HurtTime", 10, 0, 10)
 
     private val mode by ListValue("Mode", arrayOf("SprintTap", "WTap", "Old", "Silent", "Packet", "SneakPacket"), "Old")
+    private val maxTicksUntilBlock: IntegerValue = object : IntegerValue("MaxTicksUntilBlock", 2, 0..5) {
+        override fun isSupported() = mode == "WTap"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTicksUntilBlock.get())
+    }
+    private val minTicksUntilBlock: IntegerValue = object : IntegerValue("MinTicksUntilBlock", 0, 0..5) {
+        override fun isSupported() = mode == "WTap"
+
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxTicksUntilBlock.get())
+    }
+
     private val reSprintMaxTicks: IntegerValue = object : IntegerValue("ReSprintMaxTicks", 2, 1..5) {
         override fun isSupported() = mode == "WTap"
 
@@ -47,6 +58,9 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
     private val timer = MSTimer()
 
     // WTap
+    private var blockInputTicks = randomDelay(minTicksUntilBlock.get(), maxTicksUntilBlock.get())
+    private var blockTicksElapsed = 0
+    private var startWaiting = false
     private var blockInput = false
     private var allowInputTicks = randomDelay(reSprintMinTicks.get(), reSprintMaxTicks.get())
     private var ticksElapsed = 0
@@ -54,6 +68,9 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
     override fun onToggle(state: Boolean) {
         // Make sure the user won't have their input forever blocked
         blockInput = false
+        startWaiting = false
+        blockTicksElapsed = 0
+        ticksElapsed = 0
     }
 
     @EventTarget
@@ -103,8 +120,15 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
 
             "WTap" -> {
                 // We want the player to be sprinting before we block inputs
-                if (player.isSprinting && player.serverSprintState) {
-                    blockInput = true
+                if (player.isSprinting && player.serverSprintState && !blockInput && !startWaiting) {
+                    blockInputTicks = randomDelay(minTicksUntilBlock.get(), maxTicksUntilBlock.get())
+
+                    blockInput = blockInputTicks == 0
+
+                    if (!blockInput) {
+                        startWaiting = true
+                    }
+
                     allowInputTicks = randomDelay(reSprintMinTicks.get(), reSprintMaxTicks.get())
                 }
             }
@@ -117,30 +141,45 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
     fun onPostSprintUpdate(event: PostSprintUpdateEvent) {
         val player = mc.thePlayer ?: return
         if (mode == "SprintTap") {
-            if (ticks == 2) {
-                player.isSprinting = false
-                forceSprintState = 2
-                ticks--
-            } else if (ticks == 1) {
-                if (player.movementInput.moveForward > 0.8) {
-                    player.isSprinting = true
+            when (ticks) {
+                2 -> {
+                    player.isSprinting = false
+                    forceSprintState = 2
+                    ticks--
                 }
-                forceSprintState = 1
-                ticks--
-            } else {
-                forceSprintState = 0
+
+                1 -> {
+                    if (player.movementInput.moveForward > 0.8) {
+                        player.isSprinting = true
+                    }
+                    forceSprintState = 1
+                    ticks--
+                }
+
+                else -> {
+                    forceSprintState = 0
+                }
             }
         }
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mode == "WTap" && blockInput) {
-            if (ticksElapsed >= allowInputTicks) {
-                blockInput = false
-                ticksElapsed = 0
+        if (mode == "WTap") {
+            if (blockInput) {
+                if (ticksElapsed++ >= allowInputTicks) {
+                    blockInput = false
+                    ticksElapsed = 0
+                }
             } else {
-                ticksElapsed++
+                if (startWaiting) {
+                    blockInput = blockTicksElapsed++ >= blockInputTicks
+
+                    if (blockInput) {
+                        startWaiting = false
+                        blockTicksElapsed = 0
+                    }
+                }
             }
         }
     }
