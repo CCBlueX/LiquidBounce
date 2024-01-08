@@ -38,22 +38,23 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
     private val visualSwing by BoolValue("VisualSwing", true, subjective = true)
 
     private val rotations by BoolValue("Rotations", true)
-        private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
 
-        private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
 
-            override fun isSupported() = rotations
-        }
-        private val maxTurnSpeed by maxTurnSpeedValue
+        override fun isSupported() = rotations
+    }
+    private val maxTurnSpeed by maxTurnSpeedValue
 
-        private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
 
-            override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
-        }
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
+    }
 
-        private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
@@ -96,7 +97,8 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
             val limitedRotation = limitAngleChange(
                 currentRotation ?: player.rotation,
                 spot.rotation,
-                nextFloat(minTurnSpeed, maxTurnSpeed)
+                nextFloat(minTurnSpeed, maxTurnSpeed),
+                smootherMode
             )
 
             setTargetRotation(
@@ -104,7 +106,8 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
                 strafe = strafe != "Off",
                 strict = strafe == "Strict",
                 resetSpeed = minTurnSpeed to maxTurnSpeed,
-                angleThresholdForReset = angleThresholdUntilReset
+                angleThresholdForReset = angleThresholdUntilReset,
+                smootherMode = this.smootherMode
             )
         }
     }
