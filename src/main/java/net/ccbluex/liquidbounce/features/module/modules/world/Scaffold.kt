@@ -616,6 +616,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     private fun place(placeInfo: PlaceInfo) {
         val player = mc.thePlayer ?: return
+        val world = mc.theWorld ?: return
 
         if (!delayTimer.hasTimePassed() || shouldKeepLaunchPosition && launchY - 1 != placeInfo.vec3.yCoord.toInt())
             return
@@ -644,7 +645,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         // Line 437-440
-        if ((stack.item as? ItemBlock)?.canPlaceBlockOnSide(world, placeInfo.blockPos, placeInfo.enumFacing, player, stack) == false) {
+        if ((stack.item as? ItemBlock)?.canPlaceBlockOnSide(world,
+                placeInfo.blockPos,
+                placeInfo.enumFacing,
+                player,
+                stack
+            ) == false) {
             return
         }
 
