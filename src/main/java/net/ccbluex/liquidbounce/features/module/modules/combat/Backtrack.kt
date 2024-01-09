@@ -554,7 +554,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     fun runWithNearestTrackedDistance(entity: Entity, f: () -> Unit) {
-        if (entity !is EntityPlayer || !handleEvents()|| mode == "Modern") {
+        if (entity !is EntityPlayer || !handleEvents() || mode == "Modern") {
             f()
 
             return
