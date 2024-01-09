@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.utils.movement.zeroXZ
  * @testedOn minecraft.vagdedes.com
  * @note it might flag a bit at the start, but then stops for some reason
  */
-object Spartan524 : Choice("Spartan524") {
+object SpeedSpartan524 : Choice("Spartan524") {
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
 
@@ -29,7 +29,7 @@ object Spartan524 : Choice("Spartan524") {
             return@repeatable
         }
 
-        Timer.requestTimerSpeed(1.1f, priority = Priority.IMPORTANT_FOR_USAGE)
+        Timer.requestTimerSpeed(1.1f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
 
         when {
             player.isOnGround -> {
@@ -52,7 +52,7 @@ object Spartan524 : Choice("Spartan524") {
  * @testedOn minecraft.vagdedes.com
  * @note it will flag you for jumping
  */
-object Spartan524GroundTimer : Choice("Spartan524GroundTimer") {
+object SpeedSpartan524GroundTimer : Choice("Spartan524GroundTimer") {
     val additionalTicks by int("AdditionalTicks", 2, 1..10)
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes

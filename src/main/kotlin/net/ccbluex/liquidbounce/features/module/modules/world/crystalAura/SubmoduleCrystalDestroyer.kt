@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.decoration.EndCrystalEntity
@@ -53,7 +54,12 @@ object SubmoduleCrystalDestroyer {
             ) ?: return
 
         // aim on target
-        RotationManager.aimAt(rotation, configurable = ModuleCrystalAura.rotations)
+        RotationManager.aimAt(
+            rotation,
+            configurable = ModuleCrystalAura.rotations,
+            priority = Priority.IMPORTANT_FOR_USER_SAFETY,
+            provider = ModuleCrystalAura
+        )
 
         if (!facingEnemy(target, range, RotationManager.serverRotation)) {
             return

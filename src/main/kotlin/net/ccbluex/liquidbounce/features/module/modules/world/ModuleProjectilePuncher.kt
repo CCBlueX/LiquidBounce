@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
@@ -73,8 +74,11 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
 
         if (target.boxedDistanceTo(player) > range ||
-            !facingEnemy(toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
-                wallsRange = 0.0)) {
+            !facingEnemy(
+                toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
+                wallsRange = 0.0
+            )
+        ) {
             return@repeatable
         }
 
@@ -112,7 +116,13 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             targetTracker.lock(entity)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                spot.rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotations,
+                Priority.IMPORTANT_FOR_USER_SAFETY,
+                this@ModuleProjectilePuncher
+            )
             break
         }
     }

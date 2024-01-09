@@ -96,7 +96,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         }
 
         if (AllowTimer.enabled && dodgePlan.useTimer) {
-            Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE)
+            Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE, this@ModuleAutoDodge)
         }
     }
 

@@ -35,11 +35,16 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         super.enable()
     }
 
+    override fun disable() {
+        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimerRange)
+        super.disable()
+    }
+
     val repeatable = repeatable {
         val timerSpeed = updateTimerSpeed()
 
         if (timerSpeed != null) {
-            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
+            Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimerRange)
         }
 
         val balanceChange = mc.timer.timerSpeed / balanceRecoveryIncrement - 1

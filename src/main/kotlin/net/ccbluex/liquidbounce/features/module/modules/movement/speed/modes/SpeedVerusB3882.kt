@@ -19,7 +19,7 @@ import net.minecraft.entity.MovementType
  * @anticheatVersion b3882
  * @testedOn eu.anticheat-test.com
  */
-object Verus : Choice("Verus") {
+object SpeedVerusB3882 : Choice("VerusB3882") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
@@ -41,7 +41,7 @@ object Verus : Choice("Verus") {
     }
 
     val timerRepeatable = repeatable {
-        Timer.requestTimerSpeed(2.0F, priority = Priority.IMPORTANT_FOR_USAGE)
+        Timer.requestTimerSpeed(2.0F, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
         waitTicks(101)
     }
 }

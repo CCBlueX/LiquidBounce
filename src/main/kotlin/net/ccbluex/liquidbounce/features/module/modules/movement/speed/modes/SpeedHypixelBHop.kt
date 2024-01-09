@@ -31,23 +31,20 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import kotlin.math.sqrt
 
 /**
  * @anticheat Watchdog (NCP)
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
-object HypixelBHop : Choice("HypixelBHop") {
+object SpeedHypixelBHop : Choice("HypixelBHop") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
@@ -59,6 +56,7 @@ object HypixelBHop : Choice("HypixelBHop") {
     private var timeBoostCapable = 0
 
     private const val BASE_HORIZONTAL_MODIFIER = 0.0004
+
     // todo: check if we can do more with this
     private const val HORIZONTAL_SPEED_AMPLIFIER = 0.0007
     private const val VERTICAL_SPEED_AMPLIFIER = 0.0004
@@ -88,7 +86,7 @@ object HypixelBHop : Choice("HypixelBHop") {
                     return@repeatable
                 }
 
-                Timer.requestTimerSpeed(0.6f, Priority.IMPORTANT_FOR_USAGE)
+                Timer.requestTimerSpeed(0.6f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
                 timeBoostCapable = (timeBoostCapable + 1).coerceAtMost(timeBoostTicks)
             }
             return@repeatable
@@ -96,9 +94,9 @@ object HypixelBHop : Choice("HypixelBHop") {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {
                 BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
-                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
             } else {
-               0.0
+                0.0
             }
 
             // Vertical acceleration, this makes sense to get a little bit more speed again
@@ -113,7 +111,12 @@ object HypixelBHop : Choice("HypixelBHop") {
 
         // Time boost feature
         if (timeBoostCapable > 0) {
-            Timer.requestTimerSpeed(1.3f, Priority.IMPORTANT_FOR_USAGE, resetAfterTicks = timeBoostCapable)
+            Timer.requestTimerSpeed(
+                1.3f,
+                Priority.IMPORTANT_FOR_USAGE_1,
+                ModuleSpeed,
+                resetAfterTicks = timeBoostCapable
+            )
             timeBoostCapable = 0
         }
     }
@@ -139,7 +142,7 @@ object HypixelBHop : Choice("HypixelBHop") {
         it.jumping = true
     }
 
-    val packetHandler = sequenceHandler<PacketEvent>() {
+    val packetHandler = sequenceHandler<PacketEvent> {
         val packet = it.packet
 
         if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
@@ -162,6 +165,7 @@ object HypixelBHop : Choice("HypixelBHop") {
     }
 
     override fun disable() {
+        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, ModuleSpeed)
         timeBoostCapable = 0
         wasFlagged = false
     }

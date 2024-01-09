@@ -1,6 +1,8 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import java.util.PriorityQueue
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import java.util.*
 import kotlin.math.max
 
 class RequestHandler<T> {
@@ -12,6 +14,8 @@ class RequestHandler<T> {
     }
 
     fun request(request: Request<T>) {
+        // we remove all requests provided by module on new request
+        activeRequests.removeAll { it.provider == request.provider }
         this.activeRequests.add(request)
     }
 
@@ -22,13 +26,21 @@ class RequestHandler<T> {
         return this.activeRequests.peek().value
     }
 
+    fun removeActive() {
+        if (this.activeRequests.isNotEmpty()) {
+            this.activeRequests.remove(this.activeRequests.peek())
+        }
+    }
+
     /**
-     * @param priority higher = higher priority
      * @param expiresIn in how many time units should this request expire?
+     * @param priority higher = higher priority
+     * @param provider module which requested value
      */
     class Request<T>(
         var expiresIn: Int,
         val priority: Int,
+        val provider: Module,
         val value: T
     )
 }

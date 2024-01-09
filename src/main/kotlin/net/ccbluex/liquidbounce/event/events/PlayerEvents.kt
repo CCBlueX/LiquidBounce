@@ -63,6 +63,9 @@ class RotatedMovementInputEvent(var forward: Float, var sideways: Float): Event(
 @Nameable("playerJump")
 class PlayerJumpEvent(var motion: Float) : CancellableEvent()
 
+@Nameable("playerAfterJump")
+class PlayerAfterJumpEvent : Event()
+
 @Nameable("playerUseMultiplier")
 class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 
