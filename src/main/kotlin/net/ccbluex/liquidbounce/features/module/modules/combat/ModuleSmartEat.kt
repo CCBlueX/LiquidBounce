@@ -51,47 +51,50 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
 
 
+    private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
 
-    private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
+    private val preferGappleHealth by float("PreferGappleHealth", 9f, 0f..20f)
+    private val preferNotchAppleHealth by float("PreferNotchAppleHealth", 2f, 0f..20f)
+    private val preferHealthPotHealth by float("PreferHealthPotHealth", 12f, 0f..20f)
 
-        private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
+    private var prefersGapples = false
+    private var prefersNotchApple = false
+    private var prefersHealthPot = false
+    private val food: Pair<Int, ItemStack>?
+        get() = Hotbar.findBestItem(0) { _, itemStack ->
+            val item = itemStack.item
 
-        private val preferGappleHealth by float("PreferGappleHealth", 9f, 0f..20f)
-        private val preferNotchAppleHealth by float("PreferNotchAppleHealth", 2f, 0f..20f)
-        private val preferHealthPotHealth by float("PreferHealthPotHealth", 12f, 0f..20f)
+            if (prefersHealthPot && item == Items.POTION) {
+                val hasHealthEffect =
+                    PotionUtil.getPotionEffects(itemStack).any {
+                        it.effectType == StatusEffects.INSTANT_HEALTH
+                    }
 
-        private val food: Pair<Int, ItemStack>?
-            get() = Hotbar.findBestItem(0) { _, itemStack ->
-                val item = itemStack.item
-
-                if (prefersHealthPot && item == Items.POTION) {
-                    val hasHealthEffect =
-                        PotionUtil.getPotionEffects(itemStack).any {
-                            it.effectType == StatusEffects.INSTANT_HEALTH
-                        }
-
-                    if (hasHealthEffect)
-                        return@findBestItem 100 - preferHealthPotHealth.toInt()
-                }
-
-                val foodComp = item.foodComponent ?: return@findBestItem -1
-
-                val hasHungerEffect = foodComp.statusEffects.any { it.first.effectType == StatusEffects.HUNGER }
-                if (hasHungerEffect)
-                    return@findBestItem 0
-
-                if(prefersGapples && item == Items.GOLDEN_APPLE)
-                    return@findBestItem 100 - preferGappleHealth.toInt()
-
-                if (prefersNotchApple && item == Items.ENCHANTED_GOLDEN_APPLE)
-                    return@findBestItem 100 - preferNotchAppleHealth.toInt()
-
-                foodComp.hunger
+                if (hasHealthEffect)
+                    return@findBestItem 100 - preferHealthPotHealth.toInt()
             }
 
-        private var prefersGapples = false
-        private var prefersNotchApple = false
-        private var prefersHealthPot = false
+            val foodComp = item.foodComponent ?: return@findBestItem -1
+
+            val hasHungerEffect = foodComp.statusEffects.any { it.first.effectType == StatusEffects.HUNGER }
+            if (hasHungerEffect)
+                return@findBestItem 0
+
+            if(prefersGapples && item == Items.GOLDEN_APPLE)
+                return@findBestItem 100 - preferGappleHealth.toInt()
+
+            if (prefersNotchApple && item == Items.ENCHANTED_GOLDEN_APPLE)
+                return@findBestItem 100 - preferNotchAppleHealth.toInt()
+
+            foodComp.hunger
+        }
+
+    val tickHandler = repeatable {
+        prefersGapples = player.health <= preferGappleHealth
+        prefersNotchApple = player.health <= preferNotchAppleHealth
+        prefersHealthPot = player.health <= preferHealthPotHealth
+    }
+    private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
         private object RenderSlot : ToggleableConfigurable(this.module, "RenderSlot", true) {
             private val offset by int("Offset", 26, 0..40)
             val renderHandler = handler<OverlayRenderEvent> {
@@ -134,9 +137,6 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
         }
 
         val tickHandler = repeatable {
-            prefersGapples = player.health <= preferGappleHealth
-            prefersNotchApple = player.health <= preferNotchAppleHealth
-            prefersHealthPot = player.health <= preferHealthPotHealth
 
             val useAction = player.activeItem.useAction
 
@@ -146,8 +146,6 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
                 return@repeatable
             // if we are already eating, we want to keep the silent slot
             SilentHotbar.selectSlotSilently(this@SilentOffhand, SilentHotbar.serversideSlot, swapBackDelay)
-
-
         }
 
         init {
@@ -155,8 +153,31 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
         }
     }
 
+    private object AutoEat : ToggleableConfigurable(this, "SilentOffhand", true) {
+        private val minHunger by int("MinHunger", 15, 0..20)
+
+        private val tickHandler = repeatable {
+
+            if(player.hungerManager.foodLevel < minHunger) {
+                eat()
+            }
+        }
+
+        fun eat() {
+            val currentBestFood = food ?: return
+
+            val slot = currentBestFood.first
+
+            SilentHotbar.selectSlotSilently(AutoEat, slot, swapBackDelay)
+
+            player.eatFood(world, currentBestFood.second)
+        }
+    }
+
+
     init {
         tree(SilentOffhand)
+        tree(AutoEat)
     }
 
 
