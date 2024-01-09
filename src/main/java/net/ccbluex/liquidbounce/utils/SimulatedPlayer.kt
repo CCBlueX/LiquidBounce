@@ -174,9 +174,6 @@ open class SimulatedPlayer(
         }
     }
 
-    // private val precipitationHeightMap: IntArray = intArrayOf()
-    // private val storageArrays: Array<ExtendedBlockStorage> = arrayOf()
-
     override fun tick() {
         if (!onEntityUpdate() || player.isRiding) {
             return
@@ -827,12 +824,6 @@ open class SimulatedPlayer(
     }
 
     private fun setOnFireFromLava() {
-        /*
-        if (!this.isImmuneToFire) {
-            this.attackEntityFrom(DamageSource.lava, 4.0F);
-            this.setFire(15);
-        }
-         */
         setFire(15)
     }
 
@@ -1080,10 +1071,8 @@ open class SimulatedPlayer(
     }
 
     fun isInLava(): Boolean {
-        return this.worldObj.isMaterialInBB(this.getEntityBoundingBox().expand(-0.10000000149011612,
-            -0.4000000059604645,
-            -0.10000000149011612
-        ), Material.lava
+        return this.worldObj.isMaterialInBB(this.getEntityBoundingBox()
+            .expand(-0.10000000149011612, -0.4000000059604645, -0.10000000149011612), Material.lava
         )
     }
 
@@ -1208,9 +1197,7 @@ open class SimulatedPlayer(
     }
 
     private fun isChunkLoaded(x: Int, z: Int, flag: Boolean): Boolean {
-        return chunkProvider.chunkExists(x,
-            z
-        ) && (flag || !chunkProvider.provideChunk(x, z).isEmpty)
+        return chunkProvider.chunkExists(x, z) && (flag || !chunkProvider.provideChunk(x, z).isEmpty)
     }
 
     private fun getEntitiesWithinAABBExcludingEntity(entity: Entity, box: AxisAlignedBB): List<Entity> {
@@ -1325,7 +1312,7 @@ open class SimulatedPlayer(
             false
         } else if (!this.canSeeSky(pos)) {
             false
-        } else if (this.getPrecipitationHeight(pos).y > pos.y) {
+        } else if (worldObj.getPrecipitationHeight(pos).y > pos.y) {
             false
         } else {
             val base: BiomeGenBase = worldObj.getBiomeGenForCoords(pos)
@@ -1337,64 +1324,6 @@ open class SimulatedPlayer(
     private fun canSeeSky(pos: BlockPos): Boolean {
         return getChunkFromBlockCoords(pos).canSeeSky(pos)
     }
-
-    private fun getPrecipitationHeight(pos: BlockPos): BlockPos {
-        return worldObj.getPrecipitationHeight(pos) //getPrecipitationHeight(getChunkFromBlockCoords(pos), pos)
-    }
-
-    /*
-    fun getPrecipitationHeight(chunk: Chunk, pos: BlockPos): BlockPos {
-        val i = pos.x and 15
-        val j = pos.z and 15
-        val k = i or (j shl 4)
-        var blockpos = BlockPos(pos.x, precipitationHeightMap[k], pos.z)
-        if (blockpos.y == -999) {
-            val l = chunk.topFilledSegment + 15
-            blockpos = BlockPos(pos.x, l, pos.z)
-            var i1 = -1
-            while (true) {
-                while (blockpos.y > 0 && i1 == -1) {
-                    val block: Block = chunk.getBlock(blockpos) ?: continue
-                    val material = block.material
-                    if (!material.blocksMovement() && !material.isLiquid) {
-                        blockpos = blockpos.down()
-                    } else {
-                        i1 = blockpos.y + 1
-                    }
-                }
-                precipitationHeightMap[k] = i1
-                break
-            }
-        }
-        return BlockPos(pos.x, precipitationHeightMap[k], pos.z)
-    }
-
-    fun getBlock(blockPos: BlockPos): Block? {
-        return try {
-            this.getBlock0(blockPos.x and 15, blockPos.y, blockPos.z and 15)
-        } catch (var4: ReportedException) {
-            var4.printStackTrace()
-            return null
-        }
-    }
-
-    private fun getBlock0(x: Int, y: Int, z: Int): Block? {
-        var block = Blocks.air
-        if (y >= 0 && y shr 4 < this.storageArrays.size) {
-            val storage: ExtendedBlockStorage = this.storageArrays[y shr 4]
-
-            if (storage != null) {
-                block = try {
-                    storage.getBlockByExtId(x, y and 15, z)
-                } catch (var8: Throwable) {
-                    var8.printStackTrace()
-
-                    return null
-                }
-            }
-        }
-        return block
-    }*/
 
     private fun isPushedByWater(): Boolean {
         return !capabilities.isFlying

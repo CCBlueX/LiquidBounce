@@ -12,9 +12,12 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
+import net.ccbluex.liquidbounce.utils.realX
+import net.ccbluex.liquidbounce.utils.realY
+import net.ccbluex.liquidbounce.utils.realZ
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -334,40 +337,10 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             }
 
             "modern" -> {
-                val player = mc.thePlayer ?: return
-
-                val renderManager = mc.renderManager
-
-                val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
-
-                repeat(delay) {
-                    simPlayer.tick()
-
-                    val (x1, y1, z1) = simPlayer.pos
-
-                    val x =
-                        x1 - renderManager.renderPosX
-                    val y =
-                        y1 - renderManager.renderPosY
-                    val z =
-                        z1 - renderManager.renderPosZ
-
-                    val axisAlignedBB = simPlayer.box.offset(-x1, -y1, -z1).offset(x, y, z)
-
-                    drawBacktrackBox(
-                        AxisAlignedBB.fromBounds(
-                            axisAlignedBB.minX,
-                            axisAlignedBB.minY,
-                            axisAlignedBB.minZ,
-                            axisAlignedBB.maxX,
-                            axisAlignedBB.maxY,
-                            axisAlignedBB.maxZ
-                        ), color
-                    )
-                }
-
                 if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw || !esp)
                     return
+
+                val renderManager = mc.renderManager
 
                 target?.run {
                     val targetEntity = target as IMixinEntity
@@ -581,7 +554,7 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     fun runWithNearestTrackedDistance(entity: Entity, f: () -> Unit) {
-        if (entity !is EntityPlayer || !handleEvents()|| mode == "Modern") {
+        if (entity !is EntityPlayer || !handleEvents() || mode == "Modern") {
             f()
 
             return
