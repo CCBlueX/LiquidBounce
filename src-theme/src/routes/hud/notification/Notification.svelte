@@ -48,7 +48,7 @@
     }
 
     &.info {
-      background-color: #4677ff;
+      background-color: #7e00ff;
       background-image: url("../img/notification/info.svg");
     }
 

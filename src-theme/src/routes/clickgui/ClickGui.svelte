@@ -55,7 +55,7 @@
     let options = {
         modulesColor: "rgba(0,0,0,0.5)",
         headerColor: "rgba(0, 0, 0, 0.68)",
-        accentColor: "#4677ff",
+        accentColor: "#7e00ff",
         textColor: "#ffffff",
         textDimmed: "rgba(211,211,211,255)",
         searchAlwaysOnTop: true,

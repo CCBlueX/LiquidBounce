@@ -220,15 +220,6 @@
         })
     }
 
-    export function newMicrosoftAccountUrl() {
-        return request("/accounts/new/microsoft/url", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-    }
-
     /**
      *         class AlteningForm(
      *             val token: String

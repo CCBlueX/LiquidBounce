@@ -31,7 +31,7 @@
         width: 100%;
         padding: 7px 12px 7px 12px;
 
-        background: linear-gradient(to left, rgba(0, 0, 0, 0.5) 50%, #4677ff 50%);
+        background: linear-gradient(to left, rgba(0, 0, 0, 0.5) 50%, #7e00ff 50%);
         background-size: 200% 100%;
         background-position: right bottom;
         will-change: background-position;

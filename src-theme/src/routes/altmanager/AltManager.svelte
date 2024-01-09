@@ -9,7 +9,6 @@
         newAlteningGen,
         newCrackedAccount,
         newMicrosoftAccount,
-        newMicrosoftAccountUrl,
         restoreInitialAccount
     } from "../../client/api.svelte";
     import { listen } from "../../client/ws.svelte";
@@ -379,10 +378,7 @@
                 <br>
 
                 <button on:click={newMicrosoftAccount}>
-                    Browser
-                </button>
-                <button on:click={newMicrosoftAccountUrl}>
-                    Copy URL
+                    Add
                 </button>
             </div>
             <div class="button">

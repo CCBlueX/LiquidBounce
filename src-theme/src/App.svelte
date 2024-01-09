@@ -26,14 +26,9 @@
             cleanupListeners();
             push("/");
             showingSplash = true;
-        } else if (action === "hide") {
+        } else if (action === "hide" && nextRoute != null) {
             cleanupListeners();
-            if (nextRoute != null) {
-                push(nextRoute);
-            } else {
-                push("/closed");
-            }
-
+            push(nextRoute);
             showingSplash = false;
             nextRoute = null;
         }
