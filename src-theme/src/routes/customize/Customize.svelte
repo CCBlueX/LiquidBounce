@@ -52,7 +52,7 @@
         }
 
         .Button {
-            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #7e00ff 50%);
             background-size: 200% 100%;
             background-position: right bottom;
             will-change: background-position;
@@ -146,7 +146,7 @@
             background-color: rgba(0, 0, 0, 0.68);
             border-radius: 6px;
             margin-right: 10px;
-            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #7e00ff 50%);
             background-size: 200% 100%;
             background-position: right bottom;
             will-change: background-position;

@@ -43,7 +43,7 @@
     border-radius: 6px;
     align-items: center;
     column-gap: 30px;
-    background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+    background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #7e00ff 50%);
     background-size: 200% 100%;
     background-position: right bottom;
     will-change: background-position;
@@ -55,7 +55,7 @@
   }
 
   .icon {
-    background-color: #4677ff;
+    background-color: #7e00ff;
     width: 90px;
     height: 90px;
     border-radius: 50%;

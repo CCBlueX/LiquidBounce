@@ -33,7 +33,7 @@
 
   .icon {
     border-radius: 6px;
-    background-color: #4677FF;
+    background-color: #7e00ff;
     width: 66px;
     height: 66px;
     transition: ease background-color .2s;

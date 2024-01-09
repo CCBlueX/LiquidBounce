@@ -26,7 +26,7 @@
     align-items: center;
     column-gap: 30px;
     overflow: hidden;
-    background: linear-gradient(to left, rgba(0, 0, 0, .36) 50%, #4677ff 50%);
+    background: linear-gradient(to left, rgba(0, 0, 0, .36) 50%, #7e00ff 50%);
     background-size: 200% 100%;
     background-position: right bottom;
     will-change: background-position;
@@ -41,7 +41,7 @@
   .icon {
     height: 58px;
     width: 58px;
-    background-color: #4677FF;
+    background-color: #7e00ff;
     display: flex;
     align-items: center;
     justify-content: center;
