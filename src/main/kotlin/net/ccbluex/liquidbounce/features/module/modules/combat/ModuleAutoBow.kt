@@ -429,6 +429,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      */
     private object FastChargeOptions : ToggleableConfigurable(this, "FastCharge", false) {
         val packets by int("Packets", 20, 3..20)
+        val exploit117 by boolean("1.17+", false)
 
         val tickRepeatable = handler<GameTickEvent> {
             val player = mc.player ?: return@handler
@@ -437,11 +438,24 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
             // Should accelerated game ticks when using bow
             if (currentItem?.item is BowItem) {
-                repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
-                    network.sendPacket(
-                        PlayerMoveC2SPacket.OnGroundOnly(true),
-                    ) // Just show visual effect (not required to work - but looks better)
-                    player.tickActiveItemStack()
+                if (!exploit117) {
+                    repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
+                        network.sendPacket(
+                            PlayerMoveC2SPacket.OnGroundOnly(true)
+                        ) // Just show visual effect (not required to work - but looks better)
+                        player.tickActiveItemStack()
+                    }
+                } else {
+                    repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
+                        network.sendPacket(
+                            PlayerMoveC2SPacket.Full(
+                                player.x, player.y, player.z,
+                                player.yaw, player.pitch,
+                                player.isOnGround
+                            )
+                        ) // Just show visual effect (not required to work - but looks better)
+                        player.tickActiveItemStack()
+                    }
                 }
 
                 // Shoot with bow (auto shoot has to be enabled)

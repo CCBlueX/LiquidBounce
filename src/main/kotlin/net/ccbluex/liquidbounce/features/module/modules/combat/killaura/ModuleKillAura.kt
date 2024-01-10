@@ -105,6 +105,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val whileUsingItem by boolean("WhileUsingItem", true)
     private val whileBlocking by boolean("WhileBlocking", true)
 
+    private val onlyFallCrit by boolean("OnlyFallCrit", true)
+    private val onlyFallCritFallDist by float("FallDistance", 0.08f, 0.01f..0.2f)
+
     init {
         tree(AutoBlock)
         tree(TickBase)
@@ -261,6 +264,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
                     } else {
                         // Attack enemy
+
+                        if (onlyFallCrit && player.fallDistance >= onlyFallCritFallDist && player.velocity.y > 0.0f) {
+                            player.isSprinting = false
+                        }
+
                         chosenEntity.attack(swing, keepSprint)
                     }
 
