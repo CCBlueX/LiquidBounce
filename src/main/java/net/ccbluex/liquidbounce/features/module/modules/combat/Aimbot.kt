@@ -53,12 +53,16 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
         // Search for the best enemy to target
         val entity = mc.theWorld.loadedEntityList.filter {
-            val distanceCheck = Backtrack.getNearestTrackedDistance(it)
+            var result = false
 
-            return@filter isSelected(it, true)
-                && thePlayer.canEntityBeSeen(it)
-                && thePlayer.getDistanceToEntityBox(it) <= range || distanceCheck != 0.0 && distanceCheck <= range
-                && getRotationDifference(it) <= fov
+            Backtrack.runWithNearestTrackedDistance(it) {
+                result = isSelected(it, true)
+                    && thePlayer.canEntityBeSeen(it)
+                    && thePlayer.getDistanceToEntityBox(it) <= range
+                    && getRotationDifference(it) <= fov
+            }
+
+            result
         }.minByOrNull { mc.thePlayer.getDistanceToEntityBox(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?

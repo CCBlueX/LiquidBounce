@@ -5,9 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
@@ -28,6 +26,7 @@ import net.minecraft.block.BlockAir
 import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11.*
@@ -38,7 +37,10 @@ import kotlin.math.max
 
 object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
 
-    private val mode by ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
+    private val mode by ListValue("Mode",
+        arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock"),
+        "FlyFlag"
+    )
     private val maxFallDistance by IntegerValue("MaxFallDistance", 10, 2..255)
     private val maxDistanceWithoutGround by FloatValue("MaxDistanceToSetback", 2.5f, 1f..30f)
     private val indicator by BoolValue("Indicator", true, subjective = true)
@@ -48,11 +50,14 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
     private var prevX = 0.0
     private var prevY = 0.0
     private var prevZ = 0.0
+    private var shouldSimulateBlock = false
 
     override fun onDisable() {
         prevX = 0.0
         prevY = 0.0
         prevZ = 0.0
+
+        shouldSimulateBlock = false
     }
 
     @EventTarget
@@ -65,6 +70,7 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
             prevX = thePlayer.prevPosX
             prevY = thePlayer.prevPosY
             prevZ = thePlayer.prevPosZ
+            shouldSimulateBlock = false
         }
 
         if (!thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater) {
@@ -73,7 +79,7 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
             detectedLocation = fallingPlayer.findCollision(60)?.pos
 
             if (detectedLocation != null && abs(thePlayer.posY - detectedLocation!!.y) +
-                    thePlayer.fallDistance <= maxFallDistance) {
+                thePlayer.fallDistance <= maxFallDistance) {
                 lastFound = thePlayer.fallDistance
             }
 
@@ -86,10 +92,12 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
                         thePlayer.fallDistance = 0F
                         thePlayer.motionY = 0.0
                     }
+
                     "flyflag" -> {
                         thePlayer.motionY += 0.1
                         thePlayer.fallDistance = 0F
                     }
+
                     "ongroundspoof" -> sendPacket(C03PacketPlayer(true))
 
                     "motionteleport-flag" -> {
@@ -100,8 +108,33 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
                         strafe()
                         thePlayer.fallDistance = 0f
                     }
+
+                    "ghostblock" -> shouldSimulateBlock = true
                 }
             }
+        }
+    }
+
+    @EventTarget
+    fun onBlockBB(event: BlockBBEvent) {
+        if (mode == "GhostBlock" && shouldSimulateBlock) {
+            if (event.y < mc.thePlayer.posY.toInt()) {
+                event.boundingBox = AxisAlignedBB(event.x.toDouble(),
+                    event.y.toDouble(),
+                    event.z.toDouble(),
+                    event.x + 1.0,
+                    event.y + 1.0,
+                    event.z + 1.0
+                )
+            }
+        }
+    }
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        // Stop considering non colliding blocks as collidable ones on setback.
+        if (event.packet is S08PacketPlayerPosLook) {
+            shouldSimulateBlock = false
         }
     }
 
@@ -110,10 +143,10 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
         val thePlayer = mc.thePlayer ?: return
 
         if (detectedLocation == null || !indicator ||
-                thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
+            thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
             return
 
-        val (x, y, z) = detectedLocation!!
+        val (x, y, z) = detectedLocation ?: return
 
         val renderManager = mc.renderManager
 
@@ -132,7 +165,8 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
                 z - renderManager.renderPosZ,
                 x - renderManager.renderPosX + 1.0,
                 y + 1.2 - renderManager.renderPosY,
-                z - renderManager.renderPosZ + 1.0)
+                z - renderManager.renderPosZ + 1.0
+            )
         )
 
         glEnable(GL_TEXTURE_2D)
