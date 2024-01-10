@@ -1,7 +1,8 @@
 {
     "locale": "zh_CN",
     "contributors": [
-        "guosic"
+        "guosic",
+        "latiao_1337"
     ],
     "translations": {
         "menu.altManager": "帐号管理器",
