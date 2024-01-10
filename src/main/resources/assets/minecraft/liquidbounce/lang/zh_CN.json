@@ -65,6 +65,8 @@
 
         "module.bedGodMode.description": "允许你躺在床上四处走动。(对于1.9)",
 
+        "module.bedProtectionESP.description": "让您了解应该将方块放置在哪里来保护床",
+
         "module.clip.description": "允许你clip通过方块。",
         
         "module.airJump.description": "允许你在空中跳跃。",
@@ -327,6 +329,8 @@
         
         "module.xRay.description": "允许你透过墙壁看到矿石。",
         
-        "module.zoot.description": "移除所有负面药水效果/火焰。"
+        "module.zoot.description": "移除所有负面药水效果/火焰。",
+
+        "module.disabler.description": "禁用服务器或特定的反作弊检测"
     }
 }
