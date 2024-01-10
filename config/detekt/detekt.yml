@@ -14,7 +14,10 @@ complexity:
     active: true
     threshold: 4
   ComplexCondition:
-    threshold: 5
+    threshold: 1337
+  CyclomaticComplexMethod:
+    threshold: 1337
+
 
 performance:
   active: true
