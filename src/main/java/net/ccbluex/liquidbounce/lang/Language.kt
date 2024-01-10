@@ -30,6 +30,7 @@ object LanguageManager : MinecraftInstance() {
         "pt_BR",
         "pt_PT",
         "zh_CN",
+        "zh_TW",
         "bg_BG",
         "ru_RU"
     )
