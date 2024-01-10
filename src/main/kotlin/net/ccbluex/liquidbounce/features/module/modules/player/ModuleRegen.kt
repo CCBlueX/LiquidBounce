@@ -38,6 +38,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
     private val timer by float("Timer", 0.5f, 0.1f..10f)
     private val noAir by boolean("NoAir", false)
     private val potionEffect by boolean("PotionEffect", false)
+    private val exploit117 by boolean("1.17+", false)
 
     val repeatable = repeatable {
         if ((!noAir && player.isOnGround) && !player.abilities.creativeMode && player.health > 0 && player.health < health) {
@@ -48,10 +49,20 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
             if (player.hungerManager.foodLevel < 20) {
                 return@repeatable
             }
-
-            repeat(speed) {
-                network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
+            if (!exploit117) {
+                repeat(speed) {
+                    network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
+                }
+            } else {
+                repeat(speed) {
+                    network.sendPacket(PlayerMoveC2SPacket.Full(
+                        player.x, player.y, player.z,
+                        player.yaw, player.pitch,
+                        player.isOnGround
+                    ))
+                }
             }
+
 
             Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleRegen)
         }
