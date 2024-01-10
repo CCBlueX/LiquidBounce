@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
@@ -56,6 +57,7 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import org.lwjgl.glfw.GLFW
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -106,6 +108,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val whileBlocking by boolean("WhileBlocking", true)
 
     private val onlyFallCrit by boolean("OnlyFallCrit", true)
+    private val onlyFallCritOnSpace by boolean("OnlyOnSpace", true)
     private val onlyFallCritFallDist by float("FallDistance", 0.08f, 0.01f..0.2f)
 
     init {
@@ -265,11 +268,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     } else {
                         // Attack enemy
 
-                        if (onlyFallCrit && player.fallDistance >= onlyFallCritFallDist && player.velocity.y > 0.0f) {
+                        if (onlyFallCrit &&
+                            player.fallDistance >= onlyFallCritFallDist &&
+                            player.velocity.y > 0.0f &&
+                            (onlyFallCritOnSpace && InputUtil.isKeyPressed(mc.window.handle, GLFW.GLFW_KEY_SPACE) || !onlyFallCritOnSpace)
+                        ) {
                             player.isSprinting = false
+                            chosenEntity.attack(swing, keepSprint)
+                        } else if (!onlyFallCrit) {
+                            chosenEntity.attack(swing, keepSprint)
                         }
-
-                        chosenEntity.attack(swing, keepSprint)
                     }
 
                     true
