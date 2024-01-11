@@ -43,6 +43,7 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
 import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import org.lwjgl.glfw.GLFW
 
 object IntegrationHandler : Listenable {
 
@@ -60,6 +61,8 @@ object IntegrationHandler : Listenable {
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
+
+    val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
 
     data class VirtualScreen(val name: String)
 
@@ -136,6 +139,9 @@ object IntegrationHandler : Listenable {
             updateIntegrationBrowser()
             return@handler
         }
+
+        // Set to default GLFW cursor
+        GLFW.glfwSetCursor(mc.window.handle, standardCursor)
 
         if (!browserIsReady && event.screen !is MCEFDownloaderMenu) {
             RenderSystem.recordRenderCall {
