@@ -77,6 +77,9 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
     }
+    // Anticheat: Grim
+    // Tested AC Version: 2.5.34
+    // Tested on: eu.loyisa.cn, anticheat-test.com
     private object Grim : Choice("Grim1.17+") {
         override val parent: ChoiceConfigurable
             get() = modes
