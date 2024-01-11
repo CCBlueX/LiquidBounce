@@ -78,7 +78,7 @@ object LiquidBounce : Listenable {
      *
      * WARNING: Please read the GNU General Public License
      */
-    const val CLIENT_NAME = "LiquidBounce"
+    const val CLIENT_NAME = "PastedBounce"
     const val CLIENT_AUTHOR = "CCBlueX"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
