@@ -30,12 +30,14 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.potion.PotionUtil
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.UseAction
 import kotlin.math.max
@@ -153,13 +155,19 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
         }
     }
 
-    private object AutoEat : ToggleableConfigurable(this, "SilentOffhand", true) {
+    private object AutoEat : ToggleableConfigurable(this, "AutoEat", true) {
         private val minHunger by int("MinHunger", 15, 0..20)
 
         private val tickHandler = repeatable {
 
             if(player.hungerManager.foodLevel < minHunger) {
-                eat()
+
+                waitUntil {
+                    eat()
+                    player.hungerManager.foodLevel > minHunger
+                }
+                KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
+
             }
         }
 
@@ -170,8 +178,10 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
             SilentHotbar.selectSlotSilently(AutoEat, slot, swapBackDelay)
 
-            player.eatFood(world, currentBestFood.second)
-        }
+            KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
+
+
+            }
     }
 
 
