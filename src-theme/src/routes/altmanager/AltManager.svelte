@@ -210,13 +210,6 @@
             row-gap: 5px;
         }
 
-        .wrapper {
-            position: relative;
-            height: 100%;
-            grid-gap: 30px;
-            margin: 60px;
-        }
-
         .button {
             background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
@@ -229,41 +222,6 @@
             border-radius: 6px;
             align-items: center;
             column-gap: 30px;
-        }
-
-        .scale {
-            position: relative;
-            height: 100%;
-        }
-
-        @media screen and (max-width: 1366px) {
-            .scale {
-                zoom: .5;
-            }
-        }
-
-        @media screen and (max-width: 1024px) {
-            .scale {
-                zoom: .6;
-            }
-        }
-
-        @media screen and (max-height: 1000px) {
-            .scale {
-                zoom: .9;
-            }
-        }
-
-        @media screen and (max-height: 700px) {
-            .scale {
-                zoom: .6;
-            }
-        }
-
-        @media screen and (max-height: 540px) {
-            .scale {
-                zoom: .5;
-            }
         }
 
         input {
@@ -295,26 +253,24 @@
             padding: 10px;
         }
 
-        .footinit {
-            display: block;
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            text-align: right;
-            height: 100px;
-            margin-bottom: 45px;
-        }
-
         .back {
-            height: 75px;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+
+            height: 50px;
             width: 150px;
+
             font-size: 26px;
-            background-color: rgba(0, 0, 0, 0.68);
+
             border-radius: 6px;
             margin-right: 10px;
+
+            background-color: rgba(0, 0, 0, 0.68);
             background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
             background-position: right bottom;
+
             will-change: background-position;
             transition: background-position .2s ease-out;
         }
@@ -456,9 +412,7 @@
         </div>
     </div>
     <footer>
-        <div class="footinit">
-            <button class="back" on:click={pop}>Back</button>
-        </div>
+        <button class="back" on:click={pop}>Back</button>
     </footer>
 </div>
 </body>
