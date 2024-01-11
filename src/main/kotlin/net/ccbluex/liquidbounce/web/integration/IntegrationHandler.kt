@@ -131,6 +131,12 @@ object IntegrationHandler : Listenable {
             return@handler
         }
 
+        // Check if the client tab is ready
+        if (clientJcef?.getUrl()?.startsWith(integrationUrl) != true) {
+            updateIntegrationBrowser()
+            return@handler
+        }
+
         if (!browserIsReady && event.screen !is MCEFDownloaderMenu) {
             RenderSystem.recordRenderCall {
                 mc.setScreen(MCEFDownloaderMenu(event.screen))
