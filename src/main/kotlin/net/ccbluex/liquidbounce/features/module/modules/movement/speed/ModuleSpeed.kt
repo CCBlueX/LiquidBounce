@@ -39,6 +39,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
             SpeedVerusB3882,
             SpeedHypixelBHop,
+            SpeedGrim,
 
             SpeedSpartan524,
             SpeedSpartan524GroundTimer
