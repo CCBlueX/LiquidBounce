@@ -39,7 +39,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
-    private val modes = choices("Mode", Instant, arrayOf(Instant, NCP, AAC, Custom))
+    private val modes = choices("Mode", Instant, arrayOf(Instant, Grim, NCP, AAC, Custom))
     private val noMove by boolean("NoMove", false)
 
     private object Instant : Choice("Instant") {
@@ -77,7 +77,45 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
     }
+    private object Grim : Choice("Grim") {
+        override val parent: ChoiceConfigurable
+            get() = modes
 
+        val repeatable = repeatable {
+            if (!player.isUsingItem) {
+                return@repeatable
+            }
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
+                if (player.isUsingItem) {
+                    repeat(35) {
+                        network.sendPacket(PlayerMoveC2SPacket.Full(
+                            player.x, player.y, player.z,
+                            player.yaw, player.pitch,
+                            player.isOnGround
+                        ))
+                    }
+                    player.stopUsingItem()
+                }
+            }
+        }
+
+        val moveHandler = handler<PlayerMoveEvent> { event ->
+            if (!noMove) {
+                return@handler
+            }
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
+                if (player.isUsingItem) {
+                    event.movement.x = 0.0
+                    event.movement.y = 0.0
+                    event.movement.z = 0.0
+                }
+            }
+        }
+    }
     private object NCP : Choice("NCP") {
         override val parent: ChoiceConfigurable
             get() = modes
