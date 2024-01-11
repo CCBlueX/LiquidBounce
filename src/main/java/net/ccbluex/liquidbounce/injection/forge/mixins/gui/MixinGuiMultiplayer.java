@@ -26,18 +26,20 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
-        buttonList.add(new GuiButton(997, 5, 8, 45, 20, "Fixes"));
-        buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 55, 8, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.INSTANCE.getEnabled() ? "On" : "Off")));
-        buttonList.add(new GuiButton(999, width - 104, 8, 98, 20, "Tools"));
-
         // Detect ViaForge button
         GuiButton button = buttonList.stream().filter(b -> b.displayString.equals("ViaForge")).findFirst().orElse(null);
 
+        int increase = 0;
+        int yPosition = 8;
+
         if (button != null) {
-            // Set it next to the BungeeCord Spoof button
-            button.xPosition = 158;
-            button.yPosition = 8;
+            increase += 105;
+            yPosition = Math.min(button.yPosition, 10);
         }
+
+        buttonList.add(new GuiButton(997, 5 + increase, yPosition, 45, 20, "Fixes"));
+        buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 55 + increase, yPosition, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.INSTANCE.getEnabled() ? "On" : "Off")));
+        buttonList.add(new GuiButton(999, width - 104, yPosition, 98, 20, "Tools"));
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
