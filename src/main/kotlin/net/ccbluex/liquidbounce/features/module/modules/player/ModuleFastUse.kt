@@ -77,7 +77,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
     }
-    private object Grim : Choice("Grim") {
+    private object Grim : Choice("Grim1.17+") {
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -88,13 +88,15 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
                 || player.activeItem.item is PotionItem
             ) {
-                if (player.isUsingItem) {
-                    repeat(35) {
+                if (player.isUsingItem) { 
+                    // Q: Why this works?
+                    // A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
+                    repeat(20) {
                         network.sendPacket(PlayerMoveC2SPacket.Full(
                             player.x, player.y, player.z,
                             player.yaw, player.pitch,
                             player.isOnGround
-                        ))
+                        )) // C06 duplicate exempt, but we abuse it.
                     }
                     player.stopUsingItem()
                 }
