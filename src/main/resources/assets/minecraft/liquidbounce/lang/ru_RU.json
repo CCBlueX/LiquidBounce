@@ -102,6 +102,8 @@
         "module.avoidHazards.description": "Предотвращает попадание в блоки, наносящие урон.",
         
         "module.blink.description": "Приостанавливает все пакеты перемещения.",
+
+        "module.bedProtectionESP.description": "UNTRANSLATED: Allows you to see where the blocks should be placed to protect a bed",
         
         "module.blockESP.description": "Позволяет видеть выбранный блок сквозь стены.",
         
@@ -327,6 +329,10 @@
         
         "module.xRay.description": "Позволяет видеть руды сквозь блоки.",
         
-        "module.zoot.description": "Убирает все негативные эффекты зелий/огня."
+        "module.zoot.description": "Убирает все негативные эффекты зелий/огня.",
+
+        "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
+
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
     }
 }

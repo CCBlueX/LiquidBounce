@@ -66,7 +66,7 @@
 
         "module.bedGodMode.description": "允许你躺在床上四处走动。(对于1.9)",
 
-        "module.bedProtectionESP.description": "让您了解应该将方块放置在哪里来保护床",
+        "module.bedProtectionESP.description": "帮助你找到保护床所需放置方块的位置。 ",
 
         "module.clip.description": "允许你clip通过方块。",
         
@@ -332,6 +332,8 @@
         
         "module.zoot.description": "移除所有负面药水效果/火焰。",
 
-        "module.disabler.description": "禁用服务器或特定的反作弊检测"
+        "module.keepSprint.description": "允许你在攻击后不打断疾跑。",
+
+        "module.disabler.description": "使你免受服务器或特定反作弊的作弊检测。"
     }
 }

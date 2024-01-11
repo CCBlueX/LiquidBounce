@@ -101,6 +101,8 @@
 
         "module.blink.description": "Suspende todos os pacotes de movimento.",
 
+        "module.bedProtectionESP.description": "UNTRANSLATED: Allows you to see where the blocks should be placed to protect a bed",
+
         "module.blockESP.description": "Permite ver um bloco selecionado através das paredes.",
 
         "module.blockOverlay.description": "Permite alterar o design da sobreposição de blocos.",
@@ -323,6 +325,10 @@
 
         "module.xRay.description": "Permite ver minérios através de paredes.",
 
-        "module.zoot.description": "Remove todos os efeitos ruins de poções/fogo."
+        "module.zoot.description": "Remove todos os efeitos ruins de poções/fogo.",
+
+        "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
+
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
     }
 }

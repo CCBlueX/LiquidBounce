@@ -99,6 +99,8 @@
         "module.autoWalk.description": "Automaticamente faz te andar.",
         
         "module.blink.description": "Suspende todos os \"\"packets\"\" de movimento.",
+
+        "module.bedProtectionESP.description": "UNTRANSLATED: Allows you to see where the blocks should be placed to protect a bed",
         
         "module.blockESP.description": "Permite que tu vejas um bloco selecionado através de paredes.",
         
@@ -320,6 +322,10 @@
         
         "module.xRay.description": "Permite que tu vejas minérios através de paredes.",
         
-        "module.zoot.description": "Remove todos os maus efeitos de poções/fogo."
+        "module.zoot.description": "Remove todos os maus efeitos de poções/fogo.",
+
+        "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
+
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
 }
 }
