@@ -271,7 +271,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         if (onlyFallCrit &&
                             player.fallDistance >= onlyFallCritFallDist &&
                             player.velocity.y > 0.0f &&
-                            (onlyFallCritOnSpace && InputUtil.isKeyPressed(mc.window.handle, GLFW.GLFW_KEY_SPACE) || !onlyFallCritOnSpace)
+                            (onlyFallCritOnSpace
+                                && InputUtil.isKeyPressed(mc.window.handle, GLFW.GLFW_KEY_SPACE)
+                                || !onlyFallCritOnSpace)
                         ) {
                             player.isSprinting = false
                             chosenEntity.attack(swing, keepSprint)
