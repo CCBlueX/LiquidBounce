@@ -36,7 +36,6 @@ object KeyPearl : Module("KeyPearl", ModuleCategory.PLAYER, subjective = true, g
     private var wasMouseDown = false
     private var wasKeyDown = false
     private var hasThrown = false
-    private var prevSlot = 0
 
     private fun throwEnderPearl() {
         val pearlInHotbar = InventoryUtils.findItem(36, 44, Items.ender_pearl)
@@ -57,21 +56,18 @@ object KeyPearl : Module("KeyPearl", ModuleCategory.PLAYER, subjective = true, g
             return
         }
 
-        prevSlot = mc.thePlayer.inventory.currentItem
         sendPackets(
             C09PacketHeldItemChange(pearlInHotbar - 36),
             C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
         hasThrown = true
     }
 
-
     @EventTarget
     fun onTick(event: TickEvent) {
         if (hasThrown) {
-            if (mc.thePlayer.inventory.currentItem != prevSlot) {
-                sendPackets(C09PacketHeldItemChange(prevSlot))
-            }
+            sendPackets(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
             hasThrown = false
+            
         }
 
         if (mc.currentScreen != null || mc.playerController.currentGameType == WorldSettings.GameType.SPECTATOR
