@@ -5,6 +5,7 @@
         getLocation,
         getSession,
         loginAccount,
+        loginCrackedAccount,
         newAltening,
         newAlteningGen,
         newCrackedAccount,
@@ -84,6 +85,20 @@
         }
 
         newCrackedAccount(crackedUsername);
+    }
+
+    function siteLoginCrackedAccount() {
+        if (crackedUsername.trim() === "") {
+            feedback("Please enter a username", "red");
+            return;
+        }
+
+        loginCrackedAccount(crackedUsername);
+    }
+
+    function siteLoginRandomCrackedAccount() {
+        crackedUsername = random();
+        loginCrackedAccount(crackedUsername);
     }
     
     let alteningAccountToken = "";
@@ -367,7 +382,12 @@
                     <button on:click={siteNewCrackedAccount}>
                         Add
                     </button>
-
+                    <button on:click={siteLoginCrackedAccount}>
+                        Login
+                    </button>
+                    <button on:click={siteLoginRandomCrackedAccount}>
+                        Login Random
+                    </button>
 
                 </div>
             </div>
