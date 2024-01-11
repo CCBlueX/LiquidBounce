@@ -80,7 +80,10 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
     // Anticheat: Grim
     // Tested AC Version: 2.5.34
     // Tested on: eu.loyisa.cn, anticheat-test.com
-    private object Grim : Choice("Grim1.17+") {
+    // Usable MC version: 1.17-1.20.4
+    // Q: Why this works?
+    // A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
+    private object Grim : Choice("Grim2.5.34") {
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -92,8 +95,6 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 || player.activeItem.item is PotionItem
             ) {
                 if (player.isUsingItem) { 
-                    // Q: Why this works?
-                    // A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
                     repeat(20) {
                         network.sendPacket(PlayerMoveC2SPacket.Full(
                             player.x, player.y, player.z,
