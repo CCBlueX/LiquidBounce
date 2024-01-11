@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
 
-@Mixin(GuiMultiplayer.class)
+@Mixin(value = GuiMultiplayer.class, priority = 1001)
 public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
 
     private GuiButton bungeeCordSpoofButton;
@@ -29,6 +29,15 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
         buttonList.add(new GuiButton(997, 5, 8, 45, 20, "Fixes"));
         buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 55, 8, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.INSTANCE.getEnabled() ? "On" : "Off")));
         buttonList.add(new GuiButton(999, width - 104, 8, 98, 20, "Tools"));
+
+        // Detect ViaForge button
+        GuiButton button = buttonList.stream().filter(b -> b.displayString.equals("ViaForge")).findFirst().orElse(null);
+
+        if (button != null) {
+            // Set it next to the BungeeCord Spoof button
+            button.xPosition = 158;
+            button.yPosition = 8;
+        }
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
