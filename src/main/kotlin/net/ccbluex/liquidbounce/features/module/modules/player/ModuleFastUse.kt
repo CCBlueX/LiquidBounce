@@ -114,11 +114,9 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
                 || player.activeItem.item is PotionItem
             ) {
-                if (player.isUsingItem) {
-                    event.movement.x = 0.0
-                    event.movement.y = 0.0
-                    event.movement.z = 0.0
-                }
+                event.movement.x = 0.0
+                event.movement.y = 0.0
+                event.movement.z = 0.0
             }
         }
     }
