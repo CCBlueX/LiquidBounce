@@ -102,6 +102,8 @@
         "module.avoidHazards.description": "Не позволява да ходите в блокове, които може да са вредни за вас.",
         
         "module.blink.description": "Спира всички пакети за движение.",
+
+        "module.bedProtectionESP.description": "UNTRANSLATED: Allows you to see where the blocks should be placed to protect a bed",
         
         "module.blockESP.description": "Позволява ви да видите избран блок през стени.",
         
@@ -327,6 +329,10 @@
         
         "module.xRay.description": "Позволява ви да виждате руди през стени.",
         
-        "module.zoot.description": "Премахва всички лоши ефекти на отвара/огън."
+        "module.zoot.description": "Премахва всички лоши ефекти на отвара/огън.",
+
+        "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
+
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
     }
 }
