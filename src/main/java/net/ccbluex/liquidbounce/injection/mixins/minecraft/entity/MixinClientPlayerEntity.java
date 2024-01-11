@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.events.*;
@@ -35,10 +34,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
-import net.minecraft.client.util.SkinTextures;
 import org.spongepowered.asm.mixin.Unique;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -73,9 +70,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Shadow
     protected abstract boolean isWalking();
 
-    @Shadow
-    @Final
-    protected MinecraftClient client;
     @Unique
     private float lastKnownHealth;
     @Unique
@@ -256,6 +250,11 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         }
     }
 
+    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z"))
+    private boolean hookFreeCamPreventCreativeFly(PlayerAbilities instance) {
+        return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
+    }
+
     @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 2)
     private boolean hookFreeCamPreventRotations(boolean bl4) {
         return (!ModuleFreeCam.INSTANCE.shouldDisableRotations() ||  ModuleRotations.INSTANCE.shouldSendCustomRotation())  && bl4;
@@ -266,11 +265,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return ModuleSprint.INSTANCE.shouldIgnoreHunger() ? -1F : constant;
     }
 
-    @Inject(method = "tickMovement", at = @At("HEAD"))
-    private void hookAutoSprint(CallbackInfo ci) {
-        if(ModuleSuperKnockback.INSTANCE.shouldBlockSprinting()) {
-            this.client.options.sprintKey.setPressed(false);
-        }
+    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
+    private boolean hookAutoSprint(KeyBinding instance) {
+        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting() && (ModuleSprint.INSTANCE.getEnabled() || instance.isPressed());
     }
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
