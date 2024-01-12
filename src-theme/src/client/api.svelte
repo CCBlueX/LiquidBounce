@@ -184,6 +184,26 @@
     }
 
     /**
+     * post("/account/login/cracked") {
+     *         class AccountForm(
+     *             val username: String
+     *         )
+     *         val accountForm = decode<AccountForm>(it.content)
+     *         AccountManager.loginCrackedAccountAsync(accountForm.username)
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function loginCrackedAccount(username) {
+        return request("/account/login/cracked", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "username": username })
+        })
+    }
+
+    /**
      * post("/accounts/new/cracked") {
      *         class AccountForm(
      *             val username: String

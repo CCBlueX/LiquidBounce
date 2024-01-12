@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
+import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
@@ -120,6 +121,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSleepWalker,
             ModuleSpoofer,
             ModuleVehicleOneHit,
+            ModuleServerCrasher,
 
             // Fun
             ModuleDankBobbing,
