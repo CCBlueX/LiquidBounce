@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.outputString
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.GameMenuScreen
@@ -110,15 +110,12 @@ object IntegrationHandler : Listenable {
         browserIsReady = true
     }
 
-    val screenChangeChronometer = Chronometer()
-
     fun virtualOpen(name: String) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.name == name) {
             return
         }
 
-        screenChangeChronometer.reset()
         virtualClose()
         val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
         EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
@@ -126,14 +123,12 @@ object IntegrationHandler : Listenable {
     }
 
     fun virtualClose() {
-        screenChangeChronometer.reset()
         EventManager.callEvent(VirtualScreenEvent(momentaryVirtualScreen?.name ?: return,
             VirtualScreenEvent.Action.CLOSE))
         momentaryVirtualScreen = null
     }
 
     fun updateIntegrationBrowser() {
-        screenChangeChronometer.reset()
         clientJcef?.loadUrl(integrationUrl)
     }
 
@@ -186,40 +181,6 @@ object IntegrationHandler : Listenable {
             event.cancelEvent()
         } else {
             virtualOpen(virtualScreenType.assignedName)
-        }
-    }
-
-    /**
-     * This should not be needed, but in case the browser desyncs, we can detect it and reload the page.
-     *
-     * However during development, you might want to disable this, as it can be annoying.
-     */
-    val desyncChecker = repeatable {
-        val url = clientJcef?.getUrl() ?: return@repeatable
-
-        // If this is not included, we are not on a router page
-        if (!url.contains("/#/")) {
-            return@repeatable
-        }
-
-        if (!screenChangeChronometer.hasElapsed(1000)) {
-            return@repeatable
-        }
-
-        // http://$NETTY_ROOT/${activeTheme.name}/#/{screenName}
-        val virtualScreen = momentaryVirtualScreen
-        val expectedUrls = if (virtualScreen != null) {
-            arrayOf("$integrationUrl#/${virtualScreen.name}")
-        } else {
-            arrayOf("$integrationUrl#/", "$integrationUrl#/undefined", "$integrationUrl#/closed")
-        }
-
-        if (url !in expectedUrls) {
-            "Integration browser desync detected! Expected ${expectedUrls.joinToString()}, got $url".let {
-                logger.warn(it)
-                chat("§c$it")
-            }
-            updateIntegrationBrowser()
         }
     }
 
