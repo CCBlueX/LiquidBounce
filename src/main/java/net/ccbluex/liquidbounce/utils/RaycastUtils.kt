@@ -18,6 +18,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.item.EntityItemFrame
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.projectile.EntityLargeFireball
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.MovingObjectPosition
@@ -42,8 +43,8 @@ object RaycastUtils : MinecraftInstance() {
         val entityLook = getVectorForRotation(yaw, pitch)
         val vec = eyePosition + (entityLook * blockReachDistance)
 
-        val entityList = mc.theWorld.getEntities(EntityLivingBase::class.java) {
-            it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != renderViewEntity
+        val entityList = mc.theWorld.getEntities(Entity::class.java) {
+            it != null && (it is EntityLivingBase || it is EntityLargeFireball) && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != renderViewEntity
         }
 
         var pointedEntity: Entity? = null
