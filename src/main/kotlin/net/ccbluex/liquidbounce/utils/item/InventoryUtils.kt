@@ -46,8 +46,9 @@ object Hotbar {
     val slots = run {
         return@run (0 until 9).map { HotbarItemSlot(it) }
     }
-    fun findClosestItem(items: Array<Item>): List<ItemSlot> {
+    fun findClosestItem(items: Array<Item>): HotbarItemSlot? {
         return slots.filter { it.itemStack.item in items }
+            .minByOrNull { abs(player.inventory.selectedSlot - it.hotbarSlotForServer) }
     }
 
     val items

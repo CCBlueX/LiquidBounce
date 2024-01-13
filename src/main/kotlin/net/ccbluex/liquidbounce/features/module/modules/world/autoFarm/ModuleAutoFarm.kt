@@ -178,7 +178,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
                 item ?: return@repeatable
 
-                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
+                SilentHotbar.selectSlotSilently(this, item.hotbarSlotForServer, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult)
 
                 waitTicks(interactDelay.random())
