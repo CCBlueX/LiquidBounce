@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.web.browser.supports.tab
 
+import net.minecraft.client.gl.ShaderProgram
+
 interface ITab {
 
     var drawn: Boolean
@@ -30,6 +32,7 @@ interface ITab {
     fun closeTab()
 
     fun getTexture(): Int
+    fun getShader(): ShaderProgram?
 
     fun resize(width: Int, height: Int)
 
