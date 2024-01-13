@@ -51,8 +51,6 @@ import kotlin.math.max
 object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
     private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier("hud/hotbar_offhand_left")
 
-
-
     private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
 
     private val preferGappleHealth by float("PreferGappleHealth", 9f, 0f..20f)

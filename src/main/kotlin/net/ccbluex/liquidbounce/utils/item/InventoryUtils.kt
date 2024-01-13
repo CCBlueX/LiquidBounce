@@ -36,10 +36,18 @@ val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
     return@run hotbarItems + offHandItem + inventoryItems + armorItems
 }
 
+
+
 object Hotbar {
-    fun findClosestItem(items: Array<Item>): Int? {
-        return (0..8).filter { player.inventory.getStack(it).item in items }
-            .minByOrNull { abs(player.inventory.selectedSlot - it) }
+
+    /**
+     * Contains all hotbar slots in inventory.
+     */
+    val slots = run {
+        return@run (0 until 9).map { HotbarItemSlot(it) }
+    }
+    fun findClosestItem(items: Array<Item>): List<ItemSlot> {
+        return slots.filter { it.itemStack.item in items }
     }
 
     val items
@@ -49,15 +57,15 @@ object Hotbar {
         validator: (Int, ItemStack) -> Boolean,
         sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }
     ) =
-        (0..8)
-            .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
+        slots
+            .map {slot -> Pair (slot.hotbarSlotForServer, slot.itemStack) }
             .filter { (slot, itemStack) -> validator (slot, itemStack) }
             .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
 
 
     fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) =
-        (0..8)
-            .map {slot -> Pair (slot, player.inventory.getStack(slot)) }
+        slots
+            .map {slot -> Pair (slot.hotbarSlotForServer, slot.itemStack) }
             .maxByOrNull { (slot, itemStack) -> sort(slot, itemStack) }
             ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
 
