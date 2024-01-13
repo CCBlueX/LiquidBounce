@@ -161,7 +161,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && player.hurtTime > 0) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
                 event.cancelEvent()
                 velocityInput = true
                 return@handler
