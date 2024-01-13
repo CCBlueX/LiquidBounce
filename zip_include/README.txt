@@ -8,7 +8,7 @@
 an open source minecraft hacked client for 1.8-1.20.4.
 https://liquidbounce.net/
 
-➔ How to install on Fabric
+➔ How to install on Fabric 1.20.4
 1. Install the Fabric Mod Loader for 1.20.4 (How to: https://fabricmc.net/use/).
 2. Create a folder called "mods" inside in the ".minecraft" directory.
 3. Copy "liquidbounce.jar" into the mods folder.
@@ -16,6 +16,17 @@ https://liquidbounce.net/
 5. REQUIRED: Install the Fabric API mod (https://modrinth.com/mod/fabric-api).
 6. OPTIONAL: Install the ViaFabricPlus Mod (https://modrinth.com/mod/viafabricplus).
 7. Launch Fabric from the Minecraft launcher.
+
+➔ How to install on Forge 1.20.4
+| Forge is currently not supported. Sorry! Please use Fabric instead.
+
+➔ How to install on Lunar Client 1.20.4
+1. Install Lunar Client for 1.20.4 (https://www.lunarclient.com/download).
+2. Use their Launcher to launch Minecraft 1.20.4 with Fabric.
+3. Go to the ".lunarclient/offline/multiver/mods/fabric-1.20.4/" directory.
+4. Copy "liquidbounce.jar" into the mods folder.
+5. REQUIRED: Install the Kotlin fabric language mod (https://modrinth.com/mod/fabric-language-kotlin)
+6. Launch Lunar Client.
 
 ➔ Reminder for nightly builds
 This is a development build. Use these versions only if you know what you are doing! Bugs can and will occur!
