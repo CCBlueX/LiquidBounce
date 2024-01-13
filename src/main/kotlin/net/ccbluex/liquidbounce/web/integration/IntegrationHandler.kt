@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.outputString
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.GameMenuScreen
@@ -72,9 +73,15 @@ object IntegrationHandler : Listenable {
     enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
                                  val showAlong: Boolean = false, private val open: () -> Unit = {}) {
 
-        TITLE("title", { it is TitleScreen }, open = {
-            mc.setScreen(TitleScreen())
-        }),
+        TITLE("title",
+            {
+                // todo: figure out a better way of detecting Lunar Mod Main Menu instead of guessing
+                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") &&
+                    it.title.outputString() == "ScreenInjector" && mc.world == null)
+            },
+            open = {
+                mc.setScreen(TitleScreen())
+            }),
         MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, true, open = {
             mc.setScreen(MultiplayerScreen(parent))
         }),
