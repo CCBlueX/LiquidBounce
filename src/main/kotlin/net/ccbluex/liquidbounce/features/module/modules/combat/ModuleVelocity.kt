@@ -33,8 +33,11 @@ import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.util.math.Direction
 
 /**
  * Velocity module
@@ -46,7 +49,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, Dexland, JumpReset
+            Modify, Grim117, Strafe, AAC442, Dexland, JumpReset
         )
     }
 
@@ -146,7 +149,45 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
 
     }
+    private object Grim117 : Choice("Grim1.17") {
 
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val packets by int("C06", 2, 1..10)
+
+        var velocityInput = false
+
+        val packetHandler = handler<PacketEvent> { event ->
+            val packet = event.packet
+
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+                event.cancelEvent()
+                velocityInput = true
+                return@handler
+            } else if (packet is ExplosionS2CPacket) {
+                event.cancelEvent()
+                velocityInput = true
+                return@handler
+            }
+        }
+        val moveHandler = handler<PlayerMoveEvent> { event ->
+            if (velocityInput) {
+                repeat(packets) {
+                    network.sendPacket(PlayerMoveC2SPacket.Full(
+                        player.x, player.y, player.z,
+                        player.yaw, player.pitch,
+                        player.isOnGround
+                    ))
+                }
+                network.sendPacket(PlayerActionC2SPacket(
+                    PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, player.blockPos, Direction.DOWN
+                ))
+                velocityInput = false
+            }
+        }
+
+    }
     private object Dexland : Choice("Dexland") {
 
         override val parent: ChoiceConfigurable
