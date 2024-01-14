@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -62,12 +63,15 @@ import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 import kotlin.random.Random
 
+
 /**
  * Scaffold module
  *
  * Places blocks under you.
  */
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
+
+    private val grimMoment by boolean("GrimExploit", true)
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
         internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 100))
@@ -230,6 +234,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             target?.rotation
         } ?: return@handler
 
+        if (grimMoment) {
+            return@handler
+        }
+
         RotationManager.aimAt(
             rotation,
             considerInventory = !ignoreOpenInventory,
@@ -309,8 +317,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // Does the crosshair target meet the requirements?
-        if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
-            || !isValidCrosshairTarget(currentCrosshairTarget)
+        if ((!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
+                || !isValidCrosshairTarget(currentCrosshairTarget)) && !grimMoment
         ) {
             ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
 
@@ -335,17 +343,46 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         var wasSuccessful = false
 
-        doPlacement(currentCrosshairTarget, handToInteractWith, {
-            ScaffoldMovementPlanner.trackPlacedBlock(target)
-            ScaffoldEagleFeature.onBlockPlacement()
-            ScaffoldAutoJumpFeature.onBlockPlacement()
+        val shouldGrim = raycast(4.5, target.rotation)
 
-            currentTarget = null
+        if (grimMoment && shouldGrim != null && isValidCrosshairTarget(shouldGrim) && target.doesCrosshairTargetFullFillRequirements(shouldGrim)) {
 
-            wasSuccessful = true
+            network.sendPacket(PlayerMoveC2SPacket.Full(
+                player.x, player.y, player.z,
+                target.rotation.yaw, target.rotation.pitch,
+                player.isOnGround
+            ))
 
-            swing
-        }, ModuleScaffold::swing)
+            doPlacement(shouldGrim, handToInteractWith, {
+                ScaffoldMovementPlanner.trackPlacedBlock(target)
+                ScaffoldEagleFeature.onBlockPlacement()
+                ScaffoldAutoJumpFeature.onBlockPlacement()
+
+                currentTarget = null
+
+                wasSuccessful = true
+
+                swing
+            }, ModuleScaffold::swing)
+
+            network.sendPacket(PlayerMoveC2SPacket.Full(
+                player.x, player.y, player.z,
+                player.yaw, player.pitch,
+                player.isOnGround
+            ))
+        } else if (!grimMoment) {
+            doPlacement(currentCrosshairTarget, handToInteractWith, {
+                ScaffoldMovementPlanner.trackPlacedBlock(target)
+                ScaffoldEagleFeature.onBlockPlacement()
+                ScaffoldAutoJumpFeature.onBlockPlacement()
+
+                currentTarget = null
+
+                wasSuccessful = true
+
+                swing
+            }, ModuleScaffold::swing)
+        }
 
         if (wasSuccessful) {
             waitTicks(currentDelay)
