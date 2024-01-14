@@ -103,10 +103,11 @@ public abstract class MixinGameRenderer {
     /**
      * Hook screen render event
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
-    public void hookScreenRender(Screen screen, DrawContext context, int mouseX, int mouseY, float delta) {
-        screen.render(context, mouseX, mouseY, delta);
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(screen, context, mouseX, mouseY, delta));
+    @Inject(method = "render", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V",
+            shift = At.Shift.AFTER))
+    public void hookScreenRender(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent());
     }
 
     @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
