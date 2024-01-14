@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.utils
 import com.google.common.base.Predicate
 import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
+import net.ccbluex.liquidbounce.utils.extensions.rebuildInput
+import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.block.state.IBlockState
@@ -42,40 +44,37 @@ import kotlin.math.ceil
 /**
  * Compatible with client user ONLY. Useful for predicting movement ticks ahead.
  */
-@Suppress("SameParameterValue")
+@Suppress("SameParameterValue", "MemberVisibilityCanBePrivate")
 open class SimulatedPlayer(
-    val player: EntityPlayerSP,
+    private val player: EntityPlayerSP,
     var box: AxisAlignedBB,
     var movementInput: MovementInput,
-    var moveForward: Float,
-    private var moveStrafing: Float,
-    private var isJumping: Boolean,
     private var jumpTicks: Int,
     var motionZ: Double,
     var motionY: Double,
     var motionX: Double,
-    private var inWater: Boolean,
-    private var onGround: Boolean,
+    var inWater: Boolean,
+    var onGround: Boolean,
     private var isAirBorne: Boolean,
-    private val rotationYaw: Float,
-    private var posX: Double,
-    private var posY: Double,
-    private var posZ: Double,
+    var rotationYaw: Float,
+    var posX: Double,
+    var posY: Double,
+    var posZ: Double,
     private val capabilities: PlayerCapabilities,
     private val ridingEntity: Entity?,
     private var jumpMovementFactor: Float,
     private val worldObj: World,
-    private var isCollidedHorizontally: Boolean,
-    private var isCollidedVertically: Boolean,
+    var isCollidedHorizontally: Boolean,
+    var isCollidedVertically: Boolean,
     private val worldBorder: WorldBorder,
     private val chunkProvider: IChunkProvider,
     private var isOutsideBorder: Boolean,
     private var riddenByEntity: Entity?,
     private var attributeMap: BaseAttributeMap?,
     private val isSpectator: Boolean,
-    private var fallDistance: Float,
+    var fallDistance: Float,
     private val stepHeight: Float,
-    private var isCollided: Boolean,
+    var isCollided: Boolean,
     private var fire: Int,
     private var distanceWalkedModified: Float,
     private var distanceWalkedOnStepModified: Float,
@@ -83,13 +82,17 @@ open class SimulatedPlayer(
     private val height: Float,
     private val width: Float,
     private val fireResistance: Int,
-    private var isInWeb: Boolean,
+    var isInWeb: Boolean,
     private var noClip: Boolean,
     private var isSprinting: Boolean,
     private val foodStats: FoodStats,
 ) : MinecraftInstance(), PlayerSimulation {
     override val pos: Vec3
         get() = Vec3(posX, posY, posZ)
+
+    private var moveForward = 0f
+    private var moveStrafing = 0f
+    private var isJumping = false
 
     companion object {
 
@@ -111,9 +114,6 @@ open class SimulatedPlayer(
             return SimulatedPlayer(player,
                 player.entityBoundingBox,
                 movementInput,
-                player.moveForward,
-                player.moveStrafing,
-                player.isJumping,
                 player.jumpTicks,
                 player.motionZ,
                 player.motionY,
@@ -184,6 +184,13 @@ open class SimulatedPlayer(
         playerUpdate(true)
     }
 
+    fun syncWithInputAndRotations() {
+        val rotation = RotationUtils.currentRotation ?: player.rotation
+
+        rotationYaw = rotation.yaw
+        movementInput = player.rebuildInput()
+    }
+
     private fun clientPlayerLivingUpdate() {
         pushOutOfBlocks(posX - width.toDouble() * 0.35,
             getEntityBoundingBox().minY + 0.5,
@@ -205,13 +212,15 @@ open class SimulatedPlayer(
         val flag3 = this.foodStats.foodLevel.toFloat() > 6.0f || capabilities.allowFlying
         val f = 0.8
 
+        val shouldSprint = player.isSprinting
+
         if (onGround && movementInput.moveForward >= f && !isSprinting() && flag3 && !player.isUsingItem && !isPotionActive(
                 Potion.blindness
-            )) {
+            ) && shouldSprint) {
             setSprinting(true)
         }
 
-        if (!isSprinting() && movementInput.moveForward >= f && flag3 && !player.isUsingItem && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown) {
+        if (!isSprinting() && movementInput.moveForward >= f && flag3 && !player.isUsingItem && !isPotionActive(Potion.blindness) && shouldSprint) {
             setSprinting(true)
         }
 
@@ -1024,16 +1033,18 @@ open class SimulatedPlayer(
     }
 
     private fun jump() {
-        motionY = this.getJumpUpwardsMotion().toDouble()
-        if (this.isPotionActive(Potion.jump)) {
-            motionY += ((this.getActivePotionEffect(Potion.jump).amplifier + 1).toFloat() * 0.1f).toDouble()
+        motionY = getJumpUpwardsMotion().toDouble()
+        if (isPotionActive(Potion.jump)) {
+            motionY += ((getActivePotionEffect(Potion.jump).amplifier + 1).toFloat() * 0.1f).toDouble()
         }
-        if (this.isSprinting()) {
-            val f: Float = this.rotationYaw * 0.017453292f
+
+        if (isSprinting()) {
+            val f = rotationYaw * 0.017453292f
             motionX -= (MathHelper.sin(f) * 0.2f).toDouble()
             motionZ += (MathHelper.cos(f) * 0.2f).toDouble()
         }
-        this.isAirBorne = true
+
+        isAirBorne = true
     }
 
     private fun isSprinting(): Boolean {
@@ -1299,7 +1310,6 @@ open class SimulatedPlayer(
             }
         } else {
             motionY = 0.0
-
         }
     }
 
