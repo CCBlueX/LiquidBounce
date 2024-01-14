@@ -192,6 +192,7 @@ object IntegrationHandler : Listenable {
 
         val virtualScreenType =  VirtualScreenType.values().find { it.recognizer(screen) }
         if (virtualScreenType == null) {
+            logger.warn("Unknown screen type: ${screen.javaClass.name} with title '${screen.title.outputString()}'")
             virtualClose()
             return@handler
         }
