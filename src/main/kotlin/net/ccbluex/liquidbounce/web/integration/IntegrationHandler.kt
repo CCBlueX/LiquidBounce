@@ -22,10 +22,7 @@ package net.ccbluex.liquidbounce.web.integration
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
@@ -147,6 +144,7 @@ object IntegrationHandler : Listenable {
     }
 
     fun updateIntegrationBrowser() {
+        logger.info("Reloading integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
         clientJcef?.loadUrl(integrationUrl)
     }
 
@@ -215,6 +213,14 @@ object IntegrationHandler : Listenable {
             acknowledgement.since.reset()
             updateIntegrationBrowser()
         }
+    }
+
+    /**
+     * Refresh integration browser when we change worlds, this can also mean we disconnect from a server
+     * and go back to the main menu.
+     */
+    val worldChangeEvent = handler<WorldChangeEvent> {
+        updateIntegrationBrowser()
     }
 
 }
