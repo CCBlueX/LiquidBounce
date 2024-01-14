@@ -531,26 +531,20 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             return
 
         val backtrackDataArray = getBacktrackData(entity.uniqueID) ?: return
-        val entityPosition = entity.positionVector
-        val (prevX, prevY, prevZ) = Triple(entity.prevPosX, entity.prevPosY, entity.prevPosZ)
+
+        val currPos = entity.currPos
+        val prevPos = entity.prevPos
 
         // This will loop through the backtrack data. We are using reversed() to loop through the data from the newest to the oldest.
         for ((x, y, z, _) in backtrackDataArray.reversed()) {
-            entity.setPosition(x, y, z)
-            entity.prevPosX = x
-            entity.prevPosY = y
-            entity.prevPosZ = z
+            entity.setPosAndPrevPos(Vec3(x, y, z))
 
             if (action())
                 break
         }
 
         // Reset position
-        entity.prevPosX = prevX
-        entity.prevPosY = prevY
-        entity.prevPosZ = prevZ
-
-        entity.setPosition(entityPosition.xCoord, entityPosition.yCoord, entityPosition.zCoord)
+        entity.setPosAndPrevPos(currPos, prevPos)
     }
 
     fun runWithNearestTrackedDistance(entity: Entity, f: () -> Unit) {
@@ -584,24 +578,15 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
     }
 
     private fun runWithSimulatedPastPosition(entity: Entity, vec3: Vec3, f: () -> Double?): Double? {
-        val entityPosition = entity.positionVector
-        val (prevX, prevY, prevZ) = Triple(entity.prevPosX, entity.prevPosY, entity.prevPosZ)
+        val currPos = entity.currPos
+        val prevPos = entity.prevPos
 
-        val (x, y, z) = Triple(vec3.xCoord, vec3.yCoord, vec3.zCoord)
-
-        entity.setPosition(x, y, z)
-        entity.prevPosX = x
-        entity.prevPosY = y
-        entity.prevPosZ = z
+        entity.setPosAndPrevPos(vec3)
 
         val result = f()
 
         // Reset position
-        entity.prevPosX = prevX
-        entity.prevPosY = prevY
-        entity.prevPosZ = prevZ
-
-        entity.setPosition(entityPosition.xCoord, entityPosition.yCoord, entityPosition.zCoord)
+        entity.setPosAndPrevPos(currPos, prevPos)
 
         return result
     }

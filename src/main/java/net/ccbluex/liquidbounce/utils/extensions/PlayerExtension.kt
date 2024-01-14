@@ -5,10 +5,13 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura.blockStatus
+import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow.isUNCPBlocking
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
@@ -27,11 +30,9 @@ import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
+import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
+import net.minecraft.util.*
 import net.minecraftforge.event.ForgeEventFactory
 
 /**
@@ -84,6 +85,51 @@ val Entity.hitBox: AxisAlignedBB
 val Entity.eyes: Vec3
     get() = getPositionEyes(1f)
 
+val Entity.prevPos: Vec3
+    get() = Vec3(this.prevPosX, this.prevPosY, this.prevPosZ)
+
+val Entity.currPos: Vec3
+    get() = this.positionVector
+
+fun EntityPlayerSP.rebuildInput(): MovementInput {
+    val rotation = currentRotation ?: rotation
+
+    val deltaYaw = rotation.yaw - rotationYaw
+
+    return MovementInputFromOptions(mc.gameSettings).apply {
+        updatePlayerMoveState()
+
+        if (sneak) {
+            moveForward /= 0.3f
+            moveStrafe /= 0.3f
+        }
+
+        val newForward = moveForward * MathHelper.cos(deltaYaw.toRadians()) + moveStrafe * MathHelper.sin(deltaYaw.toRadians())
+        val newStrafe = moveStrafe * MathHelper.cos(deltaYaw.toRadians()) - moveForward * MathHelper.sin(deltaYaw.toRadians())
+
+        moveForward = newForward
+        moveStrafe = newStrafe
+
+        if (sneak) {
+            moveForward *= 0.3f
+            moveStrafe *= 0.3f
+        }
+
+        val isUsingItem = heldItem != null && (isUsingItem || (heldItem.item is ItemSword && blockStatus) || isUNCPBlocking())
+
+        if (isUsingItem && !isRiding) {
+            moveForward *= 0.2f
+            moveStrafe *= 0.2f
+        }
+    }
+}
+
+fun Entity.setPosAndPrevPos(currPos: Vec3, prevPos: Vec3 = currPos) {
+    setPosition(currPos.xCoord, currPos.yCoord, currPos.zCoord)
+    prevPosX = prevPos.xCoord
+    prevPosY = prevPos.yCoord
+    prevPosZ = prevPos.zCoord
+}
 
 fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
     if (yaw != null) fixedSensitivityYaw = yaw
@@ -128,7 +174,7 @@ fun EntityPlayerSP.stop() {
 // Modified mc.playerController.onPlayerRightClick() that sends correct stack in its C08
 fun EntityPlayerSP.onPlayerRightClick(
     clickPos: BlockPos, side: EnumFacing, clickVec: Vec3,
-    stack: ItemStack? = inventory.mainInventory[serverSlot]
+    stack: ItemStack? = inventory.mainInventory[serverSlot],
 ): Boolean {
     if (clickPos !in worldObj.worldBorder)
         return false
