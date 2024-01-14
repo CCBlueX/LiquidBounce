@@ -94,6 +94,15 @@ private fun RestNode.setupAccountManagerRest() {
         httpOk(JsonObject())
     }
 
+    post("/account/login/cracked") {
+        class AccountForm(
+            val username: String
+        )
+        val accountForm = decode<AccountForm>(it.content)
+        AccountManager.loginCrackedAccountAsync(accountForm.username)
+        httpOk(JsonObject())
+    }
+
     // Restore initial session
     post("/account/restoreInitial") {
         AccountManager.restoreInitial()
@@ -109,6 +118,8 @@ private fun RestNode.setupAccountManagerRest() {
         AccountManager.newCrackedAccount(accountForm.username)
         httpOk(JsonObject())
     }
+
+
 
     post("/accounts/new/microsoft") {
         AccountManager.newMicrosoftAccount {

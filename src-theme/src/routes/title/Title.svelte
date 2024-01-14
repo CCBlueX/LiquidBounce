@@ -34,9 +34,9 @@
         openScreen("multiplayer_realms").catch(console.error);
     }
 
-    function openCustomize() {
+    function openClickGui() {
         // Redirect to
-        push("/customize");
+        push("/clickgui");
     }
 
     function openOptions() {
@@ -117,7 +117,7 @@
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>
                     <ChildButton text="Realms" icon="realms" {hovered} on:click={openRealms}/>
                 </MainButton>
-                <MainButton text="Customize" icon="customize" on:click={openCustomize}/>
+                <MainButton text="Client GUI" icon="customize" on:click={openClickGui}/>
                 <MainButton text="Options" icon="options" on:click={openOptions}/>
             </MainButtons>
 
@@ -161,46 +161,5 @@
         cursor: pointer;
         background-color: rgba(0, 0, 0, .68);
         color: white;
-    }
-
-    .wrapper {
-        position: relative;
-        height: 100%;
-    }
-
-    .scale {
-        position: relative;
-        height: 100%;
-        padding: 50px;
-    }
-
-    @media screen and (max-width: 1366px) {
-        .scale {
-            zoom: .7;
-        }
-    }
-
-    @media screen and (max-width: 1024px) {
-        .scale {
-            zoom: .5;
-        }
-    }
-
-    @media screen and (max-height: 1000px) {
-        .scale {
-            zoom: .7;
-        }
-    }
-
-    @media screen and (max-height: 700px) {
-        .scale {
-            zoom: .5;
-        }
-    }
-
-    @media screen and (max-height: 540px) {
-        .scale {
-            zoom: .4;
-        }
     }
 </style>

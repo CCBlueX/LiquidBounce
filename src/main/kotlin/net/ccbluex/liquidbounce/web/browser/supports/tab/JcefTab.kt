@@ -40,7 +40,7 @@ class JcefTab(
         mcefBrowser.loadURL(url)
     }
 
-    override fun getUrl() = url
+    override fun getUrl() = mcefBrowser.getURL()
     override fun closeTab() {
         mcefBrowser.close()
         jcefBrowser.removeTab(this)

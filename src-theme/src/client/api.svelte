@@ -184,6 +184,26 @@
     }
 
     /**
+     * post("/account/login/cracked") {
+     *         class AccountForm(
+     *             val username: String
+     *         )
+     *         val accountForm = decode<AccountForm>(it.content)
+     *         AccountManager.loginCrackedAccountAsync(accountForm.username)
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function loginCrackedAccount(username) {
+        return request("/account/login/cracked", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "username": username })
+        })
+    }
+
+    /**
      * post("/accounts/new/cracked") {
      *         class AccountForm(
      *             val username: String
@@ -324,6 +344,31 @@
 
     export function getVirtualScreen() {
         return request("/virtualScreen")
+    }
+
+    /**
+     *     post("/virtualScreen") {
+     *         val body = decode<JsonObject>(it.content)
+     *         val name = body["name"]?.asString ?: return@post httpForbidden("No name")
+     *
+     *         val virtualScreen = momentaryVirtualScreen
+     *
+     *         if ((virtualScreen?.name ?: "none") != name) {
+     *             return@post httpForbidden("Wrong virtual screen")
+     *         }
+     *
+     *         acknowledgement.confirm()
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function confirmVirtualScreen(name) {
+        return request("/virtualScreen", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "name": name })
+        })
     }
 
     /**

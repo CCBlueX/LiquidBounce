@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.misc
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.authlib.account.AlteningAccount
@@ -71,6 +72,15 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @JvmName("loginAccount")
     fun loginAccount(id: Int) = runCatching {
         val account = accounts.getOrNull(id) ?: error("Account not found!")
+        loginDirectAccount(account)
+    }.onFailure {
+        logger.error("Failed to login into account", it)
+        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+    }.getOrThrow()
+
+    @RequiredByScript
+    @JvmName("loginDirectAccount")
+    fun loginDirectAccount(account: MinecraftAccount) = runCatching {
         val (compatSession, service) = account.login()
         val session = Session(
             compatSession.username, compatSession.uuid, compatSession.token,
@@ -126,6 +136,24 @@ object AccountManager : Configurable("Accounts"), Listenable {
         ConfigSystem.storeConfigurable(this@AccountManager)
 
         EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: $username"))
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    @RequiredByScript
+    @JvmName("loginCrackedAccountAsync")
+    fun loginCrackedAccountAsync(username: String) {
+        if (username.isEmpty()) {
+            error("Username is empty!")
+        }
+
+        if (username.length > 16) {
+            error("Username is too long!")
+        }
+
+        val account = CrackedAccount(username).also { it.refresh() }
+        GlobalScope.launch {
+            loginDirectAccount(account)
+        }
     }
 
     /**

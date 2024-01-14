@@ -25,26 +25,26 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.BowItem
 import net.minecraft.item.TridentItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -428,24 +428,43 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
      * TODO: Add version specific options
      */
     private object FastChargeOptions : ToggleableConfigurable(this, "FastCharge", false) {
-        val packets by int("Packets", 20, 3..20)
 
-        val tickRepeatable = handler<GameTickEvent> {
-            val player = mc.player ?: return@handler
+        private val speed by int("Speed", 20, 3..20)
 
+        private val notInTheAir by boolean("NotInTheAir", true)
+        private val notDuringMove by boolean("NotDuringMove", false)
+        private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
+
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+
+        val tickRepeatable = repeatable {
             val currentItem = player.activeItem
 
             // Should accelerated game ticks when using bow
             if (currentItem?.item is BowItem) {
-                repeat(packets) { // Send a movement packet to simulate ticks (has been patched in 1.19)
-                    network.sendPacket(
-                        PlayerMoveC2SPacket.OnGroundOnly(true),
-                    ) // Just show visual effect (not required to work - but looks better)
-                    player.tickActiveItemStack()
+                if (notInTheAir && !player.isOnGround) {
+                    return@repeatable
                 }
 
-                // Shoot with bow (auto shoot has to be enabled)
-                // TODO: Depend on Auto Shoot
+                if (notDuringMove && player.moving) {
+                    return@repeatable
+                }
+
+                if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
+                    return@repeatable
+                }
+
+                repeat(speed) {
+                    if (!player.isUsingItem) {
+                        return@repeat
+                    }
+
+                    // Accelerate ticks (MC 1.8)
+                    network.sendPacket(packetType.generatePacket())
+
+                    // Just show visual effect (not required to work - but looks better)
+                    player.tickActiveItemStack()
+                }
             }
         }
     }

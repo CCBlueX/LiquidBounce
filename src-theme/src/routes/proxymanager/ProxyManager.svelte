@@ -114,14 +114,7 @@
             row-gap: 20px;
         }
 
-        .wrapper {
-            position: relative;
-            height: 100%;
-            grid-gap: 30px;
-            margin: 60px;
-        }
-
-        .Button {
+        .button {
             background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
             background-position: right bottom;
@@ -134,41 +127,6 @@
             align-items: center;
             column-gap: 30px;
             font-size: 26px;
-        }
-
-        .scale {
-            position: relative;
-            height: 100%;
-        }
-
-        @media screen and (max-width: 1366px) {
-            .scale {
-                zoom: .5;
-            }
-        }
-
-        @media screen and (max-width: 1024px) {
-            .scale {
-                zoom: .6;
-            }
-        }
-
-        @media screen and (max-height: 1000px) {
-            .scale {
-                zoom: .9;
-            }
-        }
-
-        @media screen and (max-height: 700px) {
-            .scale {
-                zoom: .6;
-            }
-        }
-
-        @media screen and (max-height: 540px) {
-            .scale {
-                zoom: .5;
-            }
         }
 
         Input {
@@ -199,26 +157,24 @@
             padding: 10px;
         }
 
-        .footinit {
-            display: block;
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            text-align: right;
-            height: 100px;
-            margin-bottom: 45px;
-        }
-
         .back {
-            height: 75px;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+
+            height: 50px;
             width: 150px;
+
             font-size: 26px;
-            background-color: rgba(0, 0, 0, 0.68);
+
             border-radius: 6px;
             margin-right: 10px;
+
+            background-color: rgba(0, 0, 0, 0.68);
             background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
             background-size: 200% 100%;
             background-position: right bottom;
+
             will-change: background-position;
             transition: background-position .2s ease-out;
         }
@@ -235,7 +191,7 @@
         <h1 id="title">Proxy Manager</h1>
 
         <div id="buttongrid">
-            <div class="Button">
+            <div class="button">
                 <h2>Proxy Configuration</h2>
                 <div>
                     <label for="host"></label><input type="text" id="host" name="host"

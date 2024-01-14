@@ -28,7 +28,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.option.Perspective;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardEntry;
 import net.minecraft.scoreboard.ScoreboardObjective;
@@ -44,7 +43,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Comparator;
@@ -106,9 +104,11 @@ public abstract class MixinInGameHud {
         }
     }
 
-    @Redirect(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/Perspective;isFirstPerson()Z"))
-    private boolean hookFreeCamRenderCrosshairInThirdPerson(Perspective instance) {
-        return ModuleFreeCam.INSTANCE.shouldRenderCrosshair(instance.isFirstPerson());
+    @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
+    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, CallbackInfo ci) {
+        if (ModuleFreeCam.INSTANCE.getEnabled() && ModuleFreeCam.INSTANCE.shouldDisableCrosshair()) {
+            ci.cancel();
+        }
     }
 
 

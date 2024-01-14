@@ -147,6 +147,7 @@ object ConfigSystem {
 
                 logger.debug("Reading config ${configurable.loweredName}...")
                 deserializeConfigurable(configurable, reader())
+            }.onSuccess {
                 logger.info("Successfully loaded config '${configurable.loweredName}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.loweredName}", it)
@@ -212,63 +213,60 @@ object ConfigSystem {
      * Deserialize a configurable from a json element
      */
     fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
-        runCatching {
-            val jsonObject = jsonElement.asJsonObject
+        val jsonObject = jsonElement.asJsonObject
 
-            // Handle auto config
-            AutoConfig.handlePossibleAutoConfig(jsonObject)
+        // Handle auto config
+        AutoConfig.handlePossibleAutoConfig(jsonObject)
 
-            // Check if the name is the same as the configurable name
-            if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-                throw IllegalStateException()
-            }
+        // Check if the name is the same as the configurable name
+        if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
+            throw IllegalStateException()
+        }
 
-            val values =
-                jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
+        val values =
+            jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
 
-            for (value in configurable.value) {
-                if (value is Configurable) {
-                    val currentElement = values[value.name] ?: continue
+        for (value in configurable.value) {
+            if (value is Configurable) {
+                val currentElement = values[value.name] ?: continue
 
-                    runCatching {
-                        if (value is ChoiceConfigurable) {
+                runCatching {
+                    if (value is ChoiceConfigurable) {
+                        runCatching {
+                            val newActive = currentElement["active"].asString
+
+                            value.setFromValueName(newActive)
+                        }.onFailure { it.printStackTrace() }
+
+                        val choices = currentElement["choices"].asJsonObject
+
+                        for (choice in value.choices) {
                             runCatching {
-                                val newActive = currentElement["active"].asString
+                                val choiceElement = choices[choice.name]
+                                    ?: error("Choice ${choice.name} not found")
 
-                                value.setFromValueName(newActive)
-                            }.onFailure { it.printStackTrace() }
-
-                            val choices = currentElement["choices"].asJsonObject
-
-                            for (choice in value.choices) {
-                                runCatching {
-                                    val choiceElement = choices[choice.name]
-                                        ?: error("Choice ${choice.name} not found")
-
-                                    deserializeConfigurable(choice, choiceElement)
-                                }.onFailure {
-                                    logger.error("Unable to deserialize choice ${choice.name}", it)
-                                }
+                                deserializeConfigurable(choice, choiceElement)
+                            }.onFailure {
+                                logger.error("Unable to deserialize choice ${choice.name}", it)
                             }
                         }
-                    }.onFailure {
-                        logger.error("Unable to deserialize configurable ${value.name}", it)
                     }
 
+                    // Deserialize the rest of the configurable
                     deserializeConfigurable(value, currentElement)
-                } else {
-                    val currentElement = values[value.name] ?: continue
-
-                    runCatching {
-                        value.deserializeFrom(clientGson, currentElement["value"])
-                    }.onFailure {
-                        logger.error("Unable to deserialize value ${value.name}", it)
-                    }
+                }.onFailure {
+                    logger.error("Unable to deserialize configurable ${value.name}", it)
                 }
+            } else {
+                val currentElement = values[value.name] ?: continue
 
+                runCatching {
+                    value.deserializeFrom(clientGson, currentElement["value"])
+                }.onFailure {
+                    logger.error("Unable to deserialize value ${value.name}", it)
+                }
             }
-        }.onFailure {
-            logger.error("Unable to deserialize configurable ${configurable.name}", it)
+
         }
     }
 

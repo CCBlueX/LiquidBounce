@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.prepareAttackEnvironment
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
@@ -71,6 +72,9 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
                     } else {
                         network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
                     }
+
+                    // Notify the user about the failed hit
+                    NotifyWhenFail.notifyForFailedHit(entity, RotationManager.serverRotation)
                     true
                 }
             }

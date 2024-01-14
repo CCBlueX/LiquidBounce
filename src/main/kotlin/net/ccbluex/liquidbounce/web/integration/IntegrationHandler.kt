@@ -22,14 +22,12 @@ package net.ccbluex.liquidbounce.web.integration
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.GameMenuScreen
@@ -43,6 +41,7 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
 import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import org.lwjgl.glfw.GLFW
 
 object IntegrationHandler : Listenable {
 
@@ -60,8 +59,25 @@ object IntegrationHandler : Listenable {
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
+    val acknowledgement = Acknowledgement()
+
+    private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
 
     data class VirtualScreen(val name: String)
+
+    data class Acknowledgement(val since: Chronometer = Chronometer(),
+                                var confirmed: Boolean = false) {
+
+        fun confirm() {
+            confirmed = true
+        }
+
+        fun reset() {
+            since.reset()
+            confirmed = false
+        }
+
+    }
 
     private val parent: Screen
         get() = mc.currentScreen ?: TitleScreen()
@@ -69,9 +85,15 @@ object IntegrationHandler : Listenable {
     enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
                                  val showAlong: Boolean = false, private val open: () -> Unit = {}) {
 
-        TITLE("title", { it is TitleScreen }, open = {
-            mc.setScreen(TitleScreen())
-        }),
+        TITLE("title",
+            {
+                // todo: figure out a better way of detecting Lunar Mod Main Menu instead of guessing
+                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") &&
+                    it.title.outputString() == "ScreenInjector" && mc.world == null)
+            },
+            open = {
+                mc.setScreen(TitleScreen())
+            }),
         MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, true, open = {
             mc.setScreen(MultiplayerScreen(parent))
         }),
@@ -106,20 +128,30 @@ object IntegrationHandler : Listenable {
             return
         }
 
-        virtualClose()
         val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
+        acknowledgement.reset()
         EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
             VirtualScreenEvent.Action.OPEN))
     }
 
     fun virtualClose() {
-        EventManager.callEvent(VirtualScreenEvent(momentaryVirtualScreen?.name ?: return,
-            VirtualScreenEvent.Action.CLOSE))
+        val virtualScreen = momentaryVirtualScreen ?: return
+
         momentaryVirtualScreen = null
+        acknowledgement.reset()
+        EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
+            VirtualScreenEvent.Action.CLOSE))
     }
 
     fun updateIntegrationBrowser() {
+        logger.info("Reloading integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
         clientJcef?.loadUrl(integrationUrl)
+    }
+
+    fun restoreOriginalScreen() {
+        if (mc.currentScreen is VrScreen) {
+            mc.setScreen((mc.currentScreen as VrScreen).originalScreen)
+        }
     }
 
     /**
@@ -130,6 +162,15 @@ object IntegrationHandler : Listenable {
             virtualClose()
             return@handler
         }
+
+        // Check if the client tab is ready
+        if (clientJcef?.getUrl()?.startsWith(integrationUrl) != true) {
+            updateIntegrationBrowser()
+            return@handler
+        }
+
+        // Set to default GLFW cursor
+        GLFW.glfwSetCursor(mc.window.handle, standardCursor)
 
         if (!browserIsReady && event.screen !is MCEFDownloaderMenu) {
             RenderSystem.recordRenderCall {
@@ -157,12 +198,29 @@ object IntegrationHandler : Listenable {
         }
 
         if (!virtualScreenType.showAlong) {
-            val vrScreen = VrScreen(virtualScreenType.assignedName)
+            val vrScreen = VrScreen(virtualScreenType.assignedName, originalScreen = screen)
             mc.setScreen(vrScreen)
             event.cancelEvent()
         } else {
             virtualOpen(virtualScreenType.assignedName)
         }
+    }
+
+    val desyncCheck = handler<GameTickEvent> {
+        if (!acknowledgement.confirmed && acknowledgement.since.hasElapsed(500)) {
+            logger.warn("Integration desync detected. $acknowledgement: $integrationUrl -> ${clientJcef?.getUrl()}")
+            chat("Integration desync detected. It should now be fixed.")
+            acknowledgement.since.reset()
+            updateIntegrationBrowser()
+        }
+    }
+
+    /**
+     * Refresh integration browser when we change worlds, this can also mean we disconnect from a server
+     * and go back to the main menu.
+     */
+    val worldChangeEvent = handler<WorldChangeEvent> {
+        updateIntegrationBrowser()
     }
 
 }
