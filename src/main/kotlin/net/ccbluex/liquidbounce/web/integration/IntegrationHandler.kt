@@ -87,9 +87,8 @@ object IntegrationHandler : Listenable {
 
         TITLE("title",
             {
-                // todo: figure out a better way of detecting Lunar Mod Main Menu instead of guessing
-                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") &&
-                    it.title.outputString() == "ScreenInjector" && mc.world == null)
+                // todo: Do not simply replace any Lunar Screen with the title screen, if not in a world
+                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") && mc.world == null)
             },
             open = {
                 mc.setScreen(TitleScreen())
