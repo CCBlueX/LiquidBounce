@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import org.lwjgl.glfw.GLFW
@@ -71,6 +70,7 @@ object ModuleHideClient : Module("HideClient", Category.MISC) {
                     enable()
                 } else {
                     disable()
+                    IntegrationHandler.updateIntegrationBrowser()
                 }
             }
 
