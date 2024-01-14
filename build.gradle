@@ -264,6 +264,9 @@ shadowJar {
     // Natives are going to be downloaded from our cloud
     exclude 'native-binaries/*'
 
+    // META-INF/versions/20
+    exclude "META-INF/versions/20/**"
+
     dependencies {
         include(dependency('com.github.CCBlueX:mcef'))
         include(dependency('com.github.CCBlueX:mc-authlib'))

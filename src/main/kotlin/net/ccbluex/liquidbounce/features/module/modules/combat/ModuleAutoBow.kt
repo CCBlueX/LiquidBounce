@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -142,7 +142,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                     return@handler
                 }
 
-                val targetRotation = RotationManager.aimPlan ?: return@handler
+                val targetRotation = RotationManager.storedAimPlan ?: return@handler
 
                 val aimDifference = RotationManager.rotationDifference(
                     RotationManager.serverRotation, targetRotation.rotation

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.integration
 
 import com.mojang.blaze3d.systems.RenderSystem
@@ -31,6 +30,7 @@ import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.outputString
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.GameMenuScreen
@@ -44,6 +44,7 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
 import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import org.lwjgl.glfw.GLFW
 
 object IntegrationHandler : Listenable {
 
@@ -62,6 +63,8 @@ object IntegrationHandler : Listenable {
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
 
+    val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
+
     data class VirtualScreen(val name: String)
 
     private val parent: Screen
@@ -70,9 +73,15 @@ object IntegrationHandler : Listenable {
     enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
                                  val showAlong: Boolean = false, private val open: () -> Unit = {}) {
 
-        TITLE("title", { it is TitleScreen }, open = {
-            mc.setScreen(TitleScreen())
-        }),
+        TITLE("title",
+            {
+                // todo: figure out a better way of detecting Lunar Mod Main Menu instead of guessing
+                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") &&
+                    it.title.outputString() == "ScreenInjector" && mc.world == null)
+            },
+            open = {
+                mc.setScreen(TitleScreen())
+            }),
         MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, true, open = {
             mc.setScreen(MultiplayerScreen(parent))
         }),
@@ -131,6 +140,15 @@ object IntegrationHandler : Listenable {
             virtualClose()
             return@handler
         }
+
+        // Check if the client tab is ready
+        if (clientJcef?.getUrl()?.startsWith(integrationUrl) != true) {
+            updateIntegrationBrowser()
+            return@handler
+        }
+
+        // Set to default GLFW cursor
+        GLFW.glfwSetCursor(mc.window.handle, standardCursor)
 
         if (!browserIsReady && event.screen !is MCEFDownloaderMenu) {
             RenderSystem.recordRenderCall {

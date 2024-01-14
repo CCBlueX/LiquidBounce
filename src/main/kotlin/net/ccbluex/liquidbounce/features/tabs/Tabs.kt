@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -45,25 +46,42 @@ import java.util.*
  * @depends FabricAPI (for page buttons)
  */
 object Tabs {
-    private var setup = false
+
+    private var hasBeenSetup = false
 
     /**
      * Since 1.20 we need to set this up at a more precise timing than just when the client starts.
      */
     fun setup() {
-        if (!setup) {
-            setupSpecial()
-            setupExploits()
-            setupHeads()
+        if (hasBeenSetup) {
+            return
+        }
 
-            setup = true
+        // Check if FabricAPI is installed, otherwise we can't use the page buttons
+        // Use net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
+        runCatching {
+            Class.forName("net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup")
+        }.onFailure {
+            logger.error("FabricAPI is not installed, please install it to use the page buttons " +
+                "in the creative inventory")
+        }.onSuccess {
+            runCatching {
+                setupSpecial()
+                setupExploits()
+                setupHeads()
+                hasBeenSetup = true
+            }.onFailure {
+                logger.error("Unable to setup tabs", it)
+            }.onSuccess {
+                logger.info("Successfully setup tabs")
+            }
         }
     }
 
     /**
      * Special item group is useful to get blocks or items which you are not able to get without give command
      */
-    private fun setupSpecial() =  LiquidsItemGroup(
+    private fun setupSpecial() =  ClientItemGroup(
         "Special",
         icon = {
             ItemStack(Blocks.COMMAND_BLOCK).apply {
@@ -89,7 +107,7 @@ object Tabs {
     /**
      * Exploits item group allows you to get items which are able to exploit bugs (like crash exploits or render issues)
      */
-    private fun setupExploits() = LiquidsItemGroup(
+    private fun setupExploits() = ClientItemGroup(
         "Exploits",
         icon = { ItemStack(Items.LINGERING_POTION) },
         items = {
@@ -174,7 +192,7 @@ object Tabs {
         }.getOrElse { emptyArray() }
     }
 
-    private fun setupHeads() = LiquidsItemGroup(
+    private fun setupHeads() = ClientItemGroup(
         "Heads",
         icon = { ItemStack(Items.SKELETON_SKULL) },
         items = {
@@ -189,9 +207,9 @@ object Tabs {
 }
 
 /**
- * A item group from the client
+ * An item group from the client
  */
-open class LiquidsItemGroup(
+open class ClientItemGroup(
     val plainName: String,
     val icon: () -> ItemStack,
     val items: (items: ItemGroup.Entries) -> Unit
@@ -200,7 +218,7 @@ open class LiquidsItemGroup(
     // Create item group and assign to minecraft groups
     fun create(): ItemGroup {
         // Expand array
-        val itemGroup = ItemGroup.create(ItemGroup.Row.TOP, -1)
+        val itemGroup = FabricItemGroup.builder()
             .displayName(plainName.asText())
             .icon(icon)
             .entries { displayContext, entries ->

@@ -27,6 +27,7 @@
     "minecraft.client.MixinMouse",
     "minecraft.client.MixinNarratorManager",
     "minecraft.client.MixinPlayerInventory",
+    "minecraft.client.MixinTextHandler",
     "minecraft.client.MixinWindow",
     "minecraft.client.MixinWorld",
     "minecraft.client.network.message.MixinMessageHandler",

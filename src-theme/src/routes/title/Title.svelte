@@ -162,45 +162,4 @@
         background-color: rgba(0, 0, 0, .68);
         color: white;
     }
-
-    .wrapper {
-        position: relative;
-        height: 100%;
-    }
-
-    .scale {
-        position: relative;
-        height: 100%;
-        padding: 50px;
-    }
-
-    @media screen and (max-width: 1366px) {
-        .scale {
-            zoom: .7;
-        }
-    }
-
-    @media screen and (max-width: 1024px) {
-        .scale {
-            zoom: .5;
-        }
-    }
-
-    @media screen and (max-height: 1000px) {
-        .scale {
-            zoom: .7;
-        }
-    }
-
-    @media screen and (max-height: 700px) {
-        .scale {
-            zoom: .5;
-        }
-    }
-
-    @media screen and (max-height: 540px) {
-        .scale {
-            zoom: .4;
-        }
-    }
 </style>
