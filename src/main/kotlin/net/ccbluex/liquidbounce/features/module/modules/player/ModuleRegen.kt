@@ -59,7 +59,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
             return@repeatable
         }
 
-        if (notDuringRegeneration && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
+        if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
             return@repeatable
         }
 

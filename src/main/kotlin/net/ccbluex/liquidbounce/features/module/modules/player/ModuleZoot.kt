@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -38,6 +40,8 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
     private val fire by boolean("Fire", true)
 
     private val notInTheAir by boolean("NotInTheAir", true)
+    private val notDuringMove by boolean("NotDuringMove", false)
+    private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
 
     private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
 
@@ -47,6 +51,14 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
         }
 
         if (player.abilities.creativeMode || player.isDead) {
+            return@repeatable
+        }
+
+        if (notDuringMove && player.moving) {
+            return@repeatable
+        }
+
+        if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
             return@repeatable
         }
 
