@@ -20,13 +20,16 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.item.MilkBucketItem
 import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -39,157 +42,100 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
-    private val modes = choices("Mode", Instant, arrayOf(Instant, NCP, AAC, Custom))
-    private val noMove by boolean("NoMove", false)
+    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime))
+    private val stopInput by boolean("StopInput", false)
 
-    private object Instant : Choice("Instant") {
-        override val parent: ChoiceConfigurable
-            get() = modes
+    /**
+     * The packet type to send to speed up item usage.
+     *
+     * @see PacketType for more information.
+     * @see PlayerMoveC2SPacket for more information about the packet.
+     *
+     * PacketType FULL is the most likely to bypass, since it uses the C06 duplicate exempt exploit.
+     *
+     * AntiCheat: Grim
+     * Tested AC Version: 2.5.34
+     * Tested on: eu.loyisa.cn, anticheat-test.com
+     * Usable MC version: 1.17-1.20.4
+     * Q: Why this works?
+     * A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
+     */
+    private val packetType by enumChoice("PacketType", PacketType.FULL, PacketType.values())
 
-        val repeatable = repeatable {
-            if (!player.isUsingItem) {
-                return@repeatable
-            }
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.isUsingItem) {
-                    repeat(35) {
-                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
-                    }
-                    player.stopUsingItem()
-                }
-            }
-        }
+    val consumesItem: Boolean
+        get() = player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+            || player.activeItem.item is PotionItem)
 
-        val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (!noMove) {
-                return@handler
-            }
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.isUsingItem) {
-                    event.movement.x = 0.0
-                    event.movement.y = 0.0
-                    event.movement.z = 0.0
-                }
-            }
+    val movementInputHandler = handler<MovementInputEvent> { event ->
+        if (mc.options.useKey.isPressed && stopInput) {
+            event.directionalInput = DirectionalInput.NONE
         }
     }
 
-    private object NCP : Choice("NCP") {
-        override val parent: ChoiceConfigurable
-            get() = modes
+    private object Immediate : Choice("Immediate") {
 
-        val repeatable = repeatable {
-            if (!player.isUsingItem) {
-                return@repeatable
-            }
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.itemUseTime > 14) {
-                    repeat(20) {
-                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
-                    }
-                    player.stopUsingItem()
-                }
-            }
-        }
-
-        val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (!noMove) {
-                return@handler
-            }
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.isUsingItem) {
-                    event.movement.x = 0.0
-                    event.movement.y = 0.0
-                    event.movement.z = 0.0
-                }
-            }
-        }
-    }
-
-    private object AAC : Choice("AAC") {
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val repeatable = repeatable {
-            if (!player.isUsingItem) {
-                return@repeatable
-            }
-
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.isUsingItem) {
-                    Timer.requestTimerSpeed(1.22F, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse)
-                }
-            }
-        }
-
-        val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (!noMove) {
-                return@handler
-            }
-
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.isUsingItem) {
-                    event.movement.x = 0.0
-                    event.movement.y = 0.0
-                    event.movement.z = 0.0
-                }
-            }
-        }
-    }
-
-    private object Custom : Choice("Custom") {
         override val parent: ChoiceConfigurable
             get() = modes
 
         val delay by int("Delay", 0, 0..10)
         val timer by float("Timer", 1f, 0.1f..5f)
-        val speed by int("Speed", 2, 1..35)
+
+        /**
+         * This is the amount of times the packet is sent per tick.
+         *
+         * This means we will speed up the eating process by 20 ticks on each tick.
+         */
+        val speed by int("Speed", 20, 1..35)
 
         val repeatable = repeatable {
-            if (!player.isUsingItem) {
-                return@repeatable
-            }
+            if (consumesItem) {
+                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
+                    resetAfterTicks = 1 + delay)
 
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse)
-
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.isUsingItem) {
-                    waitTicks(delay)
-                    repeat(speed) {
-                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
-                    }
-                    player.stopUsingItem()
+                waitTicks(delay)
+                repeat(speed) {
+                    network.sendPacket(packetType.generatePacket())
                 }
+                player.stopUsingItem()
             }
         }
 
-        val moveHandler = handler<PlayerMoveEvent> { event ->
-            if (!noMove) {
-                return@handler
-            }
-            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem
-            ) {
-                if (player.isUsingItem) {
-                    event.movement.x = 0.0
-                    event.movement.y = 0.0
-                    event.movement.z = 0.0
-                }
-            }
-        }
     }
+
+    private object ItemUseTime : Choice("ItemUseTime") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val consumeTime by int("ConsumeTime", 15, 0..20)
+        val speed by int("Speed", 20, 1..35)
+
+        val repeatable = repeatable {
+            if (consumesItem && player.itemUseTime >= consumeTime) {
+                repeat(speed) {
+                    network.sendPacket(packetType.generatePacket())
+                }
+
+                player.stopUsingItem()
+            }
+        }
+
+    }
+
+    enum class PacketType(override val choiceName: String, val generatePacket: () -> PlayerMoveC2SPacket)
+        : NamedChoice {
+        ON_GROUND_ONLY("OnGroundOnly", {
+            PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround)
+        }),
+        POSITION_AND_ON_GROUND("PositionAndOnGround", {
+            PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, player.isOnGround)
+        }),
+        LOOK_AND_ON_GROUND("LookAndOnGround", {
+            PlayerMoveC2SPacket.LookAndOnGround(player.yaw, player.pitch, player.isOnGround)
+        }),
+        FULL("Full", {
+            PlayerMoveC2SPacket.Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround)
+        });
+    }
+
 }
