@@ -27,8 +27,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.MilkBucketItem
 import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -42,6 +45,10 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime))
+
+    private val notInTheAir by boolean("NotInTheAir", true)
+    private val notDuringMove by boolean("NotDuringMove", false)
+    private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
     private val stopInput by boolean("StopInput", false)
 
     /**
@@ -61,11 +68,25 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
      */
     private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
 
-    val consumesItem: Boolean
-        get() = player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-            || player.activeItem.item is PotionItem)
+    val accelerateNow: Boolean
+        get() {
+            if (notInTheAir && !player.isOnGround) {
+                return false
+            }
 
-    val movementInputHandler = handler<MovementInputEvent> { event ->
+            if (notDuringMove && player.moving) {
+                return false
+            }
+
+            if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
+                return false
+            }
+
+            return player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem)
+        }
+
+    val movementInputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
         if (mc.options.useKey.isPressed && stopInput) {
             event.directionalInput = DirectionalInput.NONE
         }
@@ -87,7 +108,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         val speed by int("Speed", 20, 1..35)
 
         val repeatable = repeatable {
-            if (consumesItem) {
+            if (accelerateNow) {
                 Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
                     resetAfterTicks = 1 + delay)
 
@@ -110,7 +131,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         val speed by int("Speed", 20, 1..35)
 
         val repeatable = repeatable {
-            if (consumesItem && player.itemUseTime >= consumeTime) {
+            if (accelerateNow && player.itemUseTime >= consumeTime) {
                 repeat(speed) {
                     network.sendPacket(packetType.generatePacket())
                 }
