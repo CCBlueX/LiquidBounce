@@ -40,7 +40,6 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private val modes = choices("Mode", Instant, arrayOf(Instant, NCP, Grim, AAC, Custom))
-    private val noSprint by boolean("NoSprint", false)
     private val noMove by boolean("NoMove", false)
 
     private object Instant : Choice("Instant") {
@@ -116,20 +115,6 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
     }
-
-    val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (!noSprint) {
-            return@handler
-        }
-        if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-            || player.activeItem.item is PotionItem
-        ) {
-            if (player.isUsingItem) {
-                player.isSprinting = false
-            }
-        }
-    }
-
 
     
     private object NCP : Choice("NCP") {
