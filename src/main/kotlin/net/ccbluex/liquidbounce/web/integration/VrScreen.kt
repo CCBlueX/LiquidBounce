@@ -25,7 +25,8 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-class VrScreen(val screen: String, title: Text = "VS $screen".asText()) : Screen(title) {
+class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
+               val originalScreen: Screen? = null) : Screen(title) {
 
     override fun init() {
         IntegrationHandler.virtualOpen(screen)

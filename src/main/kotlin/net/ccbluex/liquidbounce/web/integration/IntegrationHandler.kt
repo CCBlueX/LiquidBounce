@@ -132,6 +132,12 @@ object IntegrationHandler : Listenable {
         clientJcef?.loadUrl(integrationUrl)
     }
 
+    fun restoreOriginalScreen() {
+        if (mc.currentScreen is VrScreen) {
+            mc.setScreen((mc.currentScreen as VrScreen).originalScreen)
+        }
+    }
+
     /**
      * Handle opening new screens
      */
@@ -176,7 +182,7 @@ object IntegrationHandler : Listenable {
         }
 
         if (!virtualScreenType.showAlong) {
-            val vrScreen = VrScreen(virtualScreenType.assignedName)
+            val vrScreen = VrScreen(virtualScreenType.assignedName, originalScreen = screen)
             mc.setScreen(vrScreen)
             event.cancelEvent()
         } else {
