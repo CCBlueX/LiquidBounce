@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -47,12 +46,14 @@ import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -86,7 +87,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
-    private val flick by boolean("Flick", false)
+    private val aimMode by enumChoice("AimMode", AimMode.NORMAL, AimMode.values())
 
     // Target rendering
     private val targetRenderer = tree(WorldTargetRenderer(this))
@@ -173,7 +174,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@repeatable
         }
 
-        if (target == null) {
+        if (target == null || target !is LivingEntity) {
             AutoBlock.stopBlocking()
 
             // Deal with fake swing when there is no target
@@ -202,7 +203,18 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Determine if we should attack the target or someone else
-        val rotation = RotationManager.serverRotation
+        val rotation = if (aimMode == AimMode.ON_TICK) {
+            val rangeSquared = range * range
+            val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
+                ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
+            } else {
+                rangeSquared.toDouble()
+            }
+
+            getSpot(target, scanRange)?.rotation ?: RotationManager.serverRotation
+        } else {
+            RotationManager.serverRotation
+        }
         val chosenEntity: Entity
 
         if (raycast != TRACE_NONE) {
@@ -223,25 +235,23 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             chosenEntity = target
         }
 
-        // Are we actually facing the choosen entity?
-        if (!facingEnemy(
-                toEntity = chosenEntity, rotation = rotation, range = range.toDouble(),
-                wallsRange = wallRange.toDouble()
-            )
-        ) {
-            dealWithFakeSwing(chosenEntity)
-            return@repeatable
-        }
-
-        mightAttack(chosenEntity)
+        mightAttack(chosenEntity, rotation)
     }
 
-    private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity) {
+    private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity, rotation: Rotation) {
+        // Are we actually facing the [chosenEntity]
+        if (aimMode != AimMode.ON_TICK && !facingEnemy(toEntity = chosenEntity, rotation = rotation,
+                range = range.toDouble(),
+                wallsRange = wallRange.toDouble())) {
+            dealWithFakeSwing(chosenEntity)
+            return
+        }
+
         // Attack enemy according to the attack scheduler
         if (clickScheduler.goingToClick && checkIfReadyToAttack(chosenEntity)) {
             AutoBlock.makeSeemBlock()
 
-            prepareAttackEnvironment {
+            prepareAttackEnvironment(rotation) {
                 clickScheduler.clicks {
                     // On each click, we check if we are still ready to attack
                     if (!checkIfReadyToAttack(chosenEntity)) {
@@ -297,20 +307,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 continue
             }
 
-            val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(
-                target,
-                clickScheduler.isClickOnNextTick(1)
-            )
-            val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
-
-            // find best spot
-            val spot = raytraceBox(
-                eyes, cutOffBox, range = sqrt(scanRange),
-                wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
-            ) ?: raytraceBox(
-                eyes, box, range = sqrt(scanRange),
-                wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
-            ) ?: continue
+            val spot = getSpot(target, scanRange) ?: continue
 
             renderTarget = target
 
@@ -319,7 +316,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // aim at target
             val ticks = rotations.howLongItTakes(spot.rotation)
-            if (flick && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
+            if (aimMode == AimMode.FLICK && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
+                break
+            }
+
+            // On Tick can only be used if the distance is not too far compared to the turn speed
+            if (aimMode == AimMode.ON_TICK && ticks <= 1) {
                 break
             }
 
@@ -347,6 +349,25 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    private fun getSpot(entity: LivingEntity, scanRange: Double): VecRotation? {
+        val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(
+            entity,
+            clickScheduler.goingToClick || clickScheduler.isClickOnNextTick(1)
+        )
+        val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
+
+        // find best spot
+        val spot = raytraceBox(
+            eyes, cutOffBox, range = sqrt(scanRange),
+            wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
+        ) ?: raytraceBox(
+            eyes, box, range = sqrt(scanRange),
+            wallsRange = wallRange.toDouble(), rotationPreference = rotationPreference
+        ) ?: return null
+
+        return spot
+    }
+
     private fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
         val critical = !ModuleCriticals.shouldWaitForCrit() || choosenEntity.velocity.lengthSquared() > 0.25 * 0.25
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
@@ -364,7 +385,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      * This means, we make sure we are not blocking, we are not using another item,
      * and we are not in an inventory screen depending on the configuration.
      */
-    internal suspend fun Sequence<*>.prepareAttackEnvironment(attack: () -> Unit) {
+    internal suspend fun Sequence<*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
@@ -391,7 +412,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
         }
 
+        if (aimMode == AimMode.ON_TICK && rotation != null) {
+            network.sendPacket(Full(player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.isOnGround))
+        }
+
         attack()
+
+        if (aimMode == AimMode.ON_TICK && rotation != null) {
+            network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+        }
 
         if (simulateInventoryClosing && isInInventoryScreen) {
             openInventorySilently()
@@ -406,6 +435,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 PlayerInteractItemC2SPacket(player.activeHand, sequence)
             }
         }
+    }
+
+    enum class AimMode(override val choiceName: String) : NamedChoice {
+        NORMAL("Normal"), FLICK("Flick"), ON_TICK("OnTick")
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {

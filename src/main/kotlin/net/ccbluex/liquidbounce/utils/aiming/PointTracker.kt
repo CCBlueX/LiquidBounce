@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
@@ -146,8 +147,6 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      * @param entity The entity we want to track.
      */
     fun gatherPoint(entity: LivingEntity, requiredOnTick: Boolean): Point {
-        val player = mc.player!!
-
         // Predicted target position of the enemy
         val targetPrediction = entity.pos.subtract(entity.prevPos)
             .multiply(BASE_PREDICT + timeEnemyOffset.toDouble())
