@@ -457,7 +457,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 )
 
                 val ticks = if (keepRotation) {
-                    keepTicks
+                    if (mode == "Telly") 1 else keepTicks
                 } else {
                     keepLength
                 }
