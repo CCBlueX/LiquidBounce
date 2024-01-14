@@ -66,8 +66,8 @@ object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
                 val blockPos = packet.pos ?: return@handler
 
                 // Abort block break on the block above (which we are not breaking)
-                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, blockPos.up(),
-                    packet.direction))
+                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
+                    blockPos.up(), packet.direction))
             }
         }
 
