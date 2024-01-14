@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -39,7 +40,8 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
-    private val modes = choices("Mode", Instant, arrayOf(Instant, NCP, AAC, Custom))
+    private val modes = choices("Mode", Instant, arrayOf(Instant, NCP, Grim, AAC, Custom))
+    private val noSprint by boolean("NoSprint", false)
     private val noMove by boolean("NoMove", false)
 
     private object Instant : Choice("Instant") {
@@ -78,6 +80,59 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
     }
 
+    private object Grim : Choice("Grim2.5.34") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val repeatable = repeatable {
+            if (!player.isUsingItem) {
+                return@repeatable
+            }
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
+                if (player.isUsingItem) {
+                    repeat(20) {
+                        network.sendPacket(PlayerMoveC2SPacket.Full(
+                            player.x, player.y, player.z,
+                            player.yaw, player.pitch,
+                            player.isOnGround
+                        )) // C06 duplicate exempt, but we abuse it.
+                    }
+                    player.stopUsingItem()
+                }
+            }
+        }
+
+        val moveHandler = handler<PlayerMoveEvent> { event ->
+            if (!noMove) {
+                return@handler
+            }
+            if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+                || player.activeItem.item is PotionItem
+            ) {
+                event.movement.x = 0.0
+                event.movement.y = 0.0
+                event.movement.z = 0.0
+            }
+        }
+    }
+
+    val moveHandler = handler<PlayerMoveEvent> { event ->
+        if (!noSprint) {
+            return@handler
+        }
+        if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+            || player.activeItem.item is PotionItem
+        ) {
+            if (player.isUsingItem) {
+                player.isSprinting = false
+            }
+        }
+    }
+
+
+    
     private object NCP : Choice("NCP") {
         override val parent: ChoiceConfigurable
             get() = modes
@@ -113,6 +168,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
     }
+
 
     private object AAC : Choice("AAC") {
         override val parent: ChoiceConfigurable
