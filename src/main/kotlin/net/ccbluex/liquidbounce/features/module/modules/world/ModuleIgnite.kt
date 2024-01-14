@@ -99,7 +99,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
             val options = BlockPlacementTargetFindingOptions(
                 listOf(Vec3i(0, 0, 0)),
-                player.inventory.getStack(slot),
+                slot.itemStack,
                 CenterTargetPositionFactory,
                 BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
             )
@@ -132,7 +132,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
         CombatManager.pauseCombatForAtLeast(1)
 
-        SilentHotbar.selectSlotSilently(this, slot, 1)
+        SilentHotbar.selectSlotSilently(this, slot.hotbarSlotForServer, 1)
 
         doPlacement(raycast, Hand.MAIN_HAND)
 
