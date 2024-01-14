@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Animations.animat
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.defaultAnimation
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.entity.AbstractClientPlayer
 import net.minecraft.client.renderer.GlStateManager.*
@@ -49,6 +50,8 @@ object Animations : Module("Animations", ModuleCategory.RENDER, gameDetecting = 
 
     private val animationMode by ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
     val oddSwing by BoolValue("OddSwing", false)
+    val swingSpeed by IntegerValue("SwingSpeed", 15, 0..20)
+
 
     fun getAnimation() = animations.firstOrNull { it.name == animationMode }
 
