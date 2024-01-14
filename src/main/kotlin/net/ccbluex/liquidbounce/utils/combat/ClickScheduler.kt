@@ -125,7 +125,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, 
             cooldown?.readyToAttack() != false)
 
         // Does the clickTime need a forced update or are we a tick late?
-        if (clickData.isWayTooLate) {
+        if (clickData.isWayTooLate && cooldown?.readyToAttack() != false) {
             clickData = newClickData()
 
             // If we are way too late, we should click once.

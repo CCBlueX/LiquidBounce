@@ -153,6 +153,7 @@
     <ID>ThrowsCount:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>ThrowsCount:Value.kt$Value$open fun setByString(string: String)</ID>
+    <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:Chat.kt$Chat : ToggleableConfigurable</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>

@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.acknowledgement
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.momentaryVirtualScreen
 import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
@@ -58,9 +60,23 @@ internal fun RestNode.setupClientRestApi() {
 
     get("/virtualScreen") {
         httpOk(JsonObject().apply {
-            addProperty("name", IntegrationHandler.momentaryVirtualScreen?.name)
+            addProperty("name", momentaryVirtualScreen?.name)
             addProperty("splash", mc.overlay is SplashOverlay)
         })
+    }
+
+    post("/virtualScreen") {
+        val body = decode<JsonObject>(it.content)
+        val name = body["name"]?.asString ?: return@post httpForbidden("No name")
+
+        val virtualScreen = momentaryVirtualScreen
+
+        if ((virtualScreen?.name ?: "none") != name) {
+            return@post httpForbidden("Wrong virtual screen")
+        }
+
+        acknowledgement.confirm()
+        httpOk(JsonObject())
     }
 
     get("/window") {
