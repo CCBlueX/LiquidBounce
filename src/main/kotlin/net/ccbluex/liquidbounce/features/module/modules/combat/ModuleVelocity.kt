@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
@@ -46,7 +48,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, Dexland, JumpReset
+            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
     }
 
@@ -260,4 +262,38 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             limitUntilJump++
         }
     }
+
+    /**
+     * Duplicate exempt grim
+     * This is a technique that allows you to bypass the grim anti-cheat.
+     *
+     * It abuses the C06 duplicate exempt to bypass the velocity check.
+     *
+     * After sending a finish-mining digging packet that coincides with the player's
+     * collision box and canceling the knockback packet sent by the server before the player's movement packet is sent,
+     * grim seems to ignore the player's knockback
+     *
+     * https://github.com/GrimAnticheat/Grim/issues/1133
+     */
+    private object ExemptGrim117 : Choice("ExemptGrim117") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val packetHandler = sequenceHandler<PacketEvent> {
+            val packet = it.packet
+
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)) {
+                it.cancelEvent()
+                waitTicks(1)
+                repeat(4) {
+                    network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+                }
+                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                    player.blockPos,
+                    player.horizontalFacing.opposite))
+            }
+        }
+    }
+
+
 }

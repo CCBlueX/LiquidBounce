@@ -75,7 +75,6 @@
             name: "ping",
             event: {}
         }));
-        console.log("Sent ping to server");
     }, 5000)
 
     connect();

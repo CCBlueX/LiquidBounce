@@ -34,9 +34,9 @@
         openScreen("multiplayer_realms").catch(console.error);
     }
 
-    function openCustomize() {
+    function openClickGui() {
         // Redirect to
-        push("/customize");
+        push("/clickgui");
     }
 
     function openOptions() {
@@ -117,7 +117,7 @@
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>
                     <ChildButton text="Realms" icon="realms" {hovered} on:click={openRealms}/>
                 </MainButton>
-                <MainButton text="Customize" icon="customize" on:click={openCustomize}/>
+                <MainButton text="Client GUI" icon="customize" on:click={openClickGui}/>
                 <MainButton text="Options" icon="options" on:click={openOptions}/>
             </MainButtons>
 

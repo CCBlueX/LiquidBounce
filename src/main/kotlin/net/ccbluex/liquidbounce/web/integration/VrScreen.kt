@@ -20,14 +20,22 @@
 package net.ccbluex.liquidbounce.web.integration
 
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-class VrScreen(val screen: String, title: Text = "VS $screen".asText()) : Screen(title) {
+class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
+               val originalScreen: Screen? = null) : Screen(title) {
 
     override fun init() {
         IntegrationHandler.virtualOpen(screen)
+    }
+
+    override fun close() {
+        IntegrationHandler.virtualClose()
+        mc.mouse.lockCursor()
+        super.close()
     }
 
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {

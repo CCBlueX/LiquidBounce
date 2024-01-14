@@ -23,14 +23,14 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.outputString
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.GameMenuScreen
@@ -62,10 +62,25 @@ object IntegrationHandler : Listenable {
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
+    val acknowledgement = Acknowledgement()
 
-    val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
+    private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
 
     data class VirtualScreen(val name: String)
+
+    data class Acknowledgement(val since: Chronometer = Chronometer(),
+                                var confirmed: Boolean = false) {
+
+        fun confirm() {
+            confirmed = true
+        }
+
+        fun reset() {
+            since.reset()
+            confirmed = false
+        }
+
+    }
 
     private val parent: Screen
         get() = mc.currentScreen ?: TitleScreen()
@@ -116,20 +131,29 @@ object IntegrationHandler : Listenable {
             return
         }
 
-        virtualClose()
         val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
+        acknowledgement.reset()
         EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
             VirtualScreenEvent.Action.OPEN))
     }
 
     fun virtualClose() {
-        EventManager.callEvent(VirtualScreenEvent(momentaryVirtualScreen?.name ?: return,
-            VirtualScreenEvent.Action.CLOSE))
+        val virtualScreen = momentaryVirtualScreen ?: return
+
         momentaryVirtualScreen = null
+        acknowledgement.reset()
+        EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
+            VirtualScreenEvent.Action.CLOSE))
     }
 
     fun updateIntegrationBrowser() {
         clientJcef?.loadUrl(integrationUrl)
+    }
+
+    fun restoreOriginalScreen() {
+        if (mc.currentScreen is VrScreen) {
+            mc.setScreen((mc.currentScreen as VrScreen).originalScreen)
+        }
     }
 
     /**
@@ -176,11 +200,20 @@ object IntegrationHandler : Listenable {
         }
 
         if (!virtualScreenType.showAlong) {
-            val vrScreen = VrScreen(virtualScreenType.assignedName)
+            val vrScreen = VrScreen(virtualScreenType.assignedName, originalScreen = screen)
             mc.setScreen(vrScreen)
             event.cancelEvent()
         } else {
             virtualOpen(virtualScreenType.assignedName)
+        }
+    }
+
+    val desyncCheck = handler<GameTickEvent> {
+        if (!acknowledgement.confirmed && acknowledgement.since.hasElapsed(500)) {
+            logger.warn("Integration desync detected. $acknowledgement: $integrationUrl -> ${clientJcef?.getUrl()}")
+            chat("Integration desync detected. It should now be fixed.")
+            acknowledgement.since.reset()
+            updateIntegrationBrowser()
         }
     }
 

@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -75,3 +78,18 @@ fun handlePacket(packet: Packet<*>) =
 
 fun sendPacketSilently(packet: Packet<*>) = mc.networkHandler?.connection?.send(packet, null)
 
+enum class MovePacketType(override val choiceName: String, val generatePacket: () -> PlayerMoveC2SPacket)
+    : NamedChoice {
+    ON_GROUND_ONLY("OnGroundOnly", {
+        PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround)
+    }),
+    POSITION_AND_ON_GROUND("PositionAndOnGround", {
+        PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, player.isOnGround)
+    }),
+    LOOK_AND_ON_GROUND("LookAndOnGround", {
+        PlayerMoveC2SPacket.LookAndOnGround(player.yaw, player.pitch, player.isOnGround)
+    }),
+    FULL("Full", {
+        PlayerMoveC2SPacket.Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround)
+    });
+}
