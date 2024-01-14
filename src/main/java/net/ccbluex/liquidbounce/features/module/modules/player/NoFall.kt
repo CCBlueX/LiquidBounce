@@ -30,6 +30,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         LAAC,
         AAC3311,
         AAC3315,
+        Cancel,
         Spartan,
         CubeCraft,
         Hypixel
