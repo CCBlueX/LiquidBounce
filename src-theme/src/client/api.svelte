@@ -347,6 +347,31 @@
     }
 
     /**
+     *     post("/virtualScreen") {
+     *         val body = decode<JsonObject>(it.content)
+     *         val name = body["name"]?.asString ?: return@post httpForbidden("No name")
+     *
+     *         val virtualScreen = momentaryVirtualScreen
+     *
+     *         if ((virtualScreen?.name ?: "none") != name) {
+     *             return@post httpForbidden("Wrong virtual screen")
+     *         }
+     *
+     *         acknowledgement.confirm()
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function confirmVirtualScreen(name) {
+        return request("/virtualScreen", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "name": name })
+        })
+    }
+
+    /**
      * internal fun RestNode.setupProxyRestApi() {
      *     get("/proxy") {
      *         val proxyObject = JsonObject()
