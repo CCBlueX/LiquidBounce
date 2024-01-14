@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -230,13 +231,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             target?.rotation
         } ?: return@handler
 
-        RotationManager.aimAt(
-            rotation,
-            considerInventory = !ignoreOpenInventory,
-            configurable = rotationsConfigurable,
-            provider = this@ModuleScaffold,
-            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
-        )
+        // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
+        if (aimMode != AimMode.ON_TICK) {
+            RotationManager.aimAt(
+                rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotationsConfigurable,
+                provider = this@ModuleScaffold,
+                priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+            )
+        }
     }
 
     var currentOptimalLine: Line? = null
@@ -264,8 +268,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
         return when (aimMode) {
-            AimMode.CENTER -> CenterTargetPositionFactory
-            AimMode.GODBRIDGE -> CenterTargetPositionFactory
+            AimMode.CENTER, AimMode.GODBRIDGE, AimMode.ON_TICK -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
@@ -279,7 +282,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget
 
-        val currentRotation = RotationManager.serverRotation
+        val currentRotation = if (aimMode == AimMode.ON_TICK && target != null) {
+            target.rotation
+        } else {
+            RotationManager.serverRotation
+        }
         val currentCrosshairTarget = raycast(4.5, currentRotation)
 
         val currentDelay = delay.random()
@@ -310,16 +317,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Does the crosshair target meet the requirements?
         if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
-            || !isValidCrosshairTarget(currentCrosshairTarget)
-        ) {
+            || !isValidCrosshairTarget(currentCrosshairTarget)) {
             ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
 
             return@repeatable
         }
 
         if (ScaffoldAutoJumpFeature.shouldJump(currentDelay) &&
-            currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y
-        ) {
+            currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y) {
             ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
         }
 
@@ -332,8 +337,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
-
         var wasSuccessful = false
+
+        if (aimMode == AimMode.ON_TICK) {
+            network.sendPacket(Full(player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
+                player.isOnGround))
+        }
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
@@ -346,6 +355,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             swing
         }, ModuleScaffold::swing)
+
+        if (aimMode == AimMode.ON_TICK) {
+            network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+        }
 
         if (wasSuccessful) {
             waitTicks(currentDelay)
