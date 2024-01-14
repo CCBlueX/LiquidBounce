@@ -20,14 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.item.MilkBucketItem
@@ -60,7 +59,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
      * Q: Why this works?
      * A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
      */
-    private val packetType by enumChoice("PacketType", PacketType.FULL, PacketType.values())
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
 
     val consumesItem: Boolean
         get() = player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
@@ -122,20 +121,6 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     }
 
-    enum class PacketType(override val choiceName: String, val generatePacket: () -> PlayerMoveC2SPacket)
-        : NamedChoice {
-        ON_GROUND_ONLY("OnGroundOnly", {
-            PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround)
-        }),
-        POSITION_AND_ON_GROUND("PositionAndOnGround", {
-            PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, player.isOnGround)
-        }),
-        LOOK_AND_ON_GROUND("LookAndOnGround", {
-            PlayerMoveC2SPacket.LookAndOnGround(player.yaw, player.pitch, player.isOnGround)
-        }),
-        FULL("Full", {
-            PlayerMoveC2SPacket.Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround)
-        });
-    }
+
 
 }
