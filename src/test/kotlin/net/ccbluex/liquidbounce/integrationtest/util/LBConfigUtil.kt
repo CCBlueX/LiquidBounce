@@ -37,7 +37,11 @@ class SettingsApplication(
         genericRanged(name, range, ValueType.FLOAT_RANGE)
     }
 
-    private inline fun <reified T, reified V: RangedValue<T>> genericRanged(name: String, range: T, valueType: ValueType) {
+    private inline fun <reified T, reified V: RangedValue<T>> genericRanged(
+        name: String,
+        range: T,
+        valueType: ValueType
+    ) {
         findValue<V>(name, valueType).set(range)
     }
 

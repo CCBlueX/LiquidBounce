@@ -98,7 +98,8 @@ dependencies {
     // modImplementation "maven.modrinth:viafabricplus:3.0.2"
 
     // Tests
-    modImplementation "net.ccbluex:tenacc:0.1.0"
+    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
+//    modImplementation "net.ccbluex:tenacc:0.1.0"
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'

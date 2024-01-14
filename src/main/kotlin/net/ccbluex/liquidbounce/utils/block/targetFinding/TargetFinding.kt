@@ -75,8 +75,8 @@ class BlockPlacementTargetFindingOptions(
  *
  * @param blockPosToInteractWith the blockPos the player is eventually clicking on. Might not be the target pos, because
  * you need to interact with a neighboring block in order to place a block at a position
- * @param interactionDirection the direction the interaction should take place in. If the [blockPosToInteractWith] is not
- * the target pos, this will always point to it
+ * @param interactionDirection the direction the interaction should take place in. If the [blockPosToInteractWith] is
+ * not the target pos, this will always point to it
  */
 data class BlockTargetPlan(
     val blockPosToInteractWith: BlockPos,

@@ -112,10 +112,10 @@ class TestScaffold {
     }
 
     fun loadSettingsFromPath(module: Module, path: String) {
-        ConfigSystem.deserializeConfigurable(
-            module,
-            InputStreamReader(TestScaffold::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Path $path was not found"))
-        )
+        val stream = TestScaffold::class.java.getResourceAsStream(path)
+            ?: throw IllegalArgumentException("Path $path was not found")
+
+        ConfigSystem.deserializeConfigurable(module, InputStreamReader(stream))
     }
 
     fun resetSettings() {

@@ -72,6 +72,7 @@ import kotlin.random.Random
  *
  * Places blocks under you.
  */
+@Suppress("TooManyFunctions")
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {

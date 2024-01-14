@@ -15,12 +15,13 @@ class TenaccProvider: TACCTestProvider {
     override val structureTemplateBasePath: String
         get() = "/"
 
+    @Suppress("EmptyFunctionBlock")
     override fun init(scheduler: TACCTestScheduler?) {}
-
 
     override fun onTestFail(player: ServerPlayerEntity, schedulerInfo: ScheduledTest, error: Throwable) {
         player.chat("§cTest §l'${schedulerInfo.fn.identifier}' " +
-            "(${schedulerInfo.mirrorType}/${schedulerInfo.rotationType})§r§c failed: ${TestErrorFormatter.formatError(error, schedulerInfo.fn)}")
+            "(${schedulerInfo.mirrorType}/${schedulerInfo.rotationType})" +
+            "§r§c failed: ${TestErrorFormatter.formatError(error, schedulerInfo.fn)}")
     }
 
     override fun onTestPass(player: ServerPlayerEntity, schedulerInfo: ScheduledTest) {
