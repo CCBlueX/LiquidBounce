@@ -116,6 +116,20 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
     }
 
+    val noSprint by boolean("NoSprint", false)
+    val moveHandler = handler<PlayerMoveEvent> { event ->
+        if (!noSprint) {
+            return@handler
+        }
+        if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
+            || player.activeItem.item is PotionItem
+        ) {
+            if (player.isUsingItem) {
+                player.isSprinting = false
+            }
+        }
+    }
+
     
     private object NCP : Choice("NCP") {
         override val parent: ChoiceConfigurable
