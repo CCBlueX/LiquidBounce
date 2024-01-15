@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -43,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
@@ -190,13 +192,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private val movementInputHandler = handler<MovementInputEvent> {
-        if (bridgeMode == BridgeMode.TELLY) {
-            if (player.isOnGround && mc.options.jumpKey.isPressed) {
-                placementY += 1
-            }
+        if ((bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) && player.moving) {
+            it.jumping = true
+        }
+    }
 
-            if (player.moving) {
-                it.jumping = true
+    private val afterJumpEvent = handler<PlayerAfterJumpEvent> {
+        if (bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) {
+            placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
+
+            if (bridgeMode == BridgeMode.TELLY_NCP) {
+                // Results in a speed of 0.3371
+                player.strafe(speed = 0.49)
             }
         }
     }
@@ -437,6 +444,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return player.blockPos.add(0, -2, 0)
         }
 
+        // In case of TELLY_NCP we do not want to stay at the placement Y
         return if (bridgeMode == BridgeMode.TELLY) {
             BlockPos(player.blockPos.x, placementY, player.blockPos.z)
         } else {
@@ -532,6 +540,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     enum class BridgeMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),
         TELLY("Telly"),
+        TELLY_NCP("TellyNCP"),
     }
 
 }
