@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDel
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion;
 import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -148,7 +150,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void hookTickMovement(CallbackInfo callbackInfo) {
-        if (ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getEnabled()) {
+        if ((ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getEnabled()) ||
+                (ModuleScaffold.INSTANCE.getEnabled() && ScaffoldTowerMotion.INSTANCE.isActive())) {
             jumpingCooldown = 0;
         }
     }

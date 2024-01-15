@@ -160,6 +160,7 @@
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>TooManyFunctions:ModuleBlink.kt$ModuleBlink : Module</ID>
+    <ID>TooManyFunctions:ModuleScaffold.kt$ModuleScaffold : Module</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
     <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -> Boolean = { true }</ID>
@@ -174,7 +175,6 @@
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val reset by boolean("Reset", false).listen { clickList.clear() chat("Cleared click list") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleClickRecorder.kt$ModuleClickRecorder$private val startFromZero by boolean("StartFromZero", false).listen { progression = 0 chat("Progression is now at zero.") return@listen false }</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>
-    <ID>UnusedPrivateProperty:ModuleKillAura.kt$ModuleKillAura$// Fight Bot private val fightBot = tree(FightBot)</ID>
     <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent> { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>
     <ID>UseCheckOrError:Command.kt$Command$throw IllegalStateException("Parameter already has a command")</ID>

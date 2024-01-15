@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -135,7 +135,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldAutoJumpFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
-        tree(ScaffoldTowerFeature)
+    }
+
+    @Suppress("UnusedPrivateProperty")
+    val towerMode = choices("Tower", {
+        it.choices[0] // None
+    }) {
+        arrayOf(NoneChoice(it), ScaffoldTowerMotion)
     }
 
     private var randomization = Random.nextDouble(-0.02, 0.02)
@@ -365,7 +371,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    private fun findBestValidHotbarSlotForTarget(): Int? {
+    fun findBestValidHotbarSlotForTarget(): Int? {
         return (0..8).filter {
             isValidBlock(player.inventory.getStack(it))
         }.mapNotNull {
@@ -495,4 +501,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         return hasBlockInMainHand
     }
+
+    /**
+     * Checks if the player has a block to place
+     */
+    fun hasBlockToBePlaced(): Boolean {
+        val hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
+        val hasBlockInOffHand = isValidBlock(player.offHandStack)
+
+        return hasBlockInMainHand || hasBlockInOffHand ||
+            (silent && findBestValidHotbarSlotForTarget() != null)
+    }
+
 }
