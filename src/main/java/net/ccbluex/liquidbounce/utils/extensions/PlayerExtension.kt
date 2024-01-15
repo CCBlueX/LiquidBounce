@@ -5,13 +5,10 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura.blockStatus
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow.isUNCPBlocking
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
@@ -30,9 +27,11 @@ import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.util.*
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 import net.minecraftforge.event.ForgeEventFactory
 
 /**
@@ -90,39 +89,6 @@ val Entity.prevPos: Vec3
 
 val Entity.currPos: Vec3
     get() = this.positionVector
-
-fun EntityPlayerSP.rebuildInput(): MovementInput {
-    val rotation = currentRotation ?: rotation
-
-    val deltaYaw = rotation.yaw - rotationYaw
-
-    return MovementInputFromOptions(mc.gameSettings).apply {
-        updatePlayerMoveState()
-
-        if (sneak) {
-            moveForward /= 0.3f
-            moveStrafe /= 0.3f
-        }
-
-        val newForward = moveForward * MathHelper.cos(deltaYaw.toRadians()) + moveStrafe * MathHelper.sin(deltaYaw.toRadians())
-        val newStrafe = moveStrafe * MathHelper.cos(deltaYaw.toRadians()) - moveForward * MathHelper.sin(deltaYaw.toRadians())
-
-        moveForward = newForward
-        moveStrafe = newStrafe
-
-        if (sneak) {
-            moveForward *= 0.3f
-            moveStrafe *= 0.3f
-        }
-
-        val isUsingItem = heldItem != null && (isUsingItem || (heldItem.item is ItemSword && blockStatus) || isUNCPBlocking())
-
-        if (isUsingItem && !isRiding) {
-            moveForward *= 0.2f
-            moveStrafe *= 0.2f
-        }
-    }
-}
 
 fun Entity.setPosAndPrevPos(currPos: Vec3, prevPos: Vec3 = currPos) {
     setPosition(currPos.xCoord, currPos.yCoord, currPos.zCoord)
@@ -199,8 +165,16 @@ fun EntityPlayerSP.onPlayerRightClick(
 
     // If click had activated a block, send click and return true
     if ((!isSneaking || item == null || item.doesSneakBypassUse(worldObj, clickPos, this))
-        && blockState?.block?.onBlockActivated(worldObj, clickPos, blockState, this, side, facingX, facingY, facingZ) == true)
-            return sendClick()
+        && blockState?.block?.onBlockActivated(worldObj,
+            clickPos,
+            blockState,
+            this,
+            side,
+            facingX,
+            facingY,
+            facingZ
+        ) == true)
+        return sendClick()
 
     if (item is ItemBlock && !item.canPlaceBlockOnSide(worldObj, clickPos, side, this, stack))
         return false

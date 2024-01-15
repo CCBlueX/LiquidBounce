@@ -12,18 +12,18 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.isFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
+import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.Entity
-import net.minecraft.util.Vec3
 import java.util.*
 
 object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
@@ -31,6 +31,8 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
     private val range by FloatValue("Range", 4.4F, 1F..8F)
     private val turnSpeed by FloatValue("TurnSpeed", 10f, 1F..180F)
     private val inViewTurnSpeed by FloatValue("InViewTurnSpeed", 35f, 1f..180f)
+    private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5)
+    private val predictEnemyPosition by FloatValue("PredictEnemyPosition", 1.5f, -1f..2f)
     private val fov by FloatValue("FOV", 180F, 1F..180F)
     private val center by BoolValue("Center", false)
     private val lock by BoolValue("Lock", true)
@@ -94,30 +96,42 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
     }
 
     private fun findRotation(entity: Entity, random: Random): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        val player = mc.thePlayer ?: return false
 
-        val entityPrediction = Vec3(entity.posX - entity.prevPosX,
-            entity.posY - entity.prevPosY,
-            entity.posZ - entity.prevPosZ
-        ).times(1.5)
+        val (predictX, predictY, predictZ) = entity.currPos.subtract(entity.prevPos)
+            .times(2 + predictEnemyPosition.toDouble())
 
-        // Look up required rotations to hit enemy
-        val boundingBox = entity.hitBox.offset(
-            entityPrediction.xCoord,
-            entityPrediction.yCoord,
-            entityPrediction.zCoord
-        )
+        val boundingBox = entity.hitBox.offset(predictX, predictY, predictZ)
+        val (currPos, oldPos) = player.currPos to player.prevPos
 
-        val playerRotation = thePlayer.rotation
-        val destinationRotation =
-            if (center) toRotation(getCenter(boundingBox), true)
-            else searchCenter(boundingBox,
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+
+        repeat(predictClientMovement + 1) {
+            simPlayer.tick()
+        }
+
+        player.setPosAndPrevPos(simPlayer.pos)
+
+        val playerRotation = player.rotation
+
+        val destinationRotation = if (center) {
+            toRotation(boundingBox.center, true)
+        } else {
+            searchCenter(boundingBox,
                 outborder = false,
                 random = false,
+                gaussianOffset = false,
                 predict = true,
                 lookRange = range,
                 attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f
-            ) ?: return false
+            )
+        }
+
+        if (destinationRotation == null) {
+            player.setPosAndPrevPos(currPos, oldPos)
+
+            return false
+        }
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
         val rotationDiff = getRotationDifference(playerRotation, destinationRotation)
@@ -132,9 +146,11 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         val gaussian = random.nextGaussian()
 
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
-        val rotation = limitAngleChange(thePlayer.rotation, destinationRotation, realisticTurnSpeed.toFloat())
+        val rotation = limitAngleChange(player.rotation, destinationRotation, realisticTurnSpeed.toFloat())
 
-        rotation.toPlayer(thePlayer)
+        rotation.toPlayer(player)
+
+        player.setPosAndPrevPos(currPos, oldPos)
 
         return true
     }

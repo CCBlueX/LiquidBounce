@@ -8,8 +8,6 @@ package net.ccbluex.liquidbounce.utils
 import com.google.common.base.Predicate
 import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
-import net.ccbluex.liquidbounce.utils.extensions.rebuildInput
-import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.block.state.IBlockState
@@ -182,13 +180,6 @@ open class SimulatedPlayer(
         playerUpdate(false)
         clientPlayerLivingUpdate()
         playerUpdate(true)
-    }
-
-    fun syncWithInputAndRotations() {
-        val rotation = RotationUtils.currentRotation ?: player.rotation
-
-        rotationYaw = rotation.yaw
-        movementInput = player.rebuildInput()
     }
 
     private fun clientPlayerLivingUpdate() {
@@ -1218,7 +1209,9 @@ open class SimulatedPlayer(
         )
     }
 
-    private fun getEntitiesInAABBexcluding(entity: Entity, bb: AxisAlignedBB, predicate: Predicate<in Entity?>?): List<Entity> {
+    private fun getEntitiesInAABBexcluding(
+        entity: Entity, bb: AxisAlignedBB, predicate: Predicate<in Entity?>?,
+    ): List<Entity> {
         val list: List<Entity> = Lists.newArrayList()
         val i = MathHelper.floor_double((bb.minX - World.MAX_ENTITY_RADIUS) / 16.0)
         val j = MathHelper.floor_double((bb.maxX + World.MAX_ENTITY_RADIUS) / 16.0)
