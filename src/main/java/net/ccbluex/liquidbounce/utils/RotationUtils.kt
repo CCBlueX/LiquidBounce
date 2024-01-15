@@ -10,19 +10,19 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.*
 import org.apache.commons.lang3.tuple.MutableTriple
+import java.security.SecureRandom
 import java.util.*
 import kotlin.math.*
 
 object RotationUtils : MinecraftInstance(), Listenable {
 
-    private val randomGaussian
-        get() = abs(random.nextGaussian() % 1.0)
-
-    private var aimUp = false
+    private val secureRandom = SecureRandom()
+    private var currentSpot = Vec3(0.0, 0.0, 0.0)
 
     /**
      * Handle minecraft tick
@@ -61,47 +61,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     ).fixedSensitivity()
                 }
             }
-        }
-
-        updateTargetSpot()
-
-        val speed = MovementUtils.speed
-
-        val chance = if (speed > 0.03) {
-            0.5 - if (speed > 0.1) 0.3 else 0.0
-        } else {
-            0.8
-        }
-
-        if (randomGaussian > chance) {
-            val (newX, newY, newZ) = generateSpot()
-
-            x += (newX - x) * 0.75
-            y += (newY - y) * 0.5
-            z += (newZ - z) * 0.75
-        }
-    }
-
-    private fun updateTargetSpot() {
-        // Change target spot (from lower to higher) every random seconds
-        val randomSeconds = RandomUtils.nextInt(5, 10) * 20
-
-        if (mc.thePlayer.ticksExisted % randomSeconds == 0) {
-            aimUp = !aimUp
-        }
-    }
-
-    /**
-     * Generate a new spot depending on aimUp
-     *
-     * aimUp true -> stomach and above
-     * aimUp false -> stomach until knees
-     */
-    private fun generateSpot(): Vec3 {
-        return if (aimUp) {
-            Vec3(1 - randomGaussian, RandomUtils.nextDouble(0.65, 0.9), 1 - randomGaussian)
-        } else {
-            Vec3(1 - randomGaussian, RandomUtils.nextDouble(0.4, 0.65), 1 - randomGaussian)
         }
     }
 
@@ -151,8 +110,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
     var strafe = false
     var strict = false
 
-    var speedForReset = 0f to 0f
-    var angleThresholdForReset = 0f
+    private var speedForReset = 0f to 0f
+    private var angleThresholdForReset = 0f
 
     var currentRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
@@ -163,9 +122,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
     var setbackRotation: MutableTriple<Rotation, Boolean, Rotation>? = null
 
     private val random = Random()
-    private var x = random.nextDouble()
-    private var y = random.nextDouble()
-    private var z = random.nextDouble()
+
+    private fun findNextAimSpot() {
+        val nextSpot = currentSpot.add(
+            Vec3(secureRandom.nextGaussian(), secureRandom.nextGaussian(), secureRandom.nextGaussian())
+        )
+
+        currentSpot = nextSpot.times(nextDouble(0.85, 0.9))
+    }
 
     /**
      * Face block
@@ -190,11 +154,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                 for (z in 0.0..1.0) {
                     val block = blockPos.getBlock() ?: return null
 
-                    val posVec = startPos.addVector(
-                        block.blockBoundsMinX + (block.blockBoundsMaxX - block.blockBoundsMinX) * x,
-                        block.blockBoundsMinY + (block.blockBoundsMaxY - block.blockBoundsMinY) * x,
-                        block.blockBoundsMinZ + (block.blockBoundsMaxZ - block.blockBoundsMinZ) * x
-                    )
+                    val posVec = startPos.add(block.lerpWith(x, y, z))
 
                     val dist = eyesPos.distanceTo(posVec)
 
@@ -254,7 +214,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param gravity     how much gravity does the projectile have, arrow by default
      * @param velocity    with what velocity will the projectile be released, velocity for arrow is calculated when null
      */
-    fun faceTrajectory(target: Entity, predict: Boolean, predictSize: Float, gravity: Float = 0.05f, velocity: Float? = null): Rotation {
+    fun faceTrajectory(
+        target: Entity,
+        predict: Boolean,
+        predictSize: Float,
+        gravity: Float = 0.05f,
+        velocity: Float? = null,
+    ): Rotation {
         val player = mc.thePlayer
 
         val posX =
@@ -275,7 +241,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         return Rotation(
             atan2(posZ, posX).toDegreesF() - 90f,
-            -atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - gravityModifier * (gravityModifier * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (gravityModifier * posSqrt)).toDegreesF()
+            -atan((velocity * velocity - sqrt(
+                velocity * velocity * velocity * velocity - gravityModifier * (gravityModifier * posSqrt * posSqrt + 2 * posY * velocity * velocity)
+            )) / (gravityModifier * posSqrt)
+            ).toDegreesF()
         )
     }
 
@@ -301,15 +270,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     /**
-     * Get the center of a box
-     *
-     * @param bb your box
-     * @return center of box
-     */
-    fun getCenter(bb: AxisAlignedBB) =
-        Vec3((bb.minX + bb.maxX) * 0.5, (bb.minY + bb.maxY) * 0.5, (bb.minZ + bb.maxZ) * 0.5)
-
-    /**
      * Search good center
      *
      * @param bb                entity box to search rotation for
@@ -322,41 +282,52 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return center
      */
     fun searchCenter(
-        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, predict: Boolean,
-        lookRange: Float, attackRange: Float, throughWallsRange: Float = 0f
+        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, gaussianOffset: Boolean, predict: Boolean,
+        lookRange: Float, attackRange: Float, throughWallsRange: Float = 0f,
     ): Rotation? {
         val lookRange = lookRange.coerceAtLeast(attackRange)
 
+        val spot = if (random && gaussianOffset) {
+            findNextAimSpot()
+            currentSpot
+        } else if (random && this.random.nextGaussian() > 0.8) {
+            Vec3(this.random.nextDouble(), this.random.nextDouble(), this.random.nextDouble())
+        } else null
+
         if (outborder) {
-            val vec3 = Vec3(
-                bb.minX + (bb.maxX - bb.minX) * (x * 0.3 + 1.0),
-                bb.minY + (bb.maxY - bb.minY) * (y * 0.3 + 1.0),
-                bb.minZ + (bb.maxZ - bb.minZ) * (z * 0.3 + 1.0)
-            )
+            val vec3 = bb.lerpWith(nextDouble(0.5, 1.3), nextDouble(0.9, 1.3), nextDouble(0.5, 1.3))
 
             return toRotation(vec3, predict).fixedSensitivity()
         }
-
-        val randomVec = Vec3(
-            bb.minX + (bb.maxX - bb.minX) * x,
-            bb.minY + (bb.maxY - bb.minY) * y,
-            bb.minZ + (bb.maxZ - bb.minZ) * z
-        )
-
-        val randomRotation = toRotation(randomVec, predict).fixedSensitivity()
 
         val eyes = mc.thePlayer.eyes
 
         val isInsideEnemy = bb.isVecInside(eyes)
 
-        if (random) {
+        val currRotation = currentRotation ?: mc.thePlayer.rotation
+
+        if (random && spot != null) {
+            val randomVec = if (gaussianOffset) {
+                bb.center.add(spot)
+            } else {
+                bb.lerpWith(spot)
+            }
+
+            val randomRotation = toRotation(randomVec, predict).fixedSensitivity()
+            val vector = eyes + getVectorForRotation(randomRotation) * attackRange.toDouble()
+
+            val intercept = if (isInsideEnemy) {
+                return currRotation
+            } else {
+                bb.calculateIntercept(eyes, vector)
+            }
+
             val dist = eyes.distanceTo(randomVec)
 
-            if (dist <= attackRange && (dist <= throughWallsRange || isVisible(randomVec)))
+            if (dist <= attackRange && (intercept != null && isVisible(intercept.hitVec) || dist <= throughWallsRange))
                 return randomRotation
         }
 
-        val currRotation = currentRotation ?: mc.thePlayer.rotation
         val vector = eyes + getVectorForRotation(currRotation) * attackRange.toDouble()
 
         val intercept = if (isInsideEnemy) {
@@ -365,7 +336,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             bb.calculateIntercept(eyes, vector)
         }
 
-        if (intercept != null && random) {
+        if (intercept != null && !random) {
             val spot = intercept.hitVec
             val dist = eyes.distanceTo(spot)
 
@@ -376,16 +347,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var attackRotation: Pair<Rotation, Float>? = null
         var lookRotation: Pair<Rotation, Float>? = null
 
-        val rotationToCompareTo = if (random) randomRotation else currentRotation ?: mc.thePlayer.rotation
-
         for (x in 0.0..1.0) {
             for (y in 0.0..1.0) {
                 for (z in 0.0..1.0) {
-                    val vec = Vec3(
-                        bb.minX + (bb.maxX - bb.minX) * x,
-                        bb.minY + (bb.maxY - bb.minY) * y,
-                        bb.minZ + (bb.maxZ - bb.minZ) * z
-                    )
+                    val vec = bb.lerpWith(x, y, z)
 
                     val rotation = toRotation(vec, predict).fixedSensitivity()
 
@@ -405,7 +370,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     if (!isVisible(gcdVec) && distance > throughWallsRange)
                         continue
 
-                    val rotationWithDiff = rotation to getRotationDifference(rotation, rotationToCompareTo)
+                    val rotationWithDiff = rotation to getRotationDifference(rotation, currRotation)
 
                     if (distance <= attackRange) {
                         if (attackRotation == null || rotationWithDiff.second < attackRotation.second)
@@ -435,7 +400,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return difference between rotation
      */
     fun getRotationDifference(entity: Entity) =
-        getRotationDifference(toRotation(getCenter(entity.hitBox), true), mc.thePlayer.rotation)
+        getRotationDifference(toRotation(entity.hitBox.center, true), mc.thePlayer.rotation)
 
     /**
      * Calculate difference between two rotations
@@ -455,7 +420,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param turnSpeed your turn speed
      * @return limited rotation
      */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float, smootherMode: String = "Linear"): Rotation {
+    fun limitAngleChange(
+        currentRotation: Rotation,
+        targetRotation: Rotation,
+        turnSpeed: Float,
+        smootherMode: String = "Linear",
+    ): Rotation {
         chooseSmootherMode(smootherMode)
 
         return if (smoothMode == SmootherMode.LINEAR) {
@@ -576,7 +546,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         strict: Boolean = false,
         resetSpeed: Pair<Float, Float> = 180f to 180f,
         angleThresholdForReset: Float = 180f,
-        smootherMode: String = "Linear"
+        smootherMode: String = "Linear",
     ) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) return
 
@@ -590,7 +560,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         this.smoothMode = SmootherMode.values().first { it.modeName == smootherMode }
     }
 
-    fun resetRotation() {
+    private fun resetRotation() {
         keepLength = 0
         currentRotation?.let { rotation ->
             mc.thePlayer?.let {
@@ -622,7 +592,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun performRaytrace(
         blockPos: BlockPos,
         rotation: Rotation,
-        reach: Float = mc.playerController.blockReachDistance
+        reach: Float = mc.playerController.blockReachDistance,
     ): MovingObjectPosition? {
         val world = mc.theWorld ?: return null
         val player = mc.thePlayer ?: return null

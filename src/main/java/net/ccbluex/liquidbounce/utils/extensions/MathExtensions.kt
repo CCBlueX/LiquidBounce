@@ -5,8 +5,10 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
+import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.entity.Entity
+import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
 import net.minecraft.util.Vec3i
 
@@ -72,24 +74,27 @@ fun Double.toDegreesF() = toDegrees().toFloat()
  *      for (x in 0.1..0.9 step 0.05) {}
  *      for (y in 0.1..0.9) {}
  */
-class RangeIterator(private val range: ClosedFloatingPointRange<Double>, private val step: Double = 0.1): Iterator<Double> {
-	private var value = range.start
+class RangeIterator(
+    private val range: ClosedFloatingPointRange<Double>, private val step: Double = 0.1,
+) : Iterator<Double> {
+    private var value = range.start
 
-	override fun hasNext() = value < range.endInclusive
+    override fun hasNext() = value < range.endInclusive
 
-	override fun next(): Double {
-		val returned = value
-		value = (value + step).coerceAtMost(range.endInclusive)
-		return returned
-	}
+    override fun next(): Double {
+        val returned = value
+        value = (value + step).coerceAtMost(range.endInclusive)
+        return returned
+    }
 }
+
 operator fun ClosedFloatingPointRange<Double>.iterator() = RangeIterator(this)
 infix fun ClosedFloatingPointRange<Double>.step(step: Double) = RangeIterator(this, step)
 
 fun ClosedFloatingPointRange<Float>.random(): Double {
-	require(start.isFinite())
-	require(endInclusive.isFinite())
-	return start + (endInclusive - start) * Math.random()
+    require(start.isFinite())
+    require(endInclusive.isFinite())
+    return start + (endInclusive - start) * Math.random()
 }
 
 /**
@@ -97,3 +102,18 @@ fun ClosedFloatingPointRange<Float>.random(): Double {
  * @param shuffle determines if the returned `Iterable` is shuffled
  */
 fun <T> Iterable<T>.shuffled(shuffle: Boolean) = toMutableList().apply { if (shuffle) shuffle() }
+
+fun AxisAlignedBB.lerpWith(x: Double, y: Double, z: Double) =
+    Vec3(minX + (maxX - minX) * x, minY + (maxY - minY) * y, minZ + (maxZ - minZ) * z)
+
+fun AxisAlignedBB.lerpWith(point: Vec3) = lerpWith(point.xCoord, point.yCoord, point.zCoord)
+fun AxisAlignedBB.lerpWith(value: Double) = lerpWith(value, value, value)
+
+val AxisAlignedBB.center
+    get() = lerpWith(0.5)
+
+fun Block.lerpWith(x: Double, y: Double, z: Double) = Vec3(
+    blockBoundsMinX + (blockBoundsMaxX - blockBoundsMinX) * x,
+    blockBoundsMinY + (blockBoundsMaxY - blockBoundsMinY) * y,
+    blockBoundsMinZ + (blockBoundsMaxZ - blockBoundsMinZ) * z
+)
