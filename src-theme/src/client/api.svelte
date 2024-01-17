@@ -588,5 +588,16 @@
             }
         })
     }
+
+    // POST /modules/panic
+
+    export function panic() {
+        return request("/modules/panic", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
 </script>
 
