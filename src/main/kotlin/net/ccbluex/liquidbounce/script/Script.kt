@@ -119,7 +119,6 @@ class Script(val scriptFile: File) {
     @Suppress("unused")
     fun registerModule(moduleObject: Map<String, Any>, callback: (Module) -> Unit) {
         val module = JsModule(moduleObject)
-        ModuleManager.addModule(module)
         registeredModules += module
         callback(module)
     }
@@ -161,6 +160,7 @@ class Script(val scriptFile: File) {
         }
 
         callGlobalEvent("enable")
+        ModuleManager += registeredModules
         scriptEnabled = true
     }
 
@@ -174,6 +174,7 @@ class Script(val scriptFile: File) {
         }
 
         callGlobalEvent("disable")
+        ModuleManager -= registeredModules
         scriptEnabled = false
     }
 
@@ -195,7 +196,8 @@ class Script(val scriptFile: File) {
         try {
             globalEvents[eventName]?.invoke()
         } catch (throwable: Throwable) {
-            logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
+            logger.error("${scriptFile.name}::$scriptName -> Event Function $eventName threw an error",
+                throwable)
         }
     }
 }

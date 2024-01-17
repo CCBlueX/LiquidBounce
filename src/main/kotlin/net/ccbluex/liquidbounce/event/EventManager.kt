@@ -145,6 +145,11 @@ object EventManager {
         registry[eventClass]?.removeAll(hooks.toSet())
     }
 
+    fun unregisterEventHandler(eventHandler: Listenable) {
+        registry.values.forEach {
+            it.removeIf { it.handlerClass == eventHandler }
+        }
+    }
 
     /**
      * Call event to listeners
