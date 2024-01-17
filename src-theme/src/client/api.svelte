@@ -545,5 +545,48 @@
     export function getUpdate() {
         return request("/update")
     }
+
+    /**
+     *     post("/reconnect") {
+     *         Reconnect.reconnect()
+     *         httpOk(JsonObject())
+     *     }
+     *
+     *     post("/reconnectWithRandomAccount") {
+     *         Reconnect.reconnectWithRandomAccount()
+     *         httpOk(JsonObject())
+     *     }
+     *
+     *     post("/reconnectWithRandomUsername") {
+     *         Reconnect.reconnectWithRandomUsername()
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function reconnect() {
+        return request("/reconnect", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export function reconnectWithRandomAccount() {
+        return request("/reconnectWithRandomAccount", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export function reconnectWithRandomUsername() {
+        return request("/reconnectWithRandomUsername", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
 </script>
 

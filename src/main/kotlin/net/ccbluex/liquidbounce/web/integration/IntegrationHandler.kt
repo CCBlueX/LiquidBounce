@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
+import net.minecraft.client.gui.screen.DisconnectedScreen
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -107,7 +108,8 @@ object IntegrationHandler : Listenable {
         }),
         GAME_MENU("game_menu", { it is GameMenuScreen }, true),
         INVENTORY("inventory", { it is InventoryScreen || it is CreativeInventoryScreen }, true),
-        CONTAINER("container", { it is GenericContainerScreen }, true);
+        CONTAINER("container", { it is GenericContainerScreen }, true),
+        DISCONNECTED("disconnected", { it is DisconnectedScreen }, true);
 
         fun open() = RenderSystem.recordRenderCall(open)
 
