@@ -34,9 +34,13 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private var smartTick = 0
     private var cooldownTick = 0
 
+    private var velocityDetected = false
+    private var lagbackDetected = false
+
     // Condition to confirm
     private var confirmTick = false
     private var confirmMove = false
+    private var confirmStop = false
 
     // Condition to prevent getting timer speed stuck
     private var confirmAttack = false
@@ -57,10 +61,11 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private val rangeValue by FloatValue("Range", 3.5f, 1f..5f) { timerBoostMode == "Normal" }
     private val cooldownTickValue by IntegerValue("CooldownTick", 10, 1..50) { timerBoostMode == "Normal" }
 
-    // Smart & SmartMove Mode Settings
+    // Smart & SmartMove Mode Range
     private val minRange by FloatValue("MinRange", 1f, 1f..5f) { timerBoostMode != "Normal" }
     private val maxRange by FloatValue("MaxRange", 5f, 1f..5f) { timerBoostMode != "Normal" }
 
+    // Min & Max Tick Delay
     private val minTickDelay: IntegerValue = object : IntegerValue("MinTickDelay", 50, 1..500) {
         override fun isSupported() = timerBoostMode != "Normal"
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxTickDelay.get())
@@ -70,6 +75,11 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         override fun isSupported() = timerBoostMode != "Normal"
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get())
     }
+
+    // Min & Max Stop Settings
+    private val stopRange by BoolValue("StopRange", false)
+    private val minStopRange by FloatValue("MinStopRange", 1f, 1f..5f) { stopRange }
+    private val maxStopRange by FloatValue("MaxStopRange", 3f, 1f..5f) { stopRange }
 
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { timerBoostMode == "SmartMove" }
 
@@ -93,9 +103,13 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
     override fun onDisable() {
         timerReset()
+
         smartTick = 0
         cooldownTick = 0
         playerTicks = 0
+
+        velocityDetected = false
+        lagbackDetected = false
     }
 
     /**
@@ -150,6 +164,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             return
         }
 
+        val nearbyEntity = getNearestEntityInRange() ?: return
+
         val randomTickDelay = RandomUtils.nextInt(minTickDelay.get(), maxTickDelay.get())
         val randomRange = RandomUtils.nextDouble(minRange.toDouble(), maxRange.toDouble())
 
@@ -165,9 +181,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             confirmMove = false
         }
 
-        val nearbyEntity = getNearestEntityInRange()
-
-        if (nearbyEntity != null && isPlayerMoving()) {
+        if (isPlayerMoving()) {
             if (isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
                 val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
 
@@ -188,6 +202,19 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     }
 
     /**
+     * Motion event
+     * (Resets player speed when too close to the target)
+     */
+    @EventTarget
+    fun onMotion(event: MotionEvent) {
+        val nearbyEntity = getNearestEntityInRange() ?: return
+        val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
+        val stopDistance = RandomUtils.nextDouble(minStopRange.toDouble(), maxStopRange.toDouble())
+
+        confirmStop = (stopRange && entityDistance < stopDistance)
+    }
+
+    /**
      * Update event
      */
     @EventTarget
@@ -196,7 +223,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         val timerboost = Random.nextDouble(0.5, 0.56)
         val charged = Random.nextDouble(0.75, 0.91)
 
-        if (playerTicks <= 0) {
+        if (playerTicks <= 0 || confirmStop) {
             timerReset()
             return
         }
@@ -264,7 +291,14 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         val player = mc.thePlayer
 
         val entitiesInRange = getAllEntities()
-            .filter { player.getDistanceToEntityBox(it) <= rangeValue }
+            .filter {
+                val distance = player.getDistanceToEntityBox(it)
+                when (timerBoostMode.lowercase()) {
+                    "normal" -> distance <= rangeValue
+                    "smart", "smartmove" -> distance in minRange..maxRange
+                    else -> false
+                }
+            }
 
         return entitiesInRange.minByOrNull { player.getDistanceToEntityBox(it) }
     }
@@ -288,14 +322,15 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (isPlayerMoving() && !shouldResetTimer()
-            && mc.timer.timerSpeed > 1.0 || mc.timer.timerSpeed < 1.0 ) {
+        if (isPlayerMoving() && !shouldResetTimer()) {
 
             // Check for lagback
             if (resetOnlagBack && confirmLagBack) {
-                if (packet is S08PacketPlayerPosLook) {
+                if (lagbackDetected) {
+
                     confirmLagBack = false
                     timerReset()
+
                     if (chatDebug) {
                         Chat.print("Lagback Received | Timer Reset")
                     }
@@ -307,10 +342,11 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
             // Check for knockback
             if (resetOnKnockback && confirmKnockback) {
-                if (packet is S12PacketEntityVelocity && mc.thePlayer.entityId == packet.entityID
-                    && packet.motionY > 0 && (packet.motionX.toDouble() != 0.0 || packet.motionZ.toDouble() != 0.0)) {
+                if (velocityDetected) {
+
                     confirmKnockback = false
                     timerReset()
+
                     if (chatDebug) {
                         Chat.print("Knockback Received | Timer Reset")
                     }
@@ -320,6 +356,13 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                 }
             }
         }
+
+        // Check for velocity
+        velocityDetected = (packet is S12PacketEntityVelocity && mc.thePlayer.entityId == packet.entityID
+                && packet.motionY > 0 && (packet.motionX != 0 || packet.motionZ != 0))
+
+        // Check for lagback
+        lagbackDetected = packet is S08PacketPlayerPosLook
     }
 
     /**
