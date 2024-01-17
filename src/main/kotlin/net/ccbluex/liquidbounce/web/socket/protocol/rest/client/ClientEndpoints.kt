@@ -23,6 +23,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.acknowledgement
@@ -43,6 +44,7 @@ internal fun RestNode.setupClientRestApi() {
             addProperty("clientName", LiquidBounce.CLIENT_NAME)
             addProperty("fps", mc.currentFps)
             addProperty("gameDir", mc.runDirectory.path)
+            addProperty("inGame", inGame)
         })
     }
 
