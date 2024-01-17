@@ -21,6 +21,8 @@ mutable field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chatMessage Ljava/lang/String;
 
+accessible field net/minecraft/server/network/ServerPlayerEntity joinInvulnerabilityTicks I
+
 accessible field net/minecraft/client/network/ClientPlayerEntity lastX D
 accessible field net/minecraft/client/network/ClientPlayerEntity lastBaseY D
 accessible field net/minecraft/client/network/ClientPlayerEntity lastZ D

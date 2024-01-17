@@ -13,18 +13,23 @@ import net.ccbluex.tenacc.api.common.TACCTestSequence
 import net.ccbluex.tenacc.api.common.TACCTestVariant
 import net.ccbluex.tenacc.utils.Rotation
 import net.ccbluex.tenacc.utils.lookDirection
+import net.ccbluex.tenacc.utils.outputString
+import net.ccbluex.tenacc.utils.resetStandardConditions
+import net.ccbluex.tenacc.utils.sendInventoryUpdates
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import org.joml.Vector3f
 import java.io.InputStreamReader
-import java.io.StringReader
 
 @TACCTestClass("TestScaffold")
 class TestScaffold {
 
     @TACCTest(name = "testRotationBottleneck", scenary = "scaffold/scaffold_underground_straight.nbt", timeout = 1000)
     fun runTest(adapter: TACCSequenceAdapter) {
+        genericTestRotationBottleneck(adapter, diagonal=false)
+    }
 
+    private fun genericTestRotationBottleneck(adapter: TACCSequenceAdapter, diagonal: Boolean) {
         fun loadBaseSettings(mode: String) {
             resetSettings()
 
@@ -40,21 +45,33 @@ class TestScaffold {
             }
         }
 
-        val rotationModes = arrayOf("Center", "Stabilized", "NearestRotation")
-//        val rotationModes = arrayOf("Stabilized")
+//        val rotationModes = arrayOf("Center", "Stabilized", "NearestRotation", "OnTick")
+        val rotationModes = arrayOf("Stabilized")
+        val possibleItems = arrayOf(Items.STONE, Items.STONE_SLAB)
 
-        val variants = rotationModes.map { TACCTestVariant.of("RotationMode $it") { loadBaseSettings(it) } }
 
-        adapter.startSequence(variants.toTypedArray()) {
+        val rotationModeVariants = rotationModes.map {
+            TACCTestVariant.of("RotationMode $it") { loadBaseSettings(it) }
+        }
+
+        var itemInHand = Items.STONE
+
+        val itemVariants = possibleItems.map {
+            TACCTestVariant.of("Item ${it.name.outputString()}") { itemInHand = it }
+        }
+
+        val allVariants = TACCTestVariant.combine(rotationModeVariants.toTypedArray(), itemVariants.toTypedArray())
+
+        adapter.startSequence(allVariants) {
             val startPositions = server { getMarkerPositions("start") }
-
-            server {
-                player.inventory.setStack(0, ItemStack(Items.STONE, 64))
-            }
 
             loopByServer(startPositions) { startPositionBox ->
                 server {
-                    resetScenery()
+                    resetStandardConditions()
+
+                    player.inventory.setStack(0, ItemStack(itemInHand, 64))
+
+                    player.sendInventoryUpdates()
 
                     val pos = openBox(startPositionBox)
 

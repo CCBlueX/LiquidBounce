@@ -47,9 +47,9 @@ object ConfigSystem {
 
     init {
         // Delete the config folder if we are integration testing.
-        if (LiquidBounce.isIntegrationTesting) {
-            File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
-        }
+//        if (LiquidBounce.isIntegrationTesting) {
+//            File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
+//        }
     }
 
     private val clientDirectoryName = if (LiquidBounce.isIntegrationTesting) {

@@ -180,8 +180,8 @@ tasks.register('buildTheme', NpmTask) {
         println 'Successfully build theme'
     }
 
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
-    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
+    inputs.dir("src-theme/src")
     outputs.dir('src-theme/public')
 }
 
@@ -194,8 +194,7 @@ tasks.register('bundleTheme', NodeTask) {
     }
 
     // Incremental stuff
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
-    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
     outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 
