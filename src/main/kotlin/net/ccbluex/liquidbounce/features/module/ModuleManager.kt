@@ -144,6 +144,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleCapeTransfer,
             ModuleHideClient,
             ModuleFocus,
+            ModuleAutoConfig,
 
             // Movement
             ModuleAirJump,

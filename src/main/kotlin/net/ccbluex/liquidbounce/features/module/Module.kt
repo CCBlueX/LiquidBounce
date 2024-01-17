@@ -157,7 +157,7 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && mc.player != null && mc.world != null
+    override fun handleEvents() = enabled && inGame
 
     /**
      * Handles disconnect from world and if [disableOnQuit] is true disables module
