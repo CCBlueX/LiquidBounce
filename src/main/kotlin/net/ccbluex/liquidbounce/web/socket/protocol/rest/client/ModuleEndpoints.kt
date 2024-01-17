@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-package net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
