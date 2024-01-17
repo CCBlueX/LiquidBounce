@@ -5,6 +5,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig.cachedSettingsList
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -46,7 +47,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
      */
     private fun loadServerConfig(address: String) {
         if (blacklistedServer.any { address.contains(it, true) }) {
-            notification("AutoConfig", "This server is blacklisted.",
+            notification("Auto Config", "This server is blacklisted.",
                 NotificationEvent.Severity.INFO)
             return
         }
@@ -54,11 +55,12 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
         val autoConfig = cachedSettingsList?.find { it.serverAddress.equals(address, true) }
 
         if (autoConfig == null) {
-            notification("AutoConfig", "No config found for this server.",
+            notification("Auto Config", "There is no known config for $address.",
                 NotificationEvent.Severity.ERROR)
             return
         }
 
+        CommandConfig.loadingNow = true
         runCatching {
             ClientApi.requestSettingsScript(autoConfig.settingId).apply {
                 ConfigSystem.deserializeConfigurable(
@@ -67,12 +69,13 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
             }
 
         }.onFailure {
-            notification("AutoConfig", "Failed to load config for this server.",
+            notification("Auto Config", "Failed to load config ${autoConfig.name}.",
                 NotificationEvent.Severity.ERROR)
         }.onSuccess {
-            notification("AutoConfig", "Loaded config for this server.",
+            notification("Auto Config", "Successfully loaded config ${autoConfig.name}.",
                 NotificationEvent.Severity.SUCCESS)
         }
+        CommandConfig.loadingNow = false
     }
 
     /**

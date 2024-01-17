@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
@@ -85,11 +86,14 @@ open class Module(
                 return@listen false
             }
 
-            notification(
-                if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
-                this.name,
-                if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
-            )
+            if (!CommandConfig.loadingNow) {
+                notification(
+                    if (new) Text.translatable("liquidbounce.generic.enabled")
+                    else Text.translatable("liquidbounce.generic.disabled"),
+                    this.name,
+                    if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
+                )
+            }
 
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))

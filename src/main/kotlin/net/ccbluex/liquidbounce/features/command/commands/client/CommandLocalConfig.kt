@@ -62,6 +62,7 @@ object CommandLocalConfig {
                                 return@handler
                             }
 
+                            CommandConfig.loadingNow = true
                             ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
                                 ConfigSystem.autoConfigGson)
                         }.onFailure {
@@ -69,6 +70,8 @@ object CommandLocalConfig {
                         }.onSuccess {
                             chat(regular(command.result("loaded", variable(name))))
                         }
+
+                        CommandConfig.loadingNow = false
                     }
                     .build()
             )

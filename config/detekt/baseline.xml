@@ -7,6 +7,7 @@
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
     <ID>ComplexCondition:ModuleVelocity.kt$ModuleVelocity$(packet is EntityVelocityUpdateS2CPacket &amp;&amp; packet.id == player.id || packet is ExplosionS2CPacket) &amp;&amp; it.original &amp;&amp; Delayed.enabled</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
+    <ID>CyclomaticComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>CyclomaticComplexMethod:Chat.kt$Chat$private fun onClientError(packet: ClientErrorPacket)</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
@@ -25,6 +26,7 @@
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
+    <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
@@ -71,7 +73,6 @@
     <ID>MaxLineLength:LineSegment.kt$LineSegment$class</ID>
     <ID>MaxLineLength:LiquidBounce.kt$LiquidBounce$*</ID>
     <ID>MaxLineLength:Listenable.kt$// We store our sequence in this variable. That can be done because our variable will survive the scope of this function</ID>
-    <ID>MaxLineLength:Module.kt$Module$if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled")</ID>
     <ID>MaxLineLength:ModuleAnimation.kt$ModuleAnimation$*</ID>
     <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$// We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.</ID>
     <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
