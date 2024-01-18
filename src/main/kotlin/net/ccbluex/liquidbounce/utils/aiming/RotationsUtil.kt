@@ -26,10 +26,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBadWifi
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.*
@@ -123,7 +122,7 @@ object RotationManager : Listenable {
     var previousRotation: Rotation? = null
 
     private val fakeLagging
-        get() = ModuleBadWifi.isLagging() || ModuleBacktrack.isLagging() || ModuleBlink.isLagging()
+        get() = FakeLag.isLagging || ModuleBacktrack.isLagging()
 
     val serverRotation: Rotation
         get() = if (fakeLagging) theoreticalServerRotation else actualServerRotation

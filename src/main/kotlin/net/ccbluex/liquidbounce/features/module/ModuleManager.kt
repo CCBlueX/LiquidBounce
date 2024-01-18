@@ -89,7 +89,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoSoup,
             ModuleAutoHead,
             ModuleAutoWeapon,
-            ModuleBadWifi,
+            ModuleFakeLag,
             ModuleCriticals,
             ModuleHitbox,
             ModuleKillAura,

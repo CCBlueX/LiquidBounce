@@ -178,7 +178,8 @@ fun ClientWorld.getEntitiesInCuboid(
     range: Double,
     predicate: (Entity) -> Boolean = { true }
 ): MutableList<Entity> {
-    return getOtherEntities(null, Box(midPos.subtract(range, range, range), midPos.add(range, range, range)), predicate)
+    return getOtherEntities(null, Box(midPos.subtract(range, range, range),
+        midPos.add(range, range, range)), predicate)
 }
 
 inline fun ClientWorld.getEntitiesBoxInRange(
