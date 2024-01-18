@@ -305,7 +305,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val timerHandler = repeatable {
-        Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleScaffold)
+        if (timer != 1f) {
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleScaffold)
+        }
     }
 
     val networkTickHandler = repeatable {

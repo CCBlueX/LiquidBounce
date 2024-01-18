@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedHypixelBHop
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import kotlin.math.abs
 
 /**
  * Timer module
@@ -115,8 +117,25 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
         private val timeBoostTicks by int("TimeBoostTicks", 12, 1..60)
         private var timeBoostCapable = 0
+        
+        private val allowNegative by boolean("AllowNegative", false)
 
         val repeatable = repeatable {
+            if (timeBoostCapable < 0) {
+                val ticks = abs(timeBoostCapable)
+                Timer.requestTimerSpeed(
+                    slowSpeed,
+                    Priority.IMPORTANT_FOR_USAGE_1,
+                    ModuleSpeed,
+                    resetAfterTicks = ticks
+                )
+
+                notification("Timer", "Slowing down for $ticks ticks",
+                    NotificationEvent.Severity.INFO)
+                timeBoostCapable = 0
+                waitTicks(ticks)
+            }
+
             if (!player.moving && !CombatManager.isInCombat()) {
                 if (mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen) {
                     timeBoostCapable = 0
@@ -125,17 +144,20 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
                 Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
                 timeBoostCapable = (timeBoostCapable + 1).coerceAtMost(timeBoostTicks)
-            }else if (timeBoostCapable > 0) {
+            }else if (timeBoostCapable > 0 ||
+                (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))) {
+                val ticks = if (timeBoostCapable > 0) timeBoostCapable else timeBoostTicks
+
                 Timer.requestTimerSpeed(
                     boostSpeed,
                     Priority.IMPORTANT_FOR_USAGE_1,
                     ModuleSpeed,
-                    resetAfterTicks = timeBoostCapable
+                    resetAfterTicks = ticks
                 )
-                notification("Timer", "Boosted for $timeBoostCapable ticks",
+                notification("Timer", "Boosted for $ticks ticks",
                     NotificationEvent.Severity.INFO)
-
-                timeBoostCapable = 0
+                timeBoostCapable -= ticks
+                waitTicks(ticks)
             }
 
             return@repeatable
