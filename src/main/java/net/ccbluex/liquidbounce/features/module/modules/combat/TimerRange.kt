@@ -45,12 +45,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     // Condition to prevent getting timer speed stuck
     private var confirmAttack = false
 
-    // Condition to makesure timer isn't reset on lagback, when not attacking
-    private var confirmLagBack = false
-
-    // Condition to makesure timer isn't reset on knockback, when timer isn't changed
-    private var confirmKnockback = false
-
     private val timerBoostMode by ListValue("TimerMode", arrayOf("Normal", "Smart", "SmartMove"), "Normal")
 
     private val ticksValue by IntegerValue("Ticks", 10, 1..20)
@@ -117,7 +111,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      */
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity !is EntityLivingBase || shouldResetTimer()) {
+        if (event.targetEntity !is EntityLivingBase && playerTicks >= 1 || shouldResetTimer()) {
             timerReset()
             return
         } else {
@@ -125,7 +119,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         }
 
         val targetEntity = event.targetEntity
-        val entityDistance = mc.thePlayer.getDistanceToEntityBox(targetEntity)
+        val entityDistance = targetEntity?.let { mc.thePlayer.getDistanceToEntityBox(it) }
         val randomTickDelay = RandomUtils.nextInt(minTickDelay.get(), maxTickDelay.get() + 1)
         val randomRange = RandomUtils.nextDouble(minRange.toDouble(), maxRange.toDouble())
 
@@ -133,21 +127,14 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         cooldownTick++
 
         val shouldSlowed = when (timerBoostMode) {
-            "Normal" -> cooldownTick >= cooldownTickValue && entityDistance <= rangeValue
-            "Smart" -> smartTick >= randomTickDelay && entityDistance <= randomRange
+            "Normal" -> cooldownTick >= cooldownTickValue && entityDistance!! <= rangeValue
+            "Smart" -> smartTick >= randomTickDelay && entityDistance!! <= randomRange
             else -> false
         }
 
         if (shouldSlowed && confirmAttack) {
             confirmAttack = false
             playerTicks = ticksValue
-
-            if (resetOnKnockback) {
-                confirmKnockback = true
-            }
-            if (resetOnlagBack) {
-                confirmLagBack = true
-            }
             cooldownTick = 0
             smartTick = 0
         } else {
@@ -189,14 +176,9 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                     playerTicks = ticksValue
                     confirmTick = false
                     confirmMove = true
-
-                    if (resetOnKnockback) {
-                        confirmKnockback = true
-                    }
-                    if (resetOnlagBack) {
-                        confirmLagBack = true
-                    }
                 }
+            } else {
+                timerReset()
             }
         }
     }
@@ -251,13 +233,13 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
         if (timerBoostMode.lowercase() == "smartmove") {
             getNearestEntityInRange()?.let { nearbyEntity ->
                 val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
-                if (entityDistance <= maxRange && isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
+                if (entityDistance in minRange..maxRange && isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
                     if (markMode == "Box") {
                         drawEntityBox(nearbyEntity, Color(37, 126, 255, 70), outline)
                     } else if (markMode != "Off") {
                         drawPlatform(nearbyEntity, Color(37, 126, 255, 70))
                     }
-                } else if (entityDistance <= maxRange) {
+                } else if (entityDistance in minRange..maxRange) {
                     if (markMode == "Box") {
                         drawEntityBox(nearbyEntity, Color(210, 60, 60, 70), outline)
                     } else if (markMode != "Off") {
@@ -272,7 +254,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * Check if player is moving
      */
     private fun isPlayerMoving(): Boolean {
-        return mc.thePlayer.moveForward != 0f || mc.thePlayer.moveStrafing != 0f
+        return mc.thePlayer?.moveForward != 0f || mc.thePlayer?.moveStrafing != 0f
     }
 
     /**
@@ -307,8 +289,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * Separate condition to make it cleaner
      */
     private fun shouldResetTimer(): Boolean {
-        return (playerTicks >= 1
-            || mc.thePlayer.isSpectator || mc.thePlayer.isDead
+        return(mc.thePlayer.isSpectator || mc.thePlayer.isDead
             || mc.thePlayer.isInWater || mc.thePlayer.isInLava
             || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder
             || mc.thePlayer.isRiding)
@@ -322,37 +303,31 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (isPlayerMoving() && !shouldResetTimer()) {
+        if (isPlayerMoving() && !shouldResetTimer() && mc.timer.timerSpeed != 1F) {
 
             // Check for lagback
-            if (resetOnlagBack && confirmLagBack) {
-                if (lagbackDetected) {
+            if (resetOnlagBack && lagbackDetected) {
 
-                    confirmLagBack = false
-                    timerReset()
+                timerReset()
 
-                    if (chatDebug) {
-                        Chat.print("Lagback Received | Timer Reset")
-                    }
-                    if (notificationDebug) {
-                        hud.addNotification(Notification("Lagback Received | Timer Reset", 1000F))
-                    }
+                if (chatDebug) {
+                    Chat.print("Lagback Received | Timer Reset")
+                }
+                if (notificationDebug) {
+                    hud.addNotification(Notification("Lagback Received | Timer Reset", 1000F))
                 }
             }
 
             // Check for knockback
-            if (resetOnKnockback && confirmKnockback) {
-                if (velocityDetected) {
+            if (resetOnKnockback && velocityDetected) {
 
-                    confirmKnockback = false
-                    timerReset()
+                timerReset()
 
-                    if (chatDebug) {
-                        Chat.print("Knockback Received | Timer Reset")
-                    }
-                    if (notificationDebug) {
-                        hud.addNotification(Notification("Knockback Received | Timer Reset", 1000F))
-                    }
+                if (chatDebug) {
+                    Chat.print("Knockback Received | Timer Reset")
+                }
+                if (notificationDebug) {
+                    hud.addNotification(Notification("Knockback Received | Timer Reset", 1000F))
                 }
             }
         }
