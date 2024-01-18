@@ -28,8 +28,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedHypixelBHop
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 
 /**
@@ -115,7 +117,12 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
         private var timeBoostCapable = 0
 
         val repeatable = repeatable {
-            if (!player.moving) {
+            if (!player.moving && !CombatManager.isInCombat()) {
+                if (mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen) {
+                    timeBoostCapable = 0
+                    return@repeatable
+                }
+
                 Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
                 timeBoostCapable = (timeBoostCapable + 1).coerceAtMost(timeBoostTicks)
             }else if (timeBoostCapable > 0) {
@@ -133,6 +140,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
             return@repeatable
         }
+
 
     }
 
