@@ -50,9 +50,6 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
     private val verticalAcceleration by boolean("VerticalAcceleration", true)
 
-    private val timeBoostTicks by int("TimeBoostTicks", 12, 0..20)
-    private var timeBoostCapable = 0
-
     private const val BASE_HORIZONTAL_MODIFIER = 0.0004
 
     // todo: check if we can do more with this
@@ -76,17 +73,6 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
         if (player.isOnGround) {
             // Strafe when on ground
             player.strafe()
-
-            // Time boost feature
-            if (!player.moving && timeBoostTicks > 0) {
-                if (mc.currentScreen != null) {
-                    timeBoostCapable = 0
-                    return@repeatable
-                }
-
-                Timer.requestTimerSpeed(0.6f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
-                timeBoostCapable = (timeBoostCapable + 1).coerceAtMost(timeBoostTicks)
-            }
             return@repeatable
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
@@ -105,17 +91,6 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             }
 
             player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
-        }
-
-        // Time boost feature
-        if (timeBoostCapable > 0) {
-            Timer.requestTimerSpeed(
-                1.3f,
-                Priority.IMPORTANT_FOR_USAGE_1,
-                ModuleSpeed,
-                resetAfterTicks = timeBoostCapable
-            )
-            timeBoostCapable = 0
         }
     }
 
@@ -163,8 +138,6 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     }
 
     override fun disable() {
-        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, ModuleSpeed)
-        timeBoostCapable = 0
         wasFlagged = false
     }
 
