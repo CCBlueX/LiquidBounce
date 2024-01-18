@@ -27,7 +27,7 @@ export default function AccountEntry({ account }: AccountEntryProps) {
 
         {/* E-mail */}
         <div className="text-white/50 text-xl font-semibold">
-          example@placeholder.com
+          {account.type}
         </div>
       </div>
     </ListItem>

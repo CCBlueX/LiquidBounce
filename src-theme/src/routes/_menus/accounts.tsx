@@ -54,7 +54,7 @@ export function Component() {
     if (!search || !accounts) return accounts;
 
     const fuse = new Fuse(accounts, {
-      keys: ["username", "email"],
+      keys: ["username"],
     });
 
     return fuse.search(search).map((result) => result.item);
