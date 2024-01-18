@@ -189,7 +189,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!fake && !canCrit(player, ignoreOnGround = true)) {
+            if (!fake && !wouldCrit()) {
                 return@handler
             }
 
