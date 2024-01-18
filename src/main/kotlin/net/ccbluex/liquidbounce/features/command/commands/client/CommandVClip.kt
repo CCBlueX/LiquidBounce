@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.client.MinecraftClient
+
 object CommandVClip {
 
     fun createCommand(): Command {
@@ -19,11 +20,16 @@ object CommandVClip {
                     .build()
             )
             .handler { command, args ->
-                val y = args[0] as String
+                val y = (args[0] as String).toDoubleOrNull()
                 val player = MinecraftClient.getInstance().player
 
+                if (y == null) {
+                    chat(regular("Invalid distance. Please enter a valid number."))
+                    return@handler
+                }
+
                 if (player != null) {
-                    player.updatePosition(player.x, player.y + y.toDouble(), player.z)
+                    player.updatePosition(player.x, player.y + y, player.z)
                     chat(
                         regular(
                             command.result(
@@ -35,7 +41,7 @@ object CommandVClip {
                         )
                     )
                 } else {
-                    throw CommandException(command.result("playerNotFound"))
+                    throw CommandException(command.result("notInGame"))
                 }
             }
             .build()
