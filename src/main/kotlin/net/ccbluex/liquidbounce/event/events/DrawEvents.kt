@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,12 +29,12 @@ import net.minecraft.client.util.math.MatrixStack
 @Nameable("gameRender")
 class GameRenderEvent : Event()
 
+@Nameable("screenRender")
+class ScreenRenderEvent : Event()
+
 @Nameable("worldRender")
 class WorldRenderEvent(val matrixStack: MatrixStack, val partialTicks: Float) : Event()
 
 @Nameable("overlayRender")
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
 
-@Nameable("screenRender")
-class ScreenRenderEvent(val screen: Screen?, val context: DrawContext, val mouseX: Int, val mouseY: Int,
-                        val delta: Float) : Event()

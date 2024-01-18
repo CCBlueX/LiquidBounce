@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,17 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.acknowledgement
+import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.momentaryVirtualScreen
 import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
@@ -42,6 +44,7 @@ internal fun RestNode.setupClientRestApi() {
             addProperty("clientName", LiquidBounce.CLIENT_NAME)
             addProperty("fps", mc.currentFps)
             addProperty("gameDir", mc.runDirectory.path)
+            addProperty("inGame", inGame)
         })
     }
 
@@ -59,9 +62,23 @@ internal fun RestNode.setupClientRestApi() {
 
     get("/virtualScreen") {
         httpOk(JsonObject().apply {
-            addProperty("name", IntegrationHandler.momentaryVirtualScreen?.name)
+            addProperty("name", momentaryVirtualScreen?.name)
             addProperty("splash", mc.overlay is SplashOverlay)
         })
+    }
+
+    post("/virtualScreen") {
+        val body = decode<JsonObject>(it.content)
+        val name = body["name"]?.asString ?: return@post httpForbidden("No name")
+
+        val virtualScreen = momentaryVirtualScreen
+
+        if ((virtualScreen?.name ?: "none") != name) {
+            return@post httpForbidden("Wrong virtual screen")
+        }
+
+        acknowledgement.confirm()
+        httpOk(JsonObject())
     }
 
     get("/window") {

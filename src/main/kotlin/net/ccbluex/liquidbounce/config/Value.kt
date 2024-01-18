@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -216,10 +217,10 @@ open class Value<T : Any>(
             }
             ValueType.BLOCKS       -> {
                 val blocks = string.split(",").map {
-                    Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(it)))
-                }.filter {
-                    !it.defaultState.isAir
-                }.toMutableSet()
+                    findBlocksEndingWith(it).filter {
+                        !it.defaultState.isAir
+                    }
+                }.flatten().toHashSet()
 
                 if (blocks.isEmpty()) {
                     error("No blocks found")

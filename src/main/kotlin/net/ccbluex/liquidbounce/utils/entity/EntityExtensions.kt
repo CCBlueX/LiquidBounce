@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -146,16 +146,14 @@ fun ClientPlayerEntity.downwards(motion: Float) {
     velocityDirty = true
 }
 
-fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed) {
+fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0) {
     if (!moving) {
         velocity.x = 0.0
         velocity.z = 0.0
         return
     }
 
-    val angle = Math.toRadians(yaw.toDouble())
-    velocity.x = -sin(angle) * speed
-    velocity.z = cos(angle) * speed
+    velocity.strafe(yaw, speed, strength)
 }
 
 val Vec3d.sqrtSpeed: Double

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,16 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
-package net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
@@ -75,6 +76,19 @@ internal fun RestNode.setupModuleRestApi() {
                 .acceptPutSettingsRequest(it.content)
         }
 
+        post("/panic") {
+            RenderSystem.recordRenderCall {
+                for (module in ModuleManager) {
+                    if (module.category == Category.RENDER) {
+                        continue
+                    }
+
+                    module.enabled = false
+                }
+            }
+            httpOk(JsonObject())
+        }
+
     }
 }
 
@@ -97,12 +111,11 @@ data class ModuleRequest(val name: String) {
         if (module.enabled == supposedNew) {
             return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
         }
-        module.enabled = supposedNew
 
-        return httpOk(JsonObject().apply {
-            addProperty("name", module.name)
-            addProperty("enabled", module.enabled)
-        })
+        RenderSystem.recordRenderCall {
+            module.enabled = supposedNew
+        }
+        return httpOk(JsonObject())
     }
 
     fun acceptGetSettingsRequest(): FullHttpResponse {

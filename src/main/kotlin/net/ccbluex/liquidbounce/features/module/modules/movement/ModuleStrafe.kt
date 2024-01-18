@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,10 +35,11 @@ import net.minecraft.entity.MovementType
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
     private var strength by float("Strength", 1f, 0.1f..1f)
+    private var notDuringAir by boolean("NotDuringAir", false)
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
-        if (event.type == MovementType.SELF && player.moving) {
+        if (event.type == MovementType.SELF && player.moving && (!notDuringAir || !player.isOnGround)) {
             val movement = event.movement
             movement.strafe(player.directionYaw, strength = strength.toDouble())
         }

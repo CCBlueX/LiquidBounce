@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,6 +69,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerMoveEvent::class,
     RotatedMovementInputEvent::class,
     PlayerJumpEvent::class,
+    PlayerAfterJumpEvent::class,
     PlayerUseMultiplier::class,
     PlayerVelocityStrafe::class,
     PlayerStrideEvent::class,
@@ -97,7 +98,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     SplashProgressEvent::class,
     ChoiceChangeEvent::class,
     RefreshArrayListEvent::class,
-    BrowserReadyEvent::class
+    BrowserReadyEvent::class,
+    ServerConnectEvent::class
 )
 
 /**
@@ -143,6 +145,11 @@ object EventManager {
         registry[eventClass]?.removeAll(hooks.toSet())
     }
 
+    fun unregisterEventHandler(eventHandler: Listenable) {
+        registry.values.forEach {
+            it.removeIf { it.handlerClass == eventHandler }
+        }
+    }
 
     /**
      * Call event to listeners

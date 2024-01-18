@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 
@@ -48,8 +48,8 @@ import net.minecraft.util.math.Box
 object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val modes = choices("Mode", Box, arrayOf(Box))
-
-    private val targetedBlocksSetting by blocks("Targets", hashSetOf(Blocks.DRAGON_EGG, Blocks.RED_BED)).listen {
+    private val targets by blocks("Targets",
+        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()).listen {
         if (enabled) {
             disable()
             enable()
@@ -116,7 +116,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (!state.isAir && targetedBlocksSetting.contains(state.block)) {
+            return if (!state.isAir && targets.contains(state.block)) {
                 TrackedState
             } else {
                 null

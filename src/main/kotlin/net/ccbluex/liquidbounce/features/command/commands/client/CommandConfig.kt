@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,10 +28,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.io.HttpClient.get
 import net.minecraft.text.Text
 
@@ -44,6 +41,7 @@ import net.minecraft.text.Text
  */
 object CommandConfig {
 
+    internal var loadingNow = false
     internal var cachedSettingsList: Array<AutoSettings>? = null
 
     fun createCommand(): Command {
@@ -66,26 +64,34 @@ object CommandConfig {
 
                         // Get online config from external source
                         if (name.startsWith("http")) {
-                            get(name).runCatching {
-                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
-                                    ConfigSystem.autoConfigGson)
+                            loadingNow = true
+                            runCatching {
+                                get(name).apply {
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                        ConfigSystem.autoConfigGson)
+                                }
                             }.onFailure {
-                                chat(regular(command.result("failedToLoad", variable(name))))
+                                chat(red(command.result("failedToLoad", variable(name))))
                             }.onSuccess {
                                 chat(regular(command.result("loaded", variable(name))))
                             }
+                            loadingNow = false
                             return@handler
                         }
 
                         // Get online config from API
-                        requestSettingsScript(name).runCatching {
-                            ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
-                                ConfigSystem.autoConfigGson)
+                        loadingNow = true
+                        runCatching {
+                            requestSettingsScript(name).apply {
+                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                    ConfigSystem.autoConfigGson)
+                            }
                         }.onFailure {
-                            chat(regular(command.result("failedToLoad", variable(name))))
+                            chat(red(command.result("failedToLoad", variable(name))))
                         }.onSuccess {
                             chat(regular(command.result("loaded", variable(name))))
                         }
+                        loadingNow = false
                     }
                     .build()
             )

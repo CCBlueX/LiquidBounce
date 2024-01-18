@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
@@ -174,7 +175,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 RotationManager.aimAt(
                     Rotation(
                         currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
-                    ), ignoreOpenInventory, rotationsConfigurable
+                    ), ignoreOpenInventory, rotationsConfigurable, Priority.IMPORTANT_FOR_USAGE_1, ModuleAntiAFK
                 )
             }
 

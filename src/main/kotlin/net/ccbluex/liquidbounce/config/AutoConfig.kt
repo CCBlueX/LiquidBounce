@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.JsonObject
@@ -7,6 +25,7 @@ import net.ccbluex.liquidbounce.api.AutoSettingsType
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.int
 import net.ccbluex.liquidbounce.authlib.utils.string
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Formatting
@@ -52,11 +71,13 @@ object AutoConfig {
             // if they are not identical, make the message red and bold to make it more visible
             // also, if the protocol is identical, make the message green to make it more visible
 
+            val matchesVersion = protocolName == pName && protocolVersion == pVersion
+
             chat(
                 regular("for protocol "),
                 variable("$pName $pVersion")
                     .styled {
-                        if (protocolName != pName || protocolVersion != pVersion) {
+                        if (!matchesVersion) {
                             it.withFormatting(Formatting.RED, Formatting.BOLD)
                         } else {
                             it.withFormatting(Formatting.GREEN)
@@ -65,6 +86,14 @@ object AutoConfig {
                 regular(" and your current protocol is "),
                 variable("$protocolName $protocolVersion")
             )
+
+            if (!matchesVersion) {
+                notification(
+                    "Auto Config",
+                    "The auto config was made for protocol $pName, " +
+                        "but your current protocol is $protocolName",
+                    NotificationEvent.Severity.ERROR)
+            }
         }
 
         val date = jsonObject.string("date")

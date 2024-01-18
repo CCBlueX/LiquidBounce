@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
@@ -85,11 +86,14 @@ open class Module(
                 return@listen false
             }
 
-            notification(
-                if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
-                this.name,
-                if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
-            )
+            if (!CommandConfig.loadingNow) {
+                notification(
+                    if (new) Text.translatable("liquidbounce.generic.enabled")
+                    else Text.translatable("liquidbounce.generic.disabled"),
+                    this.name,
+                    if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
+                )
+            }
 
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
@@ -157,7 +161,7 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && mc.player != null && mc.world != null
+    override fun handleEvents() = enabled && inGame
 
     /**
      * Handles disconnect from world and if [disableOnQuit] is true disables module

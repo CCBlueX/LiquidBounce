@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,9 @@ object ScriptManager {
      */
     fun loadScripts() {
         scriptsRoot.listFiles(FileFilter { it.name.endsWith(".js") })?.forEach(ScriptManager::loadSafely)
+
+        // After loading we enable all the scripts
+        enableScripts()
     }
 
     /**
@@ -50,7 +53,7 @@ object ScriptManager {
         loadedScripts.clear()
     }
 
-    fun loadSafely(file: File) = runCatching {
+    private fun loadSafely(file: File) = runCatching {
         loadScript(file)
     }.onFailure {
         logger.error("Unable to load script ${file.name}.", it)
@@ -75,12 +78,16 @@ object ScriptManager {
     /**
      * Enables all scripts.
      */
-    fun enableScripts() = loadedScripts.forEach(Script::enable)
+    fun enableScripts() {
+        loadedScripts.forEach(Script::enable)
+    }
 
     /**
      * Disables all scripts.
      */
-    fun disableScripts() = loadedScripts.forEach(Script::disable)
+    fun disableScripts() {
+        loadedScripts.forEach(Script::disable)
+    }
 
     /**
      * Imports a script.
@@ -110,7 +117,6 @@ object ScriptManager {
      * Reloads all scripts.
      */
     fun reloadScripts() {
-        disableScripts()
         unloadScripts()
         loadScripts()
         enableScripts()

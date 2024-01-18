@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReduce
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
+import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
@@ -34,11 +35,9 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.HungerManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Pair;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
@@ -49,12 +48,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     @Shadow
-    @Final
-    private PlayerInventory inventory;
+    public abstract void tick();
 
-    @Shadow public abstract void tick();
-
-    @Shadow public abstract HungerManager getHungerManager();
+    @Shadow
+    public abstract HungerManager getHungerManager();
 
     @Shadow
     public float experienceProgress;
@@ -90,7 +87,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private float hookFixRotation(PlayerEntity entity) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotationManager.getAimPlan() == null || !rotationManager.getAimPlan().getApplyVelocityFix() || rotation == null) {
+        AimPlan configurable = rotationManager.getStoredAimPlan();
+
+        if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null) {
             return entity.getYaw();
         }
 
@@ -141,7 +140,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     private boolean injectWaterNoSlow(PlayerEntity instance, TagKey tagKey) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player &&tagKey == FluidTags.WATER &&
+        if ((Object) this == MinecraftClient.getInstance().player && tagKey == FluidTags.WATER &&
                 module.getEnabled() && module.getWater()) {
             return false;
         }
