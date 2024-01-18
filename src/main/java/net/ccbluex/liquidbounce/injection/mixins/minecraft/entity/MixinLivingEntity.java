@@ -82,7 +82,9 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Redirect(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
     public boolean hookTravelStatusEffect(LivingEntity livingEntity, StatusEffect effect) {
         if ((effect == StatusEffects.LEVITATION || effect == StatusEffects.SLOW_FALLING) && ModuleAntiLevitation.INSTANCE.getEnabled()) {
-            livingEntity.fallDistance = 0f;
+            if (livingEntity.hasStatusEffect(effect)) {
+                livingEntity.fallDistance = 0f;
+            }
             return false;
         }
 
