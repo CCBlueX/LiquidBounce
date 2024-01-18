@@ -164,6 +164,7 @@
   "liquidbounce.command.value.result.valueError": "Unable to change value %s because of an error: '%s'!",
   "liquidbounce.command.ping.description": "Checks your ping.",
   "liquidbounce.command.ping.result.pingCheck": "Your ping is %sms.",
+  "liquidbounce.command.vclip.result.positionUpdated": "Your Position has been updated.",
   "liquidbounce.command.remoteview.description": "Allows you to view the perspective of another player.",
   "liquidbounce.command.remoteview.subcommand.view.result.viewPlayer": "You are now viewing the perspective of %s.",
   "liquidbounce.command.remoteview.subcommand.view.result.caseOff": "To stop remote viewing %s, execute the command \".rv off\"",
