@@ -101,7 +101,7 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation('com.github.CCBlueX:mc-authlib:v1.3.3') {
+    implementation('com.github.CCBlueX:mc-authlib:1.3.5') {
         exclude group: 'com.google.code.gson', module: 'gson'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
