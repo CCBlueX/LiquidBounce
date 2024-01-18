@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -58,7 +58,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
     private val colorRainbow by boolean("Rainbow", false)
 
     fun shouldLag(packet: Packet<*>?): Boolean {
-        if (!enabled || player.isDead || player.isTouchingWater || mc.currentScreen != null) {
+        if (!enabled || !inGame || player.isDead || player.isTouchingWater || mc.currentScreen != null) {
             return false
         }
 

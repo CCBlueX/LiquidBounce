@@ -57,6 +57,10 @@ object FakeLag : Listenable {
     val positions = LinkedHashSet<PositionData>()
 
     val repeatable = repeatable {
+        if (!inGame) {
+            return@repeatable
+        }
+
         if (!shouldLag(null)) {
             flush()
         }
