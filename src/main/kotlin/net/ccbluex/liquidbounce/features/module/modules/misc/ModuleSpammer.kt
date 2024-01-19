@@ -73,7 +73,7 @@ object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
 
         if (formattedText.contains("@a")) {
             val playerList = mc.networkHandler?.playerList?.filter {
-                it?.profile?.name == player.gameProfile?.name
+                it?.profile?.name != player.gameProfile?.name
             }
 
             if (!playerList.isNullOrEmpty()) {

@@ -22,10 +22,7 @@ package net.ccbluex.liquidbounce.web.integration
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
@@ -33,6 +30,7 @@ import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
+import net.minecraft.client.gui.screen.DisconnectedScreen
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -90,9 +88,8 @@ object IntegrationHandler : Listenable {
 
         TITLE("title",
             {
-                // todo: figure out a better way of detecting Lunar Mod Main Menu instead of guessing
-                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") &&
-                    it.title.outputString() == "ScreenInjector" && mc.world == null)
+                // todo: Do not simply replace any Lunar Screen with the title screen, if not in a world
+                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") && mc.world == null)
             },
             open = {
                 mc.setScreen(TitleScreen())
@@ -111,7 +108,8 @@ object IntegrationHandler : Listenable {
         }),
         GAME_MENU("game_menu", { it is GameMenuScreen }, true),
         INVENTORY("inventory", { it is InventoryScreen || it is CreativeInventoryScreen }, true),
-        CONTAINER("container", { it is GenericContainerScreen }, true);
+        CONTAINER("container", { it is GenericContainerScreen }, true),
+        DISCONNECTED("disconnected", { it is DisconnectedScreen }, true);
 
         fun open() = RenderSystem.recordRenderCall(open)
 
@@ -147,6 +145,7 @@ object IntegrationHandler : Listenable {
     }
 
     fun updateIntegrationBrowser() {
+        logger.info("Reloading integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
         clientJcef?.loadUrl(integrationUrl)
     }
 
@@ -195,6 +194,7 @@ object IntegrationHandler : Listenable {
 
         val virtualScreenType =  VirtualScreenType.values().find { it.recognizer(screen) }
         if (virtualScreenType == null) {
+            logger.warn("Unknown screen type: ${screen.javaClass.name} with title '${screen.title.outputString()}'")
             virtualClose()
             return@handler
         }
@@ -215,6 +215,14 @@ object IntegrationHandler : Listenable {
             acknowledgement.since.reset()
             updateIntegrationBrowser()
         }
+    }
+
+    /**
+     * Refresh integration browser when we change worlds, this can also mean we disconnect from a server
+     * and go back to the main menu.
+     */
+    val worldChangeEvent = handler<WorldChangeEvent> {
+        updateIntegrationBrowser()
     }
 
 }

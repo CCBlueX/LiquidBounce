@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
@@ -135,6 +136,7 @@ object LiquidBounce : Listenable {
             AccountManager
             InventoryTracker
             WorldToScreen
+            Reconnect
             Tabs
             Chat
             BrowserManager

@@ -95,16 +95,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     // Predict
     private val pointTracker = tree(PointTracker())
 
-    // Fight Bot
-    private val fightBot = tree(FightBot)
+    init {
+        tree(FightBot)
+    }
 
     // Bypass techniques
     internal val swing by boolean("Swing", true)
     private val keepSprint by boolean("KeepSprint", true)
     private val attackShielding by boolean("AttackShielding", false)
-
     private val whileUsingItem by boolean("WhileUsingItem", true)
-    private val whileBlocking by boolean("WhileBlocking", true)
 
     init {
         tree(AutoBlock)
@@ -393,18 +392,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
 
-        if (player.isBlocking) {
-            if (!whileBlocking) {
-                return // return if it's not allowed to attack while using blocking with a shield
+        val wasBlocking = player.isBlocking
+
+        if (wasBlocking) {
+            if (!AutoBlock.enabled) {
+                return
             }
 
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    BlockPos.ORIGIN, Direction.DOWN
-                )
-            )
+            AutoBlock.stopBlocking(pauses = true)
 
+            // Wait for the tick off time to be over, if it's not 0
             if (AutoBlock.tickOff > 0) {
                 waitTicks(AutoBlock.tickOff)
             }
@@ -426,14 +423,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             openInventorySilently()
         }
 
-        if (player.isBlocking) {
-            if (AutoBlock.tickOn > 0) {
-                waitTicks(AutoBlock.tickOn)
-            }
-
-            interaction.sendSequencedPacket(world) { sequence ->
-                PlayerInteractItemC2SPacket(player.activeHand, sequence)
-            }
+        // If the player was blocking before, we start blocking again after the attack if the tick on is 0
+        if (wasBlocking && AutoBlock.tickOn == 0) {
+            AutoBlock.startBlocking()
         }
     }
 

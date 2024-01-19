@@ -107,7 +107,6 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
         )
     }
 
-
     companion object {
         /**
          * Maps the lowercase name of the event to the event's kotlin class

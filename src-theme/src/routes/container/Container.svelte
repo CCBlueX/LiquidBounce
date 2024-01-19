@@ -1,5 +1,5 @@
 <script>
-    import { sendChatMessage, sendCommand } from "../../client/api.svelte";
+    import { sendChatMessage, sendCommand, panic } from "../../client/api.svelte";
 
     let chatMessage = "";
 
@@ -40,6 +40,7 @@
         color: white;
         border: none;
         height: 30px;
+        margin-bottom: 5px;
     }
 
     label {
@@ -50,5 +51,6 @@
 <main>
     <label>Write Chat Message</label><br>
     <input bind:value={chatMessage} placeholder="Chat Message"><br>
-    <button on:click={handleSendMessage}>Send</button>
+    <button on:click={handleSendMessage}>Send</button><br>
+    <button on:click={panic}>Panic</button>
 </main>

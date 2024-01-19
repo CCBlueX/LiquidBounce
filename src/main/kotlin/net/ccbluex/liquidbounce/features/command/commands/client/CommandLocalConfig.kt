@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.red
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
@@ -61,13 +62,16 @@ object CommandLocalConfig {
                                 return@handler
                             }
 
+                            CommandConfig.loadingNow = true
                             ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
                                 ConfigSystem.autoConfigGson)
                         }.onFailure {
-                            chat(regular(command.result("failedToLoad", variable(name))))
+                            chat(red(command.result("failedToLoad", variable(name))))
                         }.onSuccess {
                             chat(regular(command.result("loaded", variable(name))))
                         }
+
+                        CommandConfig.loadingNow = false
                     }
                     .build()
             )

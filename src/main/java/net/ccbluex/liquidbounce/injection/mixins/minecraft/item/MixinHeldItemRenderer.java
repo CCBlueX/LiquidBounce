@@ -87,7 +87,7 @@ public abstract class MixinHeldItemRenderer {
         var item = instance.getItem();
         if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() &&
                 AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getVisualBlocking()) {
+                AutoBlock.INSTANCE.getBlockVisual()) {
             return UseAction.BLOCK;
         }
 
@@ -103,7 +103,7 @@ public abstract class MixinHeldItemRenderer {
         var item = instance.getMainHandStack().getItem();
 
         if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getVisualBlocking()) {
+                AutoBlock.INSTANCE.getBlockVisual()) {
             return true;
         }
 
@@ -119,7 +119,7 @@ public abstract class MixinHeldItemRenderer {
         var item = instance.getMainHandStack().getItem();
 
         if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getVisualBlocking()) {
+                AutoBlock.INSTANCE.getBlockVisual()) {
             return Hand.MAIN_HAND;
         }
 
@@ -135,7 +135,7 @@ public abstract class MixinHeldItemRenderer {
         var item = instance.getMainHandStack().getItem();
 
         if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getVisualBlocking()) {
+                AutoBlock.INSTANCE.getBlockVisual()) {
             return 7200;
         }
 

@@ -20,15 +20,11 @@ package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.script.bindings.api.JsApiProvider
+import net.ccbluex.liquidbounce.script.bindings.api.JsContextProvider
 import net.ccbluex.liquidbounce.script.bindings.features.JsModule
-import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
-import net.ccbluex.liquidbounce.script.bindings.globals.JsClient
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
 import java.io.File
@@ -48,7 +44,7 @@ class Script(val scriptFile: File) {
             // Global instances
             val jsBindings = getBindings("js")
 
-            JsApiProvider.setupUsefulContext(jsBindings)
+            JsContextProvider.setupUsefulContext(jsBindings)
 
             // Global functions
             jsBindings.putMember("registerScript", RegisterScript())
@@ -123,7 +119,6 @@ class Script(val scriptFile: File) {
     @Suppress("unused")
     fun registerModule(moduleObject: Map<String, Any>, callback: (Module) -> Unit) {
         val module = JsModule(moduleObject)
-        ModuleManager.addModule(module)
         registeredModules += module
         callback(module)
     }
@@ -165,6 +160,7 @@ class Script(val scriptFile: File) {
         }
 
         callGlobalEvent("enable")
+        ModuleManager += registeredModules
         scriptEnabled = true
     }
 
@@ -178,6 +174,7 @@ class Script(val scriptFile: File) {
         }
 
         callGlobalEvent("disable")
+        ModuleManager -= registeredModules
         scriptEnabled = false
     }
 
@@ -199,7 +196,8 @@ class Script(val scriptFile: File) {
         try {
             globalEvents[eventName]?.invoke()
         } catch (throwable: Throwable) {
-            logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
+            logger.error("${scriptFile.name}::$scriptName -> Event Function $eventName threw an error",
+                throwable)
         }
     }
 }

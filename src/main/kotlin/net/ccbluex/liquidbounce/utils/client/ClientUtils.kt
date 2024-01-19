@@ -33,7 +33,7 @@ val logger: Logger
     get() = LiquidBounce.logger
 
 val inGame: Boolean
-    get() = mc.player != null
+    get() = mc.player != null && mc.world != null
 
 // Chat formatting
 private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
@@ -47,6 +47,10 @@ fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY)
 fun variable(text: MutableText) = text.styled { it.withColor(Formatting.GOLD) }
 
 fun variable(text: String) = text.asText().styled { it.withColor(Formatting.GOLD) }
+
+fun warning(text: MutableText) = text.styled { it.withColor(Formatting.YELLOW) }
+
+fun red(text: MutableText) = text.styled { it.withColor(Formatting.RED) }
 
 fun chat(vararg texts: Text, prefix: Boolean = true) {
     val literalText = if (prefix) clientPrefix.copy() else Text.literal("")

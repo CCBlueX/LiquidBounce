@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -29,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -42,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
@@ -75,16 +78,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
-    private val silent by boolean("Silent", true)
+    private var delay by intRange("Delay", 3..5, 0..40)
+    private val swing by boolean("Swing", true)
+
+    // Silent block selection
+    private val autoBlock by boolean("AutoBlock", true)
     private val alwaysHoldBlock by boolean("AlwaysHoldBlock", false)
     private val slotResetDelay by int("SlotResetDelay", 5, 0..40)
-    private var delay by intRange("Delay", 3..5, 0..40)
-
-    private val swing by boolean("Swing", true)
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
     private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
+    private val bridgeMode by enumChoice("BridgeMode", BridgeMode.NORMAL, BridgeMode.values())
 
     object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
         val DEFAULT_XZ_RANGE = 0.1f..0.9f
@@ -120,7 +125,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
     private val timer by float("Timer", 1f, 0.01f..10f)
 
-    val sameY by boolean("SameY", false)
     private var currentTarget: BlockPlacementTarget? = null
 
     private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
@@ -135,11 +139,17 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldAutoJumpFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
-        tree(ScaffoldTowerFeature)
+    }
+
+    @Suppress("UnusedPrivateProperty")
+    val towerMode = choices("Tower", {
+        it.choices[0] // None
+    }) {
+        arrayOf(NoneChoice(it), ScaffoldTowerMotion)
     }
 
     private var randomization = Random.nextDouble(-0.02, 0.02)
-    private var startY = 0
+    private var placementY = 0
 
     /**
      * This comparator will estimate the value of a block. If this comparator says that Block A > Block B, Scaffold will
@@ -167,7 +177,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     override fun enable() {
         // Chooses a new randomization value
         randomization = Random.nextDouble(-0.01, 0.01)
-        startY = player.blockPos.y
+
+        // Placement Y is the Y coordinate of the block below the player
+        placementY = player.blockPos.y - 1
 
         ScaffoldMovementPlanner.reset()
 
@@ -177,6 +189,23 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     override fun disable() {
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
+    }
+
+    private val movementInputHandler = handler<MovementInputEvent> {
+        if ((bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) && player.moving) {
+            it.jumping = true
+        }
+    }
+
+    private val afterJumpEvent = handler<PlayerAfterJumpEvent> {
+        if (bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) {
+            placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
+
+            if (bridgeMode == BridgeMode.TELLY_NCP) {
+                // Results in a speed of 0.3371
+                player.strafe(speed = 0.49)
+            }
+        }
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
@@ -276,7 +305,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val timerHandler = repeatable {
-        Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleScaffold)
+        if (timer != 1f) {
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleScaffold)
+        }
     }
 
     val networkTickHandler = repeatable {
@@ -365,7 +396,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    private fun findBestValidHotbarSlotForTarget(): Int? {
+    fun findBestValidHotbarSlotForTarget(): Int? {
         return (0..8).filter {
             isValidBlock(player.inventory.getStack(it))
         }.mapNotNull {
@@ -415,8 +446,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return player.blockPos.add(0, -2, 0)
         }
 
-        return if (sameY) {
-            BlockPos(player.blockPos.x, startY - 1, player.blockPos.z)
+        // In case of TELLY_NCP we do not want to stay at the placement Y
+        return if (bridgeMode == BridgeMode.TELLY) {
+            BlockPos(player.blockPos.x, placementY, player.blockPos.z)
         } else {
             player.blockPos.add(0, -1, 0)
         }
@@ -461,8 +493,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 !canPlaceOnFace
             }
 
-            sameY -> {
-                context.blockPos.y == startY - 1 && (hitResult.side != Direction.UP || !canPlaceOnFace)
+            bridgeMode == BridgeMode.TELLY -> {
+                context.blockPos.y == placementY && (hitResult.side != Direction.UP || !canPlaceOnFace)
             }
 
             else -> {
@@ -479,7 +511,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private fun handleSilentBlockSelection(hasBlockInMainHand: Boolean, hasBlockInOffHand: Boolean): Boolean {
         // Handle silent block selection
-        if (silent && !hasBlockInMainHand && !hasBlockInOffHand) {
+        if (autoBlock && !hasBlockInMainHand && !hasBlockInOffHand) {
             val bestMainHandSlot = findBestValidHotbarSlotForTarget()
 
             if (bestMainHandSlot != null) {
@@ -495,4 +527,22 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         return hasBlockInMainHand
     }
+
+    /**
+     * Checks if the player has a block to place
+     */
+    fun hasBlockToBePlaced(): Boolean {
+        val hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
+        val hasBlockInOffHand = isValidBlock(player.offHandStack)
+
+        return hasBlockInMainHand || hasBlockInOffHand ||
+            (autoBlock && findBestValidHotbarSlotForTarget() != null)
+    }
+
+    enum class BridgeMode(override val choiceName: String) : NamedChoice {
+        NORMAL("Normal"),
+        TELLY("Telly"),
+        TELLY_NCP("TellyNCP"),
+    }
+
 }

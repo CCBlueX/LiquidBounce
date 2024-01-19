@@ -33,9 +33,9 @@ import kotlin.math.sqrt
 
 class FallingPlayer(
     private val player: ClientPlayerEntity,
-    private var x: Double,
-    private var y: Double,
-    private var z: Double,
+    var x: Double,
+    var y: Double,
+    var z: Double,
     private var motionX: Double,
     private var motionY: Double,
     private var motionZ: Double,

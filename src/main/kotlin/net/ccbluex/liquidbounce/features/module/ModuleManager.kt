@@ -89,17 +89,16 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoSoup,
             ModuleAutoHead,
             ModuleAutoWeapon,
-            ModuleBadWifi,
+            ModuleFakeLag,
             ModuleCriticals,
             ModuleHitbox,
             ModuleKillAura,
-            ModulePerfectHit,
             ModuleSuperKnockback,
             ModuleTimerRange,
-            ModuleTrigger,
             ModuleVelocity,
             ModuleBacktrack,
             ModuleSwordBlock,
+            ModuleAutoBalls,
 
             // Exploit
             ModuleAbortBreaking,
@@ -144,6 +143,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleCapeTransfer,
             ModuleHideClient,
             ModuleFocus,
+            ModuleAutoConfig,
 
             // Movement
             ModuleAirJump,
@@ -266,11 +266,31 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         modules += module
     }
 
+    fun removeModule(module: Module) {
+        if (module.enabled) {
+            module.disable()
+        }
+        module.unregister()
+        modules -= module
+    }
+
     /**
      * Allow `ModuleManager += Module` syntax
      */
     operator fun plusAssign(module: Module) {
         addModule(module)
+    }
+
+    operator fun plusAssign(modules: MutableList<Module>) {
+        modules.forEach(this::addModule)
+    }
+
+    operator fun minusAssign(module: Module) {
+        removeModule(module)
+    }
+
+    operator fun minusAssign(modules: MutableList<Module>) {
+        modules.forEach(this::removeModule)
     }
 
     fun autoComplete(begin: String, args: List<String>, validator: (Module) -> Boolean = { true }): List<String> {
