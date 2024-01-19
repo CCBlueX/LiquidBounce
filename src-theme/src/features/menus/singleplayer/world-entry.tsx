@@ -11,7 +11,7 @@ export default function WorldEntry({ world }: WorldEntryProps) {
       {/* Server Icon Wrapper */}
       <div className="relative h-[68px] w-[68px]">
         {/* Server Icon */}
-        <img src={`data:image/png;base64,${world.icon}`} alt="World Icon" className="rounded-full" />
+        <img src={`${world.icon}`} alt="World Icon" className="rounded-full" />
       </div>
 
       {/* Metadata */}
