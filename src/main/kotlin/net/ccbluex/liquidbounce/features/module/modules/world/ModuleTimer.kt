@@ -141,7 +141,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
                 waitTicks(ticks)
             }
 
-            if (player.velocity.y >= 0 && !player.moving) {
+            if (!player.moving) {
                 if (mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen) {
                     boostCapable = 0
                     return@repeatable
