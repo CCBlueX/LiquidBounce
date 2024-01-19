@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedHypixelBHop
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -116,13 +115,19 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
         private val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..10f)
 
         private val timeBoostTicks by int("TimeBoostTicks", 12, 1..60)
-        private var timeBoostCapable = 0
-        
+        private var boostCapable = 0
+
+        private val normalizeDuringCombat by boolean("NormalizeDuringCombat", true)
         private val allowNegative by boolean("AllowNegative", false)
 
         val repeatable = repeatable {
-            if (timeBoostCapable < 0) {
-                val ticks = abs(timeBoostCapable)
+            if (normalizeDuringCombat && CombatManager.isInCombat()) {
+                Timer.requestTimerSpeed(1f, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
+                return@repeatable
+            }
+
+            if (boostCapable < 0) {
+                val ticks = abs(boostCapable)
                 Timer.requestTimerSpeed(
                     slowSpeed,
                     Priority.IMPORTANT_FOR_USAGE_1,
@@ -132,32 +137,38 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
                 notification("Timer", "Slowing down for $ticks ticks",
                     NotificationEvent.Severity.INFO)
-                timeBoostCapable = 0
+                boostCapable = 0
                 waitTicks(ticks)
             }
 
-            if (!player.moving && !CombatManager.isInCombat()) {
+            if (player.velocity.y >= 0 && !player.moving) {
                 if (mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen) {
-                    timeBoostCapable = 0
+                    boostCapable = 0
                     return@repeatable
                 }
 
                 Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
-                timeBoostCapable = (timeBoostCapable + 1).coerceAtMost(timeBoostTicks)
-            }else if (timeBoostCapable > 0 ||
-                (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))) {
-                val ticks = if (timeBoostCapable > 0) timeBoostCapable else timeBoostTicks
+                boostCapable = (boostCapable + 1).coerceAtMost(timeBoostTicks)
+            }else {
+                val speedUp = boostCapable > 0 ||
+                    (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))
 
-                Timer.requestTimerSpeed(
-                    boostSpeed,
-                    Priority.IMPORTANT_FOR_USAGE_1,
-                    ModuleSpeed,
-                    resetAfterTicks = ticks
-                )
-                notification("Timer", "Boosted for $ticks ticks",
-                    NotificationEvent.Severity.INFO)
-                timeBoostCapable -= ticks
-                waitTicks(ticks)
+                if (speedUp) {
+                    val ticks = if (boostCapable > 0) boostCapable else timeBoostTicks
+
+                    Timer.requestTimerSpeed(
+                        boostSpeed,
+                        Priority.IMPORTANT_FOR_USAGE_1,
+                        ModuleSpeed,
+                        resetAfterTicks = ticks
+                    )
+                    notification(
+                        "Timer", "Boosted for $ticks ticks",
+                        NotificationEvent.Severity.INFO
+                    )
+                    boostCapable -= ticks
+                    waitTicks(ticks)
+                }
             }
 
             return@repeatable
