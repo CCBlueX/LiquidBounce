@@ -5,9 +5,11 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.blockParameter
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.resource.language.I18n.translate
 
 object CommandVClip {
 
@@ -21,10 +23,10 @@ object CommandVClip {
             )
             .handler { command, args ->
                 val y = (args[0] as String).toDoubleOrNull()
-                val player = MinecraftClient.getInstance().player
+                val player = mc.player
 
                 if (y == null) {
-                    chat(regular("Invalid distance. Please enter a valid number."))
+                    chat(regular(translate("liquidbounce.command.vclip.error.invalidDistance")))
                     return@handler
                 }
 
@@ -33,7 +35,7 @@ object CommandVClip {
                     chat(
                         regular(
                             command.result(
-                                "positionUpdated",
+                                translate("liquidbounce.command.vclip.result.positionUpdated"),
                                 variable(player.x.toString()),
                                 variable(player.y.toString()),
                                 variable(player.z.toString())
@@ -41,7 +43,7 @@ object CommandVClip {
                         )
                     )
                 } else {
-                    throw CommandException(command.result("notInGame"))
+                    throw CommandException(command.result(translate("liquidbounce.command.vclip.error.notInGame")))
                 }
             }
             .build()
