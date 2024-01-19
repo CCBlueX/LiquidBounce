@@ -90,7 +90,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
         if (prefersNotchApple && item == Items.ENCHANTED_GOLDEN_APPLE)
             return 100 - preferNotchAppleHealth.toInt()
 
-        foodComp.hunger
+        return foodComp.hunger
     }
 
     val tickHandler = repeatable {
