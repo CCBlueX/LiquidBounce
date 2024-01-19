@@ -94,6 +94,8 @@
         "module.autoBreak.description": "Automatically breaks the block you are looking at.",
         
         "module.autoFish.description": "Automatically catches fish when using a rod.",
+
+        "module.autoProjectile.description": "Automatically throws egg/snowball.",
         
         "module.autoRespawn.description": "Automatically respawns you after dying.",
         
