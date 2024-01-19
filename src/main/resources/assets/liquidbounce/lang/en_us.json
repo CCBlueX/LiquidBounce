@@ -287,7 +287,7 @@
   "liquidbounce.module.hitbox.description": "Enlarges the hitbox of other entities.",
   "liquidbounce.module.killAura.description": "Automatically attacks enemies.",
   "liquidbounce.module.superKnockback.description": "Increases knockback dealt to other entities.",
-  "liquidbounce.module.trigger.description": "Automatically attacks when facing an enemy.",
+  "liquidbounce.module.autoBalls.description": "Automatically throws snowballs at your enemies.",
   "liquidbounce.module.velocity.description": "Modifies the amount of velocity you take.",
   "liquidbounce.module.abortBreaking.description": "Allows you to abort breaking without losing progress.",
   "liquidbounce.module.bedWalk.description": "Allows you to walk out of beds while sleeping.",
