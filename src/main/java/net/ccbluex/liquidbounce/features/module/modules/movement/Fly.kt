@@ -62,7 +62,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         Spartan, Spartan2, BugSpartan,
 
         // Other anti-cheats
-        MineSecure, HawkEye, HAC, WatchCat, Vulcan, VulcanOld,
+        MineSecure, HawkEye, HAC, WatchCat, Verus, Vulcan, VulcanOld,
 
         // Other
         Jetpack, KeepAlive, Collide, Jump, Flag
@@ -95,6 +95,13 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
     val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 2..20) { mode == "NeruxVace" }
     val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
+
+    // Verus
+    val damage by BoolValue("Damage", false)
+    val timerSlow by BoolValue("TimerSlow", true)
+    val boostTicksValue by IntegerValue("BoostTicks", 20, 1..30)
+    val boostMotion by FloatValue("BoostMotion", 6.5f, 1f..9.85f)
+    val yBoost by FloatValue("YBoost", 0.42f, 0f..10f)
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
