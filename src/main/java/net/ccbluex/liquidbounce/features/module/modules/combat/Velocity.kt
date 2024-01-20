@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
+import net.minecraft.network.play.server.S32PacketConfirmTransaction
 import net.minecraft.util.AxisAlignedBB
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -39,7 +40,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         "Mode", arrayOf(
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
-            "GhostBlock"
+            "GhostBlock", "Vulcan", "Matrix"
         ), "Simple"
     )
 
@@ -303,8 +304,27 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     hasReceivedVelocity = true
                     event.cancelEvent()
                 }
+
+                "matrix" -> {
+                    if (packet is S12PacketEntityVelocity) {
+                        packet.motionX = (packet.getMotionX() * 0.33).toInt()
+                        packet.motionZ = (packet.getMotionZ() * 0.33).toInt()
+
+                        if (thePlayer.onGround) {
+                            packet.motionX = (packet.getMotionX() * 0.86).toInt()
+                            packet.motionZ = (packet.getMotionZ() * 0.86).toInt()
+                        }
+                    }
+                }
+
+                "vulcan" -> {
+                    event.cancelEvent()
+                }
             }
         }
+
+        if (mode == "Vulcan" && packet is S32PacketConfirmTransaction)
+            event.cancelEvent()
     }
 
     @EventTarget
