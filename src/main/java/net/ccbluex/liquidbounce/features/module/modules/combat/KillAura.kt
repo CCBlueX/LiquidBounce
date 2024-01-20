@@ -245,6 +245,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     // Bypass
     private val failSwing by BoolValue("FailSwing", true) { swing }
     private val swingOnlyInAir by BoolValue("SwingOnlyInAir", true) { swing && failSwing }
+    private val maxRotationDifferenceToSwing by FloatValue("MaxRotationDifferenceToSwing",
+        180f,
+        0f..180f
+    ) { swing && failSwing }
     private val noInventoryAttack by BoolValue("NoInvAttack", false, subjective = true)
     private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500, subjective = true)
     { noInventoryAttack }
@@ -455,6 +459,13 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (!hittable) {
             if (swing && failSwing) {
                 val rotation = currentRotation ?: thePlayer.rotation
+
+                // Can humans keep click consistency when performing massive rotation changes?
+                // (10-30 rotation difference/doing large mouse movements for example)
+                // Maybe apply to attacks too?
+                if (getRotationDifference(rotation) > maxRotationDifferenceToSwing) {
+                    return
+                }
 
                 runWithModifiedRaycastResult(rotation, range.toDouble(), throughWallsRange.toDouble()) {
                     if (swingOnlyInAir && it.typeOfHit != MovingObjectPosition.MovingObjectType.MISS) {
