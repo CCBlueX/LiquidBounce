@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.CPSCounter
+import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
 import net.ccbluex.liquidbounce.utils.CooldownHelper.resetLastAttackedTicks
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
@@ -245,11 +246,14 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     // Bypass
     private val failSwing by BoolValue("FailSwing", true) { swing }
     private val swingOnlyInAir by BoolValue("SwingOnlyInAir", true) { swing && failSwing }
-    private val maxRotationDifferenceToSwing by FloatValue("MaxRotationDifferenceToSwing",
-        180f,
-        0f..180f
-    ) { swing && failSwing }
-    private val noInventoryAttack by BoolValue("NoInvAttack", false, subjective = true)
+    private val maxRotationDifferenceToSwing by FloatValue("MaxRotationDifferenceToSwing", 180f, 0f..180f)
+    { swing && failSwing }
+    private val swingWhenTicksLate = object : BoolValue("SwingWhenTicksLate", false) {
+        override fun isSupported() = swing && failSwing && maxRotationDifferenceToSwing != 180f
+    }
+    private val ticksLateToSwing by IntegerValue("TicksLateToSwing", 4, 0..20)
+    { swing && failSwing && swingWhenTicksLate.isActive() }
+    val noInventoryAttack by BoolValue("NoInvAttack", false, subjective = true)
     private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500, subjective = true)
     { noInventoryAttack }
     private val noConsumeAttack by ListValue("NoConsumeAttack",
@@ -335,11 +339,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      */
     @EventTarget
     fun onTick(event: TickEvent) {
-        // Just in case world event doesn't get called
-        if (mc.thePlayer.ticksExisted in 0..1 && attackTickTimes.isNotEmpty()) {
-            attackTickTimes.clear()
-        }
-
         if (clickOnly && !mc.gameSettings.keyBindAttack.isKeyDown) return
 
         if (blockStatus && autoBlock == "Packet" && releaseAutoBlock && !ignoreTickRule) {
@@ -464,7 +463,15 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 // (10-30 rotation difference/doing large mouse movements for example)
                 // Maybe apply to attacks too?
                 if (getRotationDifference(rotation) > maxRotationDifferenceToSwing) {
-                    return
+                    val lastAttack = attackTickTimes.lastOrNull()?.second ?: 0
+
+                    // At the same time there is also a chance of the user clicking at least once in a while
+                    // when the consistency has dropped a lot.
+                    val shouldIgnore = swingWhenTicksLate.isActive() && runTimeTicks - lastAttack >= ticksLateToSwing
+
+                    if (!shouldIgnore) {
+                        return
+                    }
                 }
 
                 runWithModifiedRaycastResult(rotation, range.toDouble(), throughWallsRange.toDouble()) {
@@ -484,7 +491,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                             // Imitate game click
                             mc.clickMouse()
                         }
-                        attackTickTimes += it to thePlayer.ticksExisted
+                        attackTickTimes += it to runTimeTicks
                     }
 
                     if (clicks == 1) {
@@ -957,15 +964,13 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * We are doing the same thing here but allow more cool down.
      */
     private fun shouldDelayClick(type: MovingObjectPosition.MovingObjectType): Boolean {
-        val player = mc.thePlayer ?: return false
-
         if (!useHitDelay) {
             return false
         }
 
         val lastAttack = attackTickTimes.lastOrNull()
 
-        return lastAttack != null && lastAttack.first.typeOfHit != type && player.ticksExisted - lastAttack.second <= hitDelayTicks
+        return lastAttack != null && lastAttack.first.typeOfHit != type && runTimeTicks - lastAttack.second <= hitDelayTicks
     }
 
     /**
