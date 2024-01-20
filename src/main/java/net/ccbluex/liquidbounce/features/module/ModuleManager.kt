@@ -71,6 +71,7 @@ object ModuleManager : Listenable {
             AutoBreak,
             AutoClicker,
             AutoFish,
+            AutoProjectile,
             AutoLeave,
             AutoPot,
             AutoRespawn,
