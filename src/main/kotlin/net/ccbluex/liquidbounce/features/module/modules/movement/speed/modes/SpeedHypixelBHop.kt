@@ -90,7 +90,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
                 0.0
             }
 
-            player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
+            player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 - yMod, 1.0 + horizontalMod)
         }
     }
 

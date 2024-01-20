@@ -40,6 +40,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             Spartan524Flag,
             Vulcan,
             Verus,
+            Hypixel
         )
     )
 

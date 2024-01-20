@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -37,6 +38,9 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+
+internal typealias HypixelNoFall = net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.Hypixel
+
 
 /**
  * Velocity module
@@ -48,7 +52,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
+            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset, Hypixel
         )
     }
 
@@ -102,6 +106,48 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 player.velocity.z *= reduce
             }
         }
+    }
+
+    /**
+     *
+     * Basic velocity targeting specifically Hypixel.
+     */
+    private object Hypixel : Choice("Hypixel") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> { event ->
+            val packet = event.packet
+
+            // Check if this is a regular velocity update
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+                if (packet.velocityX == 0 && packet.velocityZ == 0) {
+                    // positive vertical velocity is a staff velocity check
+                    if (packet.velocityY > 0) {
+                        // alert the user
+                        notification(
+                            "Staff Detected",
+                            "Staff are watching you.",
+                            NotificationEvent.Severity.INFO
+                        )
+                        return@handler
+                    }
+                    // you can just cancel negative vertical velocity, it's not checked
+                    event.cancelEvent()
+                    return@handler
+                }
+
+                val currentVelocity = mc.player?.velocity ?: return@handler
+
+                // set the horizontal velocity to the player's current velocity to prevent horizontal slowdown
+                packet.velocityX = (currentVelocity.x * 8000).toInt()
+                packet.velocityZ = (currentVelocity.z * 8000).toInt()
+
+                HypixelNoFall.waitUntilGround = true
+            }
+        }
+
     }
 
     /**
