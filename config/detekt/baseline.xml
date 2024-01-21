@@ -30,6 +30,7 @@
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
     <ID>LongMethod:CommandConfig.kt$CommandConfig$fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandContainers.kt$CommandContainers$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandEnemy.kt$CommandEnemy$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
@@ -145,6 +146,7 @@
     <ID>ThrowsCount:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandBuilder.kt$CommandBuilder$fun build(): Command</ID>
+    <ID>ThrowsCount:CommandContainers.kt$CommandContainers$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>

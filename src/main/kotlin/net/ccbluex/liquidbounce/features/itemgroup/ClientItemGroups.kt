@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ContainerItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ExploitsItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
@@ -43,7 +45,7 @@ import net.minecraft.util.Identifier
 object ClientItemGroups : Configurable("tabs") {
 
     private var beenSetup = false
-    private val containers by textArray("Containers", mutableListOf())
+    val containers by textArray("Containers", mutableListOf())
 
     init {
         ConfigSystem.root(this)
@@ -58,10 +60,24 @@ object ClientItemGroups : Configurable("tabs") {
 
         containers.add(compoundString)
         ConfigSystem.storeConfigurable(this)
+
+        RenderSystem.recordRenderCall {
+            chat("§aAdded container to creative inventory")
+        }
     }
 
     fun containersAsItemStacks(): List<ItemStack> {
         return containers.map { createItem("minecraft:chest$it") }
+    }
+
+    fun clearContainers() {
+        containers.clear()
+        ConfigSystem.storeConfigurable(this)
+    }
+
+    fun removeContainer(index: Int) {
+        containers.removeAt(index)
+        ConfigSystem.storeConfigurable(this)
     }
 
     /**

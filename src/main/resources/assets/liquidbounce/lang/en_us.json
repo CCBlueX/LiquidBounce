@@ -39,6 +39,22 @@
   "liquidbounce.command.binds.subcommand.list.result.page": "Page: %s",
   "liquidbounce.command.binds.subcommand.clear.description": "Clears all binds.",
   "liquidbounce.command.binds.subcommand.clear.result.bindsCleared": "Cleared all binds.",
+
+  "liquidbounce.command.containers.description": "Allows you to manage containers.",
+  "liquidbounce.command.containers.subcommand.add.description": "Adds a container.",
+  "liquidbounce.command.containers.subcommand.add.parameter.tag.description": "NBT Tag of the container.",
+  "liquidbounce.command.containers.subcommand.add.result.noBlockEntityTag": "The NBT Tag does not contain a BlockEntityTag.",
+  "liquidbounce.command.containers.subcommand.add.result.added": "The container has been successfully added.",
+  "liquidbounce.command.containers.subcommand.remove.description": "Removes a container.",
+  "liquidbounce.command.containers.subcommand.remove.parameter.index.description": "Index of the container.",
+  "liquidbounce.command.containers.subcommand.remove.result.indexOutOfBounds": "The index is out of bounds.",
+  "liquidbounce.command.containers.subcommand.remove.result.removed": "The container has been successfully removed.",
+  "liquidbounce.command.containers.subcommand.list.description": "Lists all containers.",
+  "liquidbounce.command.containers.subcommand.list.result.noContainers": "There are no containers.",
+  "liquidbounce.command.containers.subcommand.clear.description": "Clears all containers.",
+  "liquidbounce.command.containers.subcommand.clear.result.cleared": "Cleared all containers.",
+
+
   "liquidbounce.command.clear.description": "Clears the chat.",
   "liquidbounce.command.client.description": "Allows you to manage the client.",
   "liquidbounce.command.client.subcommand.info.description": "Shows information about the client.",

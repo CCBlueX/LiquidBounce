@@ -145,6 +145,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandAutoDisable.createCommand())
         addCommand(CommandScript.createCommand())
         addCommand(CommandVClip.createCommand())
+        addCommand(CommandContainers.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
