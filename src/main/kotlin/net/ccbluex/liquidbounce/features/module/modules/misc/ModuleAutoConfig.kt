@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
 
-object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
+object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
 
     val blacklistedServer by textArray("Blacklist", mutableListOf(
         // Common anticheat test server
