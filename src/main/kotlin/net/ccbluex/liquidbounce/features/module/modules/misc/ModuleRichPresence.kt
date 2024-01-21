@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import com.jagrosh.discordipc.IPCClient
 import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
+import com.jagrosh.discordipc.exceptions.NoDiscordClientException
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_AUTHOR
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientBranch
 import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -37,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 
@@ -62,8 +65,10 @@ object ModuleRichPresence : Module("RichPresence", Category.MISC, state = true) 
     private var ipcClient: IPCClient? = null
     private var timestamp = System.currentTimeMillis()
 
+    private var doNotTryToConnect = false
+
     private fun connectIpc() {
-        if (ipcClient?.status == PipeStatus.CONNECTED) {
+        if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
             return
         }
 
@@ -71,6 +76,17 @@ object ModuleRichPresence : Module("RichPresence", Category.MISC, state = true) 
             ipcClient = IPCClient(ipcConfiguration.appID)
             ipcClient?.connect()
         }.onFailure {
+            if (it is NoDiscordClientException) {
+                if (!doNotTryToConnect) {
+                    logger.warn("Failed to connect to Discord RPC. Please make sure you have Discord running.")
+                    notification("Discord RPC", "Please make sure you have Discord running.",
+                        NotificationEvent.Severity.ERROR)
+                    doNotTryToConnect = true
+                }
+
+                return
+            }
+
             logger.error("Failed to connect to Discord RPC.", it)
         }.onSuccess {
             logger.info("Successfully connected to Discord RPC.")
