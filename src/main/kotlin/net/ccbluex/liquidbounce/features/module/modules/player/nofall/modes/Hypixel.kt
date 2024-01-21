@@ -58,7 +58,7 @@ internal object Hypixel : Choice("Hypixel") {
                 if (fallDistance > 2.1 && fallDistance < 20) {
                     managedToReset = false
                     packet.onGround = true
-                    chat("blinking")
+                    //chat("blinking")
                 } else {
                     if (fallDistance >= 20 && !managedToReset) {
                         FakeLag.packetQueue
@@ -67,6 +67,7 @@ internal object Hypixel : Choice("Hypixel") {
                             }.forEach { data ->
                                 (data.packet as PlayerMoveC2SPacket).onGround = false
                             }
+                        FakeLag.flush()
                         chat("reset")
                         managedToReset = true
                     }

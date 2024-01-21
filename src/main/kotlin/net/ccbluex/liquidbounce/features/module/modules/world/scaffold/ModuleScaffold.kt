@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -56,6 +57,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
@@ -65,6 +67,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.random.Random
 
@@ -206,7 +209,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (bridgeMode != BridgeMode.HYPIXEL) {
                 placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
             } else {
-                placementY = floor(player.blockPos.y - if (mc.options.jumpKey.isPressed) 0.0 else 1.25).toInt()
+                placementY = ceil(player.blockPos.y - if (mc.options.jumpKey.isPressed) 0.0 else 1.25).toInt()
             }
 
             if (bridgeMode == BridgeMode.TELLY_NCP) {
@@ -215,8 +218,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
 
             if (bridgeMode == BridgeMode.HYPIXEL) {
+                player.strafe(speed = 0.49)
                 val currentVelocity = (mc.player ?: return@handler).velocity
-
                 mc.player?.setVelocity(currentVelocity.x / 1.07, currentVelocity.y, currentVelocity.z / 1.07)
             }
         }
@@ -386,10 +389,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         var wasSuccessful = false
 
-        if (aimMode == AimMode.ON_TICK || bridgeMode == BridgeMode.HYPIXEL) {
+        if (aimMode == AimMode.ON_TICK) {
             network.sendPacket(Full(player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
                 player.isOnGround))
         }
+
+        /*
+        if (bridgeMode == BridgeMode.HYPIXEL) {
+            network.sendPacket(Full(player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
+                player.isOnGround))
+            mc.interactionManager?.sendSequencedPacket(world) {
+                PlayerInteractItemC2SPacket(Hand.OFF_HAND, it)
+            }
+        }
+         */
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)

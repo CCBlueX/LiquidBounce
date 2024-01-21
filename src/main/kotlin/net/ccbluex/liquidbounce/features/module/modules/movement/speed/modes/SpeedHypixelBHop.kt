@@ -96,7 +96,8 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
 
     val jumpEvent = handler<PlayerJumpEvent> {
         val atLeast = if (!wasFlagged) {
-            AT_LEAST + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        //    AT_LEAST + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+            0.0
         } else {
             0.0
         }
@@ -126,12 +127,12 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             waitTicks(1)
 
             // Fall damage velocity
-            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                player.sqrtSpeed.coerceAtLeast(AT_LEAST)
-            } else {
-                player.sqrtSpeed
-            }
-            player.strafe(speed = speed)
+            //val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
+            //    player.sqrtSpeed.coerceAtLeast(AT_LEAST)
+            //} else {
+            //    player.sqrtSpeed
+            //}
+            //player.strafe(speed = speed)
         } else if (packet is PlayerPositionLookS2CPacket) {
             wasFlagged = true
         }
