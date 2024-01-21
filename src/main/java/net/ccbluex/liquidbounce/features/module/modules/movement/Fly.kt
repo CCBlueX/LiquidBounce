@@ -96,12 +96,12 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 2..20) { mode == "NeruxVace" }
     val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
 
-    // Verus
-    val damage by BoolValue("Damage", false)
-    val timerSlow by BoolValue("TimerSlow", true)
-    val boostTicksValue by IntegerValue("BoostTicks", 20, 1..30)
-    val boostMotion by FloatValue("BoostMotion", 6.5f, 1f..9.85f)
-    val yBoost by FloatValue("YBoost", 0.42f, 0f..10f)
+    // Verus 
+    val damage by BoolValue("Damage", false) { mode == "Verus" }
+    val timerSlow by BoolValue("TimerSlow", true) { mode == "Verus" }
+    val boostTicksValue by IntegerValue("BoostTicks", 20, 1..30) { mode == "Verus" }
+    val boostMotion by FloatValue("BoostMotion", 6.5f, 1f..9.85f) { mode == "Verus" }
+    val yBoost by FloatValue("YBoost", 0.42f, 0f..10f) { mode == "Verus" }
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
