@@ -96,7 +96,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 2..20) { mode == "NeruxVace" }
     val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
 
-    // Verus
+    // Verus 
     val damage by BoolValue("Damage", false) { mode == "Verus" }
     val timerSlow by BoolValue("TimerSlow", true) { mode == "Verus" }
     val boostTicksValue by IntegerValue("BoostTicks", 20, 1..30) { mode == "Verus" }
