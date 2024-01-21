@@ -129,6 +129,7 @@ object ModuleManager : Listenable {
             InventoryCleaner,
             InventoryMove,
             ItemESP,
+            ItemPhysics,
             KeepAlive,
             KeepContainer,
             KeyPearl,
