@@ -95,7 +95,7 @@ object CommandExecutor : Listenable {
  *
  * @author superblaubeere27 (@team CCBlueX)
  */
- 
+
 object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
@@ -144,6 +144,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandLocalConfig.createCommand())
         addCommand(CommandAutoDisable.createCommand())
         addCommand(CommandScript.createCommand())
+        addCommand(CommandVClip.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
