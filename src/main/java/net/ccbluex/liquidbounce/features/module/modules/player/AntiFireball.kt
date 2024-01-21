@@ -26,7 +26,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.Vec3
 import net.minecraft.world.WorldSettings
 
 object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
@@ -66,6 +65,8 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
 
             val entityPrediction = entity.currPos - entity.prevPos
 
+            val normalDistance = player.getDistanceToBox(entity.hitBox)
+
             val predictedDistance = player.getDistanceToBox(
                 entity.hitBox.offset(
                     entityPrediction.xCoord,
@@ -74,8 +75,8 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
                 )
             )
 
-            // Skip if the predicted distance is further than range or the prediction does not return anything useful (fireball just spawned)
-            if (predictedDistance > range || entityPrediction == Vec3(0.0, 0.0, 0.0)) {
+            // Skip if the predicted distance is (further than/same as) the normal distance or the predicted distance is out of reach
+            if (predictedDistance >= normalDistance || predictedDistance > range) {
                 continue
             }
 
