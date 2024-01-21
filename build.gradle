@@ -111,6 +111,8 @@ dependencies {
     }
     implementation "com.github.CCBlueX:mcef:1.1.1-1.20.4"
 
+    implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
+
     implementation 'org.graalvm.sdk:graal-sdk:23.0.3'
     implementation 'org.graalvm.truffle:truffle-api:23.0.3'
     implementation 'org.graalvm.js:js:23.0.3'
@@ -270,6 +272,7 @@ shadowJar {
     dependencies {
         include(dependency('com.github.CCBlueX:mcef'))
         include(dependency('com.github.CCBlueX:mc-authlib'))
+        include(dependency('com.github.CCBlueX:DiscordIPC'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('net.fabricmc:tiny-mappings-parser'))
         include(dependency('org.graalvm.sdk:graal-sdk:23.0.3'))
@@ -281,6 +284,9 @@ shadowJar {
         include(dependency('io.netty:netty-codec-socks'))
         include(dependency('org.apache.commons:commons-exec'))
         include(dependency('com.vdurmont:semver4j:3.1.0'))
+        include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
+        include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
+        include(dependency('net.lenni0451:Reflect'))
     }
 }
 
