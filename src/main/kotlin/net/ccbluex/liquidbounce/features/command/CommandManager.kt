@@ -32,14 +32,14 @@ import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsernam
 import net.ccbluex.liquidbounce.script.CommandScript
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.outputString
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
 
 class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
-    Exception(text.outputString(), cause)
+    Exception(text.convertToString(), cause)
 
 /**
  * Links minecraft with the command engine

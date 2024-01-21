@@ -57,7 +57,7 @@ fun chat(vararg texts: Text, prefix: Boolean = true) {
     texts.forEach { literalText.append(it) }
 
     if (mc.player == null) {
-        logger.info("(Chat) ${literalText.outputString()}")
+        logger.info("(Chat) ${literalText.convertToString()}")
         return
     }
 

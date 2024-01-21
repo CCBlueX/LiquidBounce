@@ -1,5 +1,5 @@
 <script>
-    import { sendChatMessage, sendCommand, panic } from "../../client/api.svelte";
+    import { getContainer, sendChatMessage, sendCommand, panic, giveContainer, storeContainer } from "../../client/api.svelte";
 
     let chatMessage = "";
 
@@ -12,45 +12,73 @@
             }
         }
     }
+
+    let syncId;
+    let slots;
+    let emptySlots;
+    let rows;
+
+    function updateContainerData() {
+        getContainer().then(container => {
+            syncId = container.syncId;
+            slots = container.slots;
+            emptySlots = container.emptySlots;
+            rows = container.rows;
+        }).catch(console.log);
+    }
+
+    updateContainerData();
 </script>
 
 <style>
     main {
-        margin-top: 20px;
-        margin-left: 20px;
+        background-color: rgba(0, 0, 0, 0.4);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px;
+        width: 250px;
     }
 
-    input {
+    input, button {
+        height: 30px;
         border-radius: 6px;
-        margin-top: 10px;
-        margin-bottom: 10px;
         padding: 5px;
-        border-color: white;
-        background-color: rgba(0, 0, 0, 0.68);
+        background-color: rgba(0, 0, 0, 0.7);
         color: white;
-        border: none;
-        height: 40px;
+        border: none white;
+        margin-bottom: 10px;
     }
 
     button {
-        border-radius: 6px;
-        padding: 5px;
-        border-color: white;
-        background-color: rgba(0, 0, 0, 0.68);
-        color: white;
-        border: none;
-        height: 30px;
-        margin-bottom: 5px;
+        width: 43%;
     }
 
-    label {
+    h2, h3, p {
         color: white;
     }
 </style>
 
 <main>
-    <label>Write Chat Message</label><br>
-    <input bind:value={chatMessage} placeholder="Chat Message"><br>
+    <h2>Container Data</h2>
+
+    <p>Sync ID: {syncId}</p>
+    <p>Slots: {slots}</p>
+    <p>Empty Slots: {emptySlots}</p>
+    <p>Rows: {rows}</p><br>
+
+    <button on:click={updateContainerData}>Update</button><br><br>
+
+    <h2>Actions</h2>
+    <button on:click={giveContainer}>Give</button>
+    <button on:click={storeContainer}>Store</button>
+
+    <br><br>
+    <h2>Quick Actions</h2>
+    <p>Write a chat message</p>
+
+    <input bind:value={chatMessage} placeholder="Chat Message">
     <button on:click={handleSendMessage}>Send</button><br>
-    <button on:click={panic}>Panic</button>
+
+
+    <button on:click={panic}>Panic All</button>
 </main>

@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.minecraft.nbt.NbtString
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import java.util.regex.Pattern
 
@@ -27,11 +29,13 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
-fun text() = Text.literal("")
+fun text(): MutableText = Text.literal("")
 
-fun String.asText() = Text.literal(this)
+fun String.asText(): MutableText = Text.literal(this)
 
-fun Text.outputString(): String = "${string}${siblings.joinToString(separator = "") { it.outputString() }}"
+fun Text.asNbt(): NbtString = NbtString.of(Text.Serialization.toJsonString(this))
+
+fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
 
 /**
  * Translate alt color codes to minecraft color codes
