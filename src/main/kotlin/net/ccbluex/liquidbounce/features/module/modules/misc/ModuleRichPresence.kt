@@ -50,7 +50,7 @@ val ipcConfiguration by lazy {
     decode<IpcConfiguration>(HttpClient.get("$CLIENT_CLOUD/discord.json"))
 }
 
-object ModuleDiscordIpc : Module("DiscordIpc", Category.MISC, state = true) {
+object ModuleRichPresence : Module("RichPresence", Category.MISC, state = true) {
 
     private val detailsText by text("Details", "Nextgen v%clientVersion% by %clientAuthor%")
     private val stateText by text("State", "%enabledModules% of %totalModules% modules enabled")

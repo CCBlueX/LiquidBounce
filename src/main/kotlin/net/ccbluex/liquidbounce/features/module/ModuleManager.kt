@@ -144,7 +144,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleHideClient,
             ModuleFocus,
             ModuleAutoConfig,
-            ModuleDiscordIpc,
+            ModuleRichPresence,
 
             // Movement
             ModuleAirJump,
