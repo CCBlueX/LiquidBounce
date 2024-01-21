@@ -27,6 +27,7 @@ import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.Vec3
+import net.minecraft.world.WorldSettings
 
 object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
     private val range by FloatValue("Range", 4.5f, 3f..8f)
@@ -63,10 +64,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
             .sortedBy { player.getDistanceToBox(it.hitBox) }) {
             val nearestPoint = getNearestPointBB(player.eyes, entity.hitBox)
 
-            val entityPrediction =
-                Vec3(entity.posX - entity.prevPosX, entity.posY - entity.prevPosY, entity.posZ - entity.prevPosZ)
-
-            val distance = player.getDistanceToBox(entity.hitBox)
+            val entityPrediction = entity.currPos - entity.prevPos
 
             val predictedDistance = player.getDistanceToBox(
                 entity.hitBox.offset(
@@ -76,16 +74,15 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
                 )
             )
 
-            // Is the fireball's speed-predicted distance further than the original distance?
-            if (predictedDistance >= distance || distance > range) {
+            // Skip if the predicted distance is further than range or the prediction does not return anything useful (fireball just spawned)
+            if (predictedDistance > range || entityPrediction == Vec3(0.0, 0.0, 0.0)) {
                 continue
             }
 
             if (rotations) {
                 setTargetRotation(
-                    limitAngleChange(
-                        currentRotation ?: player.rotation,
-                        toRotation(nearestPoint, true).fixedSensitivity(),
+                    limitAngleChange(currentRotation ?: player.rotation,
+                        toRotation(nearestPoint, true),
                         nextFloat(minTurnSpeed, maxTurnSpeed),
                         smootherMode
                     ),
@@ -103,18 +100,22 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
     @EventTarget
     fun onTick(event: TickEvent) {
         val player = mc.thePlayer ?: return
+        val entity = target ?: return
 
         val rotation = currentRotation ?: player.rotation
-        val entity = target ?: return
 
         if (!rotations && player.getDistanceToBox(entity.hitBox) <= range
             || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
-            sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
-
             when (swing) {
                 "Normal" -> mc.thePlayer.swingItem()
                 "Packet" -> sendPacket(C0APacketAnimation())
+            }
+
+            sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
+
+            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) {
+                player.attackTargetEntityWithCurrentItem(entity)
             }
 
             target = null
