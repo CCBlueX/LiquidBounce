@@ -16,20 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.render.shaders
+package net.ccbluex.liquidbounce.render.shader.shaders
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
 
-object OutlineShader : MinecraftFramebufferShader("outline_shader") {
+object DitheringShader : MinecraftFramebufferShader("dithering_shader") {
 
-    fun begin(width: Float) {
-        this.setUniform1f("radius", width)
+    fun begin(ditherAmount: Float) {
+        this.setUniform1f("ditherAmount", ditherAmount)
+//        this.vertexConsumerProvider!!.setColor(255, 255, 255, 255)
         this.beginInternal()
-    }
-
-    fun setColor(color: Color4b) {
-        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
     }
 
 }

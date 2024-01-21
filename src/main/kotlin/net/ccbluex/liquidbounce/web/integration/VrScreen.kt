@@ -19,11 +19,14 @@
  */
 package net.ccbluex.liquidbounce.web.integration
 
+import net.ccbluex.liquidbounce.render.shader.shaders.BackgroundShader.Companion.BACKGROUND_SHADER
 import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.text.Text
 
 class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
@@ -41,6 +44,22 @@ class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
 
     override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
         // render nothing
+        BACKGROUND_SHADER.startShader()
+
+        val tessellator = Tessellator.getInstance()
+        val buffer = tessellator.buffer
+        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION)
+        buffer.vertex(0.0, height.toDouble(), 0.0)
+            .next()
+        buffer.vertex(width.toDouble(), height.toDouble(), 0.0)
+            .next()
+        buffer.vertex(width.toDouble(), 0.0, 0.0)
+            .next()
+        buffer.vertex(0.0, 0.0, 0.0)
+            .next()
+        tessellator.draw()
+
+        BACKGROUND_SHADER.stopShader()
     }
 
     override fun shouldPause(): Boolean {
