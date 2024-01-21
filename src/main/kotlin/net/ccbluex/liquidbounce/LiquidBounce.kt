@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -111,6 +112,9 @@ object LiquidBounce : Listenable {
 
             // Load mappings
             McMappings.load()
+
+            // Load translations
+            LanguageManager.loadLanguages()
 
             // Initialize client features
             EventManager

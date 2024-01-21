@@ -71,7 +71,7 @@ object CommandConfig {
                                         ConfigSystem.autoConfigGson)
                                 }
                             }.onFailure {
-                                chat(red(command.result("failedToLoad", variable(name))))
+                                chat(markAsError(command.result("failedToLoad", variable(name))))
                             }.onSuccess {
                                 chat(regular(command.result("loaded", variable(name))))
                             }
@@ -87,7 +87,7 @@ object CommandConfig {
                                     ConfigSystem.autoConfigGson)
                             }
                         }.onFailure {
-                            chat(red(command.result("failedToLoad", variable(name))))
+                            chat(markAsError(command.result("failedToLoad", variable(name))))
                         }.onSuccess {
                             chat(regular(command.result("loaded", variable(name))))
                         }
