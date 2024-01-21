@@ -304,7 +304,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      */
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (event.eventState != EventState.PRE) {
+        if (event.eventState != EventState.POST) {
             return
         }
 
