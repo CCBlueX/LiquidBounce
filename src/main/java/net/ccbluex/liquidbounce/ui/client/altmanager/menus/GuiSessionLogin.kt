@@ -47,7 +47,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
         // Add fields to screen
         sessionTokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
         sessionTokenField.isFocused = false
-        sessionTokenField.maxStringLength = 32
+        sessionTokenField.maxStringLength = 1000
 
         // Call sub method
         super.initGui()
