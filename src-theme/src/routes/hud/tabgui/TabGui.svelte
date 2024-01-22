@@ -165,6 +165,7 @@
         flex-direction: column;
         border-radius: 5px;
         overflow: hidden;
+        transform: skewX(-7deg); /*  Change to Parallelogram  */
     }
 
     .modules {
@@ -177,6 +178,7 @@
         display: flex;
         flex-direction: column;
         overflow: auto;
+        transform: skewX(-7deg); /*  Change to Parallelogram  */
     }
 
     ::-webkit-scrollbar {
