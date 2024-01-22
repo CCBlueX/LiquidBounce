@@ -904,7 +904,7 @@ class SimulatedPlayer(
         return inWater
     }
 
-    fun handleMaterialAcceleration(boundingBox: AxisAlignedBB, material: Material): Boolean {
+    private fun handleMaterialAcceleration(boundingBox: AxisAlignedBB, material: Material): Boolean {
         val i = MathHelper.floor_double(boundingBox.minX)
         val j = MathHelper.floor_double(boundingBox.maxX + 1.0)
         val k = MathHelper.floor_double(boundingBox.minY)
@@ -921,20 +921,11 @@ class SimulatedPlayer(
                 for (l1 in k until l) {
                     for (i2 in i1 until j1) {
                         blockPos[k1, l1] = i2
-                        val state = getBlockState(blockPos)
-                        val block = state!!.block
-                        val result = block.isEntityInsideMaterial(worldObj,
-                            blockPos,
-                            state,
-                            player,
-                            l.toDouble(),
-                            material,
-                            false
-                        )
-                        if (result != null && result) {
-                            flag = true
-                            vec3 = block.modifyAcceleration(worldObj, blockPos, player, vec3)
-                        } else if ((result == null || result) && block.material === material) {
+                        val state = getBlockState(blockPos) ?: continue
+                        val block = state.block ?: continue
+                        // val result = null
+                        // ^^ block.isEntityInsideMaterial(worldObj, blockPos, state, player, l.toDouble(), material, false) always null
+                        if (block.material === material) {
                             val d0 = ((l1 + 1).toFloat() - BlockLiquid.getLiquidHeightPercent((state.getValue(
                                 BlockLiquid.LEVEL
                             ) as Int)
