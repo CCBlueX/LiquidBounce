@@ -91,6 +91,8 @@
 
         "module.autoFish.description": "Pesca automaticamente ao usar uma vara de pesca.",
 
+        "module.autoProjectile.description": "UNTRANSLATED: Automatically throws egg/snowball.",
+
         "module.autoRespawn.description": "Faz você ressurgir automaticamente após a morte.",
 
         "module.autoTool.description": "Seleciona automaticamente a melhor ferramenta em seu inventário para minerar um bloco.",
@@ -184,6 +186,8 @@
         "module.itemESP.description": "Permite que você veja itens através de paredes.",
 
         "module.itemTeleport.description": "Permite que você pegue itens à distância.",
+
+        "module.itemPhysics.description": "UNTRANSLATED: Allows dropped items to have physics",
 
         "module.keepAlive.description": "Tenta impedir que você morra.",
 
