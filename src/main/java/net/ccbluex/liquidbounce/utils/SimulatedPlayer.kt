@@ -43,7 +43,7 @@ import kotlin.math.ceil
  * Compatible with client user ONLY. Useful for predicting movement ticks ahead.
  */
 @Suppress("SameParameterValue", "MemberVisibilityCanBePrivate")
-class SimulatedPlayer(
+open class SimulatedPlayer(
     private val player: EntityPlayerSP,
     var box: AxisAlignedBB,
     var movementInput: MovementInput,
@@ -84,8 +84,8 @@ class SimulatedPlayer(
     private var noClip: Boolean,
     private var isSprinting: Boolean,
     private val foodStats: FoodStats,
-) : MinecraftInstance() {
-    val pos: Vec3
+) : MinecraftInstance(), PlayerSimulation {
+    override val pos: Vec3
         get() = Vec3(posX, posY, posZ)
 
     private var moveForward = 0f
@@ -172,7 +172,7 @@ class SimulatedPlayer(
         }
     }
 
-    fun tick() {
+    override fun tick() {
         if (!onEntityUpdate() || player.isRiding) {
             return
         }
@@ -367,7 +367,7 @@ class SimulatedPlayer(
         isSprinting = state
     }
 
-    private fun pushOutOfBlocks(x: Double, y: Double, z: Double): Boolean {
+    protected open fun pushOutOfBlocks(x: Double, y: Double, z: Double): Boolean {
         return if (noClip) {
             false
         } else {
@@ -904,7 +904,7 @@ class SimulatedPlayer(
         return inWater
     }
 
-    fun handleMaterialAcceleration(boundingBox: AxisAlignedBB, material: Material): Boolean {
+    open fun handleMaterialAcceleration(boundingBox: AxisAlignedBB, material: Material): Boolean {
         val i = MathHelper.floor_double(boundingBox.minX)
         val j = MathHelper.floor_double(boundingBox.maxX + 1.0)
         val k = MathHelper.floor_double(boundingBox.minY)
