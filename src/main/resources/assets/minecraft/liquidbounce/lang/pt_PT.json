@@ -91,6 +91,8 @@
         "module.autoBreak.description": "Automaticamente quebra o bloco que estás a olhar em.",
         
         "module.autoFish.description": "UNTRANSLATED: Automatically catches fish when using a rod.",
+
+        "module.autoProjectile.description": "UNTRANSLATED: Automatically throws egg/snowball.",
         
         "module.autoRespawn.description": "UNTRANSLATED: Automatically respawns you after dying.",
         
@@ -183,6 +185,8 @@
         "module.itemESP.description": "Permite que tu vejas itens através de paredes.",
         
         "module.itemTeleport.description": "Permie que tu adquires blocos longe.",
+
+        "module.itemPhysics.description": "UNTRANSLATED: Allows dropped items to have physics",
         
         "module.keepAlive.description": "Tenta prevenir que tu morras.",
         
