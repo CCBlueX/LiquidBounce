@@ -9,8 +9,11 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
+import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
@@ -23,6 +26,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
+import net.minecraft.entity.Entity
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
@@ -50,6 +54,14 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     // Reverse
     private val reverseStrength by FloatValue("ReverseStrength", 1F, 0.1F..1F) { mode == "Reverse" }
     private val reverse2Strength by FloatValue("SmoothReverseStrength", 0.05F, 0.02F..0.1F) { mode == "SmoothReverse" }
+
+    private val onLook by BoolValue("onLook", false) { mode in arrayOf("Reverse", "SmoothReverse") }
+    private val range by FloatValue("Range", 3.0F, 1F..5.0F) {
+        onLook && mode in arrayOf("Reverse", "SmoothReverse")
+    }
+    private val maxAngleDifference by FloatValue("MaxAngleDifference", 45.0f, 5.0f..90f) {
+        onLook && mode in arrayOf("Reverse", "SmoothReverse")
+    }
 
     // AAC Push
     private val aacPushXZReducer by FloatValue("AACPushXZReducer", 2F, 1F..3F) { mode == "AACPush" }
@@ -142,16 +154,24 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             }
 
             "reverse" -> {
+                val nearbyEntity = getNearestEntityInRange() ?: return
+
                 if (!hasReceivedVelocity)
                     return
 
                 if (!thePlayer.onGround) {
+                    if (onLook && !isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
+                        return
+                    }
+
                     speed *= reverseStrength
                 } else if (velocityTimer.hasTimePassed(80))
                     hasReceivedVelocity = false
             }
 
             "smoothreverse" -> {
+                val nearbyEntity = getNearestEntityInRange() ?: return
+
                 if (!hasReceivedVelocity) {
                     thePlayer.speedInAir = 0.02F
                     return
@@ -161,6 +181,11 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     reverseHurt = true
 
                 if (!thePlayer.onGround) {
+                    if (onLook && !isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
+                        thePlayer.speedInAir = 0.02F
+                        return
+                    }
+
                     if (reverseHurt)
                         thePlayer.speedInAir = reverse2Strength
                 } else if (velocityTimer.hasTimePassed(80)) {
@@ -469,5 +494,23 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 }
             }
         }
+    }
+
+    private fun getAllEntities(): List<Entity> {
+        return mc.theWorld.loadedEntityList
+            .filter { isSelected(it, true) }
+            .toList()
+    }
+
+    private fun getNearestEntityInRange(): Entity? {
+        val player = mc.thePlayer
+
+        val entitiesInRange = getAllEntities()
+            .filter {
+                val distance = player.getDistanceToEntityBox(it)
+                (distance <= range)
+            }
+
+        return entitiesInRange.minByOrNull { player.getDistanceToEntityBox(it) }
     }
 }
