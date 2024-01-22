@@ -37,7 +37,7 @@
         "module.ambience.description": "改變世界時間和天氣。(視覺上)",
         "module.antiHunger.description": "防止飢餓。",
         "module.bedGodMode.description": "允許你躺在床上四處走動。(對於1.9)",
-        "module.bedProtectionESP.description": "讓您了解應該將方塊放置在哪裡來保護床",
+        "module.bedProtectionESP.description": "幫助你找到保護床所需放置方塊的位置。",
         "module.clip.description": "允許你clip通過方塊。",
         "module.airJump.description": "允許你在空中跳躍。",
         "module.airLadder.description": "允許你在爬上懸空的藤蔓或梯子。",
@@ -52,6 +52,7 @@
         "module.autoAccount.description": "功能豐富的自動註冊/登入和帳號管理員。",
         "module.autoBreak.description": "自動破壞你瞄準的方塊。",
         "module.autoFish.description": "切換到釣竿時自動釣魚。",
+        "module.autoProjectile.description": "自動扔雞蛋/雪球。",
         "module.autoRespawn.description": "死後自動重生。",
         "module.autoTool.description": "挖方塊時自動切換到快速列中最合適的工具。",
         "module.autoWalk.description": "持續前進。",
@@ -98,6 +99,7 @@
         "module.inventoryMove.description": "允許你在打開背包時行走。",
         "module.itemESP.description": "允許你透過牆壁看到物品。",
         "module.itemTeleport.description": "允許你撿起遠處的物品。",
+        "module.itemPhysics.description": "使掉落物具有物理特性。",
         "module.keepAlive.description": "試著防止你死去。",
         "module.keepContainer.description": "允許你在任何位置打開上次關閉的容器 (按INSERT鍵打開)",
         "module.keyPearl.description": "允許你使用快捷鍵扔出在快捷欄中的末影珍珠。",
@@ -170,6 +172,7 @@
         "module.waterSpeed.description": "允許你游得更快。",
         "module.xRay.description": "允許你透過牆壁看到礦石。",
         "module.zoot.description": "移除所有負面藥水效果/火焰。",
-        "module.disabler.description": "停用伺服器或特定的反作弊偵測"
+        "module.keepSprint.description": "允許你在攻擊後不打斷疾跑。",
+        "module.disabler.description": "使你免受伺服器或特定反作弊的作弊檢測。"
     }
 }
