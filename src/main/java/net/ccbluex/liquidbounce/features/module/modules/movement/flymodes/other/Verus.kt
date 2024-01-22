@@ -23,7 +23,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
  * - Getting below block (Like NCPLatest Fly Method), should help to temporarily bypass Speed(A) Checks
  * - Turning off Damage should bypass Fly(G) Checks
  */
-object Verus : FlyMode("VerusDamage") {
+object Verus : FlyMode("Verus") {
     private var boostTicks = 0
 
     override fun onEnable() {
