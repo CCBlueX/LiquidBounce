@@ -88,28 +88,31 @@ open class Configurable(
     ) =
         Value(name, default, valueType, listType).apply { this@Configurable.value.add(this) }
 
-    protected fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>, valueType: ValueType) =
-        RangedValue(name, default, range, valueType).apply { this@Configurable.value.add(this) }
+    private fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>, suffix: String,
+                                      valueType: ValueType) =
+        RangedValue(name, default, range, suffix, valueType).apply { this@Configurable.value.add(this) }
 
     // Fixed data types
 
     protected fun boolean(name: String, default: Boolean) = value(name, default, ValueType.BOOLEAN)
 
-    protected fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>) =
-        rangedValue(name, default, range, ValueType.FLOAT)
+    protected fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>, suffix: String = "") =
+        rangedValue(name, default, range, suffix, ValueType.FLOAT)
 
     protected fun floatRange(
         name: String,
         default: ClosedFloatingPointRange<Float>,
-        range: ClosedFloatingPointRange<Float>
-    ) = rangedValue(name, default, range, ValueType.FLOAT_RANGE)
+        range: ClosedFloatingPointRange<Float>,
+        suffix: String = ""
+    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE)
 
-    protected fun int(name: String, default: Int, range: IntRange) = rangedValue(name, default, range, ValueType.INT)
+    protected fun int(name: String, default: Int, range: IntRange, suffix: String = "") =
+        rangedValue(name, default, range, suffix, ValueType.INT)
 
     protected fun key(name: String, default: Int) = value(name, default, ValueType.KEY)
 
-    protected fun intRange(name: String, default: IntRange, range: IntRange) =
-        rangedValue(name, default, range, ValueType.INT_RANGE)
+    protected fun intRange(name: String, default: IntRange, range: IntRange, suffix: String = "") =
+        rangedValue(name, default, range, suffix, ValueType.INT_RANGE)
 
     protected fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 

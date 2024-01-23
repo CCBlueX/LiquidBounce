@@ -97,7 +97,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val delay by int("Delay", 0, 0..10)
+        val delay by int("Delay", 0, 0..10, "ticks")
         val timer by float("Timer", 1f, 0.1f..5f)
 
         /**
@@ -105,7 +105,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
          *
          * This means we will speed up the eating process by 20 ticks on each tick.
          */
-        val speed by int("Speed", 20, 1..35)
+        val speed by int("Speed", 20, 1..35, "packets")
 
         val repeatable = repeatable {
             if (accelerateNow) {
@@ -128,7 +128,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             get() = modes
 
         val consumeTime by int("ConsumeTime", 15, 0..20)
-        val speed by int("Speed", 20, 1..35)
+        val speed by int("Speed", 20, 1..35, "packets")
 
         val repeatable = repeatable {
             if (accelerateNow && player.itemUseTime >= consumeTime) {

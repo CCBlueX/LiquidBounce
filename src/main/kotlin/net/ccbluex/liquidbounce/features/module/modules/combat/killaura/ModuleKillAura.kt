@@ -112,7 +112,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     internal val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
-    private val failRate by int("FailRate", 0, 0..100)
+    private val failRate by int("FailRate", 0, 0..100, "%")
 
     init {
         tree(FailSwing)

@@ -83,7 +83,7 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
          */
         private val simulateJumpOrder by intRange("SimulateJumpOrder", 0..2,
             jumpOrder.indices)
-        private val wait by intRange("Wait", 0..0, 0..60)
+        private val wait by intRange("Wait", 0..0, 0..60, "ticks")
 
         private var ticksWait = 0
 

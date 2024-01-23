@@ -48,7 +48,7 @@ import net.minecraft.util.math.Vec3d
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     private val range by floatRange("Range", 1f..3f, 0f..6f)
-    private val delay by int("Delay", 100, 0..1000)
+    private val delay by int("Delay", 100, 0..1000, "ms")
     private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
     private val packetQueue = LinkedHashSet<DelayData>()
