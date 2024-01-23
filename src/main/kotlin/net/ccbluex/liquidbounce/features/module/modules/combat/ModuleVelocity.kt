@@ -152,7 +152,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     return@handler
                 }
 
-                val currentVelocity = mc.player?.velocity ?: return@handler
+                val currentVelocity = player.velocity
 
                 // set the horizontal velocity to the player's current velocity to prevent horizontal slowdown
                 packet.velocityX = (currentVelocity.x * 8000).toInt()
