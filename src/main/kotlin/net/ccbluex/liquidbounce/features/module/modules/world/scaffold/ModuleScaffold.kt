@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.HypixelNoFall
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -57,7 +56,6 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
@@ -68,7 +66,6 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 import kotlin.math.ceil
-import kotlin.math.floor
 import kotlin.random.Random
 
 /**
@@ -129,6 +126,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ),
         )
     private val timer by float("Timer", 1f, 0.01f..10f)
+
+    private val keepY by boolean("KeepY", false)
+    private val jumpSlowdown by float("JumpSlowdown", 1.05f, 0.01f..10f)
 
     private var currentTarget: BlockPlacementTarget? = null
 
@@ -192,41 +192,38 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     override fun disable() {
-        HypixelNoFall.waitUntilGround = false
+        NoFallHypixel.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
     }
 
     private val movementInputHandler = handler<MovementInputEvent> {
-        if ((bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP || bridgeMode == BridgeMode.HYPIXEL) && player.moving) {
+        if ((bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) && player.moving) {
             it.jumping = true
         }
     }
 
     private val afterJumpEvent = handler<PlayerAfterJumpEvent> {
         randomization = Random.nextDouble(-0.01, 0.01)
-        if (bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP || bridgeMode == BridgeMode.HYPIXEL) {
-            if (bridgeMode != BridgeMode.HYPIXEL) {
-                placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
-            } else {
+        if (bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) {
+            if (keepY) {
                 placementY = ceil(player.blockPos.y - if (mc.options.jumpKey.isPressed) 0.0 else 1.25).toInt()
+            } else {
+                placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
             }
 
             if (bridgeMode == BridgeMode.TELLY_NCP) {
                 // Results in a speed of 0.3371
                 player.strafe(speed = 0.49)
             }
-
-            if (bridgeMode == BridgeMode.HYPIXEL) {
-                player.strafe(speed = 0.49)
-                val currentVelocity = (mc.player ?: return@handler).velocity
-                mc.player?.setVelocity(currentVelocity.x / 1.049, currentVelocity.y, currentVelocity.z / 1.049) // value found through trial and error
-            }
         }
+
+        val currentVelocity = (mc.player ?: return@handler).velocity
+        player.setVelocity(currentVelocity.x / jumpSlowdown, currentVelocity.y, currentVelocity.z / jumpSlowdown)
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        HypixelNoFall.waitUntilGround = true
+        NoFallHypixel.waitUntilGround = true
 
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
@@ -476,7 +473,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // In case of TELLY_NCP we do not want to stay at the placement Y
-        return if (bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.HYPIXEL) {
+        return if (keepY) {
             BlockPos(player.blockPos.x, placementY, player.blockPos.z)
         } else {
             player.blockPos.add(0, -1, 0)
@@ -571,8 +568,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     enum class BridgeMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),
         TELLY("Telly"),
-        TELLY_NCP("TellyNCP"),
-        HYPIXEL("Hypixel")
+        TELLY_NCP("TellyNCP")
     }
 
 }
