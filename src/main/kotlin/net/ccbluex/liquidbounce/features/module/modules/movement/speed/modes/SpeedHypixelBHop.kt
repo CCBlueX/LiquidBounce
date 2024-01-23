@@ -90,7 +90,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
                 0.0
             }
 
-            player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 - yMod, 1.0 + horizontalMod)
+            player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
         }
     }
 
@@ -127,12 +127,12 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             waitTicks(1)
 
             // Fall damage velocity
-            //val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-            //    player.sqrtSpeed.coerceAtLeast(AT_LEAST)
-            //} else {
-            //    player.sqrtSpeed
-            //}
-            //player.strafe(speed = speed)
+            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
+                player.sqrtSpeed.coerceAtLeast(AT_LEAST)
+            } else {
+                player.sqrtSpeed
+            }
+            player.strafe(speed = speed)
         } else if (packet is PlayerPositionLookS2CPacket) {
             wasFlagged = true
         }
