@@ -118,9 +118,16 @@ object IntegrationHandler : Listenable {
     private var browserIsReady = false
 
     val handleBrowserReady = handler<BrowserReadyEvent> {
+        logger.info("Browser is ready.")
+
         // Fires up the client tab
         clientJcef
         browserIsReady = true
+
+        logger.info("Opening integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
+
+        // Open the title screen
+        handleScreenSituation(mc.currentScreen)
     }
 
     fun virtualOpen(name: String) {
@@ -145,6 +152,10 @@ object IntegrationHandler : Listenable {
     }
 
     fun updateIntegrationBrowser() {
+        if (!browserIsReady || BrowserManager.browser?.isInitialized() != true) {
+            return
+        }
+
         logger.info("Reloading integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
         clientJcef?.loadUrl(integrationUrl)
     }
@@ -159,61 +170,24 @@ object IntegrationHandler : Listenable {
      * Handle opening new screens
      */
     private val screenHandler = handler<ScreenEvent> { event ->
-        if (HideClient.isHidingNow || ModuleHideClient.enabled) {
-            virtualClose()
-            return@handler
-        }
-
-        // Check if the client tab is ready
-        if (clientJcef?.getUrl()?.startsWith(integrationUrl) != true) {
-            updateIntegrationBrowser()
-            return@handler
-        }
-
         // Set to default GLFW cursor
         GLFW.glfwSetCursor(mc.window.handle, standardCursor)
 
-        if (!browserIsReady && event.screen !is MCEFDownloaderMenu) {
-            RenderSystem.recordRenderCall {
-                mc.setScreen(MCEFDownloaderMenu(event.screen))
-            }
+        if (handleScreenSituation(event.screen)) {
             event.cancelEvent()
-            return@handler
-        }
-
-        if (event.screen is VrScreen) {
-            return@handler
-        }
-
-        val screen = event.screen ?: if (mc.world != null) {
-            virtualClose()
-            return@handler
-        } else {
-            TitleScreen()
-        }
-
-        val virtualScreenType =  VirtualScreenType.values().find { it.recognizer(screen) }
-        if (virtualScreenType == null) {
-            logger.warn("Unknown screen type: ${screen.javaClass.name} with title '${screen.title.outputString()}'")
-            virtualClose()
-            return@handler
-        }
-
-        if (!virtualScreenType.showAlong) {
-            val vrScreen = VrScreen(virtualScreenType.assignedName, originalScreen = screen)
-            mc.setScreen(vrScreen)
-            event.cancelEvent()
-        } else {
-            virtualOpen(virtualScreenType.assignedName)
         }
     }
 
     val desyncCheck = handler<GameTickEvent> {
-        if (!acknowledgement.confirmed && acknowledgement.since.hasElapsed(500)) {
-            logger.warn("Integration desync detected. $acknowledgement: $integrationUrl -> ${clientJcef?.getUrl()}")
-            chat("Integration desync detected. It should now be fixed.")
-            acknowledgement.since.reset()
-            updateIntegrationBrowser()
+        if (browserIsReady && mc.currentScreen !is MCEFDownloaderMenu) {
+            handleScreenSituation(mc.currentScreen)
+
+            if (!acknowledgement.confirmed && acknowledgement.since.hasElapsed(500)) {
+                logger.warn("Integration desync detected. $acknowledgement: $integrationUrl -> ${clientJcef?.getUrl()}")
+                chat("Integration desync detected. It should now be fixed.")
+                acknowledgement.since.reset()
+                updateIntegrationBrowser()
+            }
         }
     }
 
@@ -223,6 +197,51 @@ object IntegrationHandler : Listenable {
      */
     val worldChangeEvent = handler<WorldChangeEvent> {
         updateIntegrationBrowser()
+    }
+
+    private fun handleScreenSituation(screen: Screen?): Boolean {
+        if (HideClient.isHidingNow || ModuleHideClient.enabled) {
+            virtualClose()
+            return false
+        }
+
+        if (!browserIsReady) {
+            if (screen !is MCEFDownloaderMenu) {
+                RenderSystem.recordRenderCall {
+                    mc.setScreen(MCEFDownloaderMenu())
+                }
+                return true
+            }
+
+            return false
+        }
+
+        if (screen is VrScreen) {
+            return false
+        }
+
+        val screen = screen ?: if (mc.world != null) {
+            virtualClose()
+            return false
+        } else {
+            TitleScreen()
+        }
+
+        val virtualScreenType =  VirtualScreenType.values().find { it.recognizer(screen) }
+        if (virtualScreenType == null) {
+            virtualClose()
+            return false
+        }
+
+        if (!virtualScreenType.showAlong) {
+            val vrScreen = VrScreen(virtualScreenType.assignedName, originalScreen = screen)
+            mc.setScreen(vrScreen)
+            return true
+        } else {
+            virtualOpen(virtualScreenType.assignedName)
+        }
+
+        return false
     }
 
 }

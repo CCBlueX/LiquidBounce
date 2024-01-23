@@ -73,6 +73,11 @@ object HttpClient {
 
         // we want to read the error stream or the input stream
         val stream = if (connection.responseCode < 400) connection.inputStream else connection.errorStream
+
+        if (stream == null) {
+            error("Unable to receive response from server, response code: $responseCode")
+        }
+
         val text = stream.bufferedReader().use { it.readText() }
 
         if (responseCode != 200) {

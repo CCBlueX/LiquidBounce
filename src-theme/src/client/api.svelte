@@ -534,6 +534,41 @@
         })
     }
 
+    export function giveItem(stack) {
+        return request("/player/give", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "stack": stack })
+        })
+    }
+
+    /**
+     * get("/container") {
+     */
+    export function getContainer() {
+        return request("/container")
+    }
+
+    export function giveContainer() {
+        return request("/container/give", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export function storeContainer() {
+        return request("/container/store", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
     /**
      * get("update") {
      *         httpOk(JsonObject().apply {

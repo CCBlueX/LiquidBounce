@@ -33,6 +33,8 @@ interface IBrowser {
 
     fun shutdownBrowserBackend()
 
+    fun isInitialized(): Boolean
+
     fun createTab(url: String): ITab
 
     fun createInputAwareTab(url: String, takesInput: () -> Boolean): ITab

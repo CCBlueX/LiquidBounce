@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
@@ -123,7 +122,7 @@ open class Module(
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
     open val description: String
-        get() = Text.translatable("$translationBaseKey.description").outputString()
+        get() = Text.translatable("$translationBaseKey.description").convertToString()
 
     // Tag to be displayed on the HUD
     open val tag: String?

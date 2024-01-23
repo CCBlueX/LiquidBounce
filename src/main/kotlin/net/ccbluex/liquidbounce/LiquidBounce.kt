@@ -38,8 +38,9 @@ import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.tabs.Tabs
-import net.ccbluex.liquidbounce.features.tabs.Tabs.headsCollection
+import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
+import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
+import net.ccbluex.liquidbounce.features.module.modules.misc.ipcConfiguration
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -60,10 +61,7 @@ import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
-import net.minecraft.util.profiler.Profiler
 import org.apache.logging.log4j.LogManager
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
 
 /**
  * LiquidBounce
@@ -137,7 +135,7 @@ object LiquidBounce : Listenable {
             InventoryTracker
             WorldToScreen
             Reconnect
-            Tabs
+            ConfigSystem.root(ClientItemGroups)
             Chat
             BrowserManager
             Fonts
@@ -199,6 +197,15 @@ object LiquidBounce : Listenable {
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
             }
+
+            runCatching {
+                ipcConfiguration.let {
+                    logger.info("Loaded Discord IPC configuration.")
+                }
+            }.onFailure {
+                logger.error("Failed to load Discord IPC configuration.", it)
+            }
+
 
             // Refresh local IP info
             logger.info("Refreshing local IP info...")

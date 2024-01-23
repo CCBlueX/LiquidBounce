@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.minecraft.client.gui.screen.SplashOverlay
 import net.minecraft.registry.Registries
 import net.minecraft.util.Util
+import java.text.SimpleDateFormat
 
 internal fun RestNode.setupClientRestApi() {
     get("/info") {
@@ -51,7 +53,25 @@ internal fun RestNode.setupClientRestApi() {
     get("/update") {
         httpOk(JsonObject().apply {
             addProperty("updateAvailable", LiquidBounce.updateAvailable)
+            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
             addProperty("commit", LiquidBounce.clientCommit)
+
+            add("newestVersion", JsonObject().apply {
+                val newestVersion = ClientUpdate.newestVersion ?: return@apply
+
+                addProperty("buildId", newestVersion.buildId)
+                addProperty("commitId", newestVersion.commitId.substring(0, 7))
+                addProperty("branch", newestVersion.branch)
+                addProperty("clientVersion", newestVersion.lbVersion)
+                addProperty("minecraftVersion", newestVersion.mcVersion)
+                addProperty("release", newestVersion.release)
+
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestVersion.date)
+                addProperty("date", SimpleDateFormat().format(dateFormat))
+                addProperty("message", newestVersion.message)
+
+                addProperty("url", newestVersion.url)
+            })
         })
     }
 
