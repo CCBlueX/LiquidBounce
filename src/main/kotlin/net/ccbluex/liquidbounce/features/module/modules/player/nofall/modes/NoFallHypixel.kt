@@ -40,12 +40,9 @@ internal object NoFallHypixel : Choice("Hypixel") {
     override val parent: ChoiceConfigurable
         get() = ModuleNoFall.modes
 
-    // Packet handler to intercept and modify PlayerMoveC2SPacket
     val packetHandler = handler<PacketEvent> {
-        // Retrieve the packet from the event
         val packet = it.packet
 
-        // Check if the packet is a PlayerMoveC2SPacket
         if (packet is PlayerMoveC2SPacket) {
             if (packet.onGround) {
                 managedToReset = false
