@@ -128,7 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
 
     private val keepY by boolean("KeepY", false)
-    private val jumpSlowdown by float("JumpSlowdown", 1.05f, 0.01f..10f)
+    private val jumpSlowdown by float("JumpSlowdown", 1f, 0.01f..10f)
 
     private var currentTarget: BlockPlacementTarget? = null
 
@@ -390,16 +390,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             network.sendPacket(Full(player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
                 player.isOnGround))
         }
-
-        /*
-        if (bridgeMode == BridgeMode.HYPIXEL) {
-            network.sendPacket(Full(player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
-                player.isOnGround))
-            mc.interactionManager?.sendSequencedPacket(world) {
-                PlayerInteractItemC2SPacket(Hand.OFF_HAND, it)
-            }
-        }
-         */
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
