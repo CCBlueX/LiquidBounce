@@ -220,7 +220,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (bridgeMode == BridgeMode.HYPIXEL) {
                 player.strafe(speed = 0.49)
                 val currentVelocity = (mc.player ?: return@handler).velocity
-                mc.player?.setVelocity(currentVelocity.x / 1.07, currentVelocity.y, currentVelocity.z / 1.07)
+                mc.player?.setVelocity(currentVelocity.x / 1.049, currentVelocity.y, currentVelocity.z / 1.049) // value found through trial and error
             }
         }
     }
