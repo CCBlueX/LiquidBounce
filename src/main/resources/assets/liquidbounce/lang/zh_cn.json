@@ -233,16 +233,13 @@
   "liquidbounce.command.localconfig.subcommand.create.result.failedToCreate": "未能创建名为 %s 的配置文件。",
   "liquidbounce.command.localconfig.subcommand.create.result.created": "已创建名为 %s 的配置文件。",
   "liquidbounce.command.localconfig.subcommand.create.result.alreadyExists": "名为 %s 的配置文件已存在。",
-
   "liquidbounce.command.script.description": "允许你管理脚本。",
   "liquidbounce.command.script.subcommand.load.description": "加载脚本。",
   "liquidbounce.command.script.subcommand.load.parameter.name.description": "脚本名。",
-
   "liquidbounce.command.script.subcommand.load.result.notFound": "名为 %s 的脚本不存在。",
   "liquidbounce.command.script.subcommand.load.result.failedToLoad": "脚本加载失败, 因为 '%s'。",
   "liquidbounce.command.script.subcommand.load.result.loaded": "成功加载名为 %s 的脚本。",
   "liquidbounce.command.script.subcommand.load.result.alreadyLoaded": "名为 %s 的脚本已经被加载。",
-
   "liquidbounce.command.script.subcommand.unload.description": "卸载脚本。",
   "liquidbounce.command.script.subcommand.unload.parameter.name.description": "脚本名。",
   "liquidbounce.command.script.subcommand.unload.result.notFound": "名为 %s 的脚本不存在。",
@@ -250,22 +247,17 @@
   "liquidbounce.command.script.subcommand.unload.result.unloaded": "已卸载名为 %s 的脚本。",
   "liquidbounce.command.script.subcommand.unload.result.notLoaded": "名为 %s 的脚本没有被加载。",
   "liquidbounce.command.script.subcommand.reload.description": "重新加载所有脚本。",
-
   "liquidbounce.command.script.subcommand.reload.result.reloaded": "已重新加载了所有脚本。",
   "liquidbounce.command.script.subcommand.reload.result.reloadFailed": "重新加载失败, 因为 '%s'。",
-
   "liquidbounce.command.script.subcommand.list.description": "列出所有脚本。",
   "liquidbounce.command.script.subcommand.list.result.noScripts": "没有脚本。",
   "liquidbounce.command.script.subcommand.list.result.scripts": "脚本: %s。",
-
   "liquidbounce.command.script.subcommand.directory.description": "打开脚本目录。",
   "liquidbounce.command.script.subcommand.directory.result.scriptsDirectory": "脚本目录: %s。",
-
   "liquidbounce.command.script.subcommand.edit.description": "在编辑器中打开脚本。",
   "liquidbounce.command.script.subcommand.edit.parameter.name.description": "脚本名。",
   "liquidbounce.command.script.subcommand.edit.result.notFound": "名为 %s 的脚本不存在。",
   "liquidbounce.command.script.subcommand.edit.result.opened": "已打开名为 %s 的脚本。",
-
   "liquidbounce.liquidchat.states.connecting": "正在连接聊天服务器...",
   "liquidbounce.liquidchat.states.connected": "已连接到聊天服务器!",
   "liquidbounce.liquidchat.states.disconnected": "与聊天服务器失去连接!",
