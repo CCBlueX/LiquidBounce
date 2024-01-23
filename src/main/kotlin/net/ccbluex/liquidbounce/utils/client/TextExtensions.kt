@@ -55,3 +55,41 @@ fun String.translateColorCodes(): String {
 }
 
 fun String.toLowerCamelCase() = this.replaceFirst(this.toCharArray()[0], this.toCharArray()[0].lowercaseChar())
+
+fun String.dropPort(): String {
+    val parts = this.split(":")
+    return parts[0]
+}
+
+/**
+ * Returns the root domain of the domain.
+ *
+ * This means it removes the subdomain from the domain.
+ * If the domain is already a root domain or an IP address, do nothing.
+ *
+ * e.g.
+ *   "sub.example.com" -> "example.com"
+ *   "example.com." -> "example.com"
+ *   "127.0.0.1" -> "127.0.0.1"
+ */
+fun String.rootDomain(): String {
+    var domain = this.trim().lowercase()
+
+    if (domain.matches(Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$"))) {
+        // IP address
+        return domain
+    }
+
+    // Check if domain ends with dot, if so, remove it
+    if (domain.endsWith(".")) {
+        domain = domain.dropLast(1)
+    }
+
+    val parts = domain.split(".")
+    if (parts.size <= 2) {
+        // Already a root domain
+        return domain
+    }
+
+    return parts.takeLast(2).joinToString(".")
+}
