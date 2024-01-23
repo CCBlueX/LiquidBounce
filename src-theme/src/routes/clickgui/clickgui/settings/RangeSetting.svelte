@@ -14,6 +14,7 @@
     let type = reference.valueType;
 
     let name = reference.name;
+    let suffix = reference.suffix;
     let min = reference.range.from;
     let max = reference.range.to;
     let step = type.includes("INT") ? 1 : 0.01;
@@ -107,9 +108,11 @@
             <input size="" type="number" on:change={slider.noUiSlider.set([this.value, null])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value multi text-align-center" value={value[0]}>
             <div class="value">-</div>
             <input size="" type="number" on:change={slider.noUiSlider.set([null, this.value])} bind:this={valueField2} on:keydown={unfocusOnEnter} class="value multi text-align-center" value={value[1]}>
+            <p class="value">{suffix}</p>
         </div>
     {:else}
-            <input size="" type="number" on:change={slider.noUiSlider.set([this.value])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value grid-area-b single" id="inputElem" value={valueString}>
+        <input size="" type="number" on:change={slider.noUiSlider.set([this.value])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value grid-area-b single" id="inputElem" value={valueString}>
+        <p class="value">{suffix}</p>
     {/if}
     <div bind:this={slider} class="slider"/>
 </div>
