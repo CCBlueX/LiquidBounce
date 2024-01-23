@@ -21,11 +21,15 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
+import net.ccbluex.liquidbounce.web.socket.netty.readImageAsHtmlBase64
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
-import kotlin.io.path.absolutePathString
+import net.minecraft.world.level.storage.LevelSummary
+
+var summaries = emptyList<LevelSummary>()
 
 internal fun RestNode.setupWorldApi() {
     get("/worlds") {
@@ -37,16 +41,20 @@ internal fun RestNode.setupWorldApi() {
                 return@get httpOk(worlds)
             }
 
-            val summaries = mc.levelStorage.loadSummaries(levelList).get()
+            // Refreshes the list of summaries
+            summaries = mc.levelStorage.loadSummaries(levelList).get()
 
-            for (summary in summaries) {
+            for ((index, summary) in summaries.withIndex()) {
                 worlds.add(JsonObject().apply {
+                    addProperty("id", index)
                     addProperty("name", summary.name)
                     addProperty("displayName", summary.displayName)
                     addProperty("lastPlayed", summary.lastPlayed)
                     addProperty("gameMode", summary.levelInfo.gameMode.getName())
                     addProperty("difficulty", summary.levelInfo.difficulty.getName())
-                    addProperty("icon", summary.iconPath.absolutePathString())
+                    addProperty("icon", runCatching { readImageAsHtmlBase64(summary.iconPath) }.onFailure {
+                        logger.error("Failed to read icon for world ${summary.name}", it)
+                    }.getOrNull())
                     addProperty("hardcore", summary.levelInfo.isHardcore)
                     addProperty("commandsAllowed", summary.levelInfo.areCommandsAllowed())
                 })
@@ -55,3 +63,5 @@ internal fun RestNode.setupWorldApi() {
         }.getOrElse { httpInternalServerError("Failed to get worlds due to ${it.message}") }
     }
 }
+
+

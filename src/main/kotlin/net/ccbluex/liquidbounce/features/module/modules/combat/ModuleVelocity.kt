@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -37,6 +38,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * Velocity module
@@ -52,6 +54,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         )
     }
 
+    val pauseOnFlag by int("PauseOnFlag", 0, 0..5)
+    var pause = 0
+
     object Delayed : ToggleableConfigurable(this, "Delayed", false) {
         val ticks by intRange("Ticks", 3..6, 0..40)
     }
@@ -60,10 +65,17 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         tree(Delayed)
     }
 
+    val repeatable = repeatable {
+        if (pause > 0) {
+            pause--
+        }
+    }
+
     val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
 
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.original && Delayed.enabled) {
+        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+            && it.original && Delayed.enabled) {
             it.cancelEvent()
 
             Delayed.ticks.random().let { ticks ->
@@ -80,6 +92,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             if (!packetEvent.isCancelled) {
                 (packet as Packet<ClientPlayPacketListener>).apply(network)
             }
+        } else if (packet is PlayerPositionLookS2CPacket) {
+            pause = pauseOnFlag
         }
     }
 
@@ -102,6 +116,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 player.velocity.z *= reduce
             }
         }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
     }
 
     /**
@@ -147,6 +164,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             }
         }
 
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
     }
 
     private object Dexland : Choice("Dexland") {
@@ -167,6 +186,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             }
             lastAttackTime = System.currentTimeMillis()
         }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
     }
 
     /**
@@ -207,6 +229,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 event.movement.strafe(player.directionYaw, player.sqrtSpeed * strength)
             }
         }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
 
     }
 
@@ -261,6 +285,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
             limitUntilJump++
         }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
     }
 
     /**
@@ -283,6 +310,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = it.packet
 
             if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)) {
+
+
                 it.cancelEvent()
                 waitTicks(1)
                 repeat(4) {
@@ -293,7 +322,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     player.horizontalFacing.opposite))
             }
         }
-    }
 
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
+    }
 
 }

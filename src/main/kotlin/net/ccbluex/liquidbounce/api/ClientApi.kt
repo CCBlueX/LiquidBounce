@@ -146,7 +146,8 @@ data class AutoSettings(
     var date: String,
     val contributors: String,
     @SerializedName("status_type") val statusType: AutoSettingsStatusType,
-    @SerializedName("status_date") var statusDate: String
+    @SerializedName("status_date") var statusDate: String,
+    @SerializedName("server_address") val serverAddress: String?
 ) {
 
     val dateFormatted: String

@@ -36,8 +36,6 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ModuleScaffold, "Eagle", fa
 
     val stateUpdateHandler =
         handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            val player = player
-
             if (ScaffoldDownFeature.shouldFallOffBlock()) {
                 return@handler
             }

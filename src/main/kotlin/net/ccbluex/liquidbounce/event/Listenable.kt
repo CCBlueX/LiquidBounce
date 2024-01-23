@@ -46,6 +46,18 @@ interface Listenable {
      */
     fun children(): List<Listenable> = emptyList()
 
+    /**
+     * Unregisters the event handler from the manager. This decision is FINAL!
+     * After the class was unregistered we cannot restore the handlers.
+     */
+    fun unregister() {
+        EventManager.unregisterEventHandler(this)
+
+        for (child in children()) {
+            child.unregister()
+        }
+    }
+
 }
 
 inline fun <reified T : Event> Listenable.handler(

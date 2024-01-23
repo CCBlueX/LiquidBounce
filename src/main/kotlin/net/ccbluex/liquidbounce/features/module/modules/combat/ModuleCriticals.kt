@@ -107,7 +107,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val optimizeForCooldown by boolean("OptimizeForCooldown", true)
 
         val checkKillaura by boolean("CheckKillaura", false)
-        val checkTrigger by boolean("CheckTrigger", false)
+        val checkAutoClicker by boolean("CheckAutoClicker", false)
 
         var adjustNextMotion = false
 
@@ -189,7 +189,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!fake && !canCrit(player, ignoreOnGround = true)) {
+            if (!fake && !wouldCrit()) {
                 return@handler
             }
 
@@ -223,10 +223,11 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             return false
 
         // if both module checks are disabled, we can safely say that we are active
-        if(!JumpCrit.checkKillaura && !JumpCrit.checkTrigger)
+        if(!JumpCrit.checkKillaura && !JumpCrit.checkAutoClicker)
             return true
 
-        return (ModuleKillAura.enabled && JumpCrit.checkKillaura) || (ModuleTrigger.enabled && JumpCrit.checkTrigger)
+        return (ModuleKillAura.enabled && JumpCrit.checkKillaura) ||
+            (ModuleAutoClicker.enabled && JumpCrit.checkAutoClicker)
     }
 
 
@@ -236,9 +237,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      * whether or not it is worth to wait for the fall
      */
     fun shouldWaitForCrit(): Boolean {
-        if (!isActive()) return false
-
-        val player = player
+        if (!isActive()) {
+            return false
+        }
 
         if (!canCrit(player) || player.velocity.y < -0.08) {
             return false

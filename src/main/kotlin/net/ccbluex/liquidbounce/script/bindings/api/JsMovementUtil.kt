@@ -19,20 +19,30 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 
 object JsMovementUtil {
 
-    fun strafe() = player.strafe()
+    fun speed(): Double = player.sqrtSpeed
 
-    fun strafeSpeed(speed: Double) = player.strafe(speed.toFloat())
+    fun moving(): Boolean = player.moving
 
-    fun velocity() = player.velocity
+    fun strafe() {
+        player.strafe()
+    }
 
-    fun addVelocity(x: Double, y: Double, z: Double) = player.addVelocity(x, y, z)
+    fun strafeWithSpeed(speed: Double) {
+        player.strafe(speed = speed)
+    }
 
-    fun stopVelocity() = player.setVelocity(0.0, 0.0, 0.0)
+    fun strafeWithStrength(strength: Double) {
+        player.strafe(strength = strength)
+    }
 
-    fun jump() = player.jump()
+    fun strafeWithSpeedAndStrength(speed: Double, strength: Double) {
+        player.strafe(speed = speed, strength = strength)
+    }
 
 }

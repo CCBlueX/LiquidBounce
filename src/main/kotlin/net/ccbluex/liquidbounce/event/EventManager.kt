@@ -98,7 +98,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     SplashProgressEvent::class,
     ChoiceChangeEvent::class,
     RefreshArrayListEvent::class,
-    BrowserReadyEvent::class
+    BrowserReadyEvent::class,
+    ServerConnectEvent::class
 )
 
 /**
@@ -144,6 +145,11 @@ object EventManager {
         registry[eventClass]?.removeAll(hooks.toSet())
     }
 
+    fun unregisterEventHandler(eventHandler: Listenable) {
+        registry.values.forEach {
+            it.removeIf { it.handlerClass == eventHandler }
+        }
+    }
 
     /**
      * Call event to listeners

@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
@@ -85,11 +85,14 @@ open class Module(
                 return@listen false
             }
 
-            notification(
-                if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
-                this.name,
-                if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
-            )
+            if (!CommandConfig.loadingNow) {
+                notification(
+                    if (new) Text.translatable("liquidbounce.generic.enabled")
+                    else Text.translatable("liquidbounce.generic.disabled"),
+                    this.name,
+                    if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
+                )
+            }
 
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
@@ -119,7 +122,7 @@ open class Module(
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
     open val description: String
-        get() = Text.translatable("$translationBaseKey.description").outputString()
+        get() = Text.translatable("$translationBaseKey.description").convertToString()
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -157,7 +160,7 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && mc.player != null && mc.world != null
+    override fun handleEvents() = enabled && inGame
 
     /**
      * Handles disconnect from world and if [disableOnQuit] is true disables module

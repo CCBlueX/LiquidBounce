@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
 import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -91,6 +92,12 @@ public class MixinKeyboardInput extends MixinInput {
 
         if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
             this.movementForward = 0f;
+
+            ModuleSprint sprint = ModuleSprint.INSTANCE;
+
+            if (sprint.getEnabled() && sprint.getAllDirections()) {
+                this.movementSideways = 0f;
+            }
         }
 
         this.jumping = event.getJumping();

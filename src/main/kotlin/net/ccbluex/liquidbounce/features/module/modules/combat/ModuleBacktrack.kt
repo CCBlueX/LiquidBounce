@@ -20,9 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.fakelag.DelayData
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -50,7 +51,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
     private val delay by int("Delay", 100, 0..1000)
     private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
-    private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
+    private val packetQueue = LinkedHashSet<DelayData>()
 
     private var target: Entity? = null
     private var position: TrackedPosition? = null
@@ -112,7 +113,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
             it.cancelEvent()
 
-            packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
+            packetQueue.add(DelayData(packet, System.currentTimeMillis()))
         }
     }
 

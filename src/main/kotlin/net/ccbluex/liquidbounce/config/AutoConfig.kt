@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.api.AutoSettingsType
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.int
 import net.ccbluex.liquidbounce.authlib.utils.string
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Formatting
@@ -70,11 +71,13 @@ object AutoConfig {
             // if they are not identical, make the message red and bold to make it more visible
             // also, if the protocol is identical, make the message green to make it more visible
 
+            val matchesVersion = protocolName == pName && protocolVersion == pVersion
+
             chat(
                 regular("for protocol "),
                 variable("$pName $pVersion")
                     .styled {
-                        if (protocolName != pName || protocolVersion != pVersion) {
+                        if (!matchesVersion) {
                             it.withFormatting(Formatting.RED, Formatting.BOLD)
                         } else {
                             it.withFormatting(Formatting.GREEN)
@@ -83,6 +86,14 @@ object AutoConfig {
                 regular(" and your current protocol is "),
                 variable("$protocolName $protocolVersion")
             )
+
+            if (!matchesVersion) {
+                notification(
+                    "Auto Config",
+                    "The auto config was made for protocol $pName, " +
+                        "but your current protocol is $protocolName",
+                    NotificationEvent.Severity.ERROR)
+            }
         }
 
         val date = jsonObject.string("date")

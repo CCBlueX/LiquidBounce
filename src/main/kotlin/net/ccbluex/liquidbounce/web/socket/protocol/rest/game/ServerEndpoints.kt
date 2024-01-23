@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
@@ -63,5 +64,20 @@ internal fun RestNode.setupServerApi() {
 
             httpOk(servers)
         }.getOrElse { httpInternalServerError("Failed to get servers due to ${it.message}") }
+    }
+
+    post("/reconnect") {
+        Reconnect.reconnectNow()
+        httpOk(JsonObject())
+    }
+
+    post("/reconnectWithRandomAccount") {
+        Reconnect.reconnectWithRandomAccount()
+        httpOk(JsonObject())
+    }
+
+    post("/reconnectWithRandomUsername") {
+        Reconnect.reconnectWithRandomUsername()
+        httpOk(JsonObject())
     }
 }

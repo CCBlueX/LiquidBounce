@@ -60,7 +60,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
     private val surroundings by boolean("Surroundings", true)
-    private val targets by blocks("Target", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
+    private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
     private val delay by int("Delay", 0, 0..20)
     private val action by enumChoice("Action", DestroyAction.DESTROY, DestroyAction.values())
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)

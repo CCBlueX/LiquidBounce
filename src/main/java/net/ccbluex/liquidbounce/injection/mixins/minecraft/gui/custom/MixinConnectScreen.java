@@ -22,6 +22,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.api.IpInfoApi;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ServerConnectEvent;
 import net.ccbluex.liquidbounce.features.misc.ProxyManager;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.MinecraftClient;
@@ -80,6 +82,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
     @Inject(method = "connect(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;)V", at = @At("HEAD"))
     private void injectConnect(final MinecraftClient client, final ServerAddress address, @Nullable final ServerInfo info, final CallbackInfo callback) {
         this.serverAddress = address;
+        EventManager.INSTANCE.callEvent(new ServerConnectEvent(info.name, info.address));
     }
 
     @ModifyConstant(method = "render", constant = @Constant(intValue = 50))
