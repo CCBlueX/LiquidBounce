@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
@@ -40,9 +40,6 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-
-internal typealias HypixelNoFall = net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.Hypixel
-
 
 /**
  * Velocity module
@@ -161,7 +158,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.velocityX = (currentVelocity.x * 8000).toInt()
                 packet.velocityZ = (currentVelocity.z * 8000).toInt()
 
-                HypixelNoFall.waitUntilGround = true
+                NoFallHypixel.waitUntilGround = true
             }
         }
 

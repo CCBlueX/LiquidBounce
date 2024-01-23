@@ -40,7 +40,7 @@ import net.minecraft.item.Items
  * As such module is mostly used by German players, the name of the module is in German.
  * That is unusual for LiquidBounce, but it is the best name for this module.
  */
-internal object Rettungsplatform : Choice("Rettungsplatform") {
+internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleNoFall.modes

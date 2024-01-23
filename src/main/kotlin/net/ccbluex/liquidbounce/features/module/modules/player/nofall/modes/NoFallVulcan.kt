@@ -20,19 +20,26 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
-internal object Packet : Choice("Packet") {
-
+/**
+ * @anticheat Vulcan
+ * @anticheatVersion 2.7.7
+ * @testedOn eu.loyisa.cn
+ */
+internal object NoFallVulcan : Choice("Vulcan") {
     override val parent: ChoiceConfigurable
         get() = ModuleNoFall.modes
 
-    val repeatable = repeatable {
-        if (player.fallDistance > 2f) {
-            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
+    val packetHandler = handler<PacketEvent> {
+        val packet = it.packet
+        if (packet is PlayerMoveC2SPacket && player.fallDistance > 7.0) {
+            packet.onGround = true
+            player.fallDistance = 0f
+            player.velocity.y = 0.0
         }
     }
-
 }

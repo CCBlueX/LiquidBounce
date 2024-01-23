@@ -31,7 +31,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * SpoofGround mode for the NoFall module.
  * This mode spoofs the 'onGround' flag in PlayerMoveC2SPacket to prevent fall damage.
  */
-internal object Hypixel : Choice("Hypixel") {
+internal object NoFallHypixel : Choice("Hypixel") {
 
     var managedToReset = false
     var waitUntilGround = true

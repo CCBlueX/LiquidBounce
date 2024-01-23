@@ -25,18 +25,21 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
-internal object NoGround : Choice("NoGround") {
-
+/**
+ * @anticheat Verus
+ * @anticheatVersion b3896
+ * @testedOn eu.loyisa.cn
+ */
+internal object NoFallVerus : Choice("Verus") {
     override val parent: ChoiceConfigurable
         get() = ModuleNoFall.modes
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-
-        if (packet is PlayerMoveC2SPacket) {
-            packet.onGround = false
+        if (packet is PlayerMoveC2SPacket && player.fallDistance > 3.35) {
+            packet.onGround = true
+            player.fallDistance = 0f
+            player.velocity.y = 0.0
         }
-
     }
-
 }
