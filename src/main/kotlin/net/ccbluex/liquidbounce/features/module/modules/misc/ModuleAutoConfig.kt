@@ -52,7 +52,10 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
             return
         }
 
-        val autoConfig = cachedSettingsList?.find { it.serverAddress.equals(address, true) }
+        val autoConfig = cachedSettingsList?.find {
+            it.serverAddress?.rootDomain().equals(address, true) ||
+                it.serverAddress.equals(address, true)
+        }
 
         if (autoConfig == null) {
             notification("Auto Config", "There is no known config for $address.",
