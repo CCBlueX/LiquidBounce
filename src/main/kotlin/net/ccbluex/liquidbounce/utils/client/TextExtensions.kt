@@ -73,11 +73,16 @@ fun String.dropPort(): String {
  *   "127.0.0.1" -> "127.0.0.1"
  */
 fun String.rootDomain(): String {
-    val domain = this.trim().lowercase()
+    var domain = this.trim().lowercase()
 
     if (domain.matches(Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$"))) {
         // IP address
         return domain
+    }
+
+    // Check if domain ends with dot, if so, remove it
+    if (domain.endsWith(".")) {
+        domain = domain.dropLast(1)
     }
 
     val parts = domain.split(".")
