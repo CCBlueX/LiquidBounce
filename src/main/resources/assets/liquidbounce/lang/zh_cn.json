@@ -413,5 +413,22 @@
   "liquidbounce.module.antiVanish.messages.allClear": "没有发现消失的玩家。",
   "liquidbounce.module.autoWeapon.description": "自动切换到快捷栏中最好的武器。",
   "liquidbounce.module.derp.description": "让你看起来像是在瞎折腾。",
-  "liquidbounce.module.clickRecorder.description": "记录你的点击，然后供使用cps的模块使用。"
+  "liquidbounce.module.clickRecorder.description": "记录你的点击，然后供使用cps的模块使用。",
+  "liquidbounce.command.containers.description": "允许您管理容器。",
+  "liquidbounce.command.containers.subcommand.add.description": "添加一个容器。",
+  "liquidbounce.command.containers.subcommand.add.parameter.tag.description": "容器的NBT标签。",
+  "liquidbounce.command.containers.subcommand.add.result.noBlockEntityTag": "NBT 标签不包含 BlockEntityTag。",
+  "liquidbounce.command.containers.subcommand.add.result.added": "容器已成功添加。",
+  "liquidbounce.command.containers.subcommand.remove.description": "删除容器。",
+  "liquidbounce.command.containers.subcommand.remove.parameter.index.description": "容器的索引。",
+  "liquidbounce.command.containers.subcommand.remove.result.indexOutOfBounds": "索引超出范围。",
+  "liquidbounce.command.containers.subcommand.remove.result.removed": "容器已成功删除。",
+  "liquidbounce.command.containers.subcommand.list.description": "列出所有容器。",
+  "liquidbounce.command.containers.subcommand.list.result.noContainers": "没有容器。",
+  "liquidbounce.command.containers.subcommand.clear.description": "清除所有容器。",
+  "liquidbounce.command.containers.subcommand.clear.result.cleared": "清除所有容器。",
+  "liquidbounce.command.vclip.result.invalidDistance": "距离无效。请输入有效的数字。",
+  "liquidbounce.command.vclip.result.notInGame": "你不在游戏中。",
+  "liquidbounce.command.vclip.result.positionUpdated": "您的位置已更新为 X: %s, Y: %s, Z: %s",
+  "liquidbounce.module.autoBalls.description": "自动向敌人扔雪球。"
 }
