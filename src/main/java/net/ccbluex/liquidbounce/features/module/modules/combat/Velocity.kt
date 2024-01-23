@@ -125,12 +125,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     private var limitUntilJump = 0
 
     override val tag
-        get() = if (mode == "Simple" || mode == "Legit") {
-            val horizontalPercentage = (horizontal * 100).toInt()
-            val verticalPercentage = (vertical * 100).toInt()
-
-            "$horizontalPercentage% $verticalPercentage%"
-        } else mode
+        get() = mode
 
     override fun onDisable() {
         mc.thePlayer?.speedInAir = 0.02F
