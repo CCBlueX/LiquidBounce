@@ -757,7 +757,17 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 0f
             )
 
-            val info = "Blocks: §7$blocksAmount"
+            val currentItem = mc.thePlayer?.inventory?.mainInventory?.get(serverSlot)
+
+            // Check if the held item is a block
+            val isBlock = currentItem?.item is ItemBlock
+
+            val info = if (isBlock) {
+                "${currentItem?.displayName} §7$blocksAmount"
+            } else {
+                "No Blocks"
+            }
+
             val (width, height) = ScaledResolution(mc)
 
             drawBorderedRect(
