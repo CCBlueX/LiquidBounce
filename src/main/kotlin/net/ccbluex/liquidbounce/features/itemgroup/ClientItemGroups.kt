@@ -47,10 +47,6 @@ object ClientItemGroups : Configurable("tabs") {
     private var beenSetup = false
     val containers by textArray("Containers", mutableListOf())
 
-    init {
-        ConfigSystem.root(this)
-    }
-
     fun storeAsContainerItem(compound: NbtCompound) {
         val compoundString = compound.toString()
 

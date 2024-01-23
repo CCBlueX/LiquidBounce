@@ -135,7 +135,7 @@ object LiquidBounce : Listenable {
             InventoryTracker
             WorldToScreen
             Reconnect
-            ClientItemGroups
+            ConfigSystem.root(ClientItemGroups)
             Chat
             BrowserManager
             Fonts
