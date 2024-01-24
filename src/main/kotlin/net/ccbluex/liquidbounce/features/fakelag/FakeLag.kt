@@ -244,6 +244,19 @@ object FakeLag : Listenable {
         }
     }
 
+    inline fun <reified T> rewrite(action: (T) -> Unit) {
+        synchronized(packetQueue) {
+            packetQueue
+                .filterIsInstance<T>()
+                .forEach(action)
+        }
+    }
+
+    inline fun <reified T> rewriteAndFlush(action: (T) -> Unit) {
+        rewrite(action)
+        flush()
+    }
+
     data class EvadingPacket(
         val idx: Int,
         /**

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -33,12 +33,14 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 internal object NoFallHypixel : Choice("Hypixel") {
 
-    var managedToReset = false
+    private var managedToReset = false
     var waitUntilGround = true
 
-    // Specify the parent configuration for this mode
+    /**
+     * Specifies the parent configuration for this mode
+     */
     override val parent: ChoiceConfigurable
-        get() = ModuleNoFall.modes
+        get() = modes
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
@@ -49,23 +51,27 @@ internal object NoFallHypixel : Choice("Hypixel") {
                 waitUntilGround = false
                 FakeLag.flush()
             } else {
-                if (waitUntilGround) return@handler
+                if (waitUntilGround) {
+                    return@handler
+                }
 
-                val fallDistance = (mc.player ?: return@handler).fallDistance
+                val fallDistance = player.fallDistance
+
+                // If we are between 2.1 and 20 blocks of fall distance, we want to lag (blink) and
+                // set the onGround flag to true, so we don't take any fall damage.
                 if (fallDistance > 2.1 && fallDistance < 20) {
                     managedToReset = false
                     packet.onGround = true
-                    //chat("blinking")
                 } else {
+                    // However, if we are above 20 blocks of fall distance, we want to reset the lag
+                    // and rewrite our previous packets to set the onGround flag to false, so they are not spoofed
+                    // anymore
                     if (fallDistance >= 20 && !managedToReset) {
-                        FakeLag.packetQueue
-                            .filter { data ->
-                                data.packet is PlayerMoveC2SPacket
-                            }.forEach { data ->
-                                (data.packet as PlayerMoveC2SPacket).onGround = false
-                            }
-                        FakeLag.flush()
-                        chat("reset")
+                        // Rewrite the packet queue and set all PlayerMoveC2SPacket's onGround flag to false
+                        FakeLag.rewriteAndFlush<PlayerMoveC2SPacket> { packet ->
+                            packet.onGround = false
+                        }
+
                         managedToReset = true
                     }
                 }
@@ -73,8 +79,16 @@ internal object NoFallHypixel : Choice("Hypixel") {
         }
     }
 
-    fun shouldLag(): Boolean {
-        return (isActive && ModuleNoFall.enabled) && (mc.player ?: return false).fallDistance > 1.7 && (mc.player!!.fallDistance < 21 || !managedToReset)
-    }
+    /**
+     * Tells the FakeLag feature whether it should lag or not, depending on the fall distance of the player.
+     * After 1.7 blocks of fall distance, it makes sense to start lagging (blink),
+     * after 20 blocks of fall distance we want to stop lagging (reset) - we will take fall distance.
+     * If we land after less than 20 blocks of fall distance, we want to stop lagging (reset) as well
+     * and won't take any fall damage, since the packets are spoofed to be on-ground.
+     *
+     * This logic can be seen above in the [packetHandler] as well.
+     */
+    fun shouldLag() =
+        (isActive && ModuleNoFall.enabled) && player.fallDistance > 1.7 && (player.fallDistance < 21 || !managedToReset)
 
 }
