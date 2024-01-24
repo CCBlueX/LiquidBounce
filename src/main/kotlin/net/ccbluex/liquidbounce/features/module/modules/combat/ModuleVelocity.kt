@@ -51,7 +51,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset, Hypixel
+            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
     }
 
@@ -123,51 +123,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     }
 
     /**
-     *
-     * Basic velocity targeting specifically Hypixel.
-     */
-    private object Hypixel : Choice("Hypixel") {
-
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val packetHandler = handler<PacketEvent> { event ->
-            val packet = event.packet
-
-            // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
-                if (packet.velocityX == 0 && packet.velocityZ == 0) {
-                    // positive vertical velocity is a staff velocity check
-                    if (packet.velocityY > 0) {
-                        // alert the user
-                        notification(
-                            "Staff Detected",
-                            "Staff are watching you.",
-                            NotificationEvent.Severity.INFO
-                        )
-                        return@handler
-                    }
-                    // you can just cancel negative vertical velocity, it's not checked
-                    event.cancelEvent()
-                    return@handler
-                }
-
-                val currentVelocity = player.velocity
-
-                // set the horizontal velocity to the player's current velocity to prevent horizontal slowdown
-                packet.velocityX = (currentVelocity.x * 8000).toInt()
-                packet.velocityZ = (currentVelocity.z * 8000).toInt()
-
-                NoFallHypixel.waitUntilGround = true
-            }
-        }
-
-        override fun handleEvents() = super.handleEvents() && pause == 0
-
-    }
-
-    /**
-     *
      * Basic velocity which should bypass the most server with regular anti-cheats like NCP.
      */
     private object Modify : Choice("Modify") {
@@ -189,10 +144,26 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     return@handler
                 }
 
+                val currentVelocity = player.velocity
+
                 // Modify packet according to the specified values
-                packet.velocityX = (packet.velocityX * horizontal).toInt()
-                packet.velocityY = (packet.velocityY * vertical).toInt()
-                packet.velocityZ = (packet.velocityZ * horizontal).toInt()
+                if (horizontal != 0f) {
+                    packet.velocityX = (packet.velocityX * horizontal).toInt()
+                    packet.velocityZ = (packet.velocityZ * horizontal).toInt()
+                } else {
+                    // set the horizontal velocity to the player velocity to prevent horizontal slowdown
+                    packet.velocityX = (currentVelocity.x * 8000).toInt()
+                    packet.velocityZ = (currentVelocity.z * 8000).toInt()
+                }
+
+                if (vertical != 0f) {
+                    packet.velocityY = (packet.velocityY * vertical).toInt()
+                } else {
+                    // set the vertical velocity to the player velocity to prevent vertical slowdown
+                    packet.velocityY = (currentVelocity.y * 8000).toInt()
+                }
+
+                NoFallHypixel.waitUntilGround = true
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
@@ -206,6 +177,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.playerVelocityX *= horizontal
                 packet.playerVelocityY *= vertical
                 packet.playerVelocityZ *= horizontal
+
+                NoFallHypixel.waitUntilGround = true
             }
         }
 
@@ -355,8 +328,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = it.packet
 
             if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)) {
-
-
                 it.cancelEvent()
                 waitTicks(1)
                 repeat(4) {
