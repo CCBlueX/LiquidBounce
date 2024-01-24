@@ -128,7 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
 
     private val keepY by boolean("KeepY", false)
-    private val jumpSlowdown by float("JumpSlowdown", 1f, 0.01f..10f)
+    private val jumpSlowdown by float("SlowdownOnJump", 0f, 0f..1f)
 
     private var currentTarget: BlockPlacementTarget? = null
 
@@ -218,8 +218,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
         }
 
-        val currentVelocity = (mc.player ?: return@handler).velocity
-        player.setVelocity(currentVelocity.x / jumpSlowdown, currentVelocity.y, currentVelocity.z / jumpSlowdown)
+        if (jumpSlowdown == 0f) {
+            return@handler
+        }
+
+        val currentVelocity = player.velocity
+        player.setVelocity(
+            currentVelocity.x / (1 + jumpSlowdown),
+            currentVelocity.y,
+            currentVelocity.z / (1 + jumpSlowdown)
+        )
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {

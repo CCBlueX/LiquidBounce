@@ -51,7 +51,8 @@ object FakeLag : Listenable {
      * Implement your module here if you want to enable lag.
      */
     private fun shouldLag(packet: Packet<*>?): Boolean {
-        return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet) || NoFallHypixel.shouldLag()
+        return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
+            || NoFallHypixel.shouldLag()
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
