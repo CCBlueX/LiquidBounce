@@ -14,6 +14,7 @@
     let type = reference.valueType;
 
     let name = reference.name;
+    let suffix = reference.suffix;
     let min = reference.range.from;
     let max = reference.range.to;
     let step = type.includes("INT") ? 1 : 0.01;
@@ -101,16 +102,22 @@
 
 <div class="setting animation-fix">
     <div class="name">{name}</div>
-    {#if multi}
-        <!-- <div class="value grid-area-b ">{valueString}</div> -->
-        <div class="grid-area-b multiValues">
+    <div class="grid-area-b">
+        {#if multi}
             <input size="" type="number" on:change={slider.noUiSlider.set([this.value, null])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value multi text-align-center" value={value[0]}>
             <div class="value">-</div>
             <input size="" type="number" on:change={slider.noUiSlider.set([null, this.value])} bind:this={valueField2} on:keydown={unfocusOnEnter} class="value multi text-align-center" value={value[1]}>
-        </div>
-    {:else}
-            <input size="" type="number" on:change={slider.noUiSlider.set([this.value])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value grid-area-b single" id="inputElem" value={valueString}>
-    {/if}
+            {#if suffix.length > 0}
+                <p class="value">{suffix}</p>
+            {/if}
+        {:else}
+            <input size="" type="number" on:change={slider.noUiSlider.set([this.value])} bind:this={valueField1} on:keydown={unfocusOnEnter} class="value single" id="inputElem" value={valueString}>
+
+            {#if suffix.length > 0}
+                <p class="value single-suffix">{suffix}</p>
+            {/if}
+        {/if}
+    </div>
     <div bind:this={slider} class="slider"/>
 </div>
 
@@ -143,13 +150,12 @@
     .value {
         grid-area: b;
         font-weight: 500;
-        color: var(--text);;
+        color: var(--text);
         text-align: right;
         font-size: 12px;
         background-color: transparent;
         outline: none;
         border: none;
-        
     }
 
     .text-align-center {
@@ -163,15 +169,17 @@
     .multi {
         width: 30px;
     }
+
+    .single-suffix {
+        margin-left: 5px;
+    }
+
     .value:focus {
-            outline: none;
+        outline: none;
     }
 
     .grid-area-b {
         grid-area: b;
-    }
-
-    .multiValues {
         display: flex;
     }
 

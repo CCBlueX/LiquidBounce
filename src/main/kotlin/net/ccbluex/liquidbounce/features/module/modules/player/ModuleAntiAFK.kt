@@ -134,12 +134,12 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         private object Rotate : ToggleableConfigurable(ModuleAntiAFK, "Rotate", true) {
             val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
             val rotationsConfigurable = tree(RotationsConfigurable())
-            val delay by int("Delay", 5, 0..20)
+            val delay by int("Delay", 5, 0..20, "ticks")
             val angle by float("Angle", 1f, -180f..180f)
         }
 
         private object Swing : ToggleableConfigurable(ModuleAntiAFK, "Swing", true) {
-            val delay by int("Delay", 5, 0..20)
+            val delay by int("Delay", 5, 0..20, "ticks")
         }
 
         init {

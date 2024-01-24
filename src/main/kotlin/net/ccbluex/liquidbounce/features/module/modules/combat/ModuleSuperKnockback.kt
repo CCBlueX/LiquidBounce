@@ -39,7 +39,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap))
     val hurtTime by int("HurtTime", 10, 0..10)
-    val chance by int("Chance", 100, 0..100)
+    val chance by int("Chance", 100, 0..100, "%")
 
     var sequence: Sequence<DummyEvent>? = null
 
@@ -90,7 +90,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val reSprintTicks by intRange("ReSprintTicks", 0..1, 0..10)
+        val reSprintTicks by intRange("ReSprint", 0..1, 0..10, "ticks")
 
         var antiSprint = false
 
@@ -114,8 +114,10 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val ticksUntilMovementBlock by intRange("TicksUntilMovementBlock", 0..1, 0..10)
-        val ticksUntilAllowedMovement by intRange("TicksUntilAllowedMovement", 0..1, 0..10)
+        val ticksUntilMovementBlock by intRange("UntilMovementBlock", 0..1, 0..10,
+            "ticks")
+        val ticksUntilAllowedMovement by intRange("UntilAllowedMovement", 0..1, 0..10,
+            "ticks")
 
         var stopMoving = false
 

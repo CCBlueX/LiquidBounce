@@ -71,7 +71,7 @@ object SpeedSpartan524 : Choice("Spartan524") {
  * @note it will flag you for jumping
  */
 object SpeedSpartan524GroundTimer : Choice("Spartan524GroundTimer") {
-    val additionalTicks by int("AdditionalTicks", 2, 1..10)
+    val additionalTicks by int("AdditionalTicks", 2, 1..10, "ticks")
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
 

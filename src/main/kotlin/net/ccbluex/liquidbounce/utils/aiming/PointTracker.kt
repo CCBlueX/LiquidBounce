@@ -51,7 +51,8 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      * The value of predict future movement is the amount of ticks we are going to predict the future movement of the
      * client.
      */
-    private val predictFutureMovement by int("PredictClientMovement", 1, 0..5)
+    private val predictFutureMovement by int("PredictClientMovement", 1, 0..5,
+        "ticks")
 
     /**
      * The time offset defines a prediction or rather a delay of the point tracker.

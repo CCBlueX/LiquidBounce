@@ -42,7 +42,7 @@ import kotlin.math.roundToInt
 class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, name: String = "ClickScheduler")
     : Configurable(name) where T : Module {
 
-    private val cps by intRange("CPS", 5..8, 1..maxCps)
+    private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
 
     class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Cooldown", true)
         where T: Module {
