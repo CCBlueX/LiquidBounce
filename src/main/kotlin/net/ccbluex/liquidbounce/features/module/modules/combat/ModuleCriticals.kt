@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NoneChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -32,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
@@ -51,11 +49,16 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     val modes = choices("Mode", { PacketCrit }) {
         arrayOf(
-            NoneChoice(it), PacketCrit, JumpCrit
+            NoneChoice(it),
+            PacketCrit,
+            JumpCrit
         )
     }
 
     private object PacketCrit : Choice("Packet") {
+
+        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS, Mode.values())
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
 
         private object WhenSprinting : ToggleableConfigurable(ModuleCriticals, "WhenSprinting", true) {
             val unSprint by boolean("UnSprint", false)
@@ -82,12 +85,37 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 player.isSprinting = false
             }
 
-            val (x, y, z) = player.exactPosition
-
-            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.11, z, false))
-            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.1100013579, z, false))
-            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.0000013579, z, false))
+            when (mode) {
+                Mode.VANILLA -> {
+                    modVelocity(0.2)
+                    modVelocity(0.01)
+                }
+                Mode.NO_CHEAT_PLUS -> {
+                    modVelocity(0.11)
+                    modVelocity(0.1100013579)
+                    modVelocity(0.0000013579)
+                }
+                Mode.FALLING -> {
+                    modVelocity(0.0625)
+                    modVelocity(0.0625013579)
+                    modVelocity(0.0000013579)
+                }
+            }
         }
+
+        private fun modVelocity(mod: Double, onGround: Boolean = false) {
+            network.sendPacket(packetType.generatePacket().apply {
+                this.y += mod
+                this.onGround = onGround
+            })
+        }
+
+        enum class Mode(override val choiceName: String) : NamedChoice {
+            VANILLA("Vanilla"),
+            NO_CHEAT_PLUS("NoCheatPlus"),
+            FALLING("Falling")
+        }
+
     }
 
     private object JumpCrit : Choice("Jump") {
