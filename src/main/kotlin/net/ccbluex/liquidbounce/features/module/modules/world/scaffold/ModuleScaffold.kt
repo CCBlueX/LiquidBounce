@@ -18,9 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.NoneChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
@@ -28,11 +26,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldEagleTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTellyTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -46,8 +46,8 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -66,7 +66,6 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.random.Random
 
 /**
@@ -93,7 +92,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val rotationsConfigurable = tree(RotationsConfigurable())
     private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL, AimTimingMode.values())
-    private val bridgeMode by enumChoice("BridgeMode", BridgeMode.NORMAL, BridgeMode.values())
+    internal val technique = choices("Technique", ScaffoldNormalTechnique,
+        arrayOf(ScaffoldNormalTechnique, ScaffoldEagleTechnique, ScaffoldTellyTechnique))
 
     object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
         val DEFAULT_XZ_RANGE = 0.1f..0.9f
@@ -129,7 +129,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
     private val timer by float("Timer", 1f, 0.01f..10f)
 
-    private val keepY by boolean("KeepY", false)
+    private val sameY by boolean("SameY", false)
     private val jumpSlowdown by float("SlowdownOnJump", 0f, 0f..1f)
 
     private var currentTarget: BlockPlacementTarget? = null
@@ -141,7 +141,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(SimulatePlacementAttempts)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
-        tree(ScaffoldEagleFeature)
         tree(ScaffoldDownFeature)
         tree(ScaffoldAutoJumpFeature)
         tree(AdvancedRotation)
@@ -199,37 +198,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
-    private val movementInputHandler = handler<MovementInputEvent> {
-        if ((bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) && player.moving) {
-            it.jumping = true
-        }
-    }
-
-    private val afterJumpEvent = handler<PlayerAfterJumpEvent> {
+    private val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         randomization = Random.nextDouble(-0.01, 0.01)
-        if (bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) {
-            if (keepY) {
-                placementY = ceil(player.blockPos.y - if (mc.options.jumpKey.isPressed) 0.0 else 1.25).toInt()
-            } else {
-                placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
-            }
+        placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
 
-            if (bridgeMode == BridgeMode.TELLY_NCP) {
-                // Results in a speed of 0.3371
-                player.strafe(speed = 0.49)
-            }
+        // Slow down the player when jumping
+        if (jumpSlowdown != 0f) {
+            val velocity = player.velocity
+
+            player.setVelocity(
+                velocity.x / (1 + jumpSlowdown),
+                velocity.y,
+                velocity.z / (1 + jumpSlowdown)
+            )
         }
-
-        if (jumpSlowdown == 0f) {
-            return@handler
-        }
-
-        val currentVelocity = player.velocity
-        player.setVelocity(
-            currentVelocity.x / (1 + jumpSlowdown),
-            currentVelocity.y,
-            currentVelocity.z / (1 + jumpSlowdown)
-        )
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
@@ -403,7 +385,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
-            ScaffoldEagleFeature.onBlockPlacement()
+            ScaffoldEagleTechnique.onBlockPlacement()
             ScaffoldAutoJumpFeature.onBlockPlacement()
 
             currentTarget = null
@@ -472,8 +454,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return player.blockPos.add(0, -2, 0)
         }
 
-        // In case of TELLY_NCP we do not want to stay at the placement Y
-        return if (keepY) {
+        // In case of SameY we do want to stay at the placement Y
+        return if (sameY) {
             BlockPos(player.blockPos.x, placementY, player.blockPos.z)
         } else {
             player.blockPos.add(0, -1, 0)
@@ -519,7 +501,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 !canPlaceOnFace
             }
 
-            bridgeMode == BridgeMode.TELLY -> {
+            sameY -> {
                 context.blockPos.y == placementY && (hitResult.side != Direction.UP || !canPlaceOnFace)
             }
 
@@ -563,12 +545,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         return hasBlockInMainHand || hasBlockInOffHand ||
             (autoBlock && findBestValidHotbarSlotForTarget() != null)
-    }
-
-    enum class BridgeMode(override val choiceName: String) : NamedChoice {
-        NORMAL("Normal"),
-        TELLY("Telly"),
-        TELLY_NCP("TellyNCP")
     }
 
     enum class AimTimingMode(override val choiceName: String) : NamedChoice {
