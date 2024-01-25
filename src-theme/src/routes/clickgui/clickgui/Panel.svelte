@@ -95,7 +95,7 @@
         {#if expanded}
            {#each modules as m}
                <div transition:slide={{duration: 400, easing: sineInOut}}>
-                   <Module name={m.name} enabled={m.enabled} toggleModule={toggleModule} />
+                   <Module name={m.name} enabled={m.enabled} description={m.description} toggleModule={toggleModule} />
                </div>
            {/each}
         {/if}

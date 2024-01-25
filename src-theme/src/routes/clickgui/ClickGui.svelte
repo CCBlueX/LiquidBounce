@@ -30,6 +30,7 @@
                 const module = {
                     category: category,
                     name: name,
+                    description: mod.description,
                     enabled: enabled
                 };
                 modules.push(module);

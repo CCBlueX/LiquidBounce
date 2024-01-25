@@ -60,6 +60,7 @@
     "minecraft.render.MixinBlockEntityRenderDispatcher",
     "minecraft.render.MixinBuiltinModelItemRenderer",
     "minecraft.render.MixinCamera",
+    "minecraft.render.MixinChunkOcclusionDataBuilder",
     "minecraft.render.MixinEntityRenderDispatcher",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
@@ -70,11 +71,13 @@
     "minecraft.render.MixinSignText",
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
-    "minecraft.render.MixinWorldRenderer",
-    "minecraft.render.MixinChunkOcclusionDataBuilder"
+    "minecraft.render.MixinWorldRenderer"
   ],
   "server": [],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+    "minecraft.text.MixinTranslatableTextContent"
+  ]
 }
