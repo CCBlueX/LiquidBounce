@@ -71,13 +71,11 @@
     "minecraft.render.MixinSignText",
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
-    "minecraft.render.MixinWorldRenderer"
+    "minecraft.render.MixinWorldRenderer",
+    "minecraft.text.MixinTranslatableTextContent"
   ],
   "server": [],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-    "minecraft.text.MixinTranslatableTextContent"
-  ]
+  }
 }
