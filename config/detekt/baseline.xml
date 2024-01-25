@@ -18,8 +18,8 @@
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, true)</ID>
-    <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( entity, clickScheduler.goingToClick || clickScheduler.isClickOnNextTick(1) )</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NOW)</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( entity, situation )</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
     <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>

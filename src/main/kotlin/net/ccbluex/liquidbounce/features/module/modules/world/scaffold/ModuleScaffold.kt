@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
@@ -91,6 +92,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
     private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
+    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL, AimTimingMode.values())
     private val bridgeMode by enumChoice("BridgeMode", BridgeMode.NORMAL, BridgeMode.values())
 
     object AdvancedRotation : ToggleableConfigurable(this, "AdvancedRotation", false) {
@@ -285,7 +287,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         } ?: return@handler
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
-        if (aimMode != AimMode.ON_TICK) {
+        if (aimTimingMode != AimTimingMode.ON_TICK) {
             RotationManager.aimAt(
                 rotation,
                 considerInventory = !ignoreOpenInventory,
@@ -321,7 +323,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
         return when (aimMode) {
-            AimMode.CENTER, AimMode.GODBRIDGE, AimMode.ON_TICK -> CenterTargetPositionFactory
+            AimMode.CENTER, AimMode.GODBRIDGE -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
@@ -337,7 +339,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget
 
-        val currentRotation = if (aimMode == AimMode.ON_TICK && target != null) {
+        val currentRotation = if (aimTimingMode == AimTimingMode.ON_TICK && target != null) {
             target.rotation
         } else {
             RotationManager.serverRotation
@@ -394,7 +396,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         var wasSuccessful = false
 
-        if (aimMode == AimMode.ON_TICK) {
+        if (aimTimingMode == AimTimingMode.ON_TICK) {
             network.sendPacket(Full(player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
                 player.isOnGround))
         }
@@ -411,7 +413,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             swing
         }, ModuleScaffold::swing)
 
-        if (aimMode == AimMode.ON_TICK) {
+        if (aimTimingMode == AimTimingMode.ON_TICK) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
         }
 
@@ -567,6 +569,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         NORMAL("Normal"),
         TELLY("Telly"),
         TELLY_NCP("TellyNCP")
+    }
+
+    enum class AimTimingMode(override val choiceName: String) : NamedChoice {
+        NORMAL("Normal"),
+        ON_TICK("OnTick")
     }
 
 }
