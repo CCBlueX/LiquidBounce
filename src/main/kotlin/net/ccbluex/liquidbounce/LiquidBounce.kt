@@ -137,6 +137,7 @@ object LiquidBounce : Listenable {
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
+            ConfigSystem.root(LanguageManager)
             Chat
             BrowserManager
             Fonts

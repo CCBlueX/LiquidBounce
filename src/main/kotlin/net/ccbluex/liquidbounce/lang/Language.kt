@@ -7,11 +7,12 @@ package net.ccbluex.liquidbounce.lang
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.text.MutableText
 
-fun translation(key: String, vararg args: Any) = LanguageManager.getTranslation(key, *args).asText()
+fun translation(key: String, vararg args: Any): MutableText =
+    MutableText.of(LanguageText(key, args))
 
 object LanguageManager : Configurable("lang") {
 
@@ -58,21 +59,18 @@ object LanguageManager : Configurable("lang") {
         }
     }
 
-    /**
-     * Get translation from language
-     */
-    fun getTranslation(key: String, vararg args: Any): String {
-
-
-        return languageMap[language]?.getTranslation(key, *args)
-            ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.getTranslation(key, *args)
+    fun getTranslation(key: String): String {
+        return languageMap[language]?.getTranslation(key)
+            ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.getTranslation(key)
             ?: key
     }
 
-    fun hasFallback(key: String) = languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.getTranslation(key) != null
+    fun hasFallbackTranslation(key: String): Boolean {
+        return languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.getTranslation(key) != null
+    }
 
 }
 
 data class Language(val translations: Map<String, String>) {
-    fun getTranslation(key: String, vararg args: Any) = translations[key]?.format(*args)
+    fun getTranslation(key: String) = translations[key]
 }

@@ -149,7 +149,7 @@ open class Module(
         inline get() = mc.interactionManager!!
 
     init {
-        if (!LanguageManager.hasFallback(descriptionKey)) {
+        if (!LanguageManager.hasFallbackTranslation(descriptionKey)) {
             logger.warn("$name is missing fallback description key $descriptionKey")
         }
     }
