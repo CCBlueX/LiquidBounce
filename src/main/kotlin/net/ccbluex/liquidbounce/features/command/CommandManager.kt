@@ -76,7 +76,8 @@ object CommandExecutor : Listenable {
                     }
                 }
             } catch (e: Exception) {
-                chat(markAsError(translation("liquidbounce.commandManager.exceptionOccurred")))
+                chat(markAsError(translation("liquidbounce.commandManager.exceptionOccurred",
+                    e::class.simpleName ?: "Class name missing", e.message ?: "No message")))
             }
 
             it.cancelEvent()

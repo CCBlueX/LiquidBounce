@@ -6,7 +6,7 @@
   "liquidbounce.generic.enabled": "Enabled",
   "liquidbounce.generic.disabled": "Disabled",
   "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
-  "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s",
+  "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s: %s",
   "liquidbounce.commandManager.unknownCommand": "Command \"%s\" was not found.",
   "liquidbounce.commandManager.invalidUsage": "Invalid usage of command \"%s\".",
   "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any arguments.",
