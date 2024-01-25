@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -64,6 +65,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.random.Random
 
 /**
@@ -124,6 +126,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ),
         )
     private val timer by float("Timer", 1f, 0.01f..10f)
+
+    private val keepY by boolean("KeepY", false)
+    private val jumpSlowdown by float("SlowdownOnJump", 0f, 0f..1f)
 
     private var currentTarget: BlockPlacementTarget? = null
 
@@ -187,6 +192,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     override fun disable() {
+        NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
     }
@@ -198,17 +204,35 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private val afterJumpEvent = handler<PlayerAfterJumpEvent> {
+        randomization = Random.nextDouble(-0.01, 0.01)
         if (bridgeMode == BridgeMode.TELLY || bridgeMode == BridgeMode.TELLY_NCP) {
-            placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
+            if (keepY) {
+                placementY = ceil(player.blockPos.y - if (mc.options.jumpKey.isPressed) 0.0 else 1.25).toInt()
+            } else {
+                placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
+            }
 
             if (bridgeMode == BridgeMode.TELLY_NCP) {
                 // Results in a speed of 0.3371
                 player.strafe(speed = 0.49)
             }
         }
+
+        if (jumpSlowdown == 0f) {
+            return@handler
+        }
+
+        val currentVelocity = player.velocity
+        player.setVelocity(
+            currentVelocity.x / (1 + jumpSlowdown),
+            currentVelocity.y,
+            currentVelocity.z / (1 + jumpSlowdown)
+        )
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
+        NoFallBlink.waitUntilGround = true
+
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
         val bestStack = if (blockInHotbar == null) {
@@ -447,7 +471,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // In case of TELLY_NCP we do not want to stay at the placement Y
-        return if (bridgeMode == BridgeMode.TELLY) {
+        return if (keepY) {
             BlockPos(player.blockPos.x, placementY, player.blockPos.z)
         } else {
             player.blockPos.add(0, -1, 0)
@@ -542,7 +566,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     enum class BridgeMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),
         TELLY("Telly"),
-        TELLY_NCP("TellyNCP"),
+        TELLY_NCP("TellyNCP")
     }
 
 }

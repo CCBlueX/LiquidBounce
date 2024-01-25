@@ -42,7 +42,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3i
 
-internal object MLG : Choice("MLG") {
+internal object NoFallMLG : Choice("MLG") {
     override val parent: ChoiceConfigurable
         get() = ModuleNoFall.modes
 

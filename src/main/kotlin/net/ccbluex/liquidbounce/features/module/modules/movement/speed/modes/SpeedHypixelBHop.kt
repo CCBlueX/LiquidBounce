@@ -64,7 +64,8 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
      *
      * Speed mod: 0.008003278196411223
      */
-    private const val AT_LEAST = 0.2857671997172534
+    private const val AT_LEAST = 0.281
+    private const val BASH = 0.2857671997172534
     private const val SPEED_EFFECT_CONST = 0.008003278196411223
 
     private var wasFlagged = false
@@ -127,7 +128,8 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
 
             // Fall damage velocity
             val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                player.sqrtSpeed.coerceAtLeast(AT_LEAST)
+                player.sqrtSpeed.coerceAtLeast(BASH *
+                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
             } else {
                 player.sqrtSpeed
             }

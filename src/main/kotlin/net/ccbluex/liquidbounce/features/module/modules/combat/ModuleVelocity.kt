@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -121,7 +122,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     }
 
     /**
-     *
      * Basic velocity which should bypass the most server with regular anti-cheats like NCP.
      */
     private object Modify : Choice("Modify") {
@@ -131,6 +131,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
         val horizontal by float("Horizontal", 0f, 0f..1f)
         val vertical by float("Vertical", 0f, 0f..1f)
+
+        val cancelMotion by boolean("CancelMotion", false)
 
         val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
@@ -143,10 +145,26 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     return@handler
                 }
 
+                val currentVelocity = player.velocity
+
                 // Modify packet according to the specified values
-                packet.velocityX = (packet.velocityX * horizontal).toInt()
-                packet.velocityY = (packet.velocityY * vertical).toInt()
-                packet.velocityZ = (packet.velocityZ * horizontal).toInt()
+                if (horizontal != 0f || cancelMotion) {
+                    packet.velocityX = (packet.velocityX * horizontal).toInt()
+                    packet.velocityZ = (packet.velocityZ * horizontal).toInt()
+                } else {
+                    // set the horizontal velocity to the player velocity to prevent horizontal slowdown
+                    packet.velocityX = (currentVelocity.x * 8000).toInt()
+                    packet.velocityZ = (currentVelocity.z * 8000).toInt()
+                }
+
+                if (vertical != 0f || cancelMotion) {
+                    packet.velocityY = (packet.velocityY * vertical).toInt()
+                } else {
+                    // set the vertical velocity to the player velocity to prevent vertical slowdown
+                    packet.velocityY = (currentVelocity.y * 8000).toInt()
+                }
+
+                NoFallBlink.waitUntilGround = true
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
@@ -160,6 +178,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.playerVelocityX *= horizontal
                 packet.playerVelocityY *= vertical
                 packet.playerVelocityZ *= horizontal
+
+                NoFallBlink.waitUntilGround = true
             }
         }
 
@@ -309,8 +329,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = it.packet
 
             if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)) {
-
-
                 it.cancelEvent()
                 waitTicks(1)
                 repeat(4) {

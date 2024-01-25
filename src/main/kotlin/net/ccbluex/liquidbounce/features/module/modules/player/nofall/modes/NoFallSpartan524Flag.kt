@@ -20,30 +20,25 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
- * SpoofGround mode for the NoFall module.
- * This mode spoofs the 'onGround' flag in PlayerMoveC2SPacket to prevent fall damage.
+ * @anticheat Spartan
+ * @anticheatVersion phase 524
+ * @testedOn minecraft.vagdedes.com
+ * @note it gives you 6 flags for 50 blocks, which isn't enough to get kicked
  */
-internal object SpoofGround : Choice("SpoofGround") {
+internal object NoFallSpartan524Flag : Choice("Spartan524Flag") {
 
-    // Specify the parent configuration for this mode
     override val parent: ChoiceConfigurable
         get() = ModuleNoFall.modes
 
-    // Packet handler to intercept and modify PlayerMoveC2SPacket
-    val packetHandler = handler<PacketEvent> {
-        // Retrieve the packet from the event
-        val packet = it.packet
-
-        // Check if the packet is a PlayerMoveC2SPacket
-        if (packet is PlayerMoveC2SPacket) {
-            // Modify the 'onGround' flag to true, preventing fall damage
-            packet.onGround = true
+    val repeatable = repeatable {
+        if (player.fallDistance > 2f) {
+            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
+            waitTicks(1)
         }
     }
 

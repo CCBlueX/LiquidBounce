@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleBugUp
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -69,6 +70,7 @@ object FakeLag : Listenable {
      */
     private fun shouldLag(packet: Packet<*>?): Boolean {
         return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
+            || NoFallBlink.shouldLag()
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -259,6 +261,19 @@ object FakeLag : Listenable {
         synchronized(positions) {
             return positions.firstOrNull()?.vec
         }
+    }
+
+    inline fun <reified T> rewrite(action: (T) -> Unit) {
+        synchronized(packetQueue) {
+            packetQueue
+                .filterIsInstance<T>()
+                .forEach(action)
+        }
+    }
+
+    inline fun <reified T> rewriteAndFlush(action: (T) -> Unit) {
+        rewrite(action)
+        flush()
     }
 
     data class EvadingPacket(
