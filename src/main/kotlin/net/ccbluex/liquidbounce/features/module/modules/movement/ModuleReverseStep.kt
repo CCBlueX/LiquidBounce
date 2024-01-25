@@ -73,7 +73,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        private val ticks by int("Ticks", 20, 1..40)
+        private val ticks by int("Ticks", 20, 1..40, "ticks")
         private val simulateFalling by boolean("SimulateFalling", false)
 
         val repeatable = repeatable {

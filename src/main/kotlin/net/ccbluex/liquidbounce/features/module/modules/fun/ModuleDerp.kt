@@ -84,8 +84,8 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     private object YawJitter : Choice("Jitter") {
         override val parent: ChoiceConfigurable
             get() = yawMode
-        val yawForwardTicks by int("ForwardTicks", 5, 0..100)
-        val yawBackwardTicks by int("BackwardTicks", 5, 0..100)
+        val yawForwardTicks by int("ForwardTicks", 5, 0..100, "ticks")
+        val yawBackwardTicks by int("BackwardTicks", 5, 0..100, "ticks")
 
         val repeatable = repeatable {
             repeat(yawForwardTicks) {
@@ -102,7 +102,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     private object YawSpin : Choice("Spin") {
         override val parent: ChoiceConfigurable
             get() = yawMode
-        val yawSpinSpeed by int("Speed", 1, -70..70)
+        val yawSpinSpeed by int("Speed", 1, -70..70, "ticks")
         val repeatable = repeatable {
             yaw += yawSpinSpeed
             waitTicks(1)

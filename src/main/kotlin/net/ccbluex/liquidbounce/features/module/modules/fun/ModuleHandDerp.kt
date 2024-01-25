@@ -93,7 +93,7 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
         override val parent: ChoiceConfigurable
             get() = mode
 
-        val delayValue by int("Delay", 1, 0..20)
+        val delayValue by int("Delay", 1, 0..20, "ticks")
 
         val repeatable = repeatable {
             waitTicks(delayValue)

@@ -50,7 +50,7 @@ import net.minecraft.util.math.Vec3d
 object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
     private val range by floatRange("Range", 2f..5f, 0f..10f)
-    private val delay by int("Delay", 550, 0..1000)
+    private val delay by int("Delay", 550, 0..1000, "ms")
 
     private val evadeArrows by boolean("EvadeArrows", true)
 

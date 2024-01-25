@@ -12,12 +12,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
 
-object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
+object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
 
     val blacklistedServer by textArray("Blacklist", mutableListOf(
         // Common anticheat test server
         "poke.sexy",
-        "eu.loyisa.cn",
+        "loyisa.cn",
         "anticheat-test.com"
     ))
 
@@ -30,7 +30,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
             return
         }
 
-
+        loadServerConfig(currentServerEntry.address.dropPort().rootDomain())
         super.enable()
     }
 
@@ -39,7 +39,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
         waitUntil { inGame && mc.currentScreen == null }
 
         // Loads the server config
-        loadServerConfig(it.serverAddress)
+        loadServerConfig(it.serverAddress.dropPort().rootDomain())
     }
 
     /**
@@ -52,7 +52,10 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC) {
             return
         }
 
-        val autoConfig = cachedSettingsList?.find { it.serverAddress.equals(address, true) }
+        val autoConfig = cachedSettingsList?.find {
+            it.serverAddress?.rootDomain().equals(address, true) ||
+                it.serverAddress.equals(address, true)
+        }
 
         if (autoConfig == null) {
             notification("Auto Config", "There is no known config for $address.",

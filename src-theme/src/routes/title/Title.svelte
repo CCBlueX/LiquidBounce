@@ -95,7 +95,14 @@
     }).catch(console.error);
 
     let updateAvailable = false;
+    let newestVersion = {
+        "clientVersion": "0.1.0",
+        "minecraftVersion": "1.20.4",
+        "date": ""
+    };
+
     getUpdate().then(update => {
+        newestVersion = update.newestVersion;
         updateAvailable = update.updateAvailable;
     }).catch(console.error);
 </script>
@@ -104,8 +111,15 @@
     <div class="scale">
         <div class="wrapper">
             {#if updateAvailable}
-                <div class="update-available">
-                    <span on:click={browseWebsite}>Update available! Go to https://liquidbounce.net/</span>
+                <div class="update-available" on:click={browseWebsite} >
+                    <p>LiquidBounce v{newestVersion.clientVersion}{#if !newestVersion.release } (dev){/if}</p>
+                    <p>for Minecraft {newestVersion.minecraftVersion} has been released!</p>
+                    <br>
+
+                    <p>Release date: {newestVersion.date}</p>
+                    <p>Commit: {newestVersion.commitId}</p><br>
+
+                    <p>Go to https://liquidbounce.net/</p>
                 </div>
             {/if}
 

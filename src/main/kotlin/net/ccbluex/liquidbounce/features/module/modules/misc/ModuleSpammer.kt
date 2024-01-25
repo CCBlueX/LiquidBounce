@@ -32,7 +32,7 @@ import kotlin.random.Random
  */
 object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
 
-    private val delay by intRange("Delay", 12..14, 0..300)
+    private val delay by intRange("Delay", 2..4, 0..300, "secs")
     private val message by text("Message",
         "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}")
         .doNotInclude()
