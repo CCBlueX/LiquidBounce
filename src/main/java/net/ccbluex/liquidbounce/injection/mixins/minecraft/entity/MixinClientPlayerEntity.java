@@ -210,7 +210,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationYaw(ClientPlayerEntity instance) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return ModuleDerp.INSTANCE.getEnabled() ? ModuleDerp.INSTANCE.getRotation()[0] : instance.getYaw();
+            return instance.getYaw();
         }
 
         return rotation.getYaw();
@@ -220,7 +220,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationPitch(ClientPlayerEntity instance) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return ModuleDerp.INSTANCE.getEnabled() ? ModuleDerp.INSTANCE.getRotation()[1] : instance.getPitch();
+            return instance.getPitch();
         }
 
         return rotation.getPitch();
