@@ -338,9 +338,7 @@
   "liquidbounce.module.scoreboard.description": "Modify the minecraft scoreboard.",
   "liquidbounce.module.autoDisable.description": "Automatically disables certain modules.",
   "liquidbounce.module.nuker.description": "Destroys all blocks in your area. Be careful.",
-
-
-
+  "liquidbounce.module.swingFix.description": "Fixed swing packet order for 1.8 servers in-case their anti-cheat is outdated.",
   "liquidbounce.module.autoArmor.description": "Automatically equips the best armor.",
   "liquidbounce.module.autoArmor.value.delay.description": "Time to wait between equipping multiple items.",
   "liquidbounce.module.autoArmor.value.inv_open.description": "Whether the an opened inventory is required.",
