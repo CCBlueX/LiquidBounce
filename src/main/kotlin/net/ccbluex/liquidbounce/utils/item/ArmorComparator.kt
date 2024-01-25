@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
@@ -26,14 +27,36 @@ import net.minecraft.item.ItemStack
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-object ArmorComparator : Comparator<ArmorPiece> {
+
+class ArmorConfigurable : Configurable("Enchantment factors") {
+    val PROTECTION by float("PROTECTION", 1.5f, 0f..5f)
+    val PROJECTILE_PROTECTION by float("PROJECTILE_PROTECTION", 0.4f, 0f..5f)
+    val FIRE_PROTECTION by float("FIRE_PROTECTION", 0.39f, 0f..5f)
+    val BLAST_PROTECTION by float("BLAST_PROTECTION", 0.38f, 0f..5f)
+    // val FEATHER_FALLING by float("Threshold", 2f, 0f..5f)
+    // val THORNS by float("Threshold", 2f, 0f..5f)
+    // val RESPIRATION by float("Threshold", 2f, 0f..5f)
+    // val AQUA_AFFINITY by float("Threshold", 2f, 0f..5f)
+    // val UNBREAKING by float("Threshold", 2f, 0f..5f)
+    // val preferProt by boolean("preferProtetion", false)
+}
+
+class ArmorComparator(private val armorconfigurable: ArmorConfigurable) : Comparator<ArmorPiece> {
+    // val FEATHER_FALLING by float("Threshold", 2f, 0f..5f)
+    // val THORNS by float("Threshold", 2f, 0f..5f)
+    // val RESPIRATION by float("Threshold", 2f, 0f..5f)
+    // val AQUA_AFFINITY by float("Threshold", 2f, 0f..5f)
+    // val UNBREAKING by float("Threshold", 2f, 0f..5f)
+    // val preferProt by boolean("preferProtetion", false)
+
+
     private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<Enchantment> = arrayOf(
         Enchantments.PROTECTION,
         Enchantments.PROJECTILE_PROTECTION,
         Enchantments.FIRE_PROTECTION,
         Enchantments.BLAST_PROTECTION
     )
-    private val ENCHANTMENT_FACTORS = floatArrayOf(1.5f, 0.4f, 0.39f, 0.38f)
+    val ENCHANTMENT_FACTORS = floatArrayOf(1.5f, 0.4f, 0.39f, 0.38f)
     private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
     private val OTHER_ENCHANTMENTS: Array<Enchantment> = arrayOf(
         Enchantments.FEATHER_FALLING,
@@ -118,7 +141,7 @@ object ArmorComparator : Comparator<ArmorPiece> {
 
     private fun getThresholdedEnchantmentDamageReduction(itemStack: ItemStack): Float {
         var sum = 0.0f
-
+        val ENCHANTMENT_FACTORS = floatArrayOf(armorconfigurable.PROTECTION, armorconfigurable.PROJECTILE_PROTECTION, armorconfigurable.FIRE_PROTECTION, armorconfigurable.BLAST_PROTECTION)
         for (i in DAMAGE_REDUCTION_ENCHANTMENTS.indices) {
             sum += itemStack.getEnchantment(DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i]
         }
