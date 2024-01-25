@@ -21,6 +21,10 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
         "anticheat-test.com"
     ))
 
+    init {
+        doNotInclude()
+    }
+
     override fun enable() {
         val currentServerEntry = mc.currentServerEntry
 

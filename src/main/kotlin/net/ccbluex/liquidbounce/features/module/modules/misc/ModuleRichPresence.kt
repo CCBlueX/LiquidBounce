@@ -67,6 +67,10 @@ object ModuleRichPresence : Module("RichPresence", Category.MISC, state = true) 
 
     private var doNotTryToConnect = false
 
+    init {
+        doNotInclude()
+    }
+
     private fun connectIpc() {
         if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
             return
