@@ -28,7 +28,7 @@ import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.util.Hand
 
 /**
- * ItemRename Command 
+ * ItemRename Command
  *
  * Allows you to rename an item held in the player's hand.
  */
@@ -42,10 +42,11 @@ object CommandItemRename {
                     .begin<String>("name")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
+                    .vararg()
                     .build()
             )
             .handler { command, args ->
-                val name = args[0] as String
+                val name = (args[0] as Array<*>).joinToString(" ") { it as String }
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
                     throw CommandException(command.result("mustBeCreative"))
