@@ -14,12 +14,16 @@ import net.ccbluex.liquidbounce.utils.client.*
 
 object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
 
-    val blacklistedServer by textArray("Blacklist", mutableListOf(
+    val blacklistedServer = mutableListOf(
         // Common anticheat test server
         "poke.sexy",
         "loyisa.cn",
         "anticheat-test.com"
-    ))
+    )
+
+    init {
+        doNotInclude()
+    }
 
     override fun enable() {
         val currentServerEntry = mc.currentServerEntry
