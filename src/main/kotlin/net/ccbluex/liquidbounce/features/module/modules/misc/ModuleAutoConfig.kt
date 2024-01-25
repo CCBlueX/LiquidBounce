@@ -46,7 +46,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
      * Loads the config for the given server address
      */
     private fun loadServerConfig(address: String) {
-        if (blacklistedServer.any { address.contains(it, true) }) {
+        if (blacklistedServer.any { address.endsWith(it, true) }) {
             notification("Auto Config", "This server is blacklisted.",
                 NotificationEvent.Severity.INFO)
             return
