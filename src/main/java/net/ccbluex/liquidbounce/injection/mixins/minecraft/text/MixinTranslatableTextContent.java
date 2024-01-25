@@ -12,22 +12,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinTranslatableTextContent {
 
     @Redirect(method = "updateTranslations", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/util/Language;get(Ljava/lang/String;)Ljava/lang/String;"))
-    private String hookClientTranslations(Language instance, String key) {
+            target = "Lnet/minecraft/util/Language;getInstance()Lnet/minecraft/util/Language;"))
+    private Language hookClientTranslations() {
         if ((Object) this instanceof LanguageText) {
-            return LanguageManager.INSTANCE.getTranslation(key);
+            return LanguageManager.INSTANCE.getLanguage();
         } else {
-            return instance.get(key);
-        }
-    }
-
-    @Redirect(method = "updateTranslations", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/util/Language;get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"))
-    private String hookClientTranslationsWithFallback(Language instance, String key, String fallback) {
-        if ((Object) this instanceof LanguageText) {
-            return LanguageManager.INSTANCE.getTranslation(key);
-        } else {
-            return instance.get(key, fallback);
+            return Language.getInstance();
         }
     }
 

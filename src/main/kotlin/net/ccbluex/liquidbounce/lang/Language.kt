@@ -9,7 +9,9 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.text.MutableText
+import net.minecraft.text.*
+import net.minecraft.util.Language
+import java.util.*
 
 fun translation(key: String, vararg args: Any): MutableText =
     MutableText.of(LanguageText(key, args))
@@ -36,7 +38,7 @@ object LanguageManager : Configurable("lang") {
         "en_pt",
         "pt_br"
     )
-    private val languageMap = mutableMapOf<String, Language>()
+    private val languageMap = mutableMapOf<String, ClientLanguage>()
 
     /**
      * Load all languages which are pre-defined in [knownLanguages] and stored in assets.
@@ -50,7 +52,7 @@ object LanguageManager : Configurable("lang") {
                 val languageFile = javaClass.getResourceAsStream("/assets/liquidbounce/lang/$language.json")
                 val translations = decode<HashMap<String, String>>(languageFile.reader().readText())
 
-                languageMap[language] = Language(translations)
+                languageMap[language] = ClientLanguage(translations)
             }.onSuccess {
                 logger.info("Loaded language $language")
             }.onFailure {
@@ -59,18 +61,44 @@ object LanguageManager : Configurable("lang") {
         }
     }
 
-    fun getTranslation(key: String): String {
-        return languageMap[language]?.getTranslation(key)
-            ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.getTranslation(key)
-            ?: key
-    }
+    fun getLanguage() = languageMap[language] ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]
 
-    fun hasFallbackTranslation(key: String): Boolean {
-        return languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.getTranslation(key) != null
-    }
+    fun getCommonLanguage() = languageMap[COMMON_UNDERSTOOD_LANGUAGE]
+
+    /**
+     * Get a translation for the current language.
+     * If the translation is not found, it will be searched in the common language.
+     * If the translation is still not found, the key will be returned.
+     *
+     * @param key The translation key
+     * @return The translation
+     */
+    fun getTranslation(key: String) = languageMap[language]?.get(key)
+        ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.get(key)
+        ?: key
+
+    fun hasFallbackTranslation(key: String) =
+        languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.hasTranslation(key) ?: false
 
 }
 
-data class Language(val translations: Map<String, String>) {
-    fun getTranslation(key: String) = translations[key]
+class ClientLanguage(private val translations: Map<String, String>) : Language() {
+
+    override fun get(key: String, fallback: String?) = translations[key]
+        ?: LanguageManager.getCommonLanguage()?.get(key) ?: fallback ?: key
+
+    override fun hasTranslation(key: String) = translations.containsKey(key)
+
+    override fun isRightToLeft() = false
+
+    override fun reorder(text: StringVisitable) = OrderedText { visitor ->
+        text.visit({ style, string ->
+            if (TextVisitFactory.visitFormatted(string, style, visitor)) {
+                Optional.empty()
+            } else {
+                StringVisitable.TERMINATE_VISIT
+            }
+        }, Style.EMPTY).isPresent
+    }
+
 }

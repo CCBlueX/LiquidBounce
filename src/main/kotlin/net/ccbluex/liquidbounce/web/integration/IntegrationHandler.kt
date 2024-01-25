@@ -42,6 +42,7 @@ import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
 import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import net.minecraft.client.util.NarratorManager
 import org.lwjgl.glfw.GLFW
 
 object IntegrationHandler : Listenable {
@@ -123,11 +124,6 @@ object IntegrationHandler : Listenable {
         // Fires up the client tab
         clientJcef
         browserIsReady = true
-
-        logger.info("Opening integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
-
-        // Open the title screen
-        handleScreenSituation(mc.currentScreen)
     }
 
     fun virtualOpen(name: String) {
@@ -200,6 +196,7 @@ object IntegrationHandler : Listenable {
     }
 
     private fun handleScreenSituation(screen: Screen?): Boolean {
+        // Check for the Game narrator
         if (HideClient.isHidingNow || ModuleHideClient.enabled) {
             virtualClose()
             return false
