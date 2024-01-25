@@ -129,10 +129,11 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val horizontal by float("Horizontal", 0f, 0f..1f)
-        val vertical by float("Vertical", 0f, 0f..1f)
+        val horizontal by float("Horizontal", 0f, -1f..1f)
+        val vertical by float("Vertical", 0f, -1f..1f)
 
-        val cancelMotion by boolean("CancelMotion", false)
+        val motionHorizontal by float("MotionHorizontal", 0f, 0f..1f)
+        val motionVertical by float("MotionVertical", 0f, 0f..1f)
 
         val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
@@ -148,20 +149,20 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 val currentVelocity = player.velocity
 
                 // Modify packet according to the specified values
-                if (horizontal != 0f || cancelMotion) {
+                if (horizontal != 0f) {
                     packet.velocityX = (packet.velocityX * horizontal).toInt()
                     packet.velocityZ = (packet.velocityZ * horizontal).toInt()
                 } else {
                     // set the horizontal velocity to the player velocity to prevent horizontal slowdown
-                    packet.velocityX = (currentVelocity.x * 8000).toInt()
-                    packet.velocityZ = (currentVelocity.z * 8000).toInt()
+                    packet.velocityX = ((currentVelocity.x * motionHorizontal) * 8000).toInt()
+                    packet.velocityZ = ((currentVelocity.z * motionHorizontal) * 8000).toInt()
                 }
 
-                if (vertical != 0f || cancelMotion) {
+                if (vertical != 0f) {
                     packet.velocityY = (packet.velocityY * vertical).toInt()
                 } else {
                     // set the vertical velocity to the player velocity to prevent vertical slowdown
-                    packet.velocityY = (currentVelocity.y * 8000).toInt()
+                    packet.velocityY = ((currentVelocity.y * motionVertical) * 8000).toInt()
                 }
 
                 NoFallBlink.waitUntilGround = true
