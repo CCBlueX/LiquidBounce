@@ -50,7 +50,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
 
     private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, OutlineMode, GlowMode))
 
-    private val colorModes = choices("ColorMode", StaticMode, arrayOf(StaticMode, RainbowMode))
+    private val colorModes = choices("ColorMode", StaticMode, arrayOf(StaticMode, HealthMode, RainbowMode))
 
     private object StaticMode : Choice("Static") {
         override val parent: ChoiceConfigurable
@@ -60,6 +60,11 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     }
 
     private object RainbowMode : Choice("Rainbow") {
+        override val parent: ChoiceConfigurable
+            get() = colorModes
+    }
+
+    private object HealthMode : Choice("Health") {
         override val parent: ChoiceConfigurable
             get() = colorModes
     }
@@ -146,6 +151,18 @@ object ModuleESP : Module("ESP", Category.RENDER) {
 
         if (teamColor) {
             getTeamColor(entity)?.let { return it }
+        }
+
+        if (HealthMode.isActive) {
+            val health = entity.health
+            val maxHealth = entity.maxHealth
+
+            val healthPercentage = health / maxHealth
+
+            val red = (255 * (1 - healthPercentage)).toInt()
+            val green = (255 * healthPercentage).toInt()
+
+            return Color4b(red, green, 0)
         }
 
         return getBaseColor()
