@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 /**
@@ -16,7 +17,7 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
 
     object VelocityCheck : ToggleableConfigurable(this, "VelocityCheck", true) {
 
-        val packetHandler = handler<PacketEvent> { event ->
+        val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
             val packet = event.packet
 
             // Check if this is a regular velocity update
