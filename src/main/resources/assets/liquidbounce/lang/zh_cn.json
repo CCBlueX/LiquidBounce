@@ -418,7 +418,7 @@
   "liquidbounce.command.containers.subcommand.list.description": "列出所有容器。",
   "liquidbounce.command.containers.subcommand.list.result.noContainers": "没有容器。",
   "liquidbounce.command.containers.subcommand.clear.description": "清除所有容器。",
-  "liquidbounce.command.containers.subcommand.clear.result.cleared": "清除所有容器。",
+  "liquidbounce.command.containers.subcommand.clear.result.cleared": "已清除了所有容器。",
   "liquidbounce.command.vclip.result.invalidDistance": "距离无效。请输入有效的数字。",
   "liquidbounce.command.vclip.result.notInGame": "你不在游戏中。",
   "liquidbounce.command.vclip.result.positionUpdated": "您的位置已更新为 X: %s, Y: %s, Z: %s",
