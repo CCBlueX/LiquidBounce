@@ -60,10 +60,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     var pause = 0
 
-    init {
-        tree(Delayed)
-    }
-
     val repeatable = repeatable {
         if (pause > 0) {
             pause--
@@ -137,6 +133,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         val horizontal by float("Horizontal", 0f, 0f..1f)
         val vertical by float("Vertical", 0f, 0f..1f)
 
+        val cancelMotion by boolean("CancelMotion", false)
+
         val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
@@ -151,7 +149,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 val currentVelocity = player.velocity
 
                 // Modify packet according to the specified values
-                if (horizontal != 0f) {
+                if (horizontal != 0f || cancelMotion) {
                     packet.velocityX = (packet.velocityX * horizontal).toInt()
                     packet.velocityZ = (packet.velocityZ * horizontal).toInt()
                 } else {
@@ -160,7 +158,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     packet.velocityZ = (currentVelocity.z * 8000).toInt()
                 }
 
-                if (vertical != 0f) {
+                if (vertical != 0f || cancelMotion) {
                     packet.velocityY = (packet.velocityY * vertical).toInt()
                 } else {
                     // set the vertical velocity to the player velocity to prevent vertical slowdown
