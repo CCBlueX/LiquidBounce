@@ -183,7 +183,7 @@ class PointTracker : Configurable("PointTracker"), Listenable {
                 this.random.nextGaussian(),
             )
 
-        this.currentOffset = nextOffset.multiply(0.9, 0.9, 0.9)
+        this.currentOffset = nextOffset.multiply(0.1, 0.1, 0.1)
     }
 
     data class Point(val fromPoint: Vec3d, val toPoint: Vec3d, val box: Box, val cutOffBox: Box)
