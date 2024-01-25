@@ -31,10 +31,14 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * SpoofGround mode for the NoFall module.
  * This mode spoofs the 'onGround' flag in PlayerMoveC2SPacket to prevent fall damage.
  */
-internal object NoFallHypixel : Choice("Hypixel") {
+internal object NoFallBlink : Choice("Blink") {
 
     private var managedToReset = false
     var waitUntilGround = true
+
+    private val blinkDuringFallDistance by floatRange("FallDistance",
+        1.4f..20f, 1f..30f)
+    private val spoofDistance by float("SpoofDistance", 0.6f, 0f..1f)
 
     /**
      * Specifies the parent configuration for this mode
@@ -59,14 +63,15 @@ internal object NoFallHypixel : Choice("Hypixel") {
 
                 // If we are between 2.1 and 20 blocks of fall distance, we want to lag (blink) and
                 // set the onGround flag to true, so we don't take any fall damage.
-                if (fallDistance > 2.1 && fallDistance < 20) {
+                if (fallDistance >= (blinkDuringFallDistance.start + spoofDistance)
+                    && fallDistance <= blinkDuringFallDistance.endInclusive) {
                     managedToReset = false
                     packet.onGround = true
                 } else {
                     // However, if we are above 20 blocks of fall distance, we want to reset the lag
                     // and rewrite our previous packets to set the onGround flag to false, so they are not spoofed
                     // anymore
-                    if (fallDistance >= 20 && !managedToReset) {
+                    if (fallDistance > blinkDuringFallDistance.endInclusive && !managedToReset) {
                         // Rewrite the packet queue and set all PlayerMoveC2SPacket's onGround flag to false
                         FakeLag.rewriteAndFlush<PlayerMoveC2SPacket> { packet ->
                             packet.onGround = false
@@ -83,12 +88,12 @@ internal object NoFallHypixel : Choice("Hypixel") {
      * Tells the FakeLag feature whether it should lag or not, depending on the fall distance of the player.
      * After 1.7 blocks of fall distance, it makes sense to start lagging (blink),
      * after 20 blocks of fall distance we want to stop lagging (reset) - we will take fall distance.
-     * If we land after less than 20 blocks of fall distance, we want to stop lagging (reset) as well
+     * If we land after less than 20 blocks of fall distance, we want to stop lagging as well
      * and won't take any fall damage, since the packets are spoofed to be on-ground.
      *
      * This logic can be seen above in the [packetHandler] as well.
      */
     fun shouldLag() =
-        (isActive && ModuleNoFall.enabled) && player.fallDistance > 1.7 && (player.fallDistance < 21 || !managedToReset)
+        (isActive && ModuleNoFall.enabled) && player.fallDistance in blinkDuringFallDistance && !managedToReset
 
 }

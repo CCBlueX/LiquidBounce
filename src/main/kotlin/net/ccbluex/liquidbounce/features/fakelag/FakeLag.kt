@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleBugUp
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -70,7 +70,7 @@ object FakeLag : Listenable {
      */
     private fun shouldLag(packet: Packet<*>?): Boolean {
         return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
-            || NoFallHypixel.shouldLag()
+            || NoFallBlink.shouldLag()
     }
 
     val packetQueue = LinkedHashSet<DelayData>()

@@ -28,8 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel
-import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -165,7 +164,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     packet.velocityY = (currentVelocity.y * 8000).toInt()
                 }
 
-                NoFallHypixel.waitUntilGround = true
+                NoFallBlink.waitUntilGround = true
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
@@ -180,7 +179,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.playerVelocityY *= vertical
                 packet.playerVelocityZ *= horizontal
 
-                NoFallHypixel.waitUntilGround = true
+                NoFallBlink.waitUntilGround = true
             }
         }
 

@@ -40,7 +40,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             NoFallSpartan524Flag,
             NoFallVulcan,
             NoFallVerus,
-            NoFallHypixel
+            NoFallBlink
         )
     )
 

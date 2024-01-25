@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
@@ -192,7 +192,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     override fun disable() {
-        NoFallHypixel.waitUntilGround = false
+        NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
     }
@@ -231,7 +231,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        NoFallHypixel.waitUntilGround = true
+        NoFallBlink.waitUntilGround = true
 
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
