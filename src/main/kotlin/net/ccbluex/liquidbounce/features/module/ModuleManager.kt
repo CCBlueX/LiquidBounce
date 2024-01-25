@@ -121,6 +121,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSpoofer,
             ModuleVehicleOneHit,
             ModuleServerCrasher,
+            ModuleSwingFix,
 
             // Fun
             ModuleDankBobbing,
