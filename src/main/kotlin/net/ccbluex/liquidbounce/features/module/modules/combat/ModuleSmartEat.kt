@@ -43,9 +43,9 @@ import net.minecraft.util.UseAction
 import kotlin.math.max
 
 /**
- * AutoClicker module
+ * SmartEat module
  *
- * Clicks automatically when holding down a mouse button.
+ * Makes it easier to eat
  */
 
 object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
