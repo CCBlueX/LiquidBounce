@@ -31,6 +31,8 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 internal object NoFallSpoofGround : Choice("SpoofGround") {
 
+    val fallDistance by float("FallDistance", 1.7f, 0f..5f)
+
     // Specify the parent configuration for this mode
     override val parent: ChoiceConfigurable
         get() = ModuleNoFall.modes
@@ -41,7 +43,7 @@ internal object NoFallSpoofGround : Choice("SpoofGround") {
         val packet = it.packet
 
         // Check if the packet is a PlayerMoveC2SPacket
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is PlayerMoveC2SPacket && player.fallDistance >= fallDistance) {
             // Modify the 'onGround' flag to true, preventing fall damage
             packet.onGround = true
         }
