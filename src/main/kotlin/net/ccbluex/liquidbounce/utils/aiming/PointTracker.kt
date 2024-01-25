@@ -172,7 +172,13 @@ class PointTracker : Configurable("PointTracker"), Listenable {
             box.center.z
         ) + offset
 
-        return Point(predictedEyes ?: player.eyes, targetPoint, box, cutoffBox)
+        val eyes = if (requiredOnTick) {
+            null
+        } else {
+            predictedEyes
+        } ?: player.eyes
+
+        return Point(eyes, targetPoint, box, cutoffBox)
     }
 
     private fun updateGaussianOffset() {
