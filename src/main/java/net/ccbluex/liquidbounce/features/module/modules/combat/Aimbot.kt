@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.Entity
 import java.util.*
+import kotlin.math.atan
 
 object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
@@ -34,10 +35,14 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
     private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5)
     private val predictEnemyPosition by FloatValue("PredictEnemyPosition", 1.5f, -1f..2f)
     private val fov by FloatValue("FOV", 180F, 1F..180F)
-    private val center by BoolValue("Center", false)
     private val lock by BoolValue("Lock", true)
     private val onClick by BoolValue("OnClick", false)
     private val jitter by BoolValue("Jitter", false)
+    private val yawJitterMultiplier by FloatValue("JitterYawMultiplier", 1f, 0.1f..2.5f)
+    private val pitchJitterMultiplier by FloatValue("JitterPitchMultiplier", 1f, 0.1f..2.5f)
+    private val center by BoolValue("Center", false)
+    private val headLock by BoolValue("Headlock", false) { center }
+    private val headLockBlockHeight by FloatValue("headBlockHeight", -1f, -2f..0f) { headLock }
 
     private val clickTimer = MSTimer()
 
@@ -86,11 +91,11 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         // Some players do jitter on their mouses causing them to shake around. This is trying to simulate this behavior.
         if (jitter) {
             if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityYaw += (random.nextGaussian() - 0.5f).toFloat()
+                thePlayer.fixedSensitivityYaw += ((random.nextGaussian() - 0.5f) * yawJitterMultiplier).toFloat()
             }
 
             if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityPitch += (random.nextGaussian() - 0.5f).toFloat()
+                thePlayer.fixedSensitivityPitch += ((random.nextGaussian() - 0.5f) * pitchJitterMultiplier).toFloat()
             }
         }
     }
@@ -129,8 +134,19 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
         if (destinationRotation == null) {
             player.setPosAndPrevPos(currPos, oldPos)
-
             return false
+        }
+
+        // look headLockBlockHeight higher
+        if (headLock) {
+            val distance = player.getDistanceToEntityBox(entity)
+            val playerEyeHeight = player.eyeHeight
+            val blockHeight = headLockBlockHeight
+
+            // Calculate the pitch offset needed to shift the view one block up
+            val pitchOffset = Math.toDegrees(atan((blockHeight + playerEyeHeight) / distance)).toFloat()
+
+            destinationRotation.pitch -= pitchOffset
         }
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
