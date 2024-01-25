@@ -25,14 +25,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 /**
- * @author lit
+ * Remaps class names to their obfuscated counterparts.
+ *
+ * Initial code by lit
  */
-@Mixin(targets = "com/oracle/truffle/host/HostContext")
-public class MixinHostContext {
+@Mixin(targets = "com/oracle/truffle/host/HostClassLoader")
+public class MixinHostClassLoader {
 
-    @ModifyVariable(method = "findClassImpl", at = @At("HEAD"), argsOnly = true, remap = false)
+    @ModifyVariable(method = "findClass", at = @At("HEAD"), argsOnly = true, remap = false)
     private String remapClassName(String value) {
-        return McMappings.INSTANCE.remapClass(value);
+        return McMappings.INSTANCE.remapClassName(value);
     }
 
 }

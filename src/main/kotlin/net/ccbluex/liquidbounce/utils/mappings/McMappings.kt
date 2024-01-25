@@ -43,7 +43,7 @@ object McMappings {
         }
     }
 
-    fun remapClass(clazz: String): String {
+    fun remapClassName(clazz: String): String {
         val className = clazz.replace('.', '/')
 
         return mappings?.classEntries?.find {
