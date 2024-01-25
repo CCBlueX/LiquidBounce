@@ -22,9 +22,11 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.overlayUrl
+import net.minecraft.client.gui.screen.DisconnectedScreen
 
 /**
  * Module HUD
@@ -40,7 +42,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         get() = "liquidbounce.module.hud"
 
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {
-        if (!enabled || mc.world == null) {
+        if (!enabled || !inGame || it.screen is DisconnectedScreen) {
             browserTab?.closeTab()
             browserTab = null
         } else if (browserTab == null) {
