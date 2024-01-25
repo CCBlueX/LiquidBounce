@@ -14,12 +14,16 @@ import net.ccbluex.liquidbounce.utils.client.*
 
 object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
 
-    val blacklistedServer by textArray("Blacklist", mutableListOf(
+    val blacklistedServer = mutableListOf(
         // Common anticheat test server
         "poke.sexy",
         "loyisa.cn",
         "anticheat-test.com"
-    ))
+    )
+
+    init {
+        doNotInclude()
+    }
 
     override fun enable() {
         val currentServerEntry = mc.currentServerEntry
@@ -46,7 +50,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.MISC, state = true) {
      * Loads the config for the given server address
      */
     private fun loadServerConfig(address: String) {
-        if (blacklistedServer.any { address.contains(it, true) }) {
+        if (blacklistedServer.any { address.endsWith(it, true) }) {
             notification("Auto Config", "This server is blacklisted.",
                 NotificationEvent.Severity.INFO)
             return

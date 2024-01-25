@@ -60,7 +60,7 @@ class RotationsConfigurable(
     val smoothMode by enumChoice("SmoothMode", SmootherMode.RELATIVE, SmootherMode.values())
     var fixVelocity by boolean("FixVelocity", true)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
-    val ticksUntilReset by int("TicksUntilReset", 5, 1..30)
+    val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
     val silent by boolean("Silent", true)
 
     fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) = AimPlan(

@@ -55,12 +55,10 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         )
     }
 
-    val pauseOnFlag by int("PauseOnFlag", 0, 0..5)
-    var pause = 0
+    private val delay by intRange("Delay", 0..0, 0..40, "ticks")
+    private val pauseOnFlag by int("PauseOnFlag", 0, 0..5, "ticks")
 
-    object Delayed : ToggleableConfigurable(this, "Delayed", false) {
-        val ticks by intRange("Ticks", 3..6, 0..40)
-    }
+    var pause = 0
 
     init {
         tree(Delayed)
@@ -75,23 +73,29 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
 
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
-            && it.original && Delayed.enabled) {
-            it.cancelEvent()
+        if (!it.original) {
+            return@sequenceHandler
+        }
 
-            Delayed.ticks.random().let { ticks ->
-                if (ticks > 0) {
-                    val timeToWait = System.currentTimeMillis() + (ticks * 50L)
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+            // When delay is above 0, we will delay the velocity update
+            if (delay.last > 0) {
+                it.cancelEvent()
 
-                    waitUntil { System.currentTimeMillis() >= timeToWait }
+                delay.random().let { ticks ->
+                    if (ticks > 0) {
+                        val timeToWait = System.currentTimeMillis() + (ticks * 50L)
+
+                        waitUntil { System.currentTimeMillis() >= timeToWait }
+                    }
                 }
-            }
 
-            val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
-            EventManager.callEvent(packetEvent)
+                val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+                EventManager.callEvent(packetEvent)
 
-            if (!packetEvent.isCancelled) {
-                (packet as Packet<ClientPlayPacketListener>).apply(network)
+                if (!packetEvent.isCancelled) {
+                    (packet as Packet<ClientPlayPacketListener>).apply(network)
+                }
             }
         } else if (packet is PlayerPositionLookS2CPacket) {
             pause = pauseOnFlag
@@ -217,7 +221,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val delay by int("Delay", 2, 0..10)
+        val delay by int("Delay", 2, 0..10, "ticks")
         val strength by float("Strength", 1f, 0.1f..2f)
         val untilGround by boolean("UntilGround", false)
 
@@ -264,7 +268,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
 
         object JumpByDelay : ToggleableConfigurable(ModuleVelocity, "JumpByDelay", true) {
-            val ticksUntilJump by int("TicksUntilJump", 2, 0..20)
+            val ticksUntilJump by int("UntilJump", 2, 0..20, "ticks")
         }
 
         init {

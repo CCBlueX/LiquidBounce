@@ -48,7 +48,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
         override val parent: ChoiceConfigurable
             get() = mode
 
-        val fadeSeconds by int("FadeSeconds", 4, 1..10)
+        val fadeSeconds by int("Fade", 4, 1..10, "secs")
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)

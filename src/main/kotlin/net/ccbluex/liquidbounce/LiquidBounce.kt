@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.ipcConfiguration
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -136,6 +137,7 @@ object LiquidBounce : Listenable {
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
+            ConfigSystem.root(LanguageManager)
             Chat
             BrowserManager
             Fonts
@@ -206,6 +208,8 @@ object LiquidBounce : Listenable {
                 logger.error("Failed to load Discord IPC configuration.", it)
             }
 
+            // Load translations
+            LanguageManager.loadLanguages()
 
             // Refresh local IP info
             logger.info("Refreshing local IP info...")

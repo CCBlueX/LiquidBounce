@@ -80,13 +80,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
-    private var delay by intRange("Delay", 3..5, 0..40)
+    private var delay by intRange("Delay", 3..5, 0..40, "ticks")
     private val swing by boolean("Swing", true)
 
     // Silent block selection
     private val autoBlock by boolean("AutoBlock", true)
     private val alwaysHoldBlock by boolean("AlwaysHoldBlock", false)
-    private val slotResetDelay by int("SlotResetDelay", 5, 0..40)
+    private val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())

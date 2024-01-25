@@ -44,9 +44,9 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
     private val health by int("Health", 15, 1..40)
     private val healthToIgnoreRegen by int("HealthToIgnoreRegen", 5, 1..10)
 
-    private val cooldown by int("Cooldown", 0, 0..1000)
-    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
-    private val swapDelay by int("SwapDelay", 5, 1..100)
+    private val cooldown by int("Cooldown", 0, 0..1000, "ticks")
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
+    private val swapDelay by int("SwapDelay", 5, 1..100, "ticks")
 
     val repeatable = repeatable {
         val headSlot = findHotbarSlot(Items.PLAYER_HEAD)
