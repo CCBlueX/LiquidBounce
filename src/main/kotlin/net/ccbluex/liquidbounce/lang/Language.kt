@@ -65,18 +65,6 @@ object LanguageManager : Configurable("lang") {
 
     fun getCommonLanguage() = languageMap[COMMON_UNDERSTOOD_LANGUAGE]
 
-    /**
-     * Get a translation for the current language.
-     * If the translation is not found, it will be searched in the common language.
-     * If the translation is still not found, the key will be returned.
-     *
-     * @param key The translation key
-     * @return The translation
-     */
-    fun getTranslation(key: String) = languageMap[language]?.get(key)
-        ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.get(key)
-        ?: key
-
     fun hasFallbackTranslation(key: String) =
         languageMap[COMMON_UNDERSTOOD_LANGUAGE]?.hasTranslation(key) ?: false
 
@@ -84,8 +72,20 @@ object LanguageManager : Configurable("lang") {
 
 class ClientLanguage(private val translations: Map<String, String>) : Language() {
 
-    override fun get(key: String, fallback: String?) = translations[key]
-        ?: LanguageManager.getCommonLanguage()?.get(key) ?: fallback ?: key
+    private fun getTranslation(key: String) = translations[key]
+
+    /**
+     * Get a translation for the given key.
+     * If the translation is not found, the fallback will be used.
+     * If the fallback is not found, the key will be returned.
+     *
+     * Be careful when using this method that it will not cause a stack overflow.
+     * Use [getTranslation] instead.
+     */
+    override fun get(key: String, fallback: String?) = getTranslation(key)
+        ?: LanguageManager.getCommonLanguage()?.getTranslation(key)
+        ?: fallback
+        ?: key
 
     override fun hasTranslation(key: String) = translations.containsKey(key)
 
