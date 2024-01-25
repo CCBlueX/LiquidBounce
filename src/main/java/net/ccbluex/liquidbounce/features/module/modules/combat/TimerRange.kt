@@ -289,10 +289,10 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * Separate condition to make it cleaner
      */
     private fun shouldResetTimer(): Boolean {
-        return(mc.thePlayer.isSpectator || mc.thePlayer.isDead
-            || mc.thePlayer.isInWater || mc.thePlayer.isInLava
-            || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder
-            || mc.thePlayer.isRiding)
+        return(mc.thePlayer != null && (mc.thePlayer.isSpectator || mc.thePlayer.isDead
+                || mc.thePlayer.isInWater || mc.thePlayer.isInLava
+                || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder
+                || mc.thePlayer.isRiding))
     }
 
     /**
