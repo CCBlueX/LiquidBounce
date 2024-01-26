@@ -258,6 +258,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      * Jump Reset mode. A technique most players use to minimize the amount of knockback they get.
      */
     private object JumpReset : Choice("JumpReset") {
+
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -276,14 +277,14 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
         var limitUntilJump = 0
 
-        val tickJumpHandler = handler<TickJumpEvent> {
+        val tickJumpHandler = handler<MovementInputEvent> {
             // To be able to alter velocity when receiving knockback, player must be sprinting.
             if (player.hurtTime != 9 || !player.isOnGround || !player.isSprinting || !isCooldownOver()) {
                 updateLimit()
                 return@handler
             }
 
-            player.jump()
+            it.jumping = true
             limitUntilJump = 0
         }
 

@@ -35,7 +35,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         "Mode", NoCheatPlusBoost, arrayOf(
             // NoCheatPlus
             NoCheatPlusBoost,
-            NoCheatPlusBoost
+            NoCheatPlusBow
         )
     )
     private val autoJump by boolean("AutoJump", false)
@@ -45,7 +45,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
     var canBoost = false
     var boosted = false
 
-    val tickHandler = handler<TickJumpEvent> {
+    val tickHandler = handler<MovementInputEvent> {
         if (jumped) {
             if (player.isOnGround || player.abilities.flying) {
                 if (autoDisable && boosted) {

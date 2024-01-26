@@ -25,9 +25,8 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -44,7 +43,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
  * @testedOn eu.loyisa.cn
  */
 
-internal object NoCheatPlusBow : Choice("NCPBow") {
+internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
 
     override val parent: ChoiceConfigurable
         get() = ModuleLongJump.mode
@@ -67,7 +66,7 @@ internal object NoCheatPlusBow : Choice("NCPBow") {
         }
     }
 
-    val tickJumpHandler = sequenceHandler<TickJumpEvent> {
+    val tickJumpHandler = repeatable {
         if (arrowBoost <= arrowsToShoot) {
             mc.options.useKey.isPressed = true
             RotationManager.aimAt(
@@ -76,8 +75,10 @@ internal object NoCheatPlusBow : Choice("NCPBow") {
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = ModuleLongJump
             )
+
             // Stops moving
             stopMovement = true
+
             // Shoots arrow
             if (player.itemUseTime >= charged) {
                 interaction.stopUsingItem(player)
@@ -99,13 +100,13 @@ internal object NoCheatPlusBow : Choice("NCPBow") {
     }
 
     // what, why two events here?
-    val tickHandler = handler<TickJumpEvent> {
+    val handleMovementInput = handler<MovementInputEvent> {
         if (arrowBoost <= arrowsToShoot) {
             return@handler
         }
 
         if (player.fallDistance >= fallDistance) {
-            player.jump()
+            it.jumping = true
             player.fallDistance = 0f
         }
     }

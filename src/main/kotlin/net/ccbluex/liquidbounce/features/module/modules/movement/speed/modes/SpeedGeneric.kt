@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
@@ -57,7 +56,7 @@ object SpeedLegitHop : Choice("LegitHop") {
     // Avoids running into edges which loses speed
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
-    val tickJumpHandler = handler<TickJumpEvent> {
+    val handleMovementInput = handler<MovementInputEvent> {
         if (!player.isOnGround || !player.moving) {
             return@handler
         }
@@ -66,7 +65,7 @@ object SpeedLegitHop : Choice("LegitHop") {
         if (!mc.options.jumpKey.isPressed && doOptimizationsPreventJump())
             return@handler
 
-        player.jump()
+        it.jumping = true
     }
 
     private fun doOptimizationsPreventJump(): Boolean {
@@ -81,11 +80,4 @@ object SpeedLegitHop : Choice("LegitHop") {
         return false
     }
 
-    val injectMovementEnforcement = handler<MovementInputEvent> {
-        if (!player.isOnGround) {
-            return@handler
-        }
-
-        it.jumping = false
-    }
 }
