@@ -49,11 +49,11 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
         override val parent: ChoiceConfigurable
             get() = modes
 
-        private val motion by float("Motion", 0.2872F, 0.1f..0.5f)
+        private val climbMotion by float("Motion", 0.2872F, 0.1f..0.5f)
 
         val moveHandler = handler<PlayerMoveEvent> {
             if (player.horizontalCollision && player.isClimbing) {
-                it.movement.y = motion.toDouble()
+                it.movement.y = climbMotion.toDouble()
             }
         }
 
