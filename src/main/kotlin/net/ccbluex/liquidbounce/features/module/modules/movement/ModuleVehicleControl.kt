@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
@@ -26,23 +28,28 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 
 /**
- * Vehicle Fly module
+ * Vehicle control module
  *
- * Fly with your vehicle.
+ * Move with your vehicle however you want.
  */
-object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
+object ModuleVehicleControl : Module("VehicleControl", Category.MOVEMENT) {
 
-    val speedVertical by float("Vertical", 0.32f, 0.1f..0.4f)
-    val speedHorizontal by float("Horizontal", 0.48f, 0.1f..0.4f)
+    private val speedVertical by float("Vertical", 0.32f, 0.1f..1f)
+    private val glideVertical by float("GlideVertical", -0.2f, -0.3f..0.3f)
+
+    private val speedHorizontal by float("Horizontal", 0.48f, 0.1f..2f)
 
     val repeatable = repeatable {
         val vehicle = player.vehicle ?: return@repeatable
+        val velociy = vehicle.velocity
 
-        vehicle.velocity.y = when {
+        velociy.y = when {
             mc.options.jumpKey.isPressed -> speedVertical.toDouble()
-            else -> 0.0
+            else -> glideVertical.toDouble()
         }
-        vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)
+
+        velociy.strafe(yaw = player.directionYaw,
+            speed = if (player.moving) speedHorizontal.toDouble() else 0.0)
     }
 
 }
