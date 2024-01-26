@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  */
 object ModuleDerp : Module("Derp", Category.FUN) {
 
-    private val yawMode = choices("Yaw", YawStatic,
+    private val yawMode = choices("Yaw", YawSpin,
         arrayOf(YawStatic, YawOffset, YawRandom, YawJitter, YawSpin))
     private val pitchMode = choices("Pitch", PitchStatic,
         arrayOf(PitchStatic, PitchOffset, PitchRandom))
@@ -92,8 +92,8 @@ object ModuleDerp : Module("Derp", Category.FUN) {
 
         override var yaw = 0.0f
 
-        val yawForwardTicks by int("ForwardTicks", 5, 0..100, "ticks")
-        val yawBackwardTicks by int("BackwardTicks", 5, 0..100, "ticks")
+        val yawForwardTicks by int("ForwardTicks", 2, 0..100, "ticks")
+        val yawBackwardTicks by int("BackwardTicks", 2, 0..100, "ticks")
 
         val repeatable = repeatable {
             repeat(yawForwardTicks) {
@@ -113,7 +113,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
 
         override var yaw = 0.0f
 
-        val yawSpinSpeed by int("Speed", 1, -70..70, "°/tick")
+        val yawSpinSpeed by int("Speed", 50, -70..70, "°/tick")
 
         val repeatable = repeatable {
             yaw += yawSpinSpeed
@@ -127,7 +127,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
         override val pitch: Float
             get() = pitchValue
 
-        val pitchValue by float("Pitch", 0f, -180f..180f, "°")
+        val pitchValue by float("Pitch", -90f, -180f..180f, "°")
 
     }
 
