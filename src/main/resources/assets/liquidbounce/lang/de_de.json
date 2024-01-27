@@ -163,7 +163,7 @@
   "liquidbounce.module.parkour.description": "Springt automatisch, wenn du dich an der Kante eines Blocks befindest.",
   "liquidbounce.module.speed.description": "Erlaubt es dir, dich schneller zu bewegen.",
   "liquidbounce.module.strafe.description": "Erlaubt es dir, deine Richtung in der Luft zu ändern.",
-  "liquidbounce.module.vehicleFly.description": "Erlaubt es dir zu fliegen, während du auf einem anderen Entity reiteest (z.B. Boot, Pferd).",
+  "liquidbounce.module.vehicleControl.description": "Erlaubt es dir zu fliegen, während du auf einem anderen Entity reiteest (z.B. Boot, Pferd).",
   "liquidbounce.module.antiCactus.description": "Verhindert, dass Kakteen dir Schaden zufügen können.",
   "liquidbounce.module.antiLevitation.description": "Verhindert, dass Schwebekraft- und Sanfter-Fall-Effekte einen Einfluss auf dich haben .",
   "liquidbounce.module.autoBreak.description": "Baut automatisch den Block ab, den du anschaust.",

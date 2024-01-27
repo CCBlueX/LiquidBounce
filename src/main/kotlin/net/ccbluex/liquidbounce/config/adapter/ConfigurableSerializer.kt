@@ -102,7 +102,7 @@ object AutoConfigurableSerializer : JsonSerializer<Configurable> {
             /**
              * Do not include modules that are heavily user-personalised
              */
-            if (value.category == Category.RENDER) {
+            if (value.category == Category.RENDER || value.category == Category.CLIENT) {
                 return false
             }
         }

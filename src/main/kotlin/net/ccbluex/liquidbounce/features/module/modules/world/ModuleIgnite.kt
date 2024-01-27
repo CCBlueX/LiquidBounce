@@ -52,7 +52,7 @@ import net.minecraft.util.math.Vec3i
 object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
     private val range by floatRange("Range", 3.0f..4.5f, 2f..6f)
-    private val delay by int("Delay", 20, 0..400)
+    private val delay by int("Delay", 20, 0..400, "ticks")
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val targetTracker = tree(TargetTracker())

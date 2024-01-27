@@ -38,9 +38,9 @@ import kotlin.math.ceil
 
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
-    val startDelay by intRange("StartDelay", 1..2, 0..20)
-    val clickDelay by intRange("ClickDelay", 2..4, 0..20)
-    val closeDelay by intRange("CloseDelay", 1..5, 0..20)
+    val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
+    val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
+    val closeDelay by intRange("CloseDelay", 1..5, 0..20, "ticks")
     val quickSwaps by boolean("QuickSwaps", true)
     val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)

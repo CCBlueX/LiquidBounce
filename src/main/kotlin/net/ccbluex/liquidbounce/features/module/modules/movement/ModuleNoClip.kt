@@ -37,6 +37,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)
+    val disableOnSetback by boolean("DisableOnSetback", true)
 
     val repeatable = repeatable {
         player.noClip = true
@@ -55,7 +56,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
     val packetHandler = handler<PacketEvent> { event ->
         // Setback detection
-        if (event.packet is PlayerPositionLookS2CPacket) {
+        if (event.packet is PlayerPositionLookS2CPacket && disableOnSetback) {
             chat(regular(this.message("setbackDetected")))
             enabled = false
         }

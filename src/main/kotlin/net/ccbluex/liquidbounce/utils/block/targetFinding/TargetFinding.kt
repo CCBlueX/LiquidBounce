@@ -43,8 +43,7 @@ enum class AimMode(override val choiceName: String) : NamedChoice {
     GODBRIDGE("GodBridge"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
-    NEAREST_ROTATION("NearestRotation"),
-    ON_TICK("OnTick")
+    NEAREST_ROTATION("NearestRotation")
 }
 
 class BlockPlacementTargetFindingOptions(

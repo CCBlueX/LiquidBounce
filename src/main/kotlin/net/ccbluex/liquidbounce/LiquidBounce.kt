@@ -40,7 +40,8 @@ import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
-import net.ccbluex.liquidbounce.features.module.modules.misc.ipcConfiguration
+import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -54,6 +55,7 @@ import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
@@ -113,6 +115,9 @@ object LiquidBounce : Listenable {
             // Load mappings
             McMappings.load()
 
+            // Load translations
+            LanguageManager.loadLanguages()
+
             // Initialize client features
             EventManager
 
@@ -136,6 +141,7 @@ object LiquidBounce : Listenable {
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
+            ConfigSystem.root(LanguageManager)
             Chat
             BrowserManager
             Fonts
@@ -206,7 +212,6 @@ object LiquidBounce : Listenable {
                 logger.error("Failed to load Discord IPC configuration.", it)
             }
 
-
             // Refresh local IP info
             logger.info("Refreshing local IP info...")
             IpInfoApi.refreshLocalIpInfo()
@@ -239,6 +244,9 @@ object LiquidBounce : Listenable {
             }.onFailure {
                 logger.error("Failed to load settings list from API", it)
             }
+
+            // Load acknowledgement handler
+            AcknowledgementHandler
         }
     }
 

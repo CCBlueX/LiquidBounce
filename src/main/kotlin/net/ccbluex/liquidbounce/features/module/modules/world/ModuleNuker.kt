@@ -69,7 +69,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
     }
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    private val switchDelay by int("SwitchDelay", 0, 0..20)
+    private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
 
     private val comparisonMode by enumChoice("Preferred", ComparisonMode.SERVER_ROTATION, ComparisonMode.values())
 

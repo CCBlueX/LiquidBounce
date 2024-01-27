@@ -235,7 +235,7 @@
   "liquidbounce.module.parkour.description": "ブロックの端で自動的にジャンプします。",
   "liquidbounce.module.speed.description": "より速く移動できるようになります。",
   "liquidbounce.module.strafe.description": "空中で方向転換ができるようにします。",
-  "liquidbounce.module.vehicleFly.description": "エンティティ (例: ボート、馬) に乗って飛行できるようにします。",
+  "liquidbounce.module.vehicleControl.description": "エンティティ (例: ボート、馬) に乗って飛行できるようにします。",
   "liquidbounce.module.antiCactus.description": "サボテンからのダメージを防ぎます。",
   "liquidbounce.module.antiLevitation.description": "浮揚とゆっくりとした落下効果が影響するのを防ぎます。",
   "liquidbounce.module.autoBreak.description": "見ているブロックを自動的に壊します。",

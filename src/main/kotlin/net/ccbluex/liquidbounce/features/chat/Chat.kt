@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.chat.client.packet.*
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.Text
 import net.minecraft.util.Util
@@ -121,7 +122,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         logger.info("Connecting to LiquidChat...")
         notification(
             "LiquidChat",
-            Text.translatable("liquidbounce.liquidchat.states.connecting"),
+            translation("liquidbounce.liquidchat.states.connecting"),
             NotificationEvent.Severity.INFO
         )
     }
@@ -131,7 +132,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
         notification(
             "LiquidChat",
-            Text.translatable("liquidbounce.liquidchat.states.connected"),
+            translation("liquidbounce.liquidchat.states.connected"),
             NotificationEvent.Severity.INFO
         )
 
@@ -148,7 +149,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         client.channel = null
         notification(
             "LiquidChat",
-            Text.translatable("liquidbounce.liquidchat.states.disconnected"),
+            translation("liquidbounce.liquidchat.states.disconnected"),
             NotificationEvent.Severity.INFO
         )
     }
@@ -156,7 +157,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     private fun onLogon() {
         notification(
             "LiquidChat",
-            Text.translatable("liquidbounce.liquidchat.states.loggingIn"),
+            translation("liquidbounce.liquidchat.states.loggingIn"),
             NotificationEvent.Severity.INFO
         )
     }
@@ -164,7 +165,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     private fun onLoggedIn() {
         notification(
             "LiquidChat",
-            Text.translatable("liquidbounce.liquidchat.states.loggedIn"),
+            translation("liquidbounce.liquidchat.states.loggedIn"),
             NotificationEvent.Severity.SUCCESS
         )
     }
@@ -234,7 +235,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     internal fun onError(cause: Throwable) {
         notification(
             "LiquidChat",
-            Text.translatable("liquidbounce.generic.notifyDeveloper"),
+            translation("liquidbounce.generic.notifyDeveloper"),
             NotificationEvent.Severity.ERROR
         )
         logger.error("LiquidChat error", cause)
@@ -243,7 +244,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     private fun onReceivedJwtToken(jwt: String) {
         notification(
             "LiquidChat",
-            Text.translatable("liquidbounce.liquidchat.jwtTokenReceived"),
+            translation("liquidbounce.liquidchat.jwtTokenReceived"),
             NotificationEvent.Severity.SUCCESS
         )
 
@@ -291,7 +292,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
                     if (cause is InvalidCredentialsException) {
                         notification(
                             "LiquidChat",
-                            Text.translatable("liquidbounce.liquidchat.authenticationFailed"),
+                            translation("liquidbounce.liquidchat.authenticationFailed"),
                             NotificationEvent.Severity.ERROR
                         )
                         logger.warn("Failed authentication to LiquidChat")

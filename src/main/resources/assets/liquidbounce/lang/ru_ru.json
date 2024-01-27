@@ -256,7 +256,7 @@
   "liquidbounce.module.parkour.description": "Автоматически прыгает на самый край блока.",
   "liquidbounce.module.speed.description": "Позволяет Вам двигаться быстрее.",
   "liquidbounce.module.strafe.description": "Позволяет вам стрейфить, находясь в воздухе.",
-  "liquidbounce.module.vehicleFly.description": "Позволяет летать, во время езды на сущности (напр. лодка, лошадь).",
+  "liquidbounce.module.vehicleControl.description": "Позволяет летать, во время езды на сущности (напр. лодка, лошадь).",
   "liquidbounce.module.antiCactus.description": "Защищает от повреждений, наносимых кактусом.",
   "liquidbounce.module.antiLevitation.description": "Предотвращает воздействие на Вас эффектов левитации и медленного падения.",
   "liquidbounce.module.autoBreak.description": "Автоматически ломает блок, на который Вы смотрите.",

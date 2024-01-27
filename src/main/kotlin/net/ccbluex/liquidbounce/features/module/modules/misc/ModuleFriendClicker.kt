@@ -60,7 +60,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))
                 notification(
                     "Friend Clicker",
-                    Text.translatable("$translationBaseKey.removedFriend", name),
+                    message("removedFriend"),
                     NotificationEvent.Severity.INFO
                 )
             } else {
@@ -68,7 +68,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
                 notification(
                     "Friend Clicker",
-                    Text.translatable("$translationBaseKey.addedFriend", name),
+                    "addedFriend",
                     NotificationEvent.Severity.INFO
                 )
             }

@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.fakelag
 
 import net.ccbluex.liquidbounce.event.Listenable
@@ -10,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleBugUp
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -51,6 +70,7 @@ object FakeLag : Listenable {
      */
     private fun shouldLag(packet: Packet<*>?): Boolean {
         return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
+            || NoFallBlink.shouldLag()
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -241,6 +261,19 @@ object FakeLag : Listenable {
         synchronized(positions) {
             return positions.firstOrNull()?.vec
         }
+    }
+
+    inline fun <reified T> rewrite(action: (T) -> Unit) {
+        synchronized(packetQueue) {
+            packetQueue
+                .filterIsInstance<T>()
+                .forEach(action)
+        }
+    }
+
+    inline fun <reified T> rewriteAndFlush(action: (T) -> Unit) {
+        rewrite(action)
+        flush()
     }
 
     data class EvadingPacket(

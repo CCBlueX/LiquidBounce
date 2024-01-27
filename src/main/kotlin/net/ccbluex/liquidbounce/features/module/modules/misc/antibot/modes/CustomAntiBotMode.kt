@@ -38,7 +38,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         get() = ModuleAntiBot.modes
 
     private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
-        val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50)
+        val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
     }
 
     init {

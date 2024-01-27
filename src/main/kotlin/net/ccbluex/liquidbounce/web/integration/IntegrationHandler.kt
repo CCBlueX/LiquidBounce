@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideClient
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleHideClient
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
@@ -60,14 +60,25 @@ object IntegrationHandler : Listenable {
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
+
+    /**
+     * Acknowledgement is used to detect desyncs between the integration browser and the client.
+     * It is reset when the client opens a new screen and confirmed when the integration browser
+     * opens the same screen.
+     *
+     * If the acknowledgement is not confirmed after 500ms, the integration browser will be reloaded.
+     */
     val acknowledgement = Acknowledgement()
 
     private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
 
-    data class VirtualScreen(val name: String)
+    data class VirtualScreen(val name: String, val openSince: Chronometer = Chronometer())
 
-    data class Acknowledgement(val since: Chronometer = Chronometer(),
+    class Acknowledgement(val since: Chronometer = Chronometer(),
                                 var confirmed: Boolean = false) {
+
+        val isDesynced
+            get() = !confirmed && since.hasElapsed(1000)
 
         fun confirm() {
             confirmed = true
@@ -115,7 +126,7 @@ object IntegrationHandler : Listenable {
 
     }
 
-    private var browserIsReady = false
+    internal var browserIsReady = false
 
     val handleBrowserReady = handler<BrowserReadyEvent> {
         logger.info("Browser is ready.")
@@ -123,11 +134,6 @@ object IntegrationHandler : Listenable {
         // Fires up the client tab
         clientJcef
         browserIsReady = true
-
-        logger.info("Opening integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
-
-        // Open the title screen
-        handleScreenSituation(mc.currentScreen)
     }
 
     fun virtualOpen(name: String) {
@@ -178,16 +184,9 @@ object IntegrationHandler : Listenable {
         }
     }
 
-    val desyncCheck = handler<GameTickEvent> {
+    val screenRefresher = handler<GameTickEvent> {
         if (browserIsReady && mc.currentScreen !is MCEFDownloaderMenu) {
             handleScreenSituation(mc.currentScreen)
-
-            if (!acknowledgement.confirmed && acknowledgement.since.hasElapsed(500)) {
-                logger.warn("Integration desync detected. $acknowledgement: $integrationUrl -> ${clientJcef?.getUrl()}")
-                chat("Integration desync detected. It should now be fixed.")
-                acknowledgement.since.reset()
-                updateIntegrationBrowser()
-            }
         }
     }
 
@@ -200,6 +199,7 @@ object IntegrationHandler : Listenable {
     }
 
     private fun handleScreenSituation(screen: Screen?): Boolean {
+        // Check for the Game narrator
         if (HideClient.isHidingNow || ModuleHideClient.enabled) {
             virtualClose()
             return false
