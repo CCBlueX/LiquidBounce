@@ -96,6 +96,8 @@
         "module.autoFish.description": "Automatically catches fish when using a rod.",
 
         "module.autoProjectile.description": "Automatically throws egg/snowball.",
+
+        "module.autoPlay.description": "Automatically queues up for next match",
         
         "module.autoRespawn.description": "Automatically respawns you after dying.",
         
