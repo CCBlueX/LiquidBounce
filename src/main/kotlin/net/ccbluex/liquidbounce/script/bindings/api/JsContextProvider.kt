@@ -41,6 +41,7 @@ object JsContextProvider {
         putMember("Setting", JsSetting)
         putMember("CommandBuilder", CommandBuilder)
         putMember("ParameterBuilder", ParameterBuilder)
+
         // -> Minecraft API
         putMember("Vec3i", Vec3i::class.java)
         putMember("Vec3d", Vec3d::class.java)
