@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.misc
+package net.ccbluex.liquidbounce.features.module.modules.client
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -39,7 +41,7 @@ import kotlin.concurrent.thread
 /**
  * Transfers donator capes from one account to another.
  */
-object ModuleCapeTransfer : Module("CapeTransfer", Category.MISC) {
+object ModuleCapeTransfer : Module("CapeTransfer", Category.CLIENT, hide = true) {
 
     init {
         // Hooks configurable of cape service into the module

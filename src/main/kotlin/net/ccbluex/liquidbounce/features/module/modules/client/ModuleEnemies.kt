@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,32 +15,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module
 
-enum class Category(val readableName: String) {
+package net.ccbluex.liquidbounce.features.module.modules.client
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun"),
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 
-    /**
-     * A temporary category for client-related modules, since we don't have a client settings UI yet.
-     */
-    CLIENT("Client");
-
-    companion object {
-        /**
-         * Gets an enum by its readable name
-         */
-        fun fromReadableName(name: String): Category? {
-            return values().find { name.equals(it.name, true) }
-        }
+object ModuleEnemies : Module("Enemies", Category.CLIENT, disableActivation = true, hide = true) {
+    init {
+        tree(globalEnemyConfigurable)
     }
-
 }
