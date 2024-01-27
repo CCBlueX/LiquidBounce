@@ -346,6 +346,7 @@
   "liquidbounce.module.clickGUI.description": "Shows you an easy-to-use menu to toggle and configure modules.",
   "liquidbounce.module.clientSpoofer.description": "Spoofs your game client brand to whatever you want.",
   "liquidbounce.module.clip.description": "Allows you to clip through blocks.",
+  "liquidbounce.module.clip.messages.whoosh": "Whoosh!",
   "liquidbounce.module.combineMobs.description": "Combines cramped entities.",
   "liquidbounce.module.criticals.description": "Automatically deals critical damage everytime an entity is hit.",
   "liquidbounce.module.crystalAura.description": "Automatically places and destroys End Crystals.",
