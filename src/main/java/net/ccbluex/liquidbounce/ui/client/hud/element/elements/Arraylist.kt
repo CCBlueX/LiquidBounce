@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
@@ -32,8 +33,10 @@ import java.awt.Color
  * Shows a list of enabled modules
  */
 @ElementInfo(name = "Arraylist", single = true)
-class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
-    side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
+class Arraylist(
+    x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
+    side: Side = Side(Horizontal.RIGHT, Vertical.UP)
+) : Element(x, y, scale, side) {
 
     private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
     private val textRed by IntegerValue("Text-R", 0, 0..255) { textColorMode == "Custom" }
@@ -41,7 +44,11 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val textBlue by IntegerValue("Text-B", 255, 0..255) { textColorMode == "Custom" }
 
     private val rectMode by ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
-    private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow") { rectMode != "None" }
+    private val rectColorMode by ListValue(
+        "Rect-Color",
+        arrayOf("Custom", "Random", "Rainbow"),
+        "Rainbow"
+    ) { rectMode != "None" }
     private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
     private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
     private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
@@ -64,6 +71,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val tags by BoolValue("Tags", true)
     private val tagsStyle by object : ListValue("TagsStyle", arrayOf("[]", "()", "<>", "-", "|", "Space"), "Space") {
         override fun isSupported() = tags
+
         // onUpdate - updates tag onInit and onChanged
         override fun onUpdate(value: String) = updateTagDetails()
     }
@@ -84,7 +92,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     companion object {
         val spacedModules by BoolValue("SpacedModules", false)
-        val inactiveStyle by ListValue("InactiveModulesStyle", arrayOf("Normal", "Color", "Hide"), "Color") 
+        val inactiveStyle by ListValue("InactiveModulesStyle", arrayOf("Normal", "Color", "Hide"), "Color")
         { GameDetector.state }
     }
 
@@ -151,21 +159,32 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
             val width = font.getStringWidth(displayString)
 
-            // If modules become inactive because they only work when in game, animate them as if they got disabled
-            if (shouldShow) {
-                if (module.slide < width) {
-                    module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
-                    module.slideStep += delta / 4F
+            when (animation) {
+                "Slide" -> {
+                    // If modules become inactive because they only work when in game, animate them as if they got disabled
+                    if (shouldShow) {
+                        if (module.slide < width) {
+                            module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
+                            module.slideStep += delta / 4F
+                        }
+                    } else {
+                        module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
+                        module.slideStep -= delta / 4F
+                    }
+
+                    module.slide = module.slide.coerceIn(0F, width.toFloat())
+                    module.slideStep = module.slideStep.coerceIn(0F, width.toFloat())
                 }
-            } else {
-                module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
-                module.slideStep -= delta / 4F
+
+                "Smooth" -> {
+                    if (shouldShow) {
+                        module.slide = AnimationUtil.base(module.slide.toDouble(), width.toDouble(), 0.1).toFloat()
+                    } else {
+                        module.slide = AnimationUtil.base(module.slide.toDouble(), -width.toDouble() / 2, 0.2).toFloat()
+                    }
+                }
             }
-
-            module.slide = module.slide.coerceIn(0F, width.toFloat())
-            module.slideStep = module.slideStep.coerceIn(0F, width.toFloat())
         }
-
         // Draw arraylist
         val textCustomColor = Color(textRed, textGreen, textBlue, 1).rgb
         val rectCustomColor = Color(rectRed, rectGreen, rectBlue, rectAlpha).rgb
@@ -178,9 +197,12 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
 
         modules.forEachIndexed { index, module ->
-            val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
-                if (side.vertical == Vertical.DOWN) index + 1 else index
-
+            var yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
+                    if (side.vertical == Vertical.DOWN) index + 1 else index
+            if (animation == "Smooth") {
+                module.yAnim = AnimationUtil.base(module.yAnim.toDouble(), yPos.toDouble(), 0.2).toFloat()
+                yPos = module.yAnim
+            }
             val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
             val markAsInactive = inactiveStyle == "Color" && !module.isActive
@@ -192,7 +214,11 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     val xPos = -module.slide - 2
 
                     RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRect(xPos - if (rectMode == "Right") 5 else 2, yPos, if (rectMode == "Right") -3F else 0F, yPos + textHeight,
+                        drawRect(
+                            xPos - if (rectMode == "Right") 5 else 2,
+                            yPos,
+                            if (rectMode == "Right") -3F else 0F,
+                            yPos + textHeight,
                             when (backgroundMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
@@ -201,8 +227,14 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         )
                     }
 
-                    RainbowFontShader.begin(!markAsInactive && textColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        font.drawString(displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY,
+                    RainbowFontShader.begin(
+                        !markAsInactive && textColorMode == "Rainbow",
+                        rainbowX,
+                        rainbowY,
+                        rainbowOffset
+                    ).use {
+                        font.drawString(
+                            displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY,
                             if (markAsInactive) inactiveColor
                             else when (textColorMode) {
                                 "Rainbow" -> 0
@@ -214,7 +246,12 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     }
 
                     if (rectMode != "None") {
-                        RainbowShader.begin(!markAsInactive && rectColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
+                        RainbowShader.begin(
+                            !markAsInactive && rectColorMode == "Rainbow",
+                            rainbowX,
+                            rainbowY,
+                            rainbowOffset
+                        ).use {
                             val rectColor =
                                 if (markAsInactive) inactiveColor
                                 else when (rectColorMode) {
@@ -236,7 +273,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     val xPos = -(width - module.slide) + if (rectMode == "Left") 5 else 2
 
                     RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRect(0F, yPos, xPos + width + if (rectMode == "Right") 5 else 2, yPos + textHeight,
+                        drawRect(
+                            0F, yPos, xPos + width + if (rectMode == "Right") 5 else 2, yPos + textHeight,
                             when (backgroundMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
@@ -245,8 +283,14 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         )
                     }
 
-                    RainbowFontShader.begin(!markAsInactive && textColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        font.drawString(displayString, xPos, yPos + textY,
+                    RainbowFontShader.begin(
+                        !markAsInactive && textColorMode == "Rainbow",
+                        rainbowX,
+                        rainbowY,
+                        rainbowOffset
+                    ).use {
+                        font.drawString(
+                            displayString, xPos, yPos + textY,
                             if (markAsInactive) inactiveColor
                             else when (textColorMode) {
                                 "Rainbow" -> 0
@@ -257,7 +301,12 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         )
                     }
 
-                    RainbowShader.begin(!markAsInactive && rectColorMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
+                    RainbowShader.begin(
+                        !markAsInactive && rectColorMode == "Rainbow",
+                        rainbowX,
+                        rainbowY,
+                        rainbowOffset
+                    ).use {
                         if (rectMode != "None") {
                             val rectColor =
                                 if (markAsInactive) inactiveColor
@@ -269,7 +318,13 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
                             when (rectMode) {
                                 "Left" -> drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
-                                "Right" -> drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3, yPos + textHeight, rectColor)
+                                "Right" -> drawRect(
+                                    xPos + width + 2,
+                                    yPos,
+                                    xPos + width + 2 + 3,
+                                    yPos + textHeight,
+                                    rectColor
+                                )
                             }
                         }
                     }
@@ -295,6 +350,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                         val xPos = -module.slide.toInt() - 2
                         if (x2 == Int.MIN_VALUE || xPos < x2) x2 = xPos
                     }
+
                     Horizontal.LEFT -> {
                         val xPos = module.slide.toInt() + 14
                         if (x2 == Int.MIN_VALUE || xPos > x2) x2 = xPos
