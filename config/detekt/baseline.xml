@@ -124,8 +124,9 @@
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
     <ID>SpreadOperator:ExploitsItemGroup.kt$ExploitsItemGroup$("Troll Potion", *Registries.STATUS_EFFECT.map { statusEffect -> StatusEffectInstance(statusEffect, Int.MAX_VALUE, 127) }.toTypedArray())</ID>
     <ID>SpreadOperator:FakeLag.kt$FakeLag$(*positions.map { Vec3(it.vec) }.toTypedArray())</ID>
+    <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(clazz, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
+    <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(obj::class.java, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(*args.map { it!!::class.java }.toTypedArray())</ID>
-    <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(name, *args.map { it!!::class.java }.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
     <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*>) ?: emptyArray&lt;String>()).map { it as String } .toTypedArray())</ID>

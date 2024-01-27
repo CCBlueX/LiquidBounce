@@ -52,7 +52,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
-import net.ccbluex.liquidbounce.utils.mappings.McMappings
+import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
@@ -113,7 +113,7 @@ object LiquidBounce : Listenable {
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
             // Load mappings
-            McMappings.load()
+            Remapper.load()
 
             // Load translations
             LanguageManager.loadLanguages()
