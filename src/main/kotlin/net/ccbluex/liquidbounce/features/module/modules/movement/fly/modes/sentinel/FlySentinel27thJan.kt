@@ -23,29 +23,50 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sent
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.kotlin.random
 
 /**
  * @anticheat Sentinel
- * @anticheatVersion 27.10.2023
+ * @anticheatVersion 27.01.2024
  * @testedOn cubecraft.net
  *
  * @note Tested in SkyWars and EggWars, works fine and no automatic ban.
- * @note This is a very simple fly, it's not the best, but it's not bad either.
- * Bypasses Sentinel's fly check and is a little faster. Might can be improved.
+ * @note Glides down and by pressing spacebar, it will go up. It also has a horizontal speed.
  * This fly does not require any disabler.
+ *
+ * Thanks to icewormy3
  */
-internal object FlySentinel27thOct : Choice("Sentinel27thOct") {
+internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
+
+    private val horizontalSpeed by floatRange("HorizontalSpeed",
+        0.33f..0.34f, 0.1f..1f)
 
     override val parent: ChoiceConfigurable
         get() = ModuleFly.modes
 
     val repeatable = repeatable {
-        player.velocity.y = 0.2
-        player.strafe(speed = 0.34)
-        waitTicks(5)
+        if (player.isOnGround) {
+            return@repeatable
+        }
+
+        player.velocity.y = when {
+            player.isSneaking -> -0.4
+            player.input.jumping -> 0.42
+            else -> 0.2
+        }
+        player.strafe(speed = horizontalSpeed.random())
+
+        waitTicks(6)
+    }
+
+    val moveHandler = handler<PlayerMoveEvent> {
+        it.movement.strafe(player.directionYaw)
     }
 
 }
