@@ -115,6 +115,9 @@ object LiquidBounce : Listenable {
             // Load mappings
             McMappings.load()
 
+            // Load translations
+            LanguageManager.loadLanguages()
+
             // Initialize client features
             EventManager
 
@@ -208,9 +211,6 @@ object LiquidBounce : Listenable {
             }.onFailure {
                 logger.error("Failed to load Discord IPC configuration.", it)
             }
-
-            // Load translations
-            LanguageManager.loadLanguages()
 
             // Refresh local IP info
             logger.info("Refreshing local IP info...")
