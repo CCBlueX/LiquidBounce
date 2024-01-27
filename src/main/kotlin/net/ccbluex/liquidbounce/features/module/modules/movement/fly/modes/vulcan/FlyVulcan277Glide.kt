@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,40 +15,37 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
+
+package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 
 /**
- * NoWeb module
- *
- * Disables web slowdown.
+ * @anticheat Vulcan
+ * @anticheat Version 2.7.7
+ * @testedOn anticheat-test.com
+ * @note NA
  */
-object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
+internal object FlyVulcan277Glide : Choice("Vulcan277Glide") {
 
-    val modes = choices("Mode", Air, arrayOf(Air))
+    override val parent: ChoiceConfigurable
+        get() = modes
 
     val repeatable = repeatable {
-        if (ModuleAvoidHazards.enabled) {
-            if (ModuleAvoidHazards.cobWebs) {
-                ModuleAvoidHazards.enabled = false
-                notification("Compatibility error", "NoWeb is incompatible with AvoidHazards",
-                    NotificationEvent.Severity.ERROR)
+        if (player.fallDistance > 0.1) {
+            if (player.age % 2 == 0) {
+                player.velocity.y = -0.155
             }
+        } else {
+            player.velocity.y = -0.1
         }
     }
 
-    object Air : Choice("Air") {
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        // Mixins take care of anti web slowdown.
-    }
 }
+

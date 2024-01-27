@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,34 +15,37 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
 
+package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
+
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
-import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.entity.strafe
 
 /**
- * Vehicle Fly module
+ * @anticheat Sentinel
+ * @anticheatVersion 27.10.2023
+ * @testedOn cubecraft.net
  *
- * Fly with your vehicle.
+ * @note Tested in SkyWars and EggWars, works fine and no automatic ban.
+ * @note This is a very simple fly, it's not the best, but it's not bad either.
+ * Bypasses Sentinel's fly check and is a little faster. Might can be improved.
+ * This fly does not require any disabler.
  */
-object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
+internal object FlySentinel27thOct : Choice("Sentinel27thOct") {
 
-    val speedVertical by float("Vertical", 0.32f, 0.1f..0.4f)
-    val speedHorizontal by float("Horizontal", 0.48f, 0.1f..0.4f)
+    override val parent: ChoiceConfigurable
+        get() = ModuleFly.modes
 
     val repeatable = repeatable {
-        val vehicle = player.vehicle ?: return@repeatable
-
-        vehicle.velocity.y = when {
-            mc.options.jumpKey.isPressed -> speedVertical.toDouble()
-            else -> 0.0
-        }
-        vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)
+        player.velocity.y = 0.2
+        player.strafe(speed = 0.34)
+        waitTicks(5)
     }
 
 }

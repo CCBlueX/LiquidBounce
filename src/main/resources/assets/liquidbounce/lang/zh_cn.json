@@ -316,7 +316,7 @@
   "liquidbounce.module.parkour.description": "在方块边缘自动跳跃帮你完成跑酷。",
   "liquidbounce.module.speed.description": "允许你移动地更快。",
   "liquidbounce.module.strafe.description": "允许你在半空中进行灵活动作。",
-  "liquidbounce.module.vehicleFly.description": "允许你骑着一个实体飞行 (例如. 船, 马)。",
+  "liquidbounce.module.vehicleControl.description": "允许你骑着一个实体飞行 (例如. 船, 马)。",
   "liquidbounce.module.antiCactus.description": "防止受到仙人掌的伤害。",
   "liquidbounce.module.antiLevitation.description": "避免受到失重/缓降效果。",
   "liquidbounce.module.autoBreak.description": "自动破坏你面前的方块。",

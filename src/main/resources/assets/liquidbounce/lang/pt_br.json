@@ -206,7 +206,7 @@
   "liquidbounce.module.parkour.description": "Automaticamente pula no canto de um bloco.",
   "liquidbounce.module.speed.description": "Deixa você se mover mais rapido.",
   "liquidbounce.module.strafe.description": "Deixa você se mover melhor no ar.",
-  "liquidbounce.module.vehicleFly.description": "Deixa você voar em quanto em uma entidade (barco, porco, ...).",
+  "liquidbounce.module.vehicleControl.description": "Deixa você voar em quanto em uma entidade (barco, porco, ...).",
   "liquidbounce.module.antiCactus.description": "Protege contra o dano do cacto.",
   "liquidbounce.module.antiLevitation.description": "Não deixa a levitação te afetar.",
   "liquidbounce.module.autoBreak.description": "Automaticamente quebra o bloco que esta olhando.",

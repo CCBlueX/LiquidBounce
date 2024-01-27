@@ -35,7 +35,15 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
+import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
+import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
@@ -177,7 +185,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
-            ModuleVehicleFly,
+            ModuleVehicleControl,
 
             // Player
             ModuleAntiAFK,

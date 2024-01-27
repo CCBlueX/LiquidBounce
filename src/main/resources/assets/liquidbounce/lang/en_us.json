@@ -380,7 +380,7 @@
   "liquidbounce.module.parkour.description": "Automatically jumps at the very edge of a block.",
   "liquidbounce.module.speed.description": "Allows you to move faster.",
   "liquidbounce.module.strafe.description": "Allows you to strafe while being in mid-air.",
-  "liquidbounce.module.vehicleFly.description": "Allows you to fly while riding an entity (eg. boat, horse).",
+  "liquidbounce.module.vehicleControl.description": "Allows you to fly and speed while riding an entity (eg. boat, horse).",
   "liquidbounce.module.antiCactus.description": "Protects taking damage from cacti.",
   "liquidbounce.module.antiLevitation.description": "Prevents levitation and slow falling effects from affecting you.",
   "liquidbounce.module.autoBreak.description": "Automatically breaks the block you are looking at.",
