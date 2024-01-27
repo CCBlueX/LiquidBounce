@@ -10,7 +10,7 @@ class ColorAnimation {
     var first = true
     var end: Color? = null
 
-    fun start(start: Color, end: Color, duration: Float, type: Type) {
+    fun start(start: Color, end: Color, duration: Float, type: AnimationType) {
         this.end = end
         r.start(start.red.toDouble(), end.red.toDouble(), duration, type)
         g.start(start.green.toDouble(), end.green.toDouble(), duration, type)
@@ -19,17 +19,16 @@ class ColorAnimation {
     }
 
     fun update() {
-        if (end != null) {
-            if (first) {
-                color = end ?: return
-                first = false
-                return
-            }
-            r.update()
-            g.update()
-            b.update()
-            a.update()
+        end ?: return
+        if (first) {
+            color = end as Color
+            first = false
+            return
         }
+        r.update()
+        g.update()
+        b.update()
+        a.update()
     }
 
     fun reset() {
@@ -40,7 +39,12 @@ class ColorAnimation {
     }
 
     var color: Color
-        get() = Color(r.value.coerceIn(0.0,255.0).toInt(), g.value.coerceIn(0.0,255.0).toInt(), b.value.coerceIn(0.0,255.0).toInt(), a.value.coerceIn(0.0,255.0).toInt())
+        get() = Color(
+            r.value.coerceIn(0.0, 255.0).toInt(),
+            g.value.coerceIn(0.0, 255.0).toInt(),
+            b.value.coerceIn(0.0, 255.0).toInt(),
+            a.value.coerceIn(0.0, 255.0).toInt()
+        )
         set(color) {
             r.value = color.red.toDouble()
             g.value = color.green.toDouble()
@@ -48,7 +52,7 @@ class ColorAnimation {
             a.value = color.alpha.toDouble()
         }
 
-    fun fstart(color: Color, color1: Color, duration: Float, type: Type) {
+    fun fstart(color: Color, color1: Color, duration: Float, type: AnimationType) {
         end = color1
         r.fstart(color.red.toDouble(), color1.red.toDouble(), duration, type)
         g.fstart(color.green.toDouble(), color1.green.toDouble(), duration, type)

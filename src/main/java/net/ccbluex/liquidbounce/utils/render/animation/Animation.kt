@@ -6,85 +6,85 @@ class Animation {
     private var start = 0.0
     var value = 0.0
     var end = 0.0
-    private var type = Type.LINEAR
+    private var type = AnimationType.LINEAR
     var isStarted = false
         private set
 
-    fun start(start: Double, end: Double, duration: Float, type: Type) {
-        if (!isStarted) {
-            if (start != this.start || end != this.end || (duration * 1000).toLong() != this.duration || type != this.type) {
-                this.duration = (duration * 1000).toLong()
-                this.start = start
-                startTime = System.currentTimeMillis()
-                value = start
-                this.end = end
-                this.type = type
-                isStarted = true
-            }
+    fun start(start: Double, end: Double, duration: Float, type: AnimationType) {
+        if (isStarted) {
+            return
+        }
+        if (start != this.start || end != this.end || (duration * 1000).toLong() != this.duration || type != this.type) {
+            this.duration = (duration * 1000).toLong()
+            this.start = start
+            startTime = System.currentTimeMillis()
+            value = start
+            this.end = end
+            this.type = type
+            isStarted = true
         }
     }
 
     fun update() {
         if (!isStarted) return
-        val result: Double
-        result = when (type) {
-            Type.LINEAR -> AnimationUtil.linear(
+        val result: Double = when (type) {
+            AnimationType.LINEAR -> AnimationUtil.linear(
                 startTime,
                 duration,
                 start,
                 end
             )
 
-            Type.EASE_IN_QUAD -> AnimationUtil.easeInQuad(
+            AnimationType.EASE_IN_QUAD -> AnimationUtil.easeInQuad(
                 startTime,
                 duration,
                 start,
                 end
             )
 
-            Type.EASE_OUT_QUAD -> AnimationUtil.easeOutQuad(
+            AnimationType.EASE_OUT_QUAD -> AnimationUtil.easeOutQuad(
                 startTime,
                 duration,
                 start,
                 end
             )
 
-            Type.EASE_IN_OUT_QUAD -> AnimationUtil.easeInOutQuad(
+            AnimationType.EASE_IN_OUT_QUAD -> AnimationUtil.easeInOutQuad(
                 startTime,
                 duration,
                 start,
                 end
             )
 
-            Type.EASE_IN_ELASTIC -> AnimationUtil.easeInElastic(
+            AnimationType.EASE_IN_ELASTIC -> AnimationUtil.easeInElastic(
                 (System.currentTimeMillis() - startTime).toDouble(),
                 start,
                 end - start,
                 duration.toDouble()
             )
 
-            Type.EASE_OUT_ELASTIC -> AnimationUtil.easeOutElastic(
+            AnimationType.EASE_OUT_ELASTIC -> AnimationUtil.easeOutElastic(
                 (System.currentTimeMillis() - startTime).toDouble(),
                 start,
                 end - start,
                 duration.toDouble()
             )
 
-            Type.EASE_IN_OUT_ELASTIC -> AnimationUtil.easeInOutElastic(
+            AnimationType.EASE_IN_OUT_ELASTIC -> AnimationUtil.easeInOutElastic(
                 (System.currentTimeMillis() - startTime).toDouble(),
                 start,
                 end - start,
                 duration.toDouble()
             )
 
-            Type.EASE_IN_BACK -> AnimationUtil.easeInBack(
+            AnimationType.EASE_IN_BACK -> AnimationUtil.easeInBack(
                 (System.currentTimeMillis() - startTime).toDouble(),
                 start,
                 end - start,
                 duration.toDouble()
             )
 
-            Type.EASE_OUT_BACK -> AnimationUtil.easeOutBack(
+            AnimationType.EASE_OUT_BACK -> AnimationUtil.easeOutBack(
                 (System.currentTimeMillis() - startTime).toDouble(),
                 start,
                 end - start,
@@ -108,7 +108,7 @@ class Animation {
         isStarted = false
     }
 
-    fun fstart(start: Double, end: Double, duration: Float, type: Type) {
+    fun fstart(start: Double, end: Double, duration: Float, type: AnimationType) {
         isStarted = false
         start(start, end, duration, type)
     }

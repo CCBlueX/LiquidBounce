@@ -88,8 +88,8 @@ class Arraylist(
     private val textHeight by FloatValue("TextHeight", 11F, 1F..20F)
     private val textY by FloatValue("TextY", 1F, 0F..20F)
 
-    private val animation by ListValue("Animation", arrayOf("Slide", "Smooth"), "Normal") { tags }
-    private val animationSpeed by FloatValue("AnimationSpeed", 0.2F, 0F..1F) {animation == "Smooth"}
+    private val animation by ListValue("Animation", arrayOf("Slide", "Smooth"), "Smooth") { tags }
+    private val animationSpeed by FloatValue("AnimationSpeed", 0.2F, 0.01F..1F) { animation == "Smooth" }
 
     companion object {
         val spacedModules by BoolValue("SpacedModules", false)
@@ -163,14 +163,13 @@ class Arraylist(
             when (animation) {
                 "Slide" -> {
                     // If modules become inactive because they only work when in game, animate them as if they got disabled
+                    module.slideStep = if (shouldShow) delta / 4F else -delta / 4F
                     if (shouldShow) {
                         if (module.slide < width) {
                             module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
-                            module.slideStep += delta / 4F
                         }
                     } else {
                         module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
-                        module.slideStep -= delta / 4F
                     }
 
                     module.slide = module.slide.coerceIn(0F, width.toFloat())
@@ -178,11 +177,9 @@ class Arraylist(
                 }
 
                 "Smooth" -> {
-                    if (shouldShow) {
-                        module.slide = AnimationUtil.base(module.slide.toDouble(), width.toDouble(), animationSpeed.toDouble()).toFloat()
-                    } else {
-                        module.slide = AnimationUtil.base(module.slide.toDouble(), -width.toDouble() / 5, animationSpeed.toDouble()).toFloat()
-                    }
+                    val target = if (shouldShow) width.toDouble() else -width / 5.0
+                    module.slide =
+                        AnimationUtil.base(module.slide.toDouble(), target, animationSpeed.toDouble()).toFloat()
                 }
             }
         }

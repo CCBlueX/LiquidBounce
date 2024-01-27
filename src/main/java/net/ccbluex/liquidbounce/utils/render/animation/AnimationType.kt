@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.utils.render.animation
 
-enum class Type {
+enum class AnimationType {
     LINEAR,
     EASE_IN_QUAD,
     EASE_OUT_QUAD,
