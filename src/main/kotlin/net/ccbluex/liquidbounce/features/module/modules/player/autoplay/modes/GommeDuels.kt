@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay.modes
+import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoQueue.modes
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
@@ -38,9 +38,10 @@ object GommeDuels : Choice("GommeDuels") {
 
     private var inMatch = false
 
-    private var forceKillAura by boolean("ForceKillAura", true)
     private var winMessage by text("WinMessage", "GG, nice try")
     private var loseMessage by text("LoseMessage", "GG, bist wohl besser als ich!")
+
+    private var controlKillAura by boolean("ControlKillAura", true)
 
     override val parent: ChoiceConfigurable
         get() = modes
@@ -142,7 +143,9 @@ object GommeDuels : Choice("GommeDuels") {
     private suspend fun Sequence<*>.handleDuelsSituation() {
         // Check if player inventory has a head
         if (!inMatch) {
-            ModuleKillAura.enabled = false
+            if (controlKillAura) {
+                ModuleKillAura.enabled = false
+            }
 
             val headSlot = findHotbarSlot(Items.PLAYER_HEAD) ?: return
 
@@ -157,7 +160,7 @@ object GommeDuels : Choice("GommeDuels") {
                 PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
             }
             waitTicks(20)
-        } else if (!ModuleKillAura.enabled && forceKillAura) {
+        } else if (!ModuleKillAura.enabled && controlKillAura) {
             ModuleKillAura.enabled = true
         }
     }

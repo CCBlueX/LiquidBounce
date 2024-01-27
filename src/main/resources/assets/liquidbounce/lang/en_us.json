@@ -321,7 +321,7 @@
   "liquidbounce.module.autoGapple.description": "Automatically eats apples whenever your health is low.",
   "liquidbounce.module.autoHead.description": "Automatically uses Player Heads in your Hotbar, which act as a Golden Apple.",
   "liquidbounce.module.autoLeave.description": "Automatically leaves the server whenever your health goes below the specified threshold.",
-  "liquidbounce.module.autoPlay.description": "Automatically enters queues and plays the game for you.",
+  "liquidbounce.module.autoQueue.description": "Automatically queues up for next match.",
   "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low.",
   "liquidbounce.module.autoRespawn.description": "Automatically respawns you after dying.",
   "liquidbounce.module.autoSoup.description": "Automatically eats soup whenever your health is low.",

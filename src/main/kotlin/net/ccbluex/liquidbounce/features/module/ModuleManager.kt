@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
 import net.ccbluex.liquidbounce.features.module.modules.player.*
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
+import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
@@ -202,7 +202,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleReach,
             ModuleRegen,
             ModuleZoot,
-            ModuleAutoPlay,
+            ModuleAutoQueue,
 
             // Render
             ModuleAnimation,
