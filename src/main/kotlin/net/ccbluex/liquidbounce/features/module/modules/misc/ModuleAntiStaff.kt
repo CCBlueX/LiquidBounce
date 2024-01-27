@@ -43,7 +43,7 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
     private fun alertAboutStaff() {
         notification(
             "Staff Detected",
-            "Staff are watching you.",
+            message("staffDetected"),
             NotificationEvent.Severity.INFO
         )
     }
