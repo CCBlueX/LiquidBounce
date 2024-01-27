@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
@@ -148,11 +149,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
-            ModuleCapeTransfer,
-            ModuleHideClient,
             ModuleFocus,
-            ModuleAutoConfig,
-            ModuleRichPresence,
             ModuleAntiStaff,
 
             // Movement
@@ -260,7 +257,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProjectilePuncher,
             ModuleScaffold,
             ModuleTimer,
-            ModuleNuker
+            ModuleNuker,
+
+            // Client
+            ModuleAutoConfig,
+            ModuleRichPresence,
+            ModuleCapeTransfer,
+            ModuleHideClient,
+            ModuleEnemies
         )
 
         builtin.apply {
