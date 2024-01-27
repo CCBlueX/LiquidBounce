@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.graaljs;
 
-import net.ccbluex.liquidbounce.utils.mappings.McMappings;
+import net.ccbluex.liquidbounce.utils.mappings.Remapper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,23 +39,23 @@ public abstract class MixinHostClassDesc {
     @ModifyVariable(method = "lookupField(Ljava/lang/String;)Lcom/oracle/truffle/host/HostFieldDesc;",
             at = @At("HEAD"), argsOnly = true, index = 1, remap = false)
     private String remapFieldName(String name) {
-        return McMappings.INSTANCE.remapField(getType(), name, true);
+        return Remapper.INSTANCE.remapField(getType(), name, true);
     }
 
     @ModifyVariable(method = "lookupStaticField", at = @At("HEAD"), argsOnly = true, index = 1, remap = false)
     private String remapStaticFieldName(String name) {
-        return McMappings.INSTANCE.remapField(getType(), name, true);
+        return Remapper.INSTANCE.remapField(getType(), name, true);
     }
 
     @ModifyVariable(method = "lookupMethod(Ljava/lang/String;)Lcom/oracle/truffle/host/HostMethodDesc;",
             at = @At("HEAD"), argsOnly = true, index = 1, remap = false)
     private String remapMethodName(String name) {
-        return McMappings.INSTANCE.remapMethod(getType(), name, true);
+        return Remapper.INSTANCE.remapMethod(getType(), name, true);
     }
 
     @ModifyVariable(method = "lookupStaticMethod", at = @At("HEAD"), argsOnly = true, index = 1, remap = false)
     private String remapStaticMethodName(String name) {
-        return McMappings.INSTANCE.remapMethod(getType(), name, true);
+        return Remapper.INSTANCE.remapMethod(getType(), name, true);
     }
 
 }

@@ -31,7 +31,7 @@ import net.fabricmc.mappings.model.V2MappingsProvider
  *
  * This is going to be used for ultralight-databind and our JS script engine.
  */
-object McMappings {
+object Remapper {
 
      var mappings: Mappings? = null
 
