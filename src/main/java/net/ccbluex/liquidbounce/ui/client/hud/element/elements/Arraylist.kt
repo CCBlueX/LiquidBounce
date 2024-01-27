@@ -80,6 +80,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val textHeight by FloatValue("TextHeight", 11F, 1F..20F)
     private val textY by FloatValue("TextY", 1F, 0F..20F)
 
+    private val animation by ListValue("Animation", arrayOf("Slide", "Smooth"), "Normal") { tags }
+
     companion object {
         val spacedModules by BoolValue("SpacedModules", false)
         val inactiveStyle by ListValue("InactiveModulesStyle", arrayOf("Normal", "Color", "Hide"), "Color") 
