@@ -89,6 +89,7 @@ class Arraylist(
     private val textY by FloatValue("TextY", 1F, 0F..20F)
 
     private val animation by ListValue("Animation", arrayOf("Slide", "Smooth"), "Normal") { tags }
+    private val animationSpeed by FloatValue("AnimationSpeed", 0.2F, 0F..1F) {animation == "Smooth"}
 
     companion object {
         val spacedModules by BoolValue("SpacedModules", false)
@@ -178,9 +179,9 @@ class Arraylist(
 
                 "Smooth" -> {
                     if (shouldShow) {
-                        module.slide = AnimationUtil.base(module.slide.toDouble(), width.toDouble(), 0.1).toFloat()
+                        module.slide = AnimationUtil.base(module.slide.toDouble(), width.toDouble(), animationSpeed.toDouble()).toFloat()
                     } else {
-                        module.slide = AnimationUtil.base(module.slide.toDouble(), -width.toDouble() / 2, 0.2).toFloat()
+                        module.slide = AnimationUtil.base(module.slide.toDouble(), -width.toDouble() / 5, animationSpeed.toDouble()).toFloat()
                     }
                 }
             }
