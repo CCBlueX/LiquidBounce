@@ -77,8 +77,8 @@ public abstract class MixinWorldRenderer {
             return;
         }
 
-        if (CombatExtensionsKt.shouldBeShown(entity)) {
-            Color4b color = ModuleESP.INSTANCE.getColor(entity);
+        if (entity instanceof LivingEntity && CombatExtensionsKt.shouldBeShown(entity)) {
+            Color4b color = ModuleESP.INSTANCE.getColor((LivingEntity) entity);
             OutlineShader outlineShader = OutlineShader.INSTANCE;
             Framebuffer originalBuffer = this.entityOutlinesFramebuffer;
 
@@ -162,8 +162,9 @@ public abstract class MixinWorldRenderer {
             }
         }
 
-        if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive()) {
-            final Color4b color = ModuleESP.INSTANCE.getColor(instance);
+        if (instance instanceof LivingEntity && ModuleESP.INSTANCE.getEnabled()
+                && ModuleESP.GlowMode.INSTANCE.isActive()) {
+            final Color4b color = ModuleESP.INSTANCE.getColor((LivingEntity) instance);
             return color.toRGBA();
         }
 
