@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.utils.mappings.Remapper
 object JsReflectionUtil {
 
     @JvmName("classByName")
-    fun classByName(name: String): Class<*> = Class.forName(Remapper.remapClassName(name))
+    fun classByName(name: String): Class<*> = Class.forName(
+        Remapper.remapClassName(name).replace('/', '.')
+    )
 
     @JvmName("classByObject")
     fun classByObject(obj: Any): Class<*> = obj::class.java
@@ -36,7 +38,7 @@ object JsReflectionUtil {
 
     @JvmName("newInstanceByName")
     fun newInstanceByName(name: String, vararg args: Any?): Any? =
-        Class.forName(Remapper.remapClassName(name))
+        Class.forName(Remapper.remapClassName(name).replace('/', '.'))
             .getDeclaredConstructor(*args.map { it!!::class.java }.toTypedArray()).apply {
                 isAccessible = true
             }.newInstance(*args)
