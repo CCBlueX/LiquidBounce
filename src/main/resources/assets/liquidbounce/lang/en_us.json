@@ -387,6 +387,8 @@
   "liquidbounce.module.ignite.description": "Automatically sets targets around you on fire.",
   "liquidbounce.module.inventoryCleaner.description": "Automatically throws away useless items and sorts them.",
   "liquidbounce.module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
+  "liquidbounce.module.inventoryMove.messages.blinkStart": "You are now lagging for %s.",
+  "liquidbounce.module.inventoryMove.messages.blinkEnd": "You are no longer lagging and we closed your screen.",
   "liquidbounce.module.itemEsp.description": "Allows you to see dropped items through walls.",
   "liquidbounce.module.jumpEffect.description": "Shows an effect when you jump.",
   "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
