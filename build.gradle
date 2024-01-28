@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'org.jlleitschuh.gradle.ktlint' version '12.1.0'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
     id "io.gitlab.arturbosch.detekt" version "1.23.4"
@@ -76,7 +76,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
 
     // Minecraft
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -134,7 +134,7 @@ dependencies {
 
     // Test libraries
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
