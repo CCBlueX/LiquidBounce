@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleBugUp
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
@@ -70,7 +71,7 @@ object FakeLag : Listenable {
      */
     private fun shouldLag(packet: Packet<*>?): Boolean {
         return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
-            || NoFallBlink.shouldLag()
+            || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag()
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -130,6 +131,15 @@ object FakeLag : Listenable {
                     return@handler
                 }
             }
+
+            // Prevent lagging inventory actions if inventory move blink is enabled
+            is ClickSlotC2SPacket, is ButtonClickC2SPacket, is CreativeInventoryActionC2SPacket,
+                is SlotChangedStateC2SPacket -> {
+                if (ModuleInventoryMove.Blink.shouldLag()) {
+                    return@handler
+                }
+            }
+
         }
 
         if (event.origin == TransferOrigin.SEND) {
