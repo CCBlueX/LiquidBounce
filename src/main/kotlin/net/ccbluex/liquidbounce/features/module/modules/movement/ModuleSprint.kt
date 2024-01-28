@@ -51,8 +51,9 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
         val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
                 MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
-        val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir) && !shouldSprintOmnidirectionally()
-                && RotationManager.storedAimPlan?.applyVelocityFix == false && !hasForwardMovement
+        val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir)
+            && !shouldSprintOmnidirectionally()
+            && RotationManager.storedAimPlan?.applyVelocityFix == false && !hasForwardMovement
 
         return enabled && preventSprint
     }

@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
@@ -228,17 +227,4 @@ public abstract class MixinLivingEntity extends MixinEntity {
         return rotation.getRotationVec();
     }
 
-    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 2))
-    private void hookTickJumpEvent(CallbackInfo ci) {
-        if ((Object) this != MinecraftClient.getInstance().player) {
-            return;
-        }
-
-        // No need to call event if player is already jumping.
-        if (this.jumping) {
-            return;
-        }
-
-        EventManager.INSTANCE.callEvent(new TickJumpEvent());
-    }
 }

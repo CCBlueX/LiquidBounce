@@ -13,6 +13,7 @@
         "Render",
         "Exploit",
         "Player",
+        "Client",
         "World",
         "Misc",
         "Fun",
@@ -30,6 +31,7 @@
                 const module = {
                     category: category,
                     name: name,
+                    description: mod.description,
                     enabled: enabled
                 };
                 modules.push(module);

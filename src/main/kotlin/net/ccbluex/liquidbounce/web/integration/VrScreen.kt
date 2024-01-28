@@ -42,7 +42,7 @@ class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
         super.close()
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // render nothing
         BACKGROUND_SHADER.startShader()
 

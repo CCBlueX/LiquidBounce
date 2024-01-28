@@ -42,7 +42,7 @@ import net.minecraft.screen.slot.SlotActionType
 
 object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
-    private val health by int("Health", 15, 1..20)
+    private val health by int("Health", 15, 1..20, "HP")
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
 
     private val notDuringRegeneration by boolean("NotDuringRegeneration", true)

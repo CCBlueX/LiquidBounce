@@ -48,8 +48,8 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM,
         UnblockMode.values())
 
-    val tickOff by int("TickOff", 0, 0..2)
-    val tickOn by int("TickOn", 0, 0..2)
+    val tickOff by int("TickOff", 0, 0..2, "ticks")
+    val tickOn by int("TickOn", 0, 0..2, "ticks")
 
     val onScanRange by boolean("OnScanRange", true)
     private val onlyWhenInDanger by boolean("OnlyWhenInDanger", false)

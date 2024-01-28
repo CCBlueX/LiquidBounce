@@ -49,7 +49,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
     object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
         val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
-        val itemDropDelay by intRange("ItemDropDelay", 1..2, 1..40)
+        val itemDropDelay by intRange("ItemDropDelay", 1..2, 1..40, "ticks")
     }
 
     object Refill : ToggleableConfigurable(this, "Refill", true) {
@@ -135,8 +135,8 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         tree(Refill)
     }
 
-    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
-    private val swapPreviousDelay by int("SwapPreviousAdditionalDelay", 5, 1..100)
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
+    private val swapPreviousDelay by int("SwapPreviousAdditionalDelay", 5, 1..100, "ticks")
 
     val repeatable = repeatable {
         val mushroomStewSlot = findHotbarSlot(Items.MUSHROOM_STEW)
