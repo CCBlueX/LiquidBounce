@@ -7,3 +7,5 @@
 /.gradle/
 /build/
 /run/
+cmd.bat
+runclient.bat
