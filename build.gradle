@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
-    id 'org.jlleitschuh.gradle.ktlint' version '12.0.3'
+    id 'org.jlleitschuh.gradle.ktlint' version '12.1.0'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
     id "io.gitlab.arturbosch.detekt" version "1.23.4"
     id "com.github.node-gradle.node" version "7.0.1"
@@ -101,7 +101,7 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation('com.github.CCBlueX:mc-authlib:v1.3.3') {
+    implementation('com.github.CCBlueX:mc-authlib:1.3.5') {
         exclude group: 'com.google.code.gson', module: 'gson'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
@@ -111,9 +111,11 @@ dependencies {
     }
     implementation "com.github.CCBlueX:mcef:1.1.1-1.20.4"
 
-    implementation 'org.graalvm.sdk:graal-sdk:23.0.2'
-    implementation 'org.graalvm.truffle:truffle-api:23.0.2'
-    implementation 'org.graalvm.js:js:23.0.2'
+    implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
+
+    implementation 'org.graalvm.sdk:graal-sdk:23.0.3'
+    implementation 'org.graalvm.truffle:truffle-api:23.0.3'
+    implementation 'org.graalvm.js:js:23.0.3'
 
     runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
     runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
@@ -256,17 +258,21 @@ shadowJar {
     dependencies {
         include(dependency('com.github.CCBlueX:mcef'))
         include(dependency('com.github.CCBlueX:mc-authlib'))
+        include(dependency('com.github.CCBlueX:DiscordIPC'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('net.fabricmc:tiny-mappings-parser'))
-        include(dependency('org.graalvm.sdk:graal-sdk:23.0.2'))
-        include(dependency('org.graalvm.truffle:truffle-api:23.0.2'))
-        include(dependency('org.graalvm.js:js:23.0.2'))
+        include(dependency('org.graalvm.sdk:graal-sdk:23.0.3'))
+        include(dependency('org.graalvm.truffle:truffle-api:23.0.3'))
+        include(dependency('org.graalvm.js:js:23.0.3'))
         include(dependency('io.netty:netty-codec'))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
         include(dependency('io.netty:netty-codec-socks'))
         include(dependency('org.apache.commons:commons-exec'))
         include(dependency('com.vdurmont:semver4j:3.1.0'))
+        include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
+        include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
+        include(dependency('net.lenni0451:Reflect'))
     }
 }
 

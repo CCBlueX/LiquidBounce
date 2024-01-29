@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.utils.client.interaction
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
-import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
@@ -132,7 +129,7 @@ inline fun searchBlocksInRadius(
 }
 
 fun BlockPos.canStandOn(): Boolean {
-    return this.getState()!!.isSideSolid(mc.world!!, this, Direction.UP, SideShapeType.CENTER)
+    return this.getState()!!.isSideSolid(world, this, Direction.UP, SideShapeType.CENTER)
 }
 
 /**

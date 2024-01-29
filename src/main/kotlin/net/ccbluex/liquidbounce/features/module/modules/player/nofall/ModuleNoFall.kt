@@ -31,15 +31,16 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
 object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     internal val modes = choices(
-        "Mode", SpoofGround, arrayOf(
-            SpoofGround,
-            NoGround,
-            Packet,
-            MLG,
-            Rettungsplatform,
-            Spartan524Flag,
-            Vulcan,
-            Verus,
+        "Mode", NoFallSpoofGround, arrayOf(
+            NoFallSpoofGround,
+            NoFallNoGround,
+            NoFallPacket,
+            NoFallMLG,
+            NoFallRettungsplatform,
+            NoFallSpartan524Flag,
+            NoFallVulcan,
+            NoFallVerus,
+            NoFallBlink
         )
     )
 

@@ -39,8 +39,8 @@ object ClientUpdate {
         }
     }
 
-    private val newestVersion by lazy {
-        // https://api.liquidbounce.net/api/v1/version/builds/legacy
+    val newestVersion by lazy {
+        // https://api.liquidbounce.net/api/v1/version/builds/nextgen
         try {
             requestNewestBuildEndpoint(branch = LiquidBounce.clientBranch, release = !IN_DEVELOPMENT)
         } catch (e: Exception) {
@@ -65,7 +65,6 @@ object ClientUpdate {
                 val clientSemVersion = Semver(clientVersion, Semver.SemverType.LOOSE)
 
                 newestVersion.release && newestSemVersion.isGreaterThan(clientSemVersion)
-                false
             }
         } catch (e: Exception) {
             logger.error("Unable to check for update", e)

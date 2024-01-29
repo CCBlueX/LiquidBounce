@@ -29,11 +29,8 @@ import net.minecraft.util.Formatting;
 
 public class MCEFDownloaderMenu extends Screen {
 
-    private final Screen menu;
-
-    public MCEFDownloaderMenu(Screen menu) {
+    public MCEFDownloaderMenu() {
         super(Text.literal("LiquidBounce is downloading required libraries..."));
-        this.menu = menu;
     }
 
     @Override
@@ -120,7 +117,7 @@ public class MCEFDownloaderMenu extends Screen {
     public void tick() {
         if (MCEFDownloadListener.INSTANCE.isDone()) {
             close();
-            client.setScreen(menu);
+            client.setScreen(new TitleScreen());
         }
     }
 

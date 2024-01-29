@@ -56,11 +56,11 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
     private const val BENEFICIAL_SQUARE_RANGE = 16.0
 
-    private val delay by int("Delay", 10, 10..20)
+    private val delay by int("Delay", 10, 10..20, "ticks")
     private val health by int("Health", 14, 1..19)
     private val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
     private val doNotBenefitOthers by boolean("DoNotBenefitOthers", true)
-    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
 
     private val healthPotion by boolean("HealthPotion", true)
     private val regenPotion by boolean("RegenPotion", true)

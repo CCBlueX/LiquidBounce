@@ -24,11 +24,10 @@ import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
-import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDerp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
+import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
@@ -36,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
+import org.spongepowered.asm.mixin.Unique;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
@@ -48,7 +48,6 @@ import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -209,7 +208,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationYaw(ClientPlayerEntity instance) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return ModuleDerp.INSTANCE.getEnabled() ? ModuleDerp.INSTANCE.getRotation()[0] : instance.getYaw();
+            return instance.getYaw();
         }
 
         return rotation.getYaw();
@@ -219,7 +218,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationPitch(ClientPlayerEntity instance) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return ModuleDerp.INSTANCE.getEnabled() ? ModuleDerp.INSTANCE.getRotation()[1] : instance.getPitch();
+            return instance.getPitch();
         }
 
         return rotation.getPitch();

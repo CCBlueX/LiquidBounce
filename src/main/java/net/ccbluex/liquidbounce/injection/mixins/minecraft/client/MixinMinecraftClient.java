@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideClient;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
@@ -149,9 +148,10 @@ public abstract class MixinMinecraftClient {
         StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
         titleBuilder.append(" v");
         titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
+        titleBuilder.append(" ");
 
         if (LiquidBounce.IN_DEVELOPMENT) {
-            titleBuilder.append(" (dev) ");
+            titleBuilder.append("(dev) ");
         }
 
         titleBuilder.append(LiquidBounce.INSTANCE.getClientCommit());
@@ -246,9 +246,7 @@ public abstract class MixinMinecraftClient {
         if (CombatManager.INSTANCE.shouldPauseCombat()) {
             cir.setReturnValue(false);
         }
-        if (!ModulePerfectHit.INSTANCE.getEnabled()) {
-            return;
-        }
+
         float h = player.getAttackCooldownProgress(0.5F);
 
         if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {

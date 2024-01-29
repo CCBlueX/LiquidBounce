@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
@@ -29,6 +28,8 @@ import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -36,6 +37,7 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.text.Text
+import net.minecraft.util.Language
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -88,8 +90,8 @@ open class Module(
 
             if (!CommandConfig.loadingNow) {
                 notification(
-                    if (new) Text.translatable("liquidbounce.generic.enabled")
-                    else Text.translatable("liquidbounce.generic.disabled"),
+                    if (new) translation("liquidbounce.generic.enabled")
+                    else translation("liquidbounce.generic.disabled"),
                     this.name,
                     if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
                 )
@@ -122,8 +124,11 @@ open class Module(
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
+    private val descriptionKey
+        get() = "$translationBaseKey.description"
+
     open val description: String
-        get() = Text.translatable("$translationBaseKey.description").outputString()
+        get() = translation(descriptionKey).convertToString()
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -142,6 +147,12 @@ open class Module(
         inline get() = mc.networkHandler!!
     protected val interaction: ClientPlayerInteractionManager
         inline get() = mc.interactionManager!!
+
+    init {
+        if (!LanguageManager.hasFallbackTranslation(descriptionKey)) {
+            logger.warn("$name is missing fallback description key $descriptionKey")
+        }
+    }
 
     /**
      * Called when module is turned on
@@ -188,6 +199,6 @@ open class Module(
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
     ) = choices(this, name, activeCallback, choicesCallback)
 
-    fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
+    fun message(key: String, vararg args: Any) = translation("$translationBaseKey.messages.$key", *args)
 
 }

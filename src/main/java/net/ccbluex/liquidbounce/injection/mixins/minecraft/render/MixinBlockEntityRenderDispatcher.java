@@ -49,7 +49,7 @@ public class MixinBlockEntityRenderDispatcher {
                     .getOutlineVertexConsumers();
             var type = ModuleStorageESP.INSTANCE.categorizeBlockEntity(blockEntity);
 
-            if (type != null) {
+            if (type != null && type.getShouldRender().invoke(blockEntity.getPos())) {
                 var color = type.getColor().invoke();
 
                 if (color.getA() > 0) {

@@ -51,7 +51,7 @@ class JcefBrowser : IBrowser, Listenable {
     override fun makeDependenciesAvailable(whenAvailable: () -> Unit) {
         if (!MCEF.isInitialized()) {
             MCEF.getSettings().apply {
-                downloadMirror = "https://dl.ccbluex.net/resources"
+                downloadMirror = "https://dl.liquidbounce.net/resources"
                 // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
             }
@@ -77,6 +77,8 @@ class JcefBrowser : IBrowser, Listenable {
     override fun shutdownBrowserBackend() {
         MCEF.shutdown()
     }
+
+    override fun isInitialized() = MCEF.isInitialized()
 
     override fun createTab(url: String) = JcefTab(this, url) { false }.apply {
         synchronized(tabs) {
