@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.math.Vec3d
 import java.util.*
 
@@ -52,6 +52,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
     private val evadeArrows by boolean("EvadeArrows", true)
+    private val autoDisable by boolean("AutoDisable", true)
 
     private object BreadcrumbsOption : ToggleableConfigurable(this, "Breadcrumbs", true) {
 
@@ -133,8 +134,10 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             // We have found no packet that avoids getting hit? Then we default to blinking.
             // AutoDoge might save the situation...
             if (evadingPacket == null) {
-                notification("Blink", "Unable to evade arrow. Blinking.",
-                    NotificationEvent.Severity.INFO)
+                notification(
+                    "Blink", "Unable to evade arrow. Blinking.",
+                    NotificationEvent.Severity.INFO
+                )
                 enabled = false
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("Blink", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
@@ -154,7 +157,8 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             }
 
             notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
-            enabled = false
+            if (autoDisable)
+                enabled = false
         }
     }
 

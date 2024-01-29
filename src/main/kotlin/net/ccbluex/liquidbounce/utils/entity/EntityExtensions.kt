@@ -85,11 +85,7 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
 
     val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.multiply(1.0, 0.0, 1.0))
 
-    if (wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)) {
-        return true
-    }
-
-    return false
+    return wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)
 }
 
 val ClientPlayerEntity.pressingMovementButton
