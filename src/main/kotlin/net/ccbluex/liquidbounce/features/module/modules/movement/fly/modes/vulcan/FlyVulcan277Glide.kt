@@ -41,9 +41,9 @@ internal object FlyVulcan277Glide : Choice("Vulcan277Glide") {
         if (player.fallDistance > 0.1) {
             if (player.age % 2 == 0) {
                 player.velocity.y = -0.155
+            } else {
+                player.velocity.y = -0.1
             }
-        } else {
-            player.velocity.y = -0.1
         }
     }
 
