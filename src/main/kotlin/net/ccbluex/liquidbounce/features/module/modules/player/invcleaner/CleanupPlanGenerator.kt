@@ -20,12 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
 import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
-    private val availableItems: List<ItemSlot>
+    private val availableItems: List<ItemSlot>,
 ) {
     private val hotbarSwaps: ArrayList<InventorySwap> = ArrayList()
 
@@ -35,8 +33,8 @@ class CleanupPlanGenerator(
     /**
      * Keeps track of where a specific type of item should be placed. e.g. BLOCK -> [Hotbar 7, Hotbar 8]
      */
-    private val categoryToSlotsMap: Map<ItemCategory, List<ItemSlot>>
-        = template.slotContentMap.entries
+    private val categoryToSlotsMap: Map<ItemCategory, List<ItemSlot>> =
+        template.slotContentMap.entries
             .filter { (_, itemType) -> itemType.category != null }
             .groupBy { (_, itemType) -> itemType.category!! }
             .mapValues { (_, entries) -> entries.map { (slot, _) -> slot } }
@@ -56,16 +54,20 @@ class CleanupPlanGenerator(
         return InventoryCleanupPlan(
             usefulItems = packer.usefulItems,
             swaps = hotbarSwaps,
-            mergeableItems = groupItemsByType()
+            mergeableItems = groupItemsByType(),
         )
     }
 
-    private fun processItemCategory(category: ItemCategory, availableItems: List<WeightedItem>) {
-        val maxItemCount = if (category.type.allowOnlyOne) {
-            1
-        } else {
-            template.itemLimitPerCategory[category] ?: Int.MAX_VALUE
-        }
+    private fun processItemCategory(
+        category: ItemCategory,
+        availableItems: List<WeightedItem>,
+    ) {
+        val maxItemCount =
+            if (category.type.allowOnlyOne) {
+                1
+            } else {
+                template.itemLimitPerCategory[category] ?: Int.MAX_VALUE
+            }
 
         val hotbarSlotsToFill = this.categoryToSlotsMap[category]
 
@@ -75,12 +77,13 @@ class CleanupPlanGenerator(
         val prioritizedItemList = availableItems.sortedDescending()
 
         // Decide where the items should go.
-        val requiredMoves = this.packer.packItems(
-            itemsToFillIn = prioritizedItemList,
-            hotbarSlotsToFill = hotbarSlotsToFill,
-            maxItemCount = maxItemCount,
-            requiredStackCount = hotbarSlotsToFill?.size ?: 0
-        )
+        val requiredMoves =
+            this.packer.packItems(
+                itemsToFillIn = prioritizedItemList,
+                hotbarSlotsToFill = hotbarSlotsToFill,
+                maxItemCount = maxItemCount,
+                requiredStackCount = hotbarSlotsToFill?.size ?: 0,
+            )
 
         this.hotbarSwaps.addAll(requiredMoves)
     }
@@ -121,7 +124,7 @@ class CleanupPlanPlacementTemplate(
     /**
      * If false, slots which also contains items of that category, those items are not replaced with other items.
      */
-    val isGreedy: Boolean
+    val isGreedy: Boolean,
 )
 
 enum class ItemSlotType {

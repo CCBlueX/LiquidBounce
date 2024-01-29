@@ -31,7 +31,7 @@ class ItemPacker {
         itemsToFillIn: List<WeightedItem>,
         hotbarSlotsToFill: List<ItemSlot>?,
         maxItemCount: Int,
-        requiredStackCount: Int
+        requiredStackCount: Int,
     ): List<InventorySwap> {
         val moves = ArrayList<InventorySwap>()
 
@@ -83,7 +83,7 @@ class ItemPacker {
      */
     private fun fillItemIntoSlot(
         filledInItemSlot: ItemSlot,
-        leftTargetSlotsToFill: Iterator<ItemSlot>
+        leftTargetSlotsToFill: Iterator<ItemSlot>,
     ): ItemSlot? {
         while (leftTargetSlotsToFill.hasNext()) {
             // Get the slots that still need to be filled if there are any (left/at all).
@@ -91,10 +91,11 @@ class ItemPacker {
             val hotbarSlotToFill = leftTargetSlotsToFill.next()
 
             // We don't need to move around equivalent items
-            val areStacksSame = ItemStack.areEqual(
-                filledInItemSlot.itemStack,
-                hotbarSlotToFill.itemStack
-            )
+            val areStacksSame =
+                ItemStack.areEqual(
+                    filledInItemSlot.itemStack,
+                    hotbarSlotToFill.itemStack,
+                )
 
             when {
                 // The item is already in the potential target slot, don't change anything about it.
@@ -125,5 +126,4 @@ class ItemPacker {
         // We found no target slot
         return null
     }
-
 }

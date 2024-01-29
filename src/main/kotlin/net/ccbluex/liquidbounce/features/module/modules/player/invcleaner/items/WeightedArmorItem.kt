@@ -30,6 +30,5 @@ class WeightedArmorItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
     override val category: ItemCategory
         get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
 
-    override fun compareTo(other: WeightedItem): Int =
-        ArmorComparator.compare(this.armorPiece, (other as WeightedArmorItem).armorPiece)
+    override fun compareTo(other: WeightedItem): Int = ArmorComparator.compare(this.armorPiece, (other as WeightedArmorItem).armorPiece)
 }
