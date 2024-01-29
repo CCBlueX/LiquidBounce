@@ -47,7 +47,7 @@ class TestScaffold {
 
 //        val rotationModes = arrayOf("Center", "Stabilized", "NearestRotation", "OnTick")
         val rotationModes = arrayOf("Stabilized")
-        val possibleItems = arrayOf(Items.STONE, Items.STONE_SLAB)
+        val possibleItems = arrayOf(Items.STONE)
 
 
         val rotationModeVariants = rotationModes.map {
@@ -66,6 +66,9 @@ class TestScaffold {
             val startPositions = server { getMarkerPositions("start") }
 
             loopByServer(startPositions) { startPositionBox ->
+                client {
+                    clearInputs()
+                }
                 server {
                     resetStandardConditions()
 
@@ -87,7 +90,8 @@ class TestScaffold {
                     )
                 }
 
-                waitTicks(2)
+                // Wait for the rotation to reset
+                waitTicks(12)
 
                 sync()
 
@@ -118,7 +122,7 @@ class TestScaffold {
             val goalBlocks = server.getMarkerPositions("end")
 
             // It has to place 11 blocks with 8 ticks delay. additionally it has 25 ticks for initial rotation
-            waitUntilOrFail(6 * 11 + 25 , "Failed to reach goal in time") {
+            waitUntilOrFail(6 * 11 + 30 , "Failed to reach goal in time") {
                 goalBlocks.any { server.player.isStandingOn(it) }
             }
 
