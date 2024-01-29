@@ -1,10 +1,20 @@
 package net.ccbluex.liquidbounce.integrationtest.util
 
 import net.ccbluex.liquidbounce.config.*
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.integrationtest.TestScaffold
+import java.io.InputStreamReader
 
 
 fun applySettings(configurable: Configurable, setter: SettingsApplication.() -> Unit) {
     setter(SettingsApplication(configurable, configurable.name))
+}
+
+fun loadSettingsFromPath(module: Module, path: String) {
+    val stream = TestScaffold::class.java.getResourceAsStream(path)
+        ?: throw IllegalArgumentException("Path $path was not found")
+
+    ConfigSystem.deserializeConfigurable(module, InputStreamReader(stream))
 }
 
 class SettingsApplication(

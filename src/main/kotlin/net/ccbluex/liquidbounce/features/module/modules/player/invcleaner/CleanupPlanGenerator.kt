@@ -100,6 +100,10 @@ class CleanupPlanGenerator(
         var currentStackCount = 0
         var currentItemCount = 0
 
+        // TODO: This function needs refactoring bc hard to read.
+        // The iterator of hotbar slots that still need filling.
+        var leftHotbarSlotIterator = hotbarSlotsToFill?.iterator()
+
         for (filledInItem in itemsToFillIn) {
             val maxCountReached = currentItemCount >= maxItemCount
             val allStacksFilled = currentStackCount >= requiredStackCount
@@ -117,9 +121,12 @@ class CleanupPlanGenerator(
 
             usefulItems.add(filledInItemSlot)
 
-            // If we have a slot to fill...
-            if (hotbarSlotsToFill != null && currentStackCount < hotbarSlotsToFill.size) {
-                val hotbarSlotToFill = hotbarSlotsToFill[currentStackCount]
+            while (true) {
+                // Get the slots that still need to be filled if there are any (left/at all).
+                if (leftHotbarSlotIterator == null || !leftHotbarSlotIterator.hasNext())
+                    break
+
+                val hotbarSlotToFill = leftHotbarSlotIterator.next()
 
                 // We don't need to move around equivalent items
                 val areStacksSame = ItemStack.areEqual(
@@ -127,12 +134,33 @@ class CleanupPlanGenerator(
                     hotbarSlotToFill.itemStack
                 )
 
-                if (filledInItemSlot != hotbarSlotToFill && !areStacksSame) {
-                    hotbarSwaps.add(InventorySwap(filledInItemSlot, hotbarSlotToFill))
+                // The item is already in the potential target slot, don't change anything about it.
+                if (filledInItemSlot == hotbarSlotToFill) {
+                    // We mark the slot as used to prevent it being used for another slot.
+                    alreadyAllocatedItems.add(hotbarSlotToFill)
+
+                    // Don't try to use this item further
+                    break
                 }
 
+                // The item isn't already in the target slot, but the items are the same anyway. In this case we need to
+                // find a new slot for the item.
+                if (areStacksSame) {
+                    // We mark the slot as used to prevent it being used for another slot.
+                    alreadyAllocatedItems.add(hotbarSlotToFill)
+
+                    // Find a new slot for the item
+                    continue
+                }
+
+                hotbarSwaps.add(InventorySwap(filledInItemSlot, hotbarSlotToFill))
+
+                // We performed a swap. Both items have changed.
                 alreadyAllocatedItems.add(filledInItemSlot)
                 alreadyAllocatedItems.add(hotbarSlotToFill)
+
+                break
+
             }
 
             currentItemCount += filledInItem.itemStack.count

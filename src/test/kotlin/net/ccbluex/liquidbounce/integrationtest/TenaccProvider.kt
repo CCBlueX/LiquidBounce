@@ -1,22 +1,27 @@
 package net.ccbluex.liquidbounce.integrationtest
 
-import net.ccbluex.tenacc.api.runner.ScheduledTest
-import net.ccbluex.tenacc.api.runner.TACCTestProvider
-import net.ccbluex.tenacc.api.runner.TACCTestRegistry
-import net.ccbluex.tenacc.api.runner.TACCTestScheduler
+import net.ccbluex.tenacc.api.runner.*
+import net.ccbluex.tenacc.impl.TestIdentifier
 import net.ccbluex.tenacc.utils.TestErrorFormatter
 import net.ccbluex.tenacc.utils.chat
 import net.minecraft.server.network.ServerPlayerEntity
 
 class TenaccProvider: TACCTestProvider {
     override val headlessMode: Boolean
-        get() = false
+        get() = System.getenv("TENACC_HEADLESS") != null
 
     override val structureTemplateBasePath: String
         get() = "/"
 
     @Suppress("EmptyFunctionBlock")
-    override fun init(scheduler: TACCTestScheduler?) {}
+    override fun init(scheduler: TACCTestScheduler?) {
+        if (headlessMode && scheduler != null) {
+            scheduler.enqueueTests(
+                TestScheduleRequest(TestIdentifier("TestInvCleaner", "testLoopRegressions")),
+                TestScheduleRequest(TestIdentifier("TestScaffold", "testRotationBottleneck")),
+            )
+        }
+    }
 
     override fun onTestFail(player: ServerPlayerEntity, schedulerInfo: ScheduledTest, error: Throwable) {
         player.chat("§cTest §l'${schedulerInfo.fn.identifier}' " +
@@ -35,5 +40,6 @@ class TenaccProvider: TACCTestProvider {
 
     override fun registerTests(registry: TACCTestRegistry) {
         registry.registerTestClass(TestScaffold::class)
+        registry.registerTestClass(TestInvCleaner::class)
     }
 }

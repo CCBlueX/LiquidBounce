@@ -97,6 +97,12 @@ open class HotbarItemSlot(private val hotbarSlot: Int) : ItemSlot() {
     override fun hashCode(): Int {
         return Objects.hash(this.javaClass, hotbarSlot)
     }
+
+    override fun toString(): String {
+        return "HotbarItemSlot(hotbarSlot=$hotbarSlot, itemStack=$itemStack)"
+    }
+
+
 }
 
 class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {

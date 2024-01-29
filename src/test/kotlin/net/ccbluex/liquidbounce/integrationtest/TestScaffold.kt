@@ -1,25 +1,19 @@
 package net.ccbluex.liquidbounce.integrationtest
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.integrationtest.util.applySettings
 import net.ccbluex.liquidbounce.integrationtest.util.isStandingOn
+import net.ccbluex.liquidbounce.integrationtest.util.loadSettingsFromPath
 import net.ccbluex.tenacc.api.TACCTest
 import net.ccbluex.tenacc.api.TACCTestClass
 import net.ccbluex.tenacc.api.client.InputKey
 import net.ccbluex.tenacc.api.common.TACCSequenceAdapter
 import net.ccbluex.tenacc.api.common.TACCTestSequence
 import net.ccbluex.tenacc.api.common.TACCTestVariant
-import net.ccbluex.tenacc.utils.Rotation
-import net.ccbluex.tenacc.utils.lookDirection
-import net.ccbluex.tenacc.utils.outputString
-import net.ccbluex.tenacc.utils.resetStandardConditions
-import net.ccbluex.tenacc.utils.sendInventoryUpdates
+import net.ccbluex.tenacc.utils.*
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import org.joml.Vector3f
-import java.io.InputStreamReader
 
 @TACCTestClass("TestScaffold")
 class TestScaffold {
@@ -130,13 +124,6 @@ class TestScaffold {
         }
 
         sync()
-    }
-
-    fun loadSettingsFromPath(module: Module, path: String) {
-        val stream = TestScaffold::class.java.getResourceAsStream(path)
-            ?: throw IllegalArgumentException("Path $path was not found")
-
-        ConfigSystem.deserializeConfigurable(module, InputStreamReader(stream))
     }
 
     fun resetSettings() {
