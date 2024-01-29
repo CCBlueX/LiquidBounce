@@ -20,10 +20,10 @@ class TestScaffold {
 
     @TACCTest(name = "testRotationBottleneck", scenary = "scaffold/scaffold_underground_straight.nbt", timeout = 1000)
     fun runTest(adapter: TACCSequenceAdapter) {
-        genericTestRotationBottleneck(adapter, diagonal=false)
+        genericTestRotationBottleneck(adapter)
     }
 
-    private fun genericTestRotationBottleneck(adapter: TACCSequenceAdapter, diagonal: Boolean) {
+    private fun genericTestRotationBottleneck(adapter: TACCSequenceAdapter) {
         fun loadBaseSettings(mode: String) {
             resetSettings()
 

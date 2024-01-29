@@ -27,14 +27,9 @@ class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
     private val availableItems: List<ItemSlot>
 ) {
-    /**
-     * Items that have already been used. For example if already we used Inventory slot 12 as a sword, we cannot reuse
-     * it as an axe in slot 2.
-     */
-    private val alreadyAllocatedItems: HashSet<ItemSlot> = HashSet()
-
-    private val usefulItems: HashSet<ItemSlot> = HashSet()
     private val hotbarSwaps: ArrayList<InventorySwap> = ArrayList()
+
+    private val packer = ItemPacker()
 
     // TODO Implement greedy check
     /**
@@ -59,7 +54,7 @@ class CleanupPlanGenerator(
         }
 
         return InventoryCleanupPlan(
-            usefulItems = usefulItems,
+            usefulItems = packer.usefulItems,
             swaps = hotbarSwaps,
             mergeableItems = groupItemsByType()
         )
@@ -79,93 +74,15 @@ class CleanupPlanGenerator(
         // Use a descending sort order so that we can fill the slots with the best items first.
         val prioritizedItemList = availableItems.sortedDescending()
 
-        markAndAllocateItems(
+        // Decide where the items should go.
+        val requiredMoves = this.packer.packItems(
             itemsToFillIn = prioritizedItemList,
             hotbarSlotsToFill = hotbarSlotsToFill,
             maxItemCount = maxItemCount,
             requiredStackCount = hotbarSlotsToFill?.size ?: 0
         )
-    }
 
-    /**
-     * Takes items from the [itemsToFillIn] list until it collected [maxItemCount] items is and [requiredStackCount]
-     * stacks. The items are marked as useful and fills in hotbar slots if there are still slots to fill.
-     */
-    private fun markAndAllocateItems(
-        itemsToFillIn: List<WeightedItem>,
-        hotbarSlotsToFill: List<ItemSlot>?,
-        maxItemCount: Int,
-        requiredStackCount: Int
-    ) {
-        var currentStackCount = 0
-        var currentItemCount = 0
-
-        // TODO: This function needs refactoring bc hard to read.
-        // The iterator of hotbar slots that still need filling.
-        var leftHotbarSlotIterator = hotbarSlotsToFill?.iterator()
-
-        for (filledInItem in itemsToFillIn) {
-            val maxCountReached = currentItemCount >= maxItemCount
-            val allStacksFilled = currentStackCount >= requiredStackCount
-
-            if (maxCountReached && allStacksFilled) {
-                break
-            }
-
-            val filledInItemSlot = filledInItem.itemSlot
-
-            // The item is already allocated and marked as useful, so we cannot use it again.
-            if (filledInItemSlot in alreadyAllocatedItems) {
-                continue
-            }
-
-            usefulItems.add(filledInItemSlot)
-
-            while (true) {
-                // Get the slots that still need to be filled if there are any (left/at all).
-                if (leftHotbarSlotIterator == null || !leftHotbarSlotIterator.hasNext())
-                    break
-
-                val hotbarSlotToFill = leftHotbarSlotIterator.next()
-
-                // We don't need to move around equivalent items
-                val areStacksSame = ItemStack.areEqual(
-                    filledInItemSlot.itemStack,
-                    hotbarSlotToFill.itemStack
-                )
-
-                // The item is already in the potential target slot, don't change anything about it.
-                if (filledInItemSlot == hotbarSlotToFill) {
-                    // We mark the slot as used to prevent it being used for another slot.
-                    alreadyAllocatedItems.add(hotbarSlotToFill)
-
-                    // Don't try to use this item further
-                    break
-                }
-
-                // The item isn't already in the target slot, but the items are the same anyway. In this case we need to
-                // find a new slot for the item.
-                if (areStacksSame) {
-                    // We mark the slot as used to prevent it being used for another slot.
-                    alreadyAllocatedItems.add(hotbarSlotToFill)
-
-                    // Find a new slot for the item
-                    continue
-                }
-
-                hotbarSwaps.add(InventorySwap(filledInItemSlot, hotbarSlotToFill))
-
-                // We performed a swap. Both items have changed.
-                alreadyAllocatedItems.add(filledInItemSlot)
-                alreadyAllocatedItems.add(hotbarSlotToFill)
-
-                break
-
-            }
-
-            currentItemCount += filledInItem.itemStack.count
-            currentStackCount++
-        }
+        this.hotbarSwaps.addAll(requiredMoves)
     }
 
     fun groupItemsByType(): HashMap<ItemId, MutableList<ItemSlot>> {
