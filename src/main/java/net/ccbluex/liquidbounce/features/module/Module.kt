@@ -105,6 +105,7 @@ open class Module @JvmOverloads constructor(
     // HUD
     val hue = nextFloat()
     var slide = 0F
+    var yAnim = 0f
 
     // Tag
     open val tag: String?
