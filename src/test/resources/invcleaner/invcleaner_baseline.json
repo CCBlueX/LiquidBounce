@@ -1,0 +1,128 @@
+{
+  "name": "InventoryCleaner",
+  "value": [
+    {
+      "name": "Enabled",
+      "value": false
+    },
+    {
+      "name": "Bind",
+      "value": -1
+    },
+    {
+      "name": "Hidden",
+      "value": false
+    },
+    {
+      "name": "InventoryConstraints",
+      "value": [
+        {
+          "name": "StartDelay",
+          "value": {
+            "from": 1,
+            "to": 1
+          }
+        },
+        {
+          "name": "ClickDelay",
+          "value": {
+            "from": 1,
+            "to": 1
+          }
+        },
+        {
+          "name": "CloseDelay",
+          "value": {
+            "from": 1,
+            "to": 1
+          }
+        },
+        {
+          "name": "InvOpen",
+          "value": false
+        },
+        {
+          "name": "NoMove",
+          "value": false
+        },
+        {
+          "name": "NoRotation",
+          "value": false
+        }
+      ]
+    },
+    {
+      "name": "MaxBlocks",
+      "value": 512
+    },
+    {
+      "name": "MaxArrows",
+      "value": 256
+    },
+    {
+      "name": "UsefulItems",
+      "value": [
+        "minecraft:water_bucket",
+        "minecraft:lava_bucket",
+        "minecraft:milk_bucket",
+        "minecraft:flint_and_steel",
+        "minecraft:ender_pearl",
+        "minecraft:golden_apple",
+        "minecraft:enchanted_golden_apple",
+        "minecraft:arrow",
+        "minecraft:spectral_arrow",
+        "minecraft:tipped_arrow",
+        "minecraft:potion",
+        "minecraft:lingering_potion",
+        "minecraft:splash_potion",
+        "minecraft:trident",
+        "minecraft:tnt",
+        "minecraft:elytra"
+      ]
+    },
+    {
+      "name": "Greedy",
+      "value": true
+    },
+    {
+      "name": "OffHandItem",
+      "value": "Shield"
+    },
+    {
+      "name": "SlotItem-1",
+      "value": "Sword"
+    },
+    {
+      "name": "SlotItem-2",
+      "value": "Bow"
+    },
+    {
+      "name": "SlotItem-3",
+      "value": "Pickaxe"
+    },
+    {
+      "name": "SlotItem-4",
+      "value": "Axe"
+    },
+    {
+      "name": "SlotItem-5",
+      "value": "None"
+    },
+    {
+      "name": "SlotItem-6",
+      "value": "None"
+    },
+    {
+      "name": "SlotItem-7",
+      "value": "Food"
+    },
+    {
+      "name": "SlotItem-8",
+      "value": "Block"
+    },
+    {
+      "name": "SlotItem-9",
+      "value": "Block"
+    }
+  ]
+}

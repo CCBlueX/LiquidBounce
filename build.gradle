@@ -97,6 +97,10 @@ dependencies {
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
     // modImplementation "maven.modrinth:viafabricplus:3.0.2"
 
+    // Tests
+    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
+//    modImplementation "net.ccbluex:tenacc:0.1.0"
+
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
@@ -178,8 +182,8 @@ tasks.register('buildTheme', NpmTask) {
         println 'Successfully build theme'
     }
 
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
-    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
+    inputs.dir("src-theme/src")
     outputs.dir('src-theme/public')
 }
 
@@ -192,8 +196,7 @@ tasks.register('bundleTheme', NodeTask) {
     }
 
     // Incremental stuff
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
-    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
     outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 
