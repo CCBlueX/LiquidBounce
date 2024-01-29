@@ -246,7 +246,11 @@ object LiquidBounce : Listenable {
             }
 
             // Load acknowledgement handler
-            AcknowledgementHandler
+            // TODO: Since acknowledgement handler is not used anymore, we should remove it.
+            //  It was intially used to detect desyncs between the client and the browser, however we
+            //  figured out this issue is with Svelte and not with JCEF. I hope this is resolved with the usage
+            //  of the React frontend.
+            // AcknowledgementHandler
         }
     }
 
