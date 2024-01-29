@@ -40,6 +40,7 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
 import net.minecraft.client.gui.screen.option.OptionsScreen
+import net.minecraft.client.gui.screen.world.CreateWorldScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
 import org.lwjgl.glfw.GLFW
@@ -120,7 +121,10 @@ object IntegrationHandler : Listenable {
         GAME_MENU("game_menu", { it is GameMenuScreen }, true),
         INVENTORY("inventory", { it is InventoryScreen || it is CreativeInventoryScreen }, true),
         CONTAINER("container", { it is GenericContainerScreen }, true),
-        DISCONNECTED("disconnected", { it is DisconnectedScreen }, true);
+        DISCONNECTED("disconnected", { it is DisconnectedScreen }, true),
+        CREATE_WORLD("create_world", { it is CreateWorldScreen },  true, open = {
+            CreateWorldScreen.create(mc, parent)
+        });
 
         fun open() = RenderSystem.recordRenderCall(open)
 
