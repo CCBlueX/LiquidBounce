@@ -16,14 +16,14 @@
     const isStatic = staticTag === "static";
 
     function changeRoute(name, splash = false) {
+        confirmVirtualScreen(name);
+
         if (splash) {
             showingSplash = true;
             nextRoute = name;
         } else {
             cleanupListeners();
             push("/" + name).then(() => {
-                confirmVirtualScreen(name);
-
                 showingSplash = false;
                 nextRoute = null;
             }).catch((error) => {

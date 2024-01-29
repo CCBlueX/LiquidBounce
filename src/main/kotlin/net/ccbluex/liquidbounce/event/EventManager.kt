@@ -78,7 +78,6 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerStepEvent::class,
     PlayerStepSuccessEvent::class,
     FluidPushEvent::class,
-    TickJumpEvent::class,
     PipelineEvent::class,
     PacketEvent::class,
     ClientStartEvent::class,

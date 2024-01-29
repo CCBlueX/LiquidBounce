@@ -8,6 +8,7 @@
 
     export let name;
     export let enabled;
+    export let description;
 
     export let toggleModule;
 
@@ -56,6 +57,7 @@
          class:enabled={enabled} class:expanded={expanded} class="module" id={name + "-module"}>{name}</div>
     {#if expanded}
         <div class="settings" transition:slide={{duration: 400, easing: sineInOut}}>
+            <p class="description">{description}</p>
             {#each configurable.value as s}
                 <GenericSetting reference={s} write={writeSettings} />
             {/each}
@@ -115,5 +117,11 @@
     background-color: rgba(0, 0, 0, 0.36);
     border-left: solid 4px var(--accent);
     overflow: hidden;
+  }
+
+  .description {
+    color: var(--text);
+    font-size: 12px;
+    padding: 10px;
   }
 </style>

@@ -32,7 +32,7 @@ import net.minecraft.client.gui.screen.DeathScreen
 object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
 
     // There is a delay until the button is clickable on the death screen (20 ticks)
-    private val delay by int("Delay", 0, 0..20)
+    private val delay by int("Delay", 0, 0..20, "ticks")
 
     val screenHandler = sequenceHandler<ScreenEvent> {
         if (it.screen is DeathScreen) {

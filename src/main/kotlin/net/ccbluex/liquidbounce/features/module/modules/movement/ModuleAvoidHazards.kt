@@ -34,11 +34,13 @@ import net.minecraft.util.shape.VoxelShapes
  */
 object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
 
-    val cacti by boolean("Cacti", true)
-    val berryBush by boolean("BerryBush", true)
-    val pressurePlates by boolean("PressurePlates", true)
-    val fire by boolean("Fire", true)
-    val magmaBlocks by boolean("MagmaBlocks", true)
+    private val cacti by boolean("Cacti", true)
+    private val berryBush by boolean("BerryBush", true)
+    private val pressurePlates by boolean("PressurePlates", true)
+    private val fire by boolean("Fire", true)
+    private val magmaBlocks by boolean("MagmaBlocks", true)
+
+    // Conflicts with AvoidHazards
     val cobWebs by boolean("Cobwebs", true)
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
@@ -52,13 +54,7 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
             event.shape = VoxelShapes.fullCube()
         } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
-        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock && !event.state.isSideSolid(
-                world,
-                event.pos,
-                Direction.UP,
-                SideShapeType.CENTER
-            )
-        ) {
+        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
         }
     }

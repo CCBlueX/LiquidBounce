@@ -24,7 +24,9 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.RequiredByScript
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.client.MinecraftClient
@@ -43,8 +45,8 @@ open class ToggleableConfigurable(@Exclude @ProtocolExclude val module: Module? 
     val translationBaseKey: String
         get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
-    val description: MutableText
-        get() = Text.translatable("$translationBaseKey.description")
+    val description: String
+        get() = translation("$translationBaseKey.description").convertToString()
 
     var enabled by boolean("Enabled", enabled).listen { newState ->
         updateEnabled(this.module?.enabled ?: true, newState)
@@ -107,8 +109,8 @@ class ChoiceConfigurable(
     val translationBaseKey: String
         get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
-    val description: MutableText
-        get() = Text.translatable("$translationBaseKey.description")
+    val description: String
+        get() = translation("$translationBaseKey.description").convertToString()
 
     init {
         this.choices = choicesCallback(this)
@@ -151,8 +153,8 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
     private val translationBaseKey: String
         get() = "${this.parent.translationBaseKey}.choice.${name.toLowerCamelCase()}"
 
-    val description: MutableText
-        get() = Text.translatable("$translationBaseKey.description")
+    val description: String
+        get() = translation("$translationBaseKey.description").convertToString()
 
     override val choiceName: String
         get() = this.name

@@ -261,7 +261,11 @@ open class Value<T : Any>(
  * Ranged value adds support for closed ranges
  */
 class RangedValue<T : Any>(
-    name: String, value: T, @Exclude val range: ClosedRange<*>, type: ValueType
+    name: String,
+    value: T,
+    @Exclude val range: ClosedRange<*>,
+    @Exclude val suffix: String,
+    type: ValueType
 ) : Value<T>(name, value, valueType = type) {
 
     fun getFrom(): Double {
@@ -330,7 +334,7 @@ class ChooseListValue<T : NamedChoice>(
     }
 
     override fun setByString(string: String) {
-        set(this.choices.firstOrNull { it.choiceName.equals(string, true) }!! as T)
+        set(this.choices.firstOrNull { it.choiceName.equals(string, true) }!!)
     }
 }
 

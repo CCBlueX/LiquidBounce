@@ -46,9 +46,9 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
      */
     private val slot by int("Slot", 0, 0..8)
 
-    private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100)
+    private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
 
-    val handler =
+    private val handleBlockBreakingProgress  =
         handler<BlockBreakingProgressEvent> { event ->
             val blockState = world.getBlockState(event.pos)
             val inventory = player.inventory

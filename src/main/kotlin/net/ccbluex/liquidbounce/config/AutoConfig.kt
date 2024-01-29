@@ -154,7 +154,7 @@ object AutoConfig {
         jsonObject.addProperty("clientVersion", LiquidBounce.clientVersion)
         jsonObject.addProperty("clientCommit", LiquidBounce.clientCommit)
         mc.currentServerEntry?.let {
-            jsonObject.addProperty("serverAddress", it.address)
+            jsonObject.addProperty("serverAddress", it.address.dropPort().rootDomain())
         }
         jsonObject.addProperty("protocolName", protocolName)
         jsonObject.addProperty("protocolVersion", protocolVersion)

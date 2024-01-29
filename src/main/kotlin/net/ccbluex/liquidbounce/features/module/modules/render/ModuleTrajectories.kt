@@ -58,7 +58,7 @@ import kotlin.math.sqrt
  */
 
 object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
-    private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000)
+    private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
     private val alwaysShowBow by boolean("AlwaysShowBow", false)
     private val otherPlayers by boolean("OtherPlayers", true)
     private val activeTrajectoryArrow by boolean("ActiveTrajectoryArrow", true)

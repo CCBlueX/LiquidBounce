@@ -49,8 +49,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         get() = "liquidbounce.module.esp"
 
     private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, OutlineMode, GlowMode))
-
-    private val colorModes = choices("ColorMode", StaticMode, arrayOf(StaticMode, RainbowMode))
+    private val colorModes = choices("ColorMode", HealthMode, arrayOf(StaticMode, HealthMode, RainbowMode))
 
     private object StaticMode : Choice("Static") {
         override val parent: ChoiceConfigurable
@@ -64,7 +63,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             get() = colorModes
     }
 
+    private object HealthMode : Choice("Health") {
+        override val parent: ChoiceConfigurable
+            get() = colorModes
+    }
+
+    val friendColor by color("Friends", Color4b(0, 0, 255))
     val teamColor by boolean("TeamColor", true)
+
 
     private object BoxMode : Choice("Box") {
 
@@ -110,7 +116,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         }
     }
 
-    fun findRenderedEntities() = world.entities.filter { it.shouldBeShown() }
+    fun findRenderedEntities() = world.entities.filterIsInstance<LivingEntity>().filter { it.shouldBeShown() }
 
     object GlowMode : Choice("Glow") {
 
@@ -126,33 +132,50 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         val width by float("Width", 1F, 0.5F..1.5F)
     }
 
-    private fun getBaseColor(): Color4b {
-        return if (RainbowMode.isActive) rainbow() else StaticMode.color
+    private fun getBaseColor(entity: LivingEntity): Color4b {
+        if (entity is PlayerEntity) {
+            if (FriendManager.isFriend(entity) && friendColor.a > 0) {
+                return friendColor
+            }
+
+            ModuleMurderMystery.getColor(entity)?.let { return it }
+
+            if (teamColor) {
+                getTeamColor(entity)?.let { return it }
+            }
+        }
+
+        return if (RainbowMode.isActive) {
+            rainbow()
+        } else if (HealthMode.isActive) {
+            val health = entity.health
+            val maxHealth = entity.maxHealth
+
+            val healthPercentage = health / maxHealth
+
+            val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0..255)
+            val green = (255 * healthPercentage).toInt().coerceIn(0..255)
+
+            return Color4b(red, green, 0)
+        } else {
+            StaticMode.color
+        }
     }
 
-    fun getColor(entity: Entity): Color4b {
-        if (entity !is LivingEntity) {
-            return getBaseColor()
-        }
+    fun getColor(entity: LivingEntity): Color4b {
+        val baseColor = getBaseColor(entity)
 
         if (entity.hurtTime > 0) {
-            return Color4b(255, 0, 0)
-        }
-        if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
-            return Color4b(0, 0, 255)
+            return Color4b.RED
         }
 
-        ModuleMurderMystery.getColor(entity)?.let { return it }
-
-        if (teamColor) {
-            getTeamColor(entity)?.let { return it }
-        }
-
-        return getBaseColor()
+        return baseColor
     }
 
-    private fun getTeamColor(entity: Entity): Color4b? {
-        return Color4b(Color(entity.displayName!!.style.color?.rgb ?: return null))
-    }
+    /**
+     * Returns the team color of the [entity] or null if the entity is not in a team.
+     */
+    private fun getTeamColor(entity: Entity)
+        = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
 
 }
