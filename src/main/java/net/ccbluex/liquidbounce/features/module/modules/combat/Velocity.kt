@@ -275,7 +275,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         return Math.floorMod(moveYaw.toInt(), 360).toDouble()
     }
 
-    @EventTarget
+    @EventTarget(priority = 1)
     fun onPacket(event: PacketEvent) {
         val thePlayer = mc.thePlayer ?: return
 
