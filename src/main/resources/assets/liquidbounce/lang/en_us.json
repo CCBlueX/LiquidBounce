@@ -273,6 +273,7 @@
   "liquidbounce.generic.forum": "Forum",
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
+  "liquidbounce.generic.locked": "The module is locked and cannot be enabled. It is likely not bypassing.",
   "liquidbounce.liquidchat.authenticationFailed": "Authentication failed! LiquidChat requires Minecraft premium account.",
   "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",

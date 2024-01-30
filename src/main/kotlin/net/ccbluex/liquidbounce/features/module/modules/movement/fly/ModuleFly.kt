@@ -41,6 +41,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     internal val modes = choices(
         "Mode", FlyVanilla, arrayOf(
             // Generic fly modes
