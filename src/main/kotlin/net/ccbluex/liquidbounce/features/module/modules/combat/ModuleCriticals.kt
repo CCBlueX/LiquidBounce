@@ -45,6 +45,10 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices("Mode", { PacketCrit }) {
         arrayOf(
             NoneChoice(it),

@@ -48,6 +48,10 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices("Mode", { Modify }) {
         arrayOf(
             Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset

@@ -50,7 +50,7 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world
+    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
 ) : Listenable, Configurable(name) {
 
     val valueEnabled = boolean("Enabled", state).also {

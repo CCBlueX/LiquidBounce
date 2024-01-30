@@ -42,6 +42,10 @@ import net.minecraft.util.shape.VoxelShapes
  */
 object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     internal val modes = choices("Mode", LiquidWalkVanilla, arrayOf(
         LiquidWalkVanilla,
         LiquidWalkNoCheatPlus
