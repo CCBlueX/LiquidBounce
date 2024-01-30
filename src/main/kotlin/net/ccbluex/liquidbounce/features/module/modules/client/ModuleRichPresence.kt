@@ -67,12 +67,18 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
     private var ipcClient: IPCClient? = null
     private var timestamp = System.currentTimeMillis()
 
+    private var doNotTryToConnect = false
+
     init {
         doNotInclude()
     }
 
+    override fun enable() {
+        doNotTryToConnect = false
+    }
+
     private fun connectIpc() {
-        if (ipcClient?.status == PipeStatus.CONNECTED) {
+        if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
             return
         }
 
@@ -80,17 +86,15 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
             ipcClient = IPCClient(ipcConfiguration.appID)
             ipcClient?.connect()
         }.onFailure {
-            if (it is NoDiscordClientException) {
-                logger.warn("Failed to connect to Discord RPC. Please make sure you have Discord running.")
+            logger.error("Failed to connect to Discord RPC.", it)
 
+            if (it is NoDiscordClientException) {
                 notification(
                     title = "Discord RPC",
                     message = "Please make sure you have Discord running.",
                     severity = NotificationEvent.Severity.ERROR
                 )
             } else {
-                logger.error("Failed to connect to Discord RPC.", it)
-
                 notification(
                     title = "Discord RPC",
                     message = "Failed to initialize Discord RPC.",
@@ -98,9 +102,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
                 )
             }
 
-            enabled = false
-
-            return
+            doNotTryToConnect = true
         }.onSuccess {
             logger.info("Successfully connected to Discord RPC.")
         }
