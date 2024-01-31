@@ -28,28 +28,22 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.utils.aiming.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.Entity
-import net.minecraft.entity.projectile.thrown.EggEntity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
@@ -77,7 +71,15 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
     /**
      * The target tracker to find the best enemy to attack.
      */
-    private val targetTracker = tree(TargetTracker(defaultPriority = PriorityEnum.DISTANCE))
+    internal val targetTracker = tree(TargetTracker(defaultPriority = PriorityEnum.DISTANCE))
+    private val pointTracker = tree(PointTracker(
+        lowestPointDefault = PointTracker.PreferredBoxPart.HEAD,
+        highestPointDefault = PointTracker.PreferredBoxPart.HEAD,
+        // The lag on Hypixel is massive
+        timeEnemyOffsetDefault = 3f,
+        timeEnemyOffsetScale = 0f..7f,
+        gaussianOffsetDefault = false
+    ))
 
     /**
      * So far I have never seen an anti-cheat which detects high turning speed for actions such as
@@ -181,14 +183,13 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
         }
     }
 
-    private fun generateRotation(target: Entity, gravityType: GravityType): Rotation? {
-        val eyesOfPlayer = player.eyes
+    private fun generateRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
+        val (fromPoint, toPoint, _, _)
+            = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
 
         return when (gravityType) {
             GravityType.LINEAR -> {
-                val headOfEnemy = target.eyes
-
-                RotationManager.makeRotation(headOfEnemy, eyesOfPlayer)
+                RotationManager.makeRotation(toPoint, fromPoint)
             }
 
             // Determines the required yaw and pitch angles to hit a target with a projectile,
@@ -196,7 +197,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
             GravityType.PROJECTILE -> {
                 // The velocity of the projectile at the moment of launch, determined by testing.
                 // todo: use math: eggEntity.setVelocity(user, user.getPitch(), user.getYaw(), 0.0F, 1.5F, 1.0F);
-                val targetPosition = target.box.center.subtract(eyesOfPlayer)
+                val targetPosition = toPoint.subtract(fromPoint)
 
                 val launchVelocity = 0.6f
 
