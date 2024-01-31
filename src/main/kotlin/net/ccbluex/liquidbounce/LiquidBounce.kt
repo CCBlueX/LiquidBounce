@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.Reconnect
-import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
@@ -144,7 +143,6 @@ object LiquidBounce : Listenable {
             Reconnect
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
-            Chat
             BrowserManager
             Fonts
 

@@ -264,7 +264,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleRichPresence,
             ModuleCapeTransfer,
             ModuleHideClient,
-            ModuleEnemies
+            ModuleEnemies,
+            ModuleLiquidChat
         )
 
         builtin.apply {
