@@ -47,7 +47,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, 
     class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Cooldown", true)
         where T: Module {
 
-        private val rangeCooldown by floatRange("CooldownRange", 1.0f..1.0f, 0f..1f)
+        val rangeCooldown by floatRange("CooldownRange", 1.0f..1.0f, 0f..1f)
 
         private var nextCooldown = rangeCooldown.random()
 
@@ -94,7 +94,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, 
      * Contains the time when the last click was performed and when the next click is possible.
      */
     private var clickData = newClickData()
-    private val cooldown: Cooldown<T>?
+    val cooldown: Cooldown<T>?
 
     val goingToClick: Boolean
         get() = isClickOnNextTick(0)

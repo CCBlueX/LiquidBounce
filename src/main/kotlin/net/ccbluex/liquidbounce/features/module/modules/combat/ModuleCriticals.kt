@@ -120,7 +120,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     }
 
-    private object JumpCrit : Choice("Jump") {
+    object JumpCrit : Choice("Jump") {
 
         override val parent: ChoiceConfigurable
             get() = modes
