@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
 
-package net.ccbluex.liquidbounce.features.chat.client
+package net.ccbluex.liquidbounce.features.chat
 
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -27,10 +29,13 @@ import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
-import net.ccbluex.liquidbounce.features.chat.Chat
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.utils.client.logger
 
-class ChannelHandler(private val handshaker: WebSocketClientHandshaker) : SimpleChannelInboundHandler<Any>() {
+class ChannelHandler(private val chatClient: ChatClient,
+                     private val handshaker: WebSocketClientHandshaker) : SimpleChannelInboundHandler<Any>() {
 
     lateinit var handshakeFuture: ChannelPromise
 
@@ -58,7 +63,7 @@ class ChannelHandler(private val handshaker: WebSocketClientHandshaker) : Simple
      * Sub-classes may override this method to change behavior.
      */
     override fun channelInactive(ctx: ChannelHandlerContext) {
-        Chat.onDisconnect()
+        EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
     }
 
     /**
@@ -69,8 +74,13 @@ class ChannelHandler(private val handshaker: WebSocketClientHandshaker) : Simple
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         logger.error("LiquidChat error", cause)
-        Chat.onError(cause)
-        if (!handshakeFuture.isDone) handshakeFuture.setFailure(cause)
+        EventManager.callEvent(ClientChatErrorEvent(
+            cause.localizedMessage ?: cause.message ?: cause.javaClass.name
+        ))
+
+        if (!handshakeFuture.isDone) {
+            handshakeFuture.setFailure(cause)
+        }
         ctx.close()
     }
 
@@ -100,7 +110,7 @@ class ChannelHandler(private val handshaker: WebSocketClientHandshaker) : Simple
         }
 
         when (msg) {
-            is TextWebSocketFrame -> Chat.client.onMessage(msg.text())
+            is TextWebSocketFrame -> chatClient.handlePlainMessage(msg.text())
             is CloseWebSocketFrame -> channel.close()
         }
     }

@@ -6,7 +6,7 @@
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
     <ID>CyclomaticComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
-    <ID>CyclomaticComplexMethod:Chat.kt$Chat$private fun onClientError(packet: ClientErrorPacket)</ID>
+    <ID>CyclomaticComplexMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
     <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
@@ -26,6 +26,7 @@
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
+    <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>LongMethod:ClientEndpoints.kt$internal fun RestNode.setupClientRestApi()</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
@@ -148,7 +149,7 @@
     <ID>ThrowsCount:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
-    <ID>TooManyFunctions:Chat.kt$Chat : ToggleableConfigurable</ID>
+    <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
     <ID>TooManyFunctions:CombatUtils.kt$CombatManager : Listenable</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
@@ -164,8 +165,6 @@
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
     <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
-    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent> { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
-    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent> { reconnect() }</ID>
     <ID>UnusedPrivateProperty:ModuleAutoTool.kt$ModuleAutoTool$private val handleBlockBreakingProgress = handler&lt;BlockBreakingProgressEvent> { event -> val blockState = world.getBlockState(event.pos) val inventory = player.inventory val index = if (search) { val (hotbarSlot, stack) = (0..8).map { it to inventory.getStack(it) }.filter { (_, stack) -> ( stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)) ) }.maxByOrNull { (_, stack) -> stack.getMiningSpeedMultiplier(blockState) } ?: return@handler val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState) // The current slot already matches the best if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) { return@handler } hotbarSlot } else { slot } SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay) }</ID>
     <ID>UnusedPrivateProperty:ModuleBugUp.kt$ModuleBugUp$i</ID>
     <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>

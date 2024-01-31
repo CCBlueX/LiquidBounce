@@ -24,7 +24,7 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.features.chat.client.packet.User
+import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
@@ -58,6 +58,25 @@ class NotificationEvent(val title: String, val message: String, val severity: Se
     }
 }
 
+@Nameable("clientChatStateChange")
+@WebSocketEvent
+class ClientChatStateChange(val state: State) : Event() {
+    enum class State {
+        @SerializedName("connecting")
+        CONNECTING,
+        @SerializedName("connected")
+        CONNECTED,
+        @SerializedName("logon")
+        LOGGING_IN,
+        @SerializedName("loggedIn")
+        LOGGED_IN,
+        @SerializedName("disconnected")
+        DISCONNECTED,
+        @SerializedName("authenticationFailed")
+        AUTHENTICATION_FAILED,
+    }
+}
+
 @Nameable("clientChatMessage")
 @WebSocketEvent
 class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
@@ -72,6 +91,10 @@ class ClientChatMessageEvent(val user: User, val message: String, val chatGroup:
 @Nameable("clientChatError")
 @WebSocketEvent
 class ClientChatErrorEvent(val error: String) : Event()
+
+@Nameable("clientChatJwtToken")
+// Do not define as WebSocket event, because it contains sensitive data
+class ClientChatJwtTokenEvent(val jwt: String) : Event()
 
 @Nameable("altManagerUpdate")
 @WebSocketEvent
