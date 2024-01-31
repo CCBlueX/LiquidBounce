@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -125,6 +127,19 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         AutoBlock.stopBlocking()
     }
 
+    override fun enable() {
+        // Warn if there is a nonsensical cooldown configuration.
+        val cooldown = this.clickScheduler.cooldown ?: return
+        val badValue = cooldown.enabled && cooldown.rangeCooldown.start < 1.0
+
+        if (ModuleCriticals.enabled && ModuleCriticals.JumpCrit.isActive && badValue) {
+            notification(
+                "Criticals miss configured!",
+                "Jump criticals don't work properly if KillAura's CooldownRange is exactly between 1 and 1.",
+                NotificationEvent.Severity.ERROR
+            )
+        }
+    }
 
     private var renderTarget: Entity? = null
 
