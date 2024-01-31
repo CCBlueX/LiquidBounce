@@ -90,23 +90,29 @@ public abstract class MixinRenderEntityItem extends Render<EntityItem> {
         float scaleY = ibakedmodel.getItemCameraTransforms().getTransform(ItemCameraTransforms.TransformType.GROUND).scale.y;
 
         if (isPhysicsState) {
-            translate((float) x, (float) y + sinValue + yOffset * scaleY + (-0.2), (float) z);
+            translate((float)x, (float)y, (float)z);
         } else {
             translate((float) x, (float) y + sinValue + yOffset * scaleY, (float) z);
+        }
+
+        if (isGui3d) {
+            translate(0, 0, -0.08);
+        } else {
+            translate(0, 0, -0.04);
         }
 
         if (isGui3d || this.renderManager.options != null) {
             float rotationYaw = (age / 20.0F + hoverStart) * (180F / (float) Math.PI);
 
-            rotationYaw *= itemPhysics.getRotationSpeed().get() * (1.0F + Math.min(age / 100.0F, 1.0F));
+            rotationYaw *= itemPhysics.getRotationSpeed().get() * (1.0F + Math.min(age / 360.0F, 1.0F));
 
             if (isPhysicsState) {
                 if (itemIn.onGround) {
-                    GL11.glRotatef(itemIn.rotationYaw, 0.0f, 1.0f, 0.0f);
                     GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+                    GL11.glRotatef(itemIn.rotationYaw, 0.0f, 0.0f, 1.0f);
                 } else {
                     for (int a = 0; a < 10; ++a) {
-                        GL11.glRotatef(rotationYaw, weight, weight, 0.0f);
+                        GL11.glRotatef(rotationYaw, weight, weight, 1.0f);
                     }
                 }
             } else {
