@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
@@ -274,8 +275,6 @@ object RotationManager : Listenable {
      * to the server.
      */
     val tickHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
-        val player = mc.player ?: return@handler
-
         val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
         input.sneaking = event.sneaking
