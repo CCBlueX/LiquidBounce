@@ -200,7 +200,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         renderNameTags = false
 
         try {
-            val entitiesGrouped = getEntitiesByColor(maxRenderDistance.toDouble())
+            val entitiesGrouped = getEntitiesByColor(maxRenderDistanceSq)
 
             entitiesGrouped.forEach { (color, entities) ->
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
@@ -208,7 +208,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
                 for (entity in entities) {
                     val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
-                    if (distanceSquared <= maxRenderDistance) {
+                    if (distanceSquared <= maxRenderDistanceSq) {
 
                         if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) {
                             continue
