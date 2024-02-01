@@ -11,9 +11,11 @@ import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.*
 import net.minecraft.client.resources.I18n
+import java.awt.Color
 
 class GuiMainMenu : GuiScreen() {
 
@@ -41,16 +43,32 @@ class GuiMainMenu : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        drawRect(width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175, Integer.MIN_VALUE)
+        drawBorderedRect(width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175,
+            2f,
+            Integer.MIN_VALUE,
+            Integer.MIN_VALUE)
 
         Fonts.fontBold180.drawCenteredString(CLIENT_NAME, width / 2F, height / 8F, 4673984, true)
         Fonts.font35.drawCenteredString(clientVersionText, width / 2F + 148, height / 8F + Fonts.font35.fontHeight, 0xffffff, true)
 
         val messageOfTheDay = messageOfTheDay?.message
         if (messageOfTheDay?.isNotBlank() == true) {
+            val lines = messageOfTheDay.lines()
+
+            drawBorderedRect(width / 2f - 115,
+                height / 4f + 190,
+                width / 2f + 115,
+                height / 4f + 192 + (Fonts.font35.fontHeight * lines.size),
+                2f,
+                Integer.MIN_VALUE,
+                Integer.MIN_VALUE,
+            )
+
             // Draw rect below main rect and within draw MOTD text
-            drawRect(width / 2f - 115, height / 4f + 190, width / 2f + 115, height / 4f + 200 + Fonts.font35.fontHeight, Integer.MIN_VALUE)
-            Fonts.font35.drawCenteredString(messageOfTheDay, width / 2F, height / 4f + 197.5f, 0xffffff, true)
+            for ((index, line) in lines.withIndex()) {
+                Fonts.font35.drawCenteredString(line, width / 2F, height / 4f + 197.5f
+                        + (Fonts.font35.fontHeight * index), 0xffffff, true)
+            }
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks)
