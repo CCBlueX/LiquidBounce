@@ -163,13 +163,14 @@ class Arraylist(
             when (animation) {
                 "Slide" -> {
                     // If modules become inactive because they only work when in game, animate them as if they got disabled
-                    module.slideStep = if (shouldShow) delta / 4F else -delta / 4F
                     if (shouldShow) {
                         if (module.slide < width) {
                             module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
+                            module.slideStep += delta / 4F
                         }
                     } else {
                         module.slide = AnimationUtils.easeOut(module.slideStep, width.toFloat()) * width
+                        module.slideStep -= delta / 4F
                     }
 
                     module.slide = module.slide.coerceIn(0F, width.toFloat())
