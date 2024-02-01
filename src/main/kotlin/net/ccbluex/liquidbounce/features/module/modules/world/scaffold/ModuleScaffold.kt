@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
@@ -44,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -60,6 +60,8 @@ import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.block.BlockWithEntity
+import net.minecraft.block.FallingBlock
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
@@ -169,19 +171,21 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
      * The chain will prefer the block that is solid. If both are solid, it goes to the next criteria
      * (in this case full cube) and so on
      */
-    private val BLOCK_COMPARATOR_FOR_HOTBAR =
+    val BLOCK_COMPARATOR_FOR_HOTBAR =
         ComparatorChain(
+            PreferFavourableBlocks,
             PreferSolidBlocks,
             PreferFullCubeBlocks,
-            PreferLessSlipperyBlocks,
+            PreferWalkableBlocks,
             PreferAverageHardBlocks,
             PreferStackSize(higher = false),
         )
     val BLOCK_COMPARATOR_FOR_INVENTORY =
         ComparatorChain(
+            PreferFavourableBlocks,
             PreferSolidBlocks,
             PreferFullCubeBlocks,
-            PreferLessSlipperyBlocks,
+            PreferWalkableBlocks,
             PreferAverageHardBlocks,
             PreferStackSize(higher = true),
         )
@@ -478,7 +482,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return true
     }
 
-    private fun isValidBlock(stack: ItemStack?): Boolean {
+    fun isValidBlock(stack: ItemStack?): Boolean {
         if (stack == null) return false
 
         val item = stack.item
@@ -493,7 +497,41 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return false
         }
 
+        // We don't want to suicide...
+        if (block is FallingBlock) {
+            return false
+        }
+
         return !DISALLOWED_BLOCKS_TO_PLACE.contains(block)
+    }
+
+    /**
+     * Special handling for unfavourable blocks (like crafting tables, slabs, etc.):
+     * - [ModuleScaffold]: Unfavourable blocks are only used when there is no other option left
+     * - [ModuleInventoryCleaner]: Unfavourable blocks are not used as blocks by inv-cleaner.
+     */
+    fun isBlockUnfavourable(stack: ItemStack): Boolean {
+        val item = stack.item
+
+        if (item !is BlockItem)
+            return true
+
+        val block = item.block
+
+        return when {
+            // We dislike slippery blocks...
+            block.slipperiness > 0.6F -> true
+            // We dislike soul sand and slime...
+            block.velocityMultiplier < 1.0F -> true
+            // We hate honey...
+            block.jumpVelocityMultiplier < 1.0F -> true
+            // We don't want to place bee hives, chests, spawners, etc.
+            block is BlockWithEntity -> true
+            // We don't like slabs etc.
+            !block.defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN) -> true
+            // Is there a hard coded answer?
+            else -> block in UNFAVORABLE_BLOCKS_TO_PLACE
+        }
     }
 
     private fun getTargetedPosition(): BlockPos {
