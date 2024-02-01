@@ -48,16 +48,36 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private val timerBoostMode by ListValue("TimerMode", arrayOf("Normal", "Smart", "SmartMove"), "Normal")
 
     private val ticksValue by IntegerValue("Ticks", 10, 1..20)
+
+    // Min & Max Boost Delay Settings
     private val timerBoostValue by FloatValue("TimerBoost", 1.5f, 0.01f..35f)
+
+    private val minBoostDelay: FloatValue = object : FloatValue("MinBoostDelay", 0.5f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxBoostDelay.get())
+    }
+
+    private val maxBoostDelay: FloatValue = object : FloatValue("MaxBoostDelay", 0.55f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minBoostDelay.get())
+    }
+
+    // Min & Max Charged Delay Settings
     private val timerChargedValue by FloatValue("TimerCharged", 0.45f, 0.05f..5f)
+
+    private val minChargedDelay: FloatValue = object : FloatValue("MinChargedDelay", 0.75f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxChargedDelay.get())
+    }
+
+    private val maxChargedDelay: FloatValue = object : FloatValue("MaxChargedDelay", 0.9f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minChargedDelay.get())
+    }
 
     // Normal Mode Settings
     private val rangeValue by FloatValue("Range", 3.5f, 1f..5f) { timerBoostMode == "Normal" }
     private val cooldownTickValue by IntegerValue("CooldownTick", 10, 1..50) { timerBoostMode == "Normal" }
 
     // Smart & SmartMove Mode Range
-    private val minRange by FloatValue("MinRange", 1f, 1f..5f) { timerBoostMode != "Normal" }
-    private val maxRange by FloatValue("MaxRange", 5f, 1f..5f) { timerBoostMode != "Normal" }
+    private val minRange by FloatValue("MinRange", 1f, 1f..8f) { timerBoostMode != "Normal" }
+    private val maxRange by FloatValue("MaxRange", 5f, 1f..8f) { timerBoostMode != "Normal" }
 
     // Min & Max Tick Delay
     private val minTickDelay: IntegerValue = object : IntegerValue("MinTickDelay", 50, 1..500) {
@@ -191,9 +211,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     fun onMotion(event: MotionEvent) {
         val nearbyEntity = getNearestEntityInRange() ?: return
         val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
-        val stopDistance = RandomUtils.nextDouble(minStopRange.toDouble(), maxStopRange.toDouble())
 
-        confirmStop = (stopRange && entityDistance < stopDistance)
+        confirmStop = (stopRange && entityDistance in minStopRange..maxStopRange)
     }
 
     /**
@@ -202,8 +221,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Randomize the timer & charged delay a bit, to bypass some AntiCheat
-        val timerboost = Random.nextDouble(0.5, 0.56)
-        val charged = Random.nextDouble(0.75, 0.91)
+        val timerboost = RandomUtils.nextFloat(minBoostDelay.get(), maxBoostDelay.get())
+        val charged = RandomUtils.nextFloat(minChargedDelay.get(), maxChargedDelay.get())
 
         if (playerTicks <= 0 || confirmStop) {
             timerReset()
