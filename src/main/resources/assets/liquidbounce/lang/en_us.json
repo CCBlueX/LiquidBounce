@@ -396,6 +396,7 @@
   "liquidbounce.module.kick.description": "Kicks yourself from the server.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Cannot enable Kick in singleplayer.",
   "liquidbounce.module.killAura.description": "Automatically attacks enemies.",
+  "liquidbounce.module.killAura.messages.badCooldown": "The cooldown should be at least 1.0, otherwise you will not be able to deal critical damage properly.",
   "liquidbounce.module.liquidWalk.description": "Allows you to walk on water.",
   "liquidbounce.module.longJump.description": "Makes you jump longer.",
   "liquidbounce.module.minimap.description": "Displays a minimap on your screen.",
