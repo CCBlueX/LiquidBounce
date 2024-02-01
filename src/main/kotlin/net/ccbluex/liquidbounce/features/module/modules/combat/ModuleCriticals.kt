@@ -296,7 +296,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val ticksTillCrit = nextPossibleCrit.coerceAtLeast(ticksTillFall)
 
-        val hitProbability = 0.6f
+        val hitProbability = 0.75f
 
         val damageOnCrit = 0.5f * hitProbability
 
