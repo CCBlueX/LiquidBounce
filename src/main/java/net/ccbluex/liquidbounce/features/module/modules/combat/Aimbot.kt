@@ -41,8 +41,9 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
     private val yawJitterMultiplier by FloatValue("JitterYawMultiplier", 1f, 0.1f..2.5f)
     private val pitchJitterMultiplier by FloatValue("JitterPitchMultiplier", 1f, 0.1f..2.5f)
     private val center by BoolValue("Center", false)
-    private val headLock by BoolValue("Headlock", false) { center }
-    private val headLockBlockHeight by FloatValue("headBlockHeight", -1f, -2f..0f) { headLock }
+    private val headLock by BoolValue("Headlock", false) { center && lock }
+    private val headLockBlockHeight by FloatValue("HeadBlockHeight", -1f, -2f..0f) { headLock && center && lock }
+    private val breakBlocks by BoolValue("BreakBlocks", true)
 
     private val clickTimer = MSTimer()
 
@@ -102,6 +103,9 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
     private fun findRotation(entity: Entity, random: Random): Boolean {
         val player = mc.thePlayer ?: return false
+        if (mc.playerController.isHittingBlock && breakBlocks) {
+            return false
+        }
 
         val (predictX, predictY, predictZ) = entity.currPos.subtract(entity.prevPos)
             .times(2 + predictEnemyPosition.toDouble())
@@ -138,7 +142,7 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         }
 
         // look headLockBlockHeight higher
-        if (headLock) {
+        if (headLock && center && lock) {
             val distance = player.getDistanceToEntityBox(entity)
             val playerEyeHeight = player.eyeHeight
             val blockHeight = headLockBlockHeight
