@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.lang.LanguageManager.loadLanguages
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.ScriptManager.enableScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.loadScripts
+import net.ccbluex.liquidbounce.script.remapper.Remapper
 import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
 import net.ccbluex.liquidbounce.tabs.BlocksTab
 import net.ccbluex.liquidbounce.tabs.ExploitsTab
@@ -124,6 +125,10 @@ object LiquidBounce {
         try {
             // Remapper
             loadSrg()
+
+            if (!Remapper.mappingsLoaded) {
+                error("Failed to load SRG mappings.")
+            }
 
             // ScriptManager
             loadScripts()

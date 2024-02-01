@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.file.FileManager.dir
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
 import java.io.File
+import java.security.MessageDigest
 
 /**
  * A srg remapper
@@ -21,6 +22,8 @@ object Remapper {
     private const val srgName = "stable_22"
     private val srgFile = File(dir, "mcp-$srgName.srg")
 
+    internal var mappingsLoaded = false
+
     private val fields = hashMapOf<String, HashMap<String, String>>()
     private val methods = hashMapOf<String, HashMap<String, String>>()
 
@@ -28,20 +31,47 @@ object Remapper {
      * Load srg
      */
     fun loadSrg() {
+        // Download sha256 file
+        val sha256File = File(dir, "mcp-$srgName.srg.sha256")
+        if (!sha256File.exists() || !sha256File.isFile || sha256File.readText().isEmpty()) {
+            sha256File.createNewFile()
+
+            download("$CLIENT_CLOUD/srgs/mcp-$srgName.srg.sha256", sha256File)
+            LOGGER.info("[Remapper] Downloaded $srgName sha256.")
+        }
+
         // Check if srg file is already downloaded
-        if (!srgFile.exists()) {
+        if (!srgFile.exists() || !hashMatches(srgFile, sha256File)) {
             // Download srg file
             srgFile.createNewFile()
 
-            LOGGER.info("[Remapper] Downloading $srgName srg...")
             download("$CLIENT_CLOUD/srgs/mcp-$srgName.srg", srgFile)
             LOGGER.info("[Remapper] Downloaded $srgName.")
         }
 
         // Load srg
-        LOGGER.info("[Remapper] Loading srg...")
         parseSrg()
-        LOGGER.info("[Remapper] Loaded srg.")
+        LOGGER.info("[Remapper] Successfully loaded SRG mappings.")
+    }
+
+    private fun hashMatches(srgFile: File, sha256File: File): Boolean {
+        val fileContent = srgFile.readText()
+
+        // Generate SHA-256 hash of file content
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(fileContent.toByteArray()).joinToString("") { "%02x".format(it) }
+
+        // sha265sum mcp-stable_22.srg
+        // -> a8486671a5e85153773eaac313f8babd1913b41524b45e92d42e6cf019e658eb  mcp-stable_22.srg
+        if (sha256File.exists()) {
+            val sha256 = sha256File.readText().split(" ")[0]
+
+            LOGGER.info("[Remapper] Hash $sha256 compared to $hash")
+            return sha256 == hash
+        }
+
+        LOGGER.warn("[Remapper] No sha256 file found.")
+        return false
     }
 
     private fun parseSrg() {
@@ -79,6 +109,8 @@ object Remapper {
                 }
             }
         }
+
+        mappingsLoaded = true
     }
 
     /**
