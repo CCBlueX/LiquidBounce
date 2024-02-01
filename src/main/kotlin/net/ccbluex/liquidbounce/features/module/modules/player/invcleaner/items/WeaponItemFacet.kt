@@ -29,11 +29,12 @@ import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.SwordItem
 import kotlin.math.pow
 
-open class WeightedWeaponItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
+open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         val DAMAGE_ESTIMATOR =
             EnchantmentValueEstimator(
@@ -50,19 +51,16 @@ open class WeightedWeaponItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
             )
         private val COMPARATOR =
-            ComparatorChain<WeightedWeaponItem>(
-                { o1, o2 -> (estimateDamage(o1)).compareTo(estimateDamage(o2)) },
-                { o1, o2 ->
-                    SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
-                        .compareTo(SECONDARY_VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-                },
-                { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item is SwordItem } },
-                { o1, o2 -> o1.itemStack.item.enchantability.compareTo(o2.itemStack.item.enchantability) },
+            ComparatorChain<WeaponItemFacet>(
+                compareBy { estimateDamage(it) },
+                compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
+                compareByCondition { it.itemStack.item is SwordItem },
+                compareBy { it.itemStack.item.enchantability },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
 
-        private fun estimateDamage(o1: WeightedWeaponItem): Float {
+        private fun estimateDamage(o1: WeaponItemFacet): Float {
             val attackSpeed = o1.itemStack.item.attackSpeed
             val attackDamage = o1.itemStack.item.attackDamage
 
@@ -82,7 +80,7 @@ open class WeightedWeaponItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
     override val category: ItemCategory
         get() = ItemCategory(ItemType.WEAPON, 0)
 
-    override fun compareTo(other: WeightedItem): Int {
-        return COMPARATOR.compare(this, other as WeightedWeaponItem)
+    override fun compareTo(other: ItemFacet): Int {
+        return COMPARATOR.compare(this, other as WeaponItemFacet)
     }
 }

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.item.isNothing
 
 class CleanupPlanGenerator(
@@ -65,7 +65,7 @@ class CleanupPlanGenerator(
 
     private fun processItemCategory(
         category: ItemCategory,
-        availableItems: List<WeightedItem>,
+        availableItems: List<ItemFacet>,
     ) {
         val maxItemCount =
             if (category.type.allowOnlyOne) {

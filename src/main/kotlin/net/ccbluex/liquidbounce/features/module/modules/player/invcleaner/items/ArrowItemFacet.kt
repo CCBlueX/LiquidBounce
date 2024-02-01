@@ -25,13 +25,11 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
-class WeightedArrowItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
+class ArrowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
-            ComparatorChain<WeightedArrowItem>(
-                { o1, o2 ->
-                    o1.itemStack.count.compareTo(o2.itemStack.count)
-                },
+            ComparatorChain<ArrowItemFacet>(
+                compareBy { it.itemStack.count },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
@@ -40,7 +38,7 @@ class WeightedArrowItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
     override val category: ItemCategory
         get() = ItemCategory(ItemType.ARROW, 0)
 
-    override fun compareTo(other: WeightedItem): Int {
-        return COMPARATOR.compare(this, other as WeightedArrowItem)
+    override fun compareTo(other: ItemFacet): Int {
+        return COMPARATOR.compare(this, other as ArrowItemFacet)
     }
 }

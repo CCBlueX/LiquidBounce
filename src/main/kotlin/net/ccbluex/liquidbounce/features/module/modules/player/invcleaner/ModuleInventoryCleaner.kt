@@ -70,7 +70,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem3 by enumChoice("SlotItem-3", ItemSortChoice.PICKAXE, ItemSortChoice.entries.toTypedArray())
     val slotItem4 by enumChoice("SlotItem-4", ItemSortChoice.AXE, ItemSortChoice.entries.toTypedArray())
     val slotItem5 by enumChoice("SlotItem-5", ItemSortChoice.NONE, ItemSortChoice.entries.toTypedArray())
-    val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.NONE, ItemSortChoice.entries.toTypedArray())
+    val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.POTION, ItemSortChoice.entries.toTypedArray())
     val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD, ItemSortChoice.entries.toTypedArray())
     val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.entries.toTypedArray())
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.entries.toTypedArray())

@@ -20,24 +20,31 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.item.ItemStack
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
+import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.enchantment.Enchantments
 
-open class WeightedItem(val itemSlot: ItemSlot) : Comparable<WeightedItem> {
-    open val category: ItemCategory
-        get() = ItemCategory(ItemType.NONE, 0)
-
-    val itemStack: ItemStack
-        get() = this.itemSlot.itemStack
-
-    val isInHotbar: Boolean
-        get() = this.itemSlot.slotType == ItemSlotType.HOTBAR || this.itemSlot.slotType == ItemSlotType.OFFHAND
-
-    open fun isSignificantlyBetter(other: WeightedItem): Boolean {
-        return false
+class RodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
+    companion object {
+        private val VALUE_ESTIMATOR =
+            EnchantmentValueEstimator(
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
+            )
+        private val COMPARATOR =
+            ComparatorChain<RodItemFacet>(
+                compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
     }
 
-    override fun compareTo(other: WeightedItem): Int = compareByCondition(this, other, WeightedItem::isInHotbar)
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.ROD, 0)
+
+    override fun compareTo(other: ItemFacet): Int {
+        return COMPARATOR.compare(this, other as RodItemFacet)
+    }
 }
