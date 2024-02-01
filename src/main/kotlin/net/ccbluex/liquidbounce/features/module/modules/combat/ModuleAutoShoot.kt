@@ -86,6 +86,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      * shooting.
      */
     private val rotationConfigurable = tree(RotationsConfigurable(turnSpeed = 180f..180f))
+    private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
 
     /**
      * The target renderer to render the target, which we are currently aiming at.
@@ -171,7 +172,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
         )
 
         // Check if we are not aiming at the target yet
-        if (rotationDifference > 0.5f) {
+        if (rotationDifference > aimOffThreshold) {
             return@repeatable
         }
 
