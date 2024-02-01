@@ -126,7 +126,12 @@ class ChoiceConfigurable(
     }
 
     fun setFromValueName(name: String) {
-        val newChoice = choices.first { it.choiceName == name }
+        val newChoice = choices.firstOrNull { it.choiceName == name }
+
+        if (newChoice == null) {
+            throw IllegalArgumentException("ChoiceConfigurable `${this.name}` has no option named $name" +
+                " (available options are ${this.choices.joinToString { it.choiceName }})")
+        }
 
         EventManager.callEvent(ChoiceChangeEvent(this.module, this.activeChoice, newChoice))
 

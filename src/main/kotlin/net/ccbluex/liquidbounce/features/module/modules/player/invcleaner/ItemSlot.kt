@@ -18,12 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoPot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
-import net.minecraft.screen.ScreenHandler
 import java.util.*
 
 /**
@@ -41,6 +38,7 @@ abstract class ItemSlot {
     fun getIdForServerWithCurrentScreen() = getIdForServer(mc.currentScreen as? GenericContainerScreen)
 
     abstract override fun hashCode(): Int
+
     abstract override fun equals(other: Any?): Boolean
 }
 
@@ -71,7 +69,6 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
 
 private fun GenericContainerScreen.itemCount() = this.screenHandler.rows * 9
 
-
 open class HotbarItemSlot(private val hotbarSlot: Int) : ItemSlot() {
     override val itemStack: ItemStack
         get() = mc.player!!.inventory.getStack(this.hotbarSlot)
@@ -96,6 +93,10 @@ open class HotbarItemSlot(private val hotbarSlot: Int) : ItemSlot() {
 
     override fun hashCode(): Int {
         return Objects.hash(this.javaClass, hotbarSlot)
+    }
+
+    override fun toString(): String {
+        return "HotbarItemSlot(hotbarSlot=$hotbarSlot, itemStack=$itemStack)"
     }
 }
 
@@ -124,7 +125,6 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
     }
 }
 
-
 class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
     override val itemStack: ItemStack
         get() = mc.player!!.inventory.armor[this.armorType]
@@ -147,7 +147,6 @@ class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
         return Objects.hash(this.javaClass, this.armorType)
     }
 }
-
 
 object OffHandSlot : HotbarItemSlot(-1) {
     override val itemStack: ItemStack

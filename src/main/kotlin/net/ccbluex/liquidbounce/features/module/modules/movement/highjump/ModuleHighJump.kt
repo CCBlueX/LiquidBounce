@@ -35,6 +35,10 @@ import net.ccbluex.liquidbounce.features.module.Module
  */
 object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     private val modes = choices(
         "Mode", Vanilla, arrayOf(
             Vanilla, Vulcan

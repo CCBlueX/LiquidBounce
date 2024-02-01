@@ -61,13 +61,13 @@ object HttpClient {
         return httpConnection
     }
 
-    fun request(
+    fun requestWithCode(
         url: String,
         method: String,
         agent: String = DEFAULT_AGENT,
         headers: Array<Pair<String, String>> = emptyArray(),
         inputData: ByteArray? = null
-    ): String {
+    ): Pair<Int, String> {
         val connection = make(url, method, agent, headers, inputData)
         val responseCode = connection.responseCode
 
@@ -80,7 +80,19 @@ object HttpClient {
 
         val text = stream.bufferedReader().use { it.readText() }
 
-        if (responseCode != 200) {
+        return responseCode to text
+    }
+
+    fun request(
+        url: String,
+        method: String,
+        agent: String = DEFAULT_AGENT,
+        headers: Array<Pair<String, String>> = emptyArray(),
+        inputData: ByteArray? = null
+    ): String {
+        val (code, text) = requestWithCode(url, method, agent, headers, inputData)
+
+        if (code != 200) {
             error(text)
         }
 

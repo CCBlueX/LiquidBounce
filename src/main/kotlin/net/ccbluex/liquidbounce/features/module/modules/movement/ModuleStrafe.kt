@@ -34,6 +34,10 @@ import net.minecraft.entity.MovementType
  */
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     private var strength by float("Strength", 1f, 0.1f..1f)
     private var strictMovement by boolean("StrictMovement", false)
     private var notDuringAir by boolean("NotDuringAir", false)

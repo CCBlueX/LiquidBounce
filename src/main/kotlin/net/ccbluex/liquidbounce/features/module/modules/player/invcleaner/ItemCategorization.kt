@@ -69,7 +69,8 @@ enum class ItemSortChoice(
     GAPPLE(
         "Gapple",
         ItemCategory(ItemType.GAPPLE, 0),
-        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
+    ),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
     IGNORE("Ignore", null),
@@ -77,7 +78,6 @@ enum class ItemSortChoice(
 }
 
 object ItemCategorization {
-
     /**
      * Returns a list of facets an item represents. For example an axe is an axe, but also a sword:
      * - (SANDSTONE_BLOCK, 64) => `[Block(SANDSTONE_BLOCK, 64)]`
@@ -98,8 +98,8 @@ object ItemCategorization {
             is ToolItem -> {
                 arrayOf(
                     // todo: add weapon type
-                    //WeightedSwordItem(slot),
-                    WeightedToolItem(slot)
+                    // WeightedSwordItem(slot),
+                    WeightedToolItem(slot),
                 )
             }
             is FishingRodItem -> arrayOf(WeightedRodItem(slot))
@@ -117,13 +117,13 @@ object ItemCategorization {
             Items.GOLDEN_APPLE -> {
                 arrayOf(
                     WeightedFoodItem(slot),
-                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0))
+                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0)),
                 )
             }
             Items.ENCHANTED_GOLDEN_APPLE -> {
                 arrayOf(
                     WeightedFoodItem(slot),
-                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0), 1)
+                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
             else -> {

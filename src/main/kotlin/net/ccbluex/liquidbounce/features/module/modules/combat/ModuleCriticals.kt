@@ -45,6 +45,10 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices("Mode", { PacketCrit }) {
         arrayOf(
             NoneChoice(it),
@@ -116,7 +120,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     }
 
-    private object JumpCrit : Choice("Jump") {
+    object JumpCrit : Choice("Jump") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -135,7 +139,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val checkKillaura by boolean("CheckKillaura", false)
         val checkAutoClicker by boolean("CheckAutoClicker", false)
 
-        var adjustNextMotion = false
+        /**
+         * Should the upwards velocity be set to the `height`-value on next jump?
+         *
+         * Only true when auto-jumping is currently taking place so that normal jumps
+         * are not affected.
+         */
+        var adjustNextJump = false
 
         val movementInputEvent = handler<MovementInputEvent> {
             if (!isActive()) {
@@ -152,17 +162,23 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
             world.findEnemy(0f..range) ?: return@handler
 
+            // Change the jump motion only if the jump is a normal jump (small jumps, i.e. honey blocks
+            // are not affected) and currently.
             if (player.isOnGround) {
                 it.jumping = true
-                adjustNextMotion = true
+                adjustNextJump = true
             }
         }
 
         val onJump = handler<PlayerJumpEvent> { event ->
-            // Only change if there is nothing affecting the default motion (like a honey block)
-            if (event.motion == 0.42f && adjustNextMotion) {
+            // The `value`-option only changes *normal jumps* with upwards velocity 0.42.
+            // Jumps with lower velocity (i.e. from honey blocks) are not affected.
+            val isJumpNormal = event.motion == 0.42f
+
+            // Is the jump a normal jump and auto-jumping is enabled.
+            if (isJumpNormal && adjustNextJump) {
                 event.motion = height
-                adjustNextMotion = false
+                adjustNextJump = false
             }
         }
 
