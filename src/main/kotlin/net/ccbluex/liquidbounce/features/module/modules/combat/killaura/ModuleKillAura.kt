@@ -134,8 +134,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (ModuleCriticals.enabled && ModuleCriticals.JumpCrit.isActive && badValue) {
             notification(
-                "Criticals miss configured!",
-                "Jump criticals don't work properly if KillAura's CooldownRange is exactly between 1 and 1.",
+                "Cooldown misconfigured",
+                message("badCooldown"),
                 NotificationEvent.Severity.ERROR
             )
         }
