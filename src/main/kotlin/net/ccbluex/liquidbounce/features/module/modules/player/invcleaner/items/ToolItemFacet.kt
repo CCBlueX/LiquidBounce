@@ -24,29 +24,32 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemTy
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
+import net.ccbluex.liquidbounce.utils.item.type
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.item.ToolItem
 
-class WeightedShieldItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
+class ToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
-        private val VALUE_ESTIMATOR =
+        val VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
             )
         private val COMPARATOR =
-            ComparatorChain<WeightedShieldItem>(
-                { o1, o2 ->
-                    VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-                },
+            ComparatorChain<ToolItemFacet>(
+                compareBy { (it.itemStack.item as ToolItem).material.miningLevel },
+                compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.SHIELD, 0)
+        get() = ItemCategory(ItemType.TOOL, (this.itemStack.item as ToolItem).type)
 
-    override fun compareTo(other: WeightedItem): Int {
-        return COMPARATOR.compare(this, other as WeightedShieldItem)
+    override fun compareTo(other: ItemFacet): Int {
+        return COMPARATOR.compare(this, other as ToolItemFacet)
     }
 }

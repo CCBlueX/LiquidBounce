@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.item.isNothing
 
 class CleanupPlanGenerator(
@@ -41,13 +41,18 @@ class CleanupPlanGenerator(
 
     fun generatePlan(): InventoryCleanupPlan {
         // Contains all facets that the available items represent. i.e. if we have an axe in slot 5, this would be
-        // (Axe(Slot 5), Sword(Slot 5)) since the axe can also function as a sword.
+        // (Axe(Slot 5), Weapon(Slot 5)) since the axe can also function as a weapon.
         val itemFacets = availableItems.flatMap { ItemCategorization.getItemFacets(it).asIterable() }
 
         // i.e. BLOCK -> [Block(Slot 5), Block(Slot 6)]
-        val facetsGroupedByType = itemFacets.groupBy { it.category }
+        // Keep priority in mind (Tool slots are processed before weapon slots)
+        val facetsGroupedByType =
+            itemFacets
+                .groupBy { it.category }
+                .entries
+                .sortedByDescending { it.key.type.allocationPriority }
 
-        for ((category, availableItems) in facetsGroupedByType.entries) {
+        for ((category, availableItems) in facetsGroupedByType) {
             processItemCategory(category, availableItems)
         }
 
@@ -60,7 +65,7 @@ class CleanupPlanGenerator(
 
     private fun processItemCategory(
         category: ItemCategory,
-        availableItems: List<WeightedItem>,
+        availableItems: List<ItemFacet>,
     ) {
         val maxItemCount =
             if (category.type.allowOnlyOne) {

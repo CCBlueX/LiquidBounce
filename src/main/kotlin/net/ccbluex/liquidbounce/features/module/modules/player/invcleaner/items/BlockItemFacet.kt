@@ -21,16 +21,25 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
-import net.ccbluex.liquidbounce.utils.item.ArmorComparator
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
-class WeightedArmorItem(itemSlot: ItemSlot) : WeightedItem(itemSlot) {
-    private val armorPiece = ArmorPiece(itemSlot)
+class BlockItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
+    companion object {
+        private val COMPARATOR =
+            ComparatorChain<BlockItemFacet>(
+                compareBy(ModuleScaffold.BLOCK_COMPARATOR_FOR_INVENTORY) { it.itemStack },
+                PREFER_ITEMS_IN_HOTBAR,
+                STABILIZE_COMPARISON,
+            )
+    }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
+        get() = ItemCategory(ItemType.BLOCK, 0)
 
-    override fun compareTo(other: WeightedItem): Int {
-        return ArmorComparator.compare(this.armorPiece, (other as WeightedArmorItem).armorPiece)
+    override fun compareTo(other: ItemFacet): Int {
+        return COMPARATOR.compare(this, other as BlockItemFacet)
     }
 }

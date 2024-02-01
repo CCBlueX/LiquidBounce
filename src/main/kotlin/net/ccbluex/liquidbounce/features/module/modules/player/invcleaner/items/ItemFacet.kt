@@ -20,21 +20,24 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
-import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
+import net.minecraft.item.ItemStack
 
-class WeightedPrimitiveItem(itemSlot: ItemSlot, override val category: ItemCategory, val worth: Int = 0) :
-    WeightedItem(itemSlot) {
-    companion object {
-        private val COMPARATOR =
-            ComparatorChain<WeightedPrimitiveItem>(
-                { o1, o2 -> o1.worth.compareTo(o2.worth) },
-                { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
-            )
+open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
+    open val category: ItemCategory
+        get() = ItemCategory(ItemType.NONE, 0)
+
+    val itemStack: ItemStack
+        get() = this.itemSlot.itemStack
+
+    val isInHotbar: Boolean
+        get() = this.itemSlot.slotType == ItemSlotType.HOTBAR || this.itemSlot.slotType == ItemSlotType.OFFHAND
+
+    open fun isSignificantlyBetter(other: ItemFacet): Boolean {
+        return false
     }
 
-    override fun compareTo(other: WeightedItem): Int = COMPARATOR.compare(this, other as WeightedPrimitiveItem)
+    override fun compareTo(other: ItemFacet): Int = compareValueByCondition(this, other, ItemFacet::isInHotbar)
 }

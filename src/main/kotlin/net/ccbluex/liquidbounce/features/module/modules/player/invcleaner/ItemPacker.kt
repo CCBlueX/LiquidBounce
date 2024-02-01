@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedItem
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.minecraft.item.ItemStack
 
 /**
@@ -28,7 +28,7 @@ class ItemPacker {
      * @return returns the item moves ("swaps") that should to be executed.
      */
     fun packItems(
-        itemsToFillIn: List<WeightedItem>,
+        itemsToFillIn: List<ItemFacet>,
         hotbarSlotsToFill: List<ItemSlot>?,
         maxItemCount: Int,
         requiredStackCount: Int,

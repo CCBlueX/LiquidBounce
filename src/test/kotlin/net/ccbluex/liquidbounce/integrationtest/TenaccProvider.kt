@@ -1,5 +1,7 @@
 package net.ccbluex.liquidbounce.integrationtest
 
+import net.ccbluex.liquidbounce.invitro.TestInventoryBlockManagement
+import net.ccbluex.liquidbounce.invitro.TestCleanupPlan
 import net.ccbluex.tenacc.api.runner.*
 import net.ccbluex.tenacc.impl.TestIdentifier
 import net.ccbluex.tenacc.utils.TestErrorFormatter
@@ -41,5 +43,7 @@ class TenaccProvider: TACCTestProvider {
     override fun registerTests(registry: TACCTestRegistry) {
         registry.registerTestClass(TestScaffold::class)
         registry.registerTestClass(TestInvCleaner::class)
+        registry.registerTestClass(TestInventoryBlockManagement::class)
+        registry.registerTestClass(TestCleanupPlan::class)
     }
 }
