@@ -116,24 +116,12 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
             player.canSee(it)
         } ?: return@handler
 
-        // todo: fix being linear when we are not holding the throwable yet
-        val gravityType = when (hand) {
-            Hand.MAIN_HAND -> when (player.mainHandStack.item) {
-                Items.EGG, Items.SNOWBALL -> GravityType.PROJECTILE
-                else -> GravityType.LINEAR
-            }
-            Hand.OFF_HAND -> when (player.offHandStack.item) {
-                Items.EGG, Items.SNOWBALL -> GravityType.PROJECTILE
-                else -> GravityType.LINEAR
-            }
-        }
-
         // Select the throwable if we are not holding it.
         if (slot != -1) {
             SilentHotbar.selectSlotSilently(this, slot)
         }
 
-        val rotation = generateRotation(target, gravityType)
+        val rotation = generateRotation(target, GravityType.fromHand(hand))
 
         // Set the rotation with the usage priority of 2.
         RotationManager.aimAt(rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory),
@@ -145,7 +133,12 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      * Handles the auto shoot logic.
      */
     val handleAutoShoot = repeatable {
-        targetTracker.lockedOnTarget ?: return@repeatable
+        val target = targetTracker.lockedOnTarget ?: return@repeatable
+
+        // Cannot happen but we want to smart-cast
+        if (target !is LivingEntity) {
+            return@repeatable
+        }
 
         if (notDuringCombat && CombatManager.isInCombat()) {
             return@repeatable
@@ -162,6 +155,24 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
             if (SilentHotbar.serversideSlot != slot) {
                 return@repeatable
             }
+        }
+
+        // Select the throwable if we are not holding it.
+        if (slot != -1) {
+            SilentHotbar.selectSlotSilently(this, slot)
+        }
+
+        val rotation = generateRotation(target, GravityType.fromHand(hand))
+
+        // Check difference between server and client rotation
+        val rotationDifference = RotationManager.rotationDifference(
+            rotation ?: return@repeatable,
+            RotationManager.serverRotation
+        )
+
+        // Check if we are not aiming at the target yet
+        if (rotationDifference > 0.5f) {
+            return@repeatable
         }
 
         // Check if we are still aiming at the target
@@ -269,7 +280,24 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
     private enum class GravityType {
         LINEAR,
-        PROJECTILE
+        PROJECTILE;
+
+        companion object {
+            fun fromHand(hand: Hand): GravityType {
+                return when (hand) {
+                    Hand.MAIN_HAND -> fromItem(player.mainHandStack.item)
+                    Hand.OFF_HAND -> fromItem(player.offHandStack.item)
+                }
+            }
+
+            fun fromItem(item: Item): GravityType {
+                return when (item) {
+                    Items.EGG, Items.SNOWBALL -> PROJECTILE
+                    else -> LINEAR
+                }
+            }
+        }
+
     }
 
 }
