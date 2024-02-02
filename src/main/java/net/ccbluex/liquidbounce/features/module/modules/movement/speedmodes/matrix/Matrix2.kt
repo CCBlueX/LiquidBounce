@@ -21,12 +21,8 @@ object Matrix2 : SpeedMode("Matrix2") {
                 mc.thePlayer.tryJump()
                 mc.timer.timerSpeed = 0.525f
                 strafe()
-
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
             } else {
                 mc.timer.timerSpeed = 1.075f
-
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
             }
 
             if (mc.thePlayer.fallDistance <= 0.8 && mc.thePlayer.moveStrafing == 0f) {
