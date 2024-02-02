@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.Reconnect
-import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
@@ -41,7 +40,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import net.ccbluex.liquidbounce.features.module.modules.misc.ipcConfiguration
+import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -52,9 +51,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
-import net.ccbluex.liquidbounce.utils.mappings.McMappings
+import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
@@ -93,6 +93,8 @@ object LiquidBounce : Listenable {
      */
     const val IN_DEVELOPMENT = true
 
+    val isIntegrationTesting = !System.getenv("TENACC_TEST_PROVIDER").isNullOrBlank()
+
     /**
      * Client logger to print out console messages
      */
@@ -112,7 +114,10 @@ object LiquidBounce : Listenable {
             logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
             // Load mappings
-            McMappings.load()
+            Remapper.load()
+
+            // Load translations
+            LanguageManager.loadLanguages()
 
             // Initialize client features
             EventManager
@@ -138,7 +143,6 @@ object LiquidBounce : Listenable {
             Reconnect
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
-            Chat
             BrowserManager
             Fonts
 
@@ -208,9 +212,6 @@ object LiquidBounce : Listenable {
                 logger.error("Failed to load Discord IPC configuration.", it)
             }
 
-            // Load translations
-            LanguageManager.loadLanguages()
-
             // Refresh local IP info
             logger.info("Refreshing local IP info...")
             IpInfoApi.refreshLocalIpInfo()
@@ -243,6 +244,9 @@ object LiquidBounce : Listenable {
             }.onFailure {
                 logger.error("Failed to load settings list from API", it)
             }
+
+            // Load acknowledgement handler
+            AcknowledgementHandler
         }
     }
 

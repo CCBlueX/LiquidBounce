@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.graaljs;
 
-import net.ccbluex.liquidbounce.utils.mappings.McMappings;
+import net.ccbluex.liquidbounce.utils.mappings.Remapper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -34,7 +34,7 @@ public class MixinHostClassLoader {
 
     @ModifyVariable(method = "findClass", at = @At("HEAD"), argsOnly = true, remap = false)
     private String remapClassName(String value) {
-        return McMappings.INSTANCE.remapClassName(value);
+        return Remapper.INSTANCE.remapClassName(value);
     }
 
 }

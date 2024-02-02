@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.PreferredWeapon.*
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeightedSwordItem.Companion.DAMAGE_ESTIMATOR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet.Companion.DAMAGE_ESTIMATOR
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.getEnchantment

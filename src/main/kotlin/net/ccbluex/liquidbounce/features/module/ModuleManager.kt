@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
@@ -35,7 +36,15 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
+import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
+import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
@@ -99,7 +108,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleVelocity,
             ModuleBacktrack,
             ModuleSwordBlock,
-            ModuleAutoBalls,
+            ModuleAutoShoot,
 
             // Exploit
             ModuleAbortBreaking,
@@ -141,11 +150,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
-            ModuleCapeTransfer,
-            ModuleHideClient,
             ModuleFocus,
-            ModuleAutoConfig,
-            ModuleRichPresence,
             ModuleAntiStaff,
 
             // Movement
@@ -178,7 +183,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
-            ModuleVehicleFly,
+            ModuleVehicleControl,
 
             // Player
             ModuleAntiAFK,
@@ -253,7 +258,15 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProjectilePuncher,
             ModuleScaffold,
             ModuleTimer,
-            ModuleNuker
+            ModuleNuker,
+
+            // Client
+            ModuleAutoConfig,
+            ModuleRichPresence,
+            ModuleCapeTransfer,
+            ModuleHideClient,
+            ModuleEnemies,
+            ModuleLiquidChat
         )
 
         builtin.apply {

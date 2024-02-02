@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.script.bindings.features.JsModule
 import net.ccbluex.liquidbounce.utils.client.logger
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
+import org.graalvm.polyglot.Source
 import java.io.File
 import java.util.function.Function
 
@@ -70,8 +71,10 @@ class Script(val scriptFile: File) {
      * Initialization of scripts
      */
     fun initScript() {
+        val relPath = scriptFile.relativeTo(ScriptManager.scriptsRoot).getPath()
+
         // Evaluate script
-        context.eval("js", scriptText)
+        context.eval(Source.newBuilder("js", scriptText, relPath).build())
 
         // Call load event
         callGlobalEvent("load")
@@ -180,12 +183,15 @@ class Script(val scriptFile: File) {
 
     /**
      * Imports another JavaScript file into the context of this script.
-     * @param scriptFile Path to the file to be imported.
+     * @param scriptFilePath Path to the file to be imported.
      */
-    fun import(scriptFile: String) {
-        val scriptText = File(ScriptManager.scriptsRoot, scriptFile).readText()
+    fun import(scriptFilePath: String) {
+        val scriptFile = File(ScriptManager.scriptsRoot, scriptFilePath)
+        val scriptText = scriptFile.readText()
+        val relPath = scriptFile.relativeTo(ScriptManager.scriptsRoot).getPath()
 
-        context.eval("js", scriptText)
+        // Evaluate script
+        context.eval(Source.newBuilder("js", scriptText, relPath).build())
     }
 
     /**

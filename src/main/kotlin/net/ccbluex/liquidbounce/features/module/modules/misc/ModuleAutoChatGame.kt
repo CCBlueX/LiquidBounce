@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.openai.Gpt
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.openai.OpenAi
 import kotlin.concurrent.thread
 
 /**
@@ -148,7 +149,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             chat("§aUnderstood question: $question")
 
             // Create new AI instance with OpenAI key
-            val ai = Gpt(openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
+            val ai = OpenAi(openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
 
             thread {
                 runCatching {
@@ -170,7 +171,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
                     // Send answer
                     network.sendChatMessage(answer)
                 }.onFailure {
-                    it.printStackTrace()
+                    logger.error("GPT AutoChatGame failed", it)
                     chat("§cFailed to answer question: ${it.message}")
                 }
             }

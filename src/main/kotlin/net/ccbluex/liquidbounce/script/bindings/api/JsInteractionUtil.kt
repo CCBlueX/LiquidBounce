@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.*
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
@@ -66,7 +65,8 @@ object JsInteractionUtil {
             listOf(Vec3i(0, 0, 0)),
             player.inventory.mainHandStack,
             CenterTargetPositionFactory,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            player.pos
         )
 
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)
