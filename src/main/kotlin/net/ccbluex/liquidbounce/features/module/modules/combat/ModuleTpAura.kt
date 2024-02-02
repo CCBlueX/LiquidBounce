@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.SuspendableHandler
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -86,7 +88,9 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
         pathFinderThread = thread {
             while (enabled) {
                 runCatching {
-                    val playerPosition = playerPosition ?: player.pos
+                    val playerPosition = playerPosition?.takeIf { it.distanceTo(player.pos) > range }
+                        ?: player.pos
+
                     val enemies = targetTracker.enemies()
                         .sortedBy { it.squaredBoxedDistanceTo(playerPosition) }
 
@@ -121,18 +125,23 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
 
         // TODO: Teleport back to the player
         player.setPosition(playerPosition ?: return)
+        playerPosition = null
         super.disable()
     }
 
-    /**
-     * Our attack repeatable acts as very simplified KillAura.
-     *
-     * It will attack the closest enemy within the range of the player position.
-     * This allows to attack enemies during our stay at the position and not just when we are teleporting.
-     */
-    val attackRepeatable = repeatable {
-        val position = playerPosition ?: player.pos
+    val repeatable = repeatable {
+        val (enemy, path, playerPath) = pathCache ?: return@repeatable
 
+        // If the scheduler is not going to click, we should teleport back to the player
+        if (!clickScheduler.goingToClick) {
+            travel(playerPath)
+            pathCache = null
+            return@repeatable
+        }
+
+        travel(path + enemy.blockVecPosition)
+
+        val position = playerPosition ?: player.pos
         clickScheduler.clicks {
             val enemy = targetTracker.enemies()
                 .filter { it.squaredBoxedDistanceTo(position) <= range * range }
@@ -141,17 +150,59 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
             enemy.attack(true, keepSprint = true)
             true
         }
+
+        //travel(playerPath)
+        pathCache = null
+
+        waitTicks(teleportCooldown)
     }
 
-    val repeatable = repeatable {
-        val (_, path, playerPath) = pathCache ?: return@repeatable
+    val packetHandler = handler<PacketEvent> {
+        val packet = it.packet
 
-        // If the scheduler is not going to click, we should not teleport and wait for the next tick.
-        if (!clickScheduler.goingToClick) {
-            // TODO: Teleport back to the player
-            return@repeatable
+        if (packet is PlayerMoveC2SPacket) {
+            val position = playerPosition ?: return@handler
+
+            // Set the packet position to the player position
+            packet.x = position.x
+            packet.y = position.y
+            packet.z = position.z
+            packet.changePosition = true
+
+        } else if (packet is PlayerPositionLookS2CPacket) {
+            chat("TpAura: Detected server position update packet, updating player position.")
+            //playerPosition = Vec3d(packet.x, packet.y, packet.z)
+            //it.cancelEvent()
         }
+    }
 
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+        val (entity, path) = pathCache ?: return@handler
+
+        renderEnvironmentForWorld(matrixStack) {
+            val start = path.first().toVec3d().add(0.5, 0.5, 0.5)
+            val end = path.last().toVec3d().add(0.5, 0.5, 0.5)
+
+            withColor(Color4b.WHITE) {
+                drawLineStrip(*path.map { it.toVec3d().add(0.5, 0.5, 0.5).toVec3() }.toTypedArray())
+            }
+
+            withColor(Color4b.RED) {
+                withPosition(start.toVec3()) {
+                    drawSolidBox(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0))
+                }
+            }
+
+            withColor(Color4b.GREEN) {
+                withPosition(end.toVec3()) {
+                    drawSolidBox(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0))
+                }
+            }
+        }
+    }
+
+    private suspend fun Sequence<*>.travel(path: List<Vec3i>) {
         // Currently path is a list of positions we need to go one by one, however we can split it into chunks
         // to use less packets and teleport more efficiently.
         // However, we cannot teleport if there are blocks in the way, so we need to check if the path is clear.
@@ -170,54 +221,15 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
                         position.y + 0.01, position.z + 0.5, false))
                     playerPosition = position.toVec3d()
                 }
+                waitTicks(1)
                 continue
             }
 
             // If the path is clear, we can teleport to the last position of the chunk.
             network.sendPacket(PositionAndOnGround(end.x, end.y, end.z, false))
             playerPosition = end
-        }
-        pathCache = null
 
-        waitTicks(teleportCooldown)
-    }
-
-    val packetHandler = handler<PacketEvent> {
-        val packet = it.packet
-
-        if (packet is PlayerMoveC2SPacket) {
-            val position = playerPosition ?: return@handler
-
-            packet.x = position.x + 0.5
-            packet.y = position.y + 0.01
-            packet.z = position.z + 0.5
-            packet.changePosition = true
-        } else if (packet is PlayerPositionLookS2CPacket) {
-            chat("TpAura: Detected server position update packet, updating player position.")
-            playerPosition = Vec3d(packet.x, packet.y, packet.z)
-            it.cancelEvent()
-        }
-    }
-
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val (entity, path) = pathCache ?: return@handler
-
-        renderEnvironmentForWorld(matrixStack) {
-            val color = if (entity == player) {
-                Color4b.GREEN
-            } else {
-                Color4b.WHITE
-            }
-
-            withColor(color) {
-                drawLineStrip(*path.map { it.toBlockPos().toCenterPos().toVec3() }.toTypedArray())
-                playerPosition?.let {
-                    withPosition(it.toBlockPos().toCenterPos().toVec3()) {
-                        drawSolidBox(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0))
-                    }
-                }
-            }
+            waitTicks(1)
         }
     }
 
@@ -307,23 +319,23 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
                 }
             }
 
-            val diagonalDirections = listOf(
-                Vec3i(-1, 0, -1), // left front
-                Vec3i(1, 0, -1), // right front
-                Vec3i(-1, 0, 1), // left back
-                Vec3i(1, 0, 1) // right back
-            )
-
-            for (direction in diagonalDirections) {
-                val adjacentPosition = Vec3i(node.position.x + direction.x, node.position.y + direction.y,
-                    node.position.z + direction.z)
-                val intermediatePosition1 = Vec3i(node.position.x + direction.x, node.position.y, node.position.z)
-                val intermediatePosition2 = Vec3i(node.position.x, node.position.y, node.position.z + direction.z)
-                if (isPassable(adjacentPosition) && isPassable(intermediatePosition1)
-                    && isPassable(intermediatePosition2)) {
-                    adjacentNodes.add(Node(adjacentPosition, node))
-                }
-            }
+//            val diagonalDirections = listOf(
+//                Vec3i(-1, 0, -1), // left front
+//                Vec3i(1, 0, -1), // right front
+//                Vec3i(-1, 0, 1), // left back
+//                Vec3i(1, 0, 1) // right back
+//            )
+//
+//            for (direction in diagonalDirections) {
+//                val adjacentPosition = Vec3i(node.position.x + direction.x, node.position.y + direction.y,
+//                    node.position.z + direction.z)
+//                val intermediatePosition1 = Vec3i(node.position.x + direction.x, node.position.y, node.position.z)
+//                val intermediatePosition2 = Vec3i(node.position.x, node.position.y, node.position.z + direction.z)
+//                if (isPassable(adjacentPosition) && isPassable(intermediatePosition1)
+//                    && isPassable(intermediatePosition2)) {
+//                    adjacentNodes.add(Node(adjacentPosition, node))
+//                }
+//            }
 
             return adjacentNodes
         }
@@ -337,11 +349,7 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
                 blockPos.up().getState()
             )
 
-            return blockStates.all { it?.isAir == true || it?.isIn(BlockTags.LEAVES) == true ||
-                it?.isIn(BlockTags.FLOWERS) == true || it?.isIn(BlockTags.CROPS) == true ||
-                it?.isIn(BlockTags.SAPLINGS) == true || it?.isIn(BlockTags.PORTALS) == true ||
-                it?.isIn(BlockTags.FIRE) == true
-            }
+            return blockStates.all { it == null || it.isAir || it.isIn(BlockTags.CLIMBABLE) }
         }
 
         private fun distanceBetween(a: Vec3i, b: Vec3i) = a.getSquaredDistance(b).roundToInt()

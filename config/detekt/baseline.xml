@@ -126,7 +126,7 @@
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(obj::class.java, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(*args.map { it!!::class.java }.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
-    <ID>SpreadOperator:ModuleTpAura.kt$ModuleTpAura$(*path.map { it.toBlockPos().toCenterPos().toVec3() }.toTypedArray())</ID>
+    <ID>SpreadOperator:ModuleTpAura.kt$ModuleTpAura$(*path.map { it.toVec3d().add(0.5, 0.5, 0.5).toVec3() }.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
     <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*>) ?: emptyArray&lt;String>()).map { it as String } .toTypedArray())</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
