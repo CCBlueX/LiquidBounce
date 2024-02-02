@@ -43,6 +43,7 @@ inline operator fun Vec3d.component3(): Double = this.z
 
 fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
 fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
+fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
 
 fun Vec3d.toBlockPos(): BlockPos {
     val d = floor(this.x).toInt()
