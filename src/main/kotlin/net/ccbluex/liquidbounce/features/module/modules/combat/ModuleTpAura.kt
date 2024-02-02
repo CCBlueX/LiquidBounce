@@ -319,7 +319,8 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
                     node.position.z + direction.z)
                 val intermediatePosition1 = Vec3i(node.position.x + direction.x, node.position.y, node.position.z)
                 val intermediatePosition2 = Vec3i(node.position.x, node.position.y, node.position.z + direction.z)
-                if (isPassable(adjacentPosition) && isPassable(intermediatePosition1) && isPassable(intermediatePosition2)) {
+                if (isPassable(adjacentPosition) && isPassable(intermediatePosition1)
+                    && isPassable(intermediatePosition2)) {
                     adjacentNodes.add(Node(adjacentPosition, node))
                 }
             }
@@ -338,7 +339,9 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
 
             return blockStates.all { it?.isAir == true || it?.isIn(BlockTags.LEAVES) == true ||
                 it?.isIn(BlockTags.FLOWERS) == true || it?.isIn(BlockTags.CROPS) == true ||
-                it?.isIn(BlockTags.SAPLINGS) == true || it?.isIn(BlockTags.PORTALS) == true || it?.isIn(BlockTags.FIRE) == true }
+                it?.isIn(BlockTags.SAPLINGS) == true || it?.isIn(BlockTags.PORTALS) == true ||
+                it?.isIn(BlockTags.FIRE) == true
+            }
         }
 
         private fun distanceBetween(a: Vec3i, b: Vec3i) = a.getSquaredDistance(b).roundToInt()
