@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spartan.SpartanYPort
@@ -73,6 +74,10 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         VerusLowHop,
         NewVerusLowHop,
 
+        // Matrix
+        Matrix,
+        Matrix2,
+
         // Server specific
         TeleportCubeCraft,
         HiveHop,
@@ -81,7 +86,6 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         MineplexGround,
 
         // Other
-        Matrix,
         Boost,
         Frame,
         MiJump,
