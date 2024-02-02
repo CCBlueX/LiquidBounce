@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.event.SuspendableHandler
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,13 +29,14 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.toBlockPos
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.blockVecPosition
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.math.toVec3i
@@ -55,41 +55,26 @@ import kotlin.math.roundToInt
 
 object ModuleTpAura : Module("TpAura", Category.COMBAT) {
 
-    val clickScheduler = tree(ClickScheduler(this, true))
-    val teleportCooldown by int("Delay", 4, 1..20, "ticks")
-    val range by float("Range", 4.2f, 3f..5f)
+    private val clickScheduler = tree(ClickScheduler(this, true))
+    private val attackRange by float("AttackRange", 4.2f, 3f..5f)
 
-    /**
-     * Maximum distance we allow our TP Aura to travel out of our player position.
-     * This is to prevent the player from teleporting too far away from the player and not being able to go back.
-     */
-    val maximumDistance by int("MaximumDistance", 95, 50..250, "blocks")
+    private val maximumDistance by int("MaximumDistance", 95, 50..250)
+    private val maximumCost by int("MaximumCost", 250, 50..500)
+    private val tickDistance by int("TickDistance", 5, 1..7)
 
-    /**
-     * Maximum cost
-     *
-     * If the cost of the path exceeds this value, the path will be skipped.
-     */
-    val maximumCost by int("MaximumCost", 250, 50..500)
-
-    /**
-     * Maximum distance per TP
-     */
-    val maximumDistancePerTp by int("MaximumDistancePerTp", 3, 1..5, "blocks")
-
-    val targetTracker = tree(TargetTracker())
+    private val targetTracker = tree(TargetTracker())
 
     private var pathCache: PathCache? = null
     private var pathFinderThread: Thread? = null
-
     private var playerPosition: Vec3d? = null
+
+    private val stuckChronometer = Chronometer()
 
     override fun enable() {
         pathFinderThread = thread {
             while (enabled) {
                 runCatching {
-                    val playerPosition = playerPosition?.takeIf { it.distanceTo(player.pos) > range }
-                        ?: player.pos
+                    val playerPosition = player.pos
 
                     val enemies = targetTracker.enemies()
                         .sortedBy { it.squaredBoxedDistanceTo(playerPosition) }
@@ -101,15 +86,13 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
 
                         val path = AStarPathFinder.findPath(playerPosition.toVec3i(),
                             enemy.blockVecPosition, maximumCost)
-                        val playerPath = AStarPathFinder.findPath(enemy.blockVecPosition,
-                            player.blockVecPosition, maximumCost)
 
                         // Skip if the path is empty
                         if (path.isEmpty()) {
                             continue
                         }
 
-                        pathCache = PathCache(enemy, path, playerPath)
+                        pathCache = PathCache(enemy, path)
                     }
                 }
 
@@ -122,39 +105,44 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
 
     override fun disable() {
         pathFinderThread = null
-
-        // TODO: Teleport back to the player
-        player.setPosition(playerPosition ?: return)
-        playerPosition = null
         super.disable()
     }
 
-    val repeatable = repeatable {
-        val (enemy, path, playerPath) = pathCache ?: return@repeatable
-
-        // If the scheduler is not going to click, we should teleport back to the player
-        if (!clickScheduler.goingToClick) {
-            travel(playerPath)
-            pathCache = null
-            return@repeatable
-        }
-
-        travel(path + enemy.blockVecPosition)
-
+    val attackRepeatable = repeatable {
         val position = playerPosition ?: player.pos
+
         clickScheduler.clicks {
             val enemy = targetTracker.enemies()
-                .filter { it.squaredBoxedDistanceTo(position) <= range * range }
+                .filter { it.squaredBoxedDistanceTo(position) <= attackRange * attackRange }
                 .minByOrNull { it.hurtTime } ?: return@clicks false
 
             enemy.attack(true, keepSprint = true)
             true
         }
+    }
 
-        //travel(playerPath)
-        pathCache = null
+    private var isCurrentlyTeleporting = false
 
-        waitTicks(teleportCooldown)
+    val repeatable = repeatable {
+        val (_, path) = pathCache ?: return@repeatable
+
+        if (!stuckChronometer.hasElapsed(1000) || isCurrentlyTeleporting) {
+            return@repeatable
+        }
+
+        // If the scheduler is not going to click, we should not teleport
+        if (!clickScheduler.goingToClick) {
+            pathCache = null
+            return@repeatable
+        }
+
+        isCurrentlyTeleporting = true
+
+        travel(path)
+        waitUntil { !clickScheduler.goingToClick }
+        travel(path.reversed())
+
+        isCurrentlyTeleporting = false
     }
 
     val packetHandler = handler<PacketEvent> {
@@ -165,20 +153,21 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
 
             // Set the packet position to the player position
             packet.x = position.x
-            packet.y = position.y
+            packet.y = position.y + (0.0f..0.2f).random()
             packet.z = position.z
             packet.changePosition = true
 
         } else if (packet is PlayerPositionLookS2CPacket) {
-            chat("TpAura: Detected server position update packet, updating player position.")
-            //playerPosition = Vec3d(packet.x, packet.y, packet.z)
-            //it.cancelEvent()
+            chat("TpAura: Detected a position packet, we are stuck. Resetting..")
+            stuckChronometer.reset()
+            pathCache = null
+            playerPosition = null
         }
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-        val (entity, path) = pathCache ?: return@handler
+        val (_, path) = pathCache ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
             val start = path.first().toVec3d().add(0.5, 0.5, 0.5)
@@ -199,6 +188,15 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
                     drawSolidBox(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0))
                 }
             }
+
+            playerPosition?.let { playerPosition ->
+                withColor(Color4b.BLUE) {
+                    withPosition(playerPosition.toVec3()) {
+                        drawSolidBox(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0))
+                    }
+                }
+
+            }
         }
     }
 
@@ -206,7 +204,7 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
         // Currently path is a list of positions we need to go one by one, however we can split it into chunks
         // to use less packets and teleport more efficiently.
         // However, we cannot teleport if there are blocks in the way, so we need to check if the path is clear.
-        val pathChunks = path.chunked(maximumDistancePerTp)
+        val pathChunks = path.chunked(tickDistance)
 
         for (chunk in pathChunks) {
             // Check if the path is clear, this can be done by raycasting the start and end position of the chunk.
@@ -233,8 +231,7 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
         }
     }
 
-    data class PathCache(val enemy: LivingEntity, val pathToEnemy: List<Vec3i>,
-                         val pathFromEnemyToPlayer: List<Vec3i>)
+    data class PathCache(val enemy: LivingEntity, val path: List<Vec3i>)
 
     data class Node(val position: Vec3i, var parent: Node? = null) {
         var g = 0
@@ -262,7 +259,7 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
                 openList.remove(currentNode)
                 closedList.add(currentNode)
 
-                if (currentNode.position.isWithinDistance(endNode.position, range.toDouble())) {
+                if (currentNode.position.isWithinDistance(endNode.position, 2.0)) {
                     return constructPath(currentNode)
                 }
 
@@ -343,13 +340,12 @@ object ModuleTpAura : Module("TpAura", Category.COMBAT) {
         private fun isPassable(position: Vec3i): Boolean {
             val blockPos = position.toBlockPos()
 
-            // Because the player box is 2 blocks height, we need both of them.
             val blockStates = arrayOf(
                 blockPos.getState(),
-                blockPos.up().getState()
+                blockPos.up().getState(),
             )
 
-            return blockStates.all { it == null || it.isAir || it.isIn(BlockTags.CLIMBABLE) }
+            return blockStates.all { it == null || it.isAir || it.isIn(BlockTags.FIRE) || it.isIn(BlockTags.CLIMBABLE) }
         }
 
         private fun distanceBetween(a: Vec3i, b: Vec3i) = a.getSquaredDistance(b).roundToInt()
