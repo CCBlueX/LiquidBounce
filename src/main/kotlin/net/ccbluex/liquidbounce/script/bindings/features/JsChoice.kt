@@ -18,48 +18,32 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.reflect.KClass
 
-class JsModule(moduleObject: Map<String, Any>) : Module(
-    name = moduleObject["name"] as String,
-    category = Category.fromReadableName(moduleObject["category"] as String)!!
+class JsChoice(choiceObject: Map<String, Any>, override val parent: ChoiceConfigurable) : Choice(
+    name = choiceObject["name"] as String,
 ) {
 
     private val events = hashMapOf<String, (Any?) -> Unit>()
     private val _values = linkedMapOf<String, Value<*>>()
-    private var _tag: String? = null
-    override val tag: String?
-        get() = _tag
-
-    private var _description: String? = null
-    override val description: String
-        get() = _description ?: ""
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    override val settings by lazy { _values }
+    val settings by lazy { _values }
 
     init {
-        if (moduleObject.containsKey("settings")) {
-            val settingsObject = moduleObject["settings"] as Map<String, Value<*>>
+        if (choiceObject.containsKey("settings")) {
+            val settingsObject = choiceObject["settings"] as Map<String, Value<*>>
 
             for ((name, value) in settingsObject) {
                 _values[name] = value(value)
             }
-        }
-
-        if (moduleObject.containsKey("tag")) {
-            _tag = moduleObject["tag"] as String
-        }
-
-        if (moduleObject.containsKey("description")) {
-            _description = moduleObject["description"] as String
         }
     }
 

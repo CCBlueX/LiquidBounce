@@ -18,4 +18,4 @@
  */
 package net.ccbluex.liquidbounce.script
 
-annotation class RequiredByScript
+annotation class ScriptApi

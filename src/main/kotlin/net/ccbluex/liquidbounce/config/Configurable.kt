@@ -29,8 +29,7 @@ open class Configurable(
     name: String,
     value: MutableList<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE
-) :
-    Value<MutableList<Value<*>>>(name, value = value, valueType) {
+) : Value<MutableList<Value<*>>>(name, value = value, valueType) {
 
     open fun initConfigurable() {
         value.filterIsInstance<Configurable>().forEach {
@@ -85,8 +84,7 @@ open class Configurable(
         default: T,
         valueType: ValueType = ValueType.INVALID,
         listType: ListValueType = ListValueType.None
-    ) =
-        Value(name, default, valueType, listType).apply { this@Configurable.value.add(this) }
+    ) = Value(name, default, valueType, listType).apply { this@Configurable.value.add(this) }
 
     private fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>, suffix: String,
                                       valueType: ValueType) =
@@ -151,5 +149,6 @@ open class Configurable(
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
     ) = ChoiceConfigurable(module, name, activeCallback, choicesCallback).apply { this@Configurable.value.add(this) }
 
+    protected fun value(value: Value<*>) = value.apply { this@Configurable.value.add(this) }
 
 }

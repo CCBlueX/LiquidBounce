@@ -31,12 +31,14 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
+import org.graalvm.polyglot.HostAccess.Export
 import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
@@ -268,14 +270,6 @@ class RangedValue<T : Any>(
     type: ValueType
 ) : Value<T>(name, value, valueType = type) {
 
-    fun getFrom(): Double {
-        return (this.range.start as Number).toDouble()
-    }
-
-    fun getTo(): Double {
-        return (this.range.endInclusive as Number).toDouble()
-    }
-
     override fun setByString(string: String) {
         if (this.value is ClosedRange<*>) {
             val split = string.split("..")
@@ -329,6 +323,7 @@ class ChooseListValue<T : NamedChoice>(
         this.value = newValue
     }
 
+    @ScriptApi
     fun getChoicesStrings(): Array<String> {
         return this.choices.map { it.choiceName }.toTypedArray()
     }

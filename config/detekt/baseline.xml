@@ -9,7 +9,7 @@
     <ID>CyclomaticComplexMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
-    <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>CyclomaticComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
@@ -38,7 +38,7 @@
     <ID>LongMethod:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandLocalConfig.kt$CommandLocalConfig$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>LongMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>LongMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>LongMethod:ContainerEndpoints.kt$internal fun RestNode.setupContainerRestApi()</ID>
@@ -108,10 +108,6 @@
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Block : ListValueType</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Proxy : ListValueType</ID>
-    <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion$o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier)</ID>
-    <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion${ o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) }</ID>
-    <ID>MaxLineLength:WeightedSwordItem.kt$WeightedSwordItem.Companion$return</ID>
-    <ID>MaxLineLength:WeightedToolItem.kt$WeightedToolItem.Companion$(o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
@@ -124,12 +120,12 @@
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
     <ID>SpreadOperator:ExploitsItemGroup.kt$ExploitsItemGroup$("Troll Potion", *Registries.STATUS_EFFECT.map { statusEffect -> StatusEffectInstance(statusEffect, Int.MAX_VALUE, 127) }.toTypedArray())</ID>
     <ID>SpreadOperator:FakeLag.kt$FakeLag$(*positions.map { Vec3(it.vec) }.toTypedArray())</ID>
+    <ID>SpreadOperator:JsCommandBuilder.kt$JsCommandBuilder$(*(commandObject["aliases"] as? Array&lt;String>) ?: emptyArray())</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(clazz, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(obj::class.java, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(*args.map { it!!::class.java }.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
-    <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*>) ?: emptyArray&lt;String>()).map { it as String } .toTypedArray())</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:ConfigSystem.kt$ConfigSystem$IllegalStateException()</ID>
@@ -144,7 +140,7 @@
     <ID>ThrowsCount:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>ThrowsCount:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>ThrowsCount:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
@@ -152,6 +148,7 @@
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
     <ID>TooManyFunctions:CombatUtils.kt$CombatManager : Listenable</ID>
+    <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>TooManyFunctions:FakeLag.kt$FakeLag : Listenable</ID>
@@ -163,7 +160,6 @@
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
-    <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
     <ID>UnusedPrivateProperty:ModuleAutoTool.kt$ModuleAutoTool$private val handleBlockBreakingProgress = handler&lt;BlockBreakingProgressEvent> { event -> val blockState = world.getBlockState(event.pos) val inventory = player.inventory val index = if (search) { val (hotbarSlot, stack) = (0..8).map { it to inventory.getStack(it) }.filter { (_, stack) -> ( stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)) ) }.maxByOrNull { (_, stack) -> stack.getMiningSpeedMultiplier(blockState) } ?: return@handler val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState) // The current slot already matches the best if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) { return@handler } hotbarSlot } else { slot } SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay) }</ID>
     <ID>UnusedPrivateProperty:ModuleBugUp.kt$ModuleBugUp$i</ID>
