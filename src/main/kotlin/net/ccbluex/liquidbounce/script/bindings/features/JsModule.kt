@@ -43,7 +43,7 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    val settings by lazy { _values }
+    override val settings by lazy { _values }
 
     init {
         if (moduleObject.containsKey("settings")) {

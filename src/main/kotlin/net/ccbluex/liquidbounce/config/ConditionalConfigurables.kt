@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.script.RequiredByScript
+import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -68,7 +68,7 @@ abstract class ToggleableConfigurable(
 
     override fun parent() = parent
 
-    @RequiredByScript
+    @ScriptApi
     @Suppress("unused")
     fun getEnabledValue(): Value<*> = this.value[0]
 }
@@ -105,7 +105,7 @@ class ChoiceConfigurable(
         this.activeChoice = newChoice
     }
 
-    @RequiredByScript
+    @ScriptApi
     fun getChoicesStrings(): Array<String> = this.choices.map { it.name }.toTypedArray()
 
 }

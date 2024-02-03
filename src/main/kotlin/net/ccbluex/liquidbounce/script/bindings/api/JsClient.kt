@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.script.bindings.globals
+package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
@@ -26,21 +28,23 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
+/**
+ * The main hub of the ScriptAPI client that provides access to a useful set of members.
+ *
+ * Access variables using `client` in the script
+ * client.getEventManager()...
+ * client.getConfigSystem()...
+ * client.getModuleManager()...
+ *
+ * @since 1.0
+ */
 object JsClient {
 
-    @JvmField
     val eventManager = EventManager
-    @JvmField
     val configSystem = ConfigSystem
-
-    @JvmField
     val moduleManager = ModuleManager
-    @JvmField
     val commandManager = CommandManager
-    @JvmField
     val scriptManager = ScriptManager
-
-    @JvmField
     val combatManager = CombatManager
 
     /**

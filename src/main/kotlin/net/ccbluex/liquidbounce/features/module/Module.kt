@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -151,6 +152,12 @@ open class Module(
     // Tag to be displayed on the HUD
     open val tag: String?
         get() = null
+
+    /**
+     * Allows the user to access values by typing module.settings.<valuename>
+     */
+    @ScriptApi
+    open val settings by lazy { value.associateBy { it.name } }
 
     /**
      * Collection of the most used variables

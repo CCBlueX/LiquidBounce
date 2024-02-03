@@ -56,7 +56,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.script.RequiredByScript
+import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
@@ -315,11 +315,11 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
      */
     @JvmName("getCategories")
-    @RequiredByScript
+    @ScriptApi
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
     @JvmName("getModuleByName")
-    @RequiredByScript
+    @ScriptApi
     fun getModuleByName(module: String) = find { it.name.equals(module, true) }
 
     operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }
