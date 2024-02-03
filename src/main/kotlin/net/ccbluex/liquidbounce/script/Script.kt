@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
 import org.graalvm.polyglot.Source
+import org.graalvm.polyglot.io.FileSystem
+import org.graalvm.polyglot.io.IOAccess
 import java.io.File
 import java.util.function.Function
 
@@ -39,6 +41,8 @@ class Script(val scriptFile: File) {
 
     private val context: Context = Context.newBuilder("js")
         .allowHostAccess(HostAccess.ALL) // Allow access to all Java classes
+        .currentWorkingDirectory(scriptFile.parentFile.toPath())
+        .allowIO(IOAccess.ALL) // Allow access to all IO operations
         .allowCreateProcess(false) // Disable process creation
         .allowCreateThread(false) // Disable thread creation
         .allowNativeAccess(false) // Disable native access
@@ -53,7 +57,6 @@ class Script(val scriptFile: File) {
 
             // Global functions
             jsBindings.putMember("registerScript", RegisterScript())
-
         }
 
     private val scriptText: String = scriptFile.readText()
@@ -84,7 +87,8 @@ class Script(val scriptFile: File) {
         val relPath = scriptFile.relativeTo(ScriptManager.scriptsRoot).path
 
         // Evaluate script
-        context.eval(Source.newBuilder("js", scriptText, relPath).build())
+        val language = Source.findLanguage(scriptFile) ?: error("Unknown language")
+        context.eval(Source.newBuilder(language, scriptText, scriptFile.name).build())
 
         // Call load event
         callGlobalEvent("load")
