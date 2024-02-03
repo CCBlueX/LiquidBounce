@@ -22,17 +22,16 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.bindings.api.JsContextProvider
 import net.ccbluex.liquidbounce.script.bindings.features.JsChoice
+import net.ccbluex.liquidbounce.script.bindings.features.JsCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.JsModule
 import net.ccbluex.liquidbounce.utils.client.logger
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
 import org.graalvm.polyglot.Source
-import org.graalvm.polyglot.io.FileSystem
 import org.graalvm.polyglot.io.IOAccess
 import java.io.File
 import java.util.function.Function
@@ -84,8 +83,6 @@ class Script(val scriptFile: File) {
      * Initialization of scripts
      */
     fun initScript() {
-        val relPath = scriptFile.relativeTo(ScriptManager.scriptsRoot).path
-
         // Evaluate script
         val language = Source.findLanguage(scriptFile) ?: error("Unknown language")
         context.eval(Source.newBuilder(language, scriptText, scriptFile.name).build())
@@ -143,20 +140,12 @@ class Script(val scriptFile: File) {
     /**
      * Registers a new script command
      *
-     * @param commandObject JavaScript object containing information about the command.
-     * @param callback JavaScript function to which the corresponding instance of [JsModule] is passed.
-     * @see JsModule
+     * @param command From the command builder.
      */
     @Suppress("unused")
-    fun registerCommand(commandObject: Map<String, Any>, callback: (CommandBuilder) -> Unit) {
-        val command = CommandBuilder
-            .begin(commandObject["name"] as String)
-            .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }
-                .toTypedArray())
-            .apply { callback(this) }
-            .build()
-
-        registeredCommands += command
+    fun registerCommand(commandObject: Map<String, Any>) {
+        val commandBuilder = JsCommandBuilder(commandObject)
+        registeredCommands += commandBuilder.build()
     }
 
     /**
