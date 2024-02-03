@@ -307,6 +307,8 @@
         
         "module.sprint.description": "Automatically sprints all the time.",
 
+        "module.staffDetector.description": "Detects and notify user of staff members on the server",
+
         "module.step.description": "Allows you to step up blocks.",
         
         "module.storageESP.description": "Allows you to see chests, etc. through walls.",

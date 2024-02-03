@@ -188,6 +188,7 @@ object ModuleManager : Listenable {
             Spammer,
             Speed,
             Sprint,
+            StaffDetector,
             Step,
             StorageESP,
             Strafe,
