@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.AttackEvent
-import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -43,13 +42,11 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
     var sequence: Sequence<DummyEvent>? = null
 
-    // Reset on mode change
-    val choiceChangeHandler = handler<ChoiceChangeEvent> {
-        if (it.module != this) {
-            return@handler
+    init {
+        modes.listen {
+            reset()
+            it
         }
-
-        reset()
     }
 
     override fun handleEvents(): Boolean {

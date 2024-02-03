@@ -97,7 +97,6 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     SimulatedTickEvent::class,
     SplashOverlayEvent::class,
     SplashProgressEvent::class,
-    ChoiceChangeEvent::class,
     RefreshArrayListEvent::class,
     BrowserReadyEvent::class,
     ServerConnectEvent::class

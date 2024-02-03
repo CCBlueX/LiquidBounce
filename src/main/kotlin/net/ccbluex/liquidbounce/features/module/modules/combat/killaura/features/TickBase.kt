@@ -178,11 +178,6 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         }
     }
 
-    override fun disable() {
-        tickBalance = 0f
-        super.disable()
-    }
-
     data class TickData(
         val position: Vec3d,
         val fallDistance: Float,
