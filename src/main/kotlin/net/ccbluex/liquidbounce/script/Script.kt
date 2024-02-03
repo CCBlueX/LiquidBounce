@@ -81,7 +81,7 @@ class Script(val scriptFile: File) {
      * Initialization of scripts
      */
     fun initScript() {
-        val relPath = scriptFile.relativeTo(ScriptManager.scriptsRoot).getPath()
+        val relPath = scriptFile.relativeTo(ScriptManager.scriptsRoot).path
 
         // Evaluate script
         context.eval(Source.newBuilder("js", scriptText, relPath).build())
@@ -214,19 +214,6 @@ class Script(val scriptFile: File) {
         registeredChoices.forEach { it.parent.choices.remove(it) }
 
         scriptEnabled = false
-    }
-
-    /**
-     * Imports another JavaScript file into the context of this script.
-     * @param scriptFilePath Path to the file to be imported.
-     */
-    fun import(scriptFilePath: String) {
-        val scriptFile = File(ScriptManager.scriptsRoot, scriptFilePath)
-        val scriptText = scriptFile.readText()
-        val relPath = scriptFile.relativeTo(ScriptManager.scriptsRoot).getPath()
-
-        // Evaluate script
-        context.eval(Source.newBuilder("js", scriptText, relPath).build())
     }
 
     /**
