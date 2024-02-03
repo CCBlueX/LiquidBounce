@@ -229,7 +229,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(rotationConfigurable)
         }
 
-        private val targetRenderer = tree(OverlayTargetRenderer(this.module!!))
+        private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
 
         val tickRepeatable = repeatable {

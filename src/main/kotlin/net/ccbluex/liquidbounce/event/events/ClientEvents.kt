@@ -47,9 +47,6 @@ class ToggleModuleEvent(val moduleName: String, val hidden: Boolean, val enabled
 @WebSocketEvent
 class RefreshArrayListEvent : Event()
 
-@Nameable("choiceChange")
-class ChoiceChangeEvent(val module: Module, val oldChoice: Choice, val newChoice: Choice) : Event()
-
 @Nameable("notification")
 @WebSocketEvent
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {

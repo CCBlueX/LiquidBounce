@@ -153,7 +153,12 @@ open class Module(
         get() = null
 
     /**
-     * Quick access
+     * Collection of the most used variables
+     * to make the code more readable.
+     *
+     * However, we do not check for nulls here, because
+     * we are sure that the client is in-game, if not
+     * fiddling with the handler code.
      */
     protected val mc: MinecraftClient
         inline get() = net.ccbluex.liquidbounce.utils.client.mc
