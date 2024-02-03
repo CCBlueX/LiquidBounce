@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.crystalAura
+package net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.canSeeUpperBlockSide
@@ -26,13 +28,12 @@ import net.ccbluex.liquidbounce.utils.block.forEachCollidingBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesInCuboid
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.item.Items
 import net.minecraft.util.hit.HitResult
@@ -44,12 +45,9 @@ object SubmoduleCrystalPlacer {
     private var currentTarget: BlockPos? = null
 
     fun tick() {
-        val player = mc.player ?: return
-        val world = mc.world ?: return
-
         val crystalSlot = findHotbarSlot(Items.END_CRYSTAL) ?: return
 
-        updateTarget(player, world)
+        updateTarget()
 
         val target = currentTarget ?: return
 
@@ -85,10 +83,7 @@ object SubmoduleCrystalPlacer {
         clickBlockWithSlot(player, rayTraceResult, crystalSlot)
     }
 
-    private fun updateTarget(
-        player: ClientPlayerEntity,
-        world: ClientWorld,
-    ) {
+    private fun updateTarget() {
         // Reset current target
         currentTarget = null
 

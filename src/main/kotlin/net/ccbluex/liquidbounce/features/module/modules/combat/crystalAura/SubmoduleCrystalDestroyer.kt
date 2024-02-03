@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.crystalAura
+package net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.canSeeBox
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -34,9 +38,6 @@ object SubmoduleCrystalDestroyer {
     private var currentTarget: EndCrystalEntity? = null
 
     fun tick() {
-        val player = mc.player ?: return
-        val world = mc.world ?: return
-
         val range = ModuleCrystalAura.DestroyOptions.range.toDouble()
 
         updateTarget(player, world, range)
@@ -72,7 +73,7 @@ object SubmoduleCrystalDestroyer {
         world: ClientWorld,
         range: Double,
     ) {
-        this.currentTarget =
+        currentTarget =
             world.getEntitiesBoxInRange(player.getCameraPosVec(1.0F), range) { it is EndCrystalEntity }
                 .mapNotNull {
                     if (!canSeeBox(

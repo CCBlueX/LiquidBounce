@@ -54,7 +54,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMin
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
-import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import org.lwjgl.glfw.GLFW

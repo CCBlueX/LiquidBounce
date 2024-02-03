@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.crystalAura
+package net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
@@ -36,7 +38,8 @@ import net.minecraft.world.explosion.Explosion
 import kotlin.math.floor
 import kotlin.math.sqrt
 
-object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
+object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
+
     val swing by boolean("Swing", true)
 
     internal object PlaceOptions : ToggleableConfigurable(this, "Place", true) {
@@ -123,7 +126,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 pos.z,
                 power,
                 false,
-                mc.world!!.getDestructionType(GameRules.BLOCK_EXPLOSION_DROP_DECAY),
+                world.getDestructionType(GameRules.BLOCK_EXPLOSION_DROP_DECAY),
             )
 
         return possibleVictim.getEffectiveDamage(mc.world!!.damageSources.explosion(explosion), preprocessedDamage)
