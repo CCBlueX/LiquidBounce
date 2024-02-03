@@ -97,14 +97,6 @@ open class Value<T : Any>(
 
     fun get() = value
 
-    @ScriptApi
-    @Export
-    fun getValue() = value
-
-    @ScriptApi
-    @Export
-    fun setValue(t: T) = set(t)
-
     fun set(t: T) { // temporary set value
         // Do nothing if value is the same
         if (t == value) return
