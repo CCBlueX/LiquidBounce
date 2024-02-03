@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyEn
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyExplosion
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyJetpack
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thOct
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277Glide
@@ -40,6 +40,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
  */
 
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
+
+    init {
+        enableLock()
+    }
 
     internal val modes = choices(
         "Mode", FlyVanilla, arrayOf(
@@ -53,7 +57,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             // Anti-cheat specific fly modes
             FlyVulcan277Glide,
             FlySpartan524,
-            FlySentinel27thOct,
+            FlySentinel27thJan,
             FlyVerusDamage,
 
         )

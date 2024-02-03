@@ -93,3 +93,20 @@ fun String.rootDomain(): String {
 
     return parts.takeLast(2).joinToString(".")
 }
+
+/**
+ * Converts milliseconds to seconds, minutes, hours and days when present.
+ */
+fun Int.formatAsTime(): String {
+    val seconds = this / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+
+    return when {
+        days > 0 -> "${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s"
+        hours > 0 -> "${hours}h ${minutes % 60}m ${seconds % 60}s"
+        minutes > 0 -> "${minutes}m ${seconds % 60}s"
+        else -> "${seconds}s"
+    }
+}

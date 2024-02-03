@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ArmorItem
@@ -90,13 +90,13 @@ object ArmorComparator : Comparator<ArmorPiece> {
                     return enchantabilityCmp
                 }
 
-                val alreadyEquippedCmp = compareByCondition(o1, o2, ArmorPiece::isAlreadyEquipped)
+                val alreadyEquippedCmp = compareValueByCondition(o1, o2, ArmorPiece::isAlreadyEquipped)
 
                 if (alreadyEquippedCmp != 0) {
                     return alreadyEquippedCmp
                 }
 
-                return compareByCondition(o1, o2, ArmorPiece::isReachableByHand)
+                return compareValueByCondition(o1, o2, ArmorPiece::isReachableByHand)
             }
             return otherEnchantmentCmp
         }

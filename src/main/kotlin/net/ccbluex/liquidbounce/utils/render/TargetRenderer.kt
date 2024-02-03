@@ -205,7 +205,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
 
     }
 
-    inner class Outline : ToggleableConfigurable(module,"Outline", true) {
+    inner class Outline : ToggleableConfigurable(parent,"Outline", true) {
         val color by color("Color", Color4b(0x00007CFF, false))
     }
 

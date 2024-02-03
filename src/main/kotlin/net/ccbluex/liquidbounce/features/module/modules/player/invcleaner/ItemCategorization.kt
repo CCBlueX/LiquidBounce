@@ -20,32 +20,49 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
+import net.minecraft.potion.PotionUtil
 
-val PREFER_ITEMS_IN_HOTBAR: (o1: WeightedItem, o2: WeightedItem) -> Int =
-    { o1, o2 -> compareByCondition(o1, o2, WeightedItem::isInHotbar) }
-val STABILIZE_COMPARISON: (o1: WeightedItem, o2: WeightedItem) -> Int =
+val PREFER_ITEMS_IN_HOTBAR: (o1: ItemFacet, o2: ItemFacet) -> Int =
+    { o1, o2 -> compareValueByCondition(o1, o2, ItemFacet::isInHotbar) }
+val STABILIZE_COMPARISON: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> o1.itemStack.hashCode().compareTo(o2.itemStack.hashCode()) }
 
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
-enum class ItemType(val allowOnlyOne: Boolean) {
+enum class ItemType(
+    val allowOnlyOne: Boolean,
+    /**
+     * Higher priority means the item category is filled in first.
+     *
+     * This is important for example for specializations. If we have a weapon slot and an axe slot, an axe would
+     * fit in both slots, but because the player specifically requested an axe, the best axe should be filled in first
+     * with the best available axe.
+     *
+     * ## Used values
+     * - Specialization (see above): 10 per level
+     */
+    val allocationPriority: Int = 0,
+) {
     ARMOR(true),
-    SWORD(true),
+    SWORD(true, allocationPriority = 10),
+    WEAPON(true),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
-    TOOL(true),
+    TOOL(true, allocationPriority = 10),
     ROD(true),
     SHIELD(true),
     FOOD(false),
     BUCKET(false),
     PEARL(false),
     GAPPLE(false),
+    POTION(false),
     BLOCK(false),
     NONE(false),
 }
@@ -53,9 +70,15 @@ enum class ItemType(val allowOnlyOne: Boolean) {
 enum class ItemSortChoice(
     override val choiceName: String,
     val category: ItemCategory?,
+    /**
+     * This is the function that is used for the greedy check.
+     *
+     * IF IT WAS IMPLEMENTED
+     */
     val satisfactionCheck: ((ItemStack) -> Boolean)? = null,
 ) : NamedChoice {
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
+    WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
     BOW("Bow", ItemCategory(ItemType.BOW, 0)),
     CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
     AXE("Axe", ItemCategory(ItemType.TOOL, 0)),
@@ -69,68 +92,97 @@ enum class ItemSortChoice(
     GAPPLE(
         "Gapple",
         ItemCategory(ItemType.GAPPLE, 0),
-        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
+    ),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
+    POTION("Potion", ItemCategory(ItemType.POTION, 0)),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
     IGNORE("Ignore", null),
     NONE("None", null),
 }
 
 object ItemCategorization {
-
     /**
      * Returns a list of facets an item represents. For example an axe is an axe, but also a sword:
      * - (SANDSTONE_BLOCK, 64) => `[Block(SANDSTONE_BLOCK, 64)]`
      * - (DIAMOND_AXE, 1) => `[Axe(DIAMOND_AXE, 1), Tool(DIAMOND_AXE, 1)]`
      */
-    @Suppress("CyclomaticComplexMethod")
-    fun getItemFacets(slot: ItemSlot): Array<WeightedItem> {
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
+    fun getItemFacets(slot: ItemSlot): Array<ItemFacet> {
         if (slot.itemStack.isNothing()) {
             return emptyArray()
         }
 
         return when (val item = slot.itemStack.item) {
-            is ArmorItem -> arrayOf(WeightedArmorItem(slot))
-            is SwordItem -> arrayOf(WeightedSwordItem(slot))
-            is BowItem -> arrayOf(WeightedBowItem(slot))
-            is CrossbowItem -> arrayOf(WeightedCrossbowItem(slot))
-            is ArrowItem -> arrayOf(WeightedArrowItem(slot))
+            is ArmorItem -> arrayOf(ArmorItemFacet(slot))
+            is SwordItem -> {
+                arrayOf(
+                    SwordItemFacet(slot),
+                    WeaponItemFacet(slot),
+                )
+            }
+
+            is BowItem -> arrayOf(BowItemFacet(slot))
+            is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
+            is ArrowItem -> arrayOf(ArrowItemFacet(slot))
             is ToolItem -> {
                 arrayOf(
-                    // todo: add weapon type
-                    //WeightedSwordItem(slot),
-                    WeightedToolItem(slot)
+                    ToolItemFacet(slot),
+                    WeaponItemFacet(slot),
                 )
             }
-            is FishingRodItem -> arrayOf(WeightedRodItem(slot))
-            is ShieldItem -> arrayOf(WeightedShieldItem(slot))
-            is BlockItem -> arrayOf(WeightedBlockItem(slot))
-            is MilkBucketItem -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 2)))
-            is BucketItem -> {
-                when (item.fluid) {
-                    is WaterFluid -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 0)))
-                    is LavaFluid -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 1)))
-                    else -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.BUCKET, 3)))
+
+            is FishingRodItem -> arrayOf(RodItemFacet(slot))
+            is ShieldItem -> arrayOf(ShieldItemFacet(slot))
+            is BlockItem -> {
+                if (ModuleScaffold.isValidBlock(slot.itemStack)
+                    && !ModuleScaffold.isBlockUnfavourable(slot.itemStack)
+                ) {
+                    arrayOf(BlockItemFacet(slot))
+                } else {
+                    arrayOf(ItemFacet(slot))
                 }
             }
-            is EnderPearlItem -> arrayOf(WeightedPrimitiveItem(slot, ItemCategory(ItemType.PEARL, 0)))
+
+            is MilkBucketItem -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
+            is BucketItem -> {
+                when (item.fluid) {
+                    is WaterFluid -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 0)))
+                    is LavaFluid -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 1)))
+                    else -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 3)))
+                }
+            }
+            is PotionItem -> {
+                val areAllEffectsGood =
+                    PotionUtil.getPotionEffects(slot.itemStack)
+                        .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
+
+                if (areAllEffectsGood) {
+                    arrayOf(PotionItemFacet(slot))
+                } else {
+                    arrayOf(ItemFacet(slot))
+                }
+            }
+            is EnderPearlItem -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
             Items.GOLDEN_APPLE -> {
                 arrayOf(
-                    WeightedFoodItem(slot),
-                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0))
+                    FoodItemFacet(slot),
+                    PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)),
                 )
             }
+
             Items.ENCHANTED_GOLDEN_APPLE -> {
                 arrayOf(
-                    WeightedFoodItem(slot),
-                    WeightedPrimitiveItem(slot, ItemCategory(ItemType.GAPPLE, 0), 1)
+                    FoodItemFacet(slot),
+                    PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
+
             else -> {
                 if (slot.itemStack.isFood) {
-                    arrayOf(WeightedFoodItem(slot))
+                    arrayOf(FoodItemFacet(slot))
                 } else {
-                    arrayOf(WeightedItem(slot))
+                    arrayOf(ItemFacet(slot))
                 }
             }
         }

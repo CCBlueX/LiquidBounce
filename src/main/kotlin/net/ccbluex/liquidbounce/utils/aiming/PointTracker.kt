@@ -37,7 +37,13 @@ import net.minecraft.util.math.Vec3d
 import java.security.SecureRandom
 import kotlin.math.abs
 
-class PointTracker : Configurable("PointTracker"), Listenable {
+class PointTracker(
+    highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
+    lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
+    gaussianOffsetDefault: Boolean = true,
+    timeEnemyOffsetDefault: Float = 0.4f,
+    timeEnemyOffsetScale: ClosedFloatingPointRange<Float> = -1f..1f
+) : Configurable("PointTracker"), Listenable {
 
     companion object {
         /**
@@ -60,13 +66,13 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      * We can either try to predict the next location of the player and use this as our newest point, or
      * we pretend to be slow in the head and aim behind.
      */
-    private val timeEnemyOffset by float("TimeEnemyOffset", 0.4f, -1f..1f)
+    private val timeEnemyOffset by float("TimeEnemyOffset", timeEnemyOffsetDefault, timeEnemyOffsetScale)
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
      * calculate the offset.
      */
-    private val gaussianOffset by boolean("GaussianOffset", true)
+    private val gaussianOffset by boolean("GaussianOffset", gaussianOffsetDefault)
 
     /**
      * OutOfBox will set the box offset to an unreachable position.
@@ -76,7 +82,7 @@ class PointTracker : Configurable("PointTracker"), Listenable {
     /**
      * Define the highest and lowest point of the box we want to aim at.
      */
-    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", PreferredBoxPart.HEAD,
+    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault,
         PreferredBoxPart.values())
         .listen { new ->
             if (lowestPoint.isHigherThan(new)) {
@@ -85,7 +91,7 @@ class PointTracker : Configurable("PointTracker"), Listenable {
                 new
             }
         }
-    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", PreferredBoxPart.BODY,
+    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault,
         PreferredBoxPart.values())
         .listen { new ->
             if (!highestPoint.isHigherThan(new)) {

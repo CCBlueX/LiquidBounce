@@ -39,7 +39,8 @@ object ScriptManager {
      * Loads all scripts inside the scripts folder.
      */
     fun loadScripts() {
-        scriptsRoot.listFiles(FileFilter { it.name.endsWith(".js") })?.forEach(ScriptManager::loadSafely)
+        scriptsRoot.listFiles(FileFilter { it.name.endsWith(".js")
+            || it.name.endsWith(".mjs") })?.forEach(ScriptManager::loadSafely)
 
         // After loading we enable all the scripts
         enableScripts()

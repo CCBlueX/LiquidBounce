@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
@@ -53,7 +54,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMin
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
-import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.script.RequiredByScript
 import org.lwjgl.glfw.GLFW
@@ -106,7 +107,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleVelocity,
             ModuleBacktrack,
             ModuleSwordBlock,
-            ModuleAutoBalls,
+            ModuleAutoShoot,
 
             // Exploit
             ModuleAbortBreaking,
@@ -148,11 +149,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
-            ModuleCapeTransfer,
-            ModuleHideClient,
             ModuleFocus,
-            ModuleAutoConfig,
-            ModuleRichPresence,
             ModuleAntiStaff,
 
             // Movement
@@ -260,7 +257,15 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProjectilePuncher,
             ModuleScaffold,
             ModuleTimer,
-            ModuleNuker
+            ModuleNuker,
+
+            // Client
+            ModuleAutoConfig,
+            ModuleRichPresence,
+            ModuleCapeTransfer,
+            ModuleHideClient,
+            ModuleEnemies,
+            ModuleLiquidChat
         )
 
         builtin.apply {

@@ -34,6 +34,10 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
  */
 object ModuleVehicleControl : Module("VehicleControl", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     private val speedVertical by float("Vertical", 0.32f, 0.1f..1f)
     private val glideVertical by float("GlideVertical", -0.2f, -0.3f..0.3f)
 

@@ -32,7 +32,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
-    private object Path : ToggleableConfigurable(this.module, "Path", true) {
+    private object Path : ToggleableConfigurable(this, "Path", true) {
         val color by color("PathColor", Color4b(36, 237, 0, 255))
 
         val renderHandler = handler<WorldRenderEvent> { event ->
@@ -48,7 +48,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
     }
 
-    private object Blocks : ToggleableConfigurable(this.module, "Blocks", true) {
+    private object Blocks : ToggleableConfigurable(this, "Blocks", true) {
         val outline by boolean("Outline", true)
 
         private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
@@ -64,7 +64,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
         // todo: use box of block, not hardcoded
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-        private object CurrentTarget : ToggleableConfigurable(this.module, "CurrentTarget", true) {
+        private object CurrentTarget : ToggleableConfigurable(this.parent, "CurrentTarget", true) {
             private val color by color("Color", Color4b(66, 120, 245, 255))
             private val colorRainbow by boolean("Rainbow", false)
 

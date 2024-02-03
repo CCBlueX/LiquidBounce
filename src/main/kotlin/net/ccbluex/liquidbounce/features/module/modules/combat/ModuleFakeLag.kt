@@ -99,6 +99,11 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
             return false
         }
 
+        // Support auto shoot with fake lag
+        if (ModuleAutoShoot.enabled && ModuleAutoShoot.targetTracker.lockedOnTarget == null) {
+            return true
+        }
+
         // If there is an enemy in range, we want to lag.
         world.findEnemy(range) ?: return false
 

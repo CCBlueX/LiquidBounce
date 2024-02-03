@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -36,8 +37,6 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.text.Text
-import net.minecraft.util.Language
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -51,7 +50,7 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world
+    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
 ) : Listenable, Configurable(name) {
 
     val valueEnabled = boolean("Enabled", state).also {
@@ -69,6 +68,20 @@ open class Module(
 
     // Module options
     var enabled by valueEnabled.listen { new ->
+        // Check if the module is locked
+        locked?.let { locked ->
+            if (locked.get()) {
+                notification(
+                    this.name,
+                    translation("liquidbounce.generic.locked"),
+                    NotificationEvent.Severity.ERROR
+                )
+
+                // Keeps it turned off
+                return@listen false
+            }
+        }
+
         runCatching {
             if (!inGame) {
                 return@runCatching
@@ -121,6 +134,11 @@ open class Module(
             it
         }
 
+    /**
+     * If this value is on true, we cannot enable the module, as it likely does not bypass.
+     */
+    private var locked: Value<Boolean>? = null
+
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
@@ -135,7 +153,12 @@ open class Module(
         get() = null
 
     /**
-     * Quick access
+     * Collection of the most used variables
+     * to make the code more readable.
+     *
+     * However, we do not check for nulls here, because
+     * we are sure that the client is in-game, if not
+     * fiddling with the handler code.
      */
     protected val mc: MinecraftClient
         inline get() = net.ccbluex.liquidbounce.utils.client.mc
@@ -188,6 +211,14 @@ open class Module(
             calledSinceStartup = true
             enable()
         }
+    }
+
+    /**
+     * If we want a module to have the requires bypass option, we specifically call it
+     * on init. This will add the option and enable the feature.
+     */
+    fun enableLock() {
+        this.locked = boolean("Locked", false)
     }
 
     protected fun choices(name: String, active: Choice, choices: Array<Choice>) =

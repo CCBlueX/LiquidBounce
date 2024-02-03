@@ -13,6 +13,7 @@
         "Render",
         "Exploit",
         "Player",
+        "Client",
         "World",
         "Misc",
         "Fun",

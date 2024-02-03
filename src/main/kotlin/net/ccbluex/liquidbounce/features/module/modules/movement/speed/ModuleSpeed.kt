@@ -35,6 +35,10 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices(
         "Mode", SpeedLegitHop, arrayOf(
             SpeedLegitHop,
