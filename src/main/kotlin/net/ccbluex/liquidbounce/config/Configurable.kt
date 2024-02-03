@@ -149,8 +149,6 @@ open class Configurable(
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
     ) = ChoiceConfigurable(module, name, activeCallback, choicesCallback).apply { this@Configurable.value.add(this) }
 
-    protected fun value(value: Value<*>) {
-        this.value.add(value)
-    }
+    protected fun value(value: Value<*>) = value.apply { this@Configurable.value.add(this) }
 
 }

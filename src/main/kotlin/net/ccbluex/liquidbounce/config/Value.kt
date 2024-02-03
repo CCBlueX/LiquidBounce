@@ -31,12 +31,14 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
+import org.graalvm.polyglot.HostAccess.Export
 import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
@@ -94,6 +96,14 @@ open class Value<T : Any>(
     }
 
     fun get() = value
+
+    @RequiredByScript
+    @Export
+    fun getValue() = value
+
+    @RequiredByScript
+    @Export
+    fun setValue(t: T) = set(t)
 
     fun set(t: T) { // temporary set value
         // Do nothing if value is the same
