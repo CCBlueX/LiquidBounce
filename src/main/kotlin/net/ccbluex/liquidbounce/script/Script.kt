@@ -18,11 +18,15 @@
  */
 package net.ccbluex.liquidbounce.script
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.bindings.api.JsContextProvider
+import net.ccbluex.liquidbounce.script.bindings.features.JsChoice
 import net.ccbluex.liquidbounce.script.bindings.features.JsModule
 import net.ccbluex.liquidbounce.utils.client.logger
 import org.graalvm.polyglot.Context
@@ -65,7 +69,13 @@ class Script(val scriptFile: File) {
     private var scriptEnabled = false
 
     private val globalEvents = mutableMapOf<String, () -> Unit>()
+
+    /**
+     * Tracks client modifications made by the script
+     */
     private val registeredModules = mutableListOf<Module>()
+    private val registeredCommands = mutableListOf<Command>()
+    private val registeredChoices = mutableListOf<Choice>()
 
     /**
      * Initialization of scripts
@@ -142,7 +152,27 @@ class Script(val scriptFile: File) {
             .apply { callback(this) }
             .build()
 
-        CommandManager.addCommand(command)
+        registeredCommands += command
+    }
+
+    /**
+     * Registers a new script choice to an existing choice configurable which can be obtained
+     * from existing modules.
+     *
+     * @param choiceConfigurable The choice configurable to add the choice to.
+     * @param choiceObject JavaScript object containing information about the choice.
+     * @param callback JavaScript function to which the corresponding instance of [JsChoice] is passed.
+     *
+     * @see JsChoice
+     * @see ChoiceConfigurable
+     */
+    @Suppress("unused")
+    fun registerChoice(choiceConfigurable: ChoiceConfigurable, choiceObject: Map<String, Any>,
+                       callback: (Choice) -> Unit) {
+        JsChoice(choiceObject, choiceConfigurable).apply {
+            callback(this)
+            registeredChoices += this
+        }
     }
 
     /**
@@ -164,6 +194,8 @@ class Script(val scriptFile: File) {
 
         callGlobalEvent("enable")
         ModuleManager += registeredModules
+        CommandManager += registeredCommands
+        registeredChoices.forEach { choice -> choice.parent.choices.add(choice) }
         scriptEnabled = true
     }
 
@@ -178,6 +210,9 @@ class Script(val scriptFile: File) {
 
         callGlobalEvent("disable")
         ModuleManager -= registeredModules
+        CommandManager -= registeredCommands
+        registeredChoices.forEach { it.parent.choices.remove(it) }
+
         scriptEnabled = false
     }
 

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.script.ScriptApi
+import net.ccbluex.liquidbounce.script.bindings.features.JsChoice
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -83,7 +84,7 @@ class ChoiceConfigurable(
     choicesCallback: (ChoiceConfigurable) -> Array<Choice>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
-    val choices: Array<Choice> = choicesCallback(this)
+    var choices: MutableList<Choice> = choicesCallback(this).toMutableList()
     var activeChoice: Choice = activeChoiceCallback(this)
 
     fun newState(state: Boolean) {

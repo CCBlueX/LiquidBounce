@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.features.command.commands.client.*
 import net.ccbluex.liquidbounce.features.command.commands.creative.*
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.CommandScript
 import net.ccbluex.liquidbounce.script.ScriptApi
@@ -157,6 +159,10 @@ object CommandManager : Iterable<Command> {
 
     fun addCommand(command: Command) {
         commands.add(command)
+    }
+
+    fun removeCommand(command: Command) {
+        commands.remove(command)
     }
 
     /**
@@ -501,6 +507,24 @@ object CommandManager : Iterable<Command> {
 //        }
 //
 //        return builder.buildFuture()
+    }
+
+
+
+    operator fun plusAssign(command: Command) {
+        addCommand(command)
+    }
+
+    operator fun plusAssign(commands: MutableList<Command>) {
+        commands.forEach(this::addCommand)
+    }
+
+    operator fun minusAssign(command: Command) {
+        removeCommand(command)
+    }
+
+    operator fun minusAssign(commands: MutableList<Command>) {
+        commands.forEach(this::removeCommand)
     }
 
 }
