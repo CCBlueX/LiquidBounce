@@ -43,14 +43,16 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    val settings by lazy { value }
+    val settings by lazy {
+        value.associateBy { it.name }
+    }
 
     init {
         if (moduleObject.containsKey("settings")) {
-            val settingsObject = moduleObject["settings"] as Map<String, Value<*>>
+            val settingsObject = moduleObject["settings"] as List<Value<*>>
 
-            for ((_, value) in settingsObject) {
-                settings.add(value)
+            for (value in settingsObject) {
+                value(value)
             }
         }
 
