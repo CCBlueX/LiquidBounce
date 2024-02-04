@@ -44,8 +44,8 @@ object JsInteractionUtil {
         entity.attack(swing, keepSprint)
     }
 
-    @JvmName("useEntity")
-    fun useEntity(entity: Entity, hand: Hand) {
+    @JvmName("interactEntity")
+    fun interactEntity(entity: Entity, hand: Hand) {
         // Safety check
         if (entity == mc.player) {
             return
