@@ -24,8 +24,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideClient
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleHideClient
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
@@ -204,7 +203,7 @@ object IntegrationHandler : Listenable {
 
     private fun handleScreenSituation(screen: Screen?): Boolean {
         // Check for the Game narrator
-        if (HideClient.isHidingNow || ModuleHideClient.enabled) {
+        if (HideAppearance.isHidingNow) {
             virtualClose()
             return false
         }
