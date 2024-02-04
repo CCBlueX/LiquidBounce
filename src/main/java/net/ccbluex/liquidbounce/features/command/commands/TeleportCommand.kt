@@ -29,6 +29,12 @@ object TeleportCommand : Command("tp", "teleport") {
 
 		val maxDistancePerPacket = args.getOrNull(4)?.toDoubleOrNull() ?: 5.0
 
+		// <= 0 will crash the client
+		if (maxDistancePerPacket <= 0) {
+			chat("MaxDistancePerPacket must >= 0.")
+			return
+		}
+
 		if (x == null || y == null || z == null) {
 			chatSyntax("tp <x> <y> <z> [maxDistancePerPacket = 5]")
 			return
