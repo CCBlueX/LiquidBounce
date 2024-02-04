@@ -113,6 +113,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAbortBreaking,
             ModuleAntiReducedDebugInfo,
             ModuleAntiVanish,
+            ModuleAntiHunger,
             ModuleClip,
             ModuleDamage,
             ModuleDisabler,
