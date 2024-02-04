@@ -34,14 +34,29 @@ import net.minecraft.util.shape.VoxelShapes
 
 internal object LiquidWalkVanilla : Choice("Vanilla") {
 
+    private val dipIfBurning by boolean("dipIfBurning", true)
+
+    // Add a new flag to control the execution of the function
+    private var isPaused = false
+
     override val parent: ChoiceConfigurable
         get() = ModuleLiquidWalk.modes
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.fluidState.isOf(Fluids.WATER)
-            && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
-            event.shape = VoxelShapes.fullCube()
+        // Check if the function is paused
+        if (!isPaused) {
+            if (event.state.fluidState.isOf(Fluids.WATER)
+                && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
+                event.shape = VoxelShapes.fullCube()
+            }
+        }
+
+        if (dipIfBurning && player.isOnFire) {
+            // Instead of changing the player's velocity, pause the function
+            isPaused = true
+        } else {
+            // If the player is not on fire, resume the function
+            isPaused = false
         }
     }
-
 }
