@@ -47,16 +47,16 @@ object JsContextProvider {
 
         // Variable bindings
         putMember("mc", mc)
-        putMember("client", JsClient)
+        putMember("Client", JsClient)
 
         // Register utilities
-        putMember("rotationUtil", JsRotationUtil)
-        putMember("itemUtil", JsItemUtil)
-        putMember("networkUtil", JsNetworkUtil)
-        putMember("interactionUtil", JsInteractionUtil)
-        putMember("blockUtil", JsBlockUtil)
-        putMember("movementUtil", JsMovementUtil)
-        putMember("reflectionUtil", JsReflectionUtil)
+        putMember("RotationUtil", JsRotationUtil)
+        putMember("ItemUtil", JsItemUtil)
+        putMember("NetworkUtil", JsNetworkUtil)
+        putMember("InteractionUtil", JsInteractionUtil)
+        putMember("BlockUtil", JsBlockUtil)
+        putMember("MovementUtil", JsMovementUtil)
+        putMember("ReflectionUtil", JsReflectionUtil)
     }
 
 }
