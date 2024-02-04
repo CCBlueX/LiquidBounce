@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
@@ -290,6 +291,14 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         boolean isWalking = (double) Math.abs(instance.input.movementForward) >= 0.8 || (double) Math.abs(instance.input.movementSideways) >= 0.8;
         boolean modifiedIsWalking = this.isSubmergedInWater() ? hasMovement : isWalking;
         return ModuleSprint.INSTANCE.shouldSprintOmnidirectionally() ? modifiedIsWalking : this.isWalking();
+    }
+
+    @ModifyExpressionValue(method = "sendSprintingPacket", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z")
+    )
+    private boolean hookNoHungerSprint(boolean original) {
+        return !(ModuleAntiHunger.INSTANCE.getEnabled() && ModuleAntiHunger.INSTANCE.getNoSprint()) && original;
     }
 
 }
