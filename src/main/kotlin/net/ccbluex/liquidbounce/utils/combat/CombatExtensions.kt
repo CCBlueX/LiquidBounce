@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMyste
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOldCombat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.network.AbstractClientPlayerEntity
@@ -159,18 +160,19 @@ fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurab
  */
 fun ClientWorld.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    player: Entity = mc.player!!,
     enemyConf: EnemyConfigurable = globalEnemyConfigurable
-): Entity? {
+) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.first
+
+fun ClientWorld.findEnemies(
+    range: ClosedFloatingPointRange<Float>,
+    enemyConf: EnemyConfigurable = globalEnemyConfigurable
+): List<Pair<Entity, Double>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
-    val (bestTarget, _) = getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
+    return getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
         .filter { it.shouldBeAttacked(enemyConf) }
         .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
         .filter { (_, distance) -> distance in squaredRange }
-        .minByOrNull { (_, distance) -> distance } ?: return null
-
-    return bestTarget
 }
 
 fun ClientWorld.getEntitiesInCuboid(
