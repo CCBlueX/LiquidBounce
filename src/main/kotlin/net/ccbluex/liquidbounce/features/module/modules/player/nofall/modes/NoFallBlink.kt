@@ -35,10 +35,12 @@ internal object NoFallBlink : Choice("Blink") {
 
     private var managedToReset = false
     var waitUntilGround = true
+    private var onGroundSince = 1337
 
     private val blinkDuringFallDistance by floatRange("FallDistance",
         1.4f..20f, 1f..30f)
     private val spoofDistance by float("SpoofDistance", 0.6f, 0f..1f)
+    private val blinkOnGroundTicks by int("OnGroundTicks", 10, 0..20)
 
     /**
      * Specifies the parent configuration for this mode
@@ -46,14 +48,19 @@ internal object NoFallBlink : Choice("Blink") {
     override val parent: ChoiceConfigurable
         get() = modes
 
+    override fun enable() {
+        onGroundSince = 1337
+        super.enable()
+    }
+
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
 
         if (packet is PlayerMoveC2SPacket) {
             if (packet.onGround) {
+                onGroundSince++
                 managedToReset = false
                 waitUntilGround = false
-                FakeLag.flush()
             } else {
                 if (waitUntilGround) {
                     return@handler
@@ -66,6 +73,7 @@ internal object NoFallBlink : Choice("Blink") {
                 if (fallDistance >= (blinkDuringFallDistance.start + spoofDistance)
                     && fallDistance <= blinkDuringFallDistance.endInclusive) {
                     managedToReset = false
+                    onGroundSince = 0
                     packet.onGround = true
                 } else {
                     // However, if we are above 20 blocks of fall distance, we want to reset the lag
@@ -94,6 +102,7 @@ internal object NoFallBlink : Choice("Blink") {
      * This logic can be seen above in the [packetHandler] as well.
      */
     fun shouldLag() =
-        (isActive && ModuleNoFall.enabled) && player.fallDistance in blinkDuringFallDistance && !managedToReset
+        (isActive && ModuleNoFall.enabled) && (player.fallDistance in blinkDuringFallDistance
+            || onGroundSince <= blinkOnGroundTicks) && !managedToReset
 
 }

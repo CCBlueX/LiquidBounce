@@ -54,19 +54,6 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     private val evadeArrows by boolean("EvadeArrows", true)
     private val autoDisable by boolean("AutoDisable", true)
 
-    private object BreadcrumbsOption : ToggleableConfigurable(this, "Breadcrumbs", true) {
-
-        val breadcrumbsColor by color("BreadcrumbsColor", Color4b(255, 179, 72, 255))
-        val breadcrumbsRainbow by boolean("BreadcrumbsRainbow", false)
-
-        val renderHandler = handler<WorldRenderEvent> { event ->
-            val matrixStack = event.matrixStack
-            val color = if (breadcrumbsRainbow) rainbow() else breadcrumbsColor
-            FakeLag.drawStrip(matrixStack, color)
-        }
-
-    }
-
     private object AutoResetOption : ToggleableConfigurable(this, "AutoReset", false) {
         val resetAfter by int("ResetAfter", 100, 1..1000)
         val action by enumChoice("ResetAction", ResetAction.RESET, ResetAction.values())
@@ -75,7 +62,6 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     private var dummyPlayer: OtherClientPlayerEntity? = null
 
     init {
-        tree(BreadcrumbsOption)
         tree(AutoResetOption)
     }
 
