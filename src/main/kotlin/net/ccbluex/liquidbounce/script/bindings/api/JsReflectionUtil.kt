@@ -49,15 +49,15 @@ object JsReflectionUtil {
             isAccessible = true
         }.newInstance(*args)
 
-    @JvmName("takeField")
-    fun takeField(obj: Any, name: String): Any? = obj::class.java.getDeclaredField(
+    @JvmName("getField")
+    fun getField(obj: Any, name: String): Any? = obj::class.java.getDeclaredField(
         Remapper.remapField(obj::class.java, name, true)
     ).apply {
         isAccessible = true
     }.get(obj)
 
-    @JvmName("takeStaticField")
-    fun takeStaticField(clazz: Class<*>, name: String): Any? = clazz.getDeclaredField(
+    @JvmName("getStaticField")
+    fun getStaticField(clazz: Class<*>, name: String): Any? = clazz.getDeclaredField(
         Remapper.remapField(clazz, name, true)
     ).apply {
         isAccessible = true

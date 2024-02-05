@@ -33,10 +33,10 @@ object JsBlockUtil {
     @JvmName("newBlockPos")
     fun newBlockPos(x: Int, y: Int, z: Int): BlockPos = BlockPos(x, y, z)
 
-    @JvmName("toBlock")
-    fun toBlock(blockPos: BlockPos) = blockPos.getBlock()
+    @JvmName("getBlock")
+    fun getBlock(blockPos: BlockPos) = blockPos.getBlock()
 
-    @JvmName("toState")
-    fun toState(blockPos: BlockPos): BlockState? = blockPos.getState()
+    @JvmName("getState")
+    fun getState(blockPos: BlockPos): BlockState? = blockPos.getState()
 
 }
