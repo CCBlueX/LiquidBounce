@@ -163,7 +163,6 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
         Right.run {
             if (!enabled || !use) return@run
 
-
             clickScheduler.clicks {
                 KeyBinding.onKeyPressed(mc.options.useKey.boundKey)
                 true

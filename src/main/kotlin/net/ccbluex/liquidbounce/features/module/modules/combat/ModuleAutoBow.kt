@@ -158,8 +158,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         fun getHypotheticalHit(): AbstractClientPlayerEntity? {
-            val yaw = player.lastYaw
-            val pitch = player.lastPitch
+            val rotation = RotationManager.serverRotation
+            val yaw = rotation.yaw
+            val pitch = rotation.pitch
 
             val velocity = getHypotheticalArrowVelocity(false)
 
@@ -256,8 +257,13 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 return@repeatable
             }
 
-            // player.yaw = rotation.yaw
-            // player.pitch = rotation.pitch
+            RotationManager.aimAt(
+                rotation,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider = ModuleAutoBow,
+                configurable = rotationConfigurable
+            )
+        }
 
         val renderHandler = handler<OverlayRenderEvent> { event ->
             val target = targetTracker.lockedOnTarget ?: return@handler

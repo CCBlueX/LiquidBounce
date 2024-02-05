@@ -31,8 +31,6 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.util.Hand
-import net.ccbluex.liquidbounce.utils.item.ArmorConfigurable
 
 /**
  * AutoArmor module
@@ -43,11 +41,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
     private val hotbar by boolean("Hotbar", true)
-    val armorconfigurable = ArmorConfigurable()
 
-    init {
-        tree(armorconfigurable)
-    }
     var locked = false
     private var clickedInInventory = false
 
@@ -57,34 +51,8 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             return@repeatable
         }
 
-        val bestArmor = (0..41).mapNotNull { slot ->
-            val stack = player.inventory.getStack(slot)
-
-            return@mapNotNull when (stack?.item) {
-                is ArmorItem -> ArmorPiece(stack, slot)
-                else -> null
-            }
-        }.groupBy(ArmorPiece::entitySlotId).values.mapNotNull {
-            it.maxWithOrNull(ArmorComparator(armorconfigurable))
-        }
-
-        for (armorPiece in bestArmor) {
-            if (armorPiece.isAlreadyEquipped) {
-                continue
-            }
-
-            val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
-
-            if (stackInArmor.item == Items.ELYTRA) {
-                continue
-            }
-
-            if (!stackInArmor.isNothing() && move(armorPiece.inventorySlot, true) || stackInArmor.isNothing() && move(
-                    armorPiece.slot, false
-                )
-            ) {
-                locked = true
-                wait { inventoryConstraints.delay.random() }
+        // Filter out already equipped armor pieces
+        val bestArmor = findBestArmorPiecesInInventory().filter { !it.isAlreadyEquipped }
 
         for ((armorIndex, armorPiece) in bestArmor.withIndex()) {
             if (!canOperate(player)) {
