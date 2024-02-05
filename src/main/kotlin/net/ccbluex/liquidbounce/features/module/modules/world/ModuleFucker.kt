@@ -19,10 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
+import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
@@ -31,6 +39,9 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.util.ActionResult
@@ -64,7 +75,16 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
      *
      * Useful for Hypixel and CubeCraft
      */
-    private val entrance by boolean("Entrance", false)
+    private object FuckerEntrance : ToggleableConfigurable(this, "Entrance", false) {
+        /**
+         * Breaks the block above the target block first and makes an entrance
+         */
+        val breakOnTop by boolean("BreakOnTop", true)
+    }
+
+    init {
+        tree(FuckerEntrance)
+    }
 
     private val surroundings by boolean("Surroundings", true)
     private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
@@ -76,6 +96,52 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable())
+
+    private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
+
+        private val color by color("Color", Color4b(255, 0, 0, 50))
+        private val outlineColor by color("OutlineColor", Color4b(255, 0, 0, 100))
+
+        private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+        val renderHandler = handler<WorldRenderEvent> { event ->
+            val matrixStack = event.matrixStack
+            val (pos, _) = currentTarget ?: return@handler
+
+            renderEnvironmentForWorld(matrixStack) {
+                val vec3 = pos.toVec3d().toVec3()
+
+                val blockState = pos.getState() ?: return@renderEnvironmentForWorld
+                if (blockState.isAir) {
+                    return@renderEnvironmentForWorld
+                }
+
+                val outlineShape = blockState.getOutlineShape(world, pos)
+                val boundingBox = if (outlineShape.isEmpty) {
+                    fullBox
+                } else {
+                    outlineShape.boundingBox
+                }
+
+                withPosition(vec3) {
+                    withColor(color) {
+                        drawSolidBox(boundingBox)
+                    }
+
+                    if (outlineColor.a != 0) {
+                        withColor(outlineColor) {
+                            drawOutlinedBox(boundingBox)
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    init {
+        tree(FuckerHighlight)
+    }
 
     private var currentTarget: DestroyerTarget? = null
 
@@ -153,7 +219,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         var wallRange = wallRange.toDouble()
 
         // If the block has an entrance, we should ignore the wall range and act as if we are breaking normally.
-        if (entrance && pos.hasEntrance) {
+        if (FuckerEntrance.enabled && pos.hasEntrance) {
             wallRange = range
         }
 
@@ -177,7 +243,29 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
 
         // Is there any block in the way?
-        if (surroundings) {
+        if (FuckerEntrance.enabled && FuckerEntrance.breakOnTop) {
+            val blockUp = pos.up()
+            val blockState = blockUp.getState()
+
+            if (blockState?.isAir == false) {
+                val raytrace = raytraceBlock(
+                    player.eyes, blockUp, state,
+                    range = ModuleFucker.range.toDouble(),
+                    wallsRange = ModuleFucker.range.toDouble()
+                ) ?: return
+
+                val (rotation, _) = raytrace
+                RotationManager.aimAt(
+                    rotation,
+                    considerInventory = !ignoreOpenInventory,
+                    configurable = rotations,
+                    Priority.IMPORTANT_FOR_USAGE_1,
+                    this@ModuleFucker
+                )
+
+                this.currentTarget = DestroyerTarget(blockUp, DestroyAction.DESTROY)
+            }
+        }else if (surroundings) {
             updateSurroundings(pos, state)
         }
     }
@@ -210,7 +298,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             this@ModuleFucker
         )
 
-        this.currentTarget = DestroyerTarget(raytraceResult.blockPos, this.action)
+        this.currentTarget = DestroyerTarget(raytraceResult.blockPos, DestroyAction.DESTROY)
     }
 
     data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
