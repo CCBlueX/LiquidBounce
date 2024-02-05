@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.utils.client.interaction
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
-import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
@@ -33,6 +30,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.roundToInt
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
@@ -49,19 +48,22 @@ fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance
  */
 @Suppress("NestedBlockDepth")
 inline fun searchBlocksInCuboid(
-    a: Int,
-    filter: (BlockPos, BlockState) -> Boolean,
+    a: Float,
+    eyes: Vec3d,
+    filter: (BlockPos, BlockState) -> Boolean
 ): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
-    val thePlayer = mc.player ?: return blocks
+//    val (eyeX, eyeY, eyeZ) = Triple(eyes.x.roundToInt(), eyes.y.roundToInt(), eyes.z.roundToInt())
+    val xRange = floor(a + eyes.x).toInt() downTo floor(-a + eyes.x).toInt()
+    val yRange = floor(a + eyes.y).toInt() downTo floor(-a + eyes.y).toInt()
+    val zRange = floor(a + eyes.z).toInt() downTo floor(-a + eyes.z).toInt()
 
-    for (x in a downTo -a + 1) {
-        for (y in a downTo -a + 1) {
-            for (z in a downTo -a + 1) {
-                val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
+    for (x in xRange) {
+        for (y in yRange) {
+            for (z in zRange) {
+                val blockPos = BlockPos(x, y, z)
                 val state = blockPos.getState() ?: continue
-
                 if (!filter(blockPos, state)) {
                     continue
                 }
@@ -127,7 +129,7 @@ inline fun searchBlocksInRadius(
 }
 
 fun BlockPos.canStandOn(): Boolean {
-    return this.getState()!!.isSideSolid(mc.world!!, this, Direction.UP, SideShapeType.CENTER)
+    return this.getState()!!.isSideSolid(world, this, Direction.UP, SideShapeType.CENTER)
 }
 
 /**

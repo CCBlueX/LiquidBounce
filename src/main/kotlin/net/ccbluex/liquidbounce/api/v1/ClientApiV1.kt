@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.api.v1
 
 import com.google.gson.annotations.SerializedName
@@ -57,11 +56,26 @@ object ClientApiV1 {
     fun requestNewestBuildEndpoint(branch: String = HARD_CODED_BRANCH, release: Boolean = false) =
         endpointRequest<Build>("version/newest/$branch${if (release) "/release" else ""}")
 
+    fun requestMessageOfTheDayEndpoint(branch: String = HARD_CODED_BRANCH) =
+        endpointRequest<MessageOfTheDay>("client/$branch/motd")
+
     fun requestSettingsList(branch: String = HARD_CODED_BRANCH) =
         endpointRequest<Array<AutoSettings>>("client/$branch/settings")
 
     fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) =
         plainEndpointRequest("client/$branch/settings/$settingId")
+
+    /**
+     * todo: this was not implemented yet, might be added in future versions
+     */
+    fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) =
+        endpointRequest<EmptyResponse>("client/$branch/settings/report/$settingId")
+
+    /**
+     * todo: this was not implemented yet, might be added in future versions
+     */
+    fun uploadSettings(settings: String, branch: String = HARD_CODED_BRANCH) =
+        endpointRequest<EmptyResponse>("client/$branch/settings/upload")
 
     /**
      * Request endpoint and parse JSON to data class
@@ -112,6 +126,13 @@ data class Build(
 )
 
 /**
+ * Message of the day
+ *
+ * Contains only a message
+ */
+data class MessageOfTheDay(val message: String)
+
+/**
  * Settings
  *
  * Settings only store the setting id, name, type, description, date, contributors and status
@@ -125,7 +146,8 @@ data class AutoSettings(
     var date: String,
     val contributors: String,
     @SerializedName("status_type") val statusType: AutoSettingsStatusType,
-    @SerializedName("status_date") var statusDate: String
+    @SerializedName("status_date") var statusDate: String,
+    @SerializedName("server_address") val serverAddress: String?
 ) {
 
     val dateFormatted: String

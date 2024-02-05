@@ -1,8 +1,8 @@
 <script>
-    import Router, { link, pop, push } from "svelte-spa-router";
+    import Router, { push } from "svelte-spa-router";
     import { routes } from "./routes.js";
     import { listenAlways, cleanupListeners } from "./client/ws.svelte";
-    import { getVirtualScreen } from "./client/api.svelte";
+    import { getVirtualScreen, confirmVirtualScreen } from "./client/api.svelte";
     import { insertPersistentData } from "./client/persistentStorage.svelte";
 
     insertPersistentData();
@@ -15,64 +15,59 @@
     const staticTag = url.split("?")[1];
     const isStatic = staticTag === "static";
 
-    listenAlways("splashOverlay", function (event) {
-        const action = event.action;
+    function changeRoute(name, splash = false) {
+        confirmVirtualScreen(name);
 
-        if (isStatic) {
-            return;
-        }
-
-        if (action === "show") {
-            cleanupListeners();
-            push("/");
+        if (splash) {
             showingSplash = true;
-        } else if (action === "hide" && nextRoute != null) {
+            nextRoute = name;
+        } else {
             cleanupListeners();
-            push(nextRoute);
-            showingSplash = false;
-            nextRoute = null;
+            push("/" + name).then(() => {
+                showingSplash = false;
+                nextRoute = null;
+            }).catch((error) => {
+                console.error(error);
+            });
+
         }
-    });
-
-    listenAlways("virtualScreen", function (event) {
-        const screenName = event.screenName;
-        const action = event.action;
-
-        if (isStatic) {
-            return;
-        }
-
-        if (action === "close") {
-            cleanupListeners();
-            push("/closed");
-        } else if (action === "open") {
-            const route = "/" + screenName;
-
-            if (showingSplash) {
-                nextRoute = route;
-            } else {
-                cleanupListeners();
-                push(route);
-            }
-        }
-    });
+    }
 
     if (!isStatic) {
-        getVirtualScreen().then((screen) => {
-            const screenName = screen.name;
-            const route = "/" + screenName;
+        listenAlways("splashOverlay", function (event) {
+            const action = event.action;
 
-            if (screen.splash) {
-                showingSplash = true;
-                nextRoute = route;
-            } else {
+            if (action === "show") {
                 cleanupListeners();
-                push(route);
+                push("/").then(() => {
+                    showingSplash = true;
+                }).catch((error) => {
+                    console.error(error);
+                });
+            } else if (action === "hide") {
+                changeRoute(nextRoute || "none");
             }
+        });
+
+        listenAlways("virtualScreen", function (event) {
+            const action = event.action;
+
+            switch (action) {
+                case "close":
+                    changeRoute("none");
+                    break;
+                case "open":
+                    const screenName = event.screenName || "none";
+                    changeRoute(screenName, showingSplash);
+                    break;
+            }
+        });
+
+        getVirtualScreen().then((screen) => {
+            const screenName = screen.name || "none";
+            changeRoute(screenName, screen.splash);
         });
     }
 </script>
 
-<main>
-    <Router {routes}/>
-</main>
+<Router {routes} />

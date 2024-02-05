@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
@@ -84,11 +85,7 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
 
     val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.multiply(1.0, 0.0, 1.0))
 
-    if (wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)) {
-        return true
-    }
-
-    return false
+    return wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)
 }
 
 val ClientPlayerEntity.pressingMovementButton
@@ -145,16 +142,14 @@ fun ClientPlayerEntity.downwards(motion: Float) {
     velocityDirty = true
 }
 
-fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed) {
+fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0) {
     if (!moving) {
         velocity.x = 0.0
         velocity.z = 0.0
         return
     }
 
-    val angle = Math.toRadians(yaw.toDouble())
-    velocity.x = -sin(angle) * speed
-    velocity.z = cos(angle) * speed
+    velocity.strafe(yaw, speed, strength)
 }
 
 val Vec3d.sqrtSpeed: Double
@@ -266,6 +261,27 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
     }
 
     return Vec3d(origin[0], origin[1], origin[2])
+}
+
+fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
+    val nearestPointInBlock = getNearestPoint(eyes, box)
+
+    val x = nearestPointInBlock.x
+    val y = nearestPointInBlock.y
+    val z = nearestPointInBlock.z
+
+    val nearestPointOnSide =
+        when(side) {
+            Direction.DOWN -> Vec3d(x, box.minY, z)
+            Direction.UP -> Vec3d(x, box.maxY, z)
+            Direction.NORTH -> Vec3d(x, y, box.minZ)
+            Direction.SOUTH -> Vec3d(x, y,  box.maxZ)
+            Direction.WEST -> Vec3d(box.maxX, y, z)
+            Direction.EAST -> Vec3d(box.minX, y, z)
+        }
+
+    return nearestPointOnSide
+
 }
 
 fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {

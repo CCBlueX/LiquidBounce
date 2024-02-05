@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -61,7 +60,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))
                 notification(
                     "Friend Clicker",
-                    Text.translatable("$translationBaseKey.removedFriend", name),
+                    message("removedFriend"),
                     NotificationEvent.Severity.INFO
                 )
             } else {
@@ -69,7 +68,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
                 notification(
                     "Friend Clicker",
-                    Text.translatable("$translationBaseKey.addedFriend", name),
+                    "addedFriend",
                     NotificationEvent.Severity.INFO
                 )
             }

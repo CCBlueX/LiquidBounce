@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.Configurable
@@ -43,12 +42,12 @@ import kotlin.math.roundToInt
 class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, name: String = "ClickScheduler")
     : Configurable(name) where T : Module {
 
-    private val cps by intRange("CPS", 5..8, 1..maxCps)
+    private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
 
     class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Cooldown", true)
         where T: Module {
 
-        private val rangeCooldown by floatRange("CooldownRange", 0.9f..1f, 0f..1f)
+        val rangeCooldown by floatRange("Timing", 1.0f..1.0f, 0.1f..1f)
 
         private var nextCooldown = rangeCooldown.random()
 
@@ -95,7 +94,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, 
      * Contains the time when the last click was performed and when the next click is possible.
      */
     private var clickData = newClickData()
-    private val cooldown: Cooldown<T>?
+    val cooldown: Cooldown<T>?
 
     val goingToClick: Boolean
         get() = isClickOnNextTick(0)
@@ -126,7 +125,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, 
             cooldown?.readyToAttack() != false)
 
         // Does the clickTime need a forced update or are we a tick late?
-        if (clickData.isWayTooLate) {
+        if (clickData.isWayTooLate && cooldown?.readyToAttack() != false) {
             clickData = newClickData()
 
             // If we are way too late, we should click once.

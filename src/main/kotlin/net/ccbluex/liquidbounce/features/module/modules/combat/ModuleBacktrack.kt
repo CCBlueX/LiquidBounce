@@ -1,10 +1,29 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.fakelag.DelayData
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -29,10 +48,10 @@ import net.minecraft.util.math.Vec3d
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     private val range by floatRange("Range", 1f..3f, 0f..6f)
-    private val delay by int("Delay", 100, 0..1000)
+    private val delay by int("Delay", 100, 0..1000, "ms")
     private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
-    private val packetQueue = LinkedHashSet<ModulePingSpoof.DelayData>()
+    private val packetQueue = LinkedHashSet<DelayData>()
 
     private var target: Entity? = null
     private var position: TrackedPosition? = null
@@ -94,7 +113,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
             it.cancelEvent()
 
-            packetQueue.add(ModulePingSpoof.DelayData(packet, System.currentTimeMillis()))
+            packetQueue.add(DelayData(packet, System.currentTimeMillis()))
         }
     }
 

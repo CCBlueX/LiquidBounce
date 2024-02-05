@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.api
 
 import com.vdurmont.semver4j.Semver
@@ -40,7 +39,7 @@ object ClientUpdate {
         }
     }
 
-    private val newestVersion by lazy {
+    val newestVersion by lazy {
         // https://api.liquidbounce.net/api/v1/version/builds/nextgen
         try {
             requestNewestBuildEndpoint(branch = LiquidBounce.clientBranch, release = !IN_DEVELOPMENT)
@@ -66,7 +65,6 @@ object ClientUpdate {
                 val clientSemVersion = Semver(clientVersion, Semver.SemverType.LOOSE)
 
                 newestVersion.release && newestSemVersion.isGreaterThan(clientSemVersion)
-                false
             }
         } catch (e: Exception) {
             logger.error("Unable to check for update", e)

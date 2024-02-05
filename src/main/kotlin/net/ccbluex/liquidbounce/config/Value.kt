@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,13 +31,14 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
-import net.minecraft.block.Block
-import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
+import org.graalvm.polyglot.HostAccess.Export
 import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
@@ -218,10 +219,10 @@ open class Value<T : Any>(
             }
             ValueType.BLOCKS       -> {
                 val blocks = string.split(",").map {
-                    Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(it)))
-                }.filter {
-                    !it.defaultState.isAir
-                }.toMutableSet()
+                    findBlocksEndingWith(it).filter {
+                        !it.defaultState.isAir
+                    }
+                }.flatten().toHashSet()
 
                 if (blocks.isEmpty()) {
                     error("No blocks found")
@@ -262,16 +263,12 @@ open class Value<T : Any>(
  * Ranged value adds support for closed ranges
  */
 class RangedValue<T : Any>(
-    name: String, value: T, @Exclude val range: ClosedRange<*>, type: ValueType
+    name: String,
+    value: T,
+    @Exclude val range: ClosedRange<*>,
+    @Exclude val suffix: String,
+    type: ValueType
 ) : Value<T>(name, value, valueType = type) {
-
-    fun getFrom(): Double {
-        return (this.range.start as Number).toDouble()
-    }
-
-    fun getTo(): Double {
-        return (this.range.endInclusive as Number).toDouble()
-    }
 
     override fun setByString(string: String) {
         if (this.value is ClosedRange<*>) {
@@ -316,15 +313,23 @@ class ChooseListValue<T : NamedChoice>(
     }
 
     fun setFromValueName(name: String?) {
-        this.value = choices.first { it.choiceName == name }
+        val newValue = choices.firstOrNull { it.choiceName == name }
+
+        if (newValue == null) {
+            throw IllegalArgumentException("ChooseListValue `${this.name}` has no option named $name" +
+                " (available options are ${this.choices.joinToString { it.choiceName }})")
+        }
+
+        this.value = newValue
     }
 
+    @ScriptApi
     fun getChoicesStrings(): Array<String> {
         return this.choices.map { it.choiceName }.toTypedArray()
     }
 
     override fun setByString(string: String) {
-        set(this.choices.firstOrNull { it.choiceName.equals(string, true) }!! as T)
+        set(this.choices.firstOrNull { it.choiceName.equals(string, true) }!!)
     }
 }
 

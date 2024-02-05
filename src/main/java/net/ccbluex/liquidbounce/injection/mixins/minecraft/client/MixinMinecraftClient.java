@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.misc.HideClient;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
@@ -140,7 +139,7 @@ public abstract class MixinMinecraftClient {
             ordinal = 1),
             cancellable = true)
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
-        if (HideClient.INSTANCE.isHidingNow()) {
+        if (HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
 
@@ -149,9 +148,10 @@ public abstract class MixinMinecraftClient {
         StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
         titleBuilder.append(" v");
         titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
+        titleBuilder.append(" ");
 
         if (LiquidBounce.IN_DEVELOPMENT) {
-            titleBuilder.append(" (dev) ");
+            titleBuilder.append("(dev) ");
         }
 
         titleBuilder.append(LiquidBounce.INSTANCE.getClientCommit());
@@ -246,9 +246,7 @@ public abstract class MixinMinecraftClient {
         if (CombatManager.INSTANCE.shouldPauseCombat()) {
             cir.setReturnValue(false);
         }
-        if (!ModulePerfectHit.INSTANCE.getEnabled()) {
-            return;
-        }
+
         float h = player.getAttackCooldownProgress(0.5F);
 
         if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {

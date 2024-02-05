@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ import kotlin.math.sqrt
 
 class FallingPlayer(
     private val player: ClientPlayerEntity,
-    private var x: Double,
-    private var y: Double,
-    private var z: Double,
+    var x: Double,
+    var y: Double,
+    var z: Double,
     private var motionX: Double,
     private var motionY: Double,
     private var motionZ: Double,

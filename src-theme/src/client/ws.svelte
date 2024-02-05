@@ -7,20 +7,43 @@
 
     console.log("Connecting to server at: ", BASE_WS_URL)
 
-    let ws = new WebSocket(BASE_WS_URL)
-    ws.onopen = () => {
-        console.log("Connected to server")
-    }
+    let ws = null;
 
-    ws.onclose = () => {
-        console.log("Disconnected from server, attempting to reconnect...")
-        setTimeout(() => {
-            ws = new WebSocket(BASE_WS_URL)
-        }, 1000)
-    }
+    function connect() {
+        ws = new WebSocket(BASE_WS_URL)
+        ws.onopen = () => {
+            console.log("Connected to server")
+        }
 
-    ws.onerror = (error) => {
-        console.error("WebSocket error: ", error)
+        ws.onclose = () => {
+            console.log("Disconnected from server, attempting to reconnect...")
+            setTimeout(() => {
+                connect();
+            }, 1000)
+        }
+
+        ws.onerror = (error) => {
+            console.error("WebSocket error: ", error)
+        }
+
+        ws.onmessage = (event) => {
+            const json = JSON.parse(event.data);
+            const eventName = json.name;
+            const eventData = json.event;
+
+            if (alwaysListeners[eventName]) {
+                alwaysListeners[eventName].forEach(callback => {
+                    callback(eventData)
+                })
+            }
+
+            if (listeners[eventName]) {
+                listeners[eventName].forEach(callback => {
+                    callback(eventData)
+                })
+            }
+
+        }
     }
 
     // List of event listener
@@ -43,23 +66,16 @@
         listeners = {}
     }
 
-    ws.onmessage = (event) => {
-        const json = JSON.parse(event.data);
-        const eventName = json.name;
-        const eventData = json.event;
+    // Send ping to server every 5 seconds
+    setInterval(() => {
+        if (!ws) return;
+        if (ws.readyState !== 1) return;
 
-        if (alwaysListeners[eventName]) {
-            alwaysListeners[eventName].forEach(callback => {
-                callback(eventData)
-            })
-        }
+        ws.send(JSON.stringify({
+            name: "ping",
+            event: {}
+        }));
+    }, 5000)
 
-        if (listeners[eventName]) {
-            listeners[eventName].forEach(callback => {
-                callback(eventData)
-            })
-        }
-
-
-    }
+    connect();
 </script>

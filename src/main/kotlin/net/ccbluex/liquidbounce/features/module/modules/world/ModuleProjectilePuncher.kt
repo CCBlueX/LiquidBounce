@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
@@ -32,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
@@ -73,8 +73,11 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
 
         if (target.boxedDistanceTo(player) > range ||
-            !facingEnemy(toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
-                wallsRange = 0.0)) {
+            !facingEnemy(
+                toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
+                wallsRange = 0.0
+            )
+        ) {
             return@repeatable
         }
 
@@ -112,7 +115,13 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             targetTracker.lock(entity)
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                spot.rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotations,
+                Priority.IMPORTANT_FOR_USER_SAFETY,
+                this@ModuleProjectilePuncher
+            )
             break
         }
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,10 +39,10 @@ import net.minecraft.util.Hand
 
 object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
-    private val reelDelay by intRange("ReelDelay", 5..8, 0..20)
+    private val reelDelay by intRange("ReelDelay", 5..8, 0..20, "ticks")
 
     private object RecastRod : ToggleableConfigurable(this, "RecastRod", true) {
-        val delay by intRange("Delay", 15..20, 10..30)
+        val delay by intRange("Delay", 15..20, 10..30, "ticks")
     }
 
     init {

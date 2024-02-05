@@ -2,19 +2,19 @@
     import {sineInOut} from "svelte/easing";
     import {slide} from "svelte/transition";
     import Module from "./Module.svelte";
+    import { listen } from "../../../client/ws.svelte";
 
     export let name;
     export let modules;
 
-    export let listen;
+    export let settings
+
     export let toggleModule;
 
     export let startTop;
     export let startLeft;
 
     let expanded = localStorage.getItem(`clickgui.panel.${name}.expanded`) === "true" || false;
-
-    let renderedModules = expanded ? modules : [];
 
     let top = parseInt(localStorage.getItem(`clickgui.panel.${name}.top`)) || startTop;
     let left = parseInt(localStorage.getItem(`clickgui.panel.${name}.left`)) || startLeft;
@@ -57,13 +57,7 @@
     }
 
     function toggleExpanded(e) {
-        if (expanded) {
-            expanded = false;
-            renderedModules = [];
-        } else {
-            expanded = true;
-            renderedModules = modules;
-        }
+        expanded = !expanded
         localStorage.setItem(`clickgui.panel.${name}.expanded`, expanded);
     }
 
@@ -79,9 +73,7 @@
             return;
 
         mod.enabled = moduleEnabled;
-        if (expanded) {
-            renderedModules = modules;
-        }
+        modules = modules
     }
 
     function handleToggleClick(event) {
@@ -93,18 +85,20 @@
     listen("toggleModule", handleToggleModule);
 </script>
 
-<div class="panel" style="left: {left}px; top: {top}px;">
+<div class="panel" class:clickgui-shadow={settings.shadow} style="left: {left}px; top: {top}px;">
     <div on:mousedown={handleToggleClick} on:mousedown={onMouseDown} class="title-wrapper">
         <img class="icon" src="img/{name.toLowerCase()}.svg" alt="icon"/>
         <div class="title">{name}</div>
         <div on:click={toggleExpanded} class="visibility-toggle" class:expanded={expanded}></div>
     </div>
     <div class="modules">
-        {#each renderedModules as m}
-            <div transition:slide={{duration: 400, easing: sineInOut}}>
-                <Module name={m.name} enabled={m.enabled} toggleModule={toggleModule} />
-            </div>
-        {/each}
+        {#if expanded}
+           {#each modules as m}
+               <div transition:slide={{duration: 400, easing: sineInOut}}>
+                   <Module name={m.name} enabled={m.enabled} description={m.description} toggleModule={toggleModule} />
+               </div>
+           {/each}
+        {/if}
     </div>
 </div>
 
@@ -115,7 +109,6 @@
     width: 225px;
     position: absolute;
     backdrop-filter: blur(4px);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   }
 
   .title-wrapper {

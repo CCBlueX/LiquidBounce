@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,8 +39,7 @@ class HttpConductor {
         logger.debug("Request {}", requestObject)
 
         if (!context.headers["content-length"].isNullOrEmpty() &&
-            context.headers["content-length"]?.toInt() != requestObject.content.length
-        ) {
+            context.headers["content-length"]?.toInt() != requestObject.content.toByteArray(Charsets.UTF_8).size) {
             logger.warn("Received incomplete request: $requestObject")
             return@runCatching httpBadRequest("Incomplete request")
         }

@@ -2,11 +2,10 @@
     import Panel from "./clickgui/Panel.svelte";
     import SearchBar from "./SearchBar.svelte";
 
-    import { listen } from "../../client/ws.svelte";
+    
     import { getModules, toggleModule, getClickGuiOptions } from "../../client/api.svelte";
-    import {fade, blur} from "svelte/transition";
+    import { blur } from "svelte/transition";
 
-    let clickGuiOpened = true;
     // todo: request from API
     const categories = [
         "Movement",
@@ -14,6 +13,7 @@
         "Render",
         "Exploit",
         "Player",
+        "Client",
         "World",
         "Misc",
         "Fun",
@@ -31,6 +31,7 @@
                 const module = {
                     category: category,
                     name: name,
+                    description: mod.description,
                     enabled: enabled
                 };
                 modules.push(module);
@@ -59,7 +60,8 @@
         textColor: "#ffffff",
         textDimmed: "rgba(211,211,211,255)",
         searchAlwaysOnTop: true,
-        autoFocus: true
+        autoFocus: true,
+        shadow: true
     };
 
     getClickGuiOptions().then(opts => {
@@ -67,30 +69,21 @@
     }).catch(console.error);
 </script>
 
-<main transition:blur>
-    {#if clickGuiOpened}
-        <div class="clickgui-container"
-             style=
-                     "--modules: {options.modulesColor};
+<div class="clickgui-container"
+     style="--modules: {options.modulesColor};
         --header: {options.headerColor};
         --accent: {options.accentColor};
         --accent-dimmed: {options.accentColor};
         --text: {options.textColor};
-        --textdimmed: {options.textDimmed};">
-            <SearchBar settings={options} modules={modules} listen={listen} toggleModule={toggleModule} />
-            {#each panels as panel}
-                <Panel name={panel.name} modules={panel.modules} listen={listen} toggleModule={toggleModule} startTop={panel.top}
-                       startLeft={panel.left}/>
-            {/each}
-        </div>
-    {/if}
-</main>
+        --textdimmed: {options.textDimmed};" transition:blur={{ duration: 200 }}>
+    <SearchBar settings={options} {modules} toggleModule={toggleModule} />
+    {#each panels as panel}
+        <Panel name={panel.name} modules={panel.modules} settings={options} toggleModule={toggleModule} startTop={panel.top}
+               startLeft={panel.left}/>
+    {/each}
+</div>
 
 <style>
-    main {
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-
     .clickgui-container {
         height: 100vh;
         width: 100vw;
@@ -98,5 +91,13 @@
         -ms-user-select: none;
         user-select: none;
         cursor: default;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    :global(.clickgui-shadow) {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
 </style>

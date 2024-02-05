@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ import kotlin.math.sqrt
  */
 
 object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
-    private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000)
+    private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
     private val alwaysShowBow by boolean("AlwaysShowBow", false)
     private val otherPlayers by boolean("OtherPlayers", true)
     private val activeTrajectoryArrow by boolean("ActiveTrajectoryArrow", true)
@@ -201,7 +201,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val yaw: Float
         val pitch: Float
 
-        val targetRotation = RotationManager.aimPlan?.rotation
+        val targetRotation = RotationManager.storedAimPlan?.rotation
 
         if (targetRotation == null) {
             yaw = otherPlayer.yaw

@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.minecraft.util.math.Box
@@ -143,30 +161,36 @@ class Face(from: Vec3d, to: Vec3d) {
 
         val intersection = plane.intersection(line) ?: return null
 
-        val xyLen = xy.lengthSquared()
-        val zyLen = zy.lengthSquared()
 
         val phiRange = 0.0..1.0
 
         val lines = listOf(
-            Pair(LineSegment(this.from, xy, phiRange), zyLen),
-            Pair(LineSegment(this.from, zy, phiRange), xyLen),
-            Pair(LineSegment(this.to, xy.negate(), phiRange), zyLen),
-            Pair(LineSegment(this.to, zy.negate(), phiRange), xyLen),
+            LineSegment(this.from, xy, phiRange),
+            LineSegment(this.from, zy, phiRange),
+            LineSegment(this.to, xy.negate(), phiRange),
+            LineSegment(this.to, zy.negate(), phiRange)
         )
 
-        val lineDistances = lines.map {
-            val nearestPoint = it.first.getNearestPointTo(intersection)
+        val isIntersectionInFace = lines.all {
+            val lineCenter = it.getPosition(0.5)
+            val lineCenterToFaceCenter = lineCenter.subtract(this.center)
+            val lineCenterToIntersection = lineCenter.subtract(intersection)
 
-            Triple(nearestPoint, it.first.squaredDistanceTo(intersection), it.second)
+            // Check if the two vectors are pointing in the same direction
+            return@all lineCenterToIntersection.dotProduct(lineCenterToFaceCenter) > 0.0
         }
 
-        val isInFace = lineDistances.all { it.second <= it.third }
-
-        if (isInFace)
+        // Is the intersection in the face?
+        if (isIntersectionInFace) {
             return intersection
+        }
 
-        return lineDistances.minBy { it.second }.first
+        val minDistanceToBorder =
+            lines
+                .map { it.getNearestPointTo(intersection) }
+                .minBy { nearestPoint -> nearestPoint.squaredDistanceTo(intersection) }
+
+        return minDistanceToBorder
     }
 
 }

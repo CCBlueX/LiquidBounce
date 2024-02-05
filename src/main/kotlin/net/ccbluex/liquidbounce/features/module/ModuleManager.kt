@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,11 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
+import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
@@ -34,7 +36,15 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
+import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
+import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
@@ -43,9 +53,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
-import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.script.RequiredByScript
+import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()
@@ -87,22 +98,22 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoSoup,
             ModuleAutoHead,
             ModuleAutoWeapon,
-            ModuleBadWifi,
+            ModuleFakeLag,
             ModuleCriticals,
             ModuleHitbox,
             ModuleKillAura,
-            ModulePerfectHit,
             ModuleSuperKnockback,
             ModuleTimerRange,
-            ModuleTrigger,
             ModuleVelocity,
             ModuleBacktrack,
             ModuleSwordBlock,
+            ModuleAutoShoot,
 
             // Exploit
             ModuleAbortBreaking,
             ModuleAntiReducedDebugInfo,
             ModuleAntiVanish,
+            ModuleAntiHunger,
             ModuleClip,
             ModuleDamage,
             ModuleDisabler,
@@ -119,6 +130,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSleepWalker,
             ModuleSpoofer,
             ModuleVehicleOneHit,
+            ModuleServerCrasher,
+            ModuleSwingFix,
 
             // Fun
             ModuleDankBobbing,
@@ -128,7 +141,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
             // Misc
             ModuleAntiBot,
-            ModuleClickRecorder,
             ModuleFriendClicker,
             ModuleKeepChatAfterDeath,
             ModuleNameProtect,
@@ -138,9 +150,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTeams,
             ModuleAutoChatGame,
             ModuleDebugRecorder,
-            ModuleCapeTransfer,
-            ModuleHideClient,
             ModuleFocus,
+            ModuleAntiStaff,
 
             // Movement
             ModuleAirJump,
@@ -172,7 +183,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleReverseStep,
             ModuleStrafe,
             ModuleTerrainSpeed,
-            ModuleVehicleFly,
+            ModuleVehicleControl,
 
             // Player
             ModuleAntiAFK,
@@ -247,7 +258,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProjectilePuncher,
             ModuleScaffold,
             ModuleTimer,
-            ModuleNuker
+            ModuleNuker,
+
+            // Client
+            ModuleAutoConfig,
+            ModuleRichPresence,
+            ModuleCapeTransfer,
+            ModuleEnemies,
+            ModuleLiquidChat
         )
 
         builtin.apply {
@@ -262,11 +280,31 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         modules += module
     }
 
+    fun removeModule(module: Module) {
+        if (module.enabled) {
+            module.disable()
+        }
+        module.unregister()
+        modules -= module
+    }
+
     /**
      * Allow `ModuleManager += Module` syntax
      */
     operator fun plusAssign(module: Module) {
         addModule(module)
+    }
+
+    operator fun plusAssign(modules: MutableList<Module>) {
+        modules.forEach(this::addModule)
+    }
+
+    operator fun minusAssign(module: Module) {
+        removeModule(module)
+    }
+
+    operator fun minusAssign(modules: MutableList<Module>) {
+        modules.forEach(this::removeModule)
     }
 
     fun autoComplete(begin: String, args: List<String>, validator: (Module) -> Boolean = { true }): List<String> {
@@ -277,11 +315,11 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
      */
     @JvmName("getCategories")
-    @RequiredByScript
+    @ScriptApi
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
     @JvmName("getModuleByName")
-    @RequiredByScript
+    @ScriptApi
     fun getModuleByName(module: String) = find { it.name.equals(module, true) }
 
     operator fun get(moduleName: String) = modules.find { it.name.equals(moduleName, true) }

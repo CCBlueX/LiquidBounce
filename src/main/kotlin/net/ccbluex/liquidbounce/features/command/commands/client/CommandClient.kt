@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
- 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -30,6 +30,9 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
 
 /**
  * Client Command
@@ -38,57 +41,160 @@ import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
  */
 object CommandClient {
 
-    fun createCommand(): Command {
-        return CommandBuilder.begin("client")
-            .hub()
-            .subcommand(
-                CommandBuilder.begin("info").handler { command, _ ->
-                    chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))),
-                        prefix = false)
-                    chat(regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))),
-                        prefix = false)
-                    chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))),
-                        prefix = false)
-                }.build()
-            )
-            .subcommand(
-                CommandBuilder.begin("browser")
-                    .hub()
-                    .subcommand(
-                        CommandBuilder.begin("open")
-                            .parameter(
-                                ParameterBuilder.begin<String>("name")
-                                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                                    .build()
-                            ).handler { command, args ->
-                                chat(regular("Opening browser..."))
-                                mc.setScreen(BrowserScreen(args[0] as String))
-                            }.build()
-                    ).subcommand(CommandBuilder.begin("override")
-                        .parameter(
-                            ParameterBuilder.begin<String>("name")
-                                .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                                .build()
-                        ).handler { command, args ->
-                            chat(regular("Overrides client JCEF browser..."))
-                            clientJcef?.loadUrl(args[0] as String)
-                        }.build()
-                    ).subcommand(CommandBuilder.begin("reset")
-                        .handler { command, args ->
-                            chat(regular("Resetting client JCEF browser..."))
-                            IntegrationHandler.updateIntegrationBrowser()
-                        }.build()
-                    )
+    /**
+     * Creates client command with a variety of subcommands.
+     *
+     * TODO: contributors
+     *  links
+     *  instructions
+     *  reset
+     *  theme manager
+     */
+    fun createCommand() = CommandBuilder.begin("client")
+        .hub()
+        .subcommand(infoCommand())
+        .subcommand(browserCommand())
+        .subcommand(integrationCommand())
+        .subcommand(languageCommand())
+        .build()
 
-                    .build()
+    private fun infoCommand() = CommandBuilder
+        .begin("info")
+        .handler { command, _ ->
+            chat(regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))),
+                prefix = false)
+            chat(regular(command.result("clientVersion", variable(LiquidBounce.clientVersion))),
+                prefix = false)
+            chat(regular(command.result("clientAuthor", variable(LiquidBounce.CLIENT_AUTHOR))),
+                prefix = false)
+        }.build()
+
+    private fun browserCommand() = CommandBuilder.begin("browser")
+        .hub()
+        .subcommand(
+            CommandBuilder.begin("open")
+                .parameter(
+                    ParameterBuilder.begin<String>("name")
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    chat(regular("Opening browser..."))
+                    mc.setScreen(BrowserScreen(args[0] as String))
+                }.build()
         )
-            // TODO: contributors
-            // TODO: links
-            // TODO: instructions
-            // TODO: reset
-            // TODO: theme manager
-            // .. other client base commands
-            .build()
-    }
+        .build()
+
+    private fun integrationCommand() = CommandBuilder.begin("integration")
+        .hub()
+        .subcommand(CommandBuilder.begin("menu")
+            .alias("url")
+            .handler { command, args ->
+                chat(variable("Client Integration"))
+                chat(
+                    regular("URL: ")
+                        .append(variable(ThemeManager.integrationUrl).styled {
+                            it.withUnderline(true)
+                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, ThemeManager.integrationUrl))
+                                .withHoverEvent(
+                                    HoverEvent(
+                                        HoverEvent.Action.SHOW_TEXT,
+                                        regular("Click to open the integration URL in your browser.")
+                                    )
+                                )
+                        }),
+                    prefix = false
+                )
+
+                chat(prefix = false)
+                chat(regular("Integration Menu:"))
+                for (menu in IntegrationHandler.VirtualScreenType.values()) {
+                    val url = "${ThemeManager.integrationUrl}#/${menu.assignedName}?static"
+                    val name = menu.assignedName.replaceFirstChar { it.uppercase() }
+
+                    chat(
+                        regular("-> $name (")
+                            .append(variable("Browser").styled {
+                                it.withUnderline(true)
+                                    .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url))
+                                    .withHoverEvent(
+                                        HoverEvent(
+                                            HoverEvent.Action.SHOW_TEXT,
+                                            regular("Click to open the URL in your browser.")
+                                        )
+                                    )
+                            })
+                            .append(regular(", "))
+                            .append(variable("Clipboard").styled {
+                                it.withUnderline(true)
+                                    .withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, url))
+                                    .withHoverEvent(
+                                        HoverEvent(
+                                            HoverEvent.Action.SHOW_TEXT,
+                                            regular("Click to copy the URL to your clipboard.")
+                                        )
+                                    )
+                            })
+                            .append(regular(")")),
+                        prefix = false
+                    )
+                }
+
+                chat(variable("Hint: You can also access the integration from another device.")
+                    .styled { it.withItalic(true) })
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("override")
+            .parameter(
+                ParameterBuilder.begin<String>("name")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                    .build()
+            ).handler { command, args ->
+                chat(regular("Overrides client JCEF browser..."))
+                clientJcef?.loadUrl(args[0] as String)
+            }.build()
+        ).subcommand(CommandBuilder.begin("reset")
+            .handler { command, args ->
+                chat(regular("Resetting client JCEF browser..."))
+                IntegrationHandler.updateIntegrationBrowser()
+            }.build()
+        )
+        .build()
+
+    private fun languageCommand() = CommandBuilder.begin("language")
+        .hub()
+        .subcommand(CommandBuilder.begin("list")
+            .handler { command, args ->
+                chat(regular("Available languages:"))
+                for (language in LanguageManager.knownLanguages) {
+                    chat(regular("-> $language"))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("set")
+            .parameter(
+                ParameterBuilder.begin<String>("language")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                    .build()
+            ).handler { command, args ->
+                val language = LanguageManager.knownLanguages.find { it.equals(args[0] as String, true) }
+                if (language == null) {
+                    chat(regular("Language not found."))
+                    return@handler
+                }
+
+                chat(regular("Setting language to ${language}..."))
+                LanguageManager.overrideLanguage = language
+
+                ConfigSystem.storeConfigurable(LanguageManager)
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("unset")
+            .handler { command, args ->
+                chat(regular("Unset override language..."))
+                LanguageManager.overrideLanguage = ""
+                ConfigSystem.storeConfigurable(LanguageManager)
+            }.build()
+        )
+        .build()
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import java.util.*
@@ -38,8 +39,8 @@ class Command(
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
-    val description: MutableText
-        get() = Text.translatable("$translationBaseKey.description")
+    val description: String
+        get() = translation("$translationBaseKey.description").convertToString()
 
     init {
         subcommands.forEach {
@@ -67,7 +68,7 @@ class Command(
     }
 
     fun result(key: String, vararg args: Any): MutableText {
-        return Text.translatable("$translationBaseKey.result.$key", *args)
+        return translation("$translationBaseKey.result.$key", *args)
     }
 
     /**

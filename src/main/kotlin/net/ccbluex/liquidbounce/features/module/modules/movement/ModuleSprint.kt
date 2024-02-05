@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,8 +51,9 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
         val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
                 MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
-        val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir) && !shouldSprintOmnidirectionally()
-            && RotationManager.aimPlan?.applyVelocityFix == false && !hasForwardMovement
+        val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir)
+            && !shouldSprintOmnidirectionally()
+            && RotationManager.storedAimPlan?.applyVelocityFix == false && !hasForwardMovement
 
         return enabled && preventSprint
     }

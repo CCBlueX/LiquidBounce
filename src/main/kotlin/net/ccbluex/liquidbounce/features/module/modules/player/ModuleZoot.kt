@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,15 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -34,31 +35,40 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleZoot : Module("Zoot", Category.PLAYER) {
 
-    val badEffects by boolean("BadEffects", true)
-    val fire by boolean("Fire", true)
-    val noAir by boolean("NoAir", false)
-    val timer by float("Timer", 0.6f, 0.1f..10f)
+    private val timer by float("Timer", 1f, 0.1f..10f)
+    private val badEffects by boolean("BadEffects", true)
+    private val fire by boolean("Fire", true)
+
+    private val notInTheAir by boolean("NotInTheAir", true)
+    private val notDuringMove by boolean("NotDuringMove", false)
+    private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
+
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
 
     val repeatable = repeatable {
-
-        // Accelerate game time (1.8.X)// todo: check if && !status.isPermanent// Accelerate game time (1.8.X)
-
-        // Skip to next tick
-        if (!player.isOnGround && noAir) {
+        if (notInTheAir && !player.isOnGround) {
             return@repeatable
         }
 
-        val shouldZootFire = fire && !player.abilities.creativeMode
+        if (player.abilities.creativeMode || player.isDead) {
+            return@repeatable
+        }
 
-        if (shouldZootFire && player.isOnFire) {
+        if (notDuringMove && player.moving) {
+            return@repeatable
+        }
+
+        if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
+            return@repeatable
+        }
+
+        if (fire && player.isOnFire) {
+            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleZoot)
+
             // Accelerate game time (1.8.X)
             repeat(9) {
-                network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
+                network.sendPacket(packetType.generatePacket())
             }
-
-            Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
-
-            // Skip to next tick
             return@repeatable
         }
 
@@ -66,17 +76,14 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
             val (effect, status) = player.activeStatusEffects.maxByOrNull { it.value.duration }
                 ?: return@repeatable
 
-            // todo: check if && !status.isPermanent
             if (!effect.isBeneficial && !status.isInfinite) {
+                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleZoot)
+
                 // Accelerate game time (1.8.X)
                 repeat(status.duration / 20) {
-                    network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
+                    network.sendPacket(packetType.generatePacket())
                 }
-
-                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE)
             }
         }
-
-        return@repeatable
     }
 }

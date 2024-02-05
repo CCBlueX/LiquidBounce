@@ -184,6 +184,26 @@
     }
 
     /**
+     * post("/account/login/cracked") {
+     *         class AccountForm(
+     *             val username: String
+     *         )
+     *         val accountForm = decode<AccountForm>(it.content)
+     *         AccountManager.loginCrackedAccountAsync(accountForm.username)
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function loginCrackedAccount(username) {
+        return request("/account/login/cracked", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "username": username })
+        })
+    }
+
+    /**
      * post("/accounts/new/cracked") {
      *         class AccountForm(
      *             val username: String
@@ -213,6 +233,15 @@
      */
     export function newMicrosoftAccount() {
         return request("/accounts/new/microsoft", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export function newMicrosoftAccountUrl() {
+        return request("/accounts/new/microsoft/url", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -315,6 +344,31 @@
 
     export function getVirtualScreen() {
         return request("/virtualScreen")
+    }
+
+    /**
+     *     post("/virtualScreen") {
+     *         val body = decode<JsonObject>(it.content)
+     *         val name = body["name"]?.asString ?: return@post httpForbidden("No name")
+     *
+     *         val virtualScreen = momentaryVirtualScreen
+     *
+     *         if ((virtualScreen?.name ?: "none") != name) {
+     *             return@post httpForbidden("Wrong virtual screen")
+     *         }
+     *
+     *         acknowledgement.confirm()
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function confirmVirtualScreen(name) {
+        return request("/virtualScreen", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "name": name })
+        })
     }
 
     /**
@@ -480,6 +534,41 @@
         })
     }
 
+    export function giveItem(stack) {
+        return request("/player/give", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "stack": stack })
+        })
+    }
+
+    /**
+     * get("/container") {
+     */
+    export function getContainer() {
+        return request("/container")
+    }
+
+    export function giveContainer() {
+        return request("/container/give", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export function storeContainer() {
+        return request("/container/store", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
     /**
      * get("update") {
      *         httpOk(JsonObject().apply {
@@ -490,6 +579,60 @@
      */
     export function getUpdate() {
         return request("/update")
+    }
+
+    /**
+     *     post("/reconnect") {
+     *         Reconnect.reconnect()
+     *         httpOk(JsonObject())
+     *     }
+     *
+     *     post("/reconnectWithRandomAccount") {
+     *         Reconnect.reconnectWithRandomAccount()
+     *         httpOk(JsonObject())
+     *     }
+     *
+     *     post("/reconnectWithRandomUsername") {
+     *         Reconnect.reconnectWithRandomUsername()
+     *         httpOk(JsonObject())
+     *     }
+     */
+    export function reconnect() {
+        return request("/reconnect", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export function reconnectWithRandomAccount() {
+        return request("/reconnectWithRandomAccount", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    export function reconnectWithRandomUsername() {
+        return request("/reconnectWithRandomUsername", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+    }
+
+    // POST /modules/panic
+
+    export function panic() {
+        return request("/modules/panic", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
     }
 </script>
 

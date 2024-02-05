@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,10 +29,8 @@ import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import net.minecraft.text.Text
@@ -47,10 +45,25 @@ import java.io.Writer
  */
 object ConfigSystem {
 
+    init {
+        // Delete the config folder if we are integration testing.
+//        if (LiquidBounce.isIntegrationTesting) {
+//            File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
+//        }
+    }
+
+    private val clientDirectoryName = if (LiquidBounce.isIntegrationTesting) {
+            "${LiquidBounce.CLIENT_NAME}_tenacc_test"
+        } else {
+            LiquidBounce.CLIENT_NAME
+        }
+
     // Config directory folder
     val rootFolder = File(
-        mc.runDirectory, LiquidBounce.CLIENT_NAME
-    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+        mc.runDirectory, clientDirectoryName
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }
@@ -134,6 +147,7 @@ object ConfigSystem {
 
                 logger.debug("Reading config ${configurable.loweredName}...")
                 deserializeConfigurable(configurable, reader())
+            }.onSuccess {
                 logger.info("Successfully loaded config '${configurable.loweredName}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.loweredName}", it)
@@ -199,72 +213,63 @@ object ConfigSystem {
      * Deserialize a configurable from a json element
      */
     fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
-        runCatching {
-            val jsonObject = jsonElement.asJsonObject
+        val jsonObject = jsonElement.asJsonObject
 
-            val chatMessages = jsonObject.getAsJsonArray("chat")
-            if (chatMessages != null) {
-                for (messages in chatMessages) {
-                    chat(messages.asString)
-                }
-            }
+        // Handle auto config
+        AutoConfig.handlePossibleAutoConfig(jsonObject)
 
-            val date = jsonObject.getAsJsonPrimitive("date").let { if (it == null) "" else it.asString }
-            val time = jsonObject.getAsJsonPrimitive("time").let { if (it == null) "" else it.asString }
-            val author = jsonObject.getAsJsonPrimitive("author").let { if (it == null) "" else "by $it" }
-            if (date != "" || time != "" || author != "") {
-                chat(regular("Config was created ${if (date != "" || time != "") "on $date $time" else ""} $author"))
-            }
-            if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-                throw IllegalStateException()
-            }
+        // Check if the name is the same as the configurable name
+        if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
+            throw IllegalStateException()
+        }
 
-            val values =
-                jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
+        val values =
+            jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
 
-            for (value in configurable.value) {
-                if (value is Configurable) {
-                    val currentElement = values[value.name] ?: continue
+        for (value in configurable.value) {
+            if (value is Configurable) {
+                val currentElement = values[value.name] ?: continue
 
-                    runCatching {
-                        if (value is ChoiceConfigurable) {
+                runCatching {
+                    if (value is ChoiceConfigurable) {
+                        runCatching {
+                            val newActive = currentElement["active"].asString
+
+                            value.setFromValueName(newActive)
+                        }.onFailure { it.printStackTrace() }
+
+                        val choices = currentElement["choices"].asJsonObject
+
+                        for (choice in value.choices) {
                             runCatching {
-                                val newActive = currentElement["active"].asString
+                                val choiceElement = choices[choice.name]
+                                    ?: error("Choice ${choice.name} not found")
 
-                                value.setFromValueName(newActive)
-                            }.onFailure { it.printStackTrace() }
-
-                            val choices = currentElement["choices"].asJsonObject
-
-                            for (choice in value.choices) {
-                                runCatching {
-                                    val choiceElement = choices[choice.name]
-                                        ?: error("Choice ${choice.name} not found")
-
-                                    deserializeConfigurable(choice, choiceElement)
-                                }.onFailure {
-                                    logger.error("Unable to deserialize choice ${choice.name}", it)
-                                }
+                                deserializeConfigurable(choice, choiceElement)
+                            }.onFailure {
+                                logger.error("Unable to deserialize choice ${choice.name}", it)
                             }
                         }
-                    }.onFailure {
-                        logger.error("Unable to deserialize configurable ${value.name}", it)
                     }
 
+                    // Deserialize the rest of the configurable
                     deserializeConfigurable(value, currentElement)
-                } else {
-                    val currentElement = values[value.name] ?: continue
-
-                    runCatching {
-                        value.deserializeFrom(clientGson, currentElement["value"])
-                    }.onFailure {
-                        logger.error("Unable to deserialize value ${value.name}", it)
-                    }
+                }.onFailure {
+                    logger.error("Unable to deserialize configurable ${value.name}", it)
                 }
+            } else {
+                val currentElement = values[value.name] ?: continue
 
+                runCatching {
+                    value.deserializeFrom(clientGson, currentElement["value"])
+                }.onFailure {
+                    logger.error("Unable to deserialize value ${value.name}", it)
+                }
             }
-        }.onFailure {
-            logger.error("Unable to deserialize configurable ${configurable.name}", it)
+
         }
     }
+
+
+
 }

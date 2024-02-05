@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -56,12 +57,12 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             it
         }
     }
-    private val delay by int("Delay", 5, 1..80)
+    private val delay by int("Delay", 5, 1..80, "ticks")
     private val visualSwing by boolean("VisualSwing", true)
     private val chest by blocks("Chest", hashSetOf(Blocks.CHEST))
 
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
-        val timeout by int("Timeout", 10, 1..80)
+        val timeout by int("Timeout", 10, 1..80, "ticks")
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
 
@@ -168,7 +169,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyes
 
-        val blocksToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val blocksToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             targetedBlocks.contains(state.block) && pos !in clickedBlocks && getNearestPoint(
                 eyesPos,
                 Box.enclosing(pos, pos.add(1, 1, 1))
@@ -187,7 +188,13 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             ) ?: continue
 
             // aim on target
-            RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotations,
+                Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleChestAura
+            )
             nextBlock = pos
             break
         }

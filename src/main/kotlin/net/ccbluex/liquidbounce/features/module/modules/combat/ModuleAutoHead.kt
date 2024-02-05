@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.repeatable
@@ -44,15 +43,13 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
 
     private val health by int("Health", 15, 1..40)
     private val healthToIgnoreRegen by int("HealthToIgnoreRegen", 5, 1..10)
-    private val combatPauseTime by int("CombatPauseTime", 0, 0..40)
-    private val swapDelay by int("SwapDelay", 5, 1..100)
+
+    private val cooldown by int("Cooldown", 0, 0..1000, "ticks")
+    private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
+    private val swapDelay by int("SwapDelay", 5, 1..100, "ticks")
 
     val repeatable = repeatable {
         val headSlot = findHotbarSlot(Items.PLAYER_HEAD)
-
-        if (interaction.hasRidingInventory()) {
-            return@repeatable
-        }
 
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
@@ -81,7 +78,8 @@ object ModuleAutoHead : Module("AutoHead", Category.COMBAT) {
             interaction.sendSequencedPacket(world) { sequence ->
                 PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
             }
-            return@repeatable
+
+            waitTicks(cooldown)
         }
     }
 

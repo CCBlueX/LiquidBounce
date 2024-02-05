@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ object ModuleAutoLeave : Module("AutoLeave", Category.COMBAT) {
 
     private val health by float("Health", 8f, 0f..20f)
 
-    private val delay by int("Delay", 0, 0..60) // min 0 ticks to 60 ticks (20 ticks == 1 second)
+    private val delay by int("Delay", 0, 0..60, "ticks")
     private val mode by enumChoice("Mode", ModuleKick.KickModeEnum.QUIT, ModuleKick.KickModeEnum.values())
 
     val tickRepeatable = repeatable {

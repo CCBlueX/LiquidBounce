@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,20 +20,24 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.text.Text
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -47,13 +51,17 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world
+    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
 ) : Listenable, Configurable(name) {
 
     val valueEnabled = boolean("Enabled", state).also {
         // Might not include the enabled state of the module depending on the category
         if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
-            doNotInclude()
+            if (this is ModuleAntiBot) {
+                return@also
+            }
+
+            it.doNotInclude()
         }
     }.notAnOption()
 
@@ -61,6 +69,20 @@ open class Module(
 
     // Module options
     var enabled by valueEnabled.listen { new ->
+        // Check if the module is locked
+        locked?.let { locked ->
+            if (locked.get()) {
+                notification(
+                    this.name,
+                    translation("liquidbounce.generic.locked"),
+                    NotificationEvent.Severity.ERROR
+                )
+
+                // Keeps it turned off
+                return@listen false
+            }
+        }
+
         runCatching {
             if (!inGame) {
                 return@runCatching
@@ -80,11 +102,14 @@ open class Module(
                 return@listen false
             }
 
-            notification(
-                if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
-                this.name,
-                if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
-            )
+            if (!CommandConfig.loadingNow) {
+                notification(
+                    if (new) translation("liquidbounce.generic.enabled")
+                    else translation("liquidbounce.generic.disabled"),
+                    this.name,
+                    if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
+                )
+            }
 
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
@@ -110,18 +135,37 @@ open class Module(
             it
         }
 
+    /**
+     * If this value is on true, we cannot enable the module, as it likely does not bypass.
+     */
+    private var locked: Value<Boolean>? = null
+
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
+    private val descriptionKey
+        get() = "$translationBaseKey.description"
+
     open val description: String
-        get() = Text.translatable("$translationBaseKey.description").outputString()
+        get() = translation(descriptionKey).convertToString()
 
     // Tag to be displayed on the HUD
     open val tag: String?
         get() = null
 
     /**
-     * Quick access
+     * Allows the user to access values by typing module.settings.<valuename>
+     */
+    @ScriptApi
+    open val settings by lazy { value.associateBy { it.name } }
+
+    /**
+     * Collection of the most used variables
+     * to make the code more readable.
+     *
+     * However, we do not check for nulls here, because
+     * we are sure that the client is in-game, if not
+     * fiddling with the handler code.
      */
     protected val mc: MinecraftClient
         inline get() = net.ccbluex.liquidbounce.utils.client.mc
@@ -133,6 +177,12 @@ open class Module(
         inline get() = mc.networkHandler!!
     protected val interaction: ClientPlayerInteractionManager
         inline get() = mc.interactionManager!!
+
+    init {
+        if (!LanguageManager.hasFallbackTranslation(descriptionKey)) {
+            logger.warn("$name is missing fallback description key $descriptionKey")
+        }
+    }
 
     /**
      * Called when module is turned on
@@ -152,7 +202,7 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && mc.player != null && mc.world != null
+    override fun handleEvents() = enabled && inGame
 
     /**
      * Handles disconnect from world and if [disableOnQuit] is true disables module
@@ -170,6 +220,14 @@ open class Module(
         }
     }
 
+    /**
+     * If we want a module to have the requires bypass option, we specifically call it
+     * on init. This will add the option and enable the feature.
+     */
+    fun enableLock() {
+        this.locked = boolean("Locked", false)
+    }
+
     protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
         choices(this, name, active, choices)
 
@@ -179,6 +237,6 @@ open class Module(
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
     ) = choices(this, name, activeCallback, choicesCallback)
 
-    fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
+    fun message(key: String, vararg args: Any) = translation("$translationBaseKey.messages.$key", *args)
 
 }

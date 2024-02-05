@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -34,7 +33,7 @@ val logger: Logger
     get() = LiquidBounce.logger
 
 val inGame: Boolean
-    get() = mc.player != null
+    get() = mc.player != null && mc.world != null
 
 // Chat formatting
 private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
@@ -45,16 +44,20 @@ fun regular(text: MutableText) = text.styled { it.withColor(Formatting.GRAY) }
 
 fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
 
-fun variable(text: MutableText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: MutableText) = text.styled { it.withColor(Formatting.GOLD) }
 
-fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: String) = text.asText().styled { it.withColor(Formatting.GOLD) }
+
+fun warning(text: MutableText) = text.styled { it.withColor(Formatting.YELLOW) }
+
+fun markAsError(text: MutableText) = text.styled { it.withColor(Formatting.RED) }
 
 fun chat(vararg texts: Text, prefix: Boolean = true) {
     val literalText = if (prefix) clientPrefix.copy() else Text.literal("")
     texts.forEach { literalText.append(it) }
 
     if (mc.player == null) {
-        logger.info("(Chat) ${literalText.outputString()}")
+        logger.info("(Chat) ${literalText.convertToString()}")
         return
     }
 

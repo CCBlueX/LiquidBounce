@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.network.ServerAddress
+import net.minecraft.client.network.ServerInfo.ServerType
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.text.Text
 
@@ -104,3 +106,7 @@ class SplashOverlayEvent(val action: Action) : Event() {
 @Nameable("splashProgress")
 @WebSocketEvent
 class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event()
+
+@Nameable("serverConnect")
+@WebSocketEvent
+class ServerConnectEvent(val serverName: String, val serverAddress: String) : Event()

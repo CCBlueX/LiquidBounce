@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -55,7 +54,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     class Simulate(override val parent: ChoiceConfigurable) : Choice("Simulate") {
 
-        private val predict by int("Ticks", 5, 0..20)
+        private val predict by int("Ticks", 5, 0..20, "ticks")
 
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.

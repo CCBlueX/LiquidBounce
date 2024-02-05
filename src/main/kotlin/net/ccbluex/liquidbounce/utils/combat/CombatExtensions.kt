@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -178,7 +178,8 @@ fun ClientWorld.getEntitiesInCuboid(
     range: Double,
     predicate: (Entity) -> Boolean = { true }
 ): MutableList<Entity> {
-    return getOtherEntities(null, Box(midPos.subtract(range, range, range), midPos.add(range, range, range)), predicate)
+    return getOtherEntities(null, Box(midPos.subtract(range, range, range),
+        midPos.add(range, range, range)), predicate)
 }
 
 inline fun ClientWorld.getEntitiesBoxInRange(

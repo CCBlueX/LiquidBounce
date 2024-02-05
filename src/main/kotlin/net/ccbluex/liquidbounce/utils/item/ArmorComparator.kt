@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ArmorItem
@@ -91,13 +90,13 @@ object ArmorComparator : Comparator<ArmorPiece> {
                     return enchantabilityCmp
                 }
 
-                val alreadyEquippedCmp = compareByCondition(o1, o2, ArmorPiece::isAlreadyEquipped)
+                val alreadyEquippedCmp = compareValueByCondition(o1, o2, ArmorPiece::isAlreadyEquipped)
 
                 if (alreadyEquippedCmp != 0) {
                     return alreadyEquippedCmp
                 }
 
-                return compareByCondition(o1, o2, ArmorPiece::isReachableByHand)
+                return compareValueByCondition(o1, o2, ArmorPiece::isReachableByHand)
             }
             return otherEnchantmentCmp
         }

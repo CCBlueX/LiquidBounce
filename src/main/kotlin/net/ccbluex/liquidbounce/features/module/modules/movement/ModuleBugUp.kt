@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.math.BlockPos
-import kotlin.math.abs
+import net.minecraft.util.math.Vec3d
+import kotlin.math.max
 
 /**
  * BugUp module
@@ -38,35 +46,48 @@ import kotlin.math.abs
  */
 
 object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
-    private val maxFallDistance by int("MaxFallDistance", 10, 2..255)
-    private val maxDistanceWithoutGround by float("MaxDistanceToSetback", 2.5f, 1f..30f)
-    private val mode = enumChoice("Mode", Mode.FLYFLAG, Mode.values())
-    //private val indicator by boolean("Indicator", true)
 
-    private var detectedLocation: BlockPos? = null
-    private var lastFound = 0F
-    private var prevX = 0.0
-    private var prevY = 0.0
-    private var prevZ = 0.0
+    private val mode by enumChoice("Mode", Mode.BLINK_BACK, Mode.values())
+
+    private val maximumFallDamage by float("MaximumFallDamage", 3F, 0F..40F)
+
+    private var fallingLocation: BlockPos? = null
+    private var previousPosition: Vec3d? = null
     private var actionTaken = false
 
+    var takeAction = false
+
+    val shouldLag
+        get() = enabled && mode == Mode.BLINK_BACK && takeAction
+
+    val isAtASafePlace
+        get() = player.isOnGround || player.blockPos.down().canStandOn()
+            || player.isHoldingOntoLadder || player.isTouchingWater || player.velocity.y > 0.0
+
+    val movementInputEvent = handler<MovementInputEvent> {
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayer.SimulatedPlayerInput(it.directionalInput, it.jumping, player.isSprinting, it.sneaking)
+        )
+
+        // Tick three times to make sure we are not falling
+        for (i in 0 until 5) {
+            simulatedPlayer.tick()
+
+            if (simulatedPlayer.fallDistance > 0 && !simulatedPlayer.pos.toBlockPos().down().canStandOn()) {
+                takeAction = true
+                break
+            }
+        }
+    }
+
     val listener = repeatable {
-        detectedLocation = null
+        fallingLocation = null
 
-        if (ModuleBlink.enabled) {
-            return@repeatable
-        }
-
-
-        if (player.isOnGround || !BlockPos(player.blockPos.down()).getState()!!.isAir) {
-            prevX = player.prevX
-            prevY = player.prevY
-            prevZ = player.prevZ
-
+        if (isAtASafePlace) {
+            previousPosition = player.prevPos
             actionTaken = false
-        }
-
-        if (!player.isOnGround && !player.isHoldingOntoLadder && !player.isTouchingWater) {
+            takeAction = false
+        } else if (!actionTaken && player.fallDistance > 0.5) {
             val fallingPlayer = FallingPlayer(
                 player,
                 player.x,
@@ -76,22 +97,18 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
                 player.velocity.y,
                 player.velocity.z,
                 player.yaw
-            )
-
-            detectedLocation = fallingPlayer.findCollision(60)?.pos
-
-            if (detectedLocation != null && abs(player.y - detectedLocation!!.y) +
-                player.fallDistance <= maxFallDistance
-            ) {
-                lastFound = player.fallDistance
+            ).apply {
+                fallingLocation = findCollision(60)?.pos
             }
 
-            if (player.fallDistance - lastFound > maxDistanceWithoutGround && !actionTaken) {
+            val totalFallDistance = player.fallDistance + (player.y - fallingPlayer.y)
+            val fallDamage = max(0.0, totalFallDistance - 3)
 
-                when (mode.value) {
+            if (fallDamage > maximumFallDamage) {
+                when (mode) {
                     Mode.TELEPORTBACK -> {
-                        player.updatePosition(prevX, prevY, prevZ)
-                        player.velocity.y = 0.0
+                        player.setPosition(previousPosition)
+                        player.velocity = Vec3d.ZERO
                     }
 
                     Mode.FLYFLAG -> {
@@ -109,20 +126,35 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
                     }
 
                     Mode.FREEZE -> {
-                        ModuleFreeze.enabled = true
+                        enabled = true
+                    }
+
+                    Mode.BLINK_BACK -> {
+                        val firstPositon = FakeLag.firstPosition() ?: return@repeatable
+                        if (firstPositon.toBlockPos().canStandOn()) {
+                            notification("BugUp", "No safe position to go back.",
+                                NotificationEvent.Severity.ERROR)
+                            actionTaken = true
+                            return@repeatable
+                        }
+
+                        FakeLag.cancel()
                     }
                 }
 
+                notification("BugUp", "Action taken", NotificationEvent.Severity.INFO)
                 actionTaken = true
             }
         }
 
     }
 
+    val packetEvent = handler<PacketEvent> {
+
+    }
+
     override fun disable() {
-        prevX = 0.0
-        prevY = 0.0
-        prevZ = 0.0
+        previousPosition = null
     }
 
     enum class Mode(override val choiceName: String) : NamedChoice {
@@ -130,8 +162,10 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
         TELEPORTBACK("TeleportBack"),
         FLYFLAG("FlyFlag"),
         ONGROUNDSPOOF("OnGroundSpoof"),
-        MOTIONTELEPORTFLAG("MotionTeleport-Flag")
+        MOTIONTELEPORTFLAG("MotionTeleport-Flag"),
+        BLINK_BACK("BlinkBack")
     }
+
 //    @EventTarget
 //    fun onRender3D(event: Render3DEvent) {
 //        val player = mc.player ?: return

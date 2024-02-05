@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
 ) {
 
     private val events = hashMapOf<String, (Any?) -> Unit>()
-
+    private val _values = linkedMapOf<String, Value<*>>()
     private var _tag: String? = null
     override val tag: String?
         get() = _tag
@@ -43,14 +43,14 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    val settings by lazy { value }
+    override val settings by lazy { _values }
 
     init {
         if (moduleObject.containsKey("settings")) {
             val settingsObject = moduleObject["settings"] as Map<String, Value<*>>
 
-            for ((_, value) in settingsObject) {
-                settings.add(value)
+            for ((name, value) in settingsObject) {
+                _values[name] = value(value)
             }
         }
 
@@ -106,7 +106,6 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
             )
         )
     }
-
 
     companion object {
         /**

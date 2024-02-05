@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
- 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.api.v1.AutoSettings
@@ -28,31 +27,21 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.io.HttpClient.get
 import net.minecraft.text.Text
 
 /**
  * Config Command
  *
- * Provides various subcommands related to the configuration, 
- * such as loading configuration from an external source or an API 
+ * Provides various subcommands related to the configuration,
+ * such as loading configuration from an external source or an API
  * and listing available configurations.
  */
 object CommandConfig {
 
-    private var cachedSettingsList: Array<AutoSettings>? = null
-
-    init {
-        runCatching {
-            cachedSettingsList = requestSettingsList()
-        }.onFailure {
-            logger.error("Failed to load settings list from API", it)
-        }
-    }
+    internal var loadingNow = false
+    internal var cachedSettingsList: Array<AutoSettings>? = null
 
     fun createCommand(): Command {
         return CommandBuilder
@@ -74,26 +63,34 @@ object CommandConfig {
 
                         // Get online config from external source
                         if (name.startsWith("http")) {
-                            get(name).runCatching {
-                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
-                                    ConfigSystem.autoConfigGson)
+                            loadingNow = true
+                            runCatching {
+                                get(name).apply {
+                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                        ConfigSystem.autoConfigGson)
+                                }
                             }.onFailure {
-                                chat(regular(command.result("failedToLoad", variable(name))))
+                                chat(markAsError(command.result("failedToLoad", variable(name))))
                             }.onSuccess {
                                 chat(regular(command.result("loaded", variable(name))))
                             }
+                            loadingNow = false
                             return@handler
                         }
 
                         // Get online config from API
-                        requestSettingsScript(name).runCatching {
-                            ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
-                                ConfigSystem.autoConfigGson)
+                        loadingNow = true
+                        runCatching {
+                            requestSettingsScript(name).apply {
+                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                    ConfigSystem.autoConfigGson)
+                            }
                         }.onFailure {
-                            chat(regular(command.result("failedToLoad", variable(name))))
+                            chat(markAsError(command.result("failedToLoad", variable(name))))
                         }.onSuccess {
                             chat(regular(command.result("loaded", variable(name))))
                         }
+                        loadingNow = false
                     }
                     .build()
             )

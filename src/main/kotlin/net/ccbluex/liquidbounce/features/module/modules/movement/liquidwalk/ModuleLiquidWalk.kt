@@ -1,0 +1,71 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015-2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
+ */
+package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk
+
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkNoCheatPlus
+import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkVanilla
+import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
+import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.minecraft.block.FluidBlock
+import net.minecraft.fluid.Fluids
+import net.minecraft.util.shape.VoxelShapes
+
+/**
+ * LiquidWalk module
+ *
+ * Allows you to walk on water like jesus. Also known as Jesus module.
+ */
+object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
+
+    init {
+        enableLock()
+    }
+
+    internal val modes = choices("Mode", LiquidWalkVanilla, arrayOf(
+        LiquidWalkVanilla,
+        LiquidWalkNoCheatPlus
+    ))
+
+    /**
+     * Check if player is standing on water
+     */
+    fun standingOnWater(): Boolean {
+        val boundingBox = player.box
+        val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.01)
+
+        return isBlockAtPosition(detectionBox) { it is FluidBlock }
+    }
+
+    fun collidesWithAnythingElse(): Boolean {
+        val boundingBox = player.box
+        val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.5)
+
+        return collideBlockIntersects(detectionBox) { it !is FluidBlock }
+    }
+
+}

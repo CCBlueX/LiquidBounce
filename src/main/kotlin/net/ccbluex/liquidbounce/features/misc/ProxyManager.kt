@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.misc
 
 import io.netty.channel.ChannelPipeline
@@ -27,7 +26,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.script.RequiredByScript
+import net.ccbluex.liquidbounce.script.ScriptApi
 import java.net.InetSocketAddress
 
 /**
@@ -45,7 +44,7 @@ object ProxyManager : Configurable("proxy"), Listenable {
      *
      * !! DO NOT CHANGE IT TO PRIVATE AS IT IS USED BY THE ULTRALIGHT GUI. !!
      */
-    @RequiredByScript
+    @ScriptApi
     val currentProxy
         get() = proxy.takeIf { it.host.isNotBlank() }
 

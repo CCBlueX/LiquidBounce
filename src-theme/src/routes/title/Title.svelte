@@ -34,9 +34,9 @@
         openScreen("multiplayer_realms").catch(console.error);
     }
 
-    function openCustomize() {
+    function openClickGui() {
         // Redirect to
-        push("/customize");
+        push("/clickgui");
     }
 
     function openOptions() {
@@ -79,7 +79,12 @@
     getSession().then(session => {
         username = session.username;
         faceUrl = session.avatar;
-        accountType = session.accountType;
+
+        if (session.premium) {
+            accountType = "Premium";
+        } else {
+            accountType = "Cracked";
+        }
     }).catch(console.error);
 
     getLocation().then(ip => {
@@ -90,7 +95,14 @@
     }).catch(console.error);
 
     let updateAvailable = false;
+    let newestVersion = {
+        "clientVersion": "0.1.0",
+        "minecraftVersion": "1.20.4",
+        "date": ""
+    };
+
     getUpdate().then(update => {
+        newestVersion = update.newestVersion;
         updateAvailable = update.updateAvailable;
     }).catch(console.error);
 </script>
@@ -99,8 +111,15 @@
     <div class="scale">
         <div class="wrapper">
             {#if updateAvailable}
-                <div class="update-available">
-                    <span on:click={browseWebsite}>Update available! Go to https://liquidbounce.net/</span>
+                <div class="update-available" on:click={browseWebsite} >
+                    <p>LiquidBounce v{newestVersion.clientVersion}{#if !newestVersion.release } (dev){/if}</p>
+                    <p>for Minecraft {newestVersion.minecraftVersion} has been released!</p>
+                    <br>
+
+                    <p>Release date: {newestVersion.date}</p>
+                    <p>Commit: {newestVersion.commitId}</p><br>
+
+                    <p>Go to https://liquidbounce.net/</p>
                 </div>
             {/if}
 
@@ -112,7 +131,7 @@
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>
                     <ChildButton text="Realms" icon="realms" {hovered} on:click={openRealms}/>
                 </MainButton>
-                <MainButton text="Customize" icon="customize" on:click={openCustomize}/>
+                <MainButton text="Client GUI" icon="customize" on:click={openClickGui}/>
                 <MainButton text="Options" icon="options" on:click={openOptions}/>
             </MainButtons>
 
@@ -156,46 +175,5 @@
         cursor: pointer;
         background-color: rgba(0, 0, 0, .68);
         color: white;
-    }
-
-    .wrapper {
-        position: relative;
-        height: 100%;
-    }
-
-    .scale {
-        position: relative;
-        height: 100%;
-        padding: 50px;
-    }
-
-    @media screen and (max-width: 1366px) {
-        .scale {
-            zoom: .7;
-        }
-    }
-
-    @media screen and (max-width: 1024px) {
-        .scale {
-            zoom: .5;
-        }
-    }
-
-    @media screen and (max-height: 1000px) {
-        .scale {
-            zoom: .7;
-        }
-    }
-
-    @media screen and (max-height: 700px) {
-        .scale {
-            zoom: .5;
-        }
-    }
-
-    @media screen and (max-height: 540px) {
-        .scale {
-            zoom: .4;
-        }
     }
 </style>

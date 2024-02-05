@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.socket.protocol.rest
 
 import com.google.gson.JsonObject
@@ -25,14 +24,15 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module.setupOptions
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupOptions
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupClientRestApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupPlayerRestApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupServerApi
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupWorldApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.module.setupModuleRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.proxy.setupProxyRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.session.setupSessionRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupModuleRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupProxyRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupSessionRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupContainerRestApi
 
 class RestApi {
 
@@ -50,6 +50,8 @@ class RestApi {
                 setupWorldApi()
                 setupServerApi()
                 setupPlayerRestApi()
+                setupContainerRestApi()
+
             }
 
         RouteController.get("/") {

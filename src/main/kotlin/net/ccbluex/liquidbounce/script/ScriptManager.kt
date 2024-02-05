@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,8 @@ import java.io.FileFilter
 
 object ScriptManager {
 
+    private val scriptExtensions = arrayOf("js", "mjs")
+
     // Loaded scripts
     val loadedScripts = mutableListOf<Script>()
 
@@ -39,7 +41,28 @@ object ScriptManager {
      * Loads all scripts inside the scripts folder.
      */
     fun loadScripts() {
-        scriptsRoot.listFiles(FileFilter { it.name.endsWith(".js") })?.forEach(ScriptManager::loadSafely)
+        scriptsRoot.listFiles {
+            file -> scriptExtensions.contains(file.extension)|| file.isDirectory
+        }?.forEach { file ->
+            if (file.isDirectory) {
+                // If we find a directory, we look for a main.js or main.mjs file inside it
+                val mainFile = file.listFiles {
+                    dirFile -> dirFile.nameWithoutExtension == "main" && scriptExtensions.contains(dirFile.extension)
+                }?.firstOrNull()
+
+                if (mainFile != null) {
+                    loadSafely(mainFile)
+                } else {
+                    logger.warn("Unable to find main.js or main.mjs inside the directory ${file.name}.")
+                }
+            } else {
+                // If the file is a script, we load it immediately
+                loadSafely(file)
+            }
+        }
+
+        // After loading we enable all the scripts
+        enableScripts()
     }
 
     /**
@@ -50,7 +73,7 @@ object ScriptManager {
         loadedScripts.clear()
     }
 
-    fun loadSafely(file: File) = runCatching {
+    private fun loadSafely(file: File) = runCatching {
         loadScript(file)
     }.onFailure {
         logger.error("Unable to load script ${file.name}.", it)
@@ -75,12 +98,16 @@ object ScriptManager {
     /**
      * Enables all scripts.
      */
-    fun enableScripts() = loadedScripts.forEach(Script::enable)
+    fun enableScripts() {
+        loadedScripts.forEach(Script::enable)
+    }
 
     /**
      * Disables all scripts.
      */
-    fun disableScripts() = loadedScripts.forEach(Script::disable)
+    fun disableScripts() {
+        loadedScripts.forEach(Script::disable)
+    }
 
     /**
      * Imports a script.
@@ -110,7 +137,6 @@ object ScriptManager {
      * Reloads all scripts.
      */
     fun reloadScripts() {
-        disableScripts()
         unloadScripts()
         loadScripts()
         enableScripts()

@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
@@ -26,9 +44,9 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
     private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
     private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
-    private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20)
+    private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks")
     private val pauseOnFlag by boolean("PauseOfFlag", true)
-    private val pauseAfterTick by int("PauseAfterTick", 0, 0..100)
+    private val pauseAfterTick by int("PauseAfterTick", 0, 0..100, "ticks")
     private val forceGround by boolean("ForceGround", false)
 
     private var ticksToSkip = 0
@@ -158,11 +176,6 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             tickBalance = 0f
         }
-    }
-
-    override fun disable() {
-        tickBalance = 0f
-        super.disable()
     }
 
     data class TickData(

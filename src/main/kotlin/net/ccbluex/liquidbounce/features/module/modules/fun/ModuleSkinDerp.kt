@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.event.repeatable
@@ -33,7 +32,7 @@ import kotlin.random.Random
 object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
     private val sync by boolean("Sync", false)
-    private val delay by int("Delay", 0, 0..20)
+    private val delay by int("Delay", 0, 0..20, "ticks")
     private val hat by boolean("Hat", true)
     private val jacket by boolean("Jacket", true)
     private val leftPants by boolean("LeftPants", true)

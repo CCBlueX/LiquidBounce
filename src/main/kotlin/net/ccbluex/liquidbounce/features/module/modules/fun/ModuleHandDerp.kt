@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
         override val parent: ChoiceConfigurable
             get() = mode
 
-        val delayValue by int("Delay", 1, 0..20)
+        val delayValue by int("Delay", 1, 0..20, "ticks")
 
         val repeatable = repeatable {
             waitTicks(delayValue)

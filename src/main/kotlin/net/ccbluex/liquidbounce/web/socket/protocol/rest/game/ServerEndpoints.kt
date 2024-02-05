@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
@@ -64,5 +64,20 @@ internal fun RestNode.setupServerApi() {
 
             httpOk(servers)
         }.getOrElse { httpInternalServerError("Failed to get servers due to ${it.message}") }
+    }
+
+    post("/reconnect") {
+        Reconnect.reconnectNow()
+        httpOk(JsonObject())
+    }
+
+    post("/reconnectWithRandomAccount") {
+        Reconnect.reconnectWithRandomAccount()
+        httpOk(JsonObject())
+    }
+
+    post("/reconnectWithRandomUsername") {
+        Reconnect.reconnectWithRandomUsername()
+        httpOk(JsonObject())
     }
 }

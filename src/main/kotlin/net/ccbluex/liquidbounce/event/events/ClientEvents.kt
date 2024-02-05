@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.features.chat.client.packet.User
+import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
@@ -47,14 +47,30 @@ class ToggleModuleEvent(val moduleName: String, val hidden: Boolean, val enabled
 @WebSocketEvent
 class RefreshArrayListEvent : Event()
 
-@Nameable("choiceChange")
-class ChoiceChangeEvent(val module: Module, val oldChoice: Choice, val newChoice: Choice) : Event()
-
 @Nameable("notification")
 @WebSocketEvent
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
     enum class Severity {
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
+    }
+}
+
+@Nameable("clientChatStateChange")
+@WebSocketEvent
+class ClientChatStateChange(val state: State) : Event() {
+    enum class State {
+        @SerializedName("connecting")
+        CONNECTING,
+        @SerializedName("connected")
+        CONNECTED,
+        @SerializedName("logon")
+        LOGGING_IN,
+        @SerializedName("loggedIn")
+        LOGGED_IN,
+        @SerializedName("disconnected")
+        DISCONNECTED,
+        @SerializedName("authenticationFailed")
+        AUTHENTICATION_FAILED,
     }
 }
 
@@ -72,6 +88,10 @@ class ClientChatMessageEvent(val user: User, val message: String, val chatGroup:
 @Nameable("clientChatError")
 @WebSocketEvent
 class ClientChatErrorEvent(val error: String) : Event()
+
+@Nameable("clientChatJwtToken")
+// Do not define as WebSocket event, because it contains sensitive data
+class ClientChatJwtTokenEvent(val jwt: String) : Event()
 
 @Nameable("altManagerUpdate")
 @WebSocketEvent
