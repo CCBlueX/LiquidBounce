@@ -112,7 +112,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             // Exploit
             ModuleAbortBreaking,
             ModuleAntiReducedDebugInfo,
-            ModuleAntiVanish,
             ModuleAntiHunger,
             ModuleClip,
             ModuleDamage,
