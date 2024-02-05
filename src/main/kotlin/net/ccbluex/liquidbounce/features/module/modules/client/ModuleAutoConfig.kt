@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig.cachedSettingsList
@@ -41,6 +42,8 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
         "loyisa.cn",
         "anticheat-test.com"
     )
+
+    var requiresConfigLoad = false
 
     init {
         doNotInclude()
@@ -59,12 +62,20 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
         super.enable()
     }
 
-    val handleServerConnect = sequenceHandler<ServerConnectEvent> {
-        // Waits until the player is in game
-        waitUntil { inGame && mc.currentScreen == null }
+    override fun disable() {
+        requiresConfigLoad = false
+        super.disable()
+    }
 
-        // Loads the server config
-        loadServerConfig(it.serverAddress.dropPort().rootDomain())
+    val repeatable = repeatable {
+        if (requiresConfigLoad && mc.currentScreen == null) {
+            enable()
+            requiresConfigLoad = false
+        }
+    }
+
+    val handleServerConnect = sequenceHandler<ServerConnectEvent> {
+        requiresConfigLoad = true
     }
 
     /**
