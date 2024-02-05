@@ -238,7 +238,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        var predictedPos = getPredictedPlacementPos() ?: player.pos
+        val predictedPos = getPredictedPlacementPos() ?: player.pos
 
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
@@ -277,14 +277,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
-        val rotation = if (aimMode == AimMode.GODBRIDGE) {
-            ScaffoldGodBridgeFeature.optimizeRotation(target)
-        } else if (aimMode == AimMode.BREEZILY) {
-            ScaffoldBreezilyFeature.optimizeRotation(target)
-        } else {
-            target?.rotation
-        };
-        if (rotation == null) return@handler
+        val rotation = when (aimMode) {
+            AimMode.GODBRIDGE -> ScaffoldGodBridgeFeature.optimizeRotation(target)
+            AimMode.BREEZILY -> ScaffoldBreezilyFeature.optimizeRotation(target)
+            else -> target?.rotation
+        } ?: return@handler
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
         if (aimTimingMode != AimTimingMode.ON_TICK) {

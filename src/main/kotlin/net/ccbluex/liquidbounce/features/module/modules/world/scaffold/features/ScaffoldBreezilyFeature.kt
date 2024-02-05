@@ -19,44 +19,49 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
     private var lastAirTime = 0L
     private var currentEdgeDistanceRandom = 0.45
 
-    private val edgeDistance by floatRange("EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks")
+    private val edgeDistance by floatRange(
+        "EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks"
+    )
 
-     fun doBreezilyIfNeeded(event: MovementInputEvent) {
-        if (!enabled) return
-        if (!event.directionalInput.forwards) return
-         if (mc.player!!.isSneaking) return
-         if (ScaffoldAutoJumpFeature.isGoingDiagonal) return
+    fun doBreezilyIfNeeded(event: MovementInputEvent) {
+        if (!enabled || !event.directionalInput.forwards || player.isSneaking
+            || ScaffoldAutoJumpFeature.isGoingDiagonal) {
+            return
+        }
 
-         if (mc.world!!.getBlockState(mc.player!!.blockPos.offset(Direction.DOWN, 1)).block == Blocks.AIR) {
-             lastAirTime = System.currentTimeMillis()
-         }
+        if (world.getBlockState(player.blockPos.offset(Direction.DOWN, 1)).block == Blocks.AIR) {
+            lastAirTime = System.currentTimeMillis()
+        } else if (System.currentTimeMillis() - lastAirTime > 500) {
+            return
+        }
 
-        if (System.currentTimeMillis() - lastAirTime > 500) return
-
-        val modX = mc.player!!.x - floor(mc.player!!.x)
-        val modZ = mc.player!!.z - floor(mc.player!!.z)
+        val modX = player.x - floor(player.x)
+        val modZ = player.z - floor(player.z)
 
         val ma = 1 - currentEdgeDistanceRandom
         var currentSideways = 0f
-        when (Direction.fromRotation(mc.player!!.yaw.toDouble()).toString()) {
-            "south" -> {
+        when (Direction.fromRotation(player.yaw.toDouble())) {
+            Direction.SOUTH -> {
                 if (modX > ma) currentSideways = 1f
                 if (modX < currentEdgeDistanceRandom) currentSideways = -1f
             }
 
-            "north" -> {
+            Direction.NORTH -> {
                 if (modX > ma) currentSideways = -1f
                 if (modX < currentEdgeDistanceRandom) currentSideways = 1f
             }
 
-            "east" -> {
+            Direction.EAST -> {
                 if (modZ > ma) currentSideways = -1f
                 if (modZ < currentEdgeDistanceRandom) currentSideways = 1f
             }
 
-            "west" -> {
+            Direction.WEST -> {
                 if (modZ > ma) currentSideways = 1f
                 if (modZ < currentEdgeDistanceRandom) currentSideways = -1f
+            }
+            else -> {
+                // do nothing
             }
         }
 
@@ -74,7 +79,7 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
     }
 
     fun optimizeRotation(target: BlockPlacementTarget?): Rotation? {
-        val dirInput = DirectionalInput(net.ccbluex.liquidbounce.utils.client.player.input)
+        val dirInput = DirectionalInput(player.input)
 
         if (dirInput == DirectionalInput.NONE) {
             target ?: return null
@@ -82,7 +87,7 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
             return getRotationForNoInput(target)
         }
 
-        val direction = getMovementDirectionOfInput(net.ccbluex.liquidbounce.utils.client.player.yaw, dirInput) + 180
+        val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45
@@ -98,13 +103,9 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
 
     }
 
-    private fun getRotationForStraightInput(movingYaw: Float): Rotation {
-        return Rotation(movingYaw, 80f)
-    }
+    private fun getRotationForStraightInput(movingYaw: Float) = Rotation(movingYaw, 80f)
 
-    private fun getRotationForDiagonalInput(movingYaw: Float): Rotation {
-        return Rotation(movingYaw, 75.6f)
-    }
+    private fun getRotationForDiagonalInput(movingYaw: Float) = Rotation(movingYaw, 75.6f)
 
     private fun getRotationForNoInput(target: BlockPlacementTarget): Rotation {
         val axisMovement = floor(target.rotation.yaw / 90) * 90
