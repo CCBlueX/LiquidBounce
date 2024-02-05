@@ -32,7 +32,7 @@ import kotlin.random.Random
 object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
     private val sync by boolean("Sync", false)
-    private val delay by int("Delay", 0, 0..20)
+    private val delay by int("Delay", 0, 0..20, "ticks")
     private val hat by boolean("Hat", true)
     private val jacket by boolean("Jacket", true)
     private val leftPants by boolean("LeftPants", true)

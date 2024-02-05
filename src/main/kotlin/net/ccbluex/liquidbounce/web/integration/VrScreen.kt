@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.web.integration
 
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -38,7 +39,7 @@ class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
         super.close()
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // render nothing
     }
 

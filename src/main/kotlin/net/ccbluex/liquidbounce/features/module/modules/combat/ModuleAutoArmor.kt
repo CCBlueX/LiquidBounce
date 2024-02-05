@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.item.ArmorConfigurable
  * Automatically put on the best armor.
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
+
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
     private val hotbar by boolean("Hotbar", true)
     val armorconfigurable = ArmorConfigurable()

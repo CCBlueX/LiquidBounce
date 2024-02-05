@@ -33,17 +33,18 @@ import net.ccbluex.liquidbounce.utils.client.notification
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
-    val modes = choices("Mode", { Air }) {
-        arrayOf(
-            Air
-        )
+    init {
+        enableLock()
     }
+
+    val modes = choices("Mode", Air, arrayOf(Air))
 
     val repeatable = repeatable {
         if (ModuleAvoidHazards.enabled) {
             if (ModuleAvoidHazards.cobWebs) {
                 ModuleAvoidHazards.enabled = false
-                notification("Compatibility error", "NoWeb is incompatible with AvoidHazards", NotificationEvent.Severity.ERROR)
+                notification("Compatibility error", "NoWeb is incompatible with AvoidHazards",
+                    NotificationEvent.Severity.ERROR)
             }
         }
     }

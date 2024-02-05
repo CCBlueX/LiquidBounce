@@ -34,14 +34,25 @@ import net.minecraft.entity.MovementType
  */
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     private var strength by float("Strength", 1f, 0.1f..1f)
+    private var strictMovement by boolean("StrictMovement", false)
     private var notDuringAir by boolean("NotDuringAir", false)
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
-        if (event.type == MovementType.SELF && player.moving && (!notDuringAir || !player.isOnGround)) {
+        if (event.type == MovementType.SELF && (player.isOnGround || !notDuringAir)) {
             val movement = event.movement
-            movement.strafe(player.directionYaw, strength = strength.toDouble())
+
+            if (player.moving) {
+                movement.strafe(player.directionYaw, strength = strength.toDouble())
+            } else if (strictMovement) {
+                movement.x = 0.0
+                movement.z = 0.0
+            }
         }
     }
 

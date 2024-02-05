@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.misc.HideClient;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
@@ -139,7 +139,7 @@ public abstract class MixinMinecraftClient {
             ordinal = 1),
             cancellable = true)
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
-        if (HideClient.INSTANCE.isHidingNow()) {
+        if (HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
 
@@ -148,9 +148,10 @@ public abstract class MixinMinecraftClient {
         StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
         titleBuilder.append(" v");
         titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
+        titleBuilder.append(" ");
 
         if (LiquidBounce.IN_DEVELOPMENT) {
-            titleBuilder.append(" (dev) ");
+            titleBuilder.append("(dev) ");
         }
 
         titleBuilder.append(LiquidBounce.INSTANCE.getClientCommit());

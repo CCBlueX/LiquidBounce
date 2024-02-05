@@ -52,7 +52,7 @@ import net.minecraft.util.math.Vec3i
 object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
     private val range by floatRange("Range", 3.0f..4.5f, 2f..6f)
-    private val delay by int("Delay", 20, 0..400)
+    private val delay by int("Delay", 20, 0..400, "ticks")
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private val targetTracker = tree(TargetTracker())
@@ -101,7 +101,8 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
                 listOf(Vec3i(0, 0, 0)),
                 slot.itemStack,
                 CenterTargetPositionFactory,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                player.pos
             )
 
             val currentTarget = findBestBlockPlacementTarget(pos, options) ?: continue

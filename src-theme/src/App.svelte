@@ -1,5 +1,5 @@
 <script>
-    import Router, { link, pop, push } from "svelte-spa-router";
+    import Router, { push } from "svelte-spa-router";
     import { routes } from "./routes.js";
     import { listenAlways, cleanupListeners } from "./client/ws.svelte";
     import { getVirtualScreen, confirmVirtualScreen } from "./client/api.svelte";
@@ -23,10 +23,13 @@
             nextRoute = name;
         } else {
             cleanupListeners();
-            push("/" + name);
+            push("/" + name).then(() => {
+                showingSplash = false;
+                nextRoute = null;
+            }).catch((error) => {
+                console.error(error);
+            });
 
-            showingSplash = false;
-            nextRoute = null;
         }
     }
 
@@ -36,8 +39,11 @@
 
             if (action === "show") {
                 cleanupListeners();
-                push("/");
-                showingSplash = true;
+                push("/").then(() => {
+                    showingSplash = true;
+                }).catch((error) => {
+                    console.error(error);
+                });
             } else if (action === "hide") {
                 changeRoute(nextRoute || "none");
             }
@@ -64,4 +70,4 @@
     }
 </script>
 
-<Router {routes}/>
+<Router {routes} />

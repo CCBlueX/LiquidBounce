@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.script.RequiredByScript
+import net.ccbluex.liquidbounce.script.ScriptApi
 import java.net.InetSocketAddress
 
 /**
@@ -44,7 +44,7 @@ object ProxyManager : Configurable("proxy"), Listenable {
      *
      * !! DO NOT CHANGE IT TO PRIVATE AS IT IS USED BY THE ULTRALIGHT GUI. !!
      */
-    @RequiredByScript
+    @ScriptApi
     val currentProxy
         get() = proxy.takeIf { it.host.isNotBlank() }
 

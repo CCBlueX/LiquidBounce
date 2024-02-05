@@ -35,8 +35,15 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import java.security.SecureRandom
+import kotlin.math.abs
 
-class PointTracker : Configurable("PointTracker"), Listenable {
+class PointTracker(
+    highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
+    lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
+    gaussianOffsetDefault: Boolean = true,
+    timeEnemyOffsetDefault: Float = 0.4f,
+    timeEnemyOffsetScale: ClosedFloatingPointRange<Float> = -1f..1f
+) : Configurable("PointTracker"), Listenable {
 
     companion object {
         /**
@@ -44,27 +51,28 @@ class PointTracker : Configurable("PointTracker"), Listenable {
          * This adds on top of the amount of ticks the user has configured.
          * Why are we doing this? Because our server rotation lags behind, and we need to compensate for that.
          */
-        const val BASE_PREDICT = 2
+        const val BASE_PREDICT = 1
     }
 
     /**
      * The value of predict future movement is the amount of ticks we are going to predict the future movement of the
      * client.
      */
-    private val predictFutureMovement by int("PredictClientMovement", 1, 0..5)
+    private val predictFutureMovement by int("PredictClientMovement", 1, 0..2,
+        "ticks")
 
     /**
      * The time offset defines a prediction or rather a delay of the point tracker.
      * We can either try to predict the next location of the player and use this as our newest point, or
      * we pretend to be slow in the head and aim behind.
      */
-    private val timeEnemyOffset by float("TimeEnemyOffset", 0.4f, -1f..2f)
+    private val timeEnemyOffset by float("TimeEnemyOffset", timeEnemyOffsetDefault, timeEnemyOffsetScale)
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
      * calculate the offset.
      */
-    private val gaussianOffset by boolean("GaussianOffset", true)
+    private val gaussianOffset by boolean("GaussianOffset", gaussianOffsetDefault)
 
     /**
      * OutOfBox will set the box offset to an unreachable position.
@@ -74,7 +82,7 @@ class PointTracker : Configurable("PointTracker"), Listenable {
     /**
      * Define the highest and lowest point of the box we want to aim at.
      */
-    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", PreferredBoxPart.HEAD,
+    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault,
         PreferredBoxPart.values())
         .listen { new ->
             if (lowestPoint.isHigherThan(new)) {
@@ -83,7 +91,7 @@ class PointTracker : Configurable("PointTracker"), Listenable {
                 new
             }
         }
-    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", PreferredBoxPart.BODY,
+    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault,
         PreferredBoxPart.values())
         .listen { new ->
             if (!highestPoint.isHigherThan(new)) {
@@ -146,12 +154,12 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      *
      * @param entity The entity we want to track.
      */
-    fun gatherPoint(entity: LivingEntity, requiredOnTick: Boolean): Point {
+    fun gatherPoint(entity: LivingEntity, situation: AimSituation): Point {
         // Predicted target position of the enemy
         val targetPrediction = entity.pos.subtract(entity.prevPos)
-            .multiply(BASE_PREDICT + timeEnemyOffset.toDouble())
+            .multiply(timeEnemyOffset.toDouble())
         var box = entity.box.offset(targetPrediction)
-        if (!requiredOnTick && outOfBox) {
+        if (!situation.isNear && outOfBox) {
             box = box.withMinY(box.maxY).withMaxY(box.maxY + 1.0)
         }
         val cutoffBox = box
@@ -171,7 +179,15 @@ class PointTracker : Configurable("PointTracker"), Listenable {
             box.center.z
         ) + offset
 
-        return Point(predictedEyes ?: player.eyes, targetPoint, box, cutoffBox)
+        val eyes = if (situation == AimSituation.FOR_NOW) {
+            null
+        } else {
+            predictedEyes
+        } ?: player.eyes
+
+        eyes.y -= abs(player.velocity.y) * 0.1
+
+        return Point(eyes, targetPoint, box, cutoffBox)
     }
 
     private fun updateGaussianOffset() {
@@ -182,9 +198,19 @@ class PointTracker : Configurable("PointTracker"), Listenable {
                 this.random.nextGaussian(),
             )
 
-        this.currentOffset = nextOffset.multiply(0.9, 0.9, 0.9)
+        this.currentOffset = nextOffset.multiply(0.1, 0.1, 0.1)
     }
 
     data class Point(val fromPoint: Vec3d, val toPoint: Vec3d, val box: Box, val cutOffBox: Box)
+
+    enum class AimSituation {
+        FOR_THE_FUTURE,
+        FOR_NEXT_TICK,
+        FOR_NOW;
+
+        val isNear: Boolean
+            get() = this == FOR_NEXT_TICK || this == FOR_NOW
+
+    }
 
 }

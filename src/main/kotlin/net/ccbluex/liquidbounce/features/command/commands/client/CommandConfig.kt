@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.api.AutoSettings
@@ -71,7 +70,7 @@ object CommandConfig {
                                         ConfigSystem.autoConfigGson)
                                 }
                             }.onFailure {
-                                chat(red(command.result("failedToLoad", variable(name))))
+                                chat(markAsError(command.result("failedToLoad", variable(name))))
                             }.onSuccess {
                                 chat(regular(command.result("loaded", variable(name))))
                             }
@@ -87,7 +86,7 @@ object CommandConfig {
                                     ConfigSystem.autoConfigGson)
                             }
                         }.onFailure {
-                            chat(red(command.result("failedToLoad", variable(name))))
+                            chat(markAsError(command.result("failedToLoad", variable(name))))
                         }.onSuccess {
                             chat(regular(command.result("loaded", variable(name))))
                         }

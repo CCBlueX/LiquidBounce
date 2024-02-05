@@ -161,7 +161,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             val yaw = player.lastYaw
             val pitch = player.lastPitch
 
-            val velocity = getHypotheticalArrowVelocity(player, false)
+            val velocity = getHypotheticalArrowVelocity(false)
 
             val vX = -MathHelper.sin(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
             val vY = -MathHelper.sin(pitch.toRadians()) * velocity
@@ -228,7 +228,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(rotationConfigurable)
         }
 
-        private val targetRenderer = tree(OverlayTargetRenderer(this.module!!))
+        private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
 
         val tickRepeatable = repeatable {
@@ -369,34 +369,30 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     }
 
     @Suppress("MaxLineLength")
-    private fun predictBow(
+    fun predictBow(
         target: Vec3d,
         assumeElongated: Boolean,
     ): BowPredictionResult {
-        val player = player
-
         val travelledOnX = sqrt(target.x * target.x + target.z * target.z)
 
-        val velocity: Float = getHypotheticalArrowVelocity(player, assumeElongated)
+        val velocity = getHypotheticalArrowVelocity(assumeElongated)
+
+        val yaw = (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f
+        val pitch = (-Math.toDegrees(atan(
+            (velocity * velocity - sqrt(
+                velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2
+                    * target.y * (velocity * velocity)))
+                ) / (0.006f * travelledOnX),
+        ))).toFloat()
 
         return BowPredictionResult(
-            Rotation(
-                (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
-                (
-                        -Math.toDegrees(
-                            atan(
-                                (velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX),
-                            ),
-                        )
-                        ).toFloat(),
-            ),
+            Rotation(yaw, pitch),
             velocity,
             travelledOnX,
         )
     }
 
     private fun getHypotheticalArrowVelocity(
-        player: ClientPlayerEntity,
         assumeElongated: Boolean,
     ): Float {
         var velocity: Float =

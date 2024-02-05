@@ -16,12 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -54,6 +55,7 @@ object CommandClient {
         .subcommand(infoCommand())
         .subcommand(browserCommand())
         .subcommand(integrationCommand())
+        .subcommand(languageCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -154,6 +156,43 @@ object CommandClient {
             .handler { command, args ->
                 chat(regular("Resetting client JCEF browser..."))
                 IntegrationHandler.updateIntegrationBrowser()
+            }.build()
+        )
+        .build()
+
+    private fun languageCommand() = CommandBuilder.begin("language")
+        .hub()
+        .subcommand(CommandBuilder.begin("list")
+            .handler { command, args ->
+                chat(regular("Available languages:"))
+                for (language in LanguageManager.knownLanguages) {
+                    chat(regular("-> $language"))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("set")
+            .parameter(
+                ParameterBuilder.begin<String>("language")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                    .build()
+            ).handler { command, args ->
+                val language = LanguageManager.knownLanguages.find { it.equals(args[0] as String, true) }
+                if (language == null) {
+                    chat(regular("Language not found."))
+                    return@handler
+                }
+
+                chat(regular("Setting language to ${language}..."))
+                LanguageManager.overrideLanguage = language
+
+                ConfigSystem.storeConfigurable(LanguageManager)
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("unset")
+            .handler { command, args ->
+                chat(regular("Unset override language..."))
+                LanguageManager.overrideLanguage = ""
+                ConfigSystem.storeConfigurable(LanguageManager)
             }.build()
         )
         .build()

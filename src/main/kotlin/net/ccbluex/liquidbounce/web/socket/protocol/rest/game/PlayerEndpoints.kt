@@ -23,9 +23,12 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.item.createItem
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
 internal fun RestNode.setupPlayerRestApi() {
     get("/player") {
@@ -83,6 +86,32 @@ internal fun RestNode.setupPlayerRestApi() {
 
         val commandRequest = decode<CommandRequest>(it.content)
         network.sendChatCommand(commandRequest.message)
+        httpOk(JsonObject())
+    }
+
+    post("/player/respawn") {
+        val player = mc.player ?: return@post httpForbidden("Player is null")
+
+        player.requestRespawn()
+        httpOk(JsonObject())
+    }
+
+    post("/player/give") {
+        val player = mc.player ?: return@post httpForbidden("Player is null")
+
+        data class GiveRequest(val stack: String, val amount: Int = 1)
+
+        val giveRequest = decode<GiveRequest>(it.content)
+        val itemStack = createItem(giveRequest.stack, giveRequest.amount)
+        val emptySlot = player.inventory.emptySlot
+
+        if (emptySlot == -1) {
+            return@post httpForbidden("No empty slot")
+        }
+
+        net.ccbluex.liquidbounce.utils.client.player.inventory.setStack(emptySlot, itemStack)
+        network.sendPacket(CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot,
+            itemStack))
         httpOk(JsonObject())
     }
 }

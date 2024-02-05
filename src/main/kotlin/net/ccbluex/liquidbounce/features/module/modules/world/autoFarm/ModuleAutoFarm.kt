@@ -65,14 +65,14 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
     // The ticks to wait after interacting with something
-    private val interactDelay by intRange("InteractDelay", 2..3, 1..15)
+    private val interactDelay by intRange("InteractDelay", 2..3, 1..15, "ticks")
 
 //    private val extraSearchRange by float("extraSearchRange", 0F, 0F..3F)
 
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
     private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlace", true) {
-        val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20)
+        val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20, "ticks")
     }
 
     private val fortune by boolean("fortune", true)

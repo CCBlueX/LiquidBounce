@@ -95,12 +95,6 @@ class ParameterBuilder<T> private constructor(val name: String) {
         return this
     }
 
-    // TODO: Remove this once all commands are using translations
-    @Deprecated("Parameter descriptions are now translated using automatically generated translation keys")
-    fun description(description: String): ParameterBuilder<T> {
-        return this
-    }
-
     fun required(): ParameterBuilder<T> {
         this.required = true
 

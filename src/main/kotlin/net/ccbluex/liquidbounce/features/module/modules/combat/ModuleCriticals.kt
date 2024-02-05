@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.NoneChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -30,17 +27,16 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.entity.exactPosition
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
  * Criticals module
@@ -49,13 +45,22 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices("Mode", { PacketCrit }) {
         arrayOf(
-            NoneChoice(it), PacketCrit, JumpCrit
+            NoneChoice(it),
+            PacketCrit,
+            JumpCrit
         )
     }
 
     private object PacketCrit : Choice("Packet") {
+
+        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS, Mode.values())
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
 
         private object WhenSprinting : ToggleableConfigurable(ModuleCriticals, "WhenSprinting", true) {
             val unSprint by boolean("UnSprint", false)
@@ -82,15 +87,40 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 player.isSprinting = false
             }
 
-            val (x, y, z) = player.exactPosition
-
-            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.11, z, false))
-            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.1100013579, z, false))
-            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.0000013579, z, false))
+            when (mode) {
+                Mode.VANILLA -> {
+                    modVelocity(0.2)
+                    modVelocity(0.01)
+                }
+                Mode.NO_CHEAT_PLUS -> {
+                    modVelocity(0.11)
+                    modVelocity(0.1100013579)
+                    modVelocity(0.0000013579)
+                }
+                Mode.FALLING -> {
+                    modVelocity(0.0625)
+                    modVelocity(0.0625013579)
+                    modVelocity(0.0000013579)
+                }
+            }
         }
+
+        private fun modVelocity(mod: Double, onGround: Boolean = false) {
+            network.sendPacket(packetType.generatePacket().apply {
+                this.y += mod
+                this.onGround = onGround
+            })
+        }
+
+        enum class Mode(override val choiceName: String) : NamedChoice {
+            VANILLA("Vanilla"),
+            NO_CHEAT_PLUS("NoCheatPlus"),
+            FALLING("Falling")
+        }
+
     }
 
-    private object JumpCrit : Choice("Jump") {
+    object JumpCrit : Choice("Jump") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -109,7 +139,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val checkKillaura by boolean("CheckKillaura", false)
         val checkAutoClicker by boolean("CheckAutoClicker", false)
 
-        var adjustNextMotion = false
+        /**
+         * Should the upwards velocity be set to the `height`-value on next jump?
+         *
+         * Only true when auto-jumping is currently taking place so that normal jumps
+         * are not affected.
+         */
+        var adjustNextJump = false
 
         val movementInputEvent = handler<MovementInputEvent> {
             if (!isActive()) {
@@ -126,17 +162,23 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
             world.findEnemy(0f..range) ?: return@handler
 
+            // Change the jump motion only if the jump is a normal jump (small jumps, i.e. honey blocks
+            // are not affected) and currently.
             if (player.isOnGround) {
                 it.jumping = true
-                adjustNextMotion = true
+                adjustNextJump = true
             }
         }
 
         val onJump = handler<PlayerJumpEvent> { event ->
-            // Only change if there is nothing affecting the default motion (like a honey block)
-            if (event.motion == 0.42f && adjustNextMotion) {
+            // The `value`-option only changes *normal jumps* with upwards velocity 0.42.
+            // Jumps with lower velocity (i.e. from honey blocks) are not affected.
+            val isJumpNormal = event.motion == 0.42f
+
+            // Is the jump a normal jump and auto-jumping is enabled.
+            if (isJumpNormal && adjustNextJump) {
                 event.motion = height
-                adjustNextMotion = false
+                adjustNextJump = false
             }
         }
 
@@ -254,7 +296,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val ticksTillCrit = nextPossibleCrit.coerceAtLeast(ticksTillFall)
 
-        val hitProbability = 0.6f
+        val hitProbability = 0.75f
 
         val damageOnCrit = 0.5f * hitProbability
 

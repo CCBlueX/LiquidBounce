@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.openai.Gpt
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.openai.OpenAi
 import kotlin.concurrent.thread
 
 /**
@@ -37,9 +38,10 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
     private val openAiKey by text("OpenAiKey", "")
         .doNotInclude() // Keeps API key private
     private val model by text("Model", "gpt-4")
-    private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000)
-    private val cooldownMinutes by int("Cooldown", 2, 0..60)
-    private val bufferTime by int("BufferTime", 200, 0..500)
+    private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000,
+        "ms")
+    private val cooldownMinutes by int("Cooldown", 2, 0..60, "minutes")
+    private val bufferTime by int("BufferTime", 200, 0..500, "ms")
     private val triggerSentence by text("TriggerSentence", "Chat Game")
     private val includeTrigger by boolean("IncludeTrigger", true)
     private val serverName by text("ServerName", "Minecraft")
@@ -147,7 +149,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             chat("§aUnderstood question: $question")
 
             // Create new AI instance with OpenAI key
-            val ai = Gpt(openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
+            val ai = OpenAi(openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
 
             thread {
                 runCatching {
@@ -169,7 +171,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
                     // Send answer
                     network.sendChatMessage(answer)
                 }.onFailure {
-                    it.printStackTrace()
+                    logger.error("GPT AutoChatGame failed", it)
                     chat("§cFailed to answer question: ${it.message}")
                 }
             }
