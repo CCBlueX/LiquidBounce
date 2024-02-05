@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -307,6 +309,8 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
     val blockPos = rayTraceResult.blockPos
 
     if (immediate) {
+        EventManager.callEvent(BlockBreakingProgressEvent(blockPos))
+
         network.sendPacket(
             PlayerActionC2SPacket(
                 PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction

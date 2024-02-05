@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.item
 import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.client.MinecraftClient
 import net.minecraft.command.argument.ItemStackArgument
@@ -58,8 +59,6 @@ fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): Item
 fun findHotbarSlot(item: Item): Int? = findHotbarSlot { it.item == item }
 
 fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
-    val player = MinecraftClient.getInstance().player ?: return null
-
     return (0..8).firstOrNull { predicate(player.inventory.getStack(it)) }
 }
 
