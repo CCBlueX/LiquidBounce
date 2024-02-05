@@ -108,6 +108,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleBacktrack,
             ModuleSwordBlock,
             ModuleAutoShoot,
+            ModuleKeepSprint,
 
             // Exploit
             ModuleAbortBreaking,

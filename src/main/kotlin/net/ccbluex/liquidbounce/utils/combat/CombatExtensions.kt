@@ -28,9 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
-import net.ccbluex.liquidbounce.utils.client.interaction
-import net.ccbluex.liquidbounce.utils.client.isOldCombat
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
@@ -195,9 +193,6 @@ inline fun ClientWorld.getEntitiesBoxInRange(
 }
 
 fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
-    val player = mc.player ?: return
-    val network = mc.networkHandler ?: return
-
     EventManager.callEvent(AttackEvent(this))
 
     // Swing before attacking (on 1.8)
