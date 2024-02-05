@@ -36,14 +36,13 @@ import net.ccbluex.liquidbounce.utils.client.*
 
 object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
 
-    val blacklistedServer = mutableListOf(
+    private val blacklistedServer = mutableListOf(
         // Common anticheat test server
         "poke.sexy",
         "loyisa.cn",
         "anticheat-test.com"
     )
-
-    var requiresConfigLoad = false
+    private var requiresConfigLoad = false
 
     init {
         doNotInclude()
@@ -68,7 +67,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
     }
 
     val repeatable = repeatable {
-        if (requiresConfigLoad && mc.currentScreen == null) {
+        if (requiresConfigLoad && inGame && mc.currentScreen == null) {
             enable()
             requiresConfigLoad = false
         }
