@@ -19,10 +19,10 @@
  */
 package net.ccbluex.liquidbounce
 
-import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.api.v1.ClientApiV1
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -238,7 +238,7 @@ object LiquidBounce : Listenable {
             // Load settings list from API
             runCatching {
                 logger.info("Loading settings list from API...")
-                CommandConfig.cachedSettingsList = ClientApi.requestSettingsList()
+                CommandConfig.cachedSettingsList = ClientApiV1.requestSettingsList()
             }.onSuccess {
                 logger.info("Loaded ${CommandConfig.cachedSettingsList?.size} settings from API.")
             }.onFailure {

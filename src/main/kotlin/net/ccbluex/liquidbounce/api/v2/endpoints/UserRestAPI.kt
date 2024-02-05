@@ -15,11 +15,11 @@ class UserRestAPI(private val api: ClientApiV2) {
     /**
      * Use [ClientApiV2.loginWithCredentials] instead.
      */
-    internal fun login(username: String, password: String): String {
-        data class Credentials(val username: String, val password: String)
+    internal fun login(email: String, password: String): String {
+        data class Credentials(val email: String, val password: String)
         data class LoginResponse(val token: String)
 
-        val credentials = Credentials(username, password)
+        val credentials = Credentials(email, password)
 
         val response = api.post<LoginResponse, Credentials>("user/login", credentials)
         return response.token

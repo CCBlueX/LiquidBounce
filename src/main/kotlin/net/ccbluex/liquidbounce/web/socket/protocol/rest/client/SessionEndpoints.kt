@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.api.ClientApi.formatAvatarUrl
+import net.ccbluex.liquidbounce.api.v1.ClientApiV1.formatAvatarUrl
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.EventManager

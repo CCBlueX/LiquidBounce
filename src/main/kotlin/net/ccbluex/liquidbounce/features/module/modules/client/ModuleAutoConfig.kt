@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import net.ccbluex.liquidbounce.api.ClientApi
+import net.ccbluex.liquidbounce.api.v1.ClientApiV1
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
@@ -90,7 +90,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
 
         CommandConfig.loadingNow = true
         runCatching {
-            ClientApi.requestSettingsScript(autoConfig.settingId).apply {
+            ClientApiV1.requestSettingsScript(autoConfig.settingId).apply {
                 ConfigSystem.deserializeConfigurable(
                     ModuleManager.modulesConfigurable, reader(),
                     ConfigSystem.autoConfigGson)

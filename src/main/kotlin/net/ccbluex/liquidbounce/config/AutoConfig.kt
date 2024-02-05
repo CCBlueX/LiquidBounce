@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.config
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.AutoSettingsStatusType
-import net.ccbluex.liquidbounce.api.AutoSettingsType
+import net.ccbluex.liquidbounce.api.v1.AutoSettingsStatusType
+import net.ccbluex.liquidbounce.api.v1.AutoSettingsType
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.int
 import net.ccbluex.liquidbounce.authlib.utils.string

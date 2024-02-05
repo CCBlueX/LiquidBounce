@@ -61,8 +61,6 @@ class ClientApiV2(val jwtToken: String? = null) {
 
     fun proxy() = ProxyRestAPI(this)
 
-    fun config() = ConfigRestAPI(this)
-
     fun marketplace() = MarketplaceRestAPI(this)
 
     fun file() = FileRestAPI(this)
