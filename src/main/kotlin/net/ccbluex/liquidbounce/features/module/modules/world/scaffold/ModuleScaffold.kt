@@ -153,6 +153,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldAutoJumpFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
+        tree(ScaffoldBreezilyFeature)
     }
 
     @Suppress("UnusedPrivateProperty")
@@ -237,7 +238,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        var predictedPos = getPredictedPlacementPos() ?: player.pos
+        val predictedPos = getPredictedPlacementPos() ?: player.pos
 
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
@@ -276,10 +277,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
-        val rotation = if (aimMode == AimMode.GODBRIDGE) {
-            ScaffoldGodBridgeFeature.optimizeRotation(target)
-        } else {
-            target?.rotation
+        val rotation = when (aimMode) {
+            AimMode.GODBRIDGE -> ScaffoldGodBridgeFeature.optimizeRotation(target)
+            AimMode.BREEZILY -> ScaffoldBreezilyFeature.optimizeRotation(target)
+            else -> target?.rotation
         } ?: return@handler
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
@@ -343,6 +344,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
+
+        ScaffoldBreezilyFeature.doBreezilyIfNeeded(event)
     }
 
     fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
@@ -356,7 +359,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
         return when (aimMode) {
-            AimMode.CENTER, AimMode.GODBRIDGE -> CenterTargetPositionFactory
+            AimMode.CENTER, AimMode.GODBRIDGE, AimMode.BREEZILY -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
