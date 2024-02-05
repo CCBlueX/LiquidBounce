@@ -43,6 +43,20 @@ fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x +
 
 fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
 
+val BlockPos.hasEntrance: Boolean
+    get() {
+        val positionsAround = arrayOf(
+            this.offset(Direction.NORTH),
+            this.offset(Direction.SOUTH),
+            this.offset(Direction.EAST),
+            this.offset(Direction.WEST),
+            this.offset(Direction.UP),
+            this.offset(Direction.DOWN)
+        )
+
+        return positionsAround.any { it.getState()?.isAir == true }
+    }
+
 /**
  * Search blocks around the player in a cuboid
  */

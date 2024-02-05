@@ -26,10 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
-import net.ccbluex.liquidbounce.utils.block.doBreak
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
@@ -59,6 +56,16 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             it
         }
     }
+
+    /**
+     * Entrance requires the target block to have an entrance. It does not matter if we can see it or not.
+     * If this condition is true, it will override the wall range to range
+     * and act as if we were breaking normally.
+     *
+     * Useful for Hypixel and CubeCraft
+     */
+    private val entrance by boolean("Entrance", false)
+
     private val surroundings by boolean("Surroundings", true)
     private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
     private val delay by int("Delay", 0, 0..20, "ticks")
@@ -142,8 +149,16 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val (pos, state) = blockToProcess
 
+        val range = range.toDouble()
+        var wallRange = wallRange.toDouble()
+
+        // If the block has an entrance, we should ignore the wall range and act as if we are breaking normally.
+        if (entrance && pos.hasEntrance) {
+            wallRange = range
+        }
+
         val raytrace = raytraceBlock(
-            eyesPos, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
+            eyesPos, pos, state, range = range, wallsRange = wallRange
         )
 
         // Check if we got a free angle to the block
@@ -203,4 +218,5 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     enum class DestroyAction(override val choiceName: String) : NamedChoice {
         DESTROY("Destroy"), USE("Use")
     }
+
 }
