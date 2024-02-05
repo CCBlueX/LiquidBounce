@@ -1,8 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.parkour
 
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.horizontalComponent
 import net.minecraft.util.math.MathHelper
@@ -10,8 +7,8 @@ import net.minecraft.util.math.Vec3d
 import org.joml.Vector2d
 import kotlin.math.sqrt
 
-fun findCurrentPlatform(platforms: List<Platform>, nextGround: Vec3d): Platform {
-    return platforms.minBy { platform ->
+fun findNearestPlatform(platforms: List<Platform>, nextGround: Vec3d): Platform? {
+    return platforms.minByOrNull { platform ->
         platform.platformBlocks.minOf { Vec3d.ofCenter(it, 1.0).squaredDistanceTo(nextGround) }
     }
 }
@@ -46,7 +43,7 @@ fun intersectLineSegmentLineSegment(a1: Vector2d, a2: Vector2d, b1: Vector2d, b2
     // t =  \frac{(x_1 - x_3)(y_3-y_4)-(y_1-y_3)(x_3-x_4)}{(x_1-x_2)(y_3-y_4)-(y_1-y_2)(x_3-x_4)}
     // v = -\frac{(x_1 - x_2)(y_1-y_3)-(y_1-y_2)(x_1-x_3)}{(x_1-x_2)(y_3-y_4)-(y_1-y_2)(x_3-x_4)},
 
-    return Vector2d(x_1 + t * (x_2-x_1), y_1 + t * (y_2-y_1))
+    return Vector2d(x_1 + t * (x_2 - x_1), y_1 + t * (y_2 - y_1))
 }
 
 /**
@@ -61,16 +58,55 @@ fun approxJumpDistance(fallDistance: Double): Double? {
     return when {
         fallDistance < -1.25 -> null
         fallDistance < 0 -> 2.7
-        else -> -0.0148951 * fallDistance * fallDistance +  0.4674965 * fallDistance + 3.65566434 - 0.1
+        else -> -0.0148951 * fallDistance * fallDistance + 0.4674965 * fallDistance + 3.65566434 - 0.1
     }
 }
 
-fun tagReachable(platforms: List<Platform>, currentPlatform: Platform, currentPos: Vec3d, rotVec: Vec3d) {
-    val line = Line(currentPos, rotVec)
+fun tagReachable(platforms: List<Platform>, jumpOffPoint: Vec3d, currentPos: Vec3d) {
+    for (platform in platforms) {
+        val hasReachableEdge = platform.edges.any {
+            val platformY = (platform.platformBlocks[0].y + 1).toDouble()
+            val distance = sqrt(
+                it.squaredDistanceTo(
+                    Vec3d(
+                        jumpOffPoint.x,
+                        platformY,
+                        jumpOffPoint.z
+                    )
+                )
+            ) // Overhang of 0.3 on every block
 
+            val yDistance = currentPos.y - platformY
+
+            val jumpDistance = approxJumpDistance(yDistance) ?: return@any false
+
+            distance < jumpDistance
+        }
+
+        platform.reachable = hasReachableEdge
+    }
+}
+
+fun findJumpOffPosition(
+    currentPos: Vec3d,
+    rotVec: Vec3d,
+    currentPlatform: Platform
+): Pair<LineSegment, Vec3d>? {
     val targetLineSegment = LineSegment(currentPos, rotVec, 0.0..6.0)
 
-    val edgeCandidates = currentPlatform.edges.mapNotNull {
+    val edgeCandidates = findIntersects(currentPlatform, targetLineSegment, currentPos.y)
+
+    val eee = edgeCandidates.minByOrNull { targetLineSegment.squaredDistanceTo(it.second) }
+
+    return eee
+}
+
+fun findIntersects(
+    platform: Platform,
+    targetLineSegment: LineSegment,
+    platformY: Double
+): List<Pair<LineSegment, Vec3d>> {
+    val edgeCandidates = platform.edges.mapNotNull {
         val (a1, a2) = targetLineSegment.points
         val (b1, b2) = it.points
 
@@ -83,33 +119,10 @@ fun tagReachable(platforms: List<Platform>, currentPlatform: Platform, currentPo
         if (point == null)
             return@mapNotNull null
 
-        val jumpOffPoint = Vec3d(point.x, currentPos.y, point.y)
+        val jumpOffPoint = Vec3d(point.x, platformY, point.y)
 
         return@mapNotNull it to jumpOffPoint
     }
 
-    val eee = edgeCandidates.minByOrNull { targetLineSegment.squaredDistanceTo(it.second) }
-
-    if (eee == null) {
-        return
-    }
-
-    val (_, jumpOffPoint) = eee
-
-    ModuleDebug.debugGeometry(ModuleParkour, "XZ", ModuleDebug.DebuggedPoint(jumpOffPoint, Color4b.WHITE))
-
-    for (platform in platforms) {
-        val hasReachableEdge = platform.edges.any {
-            val platformY = (platform.platformBlocks[0].y + 1).toDouble()
-            val distance = sqrt(it.squaredDistanceTo(Vec3d(jumpOffPoint.x, platformY, jumpOffPoint.z))) - 0.3 * 2.0 // Overhang of 0.3 on every block
-
-            val yDistance = currentPos.y - platformY
-
-            val jumpDistance = approxJumpDistance(yDistance) ?: return@any false
-
-            distance < jumpDistance
-        }
-
-        platform.reachable = hasReachableEdge
-    }
+    return edgeCandidates
 }

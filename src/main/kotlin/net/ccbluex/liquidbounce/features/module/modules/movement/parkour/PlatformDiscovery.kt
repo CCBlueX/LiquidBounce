@@ -17,7 +17,8 @@ import java.text.DecimalFormat
 class Platform(
     val platformBlocks: List<BlockPos>,
     val edges: List<LineSegment>,
-    var reachable: Boolean? = null
+    var reachable: Boolean? = null,
+    var isTarget: Boolean = false
 ) {
 
 }
@@ -114,7 +115,7 @@ fun debugPlatforms(platforms: List<Platform>, currentPlatform: Platform?) {
 
         val alpha = if (platform.reachable == true) 255 else 64
 
-        val modColor = if (platform == currentPlatform) Color4b.BLACK else color.alpha(alpha)
+        val modColor = if (platform == currentPlatform) Color4b.BLACK else if (platform.isTarget) Color4b(127, 127, 127) else color.alpha(alpha)
 
         val group = platform.platformBlocks.map { ModuleDebug.DebuggedBox(Box.from(Vec3d.of(it)), modColor) }
 
@@ -179,12 +180,12 @@ private fun calculateEdgeLength(components: Map<BlockPos, EdgeDetectionComponent
     // Fail safe
     for (i in 1..500) {
         val currPos = pos.add(walkDirection.multiply(i))
-        val component = components[currPos] ?: return Vec3d.of(walkDirection).multiply(i - 0.5)
+        val component = components[currPos] ?: return Vec3d.of(walkDirection).multiply(i - 0.2)
 
         val edgePos = currPos.add(edgeDirection)
 
         if (edgePos in components || !isEdge(edgePos)) {
-            return Vec3d.of(walkDirection).multiply(i - 0.5)
+            return Vec3d.of(walkDirection).multiply(i - 0.8)
         }
 
         component.clearDirection(direction)
@@ -214,7 +215,7 @@ fun findEdges(components: ConnectedComponents): List<LineSegment> {
             val edgeLenRight = calculateEdgeLength(componentsLeft, pos, directionVector, directionBit, 1)
             val edgeLenLeft = calculateEdgeLength(componentsLeft, pos, directionVector, directionBit, -1)
 
-            val lineCenter = Vec3d.ofCenter(pos, 1.0).add(Vec3d.of(directionVector).multiply(0.5))
+            val lineCenter = Vec3d.ofCenter(pos, 1.0).add(Vec3d.of(directionVector).multiply(0.8))
 
             edges.add(LineSegment.from(lineCenter.add(edgeLenLeft), lineCenter.add(edgeLenRight)))
         }
