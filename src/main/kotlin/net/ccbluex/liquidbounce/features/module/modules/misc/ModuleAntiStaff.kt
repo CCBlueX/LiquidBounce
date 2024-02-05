@@ -52,9 +52,9 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
 
                 if (actions.contains(PlayerListS2CPacket.Action.UPDATE_LATENCY)) {
                     if (packet.entries.size != network.playerList?.size) {
-                        notification("AntiVanish", message("staffDetected"), NotificationEvent.Severity.INFO)
+                        alertAboutStaff()
                     } else {
-                        notification("AntiVanish", message("allClear"), NotificationEvent.Severity.INFO)
+                        notification("AntiStaff", message("vanishClear"), NotificationEvent.Severity.INFO)
                     }
                 }
             }
@@ -73,7 +73,10 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
                 return@sequenceHandler
             }
 
-            waitUntil { inGame }
+            // Keeps us from loading the staff list multiple times
+            serverStaffList[address] = arrayOf()
+
+            waitUntil { inGame && mc.currentScreen != null }
 
             // Loads the server config
             thread(name = "staff-loader") {
@@ -81,18 +84,22 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
                     val (code, staffList) =
                         HttpClient.requestWithCode("$CLIENT_CLOUD/staffs/$address", "GET")
 
-                    if (code == 200) {
-                        val staffs = staffList.lines().toTypedArray()
-                        serverStaffList[address] = staffs
+                    when (code) {
+                        200 -> {
+                            val staffs = staffList.lines().toTypedArray()
+                            serverStaffList[address] = staffs
 
-                        notification("AntiStaff", message("staffsLoaded", staffs, address),
-                            NotificationEvent.Severity.SUCCESS)
-                    } else {
-                        notification("AntiStaff", message("noStaffs", address),
+                            notification("AntiStaff", message("staffsLoaded", staffs, address),
+                                NotificationEvent.Severity.SUCCESS)
+                        }
+
+                        404 -> notification("AntiStaff", message("noStaffs", address),
+                            NotificationEvent.Severity.ERROR)
+                        else -> notification("AntiStaff", message("staffsFailed", address, code),
                             NotificationEvent.Severity.ERROR)
                     }
                 }.onFailure {
-                    notification("AntiStaff", message("noStaffs", address),
+                    notification("AntiStaff", message("staffsFailed", address, it.javaClass.simpleName),
                         NotificationEvent.Severity.ERROR)
                 }
             }
@@ -123,6 +130,8 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
                 }
             }
         }
+
+        override fun handleEvents() = ModuleAntiStaff.enabled && enabled
 
     }
 
