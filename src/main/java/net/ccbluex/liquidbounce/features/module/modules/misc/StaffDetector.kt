@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.*
-import java.io.File
 
 object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetecting = false) {
 
@@ -35,7 +34,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
 
     /**
      * BlocksMC Staff List
-     * Last Updated: 4/02/2024
+     * Last Updated: 5/02/2024
      */
     private val blocksMCStaff: Set<String> by lazy {
         loadStaffList("staffdetector/blocksmc-staff.txt")
@@ -236,16 +235,15 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
         val staffList = mutableSetOf<String>()
 
         try {
-            val file = javaClass.classLoader.getResource(filePath)?.toURI()?.let { File(it) }
+            val fileStream = javaClass.classLoader.getResourceAsStream(filePath)
 
-            if (file?.exists() == true) {
-                file.readText().let { content ->
-                    val names = content.split(",").map { it.trim() }
-                    staffList.addAll(names)
-                }
+            if (fileStream != null) {
+                val content = fileStream.reader().readText()
+                val names = content.split(",").map { it.trim() }
+                staffList.addAll(names)
                 Chat.print("§aSuccessfully loaded §9${staffList.size} §astaff names")
             } else {
-                Chat.print("§cFile not found: §9${file?.absolutePath}")
+                Chat.print("§cFile not found: §9$filePath")
             }
         } catch (e: Exception) {
             Chat.print("§cError loading staff names from file: §9${e.message}")
