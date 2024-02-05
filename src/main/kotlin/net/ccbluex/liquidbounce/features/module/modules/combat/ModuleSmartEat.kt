@@ -99,7 +99,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
         prefersHealthPot = player.health <= preferHealthPotHealth
     }
     private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
-        private object RenderSlot : ToggleableConfigurable(this.module, "RenderSlot", true) {
+        private object RenderSlot : ToggleableConfigurable(this, "RenderSlot", true) {
             private val offset by int("Offset", 26, 0..40)
             val renderHandler = handler<OverlayRenderEvent> {
                 renderEnvironmentForGUI {
