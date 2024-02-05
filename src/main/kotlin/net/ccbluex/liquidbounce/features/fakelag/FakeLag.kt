@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
@@ -162,6 +164,15 @@ object FakeLag : Listenable {
         if (it.world == null) {
             clear()
         }
+    }
+
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+
+        // Use LiquidBounce accent color
+        val color = Color4b(0x00, 0x80, 0xFF, 0xFF)
+
+        drawStrip(matrixStack, color)
     }
 
     fun flush() {

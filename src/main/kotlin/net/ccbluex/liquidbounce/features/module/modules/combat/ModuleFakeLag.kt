@@ -19,13 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
@@ -53,9 +50,6 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
     private val delay by int("Delay", 550, 0..1000, "ms")
 
     private val evadeArrows by boolean("EvadeArrows", true)
-
-    private val color by color("Color", Color4b(255, 179, 72, 255))
-    private val colorRainbow by boolean("Rainbow", false)
 
     fun shouldLag(packet: Packet<*>?): Boolean {
         if (!enabled || !inGame || player.isDead || player.isTouchingWater || mc.currentScreen != null) {
@@ -142,13 +136,6 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
                 FakeLag.flush(evadingPacket.idx + 1)
             }
         }
-    }
-
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val color = if (colorRainbow) rainbow() else color
-
-        FakeLag.drawStrip(matrixStack, color)
     }
 
 }
