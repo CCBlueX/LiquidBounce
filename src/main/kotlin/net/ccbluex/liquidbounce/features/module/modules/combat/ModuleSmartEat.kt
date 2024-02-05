@@ -64,7 +64,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
         get() = Hotbar.findBestItem(0) { _, itemStack ->
             getItemScore(itemStack)
         }
-
+    @Suppress("ReturnCount")
     private fun getItemScore(itemStack: ItemStack): Int {
         val item = itemStack.item
 
