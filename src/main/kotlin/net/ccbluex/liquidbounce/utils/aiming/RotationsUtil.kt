@@ -45,10 +45,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.atan2
-import kotlin.math.hypot
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
+import kotlin.math.*
 
 /**
  * Configurable to configure the dynamic rotation engine
@@ -247,7 +244,7 @@ object RotationManager : Listenable {
      * Calculate difference between two rotations
      */
     fun rotationDifference(a: Rotation, b: Rotation) =
-        hypot(angleDifference(a.yaw, b.yaw).toDouble(), (a.pitch - b.pitch).toDouble())
+        hypot(abs(angleDifference(a.yaw, b.yaw).toDouble()), abs((a.pitch - b.pitch).toDouble()))
 
     /**
      * Calculate difference between an entity and your rotation
