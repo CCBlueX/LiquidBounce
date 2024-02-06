@@ -66,7 +66,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
      * Q: Why this works?
      * A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
      */
-    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     val accelerateNow: Boolean
         get() {

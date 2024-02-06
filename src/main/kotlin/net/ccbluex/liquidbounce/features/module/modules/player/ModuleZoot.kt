@@ -43,7 +43,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
     private val notDuringMove by boolean("NotDuringMove", false)
     private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
 
-    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     val repeatable = repeatable {
         if (notInTheAir && !player.isOnGround) {

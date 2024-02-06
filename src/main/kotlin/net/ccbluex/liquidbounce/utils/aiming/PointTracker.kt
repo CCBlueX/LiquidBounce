@@ -88,8 +88,7 @@ class PointTracker(
     /**
      * Define the highest and lowest point of the box we want to aim at.
      */
-    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault,
-        PreferredBoxPart.values())
+    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault)
         .listen { new ->
             if (lowestPoint.isHigherThan(new)) {
                 lowestPoint
@@ -97,8 +96,7 @@ class PointTracker(
                 new
             }
         }
-    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault,
-        PreferredBoxPart.values())
+    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault)
         .listen { new ->
             if (!highestPoint.isHigherThan(new)) {
                 highestPoint

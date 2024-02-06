@@ -59,8 +59,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     private object PacketCrit : Choice("Packet") {
 
-        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS, Mode.values())
-        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS)
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
         private object WhenSprinting : ToggleableConfigurable(ModuleCriticals, "WhenSprinting", true) {
             val unSprint by boolean("UnSprint", false)

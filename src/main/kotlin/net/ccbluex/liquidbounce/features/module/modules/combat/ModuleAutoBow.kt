@@ -428,7 +428,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         private val notDuringMove by boolean("NotDuringMove", false)
         private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
 
-        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
         val tickRepeatable = repeatable {
             val currentItem = player.activeItem

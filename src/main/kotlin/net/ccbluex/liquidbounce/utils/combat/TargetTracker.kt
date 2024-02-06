@@ -36,7 +36,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
     var maxDistanceSquared: Double = 0.0
 
     val fov by float("FOV", 180f, 0f..180f)
-    val priority by enumChoice("Priority", defaultPriority, PriorityEnum.values())
+    val priority by enumChoice("Priority", defaultPriority)
 
     /**
      * Update should be called to always pick the best target out of the current world context

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleOverrideWeather : Module("OverrideWeather", Category.RENDER) {
 
-    val weather = enumChoice("Weather", WeatherType.SUNNY, WeatherType.values())
+    val weather = enumChoice("Weather", WeatherType.SUNNY)
 
     enum class WeatherType(override val choiceName: String) : NamedChoice {
         SUNNY("Sunny"), RAINY("Rainy"), SNOWY("Snowy");

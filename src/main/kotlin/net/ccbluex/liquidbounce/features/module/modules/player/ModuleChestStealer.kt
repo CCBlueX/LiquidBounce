@@ -43,7 +43,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val closeDelay by intRange("CloseDelay", 1..5, 0..20, "ticks")
     val quickSwaps by boolean("QuickSwaps", true)
     val viaFix by boolean("ViaFix(1.9+)", true)
-    val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
+    val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
     val checkTitle by boolean("CheckTitle", true)
 
     private val stolenSlots = mutableListOf<ContainerItemSlot>()
