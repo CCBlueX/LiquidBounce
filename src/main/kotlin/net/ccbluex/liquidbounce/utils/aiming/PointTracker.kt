@@ -83,7 +83,7 @@ class PointTracker(
     /**
      * The shrink box value will shrink the cut-off box by the given amount.
      */
-    private val shrinkBox by float("ShrinkBox", 0.4f, 0.0f..0.7f)
+    private val shrinkBox by float("ShrinkBox", 0.05f, 0.0f..0.1f)
 
     /**
      * Define the highest and lowest point of the box we want to aim at.
