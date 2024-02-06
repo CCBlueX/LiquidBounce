@@ -42,8 +42,11 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
     val closeDelay by intRange("CloseDelay", 1..5, 0..20, "ticks")
     val quickSwaps by boolean("QuickSwaps", true)
+    val viaFix by boolean("ViaFix(1.9+)", true)
     val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
     val checkTitle by boolean("CheckTitle", true)
+
+    private val stolenSlots = mutableListOf<ContainerItemSlot>()
 
     private var lastSlot = 0
 
@@ -51,6 +54,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     val repeatable = repeatable {
         if (!screenIsChest()) {
+            stolenSlots.clear()
             isFirstTime = true
             return@repeatable
         }
@@ -72,7 +76,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
 
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
+        if (!viaFix && quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
             return@repeatable
         }
 
@@ -83,6 +87,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         val delay = clickDelay.random()
 
         for (slot in sortedItemsToCollect) {
+            if (viaFix && stolenSlots.contains(slot)) continue
+
             val hasFreeSpace = (0..35).any { player.inventory.getStack(it).isNothing() }
 
             if (!hasFreeSpace && stillRequiredSpace > 0) {
@@ -95,10 +101,26 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 }
             }
 
-            // now we have some free space so we perform item move
-            interaction.clickSlot(
-                screen.screenHandler.syncId, slot.slotInContainer, 0, SlotActionType.QUICK_MOVE, player
-            )
+            // now we have some free space, so we perform item move
+            if (viaFix) {
+                interaction.clickSlot(
+                    screen.screenHandler.syncId,
+                    slot.slotInContainer,
+                    0,
+                    SlotActionType.SWAP,
+                    player
+                )
+
+                stolenSlots.add(slot)
+            } else {
+                interaction.clickSlot(
+                    screen.screenHandler.syncId,
+                    slot.slotInContainer,
+                    0,
+                    SlotActionType.QUICK_MOVE,
+                    player
+                )
+            }
 
             lastSlot = slot.slotInContainer
 
@@ -108,9 +130,15 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             }
         }
 
+        if (viaFix && quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
+            return@repeatable
+        }
+
         waitConditional(closeDelay.random()) { !screenIsChest() }
 
-        if (sortedItemsToCollect.isEmpty()) {
+        if (!viaFix && sortedItemsToCollect.isEmpty()) {
+            player.closeHandledScreen()
+        } else if (viaFix && !sortedItemsToCollect.none { stolenSlots.contains(it) }) {
             player.closeHandledScreen()
         }
     }
