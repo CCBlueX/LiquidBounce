@@ -48,7 +48,7 @@ class AimPlan(
      */
     val considerInventory: Boolean,
     val applyVelocityFix: Boolean,
-    val applyClientSide: Boolean
+    val changeLook: Boolean
 ) {
 
     val angleSmooth: AngleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
@@ -91,7 +91,7 @@ class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPoint
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
-        val rotationDifference = hypot(yawDifference, pitchDifference)
+        val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
 
         val straightLineYaw = abs(yawDifference / rotationDifference) * baseTurnSpeed.random().toFloat()
         val straightLinePitch = abs(pitchDifference / rotationDifference) * baseTurnSpeed.random().toFloat()
@@ -106,8 +106,7 @@ class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPoint
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
-        val rotationDifference = hypot(yawDifference, pitchDifference)
-
+        val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
         val factor = computeFactor(rotationDifference)
 
         val straightLineYaw = abs(yawDifference / rotationDifference) * factor
@@ -121,9 +120,8 @@ class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPoint
 
     private fun computeFactor(rotationDifference: Float): Float {
         val turnSpeed = baseTurnSpeed.random().toFloat()
-        return ((rotationDifference / 180) * turnSpeed)
+        return ((rotationDifference / 120) * turnSpeed)
             .coerceAtMost(180f)
-            .coerceAtLeast((4f..6f).random().toFloat())
     }
 
 }

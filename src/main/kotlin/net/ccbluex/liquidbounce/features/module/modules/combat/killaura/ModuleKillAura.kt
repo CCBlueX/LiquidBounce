@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -332,6 +333,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     clickScheduler.isClickOnNextTick(1) -> PointTracker.AimSituation.FOR_NEXT_TICK
                 else -> PointTracker.AimSituation.FOR_THE_FUTURE
             }
+            ModuleDebug.debugParameter(ModuleKillAura, "AimSituation", situation)
             val spot = getSpot(target, scanRange, situation) ?: continue
 
             renderTarget = target
@@ -366,7 +368,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
             // lock on target tracker
             RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false),
+                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, changeLook = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -379,6 +381,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             entity,
             situation
         )
+
+        ModuleDebug.debugGeometry(this, "Box",
+            ModuleDebug.DebuggedBox(box, Color4b.RED.alpha(60)))
+        ModuleDebug.debugGeometry(this, "CutOffBox",
+            ModuleDebug.DebuggedBox(cutOffBox, Color4b.GREEN.alpha(90)))
+
         val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
         // find best spot
