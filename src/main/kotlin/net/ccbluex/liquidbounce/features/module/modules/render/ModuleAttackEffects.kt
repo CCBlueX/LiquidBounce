@@ -42,7 +42,7 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
         CRITS("Crits")
     }
 
-    private val particle by enumChoice("Particle", Particle.FIRE, Particle.values())
+    private val particle by enumChoice("Particle", Particle.FIRE)
     private val amount by int("ParticleAmount", 1, 1..20)
     enum class Sound(override val choiceName: String) : NamedChoice {
         NONE("None"),
@@ -50,7 +50,7 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
         ORB("Orb")
     }
 
-    private val sound by enumChoice("Sound", Sound.ORB, Sound.values())
+    private val sound by enumChoice("Sound", Sound.ORB)
 
     val onAttack = handler<AttackEvent> { event ->
         val target = event.enemy

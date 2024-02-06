@@ -55,7 +55,7 @@ class RotationsConfigurable(
 ) : Configurable("Rotations") {
 
     val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
-    val smoothMode by enumChoice("SmoothMode", smootherMode, SmootherMode.entries.toTypedArray())
+    val smoothMode by enumChoice("SmoothMode", smootherMode)
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")

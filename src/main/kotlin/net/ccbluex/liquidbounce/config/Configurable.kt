@@ -117,9 +117,7 @@ open class Configurable(
     protected fun textArray(name: String, default: MutableList<String>) =
         value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
 
-    protected fun curve(name: String, default: Curves) =
-        ChooseListValue(name, default, Curves.values()).apply { this@Configurable.value.add(this) }
-
+    protected fun curve(name: String, default: Curves) = enumChoice(name, default)
 
     protected fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 
@@ -136,7 +134,11 @@ open class Configurable(
     protected fun fonts(name: String, default: MutableList<Fonts.FontInfo>) =
         value(name, default, ValueType.INVALID, ListValueType.FontDetail)
 
-    protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
+    internal inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
+        where T : Enum<T>, T: NamedChoice = enumChoice(name, default, enumValues<T>())
+
+    protected fun <T> enumChoice(name: String, default: T, choices: Array<T>): ChooseListValue<T>
+        where T : Enum<T>, T: NamedChoice =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
     protected fun choices(module: Module, name: String, active: Choice, choices: Array<Choice>) =

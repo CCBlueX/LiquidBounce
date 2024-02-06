@@ -63,8 +63,7 @@ import kotlin.math.sqrt
  */
 object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
-    private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL,
-        ThrowableType.entries.toTypedArray())
+    private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
 
     private val clickScheduler = tree(ClickScheduler(this, showCooldown = false))
 

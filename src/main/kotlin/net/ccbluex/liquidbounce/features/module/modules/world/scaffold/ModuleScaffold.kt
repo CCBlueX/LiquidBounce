@@ -98,8 +98,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
-    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
-    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL, AimTimingMode.values())
+    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
+    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
     internal val technique = choices("Technique", ScaffoldNormalTechnique,
         arrayOf(ScaffoldNormalTechnique, ScaffoldEagleTechnique, ScaffoldTellyTechnique))
 

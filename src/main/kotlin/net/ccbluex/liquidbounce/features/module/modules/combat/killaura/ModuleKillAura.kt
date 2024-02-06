@@ -87,7 +87,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
-    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL, AimTimingMode.values())
+    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
 
     // Target rendering
     private val targetRenderer = tree(WorldTargetRenderer(this))
@@ -110,7 +110,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         tree(TickBase)
     }
 
-    internal val raycast by enumChoice("Raycast", TRACE_ALL, values())
+    internal val raycast by enumChoice("Raycast", TRACE_ALL)
 
     private val failRate by int("FailRate", 0, 0..100, "%")
 

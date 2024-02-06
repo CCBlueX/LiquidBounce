@@ -56,7 +56,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     private object AutoResetOption : ToggleableConfigurable(this, "AutoReset", false) {
         val resetAfter by int("ResetAfter", 100, 1..1000)
-        val action by enumChoice("ResetAction", ResetAction.RESET, ResetAction.values())
+        val action by enumChoice("ResetAction", ResetAction.RESET)
     }
 
     private var dummyPlayer: OtherClientPlayerEntity? = null
