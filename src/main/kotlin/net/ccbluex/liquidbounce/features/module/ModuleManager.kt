@@ -207,7 +207,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoPlay,
 
             // Render
-            ModuleAnimation,
+            ModuleAnimations,
             ModuleAntiBlind,
             ModuleBlockESP,
             ModuleBreadcrumbs,
