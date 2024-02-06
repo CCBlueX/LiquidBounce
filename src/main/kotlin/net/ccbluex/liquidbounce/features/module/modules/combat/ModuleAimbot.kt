@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.events.PlayerLookEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import kotlin.math.abs
 
 /**
  * Aimbot module
@@ -70,7 +72,8 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
                 val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
                     PointTracker.AimSituation.FOR_NOW)
-                val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, toPoint)
+
+                val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
 
                 val spot = raytraceBox(
                     fromPoint,
@@ -79,13 +82,13 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                     wallsRange = 0.0,
                     rotationPreference = rotationPreference
                 ) ?: raytraceBox(
-                    fromPoint, box, range = range.toDouble(), wallsRange = 0.0, rotationPreference = rotationPreference
+                    fromPoint, box, range = range.toDouble(),
+                    wallsRange = 0.0,
+                    rotationPreference = rotationPreference
                 ) ?: continue
 
-                if (RotationManager.rotationDifference(
-                        player.rotation, spot.rotation
-                    ) <= rotationsConfigurable.resetThreshold
-                ) {
+                if (RotationManager.rotationDifference(player.rotation, spot.rotation)
+                    <= rotationsConfigurable.resetThreshold) {
                     break
                 }
 
@@ -95,4 +98,5 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
         return null
     }
+
 }

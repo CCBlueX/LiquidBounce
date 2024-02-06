@@ -48,7 +48,7 @@ class AimPlan(
      */
     val considerInventory: Boolean,
     val applyVelocityFix: Boolean,
-    val applyClientSide: Boolean
+    val changeLook: Boolean
 ) {
 
     val angleSmooth: AngleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
