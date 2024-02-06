@@ -84,7 +84,11 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
                     }
 
                     miscSpectatorList.forEach { player ->
-                        Chat.print("§d${player} §3is using the spectator menu (compass/left)")
+                        if (player in blocksMCStaff) {
+                            Chat.print("§c[STAFF] §d${player} §3is using the spectator menu (compass/left)")
+                        } else {
+                            Chat.print("§d${player} §3is using the spectator menu (compass/left)")
+                        }
                         checkedSpectator.remove(player)
                     }
 
@@ -104,9 +108,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             return
         }
 
-        val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0]
-
-        if (!otherSpectator) {
+        if (player in blocksMCStaff) {
             if (warn == "Chat") {
                 Chat.print("§c[STAFF] §d${player} §3is a spectators")
             } else {
@@ -123,30 +125,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
         attemptLeave = false
         checkedSpectator.add(player)
 
-        if (!attemptLeave) {
-            when (autoLeave.lowercase()) {
-                "off" -> return
-                "lobby" -> {
-                    if (!inGame) {
-                        mc.thePlayer.sendChatMessage("/lobby")
-                        attemptLeave = true
-                    }
-                }
-                else -> {
-                    if (inGame && (firstSlotItemStack?.item == Items.compass || firstSlotItemStack?.item == Items.bow)) {
-                        return
-                    }
-
-                    if (inGame) {
-                        mc.thePlayer.sendChatMessage("/leave")
-                    } else {
-                        mc.theWorld.sendQuittingDisconnectingPacket()
-                    }
-
-                    attemptLeave = true
-                }
-            }
-        }
+        autoLeave()
     }
 
     private fun notifyStaff() {
@@ -178,6 +157,10 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             }
         }
 
+        autoLeave()
+    }
+
+    private fun autoLeave() {
         val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0]
 
         if (!attemptLeave) {
