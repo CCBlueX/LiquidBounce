@@ -151,7 +151,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
-        val target = renderTarget ?: return
+        val target = targetTracker.lockedOnTarget ?: return
         renderEnvironmentForWorld(matrixStack) {
             targetRenderer.render(this, target, partialTicks)
         }
@@ -317,9 +317,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             range
         }
 
-        // Cleanup current render target
-        renderTarget = null
-
         // Find the newest target in range
         updateTargetWithRange(enemies, maximumRange)
     }
@@ -337,8 +334,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
             ModuleDebug.debugParameter(ModuleKillAura, "AimSituation", situation)
             val spot = getSpot(target, range.toDouble(), situation) ?: continue
-
-            renderTarget = target
 
             // lock on target tracker
             targetTracker.lock(target)
