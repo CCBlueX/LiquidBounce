@@ -171,7 +171,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             }
         }.groupBy(ArmorPiece::entitySlotId)
 
-        return armorPiecesGroupedBySlotId.values.mapNotNull { it.maxWithOrNull(ArmorComparator) }
+        val comparator = ArmorComparator(6.0F, armorPiecesGroupedBySlotId)
+
+        return armorPiecesGroupedBySlotId.values.mapNotNull { it.maxWithOrNull() }
     }
 
     /**

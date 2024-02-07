@@ -23,17 +23,22 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
+import net.minecraft.util.math.MathHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-object ArmorComparator : Comparator<ArmorPiece> {
+class ArmorComparator(
+    private val expectedDamage: Float,
+    private val otherDefensePoint: Float,
+    private val otherToughness: Float
+) : Comparator<ArmorPiece> {
     private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<Enchantment> = arrayOf(
         Enchantments.PROTECTION,
         Enchantments.PROJECTILE_PROTECTION,
         Enchantments.FIRE_PROTECTION,
         Enchantments.BLAST_PROTECTION
     )
-    private val ENCHANTMENT_FACTORS = floatArrayOf(1.5f, 0.4f, 0.39f, 0.38f)
+    private val ENCHANTMENT_FACTORS = floatArrayOf(1.2f, 0.4f, 0.39f, 0.38f)
     private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
     private val OTHER_ENCHANTMENTS: Array<Enchantment> = arrayOf(
         Enchantments.FEATHER_FALLING,
@@ -103,20 +108,31 @@ object ArmorComparator : Comparator<ArmorPiece> {
         return compare
     }
 
-    private fun getThresholdedDamageReduction(itemStack: ItemStack): Float {
+    private fun getThresholdedDamageReduction(itemStack: ItemStack, ): Float {
         val item = itemStack.item as ArmorItem
 
-        return getDamageReduction(
-            item.material.getProtection(item.type),
-            0
+        return getDamageFactor(
+            damage = expectedDamage,
+            defensePoints = otherDefensePoint + item.material.getProtection(item.type).toFloat(),
+            toughness = otherToughness + item.material.toughness
         ) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
     }
 
-    private fun getDamageReduction(defensePoints: Int, toughness: Int): Float {
-        return 1 - 20.0f.coerceAtMost((defensePoints / 5.0f).coerceAtLeast(defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f
+    /**
+     * Calculates the base damage factor (totalDamage = damage x damageFactor).
+     *
+     * See https://minecraft.fandom.com/wiki/Armor#Mechanics.
+     *
+     * @param damage the expected damage (the damage reduction depends on the dealt damage)
+     */
+    fun getDamageFactor(damage: Float, defensePoints: Float, toughness: Float): Float {
+        val f = 2.0f + toughness / 4.0f
+        val g = MathHelper.clamp(defensePoints - damage / f, defensePoints * 0.2f, 20.0f)
+
+        return 1.0f - g / 25.0f
     }
 
-    private fun getThresholdedEnchantmentDamageReduction(itemStack: ItemStack): Float {
+    fun getThresholdedEnchantmentDamageReduction(itemStack: ItemStack): Float {
         var sum = 0.0f
 
         for (i in DAMAGE_REDUCTION_ENCHANTMENTS.indices) {

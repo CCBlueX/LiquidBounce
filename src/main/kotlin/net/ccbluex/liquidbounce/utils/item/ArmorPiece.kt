@@ -31,4 +31,13 @@ class ArmorPiece(val itemSlot: ItemSlot) {
         get() = itemSlot.slotType == ItemSlotType.ARMOR
     val isReachableByHand: Boolean
         get() = itemSlot.slotType == ItemSlotType.HOTBAR
+
+    val toughness: Float
+        get() = (itemSlot.itemStack.item as ArmorItem).toughness
+    val defensePoints: Float
+        get() {
+            val item = itemSlot.itemStack.item as ArmorItem
+
+            return item.material.getProtection(item.type).toFloat()
+        }
 }
