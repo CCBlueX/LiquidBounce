@@ -57,6 +57,8 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
+import net.minecraft.util.math.MathHelper
+import org.apache.commons.lang3.RandomUtils
 import kotlin.random.Random
 
 /**
@@ -87,6 +89,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
+    private val mouseInertia by boolean("MouseInertia", false)
 
     // Target rendering
     private val targetRenderer = tree(WorldTargetRenderer(this))
@@ -120,6 +123,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
+
+    private var mouseInertiaRotation = Rotation(yaw = 0f, pitch = 0f)
+    private var lastMouseInertiaTime = 0L
+    private var mouseInertiaTick = 0
 
     override fun disable() {
         targetTracker.cleanup()
@@ -214,12 +221,28 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Determine if we should attack the target or someone else
-        val rotation = if (aimTimingMode == AimTimingMode.ON_TICK) {
+        var rotation = if (aimTimingMode == AimTimingMode.ON_TICK) {
             getSpot(target, range.toDouble(), PointTracker.AimSituation.FOR_NOW)?.rotation
                 ?: RotationManager.serverRotation
         } else {
             RotationManager.serverRotation
         }
+
+        if (mouseInertia) {
+            if (System.currentTimeMillis() - lastMouseInertiaTime > mouseInertiaTick * 50) {
+                mouseInertiaTick = RandomUtils.nextInt(0, 10)
+                mouseInertiaRotation = Rotation(
+                    yaw = MathHelper.wrapDegrees(RotationManager.serverRotation.yaw - rotation.yaw),
+                    pitch = RotationManager.serverRotation.pitch - rotation.pitch
+                )
+            }
+
+            rotation = Rotation(
+                yaw = RotationManager.serverRotation.yaw + mouseInertiaRotation.yaw / (mouseInertiaTick * RandomUtils.nextFloat(0.5f, 1.5f)),
+                pitch = RotationManager.serverRotation.pitch + mouseInertiaRotation.pitch / (mouseInertiaTick * RandomUtils.nextFloat(0.5f, 1.5f))
+            )
+        }
+
         val chosenEntity: Entity
 
         if (raycast != TRACE_NONE) {
@@ -400,7 +423,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
         // find best spot
-        val spot = raytraceBox(
+        var spot = raytraceBox(
             eyes, cutOffBox,
             // Since [range] is squared, we need to square root
             range = range,
