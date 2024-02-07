@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.script.bindings.api.JsMovementUtil.strafe
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -52,7 +53,6 @@ object SpeedVulcan286 : Choice("Vulcan286") {
                 Timer.requestTimerSpeed(0.45f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
             } else {
                 Timer.requestTimerSpeed(1.125f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
-                player.strafe()
             }
         } else {
             Timer.requestTimerSpeed(1.0f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
