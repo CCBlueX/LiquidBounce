@@ -14,7 +14,7 @@
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$internal suspend fun Sequence&lt;*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit)</ID>
-    <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$private fun updateEnemySelection()</ID>
+    <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$private fun updateTargetWithRange(enemies: Iterable&lt;LivingEntity>, range: Float)</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:ScaffoldBreezilyFeature.kt$ScaffoldBreezilyFeature$fun doBreezilyIfNeeded(event: MovementInputEvent)</ID>
