@@ -24,6 +24,9 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /*
     * Bypasses Vulcan 285
@@ -33,13 +36,19 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.Modu
 
 internal object LiquidWalkVulcan : Choice("Vulcan285") {
 
-    private val motion by float("Motion", 0.8f, 0.2f..1.75f)
+    private val motion by float("Motion", 0.8f, 0.2f..1.4f)
 
     override val parent: ChoiceConfigurable
         get() = ModuleLiquidWalk.modes
 
     val repeatable = repeatable {
-        if (player.isSubmergedInWater)
+        if (player.isSubmergedInWater) {
+            Timer.requestTimerSpeed(1.125f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
             player.velocity.y = motion.toDouble()
+        } else {
+            Timer.requestTimerSpeed(1.0f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
+        }
     }
+
 }
+
