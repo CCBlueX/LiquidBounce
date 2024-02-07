@@ -58,7 +58,8 @@ open class Value<T : Any>(
     internal val loweredName
         get() = name.lowercase()
 
-    @Exclude @ProtocolExclude
+    @Exclude
+    @ProtocolExclude
     private val listeners = mutableListOf<ValueListener<T>>()
 
     /**
@@ -66,14 +67,16 @@ open class Value<T : Any>(
      *
      * @see
      */
-    @Exclude @ProtocolExclude
+    @Exclude
+    @ProtocolExclude
     var doNotInclude = false
         private set
 
     /**
      * If true, value will not be included in generated RestAPI config
      */
-    @Exclude @ProtocolExclude
+    @Exclude
+    @ProtocolExclude
     var notAnOption = false
         private set
 
@@ -93,6 +96,45 @@ open class Value<T : Any>(
 
     operator fun setValue(u: Any?, property: KProperty<*>, t: T) {
         set(t)
+    }
+
+    @ScriptApi
+    @JvmName("getValue")
+    fun getValue(): Any {
+        val v = get()
+        return when (v) {
+            is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
+            is IntRange -> arrayOf(v.first, v.last)
+            else -> v
+        }
+    }
+
+    @ScriptApi
+    @JvmName("setValue")
+    @Suppress("UNCHECKED_CAST")
+    fun setValue(t: org.graalvm.polyglot.Value) = run {
+        set(
+            when (value) {
+                is ClosedFloatingPointRange<*> -> {
+                    val a = (t.`as`(Array<Double>::class.java)) as Array<Double>
+                    require(a.size == 2)
+                    (a.first().toFloat()..a.last().toFloat()) as T
+                }
+
+                is IntRange -> {
+                    val a = (t.`as`(Array<Int>::class.java)) as Array<Int>
+                    require(a.size == 2)
+                    (a.first()..a.last()) as T
+                }
+
+                is Float -> (t.`as`(Double::class.java) as Double).toFloat() as T
+                is Int -> t.`as`(Int::class.java) as T
+                is String -> t.`as`(String::class.java) as T
+                is MutableList<*> -> (t.`as`(Array<String>::class.java) as Array<String>).toMutableList() as T
+                is Boolean -> (t.`as`(Boolean::class.java)) as T
+                else -> t as T
+            }
+        )
     }
 
     fun get() = value
@@ -166,8 +208,8 @@ open class Value<T : Any>(
     }
 
     open fun setByString(string: String) {
-        when(this.valueType) {
-            ValueType.BOOLEAN      -> {
+        when (this.valueType) {
+            ValueType.BOOLEAN -> {
                 val newValue = when (string.lowercase(Locale.ROOT)) {
                     "true", "on" -> true
                     "false", "off" -> false
@@ -176,48 +218,57 @@ open class Value<T : Any>(
 
                 set(newValue as T)
             }
-            ValueType.FLOAT        -> {
+
+            ValueType.FLOAT -> {
                 val newValue = string.toFloat()
 
                 set(newValue as T)
             }
-            ValueType.FLOAT_RANGE  -> {
+
+            ValueType.FLOAT_RANGE -> {
                 val split = string.split("..")
                 if (split.size != 2) throw IllegalArgumentException()
                 val newValue = split[0].toFloat()..split[1].toFloat()
 
                 set(newValue as T)
             }
-            ValueType.INT          -> {
+
+            ValueType.INT -> {
                 val newValue = string.toInt()
 
                 set(newValue as T)
             }
-            ValueType.INT_RANGE    -> {
+
+            ValueType.INT_RANGE -> {
                 val split = string.split("..")
                 if (split.size != 2) throw IllegalArgumentException()
                 val newValue = split[0].toInt()..split[1].toInt()
 
                 set(newValue as T)
             }
-            ValueType.TEXT         -> {
+
+            ValueType.TEXT -> {
                 this.value = string as T
             }
-            ValueType.TEXT_ARRAY   -> {
+
+            ValueType.TEXT_ARRAY -> {
                 val newValue = string.split(",").toMutableList()
                 set(newValue as T)
             }
-            ValueType.COLOR        -> {
-                if (string.startsWith("#"))  {
+
+            ValueType.COLOR -> {
+                if (string.startsWith("#")) {
                     set(Color4b(Color(string.substring(1).toInt(16))) as T)
                 } else {
                     set(Color4b(Color(string.toInt())) as T)
                 }
             }
-            ValueType.BLOCK        -> {
+
+            ValueType.BLOCK -> {
                 set(Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
             }
-            ValueType.BLOCKS       -> {
+
+            ValueType.BLOCKS -> {
                 val blocks = string.split(",").map {
                     findBlocksEndingWith(it).filter {
                         !it.defaultState.isAir
@@ -230,10 +281,12 @@ open class Value<T : Any>(
 
                 set(blocks as T)
             }
-            ValueType.ITEM         -> {
+
+            ValueType.ITEM -> {
                 set(Registries.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
             }
-            ValueType.ITEMS        -> {
+
+            ValueType.ITEMS -> {
                 val items = string.split(",").map {
                     Registries.ITEM.get(Identifier.fromCommandInput(StringReader(it)))
                 }.toMutableList()
@@ -244,7 +297,8 @@ open class Value<T : Any>(
 
                 set(items as T)
             }
-            ValueType.KEY          -> {
+
+            ValueType.KEY -> {
                 val newValue = try {
                     string.toInt()
                 } catch (e: NumberFormatException) {
@@ -253,6 +307,7 @@ open class Value<T : Any>(
 
                 set(newValue as T)
             }
+
             else -> error("unsupported value type")
         }
     }
@@ -316,8 +371,10 @@ class ChooseListValue<T : NamedChoice>(
         val newValue = choices.firstOrNull { it.choiceName == name }
 
         if (newValue == null) {
-            throw IllegalArgumentException("ChooseListValue `${this.name}` has no option named $name" +
-                " (available options are ${this.choices.joinToString { it.choiceName }})")
+            throw IllegalArgumentException(
+                "ChooseListValue `${this.name}` has no option named $name" +
+                    " (available options are ${this.choices.joinToString { it.choiceName }})"
+            )
         }
 
         this.value = newValue
@@ -339,7 +396,7 @@ interface NamedChoice {
 
 enum class ValueType {
     BOOLEAN,
-    FLOAT,FLOAT_RANGE,
+    FLOAT, FLOAT_RANGE,
     INT, INT_RANGE,
     TEXT, TEXT_ARRAY,
     COLOR,
