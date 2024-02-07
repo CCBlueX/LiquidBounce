@@ -32,34 +32,36 @@ object JsSetting {
     fun boolean(name: String, default: Boolean) = value(name, default, ValueType.BOOLEAN)
 
     @JvmName("float")
-    fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.FLOAT)
+    fun float(name: String, default: Float, min: Double, max: Double, suffix: String = "") =
+        rangedValue(name, default, min.toFloat()..max.toFloat(), suffix, ValueType.FLOAT)
 
     @JvmName("floatRange")
     fun floatRange(
         name: String,
-        default: ClosedFloatingPointRange<Float>,
-        range: ClosedFloatingPointRange<Float>,
+        lowDefault: Double,
+        highDefault: Double,
+        min: Double,
+        max: Double,
         suffix: String = ""
-    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE)
+    ) = rangedValue(name, lowDefault.toFloat()..highDefault.toFloat(), min.toFloat()..max.toFloat(), suffix, ValueType.FLOAT_RANGE)
 
     @JvmName("int")
-    fun int(name: String, default: Int, range: IntRange, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.INT)
+    fun int(name: String, default: Int, min: Int, max: Int, suffix: String = "") =
+        rangedValue(name, default, min..max, suffix, ValueType.INT)
 
     @JvmName("key")
     fun key(name: String, default: Int) = value(name, default, ValueType.KEY)
 
     @JvmName("intRange")
-    fun intRange(name: String, default: IntRange, range: IntRange, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.INT_RANGE)
+    fun intRange(name: String, lowDefault: Int, highDefault: Int, min: Int, max: Int, suffix: String = "") =
+        rangedValue(name, lowDefault..highDefault, min..max, suffix, ValueType.INT_RANGE)
 
     @JvmName("text")
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
     @JvmName("textArray")
-    fun textArray(name: String, default: MutableList<String>) =
-        value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
+    fun textArray(name: String, default: Array<String>) =
+        value(name, default.toMutableList(), ValueType.TEXT_ARRAY, ListValueType.String)
 
     private fun <T : Any> value(
         name: String,
