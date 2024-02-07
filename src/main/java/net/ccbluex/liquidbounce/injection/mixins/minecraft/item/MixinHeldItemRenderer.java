@@ -139,7 +139,11 @@ public abstract class MixinHeldItemRenderer {
         return instance.getItemUseTimeLeft();
     }
 
-    @ModifyVariable(method = "applyEquipOffset", at = @At("HEAD"), index = 3, argsOnly = true)
+    @ModifyArg(method = "renderFirstPersonItem", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applyEquipOffset(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/Arm;F)V",
+            ordinal = 4
+    ), index = 2)
     private float applyEquipOffset(float equipProgress) {
         if (ModuleAnimations.INSTANCE.getEnabled() && !ModuleAnimations.INSTANCE.getEquipOffset()) {
             return 0.0F;

@@ -49,6 +49,10 @@ import kotlin.math.sin
  */
 abstract class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
+    init {
+        doNotInclude()
+    }
+
     abstract val appearance: ChoiceConfigurable
 
     open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {

@@ -213,8 +213,17 @@ object AccountManager : Configurable("Accounts"), Listenable {
                 // Yay, it worked! Callback with account.
                 logger.info("Logged in as new account ${account.profile?.username}")
 
-                // Add account to list of accounts
-                accounts += account
+                val existingAccount = accounts.find {
+                    it.type == account.type && it.profile?.username == account.profile?.username
+                }
+
+                if (existingAccount != null) {
+                    // Replace existing account
+                    accounts[accounts.indexOf(existingAccount)] = account
+                } else {
+                    // Add account to list of accounts
+                    accounts += account
+                }
 
                 runCatching {
                     success(account)
