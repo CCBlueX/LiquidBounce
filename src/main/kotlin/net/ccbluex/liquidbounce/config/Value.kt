@@ -112,29 +112,31 @@ open class Value<T : Any>(
     @ScriptApi
     @JvmName("setValue")
     @Suppress("UNCHECKED_CAST")
-    fun setValue(t: org.graalvm.polyglot.Value) = run {
+    fun setValue(t: org.graalvm.polyglot.Value) = runCatching {
         set(
             when (value) {
                 is ClosedFloatingPointRange<*> -> {
-                    val a = (t.`as`(Array<Double>::class.java)) as Array<Double>
+                    val a = t.`as`(Array<Double>::class.java)
                     require(a.size == 2)
                     (a.first().toFloat()..a.last().toFloat()) as T
                 }
 
                 is IntRange -> {
-                    val a = (t.`as`(Array<Int>::class.java)) as Array<Int>
+                    val a = t.`as`(Array<Int>::class.java)
                     require(a.size == 2)
                     (a.first()..a.last()) as T
                 }
 
-                is Float -> (t.`as`(Double::class.java) as Double).toFloat() as T
+                is Float -> t.`as`(Double::class.java).toFloat() as T
                 is Int -> t.`as`(Int::class.java) as T
                 is String -> t.`as`(String::class.java) as T
-                is MutableList<*> -> (t.`as`(Array<String>::class.java) as Array<String>).toMutableList() as T
-                is Boolean -> (t.`as`(Boolean::class.java)) as T
-                else -> t as T
+                is MutableList<*> -> t.`as`(Array<String>::class.java).toMutableList() as T
+                is Boolean -> t.`as`(Boolean::class.java) as T
+                else -> throw IllegalStateException()
             }
         )
+    }.onFailure {
+        logger.error("Could not set value ${this.value}")
     }
 
     fun get() = value
