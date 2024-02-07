@@ -67,31 +67,29 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 continue
             }
 
-            if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
-                val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
-                    PointTracker.AimSituation.FOR_NOW)
+            val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
+                PointTracker.AimSituation.FOR_NOW)
 
-                val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
+            val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
 
-                val spot = raytraceBox(
-                    fromPoint,
-                    cutOffBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0,
-                    rotationPreference = rotationPreference
-                ) ?: raytraceBox(
-                    fromPoint, box, range = range.toDouble(),
-                    wallsRange = 0.0,
-                    rotationPreference = rotationPreference
-                ) ?: continue
+            val spot = raytraceBox(
+                fromPoint,
+                cutOffBox,
+                range = range.toDouble(),
+                wallsRange = 0.0,
+                rotationPreference = rotationPreference
+            ) ?: raytraceBox(
+                fromPoint, box, range = range.toDouble(),
+                wallsRange = 0.0,
+                rotationPreference = rotationPreference
+            ) ?: continue
 
-                if (RotationManager.rotationDifference(player.rotation, spot.rotation)
-                    <= rotationsConfigurable.resetThreshold) {
-                    break
-                }
-
-                return spot.rotation
+            if (RotationManager.rotationDifference(player.rotation, spot.rotation)
+                <= rotationsConfigurable.resetThreshold) {
+                break
             }
+
+            return spot.rotation
         }
 
         return null
