@@ -34,7 +34,13 @@ object JsSetting {
     @JvmName("float")
     fun float(name: String, default: Double, range: Array<Double>, suffix: String = ""): RangedValue<Float> {
         require(range.size == 2)
-        return rangedValue(name, default.toFloat(), range.first().toFloat()..range.last().toFloat(), suffix, ValueType.FLOAT)
+        return rangedValue(
+            name,
+            default.toFloat(),
+            range.first().toFloat()..range.last().toFloat(),
+            suffix,
+            ValueType.FLOAT
+        )
     }
 
     @JvmName("floatRange")
@@ -70,7 +76,13 @@ object JsSetting {
     ): RangedValue<IntRange> {
         require(default.size == 2)
         require(range.size == 2)
-        return rangedValue(name, default.first()..default.last(), range.first()..range.last(), suffix, ValueType.INT_RANGE)
+        return rangedValue(
+            name,
+            default.first()..default.last(),
+            range.first()..range.last(),
+            suffix,
+            ValueType.INT_RANGE
+        )
     }
 
     @JvmName("key")

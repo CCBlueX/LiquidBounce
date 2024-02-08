@@ -48,6 +48,7 @@ typealias ValueListener<T> = (T) -> T
 /**
  * Value based on generics and support for readable names and description
  */
+@Suppress("TooManyFunctions")
 open class Value<T : Any>(
     @SerializedName("name") open val name: String,
     @SerializedName("value") internal var value: T,
@@ -132,7 +133,7 @@ open class Value<T : Any>(
                 is String -> t.`as`(String::class.java) as T
                 is MutableList<*> -> t.`as`(Array<String>::class.java).toMutableList() as T
                 is Boolean -> t.`as`(Boolean::class.java) as T
-                else -> throw IllegalStateException()
+                else -> error("Unsupported value type ${value}")
             }
         )
     }.onFailure {
