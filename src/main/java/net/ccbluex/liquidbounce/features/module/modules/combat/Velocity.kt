@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
@@ -44,7 +45,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         "Mode", arrayOf(
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
-            "GhostBlock", "Vulcan", "Matrix"
+            "GhostBlock", "Vulcan", "Matrix", "Intave"
         ), "Simple"
     )
 
@@ -123,6 +124,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     // Jump
     private var limitUntilJump = 0
+
+    // Intave
+    private var intaveTick = 0
 
     override val tag
         get() = if (mode == "Simple" || mode == "Legit") {
@@ -258,6 +262,17 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     thePlayer.motionY *= vertical.toDouble()
                 }
             }
+
+            "intave" -> {
+                intaveTick++
+                if (hasReceivedVelocity && mc.thePlayer.hurtTime == 2) {
+                    if (mc.thePlayer.onGround && intaveTick % 2 == 0) {
+                        mc.thePlayer.tryJump()
+                        intaveTick = 0
+                    }
+                    hasReceivedVelocity = false
+                }
+            }
         }
     }
 
@@ -292,7 +307,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             when (mode.lowercase()) {
                 "simple" -> handleVelocity(event)
 
-                "aac", "reverse", "smoothreverse", "aaczero", "ghostblock" -> hasReceivedVelocity = true
+                "aac", "reverse", "smoothreverse", "aaczero", "ghostblock", "intave" -> hasReceivedVelocity = true
 
                 "jump" -> {
                     // TODO: Recode and make all velocity modes support velocity direction checks
