@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.script.bindings.features.JsCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Hand
@@ -34,7 +33,7 @@ import org.graalvm.polyglot.Value
  */
 object JsContextProvider {
 
-    internal fun setupUsefulContext(context: Value) = context.apply {
+    internal fun setupUsefulContext(bindings: Value) = bindings.apply {
         // Class bindings
         // -> Client API
         putMember("Setting", JsSetting)
@@ -59,6 +58,7 @@ object JsContextProvider {
         putMember("BlockUtil", JsBlockUtil)
         putMember("MovementUtil", JsMovementUtil)
         putMember("ReflectionUtil", JsReflectionUtil)
+        putMember("ParameterValidator", JsParameterValidator(bindings))
     }
 
 }

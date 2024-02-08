@@ -23,105 +23,94 @@ package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.Parameter
+import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.STRING_VALIDATOR
-import java.util.function.Function
+import org.graalvm.polyglot.Value
 
-/**
- * Command.createCommand({
- *     name: "localconfig",
- *     aliases: ["lc"],
- *     hub: true,
- *     subcommands: [
- *         Command.createCommand({
- *             name: "load",
- *             parameters: [
- *                 Command.createParameter({
- *                     name: "name",
- *                     required: true,
- *                     verifiedBy(v) {
- *
- *                     },
- *                     autoCompletedWith(v) {
- *
- *                     }
- *                 })
- *             ]
- *         })
- *     ],
- *     onExecute(args) {
- *
- *     }
- * })
- */
-class JsCommandBuilder(private val commandObject: Map<String, Any>) {
+class JsCommandBuilder(private val commandObject: Value) {
 
-    private fun createCommand(commandObject: Map<String, Any>): Command {
+    private fun createCommand(commandObject: Value): Command {
+        val aliases = if (commandObject.hasMember("aliases")) {
+            commandObject.getMember("aliases").`as`(Array<String>::class.java)
+        } else {
+            emptyArray()
+        }
+
+        @Suppress("SpreadOperator")
         val commandBuilder = CommandBuilder
-            .begin(commandObject["name"] as String)
-            .alias(*(commandObject["aliases"] as? Array<String>) ?: emptyArray())
+            .begin(commandObject.getMember("name").asString())
+            .alias(*aliases)
 
-        if (commandObject.containsKey("subcommands")) {
-            val subcommands = commandObject["subcommands"] as List<Map<String, Any>>
+        if (commandObject.hasMember("subcommands")) {
+            val subcommands = commandObject.getMember("subcommands").`as`(Array<Value>::class.java)
 
             for (subcommand in subcommands) {
                 commandBuilder.subcommand(createCommand(subcommand))
             }
         }
 
-        if (commandObject.containsKey("parameters")) {
-            val parameters = commandObject["parameters"] as List<Map<String, Any>>
+        if (commandObject.hasMember("parameters")) {
+            val parameters = commandObject.getMember("parameters").`as`(Array<Value>::class.java)
 
             for (parameter in parameters) {
                 commandBuilder.parameter(createParameter(parameter))
             }
         }
 
-        if (commandObject.containsKey("onExecute")) {
-            val handler = commandObject["onExecute"] as Function<Array<Any>, Unit>
+        if (commandObject.hasMember("onExecute")) {
+            val handler = commandObject.getMember("onExecute")
 
             commandBuilder.handler { _, args ->
-                println()
-                for (arg in args) {
-                    println(arg)
-                }
-                handler.apply(args)
+                handler.execute(args)
             }
         }
 
-        if (commandObject.containsKey("hub") && commandObject["hub"] as Boolean) {
+        if (commandObject.hasMember("hub") && commandObject.getMember("hub").asBoolean()) {
             commandBuilder.hub()
         }
 
         return commandBuilder.build()
     }
 
-    /**
-     *  Command.createParameter({
-     *      name: "name",
-     *      required: true,
-     *      verifiedBy(v) { },
-     *      autoCompletedWith(v) { }
-     *  })
-     */
-    private fun createParameter(parameterObject: Map<String, Any>): Parameter<*> {
+    private fun createParameter(parameterObject: Value): Parameter<*> {
         val parameterBuilder =
-            ParameterBuilder.begin<String>(parameterObject["name"] as String)
+            ParameterBuilder.begin<String>(parameterObject.getMember("name").asString())
 
-        if (parameterObject.containsKey("required") && parameterObject["required"] as Boolean) {
+        if (parameterObject.hasMember("required") && parameterObject.getMember("required").asBoolean()) {
             parameterBuilder.required()
         } else {
             parameterBuilder.optional()
         }
 
-        if (parameterObject.containsKey("vararg") && parameterObject["vararg"] as Boolean) {
+        if (parameterObject.hasMember("vararg") && parameterObject.getMember("vararg").asBoolean()) {
             parameterBuilder.vararg()
         }
 
-        // todo: add support for custom verifiedBy and autoCompletedWith
-        parameterBuilder.verifiedBy(STRING_VALIDATOR)
-        parameterBuilder.useMinecraftAutoCompletion()
+        if (parameterObject.hasMember("getCompletions")) {
+            val completions = parameterObject.getMember("getCompletions")
+
+            parameterBuilder.autocompletedWith { begin, args ->
+                (completions.execute(begin, args).`as`(Array<String>::class.java)).toList()
+            }
+        }
+
+        if (parameterObject.hasMember("validate")) {
+            val validator = parameterObject.getMember("validate")
+
+            parameterBuilder.verifiedBy { param ->
+                val result = validator.execute(param)
+                if (result.getMember("accept").asBoolean()) {
+                    ParameterValidationResult.ok(result.getMember("value").asHostObject())
+                } else {
+                    ParameterValidationResult.error(result.getMember("error").asString())
+                }
+            }
+        } else {
+            parameterBuilder.verifiedBy(STRING_VALIDATOR)
+        }
+
 
         return parameterBuilder.build()
     }
