@@ -62,8 +62,9 @@ class JsCommandBuilder(private val commandObject: Value) {
         if (commandObject.hasMember("onExecute")) {
             val handler = commandObject.getMember("onExecute")
 
+            @Suppress("SpreadOperator")
             commandBuilder.handler { _, args ->
-                handler.execute(args)
+                handler.execute(*args)
             }
         }
 
@@ -101,8 +102,9 @@ class JsCommandBuilder(private val commandObject: Value) {
 
             parameterBuilder.verifiedBy { param ->
                 val result = validator.execute(param)
+
                 if (result.getMember("accept").asBoolean()) {
-                    ParameterValidationResult.ok(result.getMember("value").asHostObject())
+                    ParameterValidationResult.ok(toObject(result.getMember("value")))
                 } else {
                     ParameterValidationResult.error(result.getMember("error").asString())
                 }
@@ -113,6 +115,14 @@ class JsCommandBuilder(private val commandObject: Value) {
 
 
         return parameterBuilder.build()
+    }
+
+    private fun <T> toObject(v: Value): T {
+        return if (v.isHostObject) {
+            v.asHostObject()
+        } else {
+            v as T
+        }
     }
 
     fun build(): Command {
