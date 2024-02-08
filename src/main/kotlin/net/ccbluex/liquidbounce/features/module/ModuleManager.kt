@@ -320,6 +320,9 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     @ScriptApi
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
+    @JvmName("getModules")
+    fun getModules() = modules
+
     @JvmName("getModuleByName")
     @ScriptApi
     fun getModuleByName(module: String) = find { it.name.equals(module, true) }
