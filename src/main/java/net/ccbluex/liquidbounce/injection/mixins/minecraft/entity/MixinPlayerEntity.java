@@ -184,12 +184,12 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
     private void hookSlowVelocity(PlayerEntity instance, Vec3d velocity) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            return;
+            if (ModuleKeepSprint.INSTANCE.getEnabled()) {
+                return;
+            }
         }
 
-        if (ModuleKeepSprint.INSTANCE.getEnabled()) {
-            return;
-        }
+
 
         instance.setVelocity(velocity);
     }
@@ -197,11 +197,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
     private void hookSlowVelocity(PlayerEntity instance, boolean b) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            return;
-        }
-
-        if (ModuleKeepSprint.INSTANCE.getEnabled() && !b) {
-            return;
+            if (ModuleKeepSprint.INSTANCE.getEnabled() && !b) {
+                return;
+            }
         }
 
         instance.setSprinting(b);
