@@ -38,6 +38,7 @@ class JsCommandBuilder(private val commandObject: Value) {
             emptyArray()
         }
 
+        @Suppress("SpreadOperator")
         val commandBuilder = CommandBuilder
             .begin(commandObject.getMember("name").asString())
             .alias(*aliases)
