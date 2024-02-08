@@ -39,7 +39,7 @@ enum class Category(val readableName: String) {
          * Gets an enum by its readable name
          */
         fun fromReadableName(name: String): Category? {
-            return values().find { name.equals(it.name, true) }
+            return entries.find { name.equals(it.name, true) }
         }
     }
 
