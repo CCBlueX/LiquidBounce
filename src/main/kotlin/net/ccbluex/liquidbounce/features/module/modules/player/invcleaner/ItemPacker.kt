@@ -73,6 +73,9 @@ class ItemPacker {
             }
         }
 
+        // Keep items that should be kept
+        itemsToFillIn.filter(ItemFacet::shouldKeep).forEach { this.usefulItems.add(it.itemSlot) }
+
         return moves
     }
 

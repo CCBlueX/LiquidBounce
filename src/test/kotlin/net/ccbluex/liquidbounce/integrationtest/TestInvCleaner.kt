@@ -10,13 +10,13 @@ import net.ccbluex.tenacc.utils.*
 
 @TACCTestClass("TestInvCleaner")
 class TestInvCleaner {
-
+// TENACC_TEST_PROVIDER=net.ccbluex.liquidbounce.integrationtest.TenaccProvider
     @TACCTest(name = "testLoopRegressions", scenary = "generic/one_block_platform.nbt", timeout = 1000)
     fun runTest(adapter: TACCSequenceAdapter) {
         adapter.startSequence {
             val cases = arrayOf(
                 "/invcleaner/9bb7f967fe02fe08.nbttxt",
-                "/invcleaner/93bce905c1b7e016.nbttxt"
+                "/invcleaner/93bce905c1b7e016.nbttxt",
             )
 
             for (case in cases) {
