@@ -19,10 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.item.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.ArmorParameter
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
@@ -101,7 +106,40 @@ enum class ItemSortChoice(
     NONE("None", null),
 }
 
-object ItemCategorization {
+/**
+ * @param expectedFullArmor what is the expected armor material when we have full armor (full iron, full dia, etc.)
+ */
+class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND) {
+    private val bestPiecesIfFullArmor: List<ItemSlot>
+    private val armorComparator: ArmorComparator
+
+    init {
+        val findBestArmorPieces = ArmorEvaluation.findBestArmorPieces(slots = availableItems)
+
+        this.armorComparator = ArmorEvaluation.getArmorComparatorFor(findBestArmorPieces)
+
+        val fullProtection = ArmorItem.Type.entries.sumOf { expectedFullArmor.getProtection(it) }
+        val fullToughness = ArmorItem.Type.entries.size * expectedFullArmor.toughness
+
+        val armorSlots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+
+        val armorParameterForSlot = armorSlots.zip(ArmorItem.Type.entries).associate { (slotType, armorType) ->
+            val armorParameter = ArmorParameter(
+                defensePoints = (fullProtection - expectedFullArmor.getProtection(armorType)).toFloat(),
+                toughness = fullToughness,
+            )
+
+            slotType to armorParameter
+        }
+
+        val armorComparatorForFullArmor = ArmorEvaluation.getArmorComparatorForParameters(armorParameterForSlot)
+
+        this.bestPiecesIfFullArmor = ArmorEvaluation.findBestArmorPiecesWithComparator(
+            availableItems,
+            armorComparatorForFullArmor
+        ).values.mapNotNull { it?.itemSlot }
+    }
+
     /**
      * Returns a list of facets an item represents. For example an axe is an axe, but also a sword:
      * - (SANDSTONE_BLOCK, 64) => `[Block(SANDSTONE_BLOCK, 64)]`
@@ -114,7 +152,7 @@ object ItemCategorization {
         }
 
         return when (val item = slot.itemStack.item) {
-            is ArmorItem -> arrayOf(ArmorItemFacet(slot))
+            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
             is SwordItem -> {
                 arrayOf(
                     SwordItemFacet(slot),

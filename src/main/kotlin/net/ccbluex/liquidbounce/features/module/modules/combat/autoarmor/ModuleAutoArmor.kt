@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -24,9 +24,20 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.ALL_SLOTS_IN_INVENTORY
+import net.ccbluex.liquidbounce.utils.item.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.ArmorParameter
+import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
+import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.item.canCloseMainInventory
+import net.ccbluex.liquidbounce.utils.item.isInInventoryScreen
+import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
+import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -38,7 +49,6 @@ import net.minecraft.screen.slot.SlotActionType
  * Automatically put on the best armor.
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
-
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
     private val hotbar by boolean("Hotbar", true)
 
@@ -52,9 +62,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         }
 
         // Filter out already equipped armor pieces
-        val bestArmor = findBestArmorPiecesInInventory().filter { !it.isAlreadyEquipped }
+        val armorToEquip = ArmorEvaluation.findBestArmorPieces().values.filterNotNull().filter { !it.isAlreadyEquipped }
 
-        for ((armorIndex, armorPiece) in bestArmor.withIndex()) {
+        for ((armorIndex, armorPiece) in armorToEquip.withIndex()) {
             if (!canOperate(player)) {
                 return@repeatable
             }
@@ -76,7 +86,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 locked = true
 
                 // Wait if this was not the last armor piece we want to equip or a swap has occurred
-                if (armorIndex != bestArmor.lastIndex || hasToSwapPiece) {
+                if (armorIndex != armorToEquip.lastIndex || hasToSwapPiece) {
                     val delay = inventoryConstraints.clickDelay.random()
 
                     // Ignore checking if there is no delay
@@ -163,17 +173,6 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         return true
     }
 
-    private fun findBestArmorPiecesInInventory(): List<ArmorPiece> {
-        val armorPiecesGroupedBySlotId = ALL_SLOTS_IN_INVENTORY.mapNotNull { slot ->
-            return@mapNotNull when (slot.itemStack.item) {
-                is ArmorItem -> ArmorPiece(slot)
-                else -> null
-            }
-        }.groupBy(ArmorPiece::entitySlotId)
-
-        return armorPiecesGroupedBySlotId.values.mapNotNull { it.maxWithOrNull(ArmorComparator) }
-    }
-
     /**
      * Central move-function of this module. There are following options:
      * 1. If the slot is in the hotbar, we do a right-click on it (if possible)
@@ -241,7 +240,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     }
 
     private fun setStatus(locked: Boolean, invClick: Boolean = locked) {
-        this.locked = locked
+        ModuleAutoArmor.locked = locked
         clickedInInventory = invClick
     }
 
