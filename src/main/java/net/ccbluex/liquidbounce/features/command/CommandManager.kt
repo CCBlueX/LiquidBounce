@@ -25,6 +25,7 @@ object CommandManager {
     fun registerCommands() {
         commands.clear()
 
+        registerCommand(AutoDisableCommand)
         registerCommand(BindCommand)
         registerCommand(VClipCommand)
         registerCommand(HClipCommand)
