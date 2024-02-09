@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.hypixel.HypixelHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other.*

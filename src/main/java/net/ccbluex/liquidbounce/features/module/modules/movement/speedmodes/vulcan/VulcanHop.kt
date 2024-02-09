@@ -17,10 +17,10 @@ object VulcanHop : SpeedMode("VulcanHop") {
         if (isMoving) {
             if (mc.thePlayer.onGround) {
                 mc.thePlayer.tryJump()
-                mc.timer.timerSpeed = 0.45f
-                strafe(0.45f)
+                mc.timer.timerSpeed = 0.4645f
+                strafe(0.475f)
             } else {
-                mc.timer.timerSpeed = 1.125f
+                mc.timer.timerSpeed = 1.145f
             }
         } else {
             mc.timer.timerSpeed = 1f
