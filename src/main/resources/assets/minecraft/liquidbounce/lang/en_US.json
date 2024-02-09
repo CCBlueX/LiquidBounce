@@ -23,6 +23,8 @@
 
         "module.autoClicker.description": "Constantly clicks when holding down a mouse button.",
 
+        "module.autoDisable.description": "Automatically disables selected module based on specified events.",
+
         "module.autoLeave.description": "Automatically makes you leave the server whenever your health is low.",
 
         "module.autoPot.description": "Automatically throws healing potions.",

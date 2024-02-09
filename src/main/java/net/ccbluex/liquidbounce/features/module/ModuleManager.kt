@@ -70,6 +70,7 @@ object ModuleManager : Listenable {
             AutoBow,
             AutoBreak,
             AutoClicker,
+            AutoDisable,
             AutoFish,
             AutoProjectile,
             AutoPlay,
