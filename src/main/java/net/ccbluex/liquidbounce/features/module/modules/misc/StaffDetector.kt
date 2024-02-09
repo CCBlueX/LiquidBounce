@@ -34,14 +34,14 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
 
     /**
      * BlocksMC Staff List
-     * Last Updated: 5/02/2024
+     * Last Updated: 7/02/2024
      */
     private val blocksMCStaff: Set<String> by lazy {
         loadStaffList("staffdetector/blocksmc-staff.txt")
     }
 
     private fun checkedStaffRemoved() {
-        val onlinePlayers = mc.netHandler?.playerInfoMap?.mapNotNull  { it?.gameProfile?.name }
+        val onlinePlayers = mc.netHandler?.playerInfoMap?.mapNotNull { it?.gameProfile?.name }
 
         onlinePlayers?.toSet()?.let { checkedStaff.retainAll(it) }
     }
@@ -84,7 +84,11 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
                     }
 
                     miscSpectatorList.forEach { player ->
-                        Chat.print("§d${player} §3is using the spectator menu (compass/left)")
+                        if (player in blocksMCStaff) {
+                            Chat.print("§c[STAFF] §d${player} §3is using the spectator menu §e(compass/left)")
+                        } else {
+                            Chat.print("§d${player} §3is using the spectator menu §e(compass/left)")
+                        }
                         checkedSpectator.remove(player)
                     }
 
@@ -104,9 +108,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             return
         }
 
-        val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0]
-
-        if (!otherSpectator) {
+        if (player in blocksMCStaff) {
             if (warn == "Chat") {
                 Chat.print("§c[STAFF] §d${player} §3is a spectators")
             } else {
@@ -123,30 +125,11 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
         attemptLeave = false
         checkedSpectator.add(player)
 
-        if (!attemptLeave) {
-            when (autoLeave.lowercase()) {
-                "off" -> return
-                "lobby" -> {
-                    if (!inGame) {
-                        mc.thePlayer.sendChatMessage("/lobby")
-                        attemptLeave = true
-                    }
-                }
-                else -> {
-                    if (inGame && (firstSlotItemStack?.item == Items.compass || firstSlotItemStack?.item == Items.bow)) {
-                        return
-                    }
-
-                    if (inGame) {
-                        mc.thePlayer.sendChatMessage("/leave")
-                    } else {
-                        mc.theWorld.sendQuittingDisconnectingPacket()
-                    }
-
-                    attemptLeave = true
-                }
-            }
+        if (player !in blocksMCStaff) {
+            return
         }
+
+        autoLeave()
     }
 
     private fun notifyStaff() {
@@ -154,8 +137,8 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             return
         }
 
-        mc.netHandler.playerInfoMap.forEach { playerInfo ->
-            val player = playerInfo?.gameProfile?.name ?: return@forEach
+        mc.netHandler?.playerInfoMap?.mapNotNull { playerInfo ->
+            val player = playerInfo?.gameProfile?.name ?: return@mapNotNull
             val isStaff = blocksMCStaff.any { player.contains(it) }
 
             val condition = when {
@@ -175,35 +158,28 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
 
                 attemptLeave = false
                 checkedStaff.add(player)
+
+                autoLeave()
             }
         }
+    }
 
-        val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0]
+    private fun autoLeave() {
+        val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0] ?: return
+
+        if (inGame && (firstSlotItemStack.item == Items.compass || firstSlotItemStack.item == Items.bow)) {
+            return
+        }
 
         if (!attemptLeave) {
             when (autoLeave.lowercase()) {
                 "off" -> return
-                "lobby" -> {
-                    if (!inGame) {
-                        mc.thePlayer.sendChatMessage("/lobby")
-                        attemptLeave = true
-                    }
-                }
-                else -> {
-                    if (inGame && (firstSlotItemStack?.item == Items.compass || firstSlotItemStack?.item == Items.bow)) {
-                        return
-                    }
-
-                    if (inGame) {
-                        mc.thePlayer.sendChatMessage("/leave")
-                    } else {
-                        mc.theWorld.sendQuittingDisconnectingPacket()
-                    }
-
-                    attemptLeave = true
-                }
+                "leave" -> mc.thePlayer.sendChatMessage("/leave")
+                "lobby" -> mc.thePlayer.sendChatMessage("/lobby")
+                "quit" -> mc.theWorld.sendQuittingDisconnectingPacket()
             }
         }
+        attemptLeave = true
     }
 
     private fun handleOtherChecks(packet: Packet<*>) {
@@ -227,6 +203,10 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
     }
 
     private fun handleStaff() {
+        if (mc.thePlayer == null || mc.theWorld == null) {
+            return
+        }
+
         checkedStaffRemoved()
         notifyStaff()
     }
