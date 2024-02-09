@@ -68,6 +68,7 @@ object AutoDisable : Module("AutoDisable", ModuleCategory.MISC, gameDetecting = 
             modulesList.forEach { module ->
                 if (module.state) {
                     module.state = false
+                    module.onDisable()
                 }
             }
 
