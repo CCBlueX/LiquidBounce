@@ -12,15 +12,25 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object VulcanHop : SpeedMode("VulcanHop") {
     override fun onUpdate() {
-        if (mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder) return
+        val player = mc.thePlayer ?: return
+        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (isMoving) {
-            if (mc.thePlayer.onGround) {
-                mc.thePlayer.tryJump()
-                mc.timer.timerSpeed = 0.4645f
-                strafe(0.475f)
+            if (player.isAirBorne && player.fallDistance > 2) {
+                mc.timer.timerSpeed = 1f
+                return
+            }
+
+            if (player.onGround) {
+                player.tryJump()
+                if (player.motionY > 0) {
+                    mc.timer.timerSpeed = 1.1253f
+                }
+                strafe(0.4815f)
             } else {
-                mc.timer.timerSpeed = 1.145f
+                if (player.motionY < 0) {
+                    mc.timer.timerSpeed = 0.8935f
+                }
             }
         } else {
             mc.timer.timerSpeed = 1f
