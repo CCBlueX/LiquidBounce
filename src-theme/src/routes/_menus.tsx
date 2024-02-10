@@ -6,8 +6,6 @@ import AnimatedOutlet from "~/components/animated-outlet";
 
 import { ReactComponent as Logo } from "~/assets/logo.svg";
 
-import background from "~/assets/background.png";
-
 import styles from "./_menus.module.css";
 
 export function Component() {
@@ -15,12 +13,6 @@ export function Component() {
 
   return (
     <div className={styles.wrapper}>
-      <img
-        src={background}
-        aria-hidden="true"
-        className={styles.background}
-        alt=""
-      />
       <div className={styles.container}>
         <motion.header
           initial={{ opacity: 0, y: -200 }}

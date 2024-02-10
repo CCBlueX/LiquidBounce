@@ -18,10 +18,6 @@ export function Component() {
 
   return (
     <div className={styles.wrapper}>
-      <img
-        src="./background.png"
-        className="absolute inset-0 w-full h-full -z-10"
-      />
       <div className={styles.container}>
         <ul className={styles.categories}>
           {Object.keys(modulesByCategory).map((category) => (
