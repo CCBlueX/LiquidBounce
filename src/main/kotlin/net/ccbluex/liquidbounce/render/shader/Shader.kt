@@ -5,131 +5,122 @@
  */
 package net.ccbluex.liquidbounce.render.shader
 
-import net.ccbluex.liquidbounce.utils.client.logger
-import org.apache.commons.io.IOUtils
+import com.mojang.blaze3d.platform.GlConst
+import com.mojang.blaze3d.platform.GlStateManager
+import net.minecraft.client.gl.GlProgramManager
+import net.minecraft.client.gl.GlUniform
+import net.minecraft.client.gl.VertexBuffer
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.VertexFormats
 import org.lwjgl.opengl.*
-import org.lwjgl.opengl.ARBShaderObjects.*
-import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL20.glGetUniformLocation
-import org.lwjgl.opengl.GL20.glUseProgram
-import java.io.File
-import java.io.IOException
-import java.nio.file.Files
+import java.io.Closeable
 
-abstract class Shader {
-    var programId = 0
-        private set
+const val QUALITY = 1.2f
 
-    private val uniformsMap = mutableMapOf<String, Int>()
+/**
+ * A GLSL shader renderer. Takes a vertex and fragment shader and renders it to the canvas.
+ *
+ * Inspired from the GLSL Panorama Shader Mod
+ * https://github.com/magistermaks/mod-glsl
+ */
+class Shader(vertex: String, fragment: String) : Closeable {
 
-    constructor(fragmentShader: String) {
-        val vertexShaderID: Int
-        val fragmentShaderID: Int
+    private var buffer: VertexBuffer
+    private var canvas: ScalableCanvas
 
-        try {
-            val vertexStream = javaClass.getResourceAsStream("/assets/liquidbounce/shaders/vertex.vert")
-            vertexShaderID = createShader(IOUtils.toString(vertexStream), ARBVertexShader.GL_VERTEX_SHADER_ARB)
-            IOUtils.closeQuietly(vertexStream)
+    private var program = 0
 
-            val fragmentStream = javaClass.getResourceAsStream("/assets/liquidbounce/shaders/fragment/$fragmentShader")
-            fragmentShaderID = createShader(IOUtils.toString(fragmentStream), ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
-            IOUtils.closeQuietly(fragmentStream)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return
+    inner class UniformPointer(val name: String) {
+        val pointer = GlUniform.getUniformLocation(program, name)
+    }
+
+    private val timeLocation: Int
+    private val mouseLocation: Int
+    private val resolutionLocation: Int
+
+    private var time = 0f
+
+    init {
+        val vertProgram = compileShader(vertex, GlConst.GL_VERTEX_SHADER)
+        val fragProgram = compileShader(fragment, GlConst.GL_FRAGMENT_SHADER)
+
+        this.canvas = ScalableCanvas()
+        this.buffer = VertexBuffer(VertexBuffer.Usage.DYNAMIC)
+        this.program = GlStateManager.glCreateProgram()
+
+        GlStateManager.glAttachShader(program, vertProgram)
+        GlStateManager.glAttachShader(program, fragProgram)
+        GlStateManager.glLinkProgram(program)
+
+        // Checks link status
+        if (GlStateManager.glGetProgrami(program, GlConst.GL_LINK_STATUS) == GlConst.GL_FALSE) {
+            val log = GlStateManager.glGetProgramInfoLog(program, 1024)
+            throw RuntimeException("Filed to link shader program! Caused by: $log")
         }
 
-        if (vertexShaderID == 0 || fragmentShaderID == 0)
-            return
+        // cleanup
+        GlStateManager.glDeleteShader(vertProgram)
+        GlStateManager.glDeleteShader(fragProgram)
 
-        programId = glCreateProgramObjectARB()
+        // bake buffer data
+        val builder = Tessellator.getInstance().buffer
+        builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
+        builder.vertex(-1.0, -1.0, 1.0).texture(0f, 0f)
+            .color(1f, 1f, 1f, 1f).next()
+        builder.vertex(1.0, -1.0, 1.0).texture(1f, 0f)
+            .color(1f, 1f, 1f, 1f).next()
+        builder.vertex(1.0, 1.0, 1.0).texture(1f, 1f)
+            .color(1f, 1f, 1f, 1f).next()
+        builder.vertex(-1.0, 1.0, 1.0).texture(0f, 1f)
+            .color(1f, 1f, 1f, 1f).next()
 
-        if (programId == 0)
-            return
+        buffer.bind()
+        buffer.upload(builder.end())
+        VertexBuffer.unbind()
 
-        glAttachObjectARB(programId, vertexShaderID)
-        glAttachObjectARB(programId, fragmentShaderID)
-
-        glLinkProgramARB(programId)
-        glValidateProgramARB(programId)
-
-        logger.info("[Shader] Successfully loaded: $fragmentShader")
+        // get uniform pointers
+        timeLocation = GlUniform.getUniformLocation(program, "time")
+        mouseLocation = GlUniform.getUniformLocation(program, "mouse")
+        resolutionLocation = GlUniform.getUniformLocation(program, "resolution")
     }
 
-    @Throws(IOException::class)
-    constructor(fragmentShader: File) {
-        val vertexShaderID: Int
-        val fragmentShaderID: Int
+    private fun compileShader(source: String, type: Int): Int {
+        val shader = GlStateManager.glCreateShader(type)
+        GlStateManager.glShaderSource(shader, listOf(source))
+        GlStateManager.glCompileShader(shader)
 
-        val vertexStream = javaClass.getResourceAsStream("/assets/minecraft/liquidbounce/shader/vertex.vert")
-        vertexShaderID = createShader(IOUtils.toString(vertexStream), ARBVertexShader.GL_VERTEX_SHADER_ARB)
-        IOUtils.closeQuietly(vertexStream)
-
-        val fragmentStream = Files.newInputStream(fragmentShader.toPath())
-        fragmentShaderID = createShader(IOUtils.toString(fragmentStream), ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
-        IOUtils.closeQuietly(fragmentStream)
-
-        if (vertexShaderID == 0 || fragmentShaderID == 0)
-            return
-
-        programId = glCreateProgramObjectARB()
-
-        if (programId == 0)
-            return
-
-        glAttachObjectARB(programId, vertexShaderID)
-        glAttachObjectARB(programId, fragmentShaderID)
-
-        glLinkProgramARB(programId)
-        glValidateProgramARB(programId)
-
-        logger.info("[Shader] Successfully loaded: " + fragmentShader.name)
-    }
-
-    open fun startShader() {
-        glUseProgram(programId)
-
-        if (uniformsMap.isEmpty())
-            setupUniforms()
-
-        updateUniforms()
-    }
-
-    open fun stopShader() {
-        glUseProgram(0)
-    }
-
-    abstract fun setupUniforms()
-    abstract fun updateUniforms()
-    private fun createShader(shaderSource: String, shaderType: Int): Int {
-        var shader = 0
-
-        return try {
-            shader = glCreateShaderObjectARB(shaderType)
-
-            if (shader == 0)
-                return 0
-
-            glShaderSourceARB(shader, shaderSource)
-            glCompileShaderARB(shader)
-
-            if (glGetObjectParameteriARB(shader, GL_OBJECT_COMPILE_STATUS_ARB) == GL_FALSE)
-                throw RuntimeException("Error creating shader: " + getLogInfo(shader))
-
-            shader
-        } catch (e: Exception) {
-            glDeleteObjectARB(shader)
-            throw e
+        // check compilation status
+        if (GlStateManager.glGetShaderi(shader, GlConst.GL_COMPILE_STATUS) == GlConst.GL_FALSE) {
+            val log = GlStateManager.glGetShaderInfoLog(shader, 1024)
+            throw RuntimeException("Filed to compile shader! Caused by: $log")
         }
+
+        return shader
     }
 
-    private fun getLogInfo(i: Int) = glGetInfoLogARB(i, glGetObjectParameteriARB(i, GL_OBJECT_INFO_LOG_LENGTH_ARB))
+    fun draw(mouseX: Int, mouseY: Int, width: Int, height: Int, delta: Float) {
+        GlProgramManager.useProgram(this.program)
 
-    fun setUniform(uniformName: String, location: Int) {
-        uniformsMap[uniformName] = location
+        canvas.resize((width * QUALITY).toInt(), (height * QUALITY).toInt())
+        canvas.write()
+
+        // update uniforms
+        GL30.glUniform1f(timeLocation, time)
+        time += (delta / 10f)
+        GL30.glUniform2f(mouseLocation, mouseX.toFloat(), mouseY.toFloat())
+        GL30.glUniform2f(resolutionLocation, canvas.width().toFloat(), canvas.height().toFloat())
+
+        // draw
+        buffer.bind()
+        buffer.draw()
+        canvas.blit(buffer)
     }
 
-    fun setupUniform(uniformName: String) = setUniform(uniformName, glGetUniformLocation(programId, uniformName))
+    override fun close() {
+        GlStateManager.glDeleteProgram(this.program)
+        buffer.close()
+        canvas.close()
+    }
 
-    fun getUniform(uniformName: String) = uniformsMap[uniformName]!!
 }

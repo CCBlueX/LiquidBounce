@@ -19,19 +19,21 @@
  *
  */
 
-package net.ccbluex.liquidbounce.render.shader.shaders
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.widget;
 
-import net.ccbluex.liquidbounce.render.shader.Shader
-import net.ccbluex.liquidbounce.utils.io.resourceToString
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.minecraft.client.gui.widget.EntryListWidget;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 
-/**
- * In-built background shader
- *
- * TODO: Use theme specific shader
- */
-val backgroundShader by lazy {
-    Shader(
-        resourceToString("/assets/liquidbounce/shaders/vertex.vert"),
-        resourceToString("/assets/liquidbounce/shaders/fragment/background.frag")
-    )
+@Mixin(EntryListWidget.class)
+public class MixinEntryListWidget {
+
+    @ModifyExpressionValue(method = "renderWidget",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/widget/EntryListWidget;renderBackground:Z"))
+    private boolean renderBackground(boolean original) {
+        return original && HideAppearance.INSTANCE.isHidingNow();
+    }
+
 }

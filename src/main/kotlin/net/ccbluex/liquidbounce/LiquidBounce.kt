@@ -39,10 +39,8 @@ import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
-import net.ccbluex.liquidbounce.render.shader.shaders.BackgroundShader.Companion.BACKGROUND_SHADER
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
-import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -205,9 +203,6 @@ object LiquidBounce : Listenable {
             if (updateAvailable) {
                 logger.info("Update available! Please download the latest version from https://liquidbounce.net/")
             }
-
-            // Load background shader
-            BACKGROUND_SHADER
 
             runCatching {
                 ipcConfiguration.let {
