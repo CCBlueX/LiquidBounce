@@ -16,7 +16,7 @@ import net.minecraft.client.render.VertexFormats
 import org.lwjgl.opengl.*
 import java.io.Closeable
 
-const val QUALITY = 1.2f
+const val QUALITY = 1f
 
 /**
  * A GLSL shader renderer. Takes a vertex and fragment shader and renders it to the canvas.
