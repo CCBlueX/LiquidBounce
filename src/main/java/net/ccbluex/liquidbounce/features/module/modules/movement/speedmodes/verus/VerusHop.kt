@@ -11,16 +11,16 @@ object VerusHop : SpeedMode("VerusHop") {
     private var speed = 0.0f
 
     override fun onUpdate() {
-        if (mc.thePlayer == null) {
-            return
-        }
+        val player = mc.thePlayer ?: return
+        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        
         if (isMoving) {
-            if (mc.thePlayer.onGround) {
-                speed = if (mc.thePlayer.isPotionActive(Potion.moveSpeed)
-                    && mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
+            if (player.onGround) {
+                speed = if (player.isPotionActive(Potion.moveSpeed)
+                    && player.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
                         0.46f else 0.34f
 
-                mc.thePlayer.tryJump()
+                player.tryJump()
             } else {
                 speed *= 0.98f
             }

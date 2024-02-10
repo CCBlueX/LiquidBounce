@@ -12,17 +12,20 @@ object VerusLowHop : SpeedMode("VerusLowHop") {
     private var airTicks = 0
 
     override fun onUpdate() {
+        val player = mc.thePlayer ?: return
+        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        
         if (isMoving) {
-            if (mc.thePlayer.onGround) {
+            if (player.onGround) {
                 airTicks = 0
-                speed = if (mc.thePlayer.isPotionActive(Potion.moveSpeed)
-                    && mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
+                speed = if (player.isPotionActive(Potion.moveSpeed)
+                    && player.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
                         0.5f else 0.36f
 
-                mc.thePlayer.tryJump()
+                player.tryJump()
             } else {
                 if (airTicks == 0) {
-                    mc.thePlayer.motionY = -0.09800000190734863
+                    player.motionY = -0.09800000190734863
                 }
 
                 airTicks++
