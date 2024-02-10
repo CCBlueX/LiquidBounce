@@ -56,7 +56,7 @@ class Shader(vertex: String, fragment: String) : Closeable {
         // Checks link status
         if (GlStateManager.glGetProgrami(program, GlConst.GL_LINK_STATUS) == GlConst.GL_FALSE) {
             val log = GlStateManager.glGetProgramInfoLog(program, 1024)
-            throw RuntimeException("Filed to link shader program! Caused by: $log")
+            error("Filed to link shader program! Caused by: $log")
         }
 
         // cleanup
@@ -93,7 +93,7 @@ class Shader(vertex: String, fragment: String) : Closeable {
         // check compilation status
         if (GlStateManager.glGetShaderi(shader, GlConst.GL_COMPILE_STATUS) == GlConst.GL_FALSE) {
             val log = GlStateManager.glGetShaderInfoLog(shader, 1024)
-            throw RuntimeException("Filed to compile shader! Caused by: $log")
+            error("Filed to compile shader! Caused by: $log")
         }
 
         return shader
