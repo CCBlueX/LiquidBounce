@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.LivingEntity
@@ -45,6 +45,10 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices("Mode", { PacketCrit }) {
         arrayOf(
             NoneChoice(it),
@@ -55,8 +59,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     private object PacketCrit : Choice("Packet") {
 
-        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS, Mode.values())
-        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS)
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
         private object WhenSprinting : ToggleableConfigurable(ModuleCriticals, "WhenSprinting", true) {
             val unSprint by boolean("UnSprint", false)
@@ -116,7 +120,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     }
 
-    private object JumpCrit : Choice("Jump") {
+    object JumpCrit : Choice("Jump") {
 
         override val parent: ChoiceConfigurable
             get() = modes
@@ -134,8 +138,15 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val checkKillaura by boolean("CheckKillaura", false)
         val checkAutoClicker by boolean("CheckAutoClicker", false)
+        val canBeSeen by boolean("CanBeSeen", true)
 
-        var adjustNextMotion = false
+        /**
+         * Should the upwards velocity be set to the `height`-value on next jump?
+         *
+         * Only true when auto-jumping is currently taking place so that normal jumps
+         * are not affected.
+         */
+        var adjustNextJump = false
 
         val movementInputEvent = handler<MovementInputEvent> {
             if (!isActive()) {
@@ -150,19 +161,26 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            world.findEnemy(0f..range) ?: return@handler
+            val enemies = world.findEnemies(0f..range)
+                .filter { (entity, _) -> !canBeSeen || player.canSee(entity) }
 
-            if (player.isOnGround) {
+            // Change the jump motion only if the jump is a normal jump (small jumps, i.e. honey blocks
+            // are not affected) and currently.
+            if (enemies.isNotEmpty() && player.isOnGround) {
                 it.jumping = true
-                adjustNextMotion = true
+                adjustNextJump = true
             }
         }
 
         val onJump = handler<PlayerJumpEvent> { event ->
-            // Only change if there is nothing affecting the default motion (like a honey block)
-            if (event.motion == 0.42f && adjustNextMotion) {
+            // The `value`-option only changes *normal jumps* with upwards velocity 0.42.
+            // Jumps with lower velocity (i.e. from honey blocks) are not affected.
+            val isJumpNormal = event.motion == 0.42f
+
+            // Is the jump a normal jump and auto-jumping is enabled.
+            if (isJumpNormal && adjustNextJump) {
                 event.motion = height
-                adjustNextMotion = false
+                adjustNextJump = false
             }
         }
 
@@ -280,7 +298,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val ticksTillCrit = nextPossibleCrit.coerceAtLeast(ticksTillFall)
 
-        val hitProbability = 0.6f
+        val hitProbability = 0.75f
 
         val damageOnCrit = 0.5f * hitProbability
 

@@ -6,25 +6,27 @@
     <ID>ComplexCondition:ModuleTrajectories.kt$ModuleTrajectories$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || player != mc.player &amp;&amp; it == mc.player)</ID>
     <ID>ComplexCondition:SimulatedArrow.kt$SimulatedArrow$!it.isSpectator &amp;&amp; it.isAlive &amp;&amp; (it.canHit() || arrowEntity != mc.player &amp;&amp; it == arrowEntity)</ID>
     <ID>CyclomaticComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
-    <ID>CyclomaticComplexMethod:Chat.kt$Chat$private fun onClientError(packet: ClientErrorPacket)</ID>
+    <ID>CyclomaticComplexMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>CyclomaticComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CyclomaticComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
-    <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>CyclomaticComplexMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>CyclomaticComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$internal suspend fun Sequence&lt;*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit)</ID>
-    <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$private fun updateEnemySelection()</ID>
+    <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$private fun updateTargetWithRange(enemies: Iterable&lt;LivingEntity>, range: Float)</ID>
     <ID>CyclomaticComplexMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
+    <ID>CyclomaticComplexMethod:ScaffoldBreezilyFeature.kt$ScaffoldBreezilyFeature$fun doBreezilyIfNeeded(event: MovementInputEvent)</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NOW)</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ModuleAutoShoot.kt$ModuleAutoShoot$val (fromPoint, toPoint, _, _) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( entity, situation )</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
-    <ID>EmptyFunctionBlock:ModuleDisabler.kt$ModuleDisabler.VulcanMovement${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
+    <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>LongMethod:ClientEndpoints.kt$internal fun RestNode.setupClientRestApi()</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
@@ -36,7 +38,7 @@
     <ID>LongMethod:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandLocalConfig.kt$CommandLocalConfig$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>LongMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>LongMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>LongMethod:ContainerEndpoints.kt$internal fun RestNode.setupContainerRestApi()</ID>
@@ -46,7 +48,7 @@
     <ID>LongMethod:PlayerEndpoints.kt$internal fun RestNode.setupPlayerRestApi()</ID>
     <ID>LongMethod:SessionEndpoints.kt$private fun RestNode.setupAccountManagerRest()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
-    <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, val ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val applyClientSide: Boolean )</ID>
+    <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, val ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val changeLook: Boolean )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, var x: Double, var y: Double, var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float )</ID>
@@ -85,13 +87,9 @@
     <ID>MaxLineLength:ModuleClickGui.kt$ModuleClickGui$object</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$!player.isInLava &amp;&amp; !player.isTouchingWater &amp;&amp; !player.isClimbing &amp;&amp; !player.hasNoGravity()</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$)</ID>
-    <ID>MaxLineLength:ModuleDisabler.kt$ModuleDisabler.VulcanMovement$return (offhand.item == Items.TRIDENT &amp;&amp; offhand.hasEnchantments() &amp;&amp; offhand.getEnchantment(Enchantments.RIPTIDE) != 0)</ID>
-    <ID>MaxLineLength:ModuleInventoryMove.kt$ModuleInventoryMove$enabled &amp;&amp; mc.currentScreen !is ChatScreen &amp;&amp; !isInCreativeSearchField() &amp;&amp; (!undetectable || mc.currentScreen !is HandledScreen&lt;*>) &amp;&amp; (passthroughSneak || keyBinding != mc.options.sneakKey)</ID>
     <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))</ID>
     <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$val response = decode&lt;Array&lt;UsernameRecord>>(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))</ID>
-    <ID>MaxLineLength:ModuleMurderMystery.kt$ModuleMurderMystery$if</ID>
-    <ID>MaxLineLength:ModuleNameCollector.kt$ModuleNameCollector$notification("NameCollector", "Captured ${network.playerList.size} players", NotificationEvent.Severity.INFO)</ID>
     <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$if</ID>
     <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$originalChar.style</ID>
     <ID>MaxLineLength:ModuleScaffold.kt$ModuleScaffold$if (AdvancedRotation.enabled) AdvancedRotation.xRange.toDouble() else AdvancedRotation.DEFAULT_XZ_RANGE.toDouble()</ID>
@@ -108,10 +106,6 @@
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Block : ListValueType</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Proxy : ListValueType</ID>
-    <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion$o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier)</ID>
-    <ID>MaxLineLength:WeightedFoodItem.kt$WeightedFoodItem.Companion${ o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) }</ID>
-    <ID>MaxLineLength:WeightedSwordItem.kt$WeightedSwordItem.Companion$return</ID>
-    <ID>MaxLineLength:WeightedToolItem.kt$WeightedToolItem.Companion$(o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
@@ -124,12 +118,12 @@
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
     <ID>SpreadOperator:ExploitsItemGroup.kt$ExploitsItemGroup$("Troll Potion", *Registries.STATUS_EFFECT.map { statusEffect -> StatusEffectInstance(statusEffect, Int.MAX_VALUE, 127) }.toTypedArray())</ID>
     <ID>SpreadOperator:FakeLag.kt$FakeLag$(*positions.map { Vec3(it.vec) }.toTypedArray())</ID>
+    <ID>SpreadOperator:JsCommandBuilder.kt$JsCommandBuilder$(*(commandObject["aliases"] as? Array&lt;String>) ?: emptyArray())</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(clazz, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(obj::class.java, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(*args.map { it!!::class.java }.toTypedArray())</ID>
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SpreadOperator:ModuleTrajectories.kt$ModuleTrajectories$(*lines.toTypedArray())</ID>
-    <ID>SpreadOperator:Script.kt$Script$(*((commandObject["aliases"] as? Array&lt;*>) ?: emptyArray&lt;String>()).map { it as String } .toTypedArray())</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:ConfigSystem.kt$ConfigSystem$IllegalStateException()</ID>
@@ -144,33 +138,29 @@
     <ID>ThrowsCount:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandManager.kt$CommandManager$@RequiredByScript @JvmName("execute") fun execute(cmd: String)</ID>
+    <ID>ThrowsCount:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>ThrowsCount:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
-    <ID>TooManyFunctions:Chat.kt$Chat : ToggleableConfigurable</ID>
+    <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
     <ID>TooManyFunctions:CombatUtils.kt$CombatManager : Listenable</ID>
+    <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>TooManyFunctions:FakeLag.kt$FakeLag : Listenable</ID>
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
-    <ID>TooManyFunctions:ModuleScaffold.kt$ModuleScaffold : Module</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
     <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
-    <ID>UnusedParameter:ParameterBuilder.kt$ParameterBuilder$description: String</ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
-    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val gameTick = handler&lt;GameTickEvent> { if (retryChronometer.hasElapsed()) { return@handler } if (!client.connected) { connectAsync() retryChronometer.waitFor(1000 * 60) // wait for 60 seconds to retry. } }</ID>
-    <ID>UnusedPrivateProperty:Chat.kt$Chat$private val sessionChange = handler&lt;SessionEvent> { reconnect() }</ID>
     <ID>UnusedPrivateProperty:ModuleAutoTool.kt$ModuleAutoTool$private val handleBlockBreakingProgress = handler&lt;BlockBreakingProgressEvent> { event -> val blockState = world.getBlockState(event.pos) val inventory = player.inventory val index = if (search) { val (hotbarSlot, stack) = (0..8).map { it to inventory.getStack(it) }.filter { (_, stack) -> ( stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)) ) }.maxByOrNull { (_, stack) -> stack.getMiningSpeedMultiplier(blockState) } ?: return@handler val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState) // The current slot already matches the best if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) { return@handler } hotbarSlot } else { slot } SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay) }</ID>
     <ID>UnusedPrivateProperty:ModuleBugUp.kt$ModuleBugUp$i</ID>
-    <ID>UnusedPrivateProperty:ModuleDisabler.kt$ModuleDisabler.VerusCombat$private var transactionPackets = 0</ID>
     <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent> { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
     <ID>UnusedPrivateProperty:ModuleScaffold.kt$ModuleScaffold$private val afterJumpEvent = handler&lt;PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { randomization = Random.nextDouble(-0.01, 0.01) placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1 // Slow down the player when jumping if (jumpSlowdown != 0f) { val velocity = player.velocity player.setVelocity( velocity.x / (1 + jumpSlowdown), velocity.y, velocity.z / (1 + jumpSlowdown) ) } }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -37,7 +38,13 @@ import net.minecraft.util.math.Vec3d
 import java.security.SecureRandom
 import kotlin.math.abs
 
-class PointTracker : Configurable("PointTracker"), Listenable {
+class PointTracker(
+    highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
+    lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
+    gaussianOffsetDefault: Boolean = true,
+    timeEnemyOffsetDefault: Float = 0.4f,
+    timeEnemyOffsetScale: ClosedFloatingPointRange<Float> = -1f..1f
+) : Configurable("PointTracker"), Listenable {
 
     companion object {
         /**
@@ -60,13 +67,13 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      * We can either try to predict the next location of the player and use this as our newest point, or
      * we pretend to be slow in the head and aim behind.
      */
-    private val timeEnemyOffset by float("TimeEnemyOffset", 0.4f, -1f..1f)
+    private val timeEnemyOffset by float("TimeEnemyOffset", timeEnemyOffsetDefault, timeEnemyOffsetScale)
 
     /**
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
      * calculate the offset.
      */
-    private val gaussianOffset by boolean("GaussianOffset", true)
+    private val gaussianOffset by boolean("GaussianOffset", gaussianOffsetDefault)
 
     /**
      * OutOfBox will set the box offset to an unreachable position.
@@ -74,10 +81,14 @@ class PointTracker : Configurable("PointTracker"), Listenable {
     private val outOfBox by boolean("OutOfBox", false)
 
     /**
+     * The shrink box value will shrink the cut-off box by the given amount.
+     */
+    private val shrinkBox by float("ShrinkBox", 0.05f, 0.0f..0.1f)
+
+    /**
      * Define the highest and lowest point of the box we want to aim at.
      */
-    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", PreferredBoxPart.HEAD,
-        PreferredBoxPart.values())
+    private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault)
         .listen { new ->
             if (lowestPoint.isHigherThan(new)) {
                 lowestPoint
@@ -85,8 +96,7 @@ class PointTracker : Configurable("PointTracker"), Listenable {
                 new
             }
         }
-    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", PreferredBoxPart.BODY,
-        PreferredBoxPart.values())
+    private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault)
         .listen { new ->
             if (!highestPoint.isHigherThan(new)) {
                 highestPoint
@@ -125,7 +135,6 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      * The input handler tracks the movement of the player and calculates the predicted future position.
      */
     private val inputHandler = handler<MovementInputEvent> {
-        val player = mc.player ?: return@handler
         val input =
             SimulatedPlayer.SimulatedPlayerInput(
                 it.directionalInput,
@@ -149,16 +158,30 @@ class PointTracker : Configurable("PointTracker"), Listenable {
      * @param entity The entity we want to track.
      */
     fun gatherPoint(entity: LivingEntity, situation: AimSituation): Point {
+        val playerPosition = player.pos
+        val positionDifference = playerPosition.y - entity.pos.y
+
         // Predicted target position of the enemy
         val targetPrediction = entity.pos.subtract(entity.prevPos)
             .multiply(timeEnemyOffset.toDouble())
-        var box = entity.box.offset(targetPrediction)
+        var box = entity.box
+            .contract(0.02, 0.05, 0.02)
+            .offset(targetPrediction)
         if (!situation.isNear && outOfBox) {
             box = box.withMinY(box.maxY).withMaxY(box.maxY + 1.0)
         }
+
+        val highest = (highestPoint.cutOff(box) + positionDifference)
+            .coerceAtMost(box.maxY)
+            .coerceAtLeast(box.minY + 0.2)
+        val lowest = (lowestPoint.cutOff(box) + positionDifference)
+            .coerceAtMost(box.maxY - 0.2)
+            .coerceAtLeast(box.minY)
+
         val cutoffBox = box
-            .withMaxY(highestPoint.cutOff(box))
-            .withMinY(lowestPoint.cutOff(box))
+            .withMaxY(highest)
+            .withMinY(lowest)
+            .contract(shrinkBox.toDouble(), 0.0, shrinkBox.toDouble())
 
         val offset = if (gaussianOffset) {
             updateGaussianOffset()

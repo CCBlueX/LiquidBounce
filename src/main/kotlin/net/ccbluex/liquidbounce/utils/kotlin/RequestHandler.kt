@@ -27,7 +27,7 @@ class RequestHandler<T> {
 
     fun tick(deltaTime: Int = 1) {
         this.activeRequests.forEach { it.expiresIn = max(it.expiresIn - deltaTime, 0) }
-        this.activeRequests.removeIf { it.expiresIn <= 0 }
+        this.activeRequests.removeIf { it.expiresIn <= 0 || !it.provider.enabled }
     }
 
     fun request(request: Request<T>) {
@@ -43,14 +43,12 @@ class RequestHandler<T> {
         return this.activeRequests.peek().value
     }
 
-    fun removeActive() {
-        if (this.activeRequests.isNotEmpty()) {
-            this.activeRequests.remove(this.activeRequests.peek())
-        }
-    }
-
     /**
-     * @param expiresIn in how many time units should this request expire?
+     * A requested state of the system.
+     *
+     * Note: A request is deleted when it's corresponding module is disabled.
+     *
+     * @param expiresIn in how many ticks units should this request expire?
      * @param priority higher = higher priority
      * @param provider module which requested value
      */

@@ -52,8 +52,13 @@ internal object LiquidWalkNoCheatPlus : Choice("NoCheatPlus") {
     private var shiftDown = false
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.fluidState.isOf(Fluids.WATER) && !isBlockAtPosition(player.box) { it is FluidBlock }
-            && !player.input.sneaking) {
+        if (player.input.sneaking || player.fallDistance > 3.0f || player.isOnFire) {
+            return@handler
+        }
+
+        val block = event.state.block
+
+        if (block is FluidBlock && !isBlockAtPosition(player.box) { it is FluidBlock }) {
             event.shape = VoxelShapes.fullCube()
         }
     }

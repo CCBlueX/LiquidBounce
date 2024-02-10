@@ -151,7 +151,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void hookTickMovement(CallbackInfo callbackInfo) {
-        if ((ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getEnabled()) ||
+        if ((ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getAllowJump()) ||
                 (ModuleScaffold.INSTANCE.getEnabled() && ScaffoldTowerMotion.INSTANCE.isActive())) {
             jumpingCooldown = 0;
         }
@@ -159,7 +159,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
     private void hookAirJump(CallbackInfo callbackInfo) {
-        if (ModuleAirJump.INSTANCE.getEnabled() && jumping && jumpingCooldown == 0) {
+        if (ModuleAirJump.INSTANCE.getAllowJump() && jumping && jumpingCooldown == 0) {
             this.jump();
             jumpingCooldown = 10;
         }
@@ -204,7 +204,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
             return instance.getPitch();
         }
 
@@ -220,7 +220,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
             return instance.getRotationVector();
         }
 

@@ -29,8 +29,7 @@ open class Configurable(
     name: String,
     value: MutableList<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE
-) :
-    Value<MutableList<Value<*>>>(name, value = value, valueType) {
+) : Value<MutableList<Value<*>>>(name, value = value, valueType) {
 
     open fun initConfigurable() {
         value.filterIsInstance<Configurable>().forEach {
@@ -85,8 +84,7 @@ open class Configurable(
         default: T,
         valueType: ValueType = ValueType.INVALID,
         listType: ListValueType = ListValueType.None
-    ) =
-        Value(name, default, valueType, listType).apply { this@Configurable.value.add(this) }
+    ) = Value(name, default, valueType, listType).apply { this@Configurable.value.add(this) }
 
     private fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>, suffix: String,
                                       valueType: ValueType) =
@@ -119,9 +117,7 @@ open class Configurable(
     protected fun textArray(name: String, default: MutableList<String>) =
         value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
 
-    protected fun curve(name: String, default: Curves) =
-        ChooseListValue(name, default, Curves.values()).apply { this@Configurable.value.add(this) }
-
+    protected fun curve(name: String, default: Curves) = enumChoice(name, default)
 
     protected fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 
@@ -138,7 +134,11 @@ open class Configurable(
     protected fun fonts(name: String, default: MutableList<Fonts.FontInfo>) =
         value(name, default, ValueType.INVALID, ListValueType.FontDetail)
 
-    protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
+    internal inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
+        where T : Enum<T>, T: NamedChoice = enumChoice(name, default, enumValues<T>())
+
+    protected fun <T> enumChoice(name: String, default: T, choices: Array<T>): ChooseListValue<T>
+        where T : Enum<T>, T: NamedChoice =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
     protected fun choices(module: Module, name: String, active: Choice, choices: Array<Choice>) =
@@ -151,5 +151,6 @@ open class Configurable(
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
     ) = ChoiceConfigurable(module, name, activeCallback, choicesCallback).apply { this@Configurable.value.add(this) }
 
+    protected fun value(value: Value<*>) = value.apply { this@Configurable.value.add(this) }
 
 }

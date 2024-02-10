@@ -31,6 +31,10 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 
 object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     val mode = choices(
         "Mode", NoCheatPlusBoost, arrayOf(
             // NoCheatPlus

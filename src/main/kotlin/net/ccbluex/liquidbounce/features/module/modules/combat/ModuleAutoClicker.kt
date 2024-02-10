@@ -46,9 +46,9 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
 
         val clickScheduler = tree(ClickScheduler(ModuleAutoClicker, true))
 
-        private val objectiveType by enumChoice("Objective", ObjectiveType.ANY, ObjectiveType.values())
-        private val onItemUse by enumChoice("OnItemUse", Use.WAIT, Use.values())
-        private val weapon by enumChoice("Weapon", Weapon.ANY, Weapon.values())
+        private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
+        private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
+        private val weapon by enumChoice("Weapon", Weapon.ANY)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
         enum class ObjectiveType(override val choiceName: String) : NamedChoice {
