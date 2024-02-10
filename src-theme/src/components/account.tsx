@@ -5,12 +5,12 @@ import { ReactComponent as Pen } from "~/assets/icons/pen.svg";
 import styles from "./account.module.css";
 import Tooltip from "./tooltip";
 import { useQuery } from "react-query";
-import { getCurrentSession } from "~/utils/api";
+import {getCurrentLocation, getCurrentSession} from "~/utils/api";
 
 export default function Account() {
   // TODO: Pull these from the client
   const { data: session } = useQuery("session", getCurrentSession);
-  const location = "de";
+  const { data: location } = useQuery("location", getCurrentLocation);
 
   return (
     <div className={styles.account}>
@@ -20,13 +20,13 @@ export default function Account() {
         </object>
         <Tooltip text="Change Location">
           <Link to="/proxies" className={styles.location}>
-            <img src={`./flags/${location}.svg`} alt="Location" />
+            <img src={`./flags/${location?.country?.toLowerCase()}.svg`} alt="Location" />
           </Link>
         </Tooltip>
       </div>
       <div className={styles.accountInfo}>
         <h3 className={styles.username}>{session?.username}</h3>
-        <span className={styles.accountType}>{session?.accountType}</span>
+        <span className={styles.accountType}>{session?.premium ? "Premium" : "Cracked"}</span>
       </div>
       <Tooltip text="Change Account">
         <Link to="/accounts" className={styles.changeAccount}>

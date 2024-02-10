@@ -310,3 +310,11 @@ type Session = {
 export function getCurrentSession(): Promise<Session> {
   return request("/session");
 }
+
+type Location = {
+    country: string;
+}
+
+export function getCurrentLocation(): Promise<Location> {
+    return request("/location");
+}
