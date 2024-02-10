@@ -17,7 +17,7 @@ object AAC5BHop : SpeedMode("AAC5BHop") {
 
         mc.timer.timerSpeed = 1f
 
-        if (thePlayer.isInWater)
+        if (thePlayer.isInWater || thePlayer.isInLava)
             return
 
         if (isMoving) {

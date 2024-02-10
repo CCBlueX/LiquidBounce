@@ -15,7 +15,7 @@ object AACBHop : SpeedMode("AACBHop") {
     override fun onMotion() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.isInWater)
+        if (thePlayer.isInWater || thePlayer.isInLava)
             return
 
         if (isMoving) {
