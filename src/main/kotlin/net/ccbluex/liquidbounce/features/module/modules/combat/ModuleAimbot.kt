@@ -67,32 +67,32 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 continue
             }
 
-            if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
-                val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
-                    PointTracker.AimSituation.FOR_NOW)
-                val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, toPoint)
+            val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
+                PointTracker.AimSituation.FOR_NOW)
 
-                val spot = raytraceBox(
-                    fromPoint,
-                    cutOffBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0,
-                    rotationPreference = rotationPreference
-                ) ?: raytraceBox(
-                    fromPoint, box, range = range.toDouble(), wallsRange = 0.0, rotationPreference = rotationPreference
-                ) ?: continue
+            val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
 
-                if (RotationManager.rotationDifference(
-                        player.rotation, spot.rotation
-                    ) <= rotationsConfigurable.resetThreshold
-                ) {
-                    break
-                }
+            val spot = raytraceBox(
+                fromPoint,
+                cutOffBox,
+                range = range.toDouble(),
+                wallsRange = 0.0,
+                rotationPreference = rotationPreference
+            ) ?: raytraceBox(
+                fromPoint, box, range = range.toDouble(),
+                wallsRange = 0.0,
+                rotationPreference = rotationPreference
+            ) ?: continue
 
-                return spot.rotation
+            if (RotationManager.rotationDifference(player.rotation, spot.rotation)
+                <= rotationsConfigurable.resetThreshold) {
+                break
             }
+
+            return spot.rotation
         }
 
         return null
     }
+
 }

@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -42,6 +44,20 @@ fun BlockPos.getBlock() = getState()?.block
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
 fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
+
+val BlockPos.hasEntrance: Boolean
+    get() {
+        val positionsAround = arrayOf(
+            this.offset(Direction.NORTH),
+            this.offset(Direction.SOUTH),
+            this.offset(Direction.EAST),
+            this.offset(Direction.WEST),
+            this.offset(Direction.UP),
+            this.offset(Direction.DOWN)
+        )
+
+        return positionsAround.any { it.getState()?.isAir == true }
+    }
 
 /**
  * Search blocks around the player in a cuboid
@@ -293,6 +309,8 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
     val blockPos = rayTraceResult.blockPos
 
     if (immediate) {
+        EventManager.callEvent(BlockBreakingProgressEvent(blockPos))
+
         network.sendPacket(
             PlayerActionC2SPacket(
                 PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction

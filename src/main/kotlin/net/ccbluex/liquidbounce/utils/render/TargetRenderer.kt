@@ -49,6 +49,10 @@ import kotlin.math.sin
  */
 abstract class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
 
+    init {
+        doNotInclude()
+    }
+
     abstract val appearance: ChoiceConfigurable
 
     open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
@@ -205,7 +209,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
 
     }
 
-    inner class Outline : ToggleableConfigurable(module,"Outline", true) {
+    inner class Outline : ToggleableConfigurable(parent,"Outline", true) {
         val color by color("Color", Color4b(0x00007CFF, false))
     }
 

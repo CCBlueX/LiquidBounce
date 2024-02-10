@@ -97,7 +97,7 @@ class NametagRenderer {
         val dc = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
 
         dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
-        dc.matrices.scale(ITEM_SCALE, ITEM_SCALE, 1.0F)
+        dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
         dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
 
         itemsToRender.forEachIndexed { index, itemStack ->

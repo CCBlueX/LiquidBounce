@@ -30,9 +30,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleOverrideTime : Module("OverrideTime", Category.RENDER) {
 
-    val time = enumChoice("Time", TimeType.NOON, TimeType.values())
+    val time = enumChoice("Time", TimeType.NOON)
 
     enum class TimeType(override val choiceName: String) : NamedChoice {
-        DAY("Day"), NOON("Noon"), NIGHT("Night"), MID_NIGHT("MidNight")
+        DAY("Day"),
+        NOON("Noon"),
+        NIGHT("Night"),
+        MID_NIGHT("MidNight")
     }
 }

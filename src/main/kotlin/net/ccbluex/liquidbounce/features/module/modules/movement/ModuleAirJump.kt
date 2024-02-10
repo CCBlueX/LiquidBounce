@@ -18,7 +18,47 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.util.shape.VoxelShape
+import net.minecraft.util.shape.VoxelShapes
 
-object ModuleAirJump : Module("AirJump", Category.MOVEMENT)
+object ModuleAirJump : Module("AirJump", Category.MOVEMENT) {
+
+    val mode by enumChoice("Mode", Mode.JUMP_FREELY)
+
+    private var doubleJump = true
+
+    val allowJump: Boolean
+        get() = enabled && (mode == Mode.JUMP_FREELY || mode == Mode.DOUBLE_JUMP && doubleJump)
+
+    val repeatable = repeatable {
+        if (player.isOnGround) {
+            doubleJump = true
+        }
+    }
+
+    val jumpEvent = handler<PlayerJumpEvent> {
+        if (doubleJump && !player.isOnGround) {
+            doubleJump = false
+        }
+    }
+
+    val handleBlockBox = handler<BlockShapeEvent> { event ->
+        if (mode == Mode.GHOST_BLOCK && event.pos.y < player.blockPos.y && mc.options.jumpKey.isPressed) {
+            event.shape = VoxelShapes.fullCube()
+        }
+    }
+
+    enum class Mode(override val choiceName: String) : NamedChoice {
+        JUMP_FREELY("JumpFreely"),
+        DOUBLE_JUMP("DoubleJump"),
+        GHOST_BLOCK("GhostBlock"),
+    }
+
+}

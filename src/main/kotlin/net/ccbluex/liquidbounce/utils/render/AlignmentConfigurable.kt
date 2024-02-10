@@ -29,9 +29,9 @@ class AlignmentConfigurable(
     verticalAlignment: ScreenAxisY,
     verticalPadding: Int,
 ) : Configurable("Alignment") {
-    private val horizontalAlignment by enumChoice("HorizontalAlignment", horizontalAlignment, ScreenAxisX.values())
+    private val horizontalAlignment by enumChoice("HorizontalAlignment", horizontalAlignment)
     private val horizontalPadding by int("HorizontalPadding", horizontalPadding, 1..256)
-    private val verticalAlignment by enumChoice("VerticalAlignment", verticalAlignment, ScreenAxisY.values())
+    private val verticalAlignment by enumChoice("VerticalAlignment", verticalAlignment)
     private val verticalPadding by int("VerticalPadding", verticalPadding, 1..256)
 
     fun getBounds(

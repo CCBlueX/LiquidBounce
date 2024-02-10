@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.Reconnect
-import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
@@ -43,6 +42,7 @@ import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
 import net.ccbluex.liquidbounce.render.shader.shaders.BackgroundShader.Companion.BACKGROUND_SHADER
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
+import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -95,6 +95,8 @@ object LiquidBounce : Listenable {
      */
     const val IN_DEVELOPMENT = true
 
+    val isIntegrationTesting = !System.getenv("TENACC_TEST_PROVIDER").isNullOrBlank()
+
     /**
      * Client logger to print out console messages
      */
@@ -143,7 +145,6 @@ object LiquidBounce : Listenable {
             Reconnect
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
-            Chat
             BrowserManager
             Fonts
 

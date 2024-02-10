@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
@@ -45,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -52,9 +54,14 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.block.BlockWithEntity
+import net.minecraft.block.FallingBlock
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
@@ -73,6 +80,7 @@ import kotlin.random.Random
  *
  * Places blocks under you.
  */
+@Suppress("TooManyFunctions")
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
@@ -90,8 +98,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
-    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED, AimMode.values())
-    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL, AimTimingMode.values())
+    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
+    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
     internal val technique = choices("Technique", ScaffoldNormalTechnique,
         arrayOf(ScaffoldNormalTechnique, ScaffoldEagleTechnique, ScaffoldTellyTechnique))
 
@@ -145,6 +153,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldAutoJumpFeature)
         tree(AdvancedRotation)
         tree(ScaffoldStabilizeMovementFeature)
+        tree(ScaffoldBreezilyFeature)
     }
 
     @Suppress("UnusedPrivateProperty")
@@ -163,19 +172,21 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
      * The chain will prefer the block that is solid. If both are solid, it goes to the next criteria
      * (in this case full cube) and so on
      */
-    private val BLOCK_COMPARATOR_FOR_HOTBAR =
+    val BLOCK_COMPARATOR_FOR_HOTBAR =
         ComparatorChain(
+            PreferFavourableBlocks,
             PreferSolidBlocks,
             PreferFullCubeBlocks,
-            PreferLessSlipperyBlocks,
+            PreferWalkableBlocks,
             PreferAverageHardBlocks,
             PreferStackSize(higher = false),
         )
     val BLOCK_COMPARATOR_FOR_INVENTORY =
         ComparatorChain(
+            PreferFavourableBlocks,
             PreferSolidBlocks,
             PreferFullCubeBlocks,
-            PreferLessSlipperyBlocks,
+            PreferWalkableBlocks,
             PreferAverageHardBlocks,
             PreferStackSize(higher = true),
         )
@@ -227,6 +238,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
+        val predictedPos = getPredictedPlacementPos() ?: player.pos
+
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
             { vec -> -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5)) }
@@ -234,12 +247,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
 
-        val searchOptions = BlockPlacementTargetFindingOptions(
-            if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-            bestStack,
-            getFacePositionFactoryForConfig(),
-            priorityGetter,
-        )
+        val searchOptions =
+            BlockPlacementTargetFindingOptions(
+                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                bestStack,
+                getFacePositionFactoryForConfig(),
+                priorityGetter,
+                predictedPos
+            )
 
         currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
 
@@ -262,10 +277,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
-        val rotation = if (aimMode == AimMode.GODBRIDGE) {
-            ScaffoldGodBridgeFeature.optimizeRotation(target)
-        } else {
-            target?.rotation
+        val rotation = when (aimMode) {
+            AimMode.GODBRIDGE -> ScaffoldGodBridgeFeature.optimizeRotation(target)
+            AimMode.BREEZILY -> ScaffoldBreezilyFeature.optimizeRotation(target)
+            else -> target?.rotation
         } ?: return@handler
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
@@ -280,6 +295,43 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
+    /**
+     * Calculates where the player will stand when he places the block. Useful for rotations
+     *
+     * @return the predicted pos or `null` if the prediction failed
+     */
+    private fun getPredictedPlacementPos(): Vec3d? {
+        val optimalLine = this.currentOptimalLine ?: return null
+
+        val optimalEdgeDist = 0.2
+
+        // When we are close to the edge, we are able to place right now. Thus, we don't want to use a future position
+        if (player.isCloseToEdge(DirectionalInput(player.input), distance = optimalEdgeDist))
+            return null
+
+        // TODO Check if the player is moving away from the line and implement another prediction method for that case
+
+        val nearestPosToPlayer = optimalLine.getNearestPointTo(player.pos)
+
+        val fromLine = nearestPosToPlayer + Vec3d(0.0, -0.1, 0.0)
+        val toLine = fromLine + optimalLine.direction.normalize().multiply(3.0)
+
+        val edgeCollision = findEdgeCollision(fromLine, toLine)
+
+        // The next placement point is far in the future. Don't predict for now
+        if (edgeCollision == null)
+            return null
+
+        val fallOffPoint = Vec3d(edgeCollision.x, player.pos.y, edgeCollision.z)
+        val fallOffPointToPlayer = fallOffPoint - player.pos
+
+        // Move the point where we want to place a bit more to the player since we ideally want to place at an edge
+        // distance of 0.2 or so
+        val vec3d = fallOffPoint - fallOffPointToPlayer.normalize() * optimalEdgeDist
+
+        return vec3d
+    }
+
     var currentOptimalLine: Line? = null
 
     val moveEvent = handler<MovementInputEvent> { event ->
@@ -292,6 +344,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
+
+        ScaffoldBreezilyFeature.doBreezilyIfNeeded(event)
     }
 
     fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
@@ -305,7 +359,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
         return when (aimMode) {
-            AimMode.CENTER, AimMode.GODBRIDGE -> CenterTargetPositionFactory
+            AimMode.CENTER, AimMode.GODBRIDGE, AimMode.BREEZILY -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
@@ -431,7 +485,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return true
     }
 
-    private fun isValidBlock(stack: ItemStack?): Boolean {
+    fun isValidBlock(stack: ItemStack?): Boolean {
         if (stack == null) return false
 
         val item = stack.item
@@ -446,7 +500,41 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return false
         }
 
+        // We don't want to suicide...
+        if (block is FallingBlock) {
+            return false
+        }
+
         return !DISALLOWED_BLOCKS_TO_PLACE.contains(block)
+    }
+
+    /**
+     * Special handling for unfavourable blocks (like crafting tables, slabs, etc.):
+     * - [ModuleScaffold]: Unfavourable blocks are only used when there is no other option left
+     * - [ModuleInventoryCleaner]: Unfavourable blocks are not used as blocks by inv-cleaner.
+     */
+    fun isBlockUnfavourable(stack: ItemStack): Boolean {
+        val item = stack.item
+
+        if (item !is BlockItem)
+            return true
+
+        val block = item.block
+
+        return when {
+            // We dislike slippery blocks...
+            block.slipperiness > 0.6F -> true
+            // We dislike soul sand and slime...
+            block.velocityMultiplier < 1.0F -> true
+            // We hate honey...
+            block.jumpVelocityMultiplier < 1.0F -> true
+            // We don't want to place bee hives, chests, spawners, etc.
+            block is BlockWithEntity -> true
+            // We don't like slabs etc.
+            !block.defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN) -> true
+            // Is there a hard coded answer?
+            else -> block in UNFAVORABLE_BLOCKS_TO_PLACE
+        }
     }
 
     private fun getTargetedPosition(): BlockPos {
