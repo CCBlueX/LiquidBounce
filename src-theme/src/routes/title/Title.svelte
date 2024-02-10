@@ -156,8 +156,6 @@
     main {
         height: 100vh;
         width: 100vw;
-        background-image: url("../img/background.png");
-        background-size: cover;
         -webkit-user-select: none;
         cursor: default !important;
     }

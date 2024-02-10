@@ -93,8 +93,6 @@
         }
 
         body {
-            background-image: url("img/background.png");
-            background-size: cover;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
