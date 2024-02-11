@@ -20,12 +20,15 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.Swing.silentSwing
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -278,7 +281,11 @@ private fun handleActionsOnAccept(
     }
 
     if (onPlacementSuccess()) {
-        player.swingHand(hand)
+        if (!silentSwing) {
+            player.swingHand(hand)
+        } else {
+            mc.networkHandler!!.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+        }
     }
 
     if (wasStackUsed) {
