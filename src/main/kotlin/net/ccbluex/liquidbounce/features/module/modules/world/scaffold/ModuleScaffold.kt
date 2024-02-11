@@ -402,7 +402,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             && SimulatePlacementAttempts.clickScheduler.goingToClick) {
             SimulatePlacementAttempts.clickScheduler.clicks {
                 // By the time this reaches here, the variables are already non-null
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, Swing::enabled, Swing::enabled)
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, { Swing.silentSwing }, Swing::enabled, Swing::enabled)
                 true
             }
         }
@@ -440,7 +440,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.isOnGround))
         }
 
-        doPlacement(currentCrosshairTarget, handToInteractWith, {
+        doPlacement(currentCrosshairTarget, handToInteractWith, { Swing.silentSwing }, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleTechnique.onBlockPlacement()
             ScaffoldAutoJumpFeature.onBlockPlacement()

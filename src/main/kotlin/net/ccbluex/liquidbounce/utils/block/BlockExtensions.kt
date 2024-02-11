@@ -237,6 +237,7 @@ fun BlockState.canBeReplacedWith(
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: Hand = Hand.MAIN_HAND,
+    silentSwing:  () -> Boolean = { false },
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true }
 ) {
@@ -260,7 +261,7 @@ fun doPlacement(
         interactionResult.isAccepted -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
+            handleActionsOnAccept(hand, interactionResult, wasStackUsed, silentSwing.invoke(), onPlacementSuccess)
         }
     }
 }
@@ -274,6 +275,7 @@ private fun handleActionsOnAccept(
     hand: Hand,
     interactionResult: ActionResult,
     wasStackUsed: Boolean,
+    silentSwing: Boolean,
     onPlacementSuccess: () -> Boolean,
 ) {
     if (!interactionResult.shouldSwingHand()) {
@@ -305,7 +307,7 @@ private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boo
 
     val actionResult = interaction.interactItem(player, hand)
 
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess)
+    handleActionsOnAccept(hand, actionResult, true, false, onItemUseSuccess)
 }
 
 /**
