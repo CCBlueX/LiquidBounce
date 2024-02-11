@@ -202,7 +202,7 @@ public abstract class MixinEntityRenderer {
 
             pointedEntity = null;
             Vec3 vec33 = null;
-            List<Entity> list = mc.theWorld.getEntities(EntityLivingBase.class, Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith() && p_apply_1_ != entity));
+            List<Entity> list = mc.theWorld.getEntities(Entity.class, Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith() && p_apply_1_ != entity));
             double d2 = d1;
 
             for (Entity entity1 : list) {
