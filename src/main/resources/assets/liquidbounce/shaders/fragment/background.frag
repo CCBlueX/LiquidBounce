@@ -1,3 +1,5 @@
+// Taken from https://glslsandbox.com/e#72444.0
+
 #version 330
 
 out vec4 fragmentColor;
