@@ -234,7 +234,7 @@ fun BlockState.canBeReplacedWith(
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: Hand = Hand.MAIN_HAND,
-    swingSilent: Boolean,
+    swingSilent: Boolean = false,
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true }
 ) {
