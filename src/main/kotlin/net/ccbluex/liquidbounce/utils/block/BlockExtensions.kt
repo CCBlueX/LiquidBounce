@@ -26,6 +26,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -33,7 +34,6 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
 import kotlin.math.floor
-import kotlin.math.roundToInt
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
@@ -234,6 +234,7 @@ fun BlockState.canBeReplacedWith(
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: Hand = Hand.MAIN_HAND,
+    silentSwing:  () -> Boolean = { false },
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true }
 ) {
@@ -257,7 +258,7 @@ fun doPlacement(
         interactionResult.isAccepted -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
+            handleActionsOnAccept(hand, interactionResult, wasStackUsed, silentSwing.invoke(), onPlacementSuccess)
         }
     }
 }
@@ -271,6 +272,7 @@ private fun handleActionsOnAccept(
     hand: Hand,
     interactionResult: ActionResult,
     wasStackUsed: Boolean,
+    silentSwing: Boolean,
     onPlacementSuccess: () -> Boolean,
 ) {
     if (!interactionResult.shouldSwingHand()) {
@@ -278,7 +280,11 @@ private fun handleActionsOnAccept(
     }
 
     if (onPlacementSuccess()) {
-        player.swingHand(hand)
+        if (!silentSwing) {
+            player.swingHand(hand)
+        } else {
+            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+        }
     }
 
     if (wasStackUsed) {
@@ -298,7 +304,7 @@ private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boo
 
     val actionResult = interaction.interactItem(player, hand)
 
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess)
+    handleActionsOnAccept(hand, actionResult, true, false, onItemUseSuccess)
 }
 
 /**

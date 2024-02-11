@@ -89,7 +89,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private var delay by intRange("Delay", 3..5, 0..40, "ticks")
-    private val swing by boolean("Swing", true)
+    object Swing : ToggleableConfigurable(this, "Swing", true) {
+        val silentSwing by boolean("Silent", false);
+    }
 
     // Silent block selection
     private val autoBlock by boolean("AutoBlock", true)
@@ -147,6 +149,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     init {
         tree(SimulatePlacementAttempts)
+        tree(Swing)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
         tree(ScaffoldDownFeature)
@@ -399,7 +402,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             && SimulatePlacementAttempts.clickScheduler.goingToClick) {
             SimulatePlacementAttempts.clickScheduler.clicks {
                 // By the time this reaches here, the variables are already non-null
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, ModuleScaffold::swing, ModuleScaffold::swing)
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, { Swing.silentSwing }, Swing::enabled, Swing::enabled)
                 true
             }
         }
@@ -437,7 +440,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.isOnGround))
         }
 
-        doPlacement(currentCrosshairTarget, handToInteractWith, {
+        doPlacement(currentCrosshairTarget, handToInteractWith, { Swing.silentSwing }, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleTechnique.onBlockPlacement()
             ScaffoldAutoJumpFeature.onBlockPlacement()
@@ -446,8 +449,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             wasSuccessful = true
 
-            swing
-        }, ModuleScaffold::swing)
+            Swing.enabled
+        }, Swing::enabled)
 
         if (aimTimingMode == AimTimingMode.ON_TICK) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
