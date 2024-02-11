@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
  * TODO: These need to be reworked since we are going to use a proxy pool in the future
  *  similar to the account pool
  */
-internal fun RestNode.setupProxyRestApi() {
+internal fun RestNode.proxyRest() {
     get("/proxy") {
         val proxyObject = JsonObject()
 

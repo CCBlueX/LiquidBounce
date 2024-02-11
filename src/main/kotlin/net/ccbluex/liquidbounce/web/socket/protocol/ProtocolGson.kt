@@ -19,13 +19,13 @@
  */
 package net.ccbluex.liquidbounce.web.socket.protocol
 
-import com.google.gson.ExclusionStrategy
-import com.google.gson.FieldAttributes
-import com.google.gson.GsonBuilder
+import com.google.gson.*
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.adapter.ConfigurableSerializer
 import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
+import net.minecraft.client.network.ServerInfo
+import java.lang.reflect.Type
+import java.util.*
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
@@ -36,9 +36,35 @@ class ProtocolExclusionStrategy : ExclusionStrategy {
     override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(ProtocolExclude::class.java) != null
 }
 
+class ServerInfoSerializer : JsonSerializer<ServerInfo> {
+    override fun serialize(src: ServerInfo?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.asJsonObject()
+
+    fun ServerInfo.asJsonObject() = JsonObject().apply {
+        addProperty("name", name)
+        addProperty("address", address)
+        addProperty("online", online)
+        add("playerList", protocolGson.toJsonTree(playerListSummary))
+        add("label", protocolGson.toJsonTree(label))
+        add("playerCountLabel", protocolGson.toJsonTree(playerCountLabel))
+        add("version", protocolGson.toJsonTree(version))
+        addProperty("protocolVersion", protocolVersion)
+        add("players", JsonObject().apply {
+            addProperty("max", players?.max)
+            addProperty("online", players?.online)
+        })
+
+        favicon?.let {
+            addProperty("icon", Base64.getEncoder().encodeToString(it))
+        }
+    }
+
+}
+
 internal val protocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableSerializer)
+    .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer())
     .create()
 

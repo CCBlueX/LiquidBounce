@@ -57,6 +57,7 @@ object ClientSocket {
         "key",
         "refreshArrayList",
         "serverConnect",
+        "serverInfoUpdate",
 
         // Statistic events
         "fps",
