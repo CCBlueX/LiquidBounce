@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
@@ -152,7 +151,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void hookTickMovement(CallbackInfo callbackInfo) {
-        if ((ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getEnabled()) ||
+        if ((ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getAllowJump()) ||
                 (ModuleScaffold.INSTANCE.getEnabled() && ScaffoldTowerMotion.INSTANCE.isActive())) {
             jumpingCooldown = 0;
         }
@@ -160,7 +159,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
     private void hookAirJump(CallbackInfo callbackInfo) {
-        if (ModuleAirJump.INSTANCE.getEnabled() && jumping && jumpingCooldown == 0) {
+        if (ModuleAirJump.INSTANCE.getAllowJump() && jumping && jumpingCooldown == 0) {
             this.jump();
             jumpingCooldown = 10;
         }
@@ -205,7 +204,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
             return instance.getPitch();
         }
 
@@ -221,24 +220,11 @@ public abstract class MixinLivingEntity extends MixinEntity {
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
             return instance.getRotationVector();
         }
 
         return rotation.getRotationVec();
     }
 
-    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", ordinal = 2))
-    private void hookTickJumpEvent(CallbackInfo ci) {
-        if ((Object) this != MinecraftClient.getInstance().player) {
-            return;
-        }
-
-        // No need to call event if player is already jumping.
-        if (this.jumping) {
-            return;
-        }
-
-        EventManager.INSTANCE.callEvent(new TickJumpEvent());
-    }
 }

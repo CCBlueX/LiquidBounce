@@ -19,9 +19,10 @@
  */
 package net.ccbluex.liquidbounce.web.integration
 
+import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
@@ -39,8 +40,8 @@ class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
         super.close()
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        // render nothing
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
     }
 
     override fun shouldPause(): Boolean {

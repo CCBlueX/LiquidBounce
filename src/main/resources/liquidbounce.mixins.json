@@ -6,8 +6,8 @@
   "priority": 1337,
   "mixinPriority": 1337,
   "client": [
-    "graaljs.MixinHostContext",
-    "graaljs.MixinHostInteropReflect",
+    "graaljs.MixinHostClassDesc",
+    "graaljs.MixinHostClassLoader",
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
     "minecraft.block.MixinBlockView",
@@ -46,6 +46,7 @@
     "minecraft.gui.MixinSplashOverlay",
     "minecraft.gui.custom.MixinConnectScreen",
     "minecraft.gui.custom.MixinDisconnectedScreen",
+    "minecraft.gui.widget.MixinEntryListWidget",
     "minecraft.item.MixinHeldItemRenderer",
     "minecraft.item.MixinItem",
     "minecraft.network.MixinAllowedAddressResolver",
@@ -60,6 +61,7 @@
     "minecraft.render.MixinBlockEntityRenderDispatcher",
     "minecraft.render.MixinBuiltinModelItemRenderer",
     "minecraft.render.MixinCamera",
+    "minecraft.render.MixinChunkOcclusionDataBuilder",
     "minecraft.render.MixinEntityRenderDispatcher",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
@@ -71,7 +73,7 @@
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer",
-    "minecraft.render.MixinChunkOcclusionDataBuilder"
+    "minecraft.text.MixinTranslatableTextContent"
   ],
   "server": [],
   "injectors": {

@@ -44,7 +44,7 @@ fun clickBlockWithSlot(
         player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))
     }
 
-    mc.interactionManager!!.sendSequencedPacket(mc.world!!) { sequence ->
+    interaction.sendSequencedPacket(world) { sequence ->
         PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, rayTraceResult, sequence)
     }
 

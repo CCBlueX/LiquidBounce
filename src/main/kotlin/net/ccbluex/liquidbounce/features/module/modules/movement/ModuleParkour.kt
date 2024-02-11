@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.events.TickJumpEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -31,12 +31,11 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
  *
  * Automatically jumps at the very edge of a block.
  */
-
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
-    val edgeDistance by float("EagleEdgeDistance", 0.01f, 0.01f..0.5f)
+    private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
 
-    val tickJumpHandler = handler<TickJumpEvent> {
+    val tickJumpHandler = handler<MovementInputEvent> {
         val shouldJump = player.moving &&
             player.isOnGround &&
             !player.isSneaking &&
@@ -45,7 +44,8 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
             player.isCloseToEdge(DirectionalInput(player.input), edgeDistance.toDouble())
 
         if (shouldJump) {
-            player.jump()
+            it.jumping = true
         }
     }
+
 }

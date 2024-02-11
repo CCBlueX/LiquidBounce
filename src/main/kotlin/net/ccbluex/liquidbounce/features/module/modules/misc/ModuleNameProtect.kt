@@ -45,7 +45,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
     val colorRainbow by boolean("Rainbow", false)
 
     object ReplaceFriendNames : ToggleableConfigurable(this, "ObfuscateFriends", true) {
-        val color by color("Color", Color4b(255, 179, 72, 255))
+        val color by color("Color", Color4b(0, 241, 255))
         val colorRainbow by boolean("Rainbow", false)
     }
 
@@ -65,7 +65,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
             FriendManager.friends.withIndex().forEach { (id, friend) ->
                 val color4b = if (ReplaceFriendNames.colorRainbow) rainbow() else ReplaceFriendNames.color
 
-                replacements.add(ReplacementMapping(friend.name, "Friend $id", color4b))
+                replacements.add(ReplacementMapping(friend.name, friend.alias ?: "Friend $id", color4b))
             }
         }
 

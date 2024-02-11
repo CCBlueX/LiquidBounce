@@ -39,15 +39,15 @@ import kotlin.math.roundToInt
  * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
  * This allows us to predict future actions and behave accordingly.
  */
-class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, name: String = "ClickScheduler")
+class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
     : Configurable(name) where T : Module {
 
-    private val cps by intRange("CPS", 5..8, 1..maxCps)
+    private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
 
     class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Cooldown", true)
         where T: Module {
 
-        private val rangeCooldown by floatRange("CooldownRange", 0.9f..1f, 0f..1f)
+        val rangeCooldown by floatRange("Timing", 1.0f..1.0f, 0.1f..1f)
 
         private var nextCooldown = rangeCooldown.random()
 
@@ -94,7 +94,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 20, 
      * Contains the time when the last click was performed and when the next click is possible.
      */
     private var clickData = newClickData()
-    private val cooldown: Cooldown<T>?
+    val cooldown: Cooldown<T>?
 
     val goingToClick: Boolean
         get() = isClickOnNextTick(0)

@@ -27,14 +27,19 @@ enum class Category(val readableName: String) {
     WORLD("World"),
     MISC("Misc"),
     EXPLOIT("Exploit"),
-    FUN("Fun");
+    FUN("Fun"),
+
+    /**
+     * A temporary category for client-related modules, since we don't have a client settings UI yet.
+     */
+    CLIENT("Client");
 
     companion object {
         /**
          * Gets an enum by its readable name
          */
         fun fromReadableName(name: String): Category? {
-            return values().find { name.equals(it.name, true) }
+            return entries.find { name.equals(it.name, true) }
         }
     }
 

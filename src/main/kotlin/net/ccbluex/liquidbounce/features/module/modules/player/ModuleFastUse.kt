@@ -66,7 +66,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
      * Q: Why this works?
      * A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
      */
-    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     val accelerateNow: Boolean
         get() {
@@ -97,7 +97,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val delay by int("Delay", 0, 0..10)
+        val delay by int("Delay", 0, 0..10, "ticks")
         val timer by float("Timer", 1f, 0.1f..5f)
 
         /**
@@ -105,7 +105,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
          *
          * This means we will speed up the eating process by 20 ticks on each tick.
          */
-        val speed by int("Speed", 20, 1..35)
+        val speed by int("Speed", 20, 1..35, "packets")
 
         val repeatable = repeatable {
             if (accelerateNow) {
@@ -128,7 +128,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             get() = modes
 
         val consumeTime by int("ConsumeTime", 15, 0..20)
-        val speed by int("Speed", 20, 1..35)
+        val speed by int("Speed", 20, 1..35, "packets")
 
         val repeatable = repeatable {
             if (accelerateNow && player.itemUseTime >= consumeTime) {

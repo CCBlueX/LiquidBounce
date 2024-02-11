@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'org.jlleitschuh.gradle.ktlint' version '12.1.0'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id "io.gitlab.arturbosch.detekt" version "1.23.4"
-    id "com.github.node-gradle.node" version "7.0.1"
+    id "io.gitlab.arturbosch.detekt" version "1.23.5"
+    id "com.github.node-gradle.node" version "7.0.2"
     id 'org.jetbrains.dokka' version '1.9.10'
 }
 
@@ -76,7 +76,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
 
     // Minecraft
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -96,6 +96,10 @@ dependencies {
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
     // modImplementation "maven.modrinth:viafabricplus:3.0.2"
+
+    // Tests
+    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
+//    modImplementation "net.ccbluex:tenacc:0.1.0"
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
@@ -134,7 +138,7 @@ dependencies {
 
     // Test libraries
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -178,8 +182,8 @@ tasks.register('buildTheme', NpmTask) {
         println 'Successfully build theme'
     }
 
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
-    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
+    inputs.dir("src-theme/src")
     outputs.dir('src-theme/public')
 }
 
@@ -192,8 +196,7 @@ tasks.register('bundleTheme', NodeTask) {
     }
 
     // Incremental stuff
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json')
-    inputs.dir(fileTree("src-theme/").exclude("**/build").exclude("**/node_modules").exclude("**/concepts"))
+    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
     outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 

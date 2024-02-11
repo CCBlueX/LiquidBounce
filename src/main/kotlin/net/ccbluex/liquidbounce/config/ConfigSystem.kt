@@ -45,10 +45,25 @@ import java.io.Writer
  */
 object ConfigSystem {
 
+    init {
+        // Delete the config folder if we are integration testing.
+//        if (LiquidBounce.isIntegrationTesting) {
+//            File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
+//        }
+    }
+
+    private val clientDirectoryName = if (LiquidBounce.isIntegrationTesting) {
+            "${LiquidBounce.CLIENT_NAME}_tenacc_test"
+        } else {
+            LiquidBounce.CLIENT_NAME
+        }
+
     // Config directory folder
     val rootFolder = File(
-        mc.runDirectory, LiquidBounce.CLIENT_NAME
-    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+        mc.runDirectory, clientDirectoryName
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }

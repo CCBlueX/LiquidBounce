@@ -54,7 +54,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     class Simulate(override val parent: ChoiceConfigurable) : Choice("Simulate") {
 
-        private val predict by int("Ticks", 5, 0..20)
+        private val predict by int("Ticks", 5, 0..20, "ticks")
 
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.

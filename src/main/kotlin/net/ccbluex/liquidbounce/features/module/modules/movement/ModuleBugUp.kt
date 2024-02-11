@@ -47,7 +47,7 @@ import kotlin.math.max
 
 object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
 
-    private val mode by enumChoice("Mode", Mode.BLINK_BACK, Mode.values())
+    private val mode by enumChoice("Mode", Mode.BLINK_BACK)
 
     private val maximumFallDamage by float("MaximumFallDamage", 3F, 0F..40F)
 

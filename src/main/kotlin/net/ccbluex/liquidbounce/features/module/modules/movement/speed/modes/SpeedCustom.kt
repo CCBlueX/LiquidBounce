@@ -68,7 +68,7 @@ object SpeedCustom : Choice("Custom") {
         /**
          * Allows for a delayed boost to be applied when the player jumps off the ground
          */
-        private val ticksToBoostOff by int("TicksToBoostOff", 0, 0..20)
+        private val ticksToBoostOff by int("TicksToBoostOff", 0, 0..20, "ticks")
 
         val repeatable = repeatable {
             if (!player.moving) {
@@ -129,7 +129,7 @@ object SpeedCustom : Choice("Custom") {
         private val customSpeed by boolean("CustomSpeed", false)
         private val speed by float("Speed", 1f, 0.1f..10f)
 
-        private val velocityTimeout by int("VelocityTimeout", 0, 0..20)
+        private val velocityTimeout by int("VelocityTimeout", 0, 0..20, "ticks")
         private val strafeKnock by boolean("StrafeKnock", false)
 
         private var ticksTimeout = 0

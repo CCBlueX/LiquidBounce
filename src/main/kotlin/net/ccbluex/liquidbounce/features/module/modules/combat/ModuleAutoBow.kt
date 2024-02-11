@@ -25,8 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -42,12 +41,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.BowItem
 import net.minecraft.item.TridentItem
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
@@ -162,7 +159,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             val yaw = rotation.yaw
             val pitch = rotation.pitch
 
-            val velocity = getHypotheticalArrowVelocity(player, false)
+            val velocity = getHypotheticalArrowVelocity(false)
 
             val vX = -MathHelper.sin(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
             val vY = -MathHelper.sin(pitch.toRadians()) * velocity
@@ -229,7 +226,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(rotationConfigurable)
         }
 
-        private val targetRenderer = tree(OverlayTargetRenderer(this.module!!))
+        private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
 
         val tickRepeatable = repeatable {
@@ -375,34 +372,30 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
     }
 
     @Suppress("MaxLineLength")
-    private fun predictBow(
+    fun predictBow(
         target: Vec3d,
         assumeElongated: Boolean,
     ): BowPredictionResult {
-        val player = player
-
         val travelledOnX = sqrt(target.x * target.x + target.z * target.z)
 
-        val velocity: Float = getHypotheticalArrowVelocity(player, assumeElongated)
+        val velocity = getHypotheticalArrowVelocity(assumeElongated)
+
+        val yaw = (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f
+        val pitch = (-Math.toDegrees(atan(
+            (velocity * velocity - sqrt(
+                velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2
+                    * target.y * (velocity * velocity)))
+                ) / (0.006f * travelledOnX),
+        ))).toFloat()
 
         return BowPredictionResult(
-            Rotation(
-                (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
-                (
-                        -Math.toDegrees(
-                            atan(
-                                (velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX),
-                            ),
-                        )
-                        ).toFloat(),
-            ),
+            Rotation(yaw, pitch),
             velocity,
             travelledOnX,
         )
     }
 
     private fun getHypotheticalArrowVelocity(
-        player: ClientPlayerEntity,
         assumeElongated: Boolean,
     ): Float {
         var velocity: Float =
@@ -435,7 +428,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         private val notDuringMove by boolean("NotDuringMove", false)
         private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
 
-        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
         val tickRepeatable = repeatable {
             val currentItem = player.activeItem

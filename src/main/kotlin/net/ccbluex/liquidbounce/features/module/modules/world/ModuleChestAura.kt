@@ -57,12 +57,12 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             it
         }
     }
-    private val delay by int("Delay", 5, 1..80)
+    private val delay by int("Delay", 5, 1..80, "ticks")
     private val visualSwing by boolean("VisualSwing", true)
     private val chest by blocks("Chest", hashSetOf(Blocks.CHEST))
 
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
-        val timeout by int("Timeout", 10, 1..80)
+        val timeout by int("Timeout", 10, 1..80, "ticks")
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
 

@@ -79,7 +79,7 @@ internal fun RestNode.setupModuleRestApi() {
         post("/panic") {
             RenderSystem.recordRenderCall {
                 for (module in ModuleManager) {
-                    if (module.category == Category.RENDER) {
+                    if (module.category == Category.RENDER || module.category == Category.CLIENT) {
                         continue
                     }
 

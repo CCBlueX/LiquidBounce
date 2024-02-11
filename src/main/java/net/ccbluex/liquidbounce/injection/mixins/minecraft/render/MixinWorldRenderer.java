@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideWea
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
-import net.ccbluex.liquidbounce.render.shaders.OutlineShader;
+import net.ccbluex.liquidbounce.render.shader.shaders.OutlineShader;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.MinecraftClient;
@@ -77,8 +77,8 @@ public abstract class MixinWorldRenderer {
             return;
         }
 
-        if (CombatExtensionsKt.shouldBeShown(entity)) {
-            Color4b color = ModuleESP.INSTANCE.getColor(entity);
+        if (entity instanceof LivingEntity && CombatExtensionsKt.shouldBeShown(entity)) {
+            Color4b color = ModuleESP.INSTANCE.getColor((LivingEntity) entity);
             OutlineShader outlineShader = OutlineShader.INSTANCE;
             Framebuffer originalBuffer = this.entityOutlinesFramebuffer;
 
@@ -162,8 +162,9 @@ public abstract class MixinWorldRenderer {
             }
         }
 
-        if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive()) {
-            final Color4b color = ModuleESP.INSTANCE.getColor(instance);
+        if (instance instanceof LivingEntity && ModuleESP.INSTANCE.getEnabled()
+                && ModuleESP.GlowMode.INSTANCE.isActive()) {
+            final Color4b color = ModuleESP.INSTANCE.getColor((LivingEntity) instance);
             return color.toRGBA();
         }
 

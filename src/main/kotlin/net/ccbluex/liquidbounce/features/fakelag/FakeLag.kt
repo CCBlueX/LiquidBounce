@@ -1,19 +1,41 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.fakelag
 
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleBugUp
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
@@ -51,6 +73,7 @@ object FakeLag : Listenable {
      */
     private fun shouldLag(packet: Packet<*>?): Boolean {
         return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
+            || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag()
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -110,6 +133,15 @@ object FakeLag : Listenable {
                     return@handler
                 }
             }
+
+            // Prevent lagging inventory actions if inventory move blink is enabled
+            is ClickSlotC2SPacket, is ButtonClickC2SPacket, is CreativeInventoryActionC2SPacket,
+                is SlotChangedStateC2SPacket -> {
+                if (ModuleInventoryMove.Blink.shouldLag()) {
+                    return@handler
+                }
+            }
+
         }
 
         if (event.origin == TransferOrigin.SEND) {
@@ -132,6 +164,15 @@ object FakeLag : Listenable {
         if (it.world == null) {
             clear()
         }
+    }
+
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+
+        // Use LiquidBounce accent color
+        val color = Color4b(0x00, 0x80, 0xFF, 0xFF)
+
+        drawStrip(matrixStack, color)
     }
 
     fun flush() {
@@ -241,6 +282,19 @@ object FakeLag : Listenable {
         synchronized(positions) {
             return positions.firstOrNull()?.vec
         }
+    }
+
+    inline fun <reified T> rewrite(action: (T) -> Unit) {
+        synchronized(packetQueue) {
+            packetQueue
+                .filterIsInstance<T>()
+                .forEach(action)
+        }
+    }
+
+    inline fun <reified T> rewriteAndFlush(action: (T) -> Unit) {
+        rewrite(action)
+        flush()
     }
 
     data class EvadingPacket(

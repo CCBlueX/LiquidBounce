@@ -25,22 +25,28 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 
 object JsMovementUtil {
 
-    fun speed(): Double = player.sqrtSpeed
+    @JvmName("getSpeed")
+    fun getSpeed(): Double = player.sqrtSpeed
 
-    fun moving(): Boolean = player.moving
+    @JvmName("isMoving")
+    fun isMoving(): Boolean = player.moving
 
+    @JvmName("strafe")
     fun strafe() {
         player.strafe()
     }
 
+    @JvmName("strafeWithSpeed")
     fun strafeWithSpeed(speed: Double) {
         player.strafe(speed = speed)
     }
 
+    @JvmName("strafeWithStrength")
     fun strafeWithStrength(strength: Double) {
         player.strafe(strength = strength)
     }
 
+    @JvmName("strafeWithSpeedAndStrength")
     fun strafeWithSpeedAndStrength(speed: Double, strength: Double) {
         player.strafe(speed = speed, strength = strength)
     }

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -48,22 +48,20 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices("Mode", { Modify }) {
         arrayOf(
             Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
     }
 
-    val pauseOnFlag by int("PauseOnFlag", 0, 0..5)
+    private val delay by intRange("Delay", 0..0, 0..40, "ticks")
+    private val pauseOnFlag by int("PauseOnFlag", 0, 0..5, "ticks")
+
     var pause = 0
-
-    object Delayed : ToggleableConfigurable(this, "Delayed", false) {
-        val ticks by intRange("Ticks", 3..6, 0..40)
-    }
-
-    init {
-        tree(Delayed)
-    }
 
     val repeatable = repeatable {
         if (pause > 0) {
@@ -74,23 +72,29 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
 
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
-            && it.original && Delayed.enabled) {
-            it.cancelEvent()
+        if (!it.original) {
+            return@sequenceHandler
+        }
 
-            Delayed.ticks.random().let { ticks ->
-                if (ticks > 0) {
-                    val timeToWait = System.currentTimeMillis() + (ticks * 50L)
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+            // When delay is above 0, we will delay the velocity update
+            if (delay.last > 0) {
+                it.cancelEvent()
 
-                    waitUntil { System.currentTimeMillis() >= timeToWait }
+                delay.random().let { ticks ->
+                    if (ticks > 0) {
+                        val timeToWait = System.currentTimeMillis() + (ticks * 50L)
+
+                        waitUntil { System.currentTimeMillis() >= timeToWait }
+                    }
                 }
-            }
 
-            val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
-            EventManager.callEvent(packetEvent)
+                val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+                EventManager.callEvent(packetEvent)
 
-            if (!packetEvent.isCancelled) {
-                (packet as Packet<ClientPlayPacketListener>).apply(network)
+                if (!packetEvent.isCancelled) {
+                    (packet as Packet<ClientPlayPacketListener>).apply(network)
+                }
             }
         } else if (packet is PlayerPositionLookS2CPacket) {
             pause = pauseOnFlag
@@ -122,7 +126,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     }
 
     /**
-     *
      * Basic velocity which should bypass the most server with regular anti-cheats like NCP.
      */
     private object Modify : Choice("Modify") {
@@ -130,8 +133,11 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val horizontal by float("Horizontal", 0f, 0f..1f)
-        val vertical by float("Vertical", 0f, 0f..1f)
+        val horizontal by float("Horizontal", 0f, -1f..1f)
+        val vertical by float("Vertical", 0f, -1f..1f)
+
+        val motionHorizontal by float("MotionHorizontal", 0f, 0f..1f)
+        val motionVertical by float("MotionVertical", 0f, 0f..1f)
 
         val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
@@ -144,10 +150,26 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     return@handler
                 }
 
+                val currentVelocity = player.velocity
+
                 // Modify packet according to the specified values
-                packet.velocityX = (packet.velocityX * horizontal).toInt()
-                packet.velocityY = (packet.velocityY * vertical).toInt()
-                packet.velocityZ = (packet.velocityZ * horizontal).toInt()
+                if (horizontal != 0f) {
+                    packet.velocityX = (packet.velocityX * horizontal).toInt()
+                    packet.velocityZ = (packet.velocityZ * horizontal).toInt()
+                } else {
+                    // set the horizontal velocity to the player velocity to prevent horizontal slowdown
+                    packet.velocityX = ((currentVelocity.x * motionHorizontal) * 8000).toInt()
+                    packet.velocityZ = ((currentVelocity.z * motionHorizontal) * 8000).toInt()
+                }
+
+                if (vertical != 0f) {
+                    packet.velocityY = (packet.velocityY * vertical).toInt()
+                } else {
+                    // set the vertical velocity to the player velocity to prevent vertical slowdown
+                    packet.velocityY = ((currentVelocity.y * motionVertical) * 8000).toInt()
+                }
+
+                NoFallBlink.waitUntilGround = true
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
@@ -161,6 +183,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.playerVelocityX *= horizontal
                 packet.playerVelocityY *= vertical
                 packet.playerVelocityZ *= horizontal
+
+                NoFallBlink.waitUntilGround = true
             }
         }
 
@@ -199,7 +223,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val delay by int("Delay", 2, 0..10)
+        val delay by int("Delay", 2, 0..10, "ticks")
         val strength by float("Strength", 1f, 0.1f..2f)
         val untilGround by boolean("UntilGround", false)
 
@@ -238,6 +262,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      * Jump Reset mode. A technique most players use to minimize the amount of knockback they get.
      */
     private object JumpReset : Choice("JumpReset") {
+
         override val parent: ChoiceConfigurable
             get() = modes
 
@@ -246,7 +271,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
 
         object JumpByDelay : ToggleableConfigurable(ModuleVelocity, "JumpByDelay", true) {
-            val ticksUntilJump by int("TicksUntilJump", 2, 0..20)
+            val ticksUntilJump by int("UntilJump", 2, 0..20, "ticks")
         }
 
         init {
@@ -256,14 +281,14 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
         var limitUntilJump = 0
 
-        val tickJumpHandler = handler<TickJumpEvent> {
+        val tickJumpHandler = handler<MovementInputEvent> {
             // To be able to alter velocity when receiving knockback, player must be sprinting.
             if (player.hurtTime != 9 || !player.isOnGround || !player.isSprinting || !isCooldownOver()) {
                 updateLimit()
                 return@handler
             }
 
-            player.jump()
+            it.jumping = true
             limitUntilJump = 0
         }
 
@@ -310,8 +335,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = it.packet
 
             if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)) {
-
-
                 it.cancelEvent()
                 waitTicks(1)
                 repeat(4) {
