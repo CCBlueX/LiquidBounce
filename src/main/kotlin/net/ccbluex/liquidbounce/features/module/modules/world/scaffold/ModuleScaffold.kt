@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import net.ccbluex.liquidbounce.config.*
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.NoneChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
@@ -90,7 +92,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var delay by intRange("Delay", 3..5, 0..40, "ticks")
     object Swing : ToggleableConfigurable(this, "Swing", true) {
-        val silentSwing by boolean("Silent", false);
+        val swingSilent by boolean("Silent", false);
     }
 
     // Silent block selection
@@ -402,7 +404,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             && SimulatePlacementAttempts.clickScheduler.goingToClick) {
             SimulatePlacementAttempts.clickScheduler.clicks {
                 // By the time this reaches here, the variables are already non-null
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, { Swing.silentSwing }, Swing::enabled, Swing::enabled)
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, Swing.swingSilent,
+                    Swing::enabled, Swing::enabled)
                 true
             }
         }
@@ -440,7 +443,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 player.isOnGround))
         }
 
-        doPlacement(currentCrosshairTarget, handToInteractWith, { Swing.silentSwing }, {
+        doPlacement(currentCrosshairTarget, handToInteractWith, Swing.swingSilent, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleTechnique.onBlockPlacement()
             ScaffoldAutoJumpFeature.onBlockPlacement()
