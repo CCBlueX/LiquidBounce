@@ -1,0 +1,47 @@
+@ -0,0 +1,46 @@
+package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim
+
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.decoration.ArmorStandEntity
+import kotlin.math.sqrt
+
+object SpeedGrimNear : Choice("GrimCollide") {
+    override val parent: ChoiceConfigurable
+        get() = ModuleSpeed.modes
+
+    /**
+     * Grim Collide mode for the Speed module.
+     * Grim's simulation when in another player basically gives up. We can exploit this by increasing our speed when
+     * we collide with another player.
+     * This Only works on servers running more recent versions of Minecraft and the player being on the same version.
+     */
+
+    val tickHandler = handler<PlayerTickEvent> {
+        for (entity in mc.world!!.entities) {
+            if (sqrt(mc.player!!.squaredDistanceTo(entity)) <= 1.5 && isSpeedable(entity)) {
+                if (mc.player!!.isOnGround) {
+                    player.jump()
+                }
+                val velocityX = mc.player!!.velocity.x * 1.08 * 1.1
+                val velocityZ = mc.player!!.velocity.z * 1.08 * 1.1
+                mc.player!!.setVelocity(velocityX, mc.player!!.velocity.y, velocityZ)
+                // Doesn't stack velocity from different players
+                break
+            }
+        }
+    }
+
+    private fun isSpeedable(entity: Entity): Boolean {
+        if (entity === mc.player) return false
+        if (entity !is LivingEntity) return false
+        if (entity is ArmorStandEntity) return false
+        return true
+    }
+
+}
