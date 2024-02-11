@@ -1,12 +1,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.LiquidBounce.hud
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
@@ -36,8 +38,11 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
      * BlocksMC Staff List
      * Last Updated: 7/02/2024
      */
-    private val blocksMCStaff: Set<String> by lazy {
-        loadStaffList("staffdetector/blocksmc-staff.txt")
+    private val blocksMCStaff: Map<String, Set<String>> by lazy {
+        if (mc.thePlayer == null || mc.theWorld == null) {
+            return@lazy emptyMap()
+        }
+        loadStaffList("$CLIENT_CLOUD/staffs/blocksmc.com")
     }
 
     private fun checkedStaffRemoved() {
@@ -139,7 +144,10 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
 
         mc.netHandler?.playerInfoMap?.mapNotNull { playerInfo ->
             val player = playerInfo?.gameProfile?.name ?: return@mapNotNull
-            val isStaff = blocksMCStaff.any { player.contains(it) }
+
+            val isStaff = blocksMCStaff.any { entry ->
+                entry.value.any { staffName -> player.contains(staffName) }
+            }
 
             val condition = when {
                 playerInfo.responseTime > 0 -> "§e(${playerInfo.responseTime}ms)"
@@ -211,25 +219,22 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
         notifyStaff()
     }
 
-    private fun loadStaffList(filePath: String): Set<String> {
-        val staffList = mutableSetOf<String>()
-
+    private fun loadStaffList(url: String): Map<String, Set<String>> {
         try {
-            val fileStream = javaClass.classLoader.getResourceAsStream(filePath)
+            val (response, code) = HttpUtils.request(url, "GET")
 
-            if (fileStream != null) {
-                val content = fileStream.reader().readText()
-                val names = content.split(",").map { it.trim() }
-                staffList.addAll(names)
-                Chat.print("§aSuccessfully loaded §9${staffList.size} §astaff names")
+            if (code == 200) {
+                val staffList = response.split("\n").filter { it.isNotBlank() && it.isNotEmpty() }.toSet()
+
+                Chat.print("§aSuccessfully loaded §9${staffList.size} §astaff names.")
+                return mapOf(url to staffList)
             } else {
-                Chat.print("§cFile not found: §9$filePath")
+                Chat.print("§cFailed to load staff list. §9(ERROR CODE: $code)")
             }
         } catch (e: Exception) {
-            Chat.print("§cError loading staff names from file: §9${e.message}")
+            Chat.print("§cFailed to load staff list. §9(${e.message})")
         }
-
-        return staffList
+        return emptyMap()
     }
 
     /**
