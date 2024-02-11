@@ -17,8 +17,8 @@ object AAC3BHop : SpeedMode("AAC3BHop") {
         val thePlayer = mc.thePlayer ?: return
 
         mc.timer.timerSpeed = 1f
-        
-        if (thePlayer.isInWater)
+
+        if (thePlayer.isInWater || thePlayer.isInLava)
             return
 
         if (isMoving) {

@@ -37,6 +37,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         NCPHop,
         NCPYPort,
         UNCPHop,
+        UNCPHop2,
 
         // YPort
         YPort,

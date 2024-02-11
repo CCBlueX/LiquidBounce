@@ -16,8 +16,9 @@ object AAC6BHop : SpeedMode("AAC6BHop") {
 
         mc.timer.timerSpeed = 1f
 
-        if (thePlayer.isInWater)
+        if (thePlayer.isInWater || thePlayer.isInLava)
             return
+
         if (isMoving) {
             if (thePlayer.onGround) {
                 if (legitJump) {
