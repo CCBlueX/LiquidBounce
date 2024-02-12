@@ -29,6 +29,8 @@ import kotlin.math.atan
 
 object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
+    private val horizontalAim by BoolValue("HorizontalAim", true)
+    private val verticalAim by BoolValue("VerticalAim", true)
     private val range by FloatValue("Range", 4.4F, 1F..8F)
     private val turnSpeed by FloatValue("TurnSpeed", 10f, 1F..180F)
     private val inViewTurnSpeed by FloatValue("InViewTurnSpeed", 35f, 1f..180f)
@@ -49,8 +51,7 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (event.eventState != EventState.POST)
-            return
+        if (event.eventState != EventState.POST) return
 
         val thePlayer = mc.thePlayer ?: return
 
@@ -65,9 +66,9 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
 
             Backtrack.runWithNearestTrackedDistance(it) {
                 result = isSelected(it, true)
-                    && thePlayer.canEntityBeSeen(it)
-                    && thePlayer.getDistanceToEntityBox(it) <= range
-                    && getRotationDifference(it) <= fov
+                        && thePlayer.canEntityBeSeen(it)
+                        && thePlayer.getDistanceToEntityBox(it) <= range
+                        && getRotationDifference(it) <= fov
             }
 
             result
@@ -168,7 +169,7 @@ object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
         val rotation = limitAngleChange(player.rotation, destinationRotation, realisticTurnSpeed.toFloat())
 
-        rotation.toPlayer(player)
+        rotation.toPlayer(player, horizontalAim, verticalAim)
 
         player.setPosAndPrevPos(currPos, oldPos)
 
