@@ -66,6 +66,20 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
                     delayTick = 0
                 }
             }
+
+            "MinemenClub" -> {
+                if (player.ticksExisted % 20 == 1) {
+                    val paper = findPaper(36, 45)
+                    if (paper == -1) return
+
+                    mc.thePlayer.rotationPitch = -90f
+                    mc.thePlayer.inventory.currentItem = (paper - 36)
+                    mc.playerController.updateController()
+                    if (delayTick >= delay) {
+                        mc.rightClickMouse()
+                    }
+                }
+            }
         }
     }
 
