@@ -197,6 +197,7 @@ tasks.register('bundleTheme', NodeTask) {
 
     // Incremental stuff
     inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
+    inputs.dir("src-theme/src")
     outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 
