@@ -371,55 +371,82 @@
         })
     }
 
-    /**
-     * internal fun RestNode.setupProxyRestApi() {
-     *     get("/proxy") {
-     *         val proxyObject = JsonObject()
-     *
-     *         ProxyManager.currentProxy?.let {
-     *             proxyObject.addProperty("host", it.host)
-     *             proxyObject.addProperty("port", it.port)
-     *             proxyObject.addProperty("username", it.credentials?.username)
-     *             proxyObject.addProperty("password", it.credentials?.password)
-     *         }
-     *
-     *         httpOk(proxyObject)
-     *     }
-     *
-     *     post("/proxy") {
-     *         data class ProxyRequest(val host: String, val port: Int, val username: String, val password: String)
-     *
-     *         val body = decode<ProxyRequest>(it.content)
-     *
-     *         if (body.host.isBlank())
-     *             return@post httpForbidden("No host")
-     *
-     *         if (body.port <= 0)
-     *             return@post httpForbidden("No port")
-     *
-     *         ProxyManager.setProxy(body.host, body.port, body.username, body.password)
-     *
-     *         httpOk(JsonObject())
-     *     }
-     *
-     *     delete("/proxy") {
-     *         ProxyManager.unsetProxy()
-     *         httpOk(JsonObject())
-     *     }
-     * }
-     */
+    // get("/proxy") {
+    //     val proxyObject = JsonObject()
+    //
+    //     ProxyManager.currentProxy?.let {
+    //         proxyObject.addProperty("host", it.host)
+    //         proxyObject.addProperty("port", it.port)
+    //         proxyObject.addProperty("username", it.credentials?.username)
+    //         proxyObject.addProperty("password", it.credentials?.password)
+    //     }
+    //
+    //     httpOk(proxyObject)
+    // }
+    //
+    // delete("/proxy") {
+    //     ProxyManager.unsetProxy()
+    //     httpOk(JsonObject())
+    // }
+    //
+    // get("/proxies") {
+    //     val proxiesArray = JsonArray()
+    //
+    //     ProxyManager.proxies.forEachIndexed { index, proxy ->
+    //         val proxyObject = JsonObject()
+    //         proxyObject.addProperty("id", index)
+    //         proxyObject.addProperty("host", proxy.host)
+    //         proxyObject.addProperty("port", proxy.port)
+    //         proxyObject.addProperty("username", proxy.credentials?.username)
+    //         proxyObject.addProperty("password", proxy.credentials?.password)
+    //         proxiesArray.add(proxyObject)
+    //     }
+    //
+    //     httpOk(proxiesArray)
+    // }
+    //
+    // post("/proxies") {
+    //     data class ProxyRequest(val host: String, val port: Int, val username: String, val password: String)
+    //
+    //     val body = decode<ProxyRequest>(it.content)
+    //
+    //     if (body.host.isBlank()) {
+    //         return@post httpForbidden("No host")
+    //     }
+    //
+    //     if (body.port <= 0) {
+    //         return@post httpForbidden("No port")
+    //     }
+    //
+    //     ProxyManager.addProxy(body.host, body.port, body.username, body.password)
+    //     httpOk(JsonObject())
+    // }
+    //
+    // delete("/proxies") {
+    //     data class ProxyRequest(val id: Int)
+    //     val body = decode<ProxyRequest>(it.content)
+    //
+    //     if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+    //         return@delete httpForbidden("Invalid id")
+    //     }
+    //
+    //     ProxyManager.removeProxy(body.id)
+    //     httpOk(JsonObject())
+    // }
+    //
+    // put("/proxies") {
+    //     data class ProxyRequest(val id: Int)
+    //     val body = decode<ProxyRequest>(it.content)
+    //
+    //     if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+    //         return@put httpForbidden("Invalid id")
+    //     }
+    //
+    //     ProxyManager.setProxy(body.id)
+    //     httpOk(JsonObject())
+    // }
     export function getProxy() {
         return request("/proxy")
-    }
-
-    export function setProxy(host, port, username, password) {
-        return request("/proxy", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ "host": host, "port": port, "username": username, "password": password })
-        })
     }
 
     export function unsetProxy() {
@@ -431,6 +458,39 @@
         })
     }
 
+    export function getProxies() {
+        return request("/proxies")
+    }
+
+    export function addProxy(proxy) {
+        return request("/proxies", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "host": proxy.host, "port": proxy.port, "username": proxy.username, "password": proxy.password })
+        })
+    }
+
+    export function removeProxy(id) {
+        return request("/proxies", {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "id": id })
+        })
+    }
+
+    export function setProxy(id) {
+        return request("/proxies", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ "id": id })
+        })
+    }
 
     export function getPersistentStorage(key) {
         const searchParams = new URLSearchParams({ key })
