@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import java.io.StringReader
 
-internal fun RestNode.setupModuleRestApi() {
+internal fun RestNode.moduleRest() {
     get("/modules") {
         val mods = JsonArray()
         for (module in ModuleManager) {
@@ -92,7 +92,7 @@ internal fun RestNode.setupModuleRestApi() {
     }
 }
 
-internal fun RestNode.setupOptions() {
+internal fun RestNode.commonOptionsRest() {
     // clickgui settings
     get("/options/clickgui") {
         val clickGui = ModuleClickGui

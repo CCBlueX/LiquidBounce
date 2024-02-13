@@ -31,7 +31,7 @@ import net.minecraft.world.level.storage.LevelSummary
 
 var summaries = emptyList<LevelSummary>()
 
-internal fun RestNode.setupWorldApi() {
+internal fun RestNode.worldListRest() {
     get("/worlds") {
         val worlds = JsonArray()
 
