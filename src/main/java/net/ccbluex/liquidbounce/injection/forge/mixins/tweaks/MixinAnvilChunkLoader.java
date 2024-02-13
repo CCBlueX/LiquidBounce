@@ -20,7 +20,7 @@ public class MixinAnvilChunkLoader {
 
     /**
      * Due to limitations with local variable capture in Mixins,
-     * a Redirect is used as a good alternative.
+     * a Redirect is used as an alternative.
      */
     @Redirect(
             method = "loadChunk__Async",
