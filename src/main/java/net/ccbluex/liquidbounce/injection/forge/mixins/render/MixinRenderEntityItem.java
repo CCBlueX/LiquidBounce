@@ -81,7 +81,8 @@ public abstract class MixinRenderEntityItem extends Render<EntityItem> {
         float age = (float) itemIn.getAge() + p_177077_8_;
         float hoverStart = itemIn.hoverStart;
         boolean isPhysicsState = itemPhysics.getState();
-        float weight = isPhysicsState ? itemPhysics.getWeight().get() : 0.0f;
+        boolean isRealistic = itemPhysics.getRealistic();
+        float weight = isPhysicsState ? itemPhysics.getWeight() : 0.0f;
 
         float sinValue = sin((age / 10.0F + hoverStart)) * 0.1F + 0.1F;
         if (isPhysicsState) {
@@ -104,15 +105,19 @@ public abstract class MixinRenderEntityItem extends Render<EntityItem> {
         if (isGui3d || this.renderManager.options != null) {
             float rotationYaw = (age / 20.0F + hoverStart) * (180F / (float) Math.PI);
 
-            rotationYaw *= itemPhysics.getRotationSpeed().get() * (1.0F + Math.min(age / 360.0F, 1.0F));
+            rotationYaw *= itemPhysics.getRotationSpeed() * (1.0F + Math.min(age / 360.0F, 1.0F));
 
             if (isPhysicsState) {
                 if (itemIn.onGround) {
                     GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-                    GL11.glRotatef(itemIn.rotationYaw, 0.0f, 0.0f, 1.0f);
+                    if (!isRealistic) {
+                        GL11.glRotatef(itemIn.rotationYaw, 0.0f, 0.0f, 1.0f);
+                    } else {
+                        GL11.glRotatef(itemIn.rotationYaw, 0.0f, 1.0f, 0.6f);
+                    }
                 } else {
-                    for (int a = 0; a < 10; ++a) {
-                        GL11.glRotatef(rotationYaw, weight, weight, 1.0f);
+                    for (int a = 0; a < 7; ++a) {
+                        GL11.glRotatef(rotationYaw, weight, weight, 1.35f);
                     }
                 }
             } else {
