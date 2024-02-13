@@ -112,9 +112,9 @@ class VirtualScreenEvent(val screenName: String, val action: Action) : Event() {
 
 }
 
-@Nameable("serverInfoUpdate")
+@Nameable("serverPinged")
 @WebSocketEvent
-class ServerInfoEvent(val server: ServerInfo) : Event()
+class ServerPingedEvent(val server: ServerInfo) : Event()
 
 /**
  * The simulated tick event is called by the [MovementInputEvent] with a simulated movement context.

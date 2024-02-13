@@ -23,6 +23,9 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -32,7 +35,11 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.minecraft.client.gui.screen.TitleScreen
+import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
+import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
 import net.minecraft.client.network.MultiplayerServerListPinger
+import net.minecraft.client.network.ServerAddress
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.option.ServerList
 import net.minecraft.screen.ScreenTexts
@@ -102,6 +109,22 @@ object ServerListRest : Listenable {
 
                 httpOk(servers)
             }.getOrElse { httpInternalServerError("Failed to get servers due to ${it.message}") }
+        }.apply {
+            post("/connect") {
+                data class ServerConnectRequest(val address: String)
+                val serverConnectRequest = decode<ServerConnectRequest>(it.content)
+
+                val serverInfo = serverList.getByAddress(serverConnectRequest.address)
+                    ?: ServerInfo("Unknown Server", serverConnectRequest.address, ServerInfo.ServerType.OTHER)
+
+                val serverAddress = ServerAddress.parse(serverInfo.address)
+
+                RenderSystem.recordRenderCall {
+                    ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo,
+                        false)
+                }
+                httpOk(JsonObject())
+            }
         }
     }
 
@@ -114,3 +137,5 @@ object ServerListRest : Listenable {
 }
 
 fun ServerList.toList() = (0 until size()).map { get(it) }
+
+fun ServerList.getByAddress(address: String) = toList().firstOrNull { it.address == address }
