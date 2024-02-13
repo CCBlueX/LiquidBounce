@@ -19,6 +19,7 @@
  */
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
@@ -28,15 +29,13 @@ import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 
 /**
  * Proxy endpoints
- *
- * TODO: These need to be reworked since we are going to use a proxy pool in the future
- *  similar to the account pool
  */
 internal fun RestNode.proxyRest() {
     get("/proxy") {
         val proxyObject = JsonObject()
 
         ProxyManager.currentProxy?.let {
+            proxyObject.addProperty("id", ProxyManager.proxies.indexOf(it))
             proxyObject.addProperty("host", it.host)
             proxyObject.addProperty("port", it.port)
             proxyObject.addProperty("username", it.credentials?.username)
@@ -46,24 +45,66 @@ internal fun RestNode.proxyRest() {
         httpOk(proxyObject)
     }
 
-    post("/proxy") {
-        data class ProxyRequest(val host: String, val port: Int, val username: String, val password: String)
-
-        val body = decode<ProxyRequest>(it.content)
-
-        if (body.host.isBlank())
-            return@post httpForbidden("No host")
-
-        if (body.port <= 0)
-            return@post httpForbidden("No port")
-
-        ProxyManager.setProxy(body.host, body.port, body.username, body.password)
-
-        httpOk(JsonObject())
-    }
-
     delete("/proxy") {
         ProxyManager.unsetProxy()
         httpOk(JsonObject())
     }
+
+    get("/proxies") {
+        val proxiesArray = JsonArray()
+
+        ProxyManager.proxies.forEachIndexed { index, proxy ->
+            val proxyObject = JsonObject()
+            proxyObject.addProperty("id", index)
+            proxyObject.addProperty("host", proxy.host)
+            proxyObject.addProperty("port", proxy.port)
+            proxyObject.addProperty("username", proxy.credentials?.username)
+            proxyObject.addProperty("password", proxy.credentials?.password)
+            proxiesArray.add(proxyObject)
+        }
+
+        httpOk(proxiesArray)
+    }
+
+    post("/proxies") {
+        data class ProxyRequest(val host: String, val port: Int, val username: String, val password: String)
+
+        val body = decode<ProxyRequest>(it.content)
+
+        if (body.host.isBlank()) {
+            return@post httpForbidden("No host")
+        }
+
+        if (body.port <= 0) {
+            return@post httpForbidden("No port")
+        }
+
+        ProxyManager.addProxy(body.host, body.port, body.username, body.password)
+        httpOk(JsonObject())
+    }
+
+    delete("/proxies") {
+        data class ProxyRequest(val id: Int)
+        val body = decode<ProxyRequest>(it.content)
+
+        if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+            return@delete httpForbidden("Invalid id")
+        }
+
+        ProxyManager.removeProxy(body.id)
+        httpOk(JsonObject())
+    }
+
+    put("/proxies") {
+        data class ProxyRequest(val id: Int)
+        val body = decode<ProxyRequest>(it.content)
+
+        if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+            return@put httpForbidden("Invalid id")
+        }
+
+        ProxyManager.setProxy(body.id)
+        httpOk(JsonObject())
+    }
+
 }
