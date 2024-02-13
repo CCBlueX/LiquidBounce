@@ -25,14 +25,17 @@ import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig.cachedSettingsList
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.rootDomain
 
 object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
 
@@ -73,7 +76,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
         }
     }
 
-    val handleServerConnect = sequenceHandler<ServerConnectEvent> {
+    val handleServerConnect = handler<ServerConnectEvent> {
         requiresConfigLoad = true
     }
 
@@ -87,10 +90,14 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
             return
         }
 
-        val autoConfig = cachedSettingsList?.find {
+        // Get config with the shortest name, as it is most likely the correct one.
+        // There can be multiple configs for the same server, but with different names
+        // and the global config is likely named e.g "hypixel", while the more specific ones are named
+        // "hypixel-csgo", "hypixel-legit", etc.
+        val autoConfig = cachedSettingsList?.filter {
             it.serverAddress?.rootDomain().equals(address, true) ||
                 it.serverAddress.equals(address, true)
-        }
+        }?.minByOrNull { it.name.length }
 
         if (autoConfig == null) {
             notification("Auto Config", "There is no known config for $address.",
