@@ -79,7 +79,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      */
 
     private val simulateCooldown by BoolValue("SimulateCooldown", false)
-    private val simulateButterflyClicking by BoolValue("SimulateButterflyClicking", false) { !simulateCooldown }
+    private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false) { !simulateCooldown }
 
     // CPS - Attack speed
     private val maxCPSValue = object : IntegerValue("MaxCPS", 8, 1..20) {
@@ -368,12 +368,14 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
             // Usually when you butterfly click, you end up clicking two (and possibly more) times in a single tick.
             // Sometimes you also do not click. The positives outweigh the negatives, however.
-            val extraClicks = if (simulateButterflyClicking && !simulateCooldown) nextInt(-1, 1) else 0
+            val extraClicks = if (simulateDoubleClicking && !simulateCooldown) nextInt(-1, 1) else 0
 
-            while (clicks + extraClicks > 0) {
+            val maxClicks = clicks + extraClicks
+
+            repeat(maxClicks) {
                 val wasBlocking = blockStatus
 
-                runAttack(clicks)
+                runAttack(it + 1 == maxClicks)
                 clicks--
 
                 if (wasBlocking && !blockStatus && (releaseAutoBlock && !ignoreTickRule || autoBlock == "Off")) {
@@ -419,7 +421,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Attack enemy
      */
     @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
-    private fun runAttack(clicks: Int) {
+    private fun runAttack(isLastClick: Boolean) {
         var currentTarget = this.target ?: return
 
         val thePlayer = mc.thePlayer ?: return
@@ -484,7 +486,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                         attackTickTimes += it to runTimeTicks
                     }
 
-                    if (clicks == 1) {
+                    if (isLastClick) {
                         // We return false because when you click literally once, the attack key's [pressed] status is false.
                         // Since we simulate clicks, we are supposed to respect that behavior.
                         mc.sendClickBlockToController(false)
