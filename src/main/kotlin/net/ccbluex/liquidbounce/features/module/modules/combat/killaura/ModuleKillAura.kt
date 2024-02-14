@@ -167,7 +167,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        if (isInInventoryScreen && !ignoreOpenInventory || player.isSpectator || player.isDead || !canTargetEnemies) {
+        val shouldCleanUpTracker = player.isSpectator || player.isDead || !canTargetEnemies
+
+        if (isInInventoryScreen && !ignoreOpenInventory || shouldCleanUpTracker) {
             // Cleanup current target tracker
             targetTracker.cleanup()
             return@handler
