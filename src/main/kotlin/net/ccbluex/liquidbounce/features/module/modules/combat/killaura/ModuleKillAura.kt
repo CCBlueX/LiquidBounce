@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
@@ -94,6 +93,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     // Predict
     private val pointTracker = tree(PointTracker())
 
+    private val onClick by boolean("OnClick", false)
+
     init {
         tree(FightBot)
     }
@@ -141,6 +142,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    private val canTargetEnemies
+        get() = !onClick || mc.options.attackKey.isPressed
+
     private var renderTarget: Entity? = null
 
     val renderHandler = handler<WorldRenderEvent> { event ->
@@ -152,6 +156,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
         val target = targetTracker.lockedOnTarget ?: return
+
         renderEnvironmentForWorld(matrixStack) {
             targetRenderer.render(this, target, partialTicks)
         }
@@ -162,7 +167,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        if ((isInInventoryScreen && !ignoreOpenInventory) || player.isSpectator || player.isDead) {
+        if (isInInventoryScreen && !ignoreOpenInventory || player.isSpectator || player.isDead || !canTargetEnemies) {
             // Cleanup current target tracker
             targetTracker.cleanup()
             return@handler
@@ -189,10 +194,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             AutoBlock.stopBlocking()
 
             // Deal with fake swing when there is no target
-            if (FailSwing.enabled) {
+            if (FailSwing.enabled && canTargetEnemies) {
                 waitTicks(AutoBlock.tickOff)
                 dealWithFakeSwing(null)
             }
+            return@repeatable
+        }
+
+        // Check if the module should (not) continue after the blocking state is updated
+        if (!canTargetEnemies) {
             return@repeatable
         }
 
@@ -253,7 +263,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
         ModuleDebug.debugParameter(ModuleKillAura, "Target", chosenEntity.nameForScoreboard)
 
-        if(!isFacingEnemy) {
+        if (!isFacingEnemy) {
             dealWithFakeSwing(chosenEntity)
             return
         }
@@ -330,6 +340,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val situation = when {
                 clickScheduler.goingToClick ||
                     clickScheduler.isClickOnNextTick(1) -> PointTracker.AimSituation.FOR_NEXT_TICK
+
                 else -> PointTracker.AimSituation.FOR_THE_FUTURE
             }
             ModuleDebug.debugParameter(ModuleKillAura, "AimSituation", situation)
