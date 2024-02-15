@@ -51,13 +51,14 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     val repeatable = repeatable {
         val hotbarSlot = findHotbarSlot(Items.GOLDEN_APPLE)
         val invSlot = findInventorySlot(Items.GOLDEN_APPLE)
+        val offhandSlot = player.offHandStack.item == Items.GOLDEN_APPLE
 
-        if (interaction.hasRidingInventory() && invSlot != null && hotbarSlot == null) {
+        if (interaction.hasRidingInventory() && invSlot != null && hotbarSlot == null && !offhandSlot) {
             return@repeatable
         }
 
         if (player.health + player.absorptionAmount < health) {
-            if (hotbarSlot == null) {
+            if (hotbarSlot == null && !offhandSlot) {
                 if (findEmptyHotbarSlot() && invSlot != null) {
                     performInventoryClick(invSlot)
                 }
@@ -65,7 +66,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                 return@repeatable
             }
 
-            hotbarSlot.run {
+            if (offhandSlot) {
                 if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
                     return@repeatable
                 }
@@ -74,39 +75,22 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                     return@repeatable
                 }
 
-                val delay = inventoryConstraints.clickDelay.random()
-
-                if (!waitConditional(delay) { !canUseItem() }) {
-                    return@repeatable
-                }
-
-                SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, this, 1)
-
                 if (player.isUsingItem) {
                     interaction.stopUsingItem(player)
-
-                    if (!waitConditional(1) { !canUseItem() }) {
-                        SilentHotbar.resetSlot(this)
-
-                        return@repeatable
-                    }
-
-                    if (SilentHotbar.serversideSlot != this) {
-                        SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, this, delay.coerceAtLeast(1))
-                    }
                 }
+
+                mc.options.useKey.isPressed = true
 
                 var stopItemUse = false
 
                 waitUntil {
-                    // Keep the slot during eating
-                    SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, this, 1)
-
-                    mc.options.useKey.isPressed = true
-
                     stopItemUse = player.health + player.absorptionAmount >= health
-                        || player.inventory.getStack(this).item != Items.GOLDEN_APPLE
+                        || player.offHandStack.item != Items.GOLDEN_APPLE
                         || !canUseItem()
+
+                    if (stopItemUse) {
+                        releaseUseKey()
+                    }
 
                     return@waitUntil stopItemUse
                 }
@@ -115,6 +99,62 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                     releaseUseKey()
 
                     SilentHotbar.resetSlot(this)
+                }
+            } else {
+                hotbarSlot.run {
+                    if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
+                        return@repeatable
+                    }
+
+                    if (notDuringCombat && CombatManager.isInCombat()) {
+                        return@repeatable
+                    }
+
+                    val delay = inventoryConstraints.clickDelay.random()
+
+                    if (!waitConditional(delay) { !canUseItem() }) {
+                        return@repeatable
+                    }
+
+                    this?.let { it1 -> SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, it1, 1) }
+
+                    if (player.isUsingItem) {
+                        interaction.stopUsingItem(player)
+
+                        if (!waitConditional(1) { !canUseItem() }) {
+                            SilentHotbar.resetSlot(this)
+
+                            return@repeatable
+                        }
+
+                        if (SilentHotbar.serversideSlot != this) {
+                            this?.let { it1 ->
+                                SilentHotbar.selectSlotSilently(this@ModuleAutoGapple,
+                                    it1, delay.coerceAtLeast(1))
+                            }
+                        }
+                    }
+
+                    var stopItemUse = false
+
+                    waitUntil {
+                        // Keep the slot during eating
+                        this?.let { it1 -> SilentHotbar.selectSlotSilently(this@ModuleAutoGapple, it1, 1) }
+
+                        mc.options.useKey.isPressed = true
+
+                        stopItemUse = player.health + player.absorptionAmount >= health
+                            || this?.let { it1 -> player.inventory.getStack(it1).item } != Items.GOLDEN_APPLE
+                            || !canUseItem()
+
+                        return@waitUntil stopItemUse
+                    }
+
+                    if (stopItemUse) {
+                        releaseUseKey()
+
+                        SilentHotbar.resetSlot(this)
+                    }
                 }
             }
         }
