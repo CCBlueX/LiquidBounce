@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.ping
@@ -38,7 +40,7 @@ class NametagTextFormatter(private val entity: Entity) {
             outputBuilder.append(this.pingText).append(" ")
         }
 
-        outputBuilder.append("${this.nameColor}${entity.displayName!!.string}")
+        outputBuilder.append("${this.nameColor}${ModuleNameProtect.replace(entity.displayName!!.string)}")
 
         if (ModuleNametags.Health.enabled) {
             outputBuilder.append(" ").append(this.healthText)
@@ -58,6 +60,7 @@ class NametagTextFormatter(private val entity: Entity) {
             isBot -> "§3"
             entity.isInvisible -> "§6"
             entity.isSneaking -> "§4"
+            FriendManager.isFriend(entity) -> "§b"
             else -> "§7"
         }
 
