@@ -35,21 +35,19 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerStatistics;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
-import org.spongepowered.asm.mixin.Unique;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.MovementType;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -71,13 +69,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     protected abstract boolean isWalking();
 
     @Unique
-    private float lastKnownHealth;
-    @Unique
-    private float lastKnownMaxHealth;
-    @Unique
-    private float lastKnownFoodLevel;
-    @Unique
-    private float lastKnownExperienceProgress;
+    private PlayerStatistics lastKnownStatistics = null;
 
     /**
      * Hook entity tick event
@@ -103,21 +95,12 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private void hookPostTickEvent(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new PlayerPostTickEvent());
 
-        var health = this.getHealth();
-        var maxHealth = this.getMaxHealth();
-        var foodLevel = this.getHungerManager().getFoodLevel();
-        var experienceProgress = this.experienceProgress;
-
-        // Call event if any of the values changed
-        if (health != this.lastKnownHealth || maxHealth != this.lastKnownMaxHealth ||
-                foodLevel != this.lastKnownFoodLevel || experienceProgress != this.lastKnownExperienceProgress) {
-            EventManager.INSTANCE.callEvent(new PlayerStatsChangeEvent(health, maxHealth, foodLevel, experienceProgress));
+        // Call player statistics change event when statistics change
+        var statistics = PlayerStatistics.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
+        if (lastKnownStatistics == null || lastKnownStatistics != statistics) {
+            EventManager.INSTANCE.callEvent(PlayerStatsChangeEvent.Companion.fromPlayerStatistics(statistics));
         }
-
-        this.lastKnownHealth = health;
-        this.lastKnownMaxHealth = maxHealth;
-        this.lastKnownFoodLevel = foodLevel;
-        this.lastKnownExperienceProgress = experienceProgress;
+        this.lastKnownStatistics = statistics;
     }
 
     /**

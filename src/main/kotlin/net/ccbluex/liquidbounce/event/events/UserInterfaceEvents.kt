@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerStatistics
 
 @Nameable("fps")
 @WebSocketEvent
@@ -30,5 +31,24 @@ class FpsChangeEvent(val fps: Int) : Event()
 
 @Nameable("playerStats")
 @WebSocketEvent
-class PlayerStatsChangeEvent(val health: Float, val maxHealth: Float, val food: Int,
-                             val experienceProgress: Float) : Event()
+class PlayerStatsChangeEvent(
+    val health: Float,
+    val maxHealth: Float,
+    val absorption: Float,
+    var armor: Int,
+    val food: Int,
+    val experienceLevel: Int,
+    val experienceProgress: Float
+) : Event() {
+    companion object {
+        fun fromPlayerStatistics(stats: PlayerStatistics) = PlayerStatsChangeEvent(
+            stats.health,
+            stats.maxHealth,
+            stats.absorption,
+            stats.armor,
+            stats.food,
+            stats.experienceLevel,
+            stats.experienceProgress
+        )
+    }
+}

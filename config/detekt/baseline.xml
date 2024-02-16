@@ -56,6 +56,7 @@
     <ID>LongParameterList:ModuleTrajectories.kt$ModuleTrajectories$( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack )</ID>
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T>?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
+    <ID>LongParameterList:UserInterfaceEvents.kt$PlayerStatsChangeEvent$( val health: Float, val maxHealth: Float, val absorption: Float, var armor: Int, val food: Int, val experienceLevel: Int, val experienceProgress: Float )</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
