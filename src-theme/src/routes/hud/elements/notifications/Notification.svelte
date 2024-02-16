@@ -36,27 +36,27 @@
 
         &.success {
             background-color: #4dac68;
-            background-image: url("img/hud/notification/icon-success.svg");
+            background-image: url("/img/hud/notification/icon-success.svg");
         }
 
         &.error {
             background-color: #fc4130;
-            background-image: url("img/hud/notification/icon-error.svg");
+            background-image: url("/img/hud/notification/icon-error.svg");
         }
 
         &.info {
             background-color: #4677ff;
-            background-image: url("img/hud/notification/icon-info.svg");
+            background-image: url("/img/hud/notification/icon-info.svg");
         }
 
         &.enabled {
             background-color: #4dac68;
-            background-image: url("img/hud/notification/icon-enabled.svg");
+            background-image: url("/img/hud/notification/icon-enabled.svg");
         }
 
         &.disabled {
             background-color: #fc4130;
-            background-image: url("img/hud/notification/icon-disabled.svg");
+            background-image: url("/img/hud/notification/icon-disabled.svg");
         }
     }
 

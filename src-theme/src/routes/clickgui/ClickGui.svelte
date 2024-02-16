@@ -35,7 +35,7 @@
         width: 100vw;
         max-width: 100vw;
         max-height: 100vh;
-        background-color: rgba(black, 0.8);
+        background-color: rgba(black, 0.2);
         overflow: hidden;
         position: relative;
     }

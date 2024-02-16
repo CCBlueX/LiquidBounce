@@ -124,7 +124,7 @@
                 width: 10px;
                 right: 15px;
                 top: 50%;
-                background-image: url("img/clickgui/icon-settings-expand.svg");
+                background-image: url("/img/clickgui/icon-settings-expand.svg");
                 background-position: center;
                 background-repeat: no-repeat;
                 opacity: 0.5;

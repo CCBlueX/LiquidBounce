@@ -86,7 +86,7 @@
             width: 10px;
             right: 10px;
             top: 50%;
-            background-image: url("img/clickgui/icon-settings-expand.svg");
+            background-image: url("/img/clickgui/icon-settings-expand.svg");
             background-position: center;
             background-repeat: no-repeat;
             transform-origin: 50% 50%;
