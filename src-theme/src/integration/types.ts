@@ -123,3 +123,13 @@ export interface VirtualScreen {
     name: string;
     splash: boolean;
 }
+
+export interface PlayerStats {
+    health: number,
+    maxHealth: number;
+    absorption: number;
+    armor: number;
+    food: number;
+    experienceLevel: number;
+    experienceProgress: number;
+}
