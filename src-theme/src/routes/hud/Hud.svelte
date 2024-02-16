@@ -1,16 +1,24 @@
 <script>
-    import TabGui from "./tabgui/TabGui.svelte";
-    import Watermark from "./watermark/Watermark.svelte";
-    import ArrayList from "./arraylist/ArrayList.svelte";
-    import Notifications from "./notification/Notifications.svelte";
-
-    import { listen } from "../../client/ws.svelte";
-    import { getModules, toggleModule } from "../../client/api.svelte";
+    import ArrayList from "./elements/ArrayList.svelte";
+    import TargetHud from "./elements/targethud/TargetHud.svelte";
+    import Watermark from "./elements/Watermark.svelte";
+    import Notifications from "./elements/notifications/Notifications.svelte";
+    import TabGui from "./elements/tabgui/TabGui.svelte";
+    import HotBar from "./elements/hotbar/HotBar.svelte";
 </script>
 
-<main>
-    <ArrayList getModules={getModules} listen={listen} />
-    <Watermark/>
-    <TabGui getModules={getModules} toggleModule={toggleModule} listen={listen} />
-    <Notifications listen={listen} />
-</main>
+<div class="hud">
+    <Watermark />
+    <TabGui />
+    <ArrayList />
+    <Notifications />
+<!--     <TargetHud />
+    <HotBar /> -->
+</div>
+
+<style lang="scss">
+    .hud {
+        height: 100vh;
+        width: 100vw;
+    }
+</style>

@@ -1,21 +1,24 @@
-<script>
+<script lang="ts">
     import Router, { push } from "svelte-spa-router";
-    import { routes } from "./routes.js";
-    import { listenAlways, cleanupListeners } from "./client/ws.svelte";
-    import { getVirtualScreen, confirmVirtualScreen } from "./client/api.svelte";
-    import { insertPersistentData } from "./client/persistentStorage.svelte";
+    import ClickGui from "./routes/clickgui/ClickGui.svelte";
+    import Hud from "./routes/hud/Hud.svelte";
+    import { confirmVirtualScreen, getVirtualScreen } from "./integration/rest";
+    import { cleanupListeners, listenAlways } from "./integration/ws";
+    import { onMount } from "svelte";
+    import { insertPersistentData } from "./integration/persistent_storage";
 
-    insertPersistentData();
+    const routes = {
+        "/clickgui": ClickGui,
+        "/hud": Hud,
+    };
 
-    let showingSplash = false;
-    let nextRoute = null;
-
-    // Check if the URL has a STATIC tag http://127.0.0.1/#/hud?static
     const url = window.location.href;
     const staticTag = url.split("?")[1];
     const isStatic = staticTag === "static";
+    let showingSplash = false;
+    let nextRoute: string | null = null;
 
-    function changeRoute(name, splash = false) {
+    async function changeRoute(name: string, splash = false) {
         confirmVirtualScreen(name);
 
         if (splash) {
@@ -23,51 +26,53 @@
             nextRoute = name;
         } else {
             cleanupListeners();
-            push("/" + name).then(() => {
-                showingSplash = false;
-                nextRoute = null;
-            }).catch((error) => {
-                console.error(error);
-            });
-
+            await push("/" + name);
+            showingSplash = false;
+            nextRoute = null;
         }
     }
 
-    if (!isStatic) {
-        listenAlways("splashOverlay", function (event) {
+    onMount(async () => {
+        await insertPersistentData();
+
+        if (isStatic) {
+            return;
+        }
+
+        listenAlways("splashOverlay", async (event: any) => {
             const action = event.action;
 
             if (action === "show") {
                 cleanupListeners();
-                push("/").then(() => {
-                    showingSplash = true;
-                }).catch((error) => {
-                    console.error(error);
-                });
+                await push("/");
+
+                showingSplash = true;
             } else if (action === "hide") {
-                changeRoute(nextRoute || "none");
+                await changeRoute(nextRoute ?? "none");
             }
         });
 
-        listenAlways("virtualScreen", function (event) {
+        listenAlways("virtualScreen", async (event: any) => {
             const action = event.action;
 
             switch (action) {
                 case "close":
-                    changeRoute("none");
+                    await changeRoute("none");
                     break;
                 case "open":
-                    const screenName = event.screenName || "none";
-                    changeRoute(screenName, showingSplash);
+                    const screenName = event.screenName ?? "none";
+                    await changeRoute(screenName, showingSplash);
                     break;
             }
         });
 
-        getVirtualScreen().then((screen) => {
-            const screenName = screen.name || "none";
-            changeRoute(screenName, screen.splash);
-        });
-    }
+        const screen = await getVirtualScreen();
+
+        const screenName = screen.name ?? "none";
+        changeRoute(screenName, screen.splash);
+    });
 </script>
 
-<Router {routes} />
+<main>
+    <Router {routes} />
+</main>

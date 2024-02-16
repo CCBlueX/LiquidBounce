@@ -95,7 +95,7 @@ object IntegrationHandler : Listenable {
         get() = mc.currentScreen ?: TitleScreen()
 
     enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
-                                 val showAlong: Boolean = false, private val open: () -> Unit = {}) {
+                                 val showAlong: Boolean = true, private val open: () -> Unit = {}) {
 
         TITLE("title",
             {

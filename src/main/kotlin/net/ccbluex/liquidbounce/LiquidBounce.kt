@@ -54,7 +54,6 @@ import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
@@ -244,9 +243,6 @@ object LiquidBounce : Listenable {
             }.onFailure {
                 logger.error("Failed to load settings list from API", it)
             }
-
-            // Load acknowledgement handler
-            AcknowledgementHandler
         }
     }
 
