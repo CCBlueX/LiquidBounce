@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
 import net.ccbluex.liquidbounce.utils.CooldownHelper.resetLastAttackedTicks
+import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
@@ -135,6 +136,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     )
     private val targetMode by ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
     private val limitedMultiTargets by IntegerValue("LimitedMultiTargets", 0, 0..50) { targetMode == "Multi" }
+    private val maxSwitchFOV by FloatValue("MaxSwitchFOV", 90f, 30f..180f) { targetMode == "Switch" }
 
     // Delay
     private val switchDelay by IntegerValue("SwitchDelay", 15, 1..1000) { targetMode == "Switch" }
@@ -559,7 +561,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             val entityFov = getRotationDifference(entity)
 
             if (distance <= maxRange && (fov == 180F || entityFov <= fov)) {
-                targets += entity
+                if (isLookingOnEntities(entity, maxSwitchFOV.toDouble())) {
+                    targets += entity
+                }
             }
         }
 
