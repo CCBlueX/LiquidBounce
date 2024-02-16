@@ -26,13 +26,14 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
+import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
+import net.minecraft.util.Identifier
 
 class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
 
@@ -54,6 +55,10 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
     }
 
     val onScreenRender = handler<ScreenRenderEvent> {
+        if (mc.world != null) {
+            return@handler
+        }
+
         val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
 
         for (tab in tabs) {
@@ -82,6 +87,9 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
             tab.drawn = true
         }
     }
+
+    val dominantTab: ITab?
+        get() = tabs.firstOrNull { !it.drawn && !it.preferOnTop }
 
     private fun renderTexture(width: Double, height: Double, texture: Int) {
         RenderSystem.disableDepthTest()

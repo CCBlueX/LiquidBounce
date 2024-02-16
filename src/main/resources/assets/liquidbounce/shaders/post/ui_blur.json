@@ -1,0 +1,24 @@
+{
+  "targets": [
+    "temp"
+  ],
+  "passes": [
+    {
+      "name": "ui_blur",
+      "intarget": "minecraft:main",
+      "outtarget": "temp",
+      "uniforms": []
+    },
+    {
+      "name": "blit",
+      "intarget": "temp",
+      "outtarget": "minecraft:main",
+      "uniforms": [
+        {
+          "name": "ColorModulate",
+          "values": [ 1.0, 1.0, 1.0, 1.0 ]
+        }
+      ]
+    }
+  ]
+}

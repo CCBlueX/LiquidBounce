@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
@@ -28,10 +29,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
+import net.ccbluex.liquidbounce.interfaces.PostEffectPassTextureAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.web.browser.BrowserManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.PostEffectPass;
+import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.Camera;
@@ -39,6 +44,8 @@ import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
@@ -51,15 +58,22 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.io.IOException;
+
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer {
 
     @Shadow
     @Final
     private MinecraftClient client;
+    private PostEffectProcessor uiRendererShader;
 
     @Shadow
     public abstract MinecraftClient getClient();
+
+    @Shadow
+    @Final
+    private ResourceManager resourceManager;
 
     /**
      * Hook game render event
@@ -161,5 +175,32 @@ public abstract class MixinGameRenderer {
         if (ModuleReach.INSTANCE.getEnabled()) {
             client.crosshairTarget = client.player.raycast(ModuleReach.INSTANCE.getBlockReach(), tickDelta, false);
         }
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/Framebuffer;beginWrite(Z)V", shift = At.Shift.BEFORE))
+    private void injectUIBlurRender(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+        if (this.uiRendererShader == null) {
+            try {
+                this.uiRendererShader = new PostEffectProcessor(this.client.getTextureManager(), this.resourceManager, this.client.getFramebuffer(), new Identifier("liquidbounce", "shaders/post/ui_blur.json"));
+                this.uiRendererShader.setupDimensions(this.client.getWindow().getFramebufferWidth(), this.client.getWindow().getFramebufferHeight());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to initialize ui blur", e);
+            }
+        }
+
+        RenderSystem.disableBlend();
+        RenderSystem.disableDepthTest();
+        RenderSystem.resetTextureMatrix();
+
+        var dominantTab = BrowserManager.INSTANCE.getBrowserDrawer().getDominantTab();
+
+        if (dominantTab == null) {
+            return;
+        }
+
+        RenderSystem.setShaderTexture(0, dominantTab.getTexture());
+        ((PostEffectPassTextureAddition) this.uiRendererShader.passes.get(0)).liquid_bounce$setTextureSampler("Overlay", dominantTab.getTexture());
+
+        this.uiRendererShader.render(tickDelta);
     }
 }

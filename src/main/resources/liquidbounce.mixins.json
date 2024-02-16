@@ -6,8 +6,8 @@
   "priority": 1337,
   "mixinPriority": 1337,
   "client": [
-    "graaljs.MixinHostClassLoader",
     "graaljs.MixinHostClassDesc",
+    "graaljs.MixinHostClassLoader",
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
     "minecraft.block.MixinBlockView",
@@ -67,6 +67,7 @@
     "minecraft.render.MixinInGameOverlayRenderer",
     "minecraft.render.MixinLightmapTextureManager",
     "minecraft.render.MixinLivingEntityRenderer",
+    "minecraft.render.MixinPostEffectPass",
     "minecraft.render.MixinRenderTickCounter",
     "minecraft.render.MixinSignText",
     "minecraft.render.MixinSodiumBlockOcclusionCache",
