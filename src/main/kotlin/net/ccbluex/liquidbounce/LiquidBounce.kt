@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.config.AutoShopConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -125,6 +126,7 @@ object LiquidBounce : Listenable {
             // Config
             ConfigSystem
             globalEnemyConfigurable
+            AutoShopConfig
 
             ChunkScanner
             WorldChangeNotifier
@@ -155,6 +157,7 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
+            AutoShopConfig.load()
 
             // Netty WebSocket
             ClientSocket.start()

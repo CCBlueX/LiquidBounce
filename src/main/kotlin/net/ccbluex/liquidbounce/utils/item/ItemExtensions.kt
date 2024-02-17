@@ -144,3 +144,13 @@ private fun Item.getAttributeValue(attribute: EntityAttribute): Float {
 
     return attribInstance.value.toFloat()
 }
+
+fun Item.isWool(): Boolean {
+    return this in WOOL_BLOCKS
+}
+
+private val WOOL_BLOCKS = arrayOf(
+    Items.BLACK_WOOL, Items.BLUE_WOOL, Items.BROWN_WOOL, Items.CYAN_WOOL,
+    Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL,
+    Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL,
+    Items.PURPLE_WOOL, Items.RED_WOOL, Items.WHITE_WOOL, Items.YELLOW_WOOL)
