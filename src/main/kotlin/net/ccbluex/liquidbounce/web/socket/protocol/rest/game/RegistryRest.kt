@@ -32,12 +32,12 @@ fun RestNode.registriesRest() {
         httpOk(JsonObject().apply {
             add("blocks", JsonArray().apply {
                 Registries.BLOCK.forEach { block ->
-                    add(block.translationKey)
+                    add(Registries.BLOCK.getId(block).toString())
                 }
             })
             add("items", JsonArray().apply {
                 Registries.ITEM.forEach { item ->
-                    add(item.translationKey)
+                    add(Registries.ITEM.getId(item).toString())
                 }
             })
         })
