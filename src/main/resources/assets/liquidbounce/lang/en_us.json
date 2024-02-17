@@ -480,5 +480,7 @@
   "liquidbounce.module.antiHunger.messages.warnSprint": "Another module caused sprint packets, which could lead to hunger.",
   "liquidbounce.module.antiHunger.messages.warnBreak": "You are breaking a block, which could lead to hunger.",
   "liquidbounce.module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
+  "liquidbounce.module.autoshop.reload.success": "Reloaded successfully",
+  "liquidbounce.module.autoshop.reload.error": "Cannot load the config",
   "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client"
 }
