@@ -19,11 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
-import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -48,7 +46,6 @@ import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerStatistics
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -175,7 +172,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         if (isInInventoryScreen && !ignoreOpenInventory || shouldCleanUpTracker) {
             // Cleanup current target tracker
             targetTracker.cleanup()
-            EventManager.callEvent(TargetChangeEvent(null))
             return@handler
         }
 
@@ -372,14 +368,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
-
-            if (target is PlayerEntity) {
-                EventManager.callEvent(TargetChangeEvent(PlayerStatistics.fromPlayer(target)))
-            }
             return
         }
-
-        EventManager.callEvent(TargetChangeEvent(null))
 
         // Choose enemy for fight bot
         if (FightBot.enabled) {
