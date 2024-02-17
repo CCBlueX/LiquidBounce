@@ -38,14 +38,15 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
@@ -58,7 +59,6 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.math.MathHelper
-import org.apache.commons.lang3.RandomUtils
 import kotlin.random.Random
 
 /**
@@ -125,7 +125,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private var mouseInertiaRotation = Rotation(yaw = 0f, pitch = 0f)
-    private var lastMouseInertiaTime = 0L
+    private var mouseInertiaChronometer = Chronometer()
     private var mouseInertiaTick = 0
 
     override fun disable() {
@@ -229,17 +229,22 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         if (mouseInertia) {
-            if (System.currentTimeMillis() - lastMouseInertiaTime > mouseInertiaTick * 50) {
-                mouseInertiaTick = RandomUtils.nextInt(0, 10)
+            if (mouseInertiaChronometer.hasElapsed(mouseInertiaTick * 50L)) {
+                mouseInertiaTick = (0..10).random()
+                mouseInertiaChronometer.reset()
+
                 mouseInertiaRotation = Rotation(
                     yaw = MathHelper.wrapDegrees(RotationManager.serverRotation.yaw - rotation.yaw),
                     pitch = RotationManager.serverRotation.pitch - rotation.pitch
                 )
             }
 
+            // Apply mouse inertia to the rotation
             rotation = Rotation(
-                yaw = RotationManager.serverRotation.yaw + mouseInertiaRotation.yaw / (mouseInertiaTick * RandomUtils.nextFloat(0.5f, 1.5f)),
-                pitch = RotationManager.serverRotation.pitch + mouseInertiaRotation.pitch / (mouseInertiaTick * RandomUtils.nextFloat(0.5f, 1.5f))
+                yaw = RotationManager.serverRotation.yaw
+                    + mouseInertiaRotation.yaw / (mouseInertiaTick * (0.5f..1.5f).random().toFloat()),
+                pitch = RotationManager.serverRotation.pitch
+                    + mouseInertiaRotation.pitch / (mouseInertiaTick * (0.5f..1.5f).random().toFloat())
             )
         }
 
@@ -423,7 +428,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
         // find best spot
-        var spot = raytraceBox(
+        val spot = raytraceBox(
             eyes, cutOffBox,
             // Since [range] is squared, we need to square root
             range = range,
