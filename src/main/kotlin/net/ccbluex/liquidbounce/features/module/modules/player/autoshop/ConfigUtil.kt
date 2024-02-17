@@ -11,8 +11,8 @@ import net.minecraft.text.Text
 fun loadAutoShopConfig(configFileName: String, moduleName: String = ModuleAutoShop.name) {
     val result = AutoShopConfig.load(configFileName)
     val message = if (result)
-        Text.translatable("liquidbounce.module.autoshop.reload.success")
-    else Text.translatable("liquidbounce.module.autoshop.reload.error")
+        Text.translatable("liquidbounce.module.autoShop.reload.success")
+    else Text.translatable("liquidbounce.module.autoShop.reload.error")
 
     notification(message, moduleName,
         if (result) NotificationEvent.Severity.INFO else NotificationEvent.Severity.ERROR
