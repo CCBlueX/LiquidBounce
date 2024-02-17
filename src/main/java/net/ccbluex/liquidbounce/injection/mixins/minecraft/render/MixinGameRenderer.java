@@ -30,15 +30,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.PostEffectPassTextureAddition;
+import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.web.browser.BrowserManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.PostEffectPass;
 import net.minecraft.client.gl.PostEffectProcessor;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -50,7 +47,6 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -177,7 +173,16 @@ public abstract class MixinGameRenderer {
         }
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/Framebuffer;beginWrite(Z)V", shift = At.Shift.BEFORE))
+    @Inject(method = "onResized", at = @At("HEAD"))
+    private void injectResizeUIBlurShader(int width, int height, CallbackInfo ci) {
+        if (this.uiRendererShader != null) {
+            this.uiRendererShader.setupDimensions(width, height);
+        }
+
+        UIRenderer.INSTANCE.setupDimensions(width, height);
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V"))
     private void injectUIBlurRender(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         if (this.uiRendererShader == null) {
             try {
@@ -192,14 +197,13 @@ public abstract class MixinGameRenderer {
         RenderSystem.disableDepthTest();
         RenderSystem.resetTextureMatrix();
 
-        var dominantTab = BrowserManager.INSTANCE.getBrowserDrawer().getDominantTab();
+        var overlayFramebuffer = UIRenderer.INSTANCE.getOverlayFramebuffer();
+        var overlayTexture = overlayFramebuffer.getColorAttachment();
 
-        if (dominantTab == null) {
-            return;
-        }
+        overlayFramebuffer.beginRead();
 
-        RenderSystem.setShaderTexture(0, dominantTab.getTexture());
-        ((PostEffectPassTextureAddition) this.uiRendererShader.passes.get(0)).liquid_bounce$setTextureSampler("Overlay", dominantTab.getTexture());
+        RenderSystem.setShaderTexture(0, overlayTexture);
+        ((PostEffectPassTextureAddition) this.uiRendererShader.passes.get(0)).liquid_bounce$setTextureSampler("Overlay", overlayTexture);
 
         this.uiRendererShader.render(tickDelta);
     }
