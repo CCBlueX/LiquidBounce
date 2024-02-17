@@ -58,7 +58,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     // Condition to prevent getting timer speed stuck
     private var confirmAttack = false
 
-    private val timerBoostMode by ListValue("TimerMode", arrayOf("Normal", "Smart", "Modern"), "Normal")
+    private val timerBoostMode by ListValue("TimerMode", arrayOf("Normal", "Smart", "Modern"), "Modern")
 
     private val ticksValue by IntegerValue("Ticks", 10, 1..20)
 
@@ -164,7 +164,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     }
 
     /**
-     * Attack event (Normal & Smart)
+     * Attack event (Normal & Smart Mode)
      */
     @EventTarget
     fun onAttack(event: AttackEvent) {
