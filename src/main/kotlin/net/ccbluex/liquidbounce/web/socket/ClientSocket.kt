@@ -58,6 +58,8 @@ object ClientSocket {
         "refreshArrayList",
         "serverConnect",
         "serverPinged",
+        "targetChange",
+        "gameModeChange",
 
         // Statistic events
         "fps",

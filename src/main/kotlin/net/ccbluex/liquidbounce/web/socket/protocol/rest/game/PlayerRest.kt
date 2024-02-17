@@ -22,11 +22,15 @@
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.util.Identifier
 
 fun RestNode.playerRest() {
     get("/player") {
@@ -34,6 +38,7 @@ fun RestNode.playerRest() {
             addProperty("username", player.nameForScoreboard)
             addProperty("uuid", player.uuidAsString)
             add("stats", protocolGson.toJsonTree(PlayerStatistics.fromPlayer(player)))
+            add("gameMode", protocolGson.toJsonTree(interaction.currentGameMode))
             add("position", JsonObject().apply {
                 addProperty("x", player.x)
                 addProperty("y", player.y)
@@ -68,13 +73,16 @@ fun RestNode.playerRest() {
  * @property experienceProgress The progress towards the next experience level.
  */
 data class PlayerStatistics(
+    val username: String,
+    val skinIdentifier: Identifier? = null,
     val health: Float,
     val maxHealth: Float,
     val absorption: Float,
     val armor: Int,
     val food: Int,
     val experienceLevel: Int,
-    val experienceProgress: Float
+    val experienceProgress: Float,
+    val armorItems: List<ItemStack> = emptyList()
 ) {
 
     companion object {
@@ -85,13 +93,16 @@ data class PlayerStatistics(
          * @return A [PlayerStatistics] instance representing the player's statistics.
          */
         fun fromPlayer(player: PlayerEntity) = PlayerStatistics(
+            player.nameForScoreboard,
+            network.playerList.find { it.profile.id == player.uuid }?.skinTextures?.texture,
             player.health,
             player.maxHealth,
             player.absorptionAmount,
             player.armor,
             player.hungerManager.foodLevel,
             player.experienceLevel,
-            player.experienceProgress
+            player.experienceProgress,
+            player.armorItems.toList()
         )
     }
 

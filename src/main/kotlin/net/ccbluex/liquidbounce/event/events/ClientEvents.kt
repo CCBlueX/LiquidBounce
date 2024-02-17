@@ -27,7 +27,9 @@ import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerStatistics
 import net.minecraft.client.network.ServerInfo
+import net.minecraft.world.GameMode
 
 @Nameable("clientStart")
 class ClientStartEvent : Event()
@@ -53,6 +55,14 @@ class NotificationEvent(val title: String, val message: String, val severity: Se
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }
 }
+
+@Nameable("gameModeChange")
+@WebSocketEvent
+class GameModeChangeEvent(val gameMode: GameMode) : Event()
+
+@Nameable("targetChange")
+@WebSocketEvent
+class TargetChangeEvent(val target: PlayerStatistics?) : Event()
 
 @Nameable("clientChatStateChange")
 @WebSocketEvent

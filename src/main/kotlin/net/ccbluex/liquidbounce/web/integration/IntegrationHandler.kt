@@ -26,7 +26,9 @@ import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
 import net.minecraft.client.gui.screen.DisconnectedScreen
@@ -102,6 +104,7 @@ object IntegrationHandler : Listenable {
                 // todo: Do not simply replace any Lunar Screen with the title screen, if not in a world
                 it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") && mc.world == null)
             },
+            showAlong = true,
             open = {
                 mc.setScreen(TitleScreen())
             }),

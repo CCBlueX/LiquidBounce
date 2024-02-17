@@ -26,6 +26,7 @@ import io.netty.handler.codec.http.*
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import org.apache.tika.Tika
 import java.io.File
+import java.io.InputStream
 
 private fun httpResponse(status: HttpResponseStatus, contentType: String = "text/plain",
                          content: String): FullHttpResponse {
@@ -90,3 +91,18 @@ fun httpFile(file: File): FullHttpResponse {
     httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
     return response
 }
+
+fun httpFileStream(stream: InputStream): FullHttpResponse {
+    val response = DefaultFullHttpResponse(
+        HttpVersion.HTTP_1_1,
+        HttpResponseStatus.OK,
+        Unpooled.wrappedBuffer(stream.readBytes())
+    )
+
+    val httpHeaders = response.headers()
+    httpHeaders[HttpHeaderNames.CONTENT_TYPE] = tika.detect(stream)
+    httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
+    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
+    return response
+}
+

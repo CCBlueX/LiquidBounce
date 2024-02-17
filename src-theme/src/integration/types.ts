@@ -125,6 +125,8 @@ export interface VirtualScreen {
 }
 
 export interface PlayerStats {
+    username: string;
+    skinIdentifier: string;
     health: number,
     maxHealth: number;
     absorption: number;
@@ -132,4 +134,12 @@ export interface PlayerStats {
     food: number;
     experienceLevel: number;
     experienceProgress: number;
+    armorItems: ItemStack[];
+}
+
+export interface ItemStack {
+    identifier: string;
+    count: number;
+    damage: number;
+    maxDamage: number;
 }

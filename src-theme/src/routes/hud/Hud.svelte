@@ -12,8 +12,8 @@
     <TabGui />
     <ArrayList />
     <Notifications />
-<!--     <TargetHud />
-    <HotBar /> -->
+    <TargetHud />
+    <HotBar />
 </div>
 
 <style lang="scss">

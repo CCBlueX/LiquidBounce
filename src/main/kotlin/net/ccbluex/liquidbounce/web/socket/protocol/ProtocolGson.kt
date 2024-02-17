@@ -24,6 +24,10 @@ import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
 import net.minecraft.client.network.ServerInfo
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
+import net.minecraft.world.GameMode
 import java.lang.reflect.Type
 import java.util.*
 
@@ -61,10 +65,36 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
 
 }
 
+class GameModeSerializer : JsonSerializer<GameMode> {
+    override fun serialize(src: GameMode?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.let { JsonPrimitive(it.getName()) }
+}
+
+class ItemStackSerializer : JsonSerializer<ItemStack> {
+    override fun serialize(src: ItemStack?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.let {
+            JsonObject().apply {
+                addProperty("identifier", Registries.ITEM.getId(it.item).toString())
+                addProperty("count", it.count)
+                addProperty("damage", it.damage)
+                addProperty("maxDamage", it.maxDamage)
+            }
+    }
+
+}
+
+class IdentifierSerializer : JsonSerializer<Identifier> {
+    override fun serialize(src: Identifier?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.let { JsonPrimitive(it.toString()) }
+}
+
 internal val protocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableSerializer)
     .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer())
+    .registerTypeAdapter(GameMode::class.java, GameModeSerializer())
+    .registerTypeAdapter(ItemStack::class.java, ItemStackSerializer())
+    .registerTypeAdapter(Identifier::class.java, IdentifierSerializer())
     .create()
 

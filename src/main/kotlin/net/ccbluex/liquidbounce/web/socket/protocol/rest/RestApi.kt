@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.reconnectRest
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.ServerListRest.serverListRest
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.playerRest
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.registriesRest
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.resourceRest
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.worldListRest
 
 class RestApi {
@@ -56,6 +57,7 @@ class RestApi {
                 registriesRest()
                 serverListRest()
                 worldListRest()
+                resourceRest()
             }
 
         RouteController.get("/") {
