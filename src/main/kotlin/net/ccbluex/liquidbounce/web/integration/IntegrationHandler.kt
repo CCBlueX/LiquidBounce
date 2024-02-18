@@ -94,15 +94,15 @@ object IntegrationHandler : Listenable {
         browserIsReady = true
     }
 
-    fun virtualOpen(name: String) {
+    fun virtualOpen(type: VirtualScreenType) {
         // Check if the virtual screen is already open
-        if (momentaryVirtualScreen?.name == name) {
+        if (momentaryVirtualScreen?.name == type.routeName) {
             return
         }
 
         // TODO: Implement switching between themes if needed
 
-        val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
+        val virtualScreen = VirtualScreen(type.routeName).apply { momentaryVirtualScreen = this }
         acknowledgement.reset()
         EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
             VirtualScreenEvent.Action.OPEN))
@@ -194,14 +194,14 @@ object IntegrationHandler : Listenable {
             return false
         }
 
-        val name = virtualScreenType.internalName
+        val name = virtualScreenType.routeName
 
         if (ThemeManager.doesSupport(name)) {
-            val vrScreen = VrScreen(name, originalScreen = screen)
+            val vrScreen = VrScreen(virtualScreenType, originalScreen = screen)
             mc.setScreen(vrScreen)
             return true
         } else if (ThemeManager.doesOverlay(name)) {
-            virtualOpen(name)
+            virtualOpen(virtualScreenType)
         }
 
         return false

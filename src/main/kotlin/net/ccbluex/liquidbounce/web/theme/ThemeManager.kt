@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
 import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
@@ -53,15 +54,16 @@ object ThemeManager {
     private val takesInputHandler: () -> Boolean
         get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
-    fun openImmediate(name: String? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createTab(getUrl(name, markAsStatic))
+    fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
+        BrowserManager.browser?.createTab(getUrl(virtualScreenType?.routeName, markAsStatic))
             ?: error("Browser is not initialized")
 
-    fun openInputAwareImmediate(name: String? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createInputAwareTab(getUrl(name, markAsStatic), takesInputHandler)
+    fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
+        BrowserManager.browser?.createInputAwareTab(getUrl(virtualScreenType?.routeName, markAsStatic), takesInputHandler)
             ?: error("Browser is not initialized")
 
-    fun updateImmediate(tab: ITab?, name: String? = null) = tab?.loadUrl(getUrl(name))
+    fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null) =
+        tab?.loadUrl(getUrl(virtualScreenType?.routeName))
 
     fun doesOverlay(name: String) = activeTheme.doesOverlay(name) || defaultTheme.doesOverlay(name)
 

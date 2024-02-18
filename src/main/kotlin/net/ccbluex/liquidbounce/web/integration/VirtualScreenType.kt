@@ -46,10 +46,13 @@ private val Screen.isLunar
     get() = javaClass.name.startsWith("com.moonsworth.lunar.") && mc.world == null
 
 enum class VirtualScreenType(
-    val internalName: String,
-    val recognizer: (Screen) -> Boolean,
+    val routeName: String,
+    val recognizer: (Screen) -> Boolean = { false },
     private val open: () -> Unit = {}
 ) {
+
+    HUD("hud"),
+    CLICK_GUI("clickgui"),
 
     TITLE(
         "title",
@@ -113,7 +116,7 @@ enum class VirtualScreenType(
     fun open() = RenderSystem.recordRenderCall(open)
 
     companion object {
-        fun byName(name: String) = entries.find { it.internalName == name }
+        fun byName(name: String) = entries.find { it.routeName == name }
         fun recognize(screen: Screen) = entries.find { it.recognizer(screen) }
     }
 

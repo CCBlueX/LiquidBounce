@@ -19,19 +19,17 @@
  */
 package net.ccbluex.liquidbounce.web.integration
 
-import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
+class VrScreen(val screenType: VirtualScreenType, title: Text = "VS $screenType".asText(),
                val originalScreen: Screen? = null) : Screen(title) {
 
     override fun init() {
-        IntegrationHandler.virtualOpen(screen)
+        IntegrationHandler.virtualOpen(screenType)
     }
 
     override fun close() {

@@ -61,7 +61,7 @@ fun RestNode.screenRest() {
 
     get("/screen") {
         val mcScreen = mc.currentScreen ?: return@get httpForbidden("No screen")
-        val name = VirtualScreenType.entries.find { it.recognizer(mcScreen) }?.internalName
+        val name = VirtualScreenType.entries.find { it.recognizer(mcScreen) }?.routeName
             ?: mcScreen::class.qualifiedName
 
         httpOk(JsonObject().apply {

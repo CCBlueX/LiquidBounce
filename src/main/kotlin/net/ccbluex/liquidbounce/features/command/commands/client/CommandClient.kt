@@ -109,12 +109,12 @@ object CommandClient {
                 chat(prefix = false)
                 chat(regular("Integration Menu:"))
                 for (menu in VirtualScreenType.entries) {
-                    val internalName = menu.internalName
+                    val internalName = menu.routeName
 
                     val url = runCatching {
                         ThemeManager.getUrl(internalName, true)
                     }.getOrNull() ?: continue
-                    val upperFirstName = menu.internalName.replaceFirstChar { it.uppercase() }
+                    val upperFirstName = menu.routeName.replaceFirstChar { it.uppercase() }
 
                     chat(
                         regular("-> $upperFirstName (")

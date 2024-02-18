@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.client.gui.screen.DisconnectedScreen
 
@@ -40,14 +41,12 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
 
-    private const val CLIENT_HUD_KEY = "hud"
-
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {
         if (!enabled || !inGame || it.screen is DisconnectedScreen) {
             browserTab?.closeTab()
             browserTab = null
         } else if (browserTab == null) {
-            browserTab = ThemeManager.openImmediate(CLIENT_HUD_KEY, true)
+            browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
         }
     }
 
@@ -56,7 +55,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         browserTab?.closeTab()
 
         // Create a new tab and open it
-        browserTab = ThemeManager.openImmediate(CLIENT_HUD_KEY, true)
+        browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
     }
 
     override fun disable() {
