@@ -37,6 +37,10 @@ fun RestNode.playerRest() {
     get("/player") {
         httpOk(protocolGson.toJsonTree(PlayerData.fromPlayer(player)))
     }
+
+    get("/player/gamemode") {
+        httpOk(protocolGson.toJsonTree(interaction.currentGameMode))
+    }
 }
 
 /**
