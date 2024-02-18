@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.common.SidebarEntry;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
@@ -29,7 +28,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.client.option.AttackIndicator;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.scoreboard.Scoreboard;
@@ -39,7 +37,6 @@ import net.minecraft.scoreboard.Team;
 import net.minecraft.scoreboard.number.NumberFormat;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.text.Text;
-import net.minecraft.util.Arm;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -214,6 +211,16 @@ public abstract class MixinInGameHud {
     @Inject(method = "renderStatusBars", at = @At("HEAD"), cancellable = true)
     private void hookRenderStatusBars(DrawContext context, CallbackInfo ci) {
         // todo: check components
+        ci.cancel();
+    }
+
+    @Inject(method = "renderExperienceBar", at = @At("HEAD"), cancellable = true)
+    private void hookRenderExperienceBar(DrawContext context, int x, CallbackInfo ci) {
+        ci.cancel();
+    }
+
+    @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)
+    private void hookRenderHeldItemTooltip(DrawContext context, CallbackInfo ci) {
         ci.cancel();
     }
 

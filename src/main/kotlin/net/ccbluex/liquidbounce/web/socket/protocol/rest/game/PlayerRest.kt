@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
@@ -31,14 +32,11 @@ import net.minecraft.client.util.SkinTextures
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.world.GameMode
 
 fun RestNode.playerRest() {
     get("/player") {
         httpOk(protocolGson.toJsonTree(PlayerData.fromPlayer(player)))
-    }
-
-    get("/player/gamemode") {
-        httpOk(protocolGson.toJsonTree(interaction.currentGameMode))
     }
 }
 
@@ -46,6 +44,7 @@ data class PlayerData(
     val username: String,
     val textures: SkinTextures? = null,
     val selectedSlot: Int,
+    val gameMode: GameMode = GameMode.DEFAULT,
     val health: Float,
     val maxHealth: Float,
     val absorption: Float,
@@ -67,6 +66,7 @@ data class PlayerData(
             player.nameForScoreboard,
             network.playerList.find { it.profile == player.gameProfile }?.skinTextures,
             player.inventory.selectedSlot,
+            if (mc.player == player) interaction.currentGameMode else GameMode.DEFAULT,
             player.health,
             player.maxHealth,
             player.absorptionAmount,

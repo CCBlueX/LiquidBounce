@@ -1,10 +1,10 @@
 <script lang="ts">
     import Status from "./Status.svelte";
     import Slot from "./Slot.svelte";
-    import { listen } from "../../../../integration/ws";
-    import type { PlayerData } from "../../../../integration/types";
-    import { onMount } from "svelte";
-    import { getPlayerData } from "../../../../integration/rest";
+    import {listen} from "../../../../integration/ws";
+    import type {PlayerData} from "../../../../integration/types";
+    import {onMount} from "svelte";
+    import {getPlayerData} from "../../../../integration/rest";
 
     let currentSlot = 0;
     let playerData: PlayerData | null = null;
@@ -29,73 +29,76 @@
     });
 </script>
 
-<div class="hotbar">
-    {#if playerData}
+{#if playerData && playerData.gameMode !== "spectator"}
+    <div class="hotbar">
         <div class="status">
             {#if playerData.armor > 0}
                 <div class="pair">
                     <Status
-                        max={20}
-                        value={playerData.armor}
-                        color="#49EAD6"
-                        alignRight={false}
+                            max={20}
+                            value={playerData.armor}
+                            color="#49EAD6"
+                            alignRight={false}
                     />
 
                     <div></div>
                 </div>
             {/if}
-            {#if playerData.absorption > 0}
+            {#if playerData.gameMode !== "creative"}
+                {#if playerData.absorption > 0}
+                    <div class="pair">
+                        <Status
+                                max={maxAbsorption}
+                                value={playerData.absorption}
+                                color="#D4AF37"
+                                alignRight={false}
+                        />
+
+                        <div></div>
+                    </div>
+                {/if}
                 <div class="pair">
                     <Status
-                        max={maxAbsorption}
-                        value={playerData.absorption}
-                        color="#D4AF37"
-                        alignRight={false}
+                            max={playerData.maxHealth}
+                            value={playerData.health}
+                            color="#FC4130"
+                            alignRight={false}
                     />
-
-                    <div></div>
+                    <Status
+                            max={20}
+                            value={playerData.food}
+                            color="#B88458"
+                            alignRight={true}
+                    />
                 </div>
             {/if}
-            <div class="pair">
-                <Status
-                    max={playerData.maxHealth}
-                    value={playerData.health}
-                    color="#FC4130"
-                    alignRight={false}
-                />
-                <Status
-                    max={20}
-                    value={playerData.food}
-                    color="#B88458"
-                    alignRight={true}
-                />
-            </div>
             {#if playerData.experienceLevel > 0}
                 <Status
-                    max={100}
-                    value={playerData.experienceProgress * 100}
-                    color="#88C657"
-                    alignRight={false}
-                    label={playerData.experienceLevel.toString()}
+                        max={100} value={playerData.experienceProgress * 100}
+                        color="#88C657"
+                        alignRight={false}
+                        label={playerData.experienceLevel.toString()}
                 />
             {/if}
+
         </div>
-    {/if}
-    <div class="hotbar-elements">
-        <div class="slider" style="left: {currentSlot * 45}px"></div>
-        <div class="slots">
-            <Slot />
-            <Slot />
-            <Slot />
-            <Slot />
-            <Slot />
-            <Slot />
-            <Slot />
-            <Slot />
-            <Slot />
+
+        <div class="hotbar-elements">
+            <div class="slider" style="left: {currentSlot * 45}px"></div>
+            <div class="slots">
+                <Slot />
+                <Slot />
+                <Slot />
+                <Slot />
+                <Slot />
+                <Slot />
+                <Slot />
+                <Slot />
+                <Slot />
+            </div>
         </div>
     </div>
-</div>
+{/if}
 
 <style lang="scss">
     @import "../../../../colors.scss";

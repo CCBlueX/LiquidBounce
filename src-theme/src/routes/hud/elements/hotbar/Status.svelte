@@ -24,6 +24,7 @@
 
     .progress {
         position: relative;
+        border-radius: 5px;
     }
 
     .label {

@@ -134,6 +134,7 @@ export interface PlayerData {
     username: string;
     textures: SkinTextures;
     selectedSlot: number;
+    gameMode: string;
     health: number,
     maxHealth: number;
     absorption: number;
@@ -143,6 +144,7 @@ export interface PlayerData {
     maxAir: number;
     experienceLevel: number;
     experienceProgress: number;
+    effects: StatusEffect[];
     mainHandStack: ItemStack;
     offHandStack: ItemStack;
     armorItems: ItemStack[];
@@ -153,6 +155,17 @@ export interface SkinTextures {
     textureUrl: string,
     capeTexture: string,
     elytraTexture: string,
+}
+
+export interface StatusEffect {
+    effect: string;
+    localizedName: string;
+    duration: number;
+    amplifier: number;
+    ambient: boolean;
+    infinite: boolean;
+    visible: boolean;
+    showIcon: boolean;
 }
 
 export interface ItemStack {
