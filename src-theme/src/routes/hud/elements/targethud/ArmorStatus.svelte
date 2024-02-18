@@ -1,14 +1,18 @@
 <script lang="ts">
-    export let durability: number;
+    import { REST_BASE } from "../../../../integration/host";
+    import type { ItemStack } from "../../../../integration/types";
 
-    const maxDurability = 10;
+    export let itemStack: ItemStack;
+
+    let damage = Math.ceil(10 - (itemStack.damage / itemStack.maxDamage * 10));
+    $: damage = Math.ceil(10 - (itemStack.damage / itemStack.maxDamage * 10));
 </script>
 
 <div class="armor-status">
-    <div class="icon"></div>
+    <img class="icon" src="{REST_BASE}/api/v1/client/resource?id=minecraft:textures/item/{itemStack.identifier.replace("minecraft:", "")}.png" alt={itemStack.identifier} />
     <div class="durability">
-        {#each Array.from({ length: maxDurability }, (x, i) => maxDurability - i) as index}
-            <div class="point" class:active={index <= durability}></div>
+        {#each Array.from({ length: 10 }, (x, i) => 10 - i) as index}
+            <div class="point" class:active={index <= damage}></div>
         {/each}
     </div>
 </div>
@@ -23,10 +27,9 @@
     }
 
     .icon {
-        height: 25px;
-        width: 25px;
-        border-radius: 50%;
-        border: solid 3px $accent-color;
+        height: 30px;
+        width: 30px;
+        image-rendering: pixelated;
     }
 
     .durability {
@@ -39,6 +42,7 @@
             height: 3px;
             width: 5px;
             border-radius: 1px;
+            transition: ease background-color 0.7s;
 
             &.active {
                 background-color: $accent-color;

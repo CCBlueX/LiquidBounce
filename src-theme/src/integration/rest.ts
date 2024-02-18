@@ -1,5 +1,5 @@
 import { REST_BASE } from "./host";
-import type { ConfigurableSetting, Module, PersistentStorageItem, PlayerStats, VirtualScreen } from "./types";
+import type { ConfigurableSetting, Module, PersistentStorageItem, PlayerStats, PrintableKey, Registries, VirtualScreen } from "./types";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -81,6 +81,22 @@ export async function confirmVirtualScreen(name: string) {
 export async function getPlayerStats(): Promise<PlayerStats> {
     const response = await fetch(`${API_BASE}/client/player`);
     const data: PlayerStats = (await response.json()).stats;
+
+    return data;
+}
+
+export async function getPrintableKeyName(code: number): Promise<PrintableKey> {
+    const searchParams = new URLSearchParams({ code: code.toString() });
+
+    const response = await fetch(`${API_BASE}/client/input?${searchParams.toString()}`);
+    const data: PrintableKey = await response.json();
+
+    return data;
+}
+
+export async function getRegistries(): Promise<Registries> {
+    const response = await fetch(`${API_BASE}/client/registries`);
+    const data: Registries = await response.json();
 
     return data;
 }

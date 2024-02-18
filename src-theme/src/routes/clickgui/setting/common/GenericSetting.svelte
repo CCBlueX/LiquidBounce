@@ -12,6 +12,7 @@
     import ColorSetting from "../ColorSetting.svelte";
     import TextSetting from "../TextSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
+    import BlocksSetting from "../blocks/BlocksSetting.svelte";
 
     export let setting: ModuleSetting;
 </script>
@@ -41,6 +42,8 @@
     <TextSetting bind:setting={setting} on:change />
 {:else if setting.valueType === "KEY"}
     <KeySetting bind:setting={setting} on:change />
+{:else if setting.valueType === "BLOCKS"}
+    <BlocksSetting bind:setting={setting} on:change />
 {:else}
     <div style="color: white">Unsupported setting {setting.valueType}</div>
 {/if}

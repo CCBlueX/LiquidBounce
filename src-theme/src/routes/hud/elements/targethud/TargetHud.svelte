@@ -3,47 +3,73 @@
     import {listen} from "../../../../integration/ws.js";
     import type {PlayerStats} from "../../../../integration/types";
     import {REST_BASE} from "../../../../integration/host";
+    import { fly } from "svelte/transition";
+    import HealthProgress from "./HealthProgress.svelte";
 
     let target: PlayerStats | null = null;
+    let visible = true;
+
+    let hideTimeout: number;
+
+    function startHideTimeout() {
+        hideTimeout = setTimeout(() => {
+            visible = false;
+        }, 500);
+    }
 
     listen("targetChange", (data: any) => {
-        console.log(JSON.stringify(data));
-
         target = data.target;
+        visible = true;
+        clearTimeout(hideTimeout);
+        startHideTimeout();
     });
+
+    startHideTimeout();
 </script>
 
-{#if target != null}
-    <div class="targethud">
-        <div class="avatar">
-            <img src="{REST_BASE}/api/v1/client/resource?id={target.skinIdentifier}" alt="avatar" />
-        </div>
-
-        <div class="name">{target.username}</div>
-        <div class="health-stats">
-            <div class="stat">
-                <span class="value">{target.health}</span>
-                <img
-                        class="icon"
-                        src="img/hud/targethud/icon-health.svg"
-                        alt="health"
-                />
+{#if visible && target != null}
+    <div class="targethud" transition:fly={{ y: -10, duration: 200 }}>
+        <div class="main-wrapper">
+            <div class="avatar">
+                <img src="{REST_BASE}/api/v1/client/resource?id={target.skinIdentifier}" alt="avatar" />
             </div>
-            <div class="stat">
-                <span class="value">{target.armor}</span>
-                <img
-                        class="icon"
-                        src="img/hud/targethud/icon-armor.svg"
-                        alt="armor"
-                />
+    
+            <div class="name">{target.username}</div>
+            <div class="health-stats">
+                <div class="stat">
+                    <div class="value">{Math.floor(target.health + target.absorption)}</div>
+                    <img
+                            class="icon"
+                            src="img/hud/targethud/icon-health.svg"
+                            alt="health"
+                    />
+                </div>
+                <div class="stat">
+                    <div class="value">{Math.floor(target.armor)}</div>
+                    <img
+                            class="icon"
+                            src="img/hud/targethud/icon-armor.svg"
+                            alt="armor"
+                    />
+                </div>
             </div>
-        </div>
-        <div class="armor-stats">
-            <ArmorStatus durability={5} />
-            <ArmorStatus durability={5} />
-            <ArmorStatus durability={5} />
-            <ArmorStatus durability={5} />
-        </div>
+            <div class="armor-stats">
+                {#if target.armorItems[3].count > 0}
+                    <ArmorStatus itemStack={target.armorItems[3]} />
+                {/if}
+                {#if target.armorItems[2].count > 0}
+                    <ArmorStatus itemStack={target.armorItems[2]} />
+                {/if}
+                {#if target.armorItems[1].count > 0}
+                    <ArmorStatus itemStack={target.armorItems[1]} />
+                {/if}
+                {#if target.armorItems[0].count > 0}
+                    <ArmorStatus itemStack={target.armorItems[0]} />
+                {/if}
+            </div>
+        </div>    
+        
+        <HealthProgress maxHealth={target.maxHealth + target.absorption} health={target.health + target.absorption} />
     </div>
 {/if}
 
@@ -56,13 +82,17 @@
         left: calc(50% + 20px);
         transform: translateY(-50%);
         background-color: rgba($targethud-base-color, 0.68);
-        padding: 10px 15px;
         border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .main-wrapper {
         display: grid;
         grid-template-areas:
             "a b d"
             "a c d";
         column-gap: 10px;
+        padding: 10px 15px;
     }
 
     .name {
@@ -81,6 +111,8 @@
             .value {
                 color: $targethud-text-dimmed-color;
                 font-size: 14px;
+                min-width: 18px;
+                display: inline-block;
             }
         }
     }
@@ -106,8 +138,10 @@
         overflow: hidden;
 
         img {
-            height: 100%;
-            width: 100%;
+            position: absolute;
+            scale: 6.25;
+            left: 118px;
+            top: 118px;
         }
     }
 </style>

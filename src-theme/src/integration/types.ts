@@ -11,7 +11,13 @@ export interface GroupedModules {
     [category: string]: Module[]
 }
 
-export type ModuleSetting = KeySetting | BooleanSetting | FloatSetting | FloatRangeSetting | IntSetting | IntRangeSetting | ChoiceSetting | ChooseSetting | ConfigurableSetting | TogglableSetting | ColorSetting | TextSetting;
+export type ModuleSetting = BlocksSetting | KeySetting | BooleanSetting | FloatSetting | FloatRangeSetting | IntSetting | IntRangeSetting | ChoiceSetting | ChooseSetting | ConfigurableSetting | TogglableSetting | ColorSetting | TextSetting;
+
+export interface BlocksSetting {
+    valueType: string;
+    name: string;
+    value: string[];
+}
 
 export interface TextSetting {
     valueType: string;
@@ -142,4 +148,14 @@ export interface ItemStack {
     count: number;
     damage: number;
     maxDamage: number;
+}
+
+export interface PrintableKey {
+    translationKey: string;
+    localized: string;
+}
+
+export interface Registries {
+    blocks: string[];
+    items: string[];
 }

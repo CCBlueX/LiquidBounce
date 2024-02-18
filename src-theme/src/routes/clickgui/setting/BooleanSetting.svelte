@@ -8,9 +8,9 @@
 
     export let setting: ModuleSetting;
 
-    const dispatch = createEventDispatcher();
-
     const cSetting = setting as BooleanSetting;
+
+    const dispatch = createEventDispatcher();
 
     function handleChange() {
         setting = { ...cSetting };

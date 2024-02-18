@@ -6,7 +6,7 @@
     export let label: string | null = null;
 </script>
 
-<div class="progress">
+<div class="progress" style="background-color: {color}32;">
     {#if label}
         <div class="label">{label}</div>
     {/if}

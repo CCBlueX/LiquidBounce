@@ -1,37 +1,69 @@
 <script lang="ts">
+    import { createEventDispatcher, onMount } from "svelte";
     import type { ModuleSetting, KeySetting } from "../../../integration/types";
     import { listen } from "../../../integration/ws";
+    import { getPrintableKeyName } from "../../../integration/rest";
 
     export let setting: ModuleSetting;
 
     const cSetting = setting as KeySetting;
 
-    let binding = false;
+    const dispatch = createEventDispatcher();
 
-    listen("key", (e: any) => {
+    let binding = false;
+    let printableKeyName = "";
+
+    async function updatePrintableKeyName() {
+        if (cSetting.value === -1) {
+            return;
+        }
+        printableKeyName = (await getPrintableKeyName(cSetting.value)).localized;
+    }
+
+    listen("keyboardKey", async (e: any) => {
         if (!binding) {
             return;
         }
 
-        if (e.key.name !== "key.keyboard.escape") {
-            cSetting.value = e.key.code;
+        binding = false;
+
+        if (e.keyCode !== 256) {
+            cSetting.value = e.keyCode;
         } else {
             cSetting.value = -1;
         }
+        await updatePrintableKeyName();
 
         setting = { ...cSetting };
 
-        binding = false;
+        dispatch("change");
+    });
+
+    async function toggleBinding() {
+        if (binding) {
+            cSetting.value = -1;
+            await updatePrintableKeyName();
+        }
+
+        binding = !binding;
+
+        setting = { ...cSetting };
+
+        dispatch("change");
+    }
+
+    onMount(async () => {
+        await updatePrintableKeyName();
     });
 </script>
 
 <div class="setting">
-    <button class="change-bind" on:click={() => (binding = true)}>
+    <button class="change-bind" on:click={toggleBinding}>
         {#if !binding}
             {#if cSetting.value === -1}
                 <span class="none">None</span>
             {:else}
-                <span>{cSetting.value}</span>
+                <span>{printableKeyName}</span>
             {/if}
         {:else}
             <span>Press any key</span>
