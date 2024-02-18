@@ -38,12 +38,7 @@ import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import net.minecraft.client.session.Session
 import org.lwjgl.glfw.GLFW
 
-internal fun RestNode.setupSessionRestApi() {
-    setupLocalSessionRestApi()
-    setupAccountManagerRest()
-}
-
-private fun RestNode.setupLocalSessionRestApi() {
+fun RestNode.sessionRest() {
     get("/session") {
         httpOk(JsonObject().apply {
             mc.session.let {
@@ -62,6 +57,8 @@ private fun RestNode.setupLocalSessionRestApi() {
             )
         )
     }
+
+    setupAccountManagerRest()
 }
 
 private fun RestNode.setupAccountManagerRest() {

@@ -27,7 +27,6 @@
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
-    <ID>LongMethod:ClientEndpoints.kt$internal fun RestNode.setupClientRestApi()</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
@@ -41,12 +40,12 @@
     <ID>LongMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>LongMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
-    <ID>LongMethod:ContainerEndpoints.kt$internal fun RestNode.setupContainerRestApi()</ID>
+    <ID>LongMethod:ContainerRest.kt$fun RestNode.containerRest()</ID>
     <ID>LongMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
-    <ID>LongMethod:PlayerEndpoints.kt$internal fun RestNode.setupPlayerRestApi()</ID>
-    <ID>LongMethod:SessionEndpoints.kt$private fun RestNode.setupAccountManagerRest()</ID>
+    <ID>LongMethod:ProxyRest.kt$internal fun RestNode.proxyRest()</ID>
+    <ID>LongMethod:SessionRest.kt$private fun RestNode.setupAccountManagerRest()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, val ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val changeLook: Boolean )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
@@ -58,6 +57,7 @@
     <ID>LongParameterList:ModuleTrajectories.kt$ModuleTrajectories$( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack )</ID>
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T>?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
+    <ID>LongParameterList:UserInterfaceEvents.kt$PlayerStatsChangeEvent$( val health: Float, val maxHealth: Float, val absorption: Float, var armor: Int, val food: Int, val experienceLevel: Int, val experienceProgress: Float )</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
@@ -66,7 +66,6 @@
     <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
     <ID>MatchingDeclarationName:RenderShortcuts.kt$RenderEnvironment</ID>
-    <ID>MaxLineLength:ArmorComparator.kt$ArmorComparator$return 1 - 20.0f.coerceAtMost((defensePoints / 5.0f).coerceAtLeast(defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f</ID>
     <ID>MaxLineLength:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("The command is marked as not executable (hub), but no handler was specified")</ID>
     <ID>MaxLineLength:CommandItemRename.kt$CommandItemRename$mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))</ID>
     <ID>MaxLineLength:ConfigSystem.kt$ConfigSystem$)</ID>
@@ -78,7 +77,6 @@
     <ID>MaxLineLength:LineSegment.kt$LineSegment$class</ID>
     <ID>MaxLineLength:LiquidBounce.kt$LiquidBounce$*</ID>
     <ID>MaxLineLength:Listenable.kt$// We store our sequence in this variable. That can be done because our variable will survive the scope of this function</ID>
-    <ID>MaxLineLength:ModuleAnimation.kt$ModuleAnimation$*</ID>
     <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$// We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.</ID>
     <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
     <ID>MaxLineLength:ModuleAutoWeapon.kt$ModuleAutoWeapon$if</ID>
@@ -106,19 +104,18 @@
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Block : ListValueType</ID>
     <ID>MaxLineLength:Value.kt$ListValueType$Proxy : ListValueType</ID>
+    <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>NestedBlockDepth:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
-    <ID>ReturnCount:ArmorComparator.kt$ArmorComparator$override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int</ID>
     <ID>ReturnCount:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>ReturnCount:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
     <ID>SpreadOperator:ExploitsItemGroup.kt$ExploitsItemGroup$("Troll Potion", *Registries.STATUS_EFFECT.map { statusEffect -> StatusEffectInstance(statusEffect, Int.MAX_VALUE, 127) }.toTypedArray())</ID>
     <ID>SpreadOperator:FakeLag.kt$FakeLag$(*positions.map { Vec3(it.vec) }.toTypedArray())</ID>
-    <ID>SpreadOperator:JsCommandBuilder.kt$JsCommandBuilder$(*(commandObject["aliases"] as? Array&lt;String>) ?: emptyArray())</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(clazz, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(obj::class.java, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$(*args.map { it!!::class.java }.toTypedArray())</ID>

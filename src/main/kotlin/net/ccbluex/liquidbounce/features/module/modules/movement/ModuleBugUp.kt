@@ -66,7 +66,7 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
 
     val movementInputEvent = handler<MovementInputEvent> {
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput(it.directionalInput, it.jumping, player.isSprinting, it.sneaking)
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
         )
 
         // Tick three times to make sure we are not falling

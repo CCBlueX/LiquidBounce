@@ -36,6 +36,9 @@ public class MixinPlayerInventory {
     @Final
     public PlayerEntity player;
 
+    @Shadow
+    public int selectedSlot;
+
     /**
      * Override the original slot based on the server-side slot information.
      *

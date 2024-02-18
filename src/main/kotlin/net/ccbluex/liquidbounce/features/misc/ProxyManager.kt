@@ -23,10 +23,12 @@ import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.ListValueType
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.script.ScriptApi
+import net.ccbluex.liquidbounce.features.misc.ProxyManager.Proxy.Companion.NO_PROXY
+import net.ccbluex.liquidbounce.features.misc.ProxyManager.ProxyCredentials.Companion.credentialsFromUserInput
 import java.net.InetSocketAddress
 
 /**
@@ -36,15 +38,12 @@ import java.net.InetSocketAddress
  */
 object ProxyManager : Configurable("proxy"), Listenable {
 
-    private val noProxy = Proxy("", 0, null)
-    var proxy by value("proxy", noProxy)
+    var proxy by value("proxy", NO_PROXY)
+    val proxies by value(name, mutableListOf<Proxy>(), listType = ListValueType.Proxy)
 
     /**
      * The proxy that is set in the current session and used for all server connections
-     *
-     * !! DO NOT CHANGE IT TO PRIVATE AS IT IS USED BY THE ULTRALIGHT GUI. !!
      */
-    @ScriptApi
     val currentProxy
         get() = proxy.takeIf { it.host.isNotBlank() }
 
@@ -52,24 +51,28 @@ object ProxyManager : Configurable("proxy"), Listenable {
         ConfigSystem.root(this)
     }
 
-    fun setProxy(host: String, port: Int, username: String, password: String) {
-        proxy = Proxy(host, port,
-            if (username.isNotBlank())
-                ProxyCredentials(username, password)
-            else
-                null
-        )
+    fun addProxy(host: String, port: Int, username: String = "", password: String = "") {
+        proxies.add(Proxy(host, port, credentialsFromUserInput(username, password)))
         ConfigSystem.storeConfigurable(this)
+    }
 
-        // Refreshes local IP info when proxy is set
-        IpInfoApi.refreshLocalIpInfo()
+    fun removeProxy(index: Int) {
+        proxies.removeAt(index)
+        ConfigSystem.storeConfigurable(this)
+    }
+
+    fun setProxy(index: Int) {
+        proxy = proxies[index]
+        sync()
     }
 
     fun unsetProxy() {
-        proxy = noProxy
-        ConfigSystem.storeConfigurable(this)
+        proxy = NO_PROXY
+        sync()
+    }
 
-        // Refreshes local IP info when proxy is unset
+    private fun sync() {
+        ConfigSystem.storeConfigurable(this)
         IpInfoApi.refreshLocalIpInfo()
     }
 
@@ -103,11 +106,24 @@ object ProxyManager : Configurable("proxy"), Listenable {
     data class Proxy(val host: String, val port: Int, val credentials: ProxyCredentials?) {
         val address
             get() = InetSocketAddress(host, port)
+
+        companion object {
+            val NO_PROXY = Proxy("", 0, null)
+        }
+
     }
 
     /**
      * Contains serializable proxy credentials
      */
-    data class ProxyCredentials(val username: String, val password: String)
+    data class ProxyCredentials(val username: String, val password: String) {
+        companion object {
+            fun credentialsFromUserInput(username: String, password: String) =
+                if (username.isNotBlank() && password.isNotBlank())
+                    ProxyCredentials(username, password)
+                else
+                    null
+        }
+    }
 
 }

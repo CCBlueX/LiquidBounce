@@ -47,12 +47,15 @@ object SpeedSpeedYPort : Choice("YPort") {
 
 }
 
-object SpeedLegitHop : Choice("LegitHop") {
+object SpeedLegitHop : SpeedBHopBase("LegitHop")
+
+open class SpeedBHopBase(name: String) : Choice(name) {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
 
     private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
+
     // Avoids running into edges which loses speed
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
