@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -92,9 +93,9 @@ object CommandClient {
                 chat(variable("Client Integration"))
                 chat(
                     regular("URL: ")
-                        .append(variable(ThemeManager.integrationUrl).styled {
+                        .append(variable(ThemeManager.getUrl()).styled {
                             it.withUnderline(true)
-                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, ThemeManager.integrationUrl))
+                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, ThemeManager.getUrl()))
                                 .withHoverEvent(
                                     HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
@@ -107,12 +108,16 @@ object CommandClient {
 
                 chat(prefix = false)
                 chat(regular("Integration Menu:"))
-                for (menu in IntegrationHandler.VirtualScreenType.values()) {
-                    val url = "${ThemeManager.integrationUrl}#/${menu.assignedName}?static"
-                    val name = menu.assignedName.replaceFirstChar { it.uppercase() }
+                for (menu in VirtualScreenType.entries) {
+                    val internalName = menu.internalName
+
+                    val url = runCatching {
+                        ThemeManager.getUrl(internalName, true)
+                    }.getOrNull() ?: continue
+                    val upperFirstName = menu.internalName.replaceFirstChar { it.uppercase() }
 
                     chat(
-                        regular("-> $name (")
+                        regular("-> $upperFirstName (")
                             .append(variable("Browser").styled {
                                 it.withUnderline(true)
                                     .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url))

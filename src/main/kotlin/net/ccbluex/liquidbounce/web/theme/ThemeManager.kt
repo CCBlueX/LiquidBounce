@@ -20,17 +20,22 @@
 package net.ccbluex.liquidbounce.web.theme
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
+import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
 
 object ThemeManager {
 
-    val themesFolder = File(ConfigSystem.rootFolder, "themes")
-    val defaultTheme = Theme.defaults()
+    internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
+    private val defaultTheme = Theme.defaults()
 
     var activeTheme = defaultTheme
         set(value) {
@@ -45,46 +50,91 @@ object ThemeManager {
             IntegrationHandler.updateIntegrationBrowser()
         }
 
-    /**
-     * The integration URL represents the URL to the integration page of the active theme.
-     *
-     * todo: remove title parameter, this should default to the root of the theme
-     */
-    val integrationUrl: String
-        get() = "$NETTY_ROOT/${activeTheme.name}/"
+    private val takesInputHandler: () -> Boolean
+        get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
-    val overlayUrl: String
-        get() = "$NETTY_ROOT/${activeTheme.name}/#/hud?static"
+    fun openImmediate(name: String? = null, markAsStatic: Boolean = false): ITab =
+        BrowserManager.browser?.createTab(getUrl(name, markAsStatic))
+            ?: error("Browser is not initialized")
+
+    fun openInputAwareImmediate(name: String? = null, markAsStatic: Boolean = false): ITab =
+        BrowserManager.browser?.createInputAwareTab(getUrl(name, markAsStatic), takesInputHandler)
+            ?: error("Browser is not initialized")
+
+    fun updateImmediate(tab: ITab?, name: String? = null) = tab?.loadUrl(getUrl(name))
+
+    fun doesOverlay(name: String) = activeTheme.doesOverlay(name) || defaultTheme.doesOverlay(name)
+
+    fun doesSupport(name: String) = activeTheme.doesSupport(name) || defaultTheme.doesSupport(name)
+
+    fun getUrl(name: String? = null, markAsStatic: Boolean = false) =
+        (activeTheme.getUrl(name) ?: defaultTheme.getUrl(name))?.let { if (markAsStatic) "$it?static" else it }
+            ?: error("No theme supports $name")
 
 }
 
 class Theme(val name: String) {
 
-    internal val themeFolder = File(ThemeManager.themesFolder, name)
+    val folder = File(ThemeManager.themesFolder, name)
+    val metadata: ThemeMetadata = run {
+        val metadataFile = File(folder, "metadata.json")
+        if (!metadataFile.exists()) {
+            error("Theme $name does not contain a metadata file")
+        }
+
+        decode<ThemeMetadata>(metadataFile.readText())
+    }
 
     val exists: Boolean
-        get() = themeFolder.exists()
+        get() = folder.exists()
+
+    private val url: String
+        get() = "$NETTY_ROOT/${ThemeManager.activeTheme.name}/#/"
+
+    /**
+     * Get the URL to the given page name in the theme.
+     */
+    fun getUrl(name: String?) = if (name == null) {
+        url
+    } else if (doesSupport(name) || doesOverlay(name)) {
+        "$url$name"
+    } else {
+        null
+    }
+
+    fun doesSupport(name: String) = metadata.supports.contains(name)
+
+    fun doesOverlay(name: String) = metadata.overlays.contains(name)
 
     companion object {
 
-        fun defaults() = Theme("default").apply {
-            runCatching {
-                val stream = resource("/assets/liquidbounce/default_theme.zip")
+        fun defaults() = runCatching {
+            val folder = ThemeManager.themesFolder.resolve("default")
+            val stream = resource("/assets/liquidbounce/default_theme.zip")
 
-                if (exists) {
-                    themeFolder.deleteRecursively()
-                }
-
-                extractZip(stream, themeFolder)
-                themeFolder.deleteOnExit()
-            }.onFailure {
-                logger.error("Unable to extract default theme", it)
-            }.onSuccess {
-                logger.info("Successfully extracted default theme")
+            if (folder.exists()) {
+                folder.deleteRecursively()
             }
 
-        }
+            extractZip(stream, folder)
+            folder.deleteOnExit()
+
+            Theme("default")
+        }.onFailure {
+            logger.error("Unable to extract default theme", it)
+        }.onSuccess {
+            logger.info("Successfully extracted default theme")
+        }.getOrThrow()
 
     }
 
 }
+
+data class ThemeMetadata(
+    val name: String,
+    val author: String,
+    val version: String,
+    val baseUrl: String,
+    val supports: List<String>,
+    val overlays: List<String>
+)

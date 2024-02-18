@@ -30,20 +30,9 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
-import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.GameMenuScreen
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
-import net.minecraft.client.gui.screen.option.OptionsScreen
-import net.minecraft.client.gui.screen.world.CreateWorldScreen
-import net.minecraft.client.gui.screen.world.SelectWorldScreen
-import net.minecraft.client.realms.gui.screen.RealmsMainScreen
 import org.lwjgl.glfw.GLFW
 
 object IntegrationHandler : Listenable {
@@ -56,8 +45,7 @@ object IntegrationHandler : Listenable {
      * The client tab will be initialized when the browser is ready.
      */
     val clientJcef by lazy {
-        BrowserManager.browser?.createInputAwareTab(integrationUrl) { mc.currentScreen != null }
-            ?.preferOnTop()
+        ThemeManager.openInputAwareImmediate().preferOnTop()
     }
 
     var momentaryVirtualScreen: VirtualScreen? = null
@@ -93,46 +81,10 @@ object IntegrationHandler : Listenable {
 
     }
 
-    private val parent: Screen
+    internal val parent: Screen
         get() = mc.currentScreen ?: TitleScreen()
 
-    enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
-                                 val showAlong: Boolean = true, private val open: () -> Unit = {}) {
-
-        TITLE("title",
-            {
-                // todo: Do not simply replace any Lunar Screen with the title screen, if not in a world
-                it is TitleScreen || (it.javaClass.name.startsWith("com.moonsworth.lunar.") && mc.world == null)
-            },
-            showAlong = true,
-            open = {
-                mc.setScreen(TitleScreen())
-            }),
-        MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, true, open = {
-            mc.setScreen(MultiplayerScreen(parent))
-        }),
-        MULTIPLAYER_REALMS("multiplayer_realms", { it is RealmsMainScreen }, true, open = {
-            mc.setScreen(RealmsMainScreen(parent))
-        }),
-        SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }, true, open = {
-            mc.setScreen(SelectWorldScreen(parent))
-        }),
-        OPTIONS("options", { it is OptionsScreen }, true, open = {
-            mc.setScreen(OptionsScreen(parent, mc.options))
-        }),
-        GAME_MENU("game_menu", { it is GameMenuScreen }, true),
-        INVENTORY("inventory", { it is InventoryScreen || it is CreativeInventoryScreen }, true),
-        CONTAINER("container", { it is GenericContainerScreen }, true),
-        DISCONNECTED("disconnected", { it is DisconnectedScreen }, true),
-        CREATE_WORLD("create_world", { it is CreateWorldScreen },  true, open = {
-            CreateWorldScreen.create(mc, parent)
-        });
-
-        fun open() = RenderSystem.recordRenderCall(open)
-
-    }
-
-    internal var browserIsReady = false
+    private var browserIsReady = false
 
     val handleBrowserReady = handler<BrowserReadyEvent> {
         logger.info("Browser is ready.")
@@ -147,6 +99,8 @@ object IntegrationHandler : Listenable {
         if (momentaryVirtualScreen?.name == name) {
             return
         }
+
+        // TODO: Implement switching between themes if needed
 
         val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
         acknowledgement.reset()
@@ -168,8 +122,9 @@ object IntegrationHandler : Listenable {
             return
         }
 
-        logger.info("Reloading integration browser ${clientJcef?.javaClass?.simpleName} to URL $integrationUrl")
-        clientJcef?.loadUrl(integrationUrl)
+        logger.info("Reloading integration browser ${clientJcef.javaClass.simpleName} " +
+            "to URL ${ThemeManager.getUrl()}")
+        ThemeManager.updateImmediate(clientJcef)
     }
 
     fun restoreOriginalScreen() {
@@ -233,18 +188,20 @@ object IntegrationHandler : Listenable {
             TitleScreen()
         }
 
-        val virtualScreenType =  VirtualScreenType.values().find { it.recognizer(screen) }
+        val virtualScreenType = VirtualScreenType.recognize(screen)
         if (virtualScreenType == null) {
             virtualClose()
             return false
         }
 
-        if (!virtualScreenType.showAlong) {
-            val vrScreen = VrScreen(virtualScreenType.assignedName, originalScreen = screen)
+        val name = virtualScreenType.internalName
+
+        if (ThemeManager.doesSupport(name)) {
+            val vrScreen = VrScreen(name, originalScreen = screen)
             mc.setScreen(vrScreen)
             return true
-        } else {
-            virtualOpen(virtualScreenType.assignedName)
+        } else if (ThemeManager.doesOverlay(name)) {
+            virtualOpen(name)
         }
 
         return false

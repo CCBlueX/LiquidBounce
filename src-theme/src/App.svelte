@@ -1,15 +1,17 @@
 <script lang="ts">
-    import Router, { push } from "svelte-spa-router";
+    import Router, {push} from "svelte-spa-router";
     import ClickGui from "./routes/clickgui/ClickGui.svelte";
     import Hud from "./routes/hud/Hud.svelte";
-    import { confirmVirtualScreen, getVirtualScreen } from "./integration/rest";
-    import { cleanupListeners, listenAlways } from "./integration/ws";
-    import { onMount } from "svelte";
-    import { insertPersistentData } from "./integration/persistent_storage";
+    import {confirmVirtualScreen, getVirtualScreen} from "./integration/rest";
+    import {cleanupListeners, listenAlways} from "./integration/ws";
+    import {onMount} from "svelte";
+    import {insertPersistentData} from "./integration/persistent_storage";
+    import Inventory from "./routes/inventory/Inventory.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
         "/hud": Hud,
+        "/inventory": Inventory
     };
 
     const url = window.location.href;

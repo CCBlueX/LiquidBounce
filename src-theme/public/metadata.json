@@ -1,0 +1,33 @@
+{
+  "name": "LiquidBounce",
+  "version": "0.1.0",
+  "author": "CCBlueX",
+  "baseUrl": "#",
+  "supports": [
+    "clickgui",
+    "hud"
+  ],
+  "overlays": [
+    "inventory"
+  ],
+  "components": {
+    "arraylist": {
+      "enabled": true,
+      "alignment": {
+        "horizontalAlignment": "right",
+        "horizontalPadding": 0,
+        "verticalAlignment": "top",
+        "verticalPadding": 0
+      }
+    },
+    "hotbar": {
+        "enabled": true,
+        "alignment": {
+            "horizontalAlignment": "center",
+            "horizontalPadding": 98,
+            "verticalAlignment": "bottom",
+            "verticalPadding": 0
+        }
+    }
+  }
+}

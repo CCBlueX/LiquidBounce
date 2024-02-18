@@ -25,6 +25,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -60,7 +61,7 @@ fun RestNode.screenRest() {
 
     get("/screen") {
         val mcScreen = mc.currentScreen ?: return@get httpForbidden("No screen")
-        val name = IntegrationHandler.VirtualScreenType.entries.find { it.recognizer(mcScreen) }?.assignedName
+        val name = VirtualScreenType.entries.find { it.recognizer(mcScreen) }?.internalName
             ?: mcScreen::class.qualifiedName
 
         httpOk(JsonObject().apply {
@@ -79,7 +80,7 @@ fun RestNode.screenRest() {
         val body = decode<JsonObject>(it.content)
         val screenName = body["name"]?.asString ?: return@put httpForbidden("No screen name")
 
-        IntegrationHandler.VirtualScreenType.entries.find { it.assignedName == screenName }?.open()
+        VirtualScreenType.byName(screenName)?.open()
             ?: return@put httpForbidden("No screen with name $screenName")
         httpOk(JsonObject())
     }
