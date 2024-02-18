@@ -21,26 +21,24 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.web.socket.netty.httpBadRequest
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
-import net.minecraft.registry.Registries
+import net.ccbluex.tenacc.utils.outputString
+import net.minecraft.client.util.InputUtil
 
-fun RestNode.registriesRest() {
-    get("/registries") {
+fun RestNode.inputRest() {
+    get("/input") { request ->
+        val key = request.params["code"]?.toIntOrNull()
+            ?: return@get httpBadRequest("Missing key parameter")
+        val scanCode = request.params["scanCode"]?.toIntOrNull() ?: -1
+
+        val input = InputUtil.fromKeyCode(key, scanCode)
+
         httpOk(JsonObject().apply {
-            add("blocks", JsonArray().apply {
-                Registries.BLOCK.forEach { block ->
-                    add(Registries.BLOCK.getId(block).toString())
-                }
-            })
-            add("items", JsonArray().apply {
-                Registries.ITEM.forEach { item ->
-                    add(Registries.ITEM.getId(item).toString())
-                }
-            })
+            addProperty("translationKey", input.translationKey)
+            addProperty("localized", input.localizedText.outputString())
         })
     }
 }
-

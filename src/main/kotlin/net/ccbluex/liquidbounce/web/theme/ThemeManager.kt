@@ -20,17 +20,23 @@
 package net.ccbluex.liquidbounce.web.theme
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
+import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
 
 object ThemeManager {
 
-    val themesFolder = File(ConfigSystem.rootFolder, "themes")
-    val defaultTheme = Theme.defaults()
+    internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
+    private val defaultTheme = Theme.defaults()
 
     var activeTheme = defaultTheme
         set(value) {
@@ -45,46 +51,102 @@ object ThemeManager {
             IntegrationHandler.updateIntegrationBrowser()
         }
 
-    /**
-     * The integration URL represents the URL to the integration page of the active theme.
-     *
-     * todo: remove title parameter, this should default to the root of the theme
-     */
-    val integrationUrl: String
-        get() = "$NETTY_ROOT/${activeTheme.name}/"
+    private val takesInputHandler: () -> Boolean
+        get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
-    val overlayUrl: String
-        get() = "$NETTY_ROOT/${activeTheme.name}/#/hud?static"
+    fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
+        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url)
+            ?: error("Browser is not initialized")
+
+    fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
+        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, takesInputHandler)
+            ?: error("Browser is not initialized")
+
+    fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
+        tab?.loadUrl(route(virtualScreenType, markAsStatic).url)
+
+    fun route(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): Route {
+        val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType.routeName)) {
+            activeTheme
+        } else if (defaultTheme.doesAccept(virtualScreenType.routeName)) {
+            defaultTheme
+        } else {
+            error("No theme supports the route ${virtualScreenType.routeName}")
+        }
+
+        return Route(
+            theme,
+            theme.getUrl(virtualScreenType?.routeName, markAsStatic)
+        )
+    }
+
+    data class Route(val theme: Theme, val url: String)
 
 }
 
 class Theme(val name: String) {
 
-    internal val themeFolder = File(ThemeManager.themesFolder, name)
+    val folder = File(ThemeManager.themesFolder, name)
+    val metadata: ThemeMetadata = run {
+        val metadataFile = File(folder, "metadata.json")
+        if (!metadataFile.exists()) {
+            error("Theme $name does not contain a metadata file")
+        }
+
+        decode<ThemeMetadata>(metadataFile.readText())
+    }
 
     val exists: Boolean
-        get() = themeFolder.exists()
+        get() = folder.exists()
+
+    private val url: String
+        get() = "$NETTY_ROOT/$name/#/"
+
+    /**
+     * Get the URL to the given page name in the theme.
+     */
+    fun getUrl(name: String? = null, markAsStatic: Boolean = false) = "$url${name.orEmpty()}".let {
+        if (markAsStatic) {
+            "$it?static"
+        } else {
+            it
+        }
+    }
+
+    fun doesAccept(name: String?) = doesSupport(name) || doesOverlay(name)
+
+    fun doesSupport(name: String?) = name != null && metadata.supports.contains(name)
+
+    fun doesOverlay(name: String?) = name != null && metadata.overlays.contains(name)
 
     companion object {
 
-        fun defaults() = Theme("default").apply {
-            runCatching {
-                val stream = resource("/assets/liquidbounce/default_theme.zip")
+        fun defaults() = runCatching {
+            val folder = ThemeManager.themesFolder.resolve("default")
+            val stream = resource("/assets/liquidbounce/default_theme.zip")
 
-                if (exists) {
-                    themeFolder.deleteRecursively()
-                }
-
-                extractZip(stream, themeFolder)
-                themeFolder.deleteOnExit()
-            }.onFailure {
-                logger.error("Unable to extract default theme", it)
-            }.onSuccess {
-                logger.info("Successfully extracted default theme")
+            if (folder.exists()) {
+                folder.deleteRecursively()
             }
 
-        }
+            extractZip(stream, folder)
+            folder.deleteOnExit()
+
+            Theme("default")
+        }.onFailure {
+            logger.error("Unable to extract default theme", it)
+        }.onSuccess {
+            logger.info("Successfully extracted default theme")
+        }.getOrThrow()
 
     }
 
 }
+
+data class ThemeMetadata(
+    val name: String,
+    val author: String,
+    val version: String,
+    val supports: List<String>,
+    val overlays: List<String>
+)

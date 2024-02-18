@@ -47,6 +47,13 @@ public class MixinKeyboard {
     private void hookKeyboardKey(long window, int key, int scancode, int i, int j, CallbackInfo callback) {
         // does if (window == this.client.getWindow().getHandle())
         EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(key, scancode, i, j));
+
+        if (client.currentScreen == null) {
+            var inputKey = InputUtil.fromKeyCode(key, scancode);
+
+            EventManager.INSTANCE.callEvent(new KeyEvent(new KeyEvent.Key(inputKey.getCode(),
+                    inputKey.getTranslationKey()), i, j));
+        }
     }
 
     /**
@@ -56,20 +63,6 @@ public class MixinKeyboard {
     private void hookKeyboardChar(long window, int codePoint, int modifiers, CallbackInfo callback) {
         // does if (window == this.client.getWindow().getHandle())
         EventManager.INSTANCE.callEvent(new KeyboardCharEvent(codePoint, modifiers));
-    }
-
-    /**
-     * Hook key event
-     */
-    @Inject(method = "onKey", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;fromKeyCode(II)Lnet/minecraft/client/util/InputUtil$Key;", shift = At.Shift.AFTER))
-    private void hookKey(long window, int key, int scancode, int i, int j, CallbackInfo callback) {
-        // does if (window == this.client.getWindow().getHandle())
-        if (client.currentScreen == null) {
-            var inputKey = InputUtil.fromKeyCode(key, scancode);
-
-            EventManager.INSTANCE.callEvent(new KeyEvent(new KeyEvent.Key(inputKey.getCode(),
-                    inputKey.getTranslationKey()), i, j));
-        }
     }
 
 }

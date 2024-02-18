@@ -39,7 +39,6 @@ import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Vec2f
@@ -50,8 +49,6 @@ import org.joml.Quaternionf
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
-
-const val LINE_WIDTH: Float = 1.0F
 
 object ModuleMinimap : Module("Minimap", Category.RENDER) {
     private val size by int("Size", 96, 1..256)

@@ -21,26 +21,21 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.web.socket.netty.httpOk
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.web.socket.netty.httpBadRequest
+import net.ccbluex.liquidbounce.web.socket.netty.httpFileStream
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
-import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
 
-fun RestNode.registriesRest() {
-    get("/registries") {
-        httpOk(JsonObject().apply {
-            add("blocks", JsonArray().apply {
-                Registries.BLOCK.forEach { block ->
-                    add(Registries.BLOCK.getId(block).toString())
-                }
-            })
-            add("items", JsonArray().apply {
-                Registries.ITEM.forEach { item ->
-                    add(Registries.ITEM.getId(item).toString())
-                }
-            })
-        })
+fun RestNode.resourceRest() {
+    get("/resource") { request ->
+        val identifier = request.params["id"]
+            ?: return@get httpBadRequest("Missing identifier parameter")
+        val minecraftIdentifier = Identifier(identifier)
+        val resource = mc.resourceManager.getResourceOrThrow(minecraftIdentifier)
+
+        resource.inputStream.use {
+            httpFileStream(it)
+        }
     }
 }
-

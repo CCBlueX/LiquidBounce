@@ -20,13 +20,17 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -79,6 +83,10 @@ class TargetTracker(
 
     fun lock(entity: LivingEntity) {
         lockedOnTarget = entity
+
+        if (entity is PlayerEntity) {
+            EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
+        }
     }
 
     fun unlock() {
