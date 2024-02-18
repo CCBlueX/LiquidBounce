@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerStatistics;
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -69,7 +69,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     protected abstract boolean isWalking();
 
     @Unique
-    private PlayerStatistics lastKnownStatistics = null;
+    private PlayerData lastKnownStatistics = null;
 
     /**
      * Hook entity tick event
@@ -96,9 +96,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         EventManager.INSTANCE.callEvent(new PlayerPostTickEvent());
 
         // Call player statistics change event when statistics change
-        var statistics = PlayerStatistics.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
+        var statistics = PlayerData.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
         if (lastKnownStatistics == null || lastKnownStatistics != statistics) {
-            EventManager.INSTANCE.callEvent(PlayerStatsChangeEvent.Companion.fromPlayerStatistics(statistics));
+            EventManager.INSTANCE.callEvent(ClientPlayerDataEvent.Companion.fromPlayerStatistics(statistics));
         }
         this.lastKnownStatistics = statistics;
     }

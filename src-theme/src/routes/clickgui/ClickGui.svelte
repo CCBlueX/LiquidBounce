@@ -2,9 +2,9 @@
     import Panel from "./clickgui/Panel.svelte";
     import SearchBar from "./SearchBar.svelte";
 
-    
-    import { getModules, toggleModule, getClickGuiOptions } from "../../client/api.svelte";
-    import { blur } from "svelte/transition";
+
+    import {getClickGuiOptions, getModules, toggleModule} from "../../client/api.svelte";
+    import {blur} from "svelte/transition";
 
     // todo: request from API
     const categories = [
@@ -75,7 +75,7 @@
         --accent: {options.accentColor};
         --accent-dimmed: {options.accentColor};
         --text: {options.textColor};
-        --textdimmed: {options.textDimmed};" transition:blur={{ duration: 200 }}>
+        --textdimmed: {options.textDimmed};" transition:blur={{ duration: 0.2 }}>
     <SearchBar settings={options} {modules} toggleModule={toggleModule} />
     {#each panels as panel}
         <Panel name={panel.name} modules={panel.modules} settings={options} toggleModule={toggleModule} startTop={panel.top}

@@ -23,7 +23,13 @@ import com.google.gson.*
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
+import net.ccbluex.tenacc.utils.outputString
 import net.minecraft.client.network.ServerInfo
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
+import net.minecraft.world.GameMode
 import java.lang.reflect.Type
 import java.util.*
 
@@ -61,10 +67,59 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
 
 }
 
+class GameModeSerializer : JsonSerializer<GameMode> {
+    override fun serialize(src: GameMode?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.let { JsonPrimitive(it.getName()) }
+}
+
+class ItemStackSerializer : JsonSerializer<ItemStack> {
+    override fun serialize(src: ItemStack?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.let {
+            JsonObject().apply {
+                addProperty("identifier", Registries.ITEM.getId(it.item).toString())
+                addProperty("displayName", it.name.outputString())
+                addProperty("count", it.count)
+                addProperty("damage", it.damage)
+                addProperty("maxDamage", it.maxDamage)
+                addProperty("empty", it.isEmpty)
+            }
+    }
+
+}
+
+class IdentifierSerializer : JsonSerializer<Identifier> {
+    override fun serialize(src: Identifier?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.let { JsonPrimitive(it.toString()) }
+}
+
+class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
+    override fun serialize(
+        src: StatusEffectInstance?,
+        typeOfSrc: Type?,
+        context: JsonSerializationContext?
+    ) = src?.let {
+        JsonObject().apply {
+            addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType).toString())
+            addProperty("localizedName", it.effectType.name.outputString())
+            addProperty("duration", it.duration)
+            addProperty("amplifier", it.amplifier)
+            addProperty("ambient", it.isAmbient)
+            addProperty("infinite", it.isInfinite)
+            addProperty("visible", it.shouldShowParticles())
+            addProperty("showIcon", it.shouldShowIcon())
+        }
+    }
+
+}
+
 internal val protocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableSerializer)
     .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer())
+    .registerTypeAdapter(GameMode::class.java, GameModeSerializer())
+    .registerTypeAdapter(ItemStack::class.java, ItemStackSerializer())
+    .registerTypeAdapter(Identifier::class.java, IdentifierSerializer())
+    .registerTypeAdapter(StatusEffectInstance::class.java, StatusEffectInstanceSerializer())
     .create()
 

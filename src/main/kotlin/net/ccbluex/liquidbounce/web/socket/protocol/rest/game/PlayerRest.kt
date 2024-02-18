@@ -21,77 +21,65 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
-import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.minecraft.client.util.SkinTextures
+import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.world.GameMode
 
 fun RestNode.playerRest() {
     get("/player") {
-        httpOk(JsonObject().apply {
-            addProperty("username", player.nameForScoreboard)
-            addProperty("uuid", player.uuidAsString)
-            add("stats", protocolGson.toJsonTree(PlayerStatistics.fromPlayer(player)))
-            add("position", JsonObject().apply {
-                addProperty("x", player.x)
-                addProperty("y", player.y)
-                addProperty("z", player.z)
-            })
-            add("rotation", JsonObject().apply {
-                addProperty("yaw", player.yaw)
-                addProperty("pitch", player.pitch)
-            })
-            add("region", JsonObject().apply {
-                addProperty("x", player.chunkPos.x)
-                addProperty("z", player.chunkPos.z)
-            })
-        })
+        httpOk(protocolGson.toJsonTree(PlayerData.fromPlayer(player)))
     }
 }
 
-/**
- * Represents statistics for a player, including health, max health, absorption, armor, food level,
- * experience level, and experience progress.
- *
- * This data class automatically generates an [equals] method which compares the values of all
- * properties declared in the primary constructor. Therefore, instances of [PlayerStatistics] with
- * the same values for all properties are considered equal.
- *
- * @property health The current health of the player.
- * @property maxHealth The maximum health the player can have.
- * @property absorption The absorption amount of the player.
- * @property armor The armor value of the player.
- * @property food The current food level of the player.
- * @property experienceLevel The level of experience the player has.
- * @property experienceProgress The progress towards the next experience level.
- */
-data class PlayerStatistics(
+data class PlayerData(
+    val username: String,
+    val textures: SkinTextures? = null,
+    val selectedSlot: Int,
+    val gameMode: GameMode = GameMode.DEFAULT,
     val health: Float,
     val maxHealth: Float,
     val absorption: Float,
     val armor: Int,
     val food: Int,
+    val air: Int,
+    val maxAir: Int,
     val experienceLevel: Int,
-    val experienceProgress: Float
+    val experienceProgress: Float,
+    val effects: List<StatusEffectInstance>,
+    val mainHandStack: ItemStack,
+    val offHandStack: ItemStack,
+    val armorItems: List<ItemStack> = emptyList()
 ) {
 
     companion object {
-        /**
-         * Creates a [PlayerStatistics] instance from a [PlayerEntity].
-         *
-         * @param player The player entity to extract statistics from.
-         * @return A [PlayerStatistics] instance representing the player's statistics.
-         */
-        fun fromPlayer(player: PlayerEntity) = PlayerStatistics(
+
+        fun fromPlayer(player: PlayerEntity) = PlayerData(
+            player.nameForScoreboard,
+            network.playerList.find { it.profile == player.gameProfile }?.skinTextures,
+            player.inventory.selectedSlot,
+            if (mc.player == player) interaction.currentGameMode else GameMode.DEFAULT,
             player.health,
             player.maxHealth,
             player.absorptionAmount,
             player.armor,
             player.hungerManager.foodLevel,
+            player.air,
+            player.maxAir,
             player.experienceLevel,
-            player.experienceProgress
+            player.experienceProgress,
+            player.statusEffects.toList(),
+            player.mainHandStack,
+            player.offHandStack,
+            player.armorItems.toList()
         )
     }
 

@@ -1,0 +1,19 @@
+{
+  "name": "LiquidBounce",
+  "version": "0.1.0",
+  "author": "CCBlueX",
+  "supports": [
+    "clickgui",
+    "title",
+    "proxymanager",
+    "altmanager",
+    "customize"
+  ],
+  "overlays": [
+    "hud",
+    "inventory",
+    "splashscreen",
+    "container",
+    "disconnected"
+  ]
+}
