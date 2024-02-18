@@ -46,7 +46,7 @@ object IntegrationHandler : Listenable {
      * The client tab will be initialized when the browser is ready.
      */
     val clientJcef by lazy {
-        ThemeManager.openInputAwareImmediate().preferOnTop()
+        ThemeManager.openInputAwareImmediate(VirtualScreenType.SPLASH).preferOnTop()
     }
 
     var momentaryVirtualScreen: VirtualScreen? = null
@@ -66,7 +66,7 @@ object IntegrationHandler : Listenable {
 
     private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
 
-    data class VirtualScreen(val name: String, val openSince: Chronometer = Chronometer())
+    data class VirtualScreen(val type: VirtualScreenType, val openSince: Chronometer = Chronometer())
 
     class Acknowledgement(val since: Chronometer = Chronometer(),
                                 var confirmed: Boolean = false) {
@@ -100,7 +100,7 @@ object IntegrationHandler : Listenable {
 
     fun virtualOpen(theme: Theme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
-        if (momentaryVirtualScreen?.name == type.routeName) {
+        if (momentaryVirtualScreen?.type == type) {
             return
         }
 
@@ -109,9 +109,9 @@ object IntegrationHandler : Listenable {
             ThemeManager.updateImmediate(clientJcef, type)
         }
 
-        val virtualScreen = VirtualScreen(type.routeName).apply { momentaryVirtualScreen = this }
+        val virtualScreen = VirtualScreen(type).apply { momentaryVirtualScreen = this }
         acknowledgement.reset()
-        EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
+        EventManager.callEvent(VirtualScreenEvent(virtualScreen.type.routeName,
             VirtualScreenEvent.Action.OPEN))
     }
 
@@ -120,7 +120,7 @@ object IntegrationHandler : Listenable {
 
         momentaryVirtualScreen = null
         acknowledgement.reset()
-        EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
+        EventManager.callEvent(VirtualScreenEvent(virtualScreen.type.routeName,
             VirtualScreenEvent.Action.CLOSE))
     }
 
@@ -131,7 +131,7 @@ object IntegrationHandler : Listenable {
 
         logger.info("Reloading integration browser ${clientJcef.javaClass.simpleName} " +
             "to ${ThemeManager.route()}")
-        ThemeManager.updateImmediate(clientJcef)
+        ThemeManager.updateImmediate(clientJcef, momentaryVirtualScreen?.type)
     }
 
     fun restoreOriginalScreen() {
@@ -219,6 +219,8 @@ object IntegrationHandler : Listenable {
             return true
         } else if (theme.doesOverlay(name)) {
             virtualOpen(theme, virtualScreenType)
+        } else {
+            virtualClose()
         }
 
         return false

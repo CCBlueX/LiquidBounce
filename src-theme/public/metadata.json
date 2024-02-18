@@ -12,7 +12,7 @@
   "overlays": [
     "hud",
     "inventory",
-    "splashscreen",
+    "splash",
     "container",
     "disconnected"
   ]

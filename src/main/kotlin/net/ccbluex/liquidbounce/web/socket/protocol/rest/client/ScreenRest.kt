@@ -40,7 +40,7 @@ import net.minecraft.client.gui.screen.SplashOverlay
 fun RestNode.screenRest() {
     get("/virtualScreen") {
         httpOk(JsonObject().apply {
-            addProperty("name", IntegrationHandler.momentaryVirtualScreen?.name)
+            addProperty("name", IntegrationHandler.momentaryVirtualScreen?.type?.routeName)
             addProperty("splash", mc.overlay is SplashOverlay)
         })
     }
@@ -51,7 +51,7 @@ fun RestNode.screenRest() {
 
         val virtualScreen = IntegrationHandler.momentaryVirtualScreen
 
-        if ((virtualScreen?.name ?: "none") != name) {
+        if ((virtualScreen?.type?.routeName ?: "none") != name) {
             return@post httpForbidden("Wrong virtual screen")
         }
 
