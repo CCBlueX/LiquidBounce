@@ -189,7 +189,7 @@ tasks.register('buildTheme', NpmTask) {
             'src-theme/rollup.config.js'
     )
     inputs.dir("src-theme/src")
-    outputs.dir('src-theme/public')
+    outputs.dir('src-theme/dist')
 }
 
 tasks.register('bundleTheme', NodeTask) {
@@ -209,6 +209,7 @@ tasks.register('bundleTheme', NodeTask) {
     )
     inputs.dir("src-theme/src")
     inputs.dir("src-theme/public")
+    inputs.dir("src-theme/dist")
     outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 
