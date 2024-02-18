@@ -131,10 +131,11 @@
         overflow: hidden;
 
         .slider {
-            background-color: rgba($hotbar-base-color, 0.3);
+            border: solid 2px $accent-color;
             height: 45px;
             width: 45px;
             position: absolute;
+            border-radius: 5px;
             /* transition: linear left 0.05s; TODO: Animation is possible but annoying */
         }
 
