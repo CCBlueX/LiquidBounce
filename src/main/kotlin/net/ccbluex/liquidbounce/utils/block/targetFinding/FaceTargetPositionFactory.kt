@@ -200,30 +200,12 @@ class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfigu
         )
 
         val clampedFace = trimmedFace.clamp(cropBox)
-        val targetFace = clampedFace
-
-//        ModuleDebug.debugGeometry(ModuleScaffold, "optimalLine", ModuleDebug.DebuggedLine(optimalLine, Color4b.GREEN))
-//        ModuleDebug.debugGeometry(
-//            ModuleScaffold,
-//            "optimalLineFromPlayer",
-//            ModuleDebug.DebuggedLine(optimalLineFromPlayer, Color4b.WHITE)
-//        )
-//        ModuleDebug.debugGeometry(
-//            ModuleScaffold,
-//            "targetFace",
-//            ModuleDebug.DebuggedBox(Box(targetFace.from, targetFace.to), Color4b(255, 0, 0, 255))
-//        )
-//        ModuleDebug.debugGeometry(
-//            ModuleScaffold,
-//            "cropBox",
-//            ModuleDebug.DebuggedBox(cropBox, Color4b(0, 127, 127, 64))
-//        )
 
         // Not much left of the area? Then don't try to sample a point on the face
-        if (targetFace.area < 0.0001)
+        if (clampedFace.area < 0.0001)
             return null
 
-        return targetFace
+        return clampedFace
     }
 }
 
