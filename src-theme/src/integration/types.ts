@@ -184,3 +184,11 @@ export interface Registries {
     blocks: string[];
     items: string[];
 }
+
+export interface Session {
+    username: string;
+    accountType: string;
+    avatar: string;
+    premium: boolean;
+    uuid: string;
+}

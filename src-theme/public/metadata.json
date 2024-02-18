@@ -5,10 +5,12 @@
   "baseUrl": "#",
   "supports": [
     "clickgui",
-    "hud"
+    "hud",
+    "title"
   ],
   "overlays": [
-    "inventory"
+    "inventory",
+    "splash"
   ],
   "components": {
     "arraylist": {

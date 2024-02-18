@@ -1,5 +1,14 @@
-import { REST_BASE } from "./host";
-import type { ConfigurableSetting, Module, PersistentStorageItem, PlayerData, PrintableKey, Registries, VirtualScreen } from "./types";
+import {REST_BASE} from "./host";
+import type {
+    ConfigurableSetting,
+    Module,
+    PersistentStorageItem,
+    PlayerData,
+    PrintableKey,
+    Registries,
+    Session,
+    VirtualScreen
+} from "./types";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -11,7 +20,7 @@ export async function getModules(): Promise<Module[]> {
 }
 
 export async function getModuleSettings(name: string): Promise<ConfigurableSetting> {
-    const searchParams = new URLSearchParams({ name });
+    const searchParams = new URLSearchParams({name});
 
     const response = await fetch(`${API_BASE}/client/modules/settings?${searchParams.toString()}`);
     const data = await response.json();
@@ -20,7 +29,7 @@ export async function getModuleSettings(name: string): Promise<ConfigurableSetti
 }
 
 export async function setModuleSettings(name: string, settings: ConfigurableSetting) {
-    const searchParams = new URLSearchParams({ name });
+    const searchParams = new URLSearchParams({name});
 
     await fetch(`${API_BASE}/client/modules/settings?${searchParams.toString()}`, {
         method: "PUT",
@@ -57,7 +66,7 @@ export async function setPersistentStorageItems(items: PersistentStorageItem[]) 
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ items })
+        body: JSON.stringify({items})
     })
 }
 
@@ -74,7 +83,7 @@ export async function confirmVirtualScreen(name: string) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({name})
     });
 }
 
@@ -86,7 +95,7 @@ export async function getPlayerData(): Promise<PlayerData> {
 }
 
 export async function getPrintableKeyName(code: number): Promise<PrintableKey> {
-    const searchParams = new URLSearchParams({ code: code.toString() });
+    const searchParams = new URLSearchParams({code: code.toString()});
 
     const response = await fetch(`${API_BASE}/client/input?${searchParams.toString()}`);
     const data: PrintableKey = await response.json();
@@ -99,4 +108,35 @@ export async function getRegistries(): Promise<Registries> {
     const data: Registries = await response.json();
 
     return data;
+}
+
+export async function getSession(): Promise<Session> {
+    const response = await fetch(`${API_BASE}/client/session`);
+    const data: Session = await response.json();
+
+    return data;
+}
+
+export async function browse(url: string) {
+    await fetch(`${API_BASE}/client/browse`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({url})
+    });
+}
+
+export async function exitClient() {
+    await fetch(`${API_BASE}/client/exit`);
+}
+
+export async function openScreen(name: string) {
+    await fetch(`${API_BASE}/client/screen`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({name})
+    });
 }

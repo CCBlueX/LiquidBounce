@@ -135,7 +135,7 @@
         width: 50px;
         position: relative;
         image-rendering: pixelated;
-        background-image: url("/img/hud/targethud/steve.png");
+        background-image: url("/img/steve.png");
         background-repeat: no-repeat;
         background-size: cover;
         border-radius: 5px;

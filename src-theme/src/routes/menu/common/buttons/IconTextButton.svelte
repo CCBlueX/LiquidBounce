@@ -1,0 +1,53 @@
+<script lang="ts">
+    import {createEventDispatcher} from "svelte";
+
+    export let title: string;
+    export let icon: string;
+
+    const dispatch = createEventDispatcher();
+</script>
+
+<div class="icon-text-button" on:click={() => dispatch("click")}>
+    <div class="icon">
+        <img src="img/menu/icon-{icon}.svg" alt={title}>
+    </div>
+    <div class="title">{title}</div>
+</div>
+
+<style lang="scss">
+    @import "../../../../colors.scss";
+
+    .icon-text-button {
+      cursor: pointer;
+      display: flex;
+
+      border-radius: 5px;
+      align-items: center;
+      overflow: hidden;
+      background: linear-gradient(to left, rgba($menu-base-color, .36) 50%, $accent-color 50%);
+      background-size: 200% 100%;
+      background-position: right bottom;
+      will-change: background-position;
+      transition: background-position .2s ease-out;
+
+      &:hover {
+        background-position: left bottom;
+      }
+    }
+
+    .icon {
+      height: 58px;
+      width: 58px;
+      background-color: $accent-color;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 500;
+      color: $menu-text-color;
+      padding: 0 30px;
+    }
+</style>

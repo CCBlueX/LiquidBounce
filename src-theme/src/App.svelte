@@ -7,11 +7,15 @@
     import {onMount} from "svelte";
     import {insertPersistentData} from "./integration/persistent_storage";
     import Inventory from "./routes/inventory/Inventory.svelte";
+    import Title from "./routes/menu/title/Title.svelte";
+    import SplashScreen from "./routes/menu/splash/SplashScreen.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
         "/hud": Hud,
-        "/inventory": Inventory
+        "/inventory": Inventory,
+        "/title": Title,
+        "/splash": SplashScreen
     };
 
     const url = window.location.href;
