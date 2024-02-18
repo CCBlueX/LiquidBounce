@@ -6,7 +6,7 @@
     $: width = Math.ceil(health / maxHealth * 100);
 </script>
 
-<div class="health-proress">
+<div class="health-progress">
     <div class="thumb" style="width: {width}%;"></div>
 </div>
 

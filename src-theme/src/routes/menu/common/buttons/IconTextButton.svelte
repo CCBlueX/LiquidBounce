@@ -7,6 +7,8 @@
     const dispatch = createEventDispatcher();
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="icon-text-button" on:click={() => dispatch("click")}>
     <div class="icon">
         <img src="img/menu/icon-{icon}.svg" alt={title}>

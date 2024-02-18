@@ -11,6 +11,7 @@
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="main-button" on:mouseenter={() => hovered = true} on:mouseleave={() => hovered = false}
      on:click={() => dispatch("click")}>
     <div class="icon">

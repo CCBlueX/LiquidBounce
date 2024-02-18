@@ -25,7 +25,7 @@
     let nextRoute: string | null = null;
 
     async function changeRoute(name: string, splash = false) {
-        confirmVirtualScreen(name);
+        await confirmVirtualScreen(name);
 
         if (splash) {
             showingSplash = true;
@@ -75,7 +75,7 @@
         const screen = await getVirtualScreen();
 
         const screenName = screen.name ?? "none";
-        changeRoute(screenName, screen.splash);
+        await changeRoute(screenName, screen.splash);
     });
 </script>
 
