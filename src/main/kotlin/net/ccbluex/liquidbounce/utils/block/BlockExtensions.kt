@@ -24,8 +24,11 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
+import net.minecraft.block.SlabBlock
+import net.minecraft.block.StairsBlock
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -33,7 +36,6 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
 import kotlin.math.floor
-import kotlin.math.roundToInt
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
@@ -43,7 +45,13 @@ fun BlockPos.getBlock() = getState()?.block
 
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
-fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
+/**
+ * Some blocks like slabs or stairs must be placed on upper side in order to be placed correctly.
+ */
+val Block.mustBePlacedOnUpperSide: Boolean
+    get() {
+        return this is SlabBlock || this is StairsBlock
+    }
 
 val BlockPos.hasEntrance: Boolean
     get() {
@@ -234,6 +242,7 @@ fun BlockState.canBeReplacedWith(
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: Hand = Hand.MAIN_HAND,
+    swingSilent: Boolean = false,
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true }
 ) {
@@ -257,7 +266,7 @@ fun doPlacement(
         interactionResult.isAccepted -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
+            handleActionsOnAccept(hand, interactionResult, wasStackUsed, swingSilent, onPlacementSuccess)
         }
     }
 }
@@ -271,6 +280,7 @@ private fun handleActionsOnAccept(
     hand: Hand,
     interactionResult: ActionResult,
     wasStackUsed: Boolean,
+    swingSilent: Boolean,
     onPlacementSuccess: () -> Boolean,
 ) {
     if (!interactionResult.shouldSwingHand()) {
@@ -278,7 +288,11 @@ private fun handleActionsOnAccept(
     }
 
     if (onPlacementSuccess()) {
-        player.swingHand(hand)
+        if (!swingSilent) {
+            player.swingHand(hand)
+        } else {
+            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+        }
     }
 
     if (wasStackUsed) {
@@ -298,7 +312,7 @@ private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boo
 
     val actionResult = interaction.interactItem(player, hand)
 
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess)
+    handleActionsOnAccept(hand, actionResult, true, false, onItemUseSuccess)
 }
 
 /**

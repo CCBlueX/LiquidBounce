@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -90,11 +91,13 @@ object CommandClient {
             .alias("url")
             .handler { command, args ->
                 chat(variable("Client Integration"))
+                val baseUrl = ThemeManager.route().url
+
                 chat(
-                    regular("URL: ")
-                        .append(variable(ThemeManager.integrationUrl).styled {
+                    regular("Base URL: ")
+                        .append(variable(baseUrl).styled {
                             it.withUnderline(true)
-                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, ThemeManager.integrationUrl))
+                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, baseUrl))
                                 .withHoverEvent(
                                     HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
@@ -107,12 +110,14 @@ object CommandClient {
 
                 chat(prefix = false)
                 chat(regular("Integration Menu:"))
-                for (menu in IntegrationHandler.VirtualScreenType.values()) {
-                    val url = "${ThemeManager.integrationUrl}#/${menu.assignedName}?static"
-                    val name = menu.assignedName.replaceFirstChar { it.uppercase() }
+                for (screenType in VirtualScreenType.entries) {
+                    val url = runCatching {
+                        ThemeManager.route(screenType, true)
+                    }.getOrNull()?.url ?: continue
+                    val upperFirstName = screenType.routeName.replaceFirstChar { it.uppercase() }
 
                     chat(
-                        regular("-> $name (")
+                        regular("-> $upperFirstName (")
                             .append(variable("Browser").styled {
                                 it.withUnderline(true)
                                     .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url))

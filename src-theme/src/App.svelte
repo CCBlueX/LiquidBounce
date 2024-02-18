@@ -1,9 +1,9 @@
 <script>
-    import Router, { push } from "svelte-spa-router";
-    import { routes } from "./routes.js";
-    import { listenAlways, cleanupListeners } from "./client/ws.svelte";
-    import { getVirtualScreen, confirmVirtualScreen } from "./client/api.svelte";
-    import { insertPersistentData } from "./client/persistentStorage.svelte";
+    import Router, {push} from "svelte-spa-router";
+    import {routes} from "./routes.js";
+    import {cleanupListeners, listenAlways} from "./client/ws.svelte";
+    import {confirmVirtualScreen, getVirtualScreen} from "./client/api.svelte";
+    import {insertPersistentData} from "./client/persistentStorage.svelte";
 
     insertPersistentData();
 
@@ -39,7 +39,7 @@
 
             if (action === "show") {
                 cleanupListeners();
-                push("/").then(() => {
+                push("/splash").then(() => {
                     showingSplash = true;
                 }).catch((error) => {
                     console.error(error);

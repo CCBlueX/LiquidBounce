@@ -57,10 +57,13 @@ object ClientSocket {
         "key",
         "refreshArrayList",
         "serverConnect",
+        "serverPinged",
+        "targetChange",
+        "gameModeChange",
 
         // Statistic events
         "fps",
-        "playerStats",
+        "clientPlayerData",
 
         // LiquidChat events, needed for chat UI
         "clientChatMessage",

@@ -179,7 +179,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         .replace("%clientCommit%", clientCommit)
         .replace("%enabledModules%", ModuleManager.count { it.enabled }.toString())
         .replace("%totalModules%", ModuleManager.count().toString())
-        .replace("%protocol%", protocolVersion.let { "${it.first} (${it.second})" })
+        .replace("%protocol%", protocolVersion.let { "${it.name} (${it.version})" })
         .replace("%server%", mc.currentServerEntry?.address ?: "none")
 
     override fun handleEvents() = true

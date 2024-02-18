@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.integration.VrScreen
 import org.lwjgl.glfw.GLFW
 
@@ -62,9 +62,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
             return
         }
 
-        RenderSystem.recordRenderCall {
-            mc.setScreen(VrScreen("clickgui"))
-        }
+        mc.setScreen(VrScreen(VirtualScreenType.CLICK_GUI))
         super.enable()
     }
 

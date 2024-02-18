@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,29 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.render.shaders
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.features
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
+import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.features.Reconnect
+import net.ccbluex.liquidbounce.web.socket.netty.httpOk
+import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 
-object OutlineShader : MinecraftFramebufferShader("outline_shader") {
-
-    fun begin(width: Float) {
-        this.setUniform1f("radius", width)
-        this.beginInternal()
+fun RestNode.reconnectRest() {
+    post("/reconnect") {
+        Reconnect.reconnectNow()
+        httpOk(JsonObject())
     }
 
-    fun setColor(color: Color4b) {
-        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
+    post("/reconnectWithRandomAccount") {
+        Reconnect.reconnectWithRandomAccount()
+        httpOk(JsonObject())
     }
 
+    post("/reconnectWithRandomUsername") {
+        Reconnect.reconnectWithRandomUsername()
+        httpOk(JsonObject())
+    }
 }

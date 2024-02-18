@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.web.theme.ThemeManager.overlayUrl
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.client.gui.screen.DisconnectedScreen
 
 /**
@@ -46,7 +46,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
             browserTab?.closeTab()
             browserTab = null
         } else if (browserTab == null) {
-            browserTab = BrowserManager.browser?.createTab(overlayUrl)
+            browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
         }
     }
 
@@ -55,7 +55,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         browserTab?.closeTab()
 
         // Create a new tab and open it
-        browserTab = BrowserManager.browser?.createTab(overlayUrl)
+        browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
     }
 
     override fun disable() {

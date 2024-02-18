@@ -1,235 +1,214 @@
 <script>
-    import { pop } from "svelte-spa-router";
-    import { getLocation, getProxy, setProxy, unsetProxy } from "../../client/api.svelte";
-    import {fade} from "svelte/transition";
+    import {pop} from "svelte-spa-router"; // Ensure you have svelte-spa-router installed for this to work
+    import {
+        addProxy,
+        getLocation,
+        getProxies,
+        getProxy,
+        removeProxy,
+        setProxy,
+        unsetProxy
+    } from "../../client/api.svelte";
 
-    let proxyHost = "";
-    let proxyPort = 1080;
-    let proxyUsername = "";
-    let proxyPassword = "";
+    let proxies = [];
+    let currentProxy = null;
+    let currentLocation = 'Fetching Location...';
+    let proxyInput = {
+        host: "",
+        port: "",
+        username: "",
+        password: ""
+    };
 
-    let proxy = "";
-    let location = "Loading...";
-    let status = "";
-
-    function set() {
-        setProxy(proxyHost, proxyPort, proxyUsername, proxyPassword).then(() => {
-            status = "Proxy set.";
-            refreshLocation();
-        }).catch((e) => {
-            status = "Error: " + e;
-            console.error(e);
-        });
+    async function fetchProxies() {
+        proxies = await getProxies();
     }
 
-    function remove() {
-        unsetProxy().then(() => {
-            status = "Proxy unset.";
-            refreshLocation();
-        }).catch((e) => {
-            status = "Error: " + e;
-            console.error(e);
-        });
+    async function fetchCurrentProxy() {
+        const data = await getProxy();
+        currentProxy = data ? `${data.host}:${data.port}` : "No Proxy";
     }
 
-    function fillInData() {
-        getProxy().then((proxy) => {
-            if (proxy.host === undefined || proxy.port === undefined) {
-                return;
-            }
-
-            proxyHost = proxy.host;
-            proxyPort = proxy.port;
-            proxyUsername = proxy.username;
-            proxyPassword = proxy.password;
-        }).catch((e) => {
-            status = "Error: " + e;
-            console.error(e);
-        });
+    async function fetchLocation() {
+        const locationData = await getLocation();
+        currentLocation = locationData ? locationData.country : 'Unknown Location';
     }
 
-    function refreshLocation() {
-        location = "Loading...";
-        getProxy().then((p) => {
-            if (p.host === undefined || p.port === undefined) {
-                proxy = "None";
-            } else {
-                proxy = p.host + ":" + p.port;
-            }
-        }).catch((e) => {
-            status = "Error: " + e;
-            console.error(e);
-        });
+    const handleAddProxy = async () => {
+        await addProxy(proxyInput);
+        fetchProxies();
+        proxyInput = {host: "", port: "", username: "", password: ""}; // reset input fields
+    };
 
-        getLocation().then(ip => {
-            const country = ip.country;
-            
-            // Lowercase country code
-            location = country;
-        }).catch(console.error);
-    }
+    const handleSetProxy = async (id) => {
+        await setProxy(id);
+        fetchCurrentProxy();
+        fetchLocation();
+    };
 
-    fillInData();
-    refreshLocation();
+    const handleUnsetProxy = async () => {
+        await unsetProxy();
+        fetchCurrentProxy();
+        fetchLocation();
+    };
+
+    const handleRemoveProxy = async (id) => {
+        await removeProxy(id);
+        fetchProxies();
+    };
+
+    fetchProxies();
+    fetchCurrentProxy();
+    fetchLocation();
 </script>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Proxy Manager</title>
-    <style>
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: 'Montserrat', sans-serif;
+    }
 
-        *:focus {
-            outline: none;
-        }
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        color: white;
+    }
 
-        * {
-            cursor: default !important;
-            font-family: "Montserrat", sans-serif;
-            user-select: none;
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            color: white;
-        }
+    h1 {
+        color: white;
+    }
 
-        body {
-            background-image: url("img/background.png");
-            background-size: cover;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
+    .proxy-list, .current-proxy, .add-proxy-form {
+        width: 80%;
+        max-width: 600px;
+        margin-top: 20px;
+        background-color: rgba(0, 0, 0, 0.68);
+        border-radius: 6px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-        #title {
-            text-align: left;
-            font-size: 56px;
-        }
+    input, button {
+        border-radius: 6px;
+        padding: 10px;
+        border: none;
+        margin-top: 5px;
+    }
 
-        #buttongrid {
-            display: grid;
-            top: 150px;
-            grid-auto-rows: max-content;
-            row-gap: 20px;
-        }
+    input {
+        width: 100%;
+        border-radius: 6px;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        padding: 5px;
+        border-color: white;
+        background-color: rgba(0, 0, 0, 0.68);
+        color: white;
+        border: none;
+        height: 40px;
+    }
 
-        .button {
-            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
-            background-size: 200% 100%;
-            background-position: right bottom;
-            will-change: background-position;
-            transition: background-position .2s ease-out;
-            margin-top: 30px;
-            width: 420px;
-            padding: 25px 35px;
-            border-radius: 6px;
-            align-items: center;
-            column-gap: 30px;
-            font-size: 26px;
-        }
+    button {
+        margin-top: 10px;
+        background-color: #4677ff;
+        color: white;
+        cursor: pointer;
+    }
 
-        Input {
-            border-radius: 6px;
-            margin-top: 10px;
-            padding: 10px;
-            border-color: white;
-            background-color: rgba(0, 0, 0, 0.68);
-            color: white;
-            border: none;
-            height: 40px;
-            width: 100%;
-        }
+    .description {
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
 
-        Button {
-            border-radius: 6px;
-            padding: 5px;
-            background-color: rgba(0, 0, 0, 0.68);
-            width: 90px;
-            height: 35px;
-            color: white;
-            border: none;
-        }
+    .current-proxy, .add-proxy-form {
+        text-align: center;
+    }
 
-        td {
-            justify-content: center;
-            text-align: center;
-            padding: 10px;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-        .back {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
+    th, td {
+        text-align: left;
+        padding: 8px;
+    }
 
-            height: 50px;
-            width: 150px;
+    th {
+        background-color: #4677ff;
+        color: white;
+    }
 
-            font-size: 26px;
+    .back-button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4677ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+</style>
 
-            border-radius: 6px;
-            margin-right: 10px;
+<main>
+    <h1>Proxy Manager</h1>
+    <p class="description">
+        ProxyManager only supports SOCKS5 proxies. <br>
+        This is a prototype design for testing purposes and is NOT the final design.
+    </p>
 
-            background-color: rgba(0, 0, 0, 0.68);
-            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
-            background-size: 200% 100%;
-            background-position: right bottom;
+    <div class="proxy-list">
+        <h2>Proxies</h2>
+        <table>
+            <tr>
+                <th>Host</th>
+                <th>Port</th>
+                <th>Auth</th>
+                <th>Actions</th>
+            </tr>
+            <tr>
+                <td colspan="3">None</td>
+                <td><button on:click={() => handleUnsetProxy()}>Set</button></td>
+            </tr>
+            {#each proxies as proxy (proxy.id)}
+                <tr>
+                    <td>{proxy.host}</td>
+                    <td>{proxy.port}</td>
+                    {#if proxy.username.length > 0}
+                        <td>&#128274;</td>
+                    {:else}
+                        <td>&#128275;</td>
+                    {/if}
 
-            will-change: background-position;
-            transition: background-position .2s ease-out;
-        }
-
-        .back:hover, Button:hover {
-            background-position: left bottom;
-        }
-
-    </style>
-</head>
-<body transition:fade>
-<div class="scale">
-    <div class="wrapper">
-        <h1 id="title">Proxy Manager</h1>
-
-        <div id="buttongrid">
-            <div class="button">
-                <h2>Proxy Configuration</h2>
-                <div>
-                    <label for="host"></label><input type="text" id="host" name="host"
-                                                     placeholder="Host" bind:value={proxyHost}><br>
-                    <label for="port"></label><input type="port" id="port" name="port"
-                                                     placeholder="Port" bind:value={proxyPort}><br>
-                    <label for="username"></label><input type="text" id="username" name="username"
-                                                         placeholder="Username" bind:value={proxyUsername}><br>
-                    <label for="password"></label><input type="password" id="password" name="password"
-                                                         placeholder="Password" bind:value={proxyPassword}>
-
-                    <br><br>
-
-                    <button on:click={set}>
-                        Set proxy
-                    </button>
-
-                    <button on:click={remove}>
-                        Unset proxy
-                    </button>
-                </div>
-            </div>
-
-            <label id="status">{status}</label>
-        </div>
-
-        <div>
-            <h2>Proxy Details</h2>
-
-            <label><b>Current proxy: </b><label id="proxy">{proxy}</label></label><br>
-            <label><b>Location: </b><label id="location">{location}</label></label>
-        </div>
+                    <td>
+                        <button on:click={() => handleSetProxy(proxy.id)}>Set</button>
+                        <button on:click={() => handleRemoveProxy(proxy.id)}>Remove</button>
+                    </td>
+                </tr>
+            {/each}
+        </table>
     </div>
-    <footer>
-        <div class="footinit">
-            <button class="back" on:click={pop}>Back</button>
-        </div>
-    </footer>
-</div>
 
-</body>
+    <div class="add-proxy-form">
+        <h2>Add New Proxy</h2>
+        <form on:submit|preventDefault={handleAddProxy}>
+            <input type="text" bind:value={proxyInput.host} placeholder="Host"/>
+            <input type="text" bind:value={proxyInput.port} placeholder="Port"/>
+            <input type="text" bind:value={proxyInput.username} placeholder="Username"/>
+            <input type="password" bind:value={proxyInput.password} placeholder="Password"/>
+            <button type="submit">Add Proxy</button>
+        </form>
+    </div>
+
+    <div class="current-proxy">
+        <h2>Current Proxy</h2>
+        <p>{currentProxy ? currentProxy : 'No active proxy'}</p>
+        <p>Location: {currentLocation}</p>
+    </div>
+
+    <button class="back-button" on:click={pop}>Back</button>
+</main>

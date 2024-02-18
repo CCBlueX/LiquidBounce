@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.AttackEvent;
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent;
+import net.ccbluex.liquidbounce.event.events.GameModeChangeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
@@ -34,6 +35,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.GameMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -125,4 +127,15 @@ public class MixinClientPlayerInteractionManager {
     private void stopUsingItem(PlayerEntity player, CallbackInfo callbackInfo) {
         ModuleAutoBow.onStopUsingItem();
     }
+
+    @Inject(method = "setGameMode", at = @At("RETURN"))
+    private void setGameMode(GameMode gameMode, CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
+    }
+
+    @Inject(method = "setGameModes", at = @At("RETURN"))
+    private void setGameModes(GameMode gameMode, GameMode previousGameMode, CallbackInfo callbackInfo) {
+        EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
+    }
+
 }

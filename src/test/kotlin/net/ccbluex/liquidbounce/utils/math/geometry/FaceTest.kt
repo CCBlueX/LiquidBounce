@@ -15,7 +15,7 @@ class FaceTest {
         val toBaseVec = Vec3d(1.0, 1.0, 0.0)
 
         rotForEach2D { rotationY, rotationZ ->
-            val toVec = toBaseVec.rotateY(rotationY).rotateY(rotationZ)
+            val toVec = toBaseVec.rotateY(rotationY).rotateZ(rotationZ)
 
             val face = Face(fromBaseVec, toVec)
 
@@ -35,7 +35,7 @@ class FaceTest {
             rotForEach1D { rot ->
                 val otherPos = Vec3d(face.to.x * 0.5, 0.0, 0.0).rotateX(rot)
 
-                val line = Line(fromPos, fromPos.subtract(otherPos.multiply(1.5).add(face.center)))
+                val line = Line(fromPos, fromPos.subtract(otherPos.multiply(2.0).add(face.center)))
 
                 val b = face.nearestPointTo(line)!!
 

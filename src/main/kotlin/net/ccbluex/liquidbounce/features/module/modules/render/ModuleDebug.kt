@@ -67,12 +67,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
                 val world = world
 
                 val input =
-                    SimulatedPlayer.SimulatedPlayerInput(
-                        event.directionalInput,
-                        player.input.jumping,
-                        player.isSprinting,
-                        player.isSneaking
-                    )
+                    SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 

@@ -1,19 +1,13 @@
 <script>
-    import { listen } from "../../client/ws.svelte";
+    import {listen} from "../../client/ws.svelte";
     import {fade} from "svelte/transition";
 
     listen("splashProgress", (data) => {
-        // from 0.0 to 1.0
-        // const progress = data.progress;
         const isComplete = data.isComplete;
-
-        // const progressElement = document.getElementById("progress");
-        // progressElement.value = progress * 100;
 
         if (isComplete) {
             let logo = document.getElementById("logo");
             logo.classList.add("fade-out");
-            // progressElement.classList.add("fade-out");
         }
     });
 </script>

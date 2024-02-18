@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
@@ -40,9 +42,10 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
     @Suppress("UnusedPrivateProperty")
     private val modes = choices("Mode", {
         it.choices[1] // Safe mode
-    }) {
+    }, this::createChoices)
+
+    fun createChoices(it: ChoiceConfigurable) =
         arrayOf(NoneChoice(it), Safe(it), Simulate(it), OnEdge(it))
-    }
 
     class Safe(override val parent: ChoiceConfigurable) : Choice("Safe") {
 
@@ -89,7 +92,9 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
          */
-        private val inputHandler = handler<MovementInputEvent> { event ->
+        private val inputHandler = handler<MovementInputEvent>(
+            priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
+        ) { event ->
             val shouldBeActive = player.isOnGround && !player.isSneaking
 
             if (shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())) {

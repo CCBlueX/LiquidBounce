@@ -38,12 +38,9 @@ object SpeedAntiCornerBump {
     fun shouldDelayJump(): Boolean {
         val player = mc.player!!
 
-        val input = SimulatedPlayer.SimulatedPlayerInput(
-                DirectionalInput(player.input),
-                true,
-                player.isSprinting,
-                player.isSneaking
-            )
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
+
+        input.jumping = true
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 

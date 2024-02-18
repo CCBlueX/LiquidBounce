@@ -54,7 +54,7 @@ object IpInfoApi {
         makeAsyncEndpointRequest(API_URL) {
             runCatching {
                 localIpInfo = decode(it)
-                logger.info("Successfully requested IP info ${localIpInfo?.ip}")
+                logger.info("IP Info [${localIpInfo?.country}, ${localIpInfo?.org}]")
             }.onFailure {
                 localIpInfo = null
                 logger.error("Failed to decode IP info", it)
