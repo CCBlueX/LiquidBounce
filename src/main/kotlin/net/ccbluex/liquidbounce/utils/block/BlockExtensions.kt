@@ -24,6 +24,8 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
+import net.minecraft.block.SlabBlock
+import net.minecraft.block.StairsBlock
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -43,7 +45,13 @@ fun BlockPos.getBlock() = getState()?.block
 
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
-fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
+/**
+ * Some blocks like slabs or stairs must be placed on upper side in order to be placed correctly.
+ */
+val Block.mustBePlacedOnUpperSide: Boolean
+    get() {
+        return this is SlabBlock || this is StairsBlock
+    }
 
 val BlockPos.hasEntrance: Boolean
     get() {

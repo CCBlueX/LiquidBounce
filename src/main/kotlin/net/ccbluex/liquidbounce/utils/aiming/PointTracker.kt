@@ -136,12 +136,7 @@ class PointTracker(
      */
     private val inputHandler = handler<MovementInputEvent> {
         val input =
-            SimulatedPlayer.SimulatedPlayerInput(
-                it.directionalInput,
-                player.input.jumping,
-                player.isSprinting,
-                player.isSneaking
-            )
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 

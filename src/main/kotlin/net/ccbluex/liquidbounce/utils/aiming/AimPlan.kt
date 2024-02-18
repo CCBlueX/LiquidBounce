@@ -120,7 +120,7 @@ class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPoint
 
     private fun computeFactor(rotationDifference: Float): Float {
         val turnSpeed = baseTurnSpeed.random().toFloat()
-        return ((rotationDifference / 120) * turnSpeed)
+        return ((rotationDifference / 120).coerceAtLeast(0.01f) * turnSpeed)
             .coerceAtMost(180f)
     }
 

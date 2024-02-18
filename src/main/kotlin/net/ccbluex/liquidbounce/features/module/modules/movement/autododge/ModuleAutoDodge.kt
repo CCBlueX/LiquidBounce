@@ -64,12 +64,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
         val arrows = findFlyingArrows(world)
 
-        val input = SimulatedPlayer.SimulatedPlayerInput(
-            event.directionalInput,
-            player.input.jumping,
-            player.isSprinting,
-            player.isSneaking
-        )
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 

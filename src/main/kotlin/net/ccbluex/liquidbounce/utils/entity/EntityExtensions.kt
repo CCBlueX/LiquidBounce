@@ -47,14 +47,18 @@ val ClientPlayerEntity.moving
 fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
     val hitbox =
         this.dimensions
-        .getBoxAt(position)
-        .expand(-0.05, 0.0, -0.05)
-        .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
+            .getBoxAt(position)
+            .expand(-0.05, 0.0, -0.05)
+            .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
 
     return world.isSpaceEmpty(this, hitbox)
 }
 
-fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distance: Double = 0.1): Boolean {
+fun ClientPlayerEntity.isCloseToEdge(
+    directionalInput: DirectionalInput,
+    distance: Double = 0.1,
+    pos: Vec3d = this.pos
+): Boolean {
     val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
 
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
@@ -66,6 +70,8 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
         simulatedInput
     )
 
+    simulatedPlayer.pos = pos
+
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.velocity
@@ -76,7 +82,7 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
         Vec3d(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
     }
 
-    val from = this.pos + Vec3d(0.0, -0.1, 0.0)
+    val from = pos + Vec3d(0.0, -0.1, 0.0)
     val to = from + direction.multiply(distance)
 
     if (findEdgeCollision(from, to) != null) {
@@ -271,11 +277,11 @@ fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
     val z = nearestPointInBlock.z
 
     val nearestPointOnSide =
-        when(side) {
+        when (side) {
             Direction.DOWN -> Vec3d(x, box.minY, z)
             Direction.UP -> Vec3d(x, box.maxY, z)
             Direction.NORTH -> Vec3d(x, y, box.minZ)
-            Direction.SOUTH -> Vec3d(x, y,  box.maxZ)
+            Direction.SOUTH -> Vec3d(x, y, box.maxZ)
             Direction.WEST -> Vec3d(box.maxX, y, z)
             Direction.EAST -> Vec3d(box.minX, y, z)
         }
