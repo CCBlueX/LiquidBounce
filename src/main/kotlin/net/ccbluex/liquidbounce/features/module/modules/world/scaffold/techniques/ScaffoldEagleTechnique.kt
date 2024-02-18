@@ -33,7 +33,7 @@ object ScaffoldEagleTechnique : Choice("Eagle") {
         get() = ModuleScaffold.technique
 
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
-    private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
+    val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
 
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
     private var placedBlocks = 0

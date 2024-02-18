@@ -134,8 +134,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
         tickBuffer.clear()
 
-        val input = SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping,
-            player.isSprinting, player.isSneaking)
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
         if (tickBalance <= 0) {

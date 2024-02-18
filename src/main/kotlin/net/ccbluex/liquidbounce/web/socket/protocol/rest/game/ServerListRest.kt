@@ -86,7 +86,7 @@ object ServerListRest : Listenable {
                 } catch (unknownHostException: UnknownHostException) {
                     serverEntry.ping = -1L
                     serverEntry.label = cannotConnectText
-                    println("Failed to ping server ${serverEntry.name} due to ${unknownHostException.message}")
+                    logger.error("Failed to ping server ${serverEntry.name} due to ${unknownHostException.message}")
                 } catch (exception: Exception) {
                     serverEntry.ping = -1L
                     serverEntry.label = cannotConnectText
