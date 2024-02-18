@@ -2,7 +2,7 @@
     import {sineInOut} from "svelte/easing";
     import {slide} from "svelte/transition";
     import Module from "./Module.svelte";
-    import { listen } from "../../../client/ws.svelte";
+    import {listen} from "../../../client/ws.svelte";
 
     export let name;
     export let modules;
@@ -142,7 +142,7 @@
       content: "";
       position: absolute;
       background-color: white;
-      transition: transform 0.4s ease-out;
+      transition: transform 0.2s ease-out;
       top: 0;
       left: 50%;
       width: 2px;
@@ -154,7 +154,7 @@
       content: "";
       position: absolute;
       background-color: white;
-      transition: transform 0.4s ease-out;
+      transition: transform 0.2s ease-out;
       top: 50%;
       left: 0;
       width: 100%;
