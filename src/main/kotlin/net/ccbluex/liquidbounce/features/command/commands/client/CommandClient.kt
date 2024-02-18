@@ -91,11 +91,13 @@ object CommandClient {
             .alias("url")
             .handler { command, args ->
                 chat(variable("Client Integration"))
+                val baseUrl = ThemeManager.route().url
+
                 chat(
-                    regular("URL: ")
-                        .append(variable(ThemeManager.getUrl()).styled {
+                    regular("Base URL: ")
+                        .append(variable(baseUrl).styled {
                             it.withUnderline(true)
-                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, ThemeManager.getUrl()))
+                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, baseUrl))
                                 .withHoverEvent(
                                     HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
@@ -108,13 +110,11 @@ object CommandClient {
 
                 chat(prefix = false)
                 chat(regular("Integration Menu:"))
-                for (menu in VirtualScreenType.entries) {
-                    val internalName = menu.routeName
-
+                for (screenType in VirtualScreenType.entries) {
                     val url = runCatching {
-                        ThemeManager.getUrl(internalName, true)
-                    }.getOrNull() ?: continue
-                    val upperFirstName = menu.routeName.replaceFirstChar { it.uppercase() }
+                        ThemeManager.route(screenType, true)
+                    }.getOrNull()?.url ?: continue
+                    val upperFirstName = screenType.routeName.replaceFirstChar { it.uppercase() }
 
                     chat(
                         regular("-> $upperFirstName (")

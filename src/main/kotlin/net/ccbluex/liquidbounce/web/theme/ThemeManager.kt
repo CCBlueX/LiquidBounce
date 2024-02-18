@@ -37,6 +37,7 @@ object ThemeManager {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
     private val defaultTheme = Theme.defaults()
+    // private val oldTheme = Theme("old_default")
 
     var activeTheme = defaultTheme
         set(value) {
@@ -55,23 +56,32 @@ object ThemeManager {
         get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
     fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createTab(getUrl(virtualScreenType?.routeName, markAsStatic))
+        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url)
             ?: error("Browser is not initialized")
 
     fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createInputAwareTab(getUrl(virtualScreenType?.routeName, markAsStatic), takesInputHandler)
+        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, takesInputHandler)
             ?: error("Browser is not initialized")
 
-    fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null) =
-        tab?.loadUrl(getUrl(virtualScreenType?.routeName))
+    fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
+        tab?.loadUrl(route(virtualScreenType, markAsStatic).url)
 
-    fun doesOverlay(name: String) = activeTheme.doesOverlay(name) || defaultTheme.doesOverlay(name)
+    fun route(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): Route {
+        val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType.routeName)) {
+            activeTheme
+        } else if (defaultTheme.doesAccept(virtualScreenType.routeName)) {
+            defaultTheme
+        } else {
+            error("No theme supports the route ${virtualScreenType.routeName}")
+        }
 
-    fun doesSupport(name: String) = activeTheme.doesSupport(name) || defaultTheme.doesSupport(name)
+        return Route(
+            theme,
+            theme.getUrl(virtualScreenType?.routeName, markAsStatic)
+        )
+    }
 
-    fun getUrl(name: String? = null, markAsStatic: Boolean = false) =
-        (activeTheme.getUrl(name) ?: defaultTheme.getUrl(name))?.let { if (markAsStatic) "$it?static" else it }
-            ?: error("No theme supports $name")
+    data class Route(val theme: Theme, val url: String)
 
 }
 
@@ -91,22 +101,24 @@ class Theme(val name: String) {
         get() = folder.exists()
 
     private val url: String
-        get() = "$NETTY_ROOT/${ThemeManager.activeTheme.name}/#/"
+        get() = "$NETTY_ROOT/$name/#/"
 
     /**
      * Get the URL to the given page name in the theme.
      */
-    fun getUrl(name: String?) = if (name == null) {
-        url
-    } else if (doesSupport(name) || doesOverlay(name)) {
-        "$url$name"
-    } else {
-        null
+    fun getUrl(name: String? = null, markAsStatic: Boolean = false) = "$url${name.orEmpty()}".let {
+        if (markAsStatic) {
+            "$it?static"
+        } else {
+            it
+        }
     }
 
-    fun doesSupport(name: String) = metadata.supports.contains(name)
+    fun doesAccept(name: String?) = doesSupport(name) || doesOverlay(name)
 
-    fun doesOverlay(name: String) = metadata.overlays.contains(name)
+    fun doesSupport(name: String?) = name != null && metadata.supports.contains(name)
+
+    fun doesOverlay(name: String?) = name != null && metadata.overlays.contains(name)
 
     companion object {
 
@@ -136,7 +148,6 @@ data class ThemeMetadata(
     val name: String,
     val author: String,
     val version: String,
-    val baseUrl: String,
     val supports: List<String>,
     val overlays: List<String>
 )

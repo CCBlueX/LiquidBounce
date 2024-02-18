@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.theme.Theme
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -49,6 +50,9 @@ object IntegrationHandler : Listenable {
     }
 
     var momentaryVirtualScreen: VirtualScreen? = null
+        private set
+
+    var runningTheme = ThemeManager.activeTheme
         private set
 
     /**
@@ -94,13 +98,18 @@ object IntegrationHandler : Listenable {
         browserIsReady = true
     }
 
-    fun virtualOpen(type: VirtualScreenType) {
+    fun virtualOpen(theme: Theme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.name == type.routeName) {
             return
         }
 
-        // TODO: Implement switching between themes if needed
+        if (runningTheme != theme) {
+            runningTheme = theme
+            println("Running theme is now $runningTheme")
+            ThemeManager.updateImmediate(clientJcef, type)
+            println("Updated theme")
+        }
 
         val virtualScreen = VirtualScreen(type.routeName).apply { momentaryVirtualScreen = this }
         acknowledgement.reset()
@@ -123,7 +132,7 @@ object IntegrationHandler : Listenable {
         }
 
         logger.info("Reloading integration browser ${clientJcef.javaClass.simpleName} " +
-            "to URL ${ThemeManager.getUrl()}")
+            "to ${ThemeManager.route()}")
         ThemeManager.updateImmediate(clientJcef)
     }
 
@@ -195,13 +204,23 @@ object IntegrationHandler : Listenable {
         }
 
         val name = virtualScreenType.routeName
+        val route = runCatching {
+            ThemeManager.route(virtualScreenType, false)
+        }.getOrNull()
 
-        if (ThemeManager.doesSupport(name)) {
-            val vrScreen = VrScreen(virtualScreenType, originalScreen = screen)
+        if (route == null) {
+            virtualClose()
+            return false
+        }
+
+        val theme = route.theme
+
+        if (theme.doesSupport(name)) {
+            val vrScreen = VrScreen(virtualScreenType, theme, originalScreen = screen)
             mc.setScreen(vrScreen)
             return true
-        } else if (ThemeManager.doesOverlay(name)) {
-            virtualOpen(virtualScreenType)
+        } else if (theme.doesOverlay(name)) {
+            virtualOpen(theme, virtualScreenType)
         }
 
         return false
