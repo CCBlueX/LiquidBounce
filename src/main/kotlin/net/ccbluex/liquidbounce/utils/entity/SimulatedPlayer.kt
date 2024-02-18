@@ -883,7 +883,7 @@ class SimulatedPlayer(
                     player.isSneaking
                 )
 
-                val safeWalkEvent = PlayerSafeWalkEvent()
+                val safeWalkEvent = PlayerSafeWalkEvent(false)
 
                 EventManager.callEvent(safeWalkEvent)
 

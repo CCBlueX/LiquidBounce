@@ -37,7 +37,6 @@ object ThemeManager {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
     private val defaultTheme = Theme.defaults()
-    // private val oldTheme = Theme("old_default")
 
     var activeTheme = defaultTheme
         set(value) {
