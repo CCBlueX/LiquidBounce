@@ -23,8 +23,9 @@ import com.google.gson.*
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
+import net.ccbluex.tenacc.utils.outputString
 import net.minecraft.client.network.ServerInfo
-import net.minecraft.client.util.SkinTextures
+import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -90,6 +91,26 @@ class IdentifierSerializer : JsonSerializer<Identifier> {
         = src?.let { JsonPrimitive(it.toString()) }
 }
 
+class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
+    override fun serialize(
+        src: StatusEffectInstance?,
+        typeOfSrc: Type?,
+        context: JsonSerializationContext?
+    ) = src?.let {
+        JsonObject().apply {
+            addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType).toString())
+            addProperty("localizedName", it.effectType.name.outputString())
+            addProperty("duration", it.duration)
+            addProperty("amplifier", it.amplifier)
+            addProperty("ambient", it.isAmbient)
+            addProperty("infinite", it.isInfinite)
+            addProperty("visible", it.shouldShowParticles())
+            addProperty("showIcon", it.shouldShowIcon())
+        }
+    }
+
+}
+
 internal val protocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
@@ -98,5 +119,6 @@ internal val protocolGson = GsonBuilder()
     .registerTypeAdapter(GameMode::class.java, GameModeSerializer())
     .registerTypeAdapter(ItemStack::class.java, ItemStackSerializer())
     .registerTypeAdapter(Identifier::class.java, IdentifierSerializer())
+    .registerTypeAdapter(StatusEffectInstance::class.java, StatusEffectInstanceSerializer())
     .create()
 
