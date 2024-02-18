@@ -236,8 +236,8 @@ public abstract class MixinInGameHud {
 
         int l = 1;
         for (int m = 0; m < 9; ++m) {
-            var x = center - 100 + m * 22 + 2;
-            this.renderHotbarItem(context, x, y, tickDelta, playerEntity,
+            var x = center - 98 + m * 22.5;
+            this.renderHotbarItem(context, (int) x, y, tickDelta, playerEntity,
                     playerEntity.getInventory().main.get(m), l++);
         }
 
