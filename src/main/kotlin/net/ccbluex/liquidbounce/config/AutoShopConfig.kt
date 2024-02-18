@@ -1,10 +1,13 @@
 package net.ccbluex.liquidbounce.config
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
+import kotlinx.serialization.json.Json
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopConfig
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ShopElement
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopElement
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.RawShopConfig
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -15,30 +18,26 @@ object AutoShopConfig {
         ConfigSystem.rootFolder, "autoshop-configs"
     ).apply {
         if (!exists()) {
-            mkdir()
-            // TODO: load the default config from LiquidCloud
+            mkdir().runCatching {
+                downloadDefaultConfigs()
+            }.onFailure {
+                logger.error("Failed to download the default AutoShop configs", it)
+            }
         }
     }
 
+    private val jsonDecoder = Json { ignoreUnknownKeys = true }
+
     fun load(configFileName: String = ModuleAutoShop.configName): Boolean {
-        val configFile = File(ConfigSystem.rootFolder, "autoshop-configs/$configFileName.json")
-
         try {
-            val jsonObject = JsonParser().parse(configFile.bufferedReader()).asJsonObject
-            val items = jsonObject.get("Items").asJsonArray
+            val configFile = File(ConfigSystem.rootFolder, "autoshop-configs/$configFileName.json")
+            val autoShopConfig = parseJsonFile(configFile)
 
-            val shopElements = mutableListOf<ShopElement>()
-            for (jsonElement in items) {
-                val currShopElement = getShopElement(jsonElement.asJsonObject)
-                shopElements += currShopElement
-            }
-
-            // add the items to AutoShop
-            ModuleAutoShop.shopElements.clear()
-            ModuleAutoShop.shopElements += shopElements
-            ModuleAutoShop.traderTitle = jsonObject.get("TraderTitle").asString
-            ModuleAutoShop.initialCategorySlot = jsonObject.get("InitialCategorySlot").asInt
-            ModuleAutoShop.prevCategorySlot = ModuleAutoShop.initialCategorySlot
+            // add items to AutoShop
+            ModuleAutoShop.disable()
+            ModuleAutoShop.currentConfig = autoShopConfig
+            ModuleAutoShop.prevCategorySlot = autoShopConfig.initialCategorySlot
+            ModuleAutoShop.enable()
         } catch (throwable: Throwable) {
             logger.error("Failed to load items for AutoShop.", throwable)
             return false
@@ -47,48 +46,69 @@ object AutoShopConfig {
         return true
     }
 
+
     /**
-     * Returns a shop element from [jsonObject]
+     * Reads a raw shop config from a json file and returns a shop config ready to use
      */
-    private fun getShopElement(jsonObject: JsonObject) : ShopElement {
-        val item = getItemFromID(jsonObject.get("ItemID").asString)     // desired item
-        val minAmount = jsonObject.get("MinAmount").asInt     // desired item amount
-        val amountPerClick = jsonObject.get("AmountPerClick")?.asInt ?: 1 // item amount can be received per 1 click
+    private fun parseJsonFile(file: File): AutoShopConfig {
+        val json = file.readText()
+        val rawShopConfig = jsonDecoder.decodeFromString<RawShopConfig>(json)
+        val autoShopConfig = AutoShopConfig(
+            rawShopConfig.traderTitle,
+            rawShopConfig.initialCategorySlot,
+            mutableListOf()
+        )
 
-        // it's about how to buy it (slots needed to click in order to buy an item)
-        val categorySlot = jsonObject.get("CategorySlot").asInt
-        val itemSlot = jsonObject.get("ItemSlot").asInt
+        // parse shop elements
+        rawShopConfig.items.forEach { rawShopElement ->
+            val item = getItemFromID(rawShopElement.itemID)
 
-        // price, basically, is a set of pairs of items and their amounts
-        val price = jsonObject.get("Price")
-            .asJsonArray
-            .map { subArray -> subArray.asJsonArray.associate {
-                    element -> Pair(
-                        getItemFromID(element.asJsonObject.get("ItemID").asString),
-                        element.asJsonObject.get("MinAmount").asInt)
+            // Price block
+            val price = rawShopElement.price.map { subList -> subList.associate {
+                rawItemInfo -> Pair(
+                    getItemFromID(rawItemInfo.itemID),
+                    rawItemInfo.minAmount)
                 }
             }
 
-        // items needed to be checked (if the player has something of those it shouldn't buy an item)
-        // for example, it's useless to buy a stone sword if the player already has an iron sword or even a diamond one
-        val checkItems = jsonObject.get("CheckItems")
-        val itemsToCheckBeforeBuying = checkItems?.asJsonArray?.map { element -> Pair(
-            getItemFromID(element.asJsonObject.get("ItemID").asString),
-            element.asJsonObject.get("MinAmount").asInt) }
+            // CheckItems block
+            val itemsToCheckBeforeBuying = if (rawShopElement.checkItems == null) null
+                                        else mutableListOf<Pair<Item, Int>>()
 
-        return ShopElement(
-            item,
-            minAmount,
-            amountPerClick,
-            categorySlot,
-            itemSlot,
-            price,
-            itemsToCheckBeforeBuying)
+            rawShopElement.checkItems?.forEach { itemInfo ->
+                itemsToCheckBeforeBuying?.add(Pair(
+                    getItemFromID(itemInfo.itemID),
+                    itemInfo.minAmount))
+            }
+
+            autoShopConfig.elements.add(
+                AutoShopElement(
+                item,
+                rawShopElement.minAmount,
+                rawShopElement.amountPerClick,
+                rawShopElement.categorySlot,
+                rawShopElement.itemSlot,
+                price,
+                itemsToCheckBeforeBuying
+            ))
+        }
+
+        return autoShopConfig
     }
 
     private fun getItemFromID(id: String): Item {
         // TODO: improve it so potions can be used
         val newID = if (id.lowercase() == "wool") "blue_wool" else id
         return Registries.ITEM.get(Identifier(newID))
+    }
+
+    /**
+     * Downloads the default autoShop configs from the cloud.
+     */
+    private fun downloadDefaultConfigs() {
+        logger.info("Downloading the default AutoShop configs...")
+        // not sure if it's the best idea to download the whole folder
+        HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs", configFolder)
+        logger.info("Successfully downloaded the default AutoShop configs")
     }
 }

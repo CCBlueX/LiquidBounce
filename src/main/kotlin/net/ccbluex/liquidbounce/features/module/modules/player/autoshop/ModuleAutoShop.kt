@@ -41,12 +41,12 @@ import kotlin.math.min
  */
 
 object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
-    var configName by text("Config", "default").listen {
+    var configName by text("Config", "pikanetwork").listen {
         loadAutoShopConfig(it)
         it
     }
-    val startDelay by intRange("StartDelay", 1..2, 0..10)
-    val clickDelay by intRange("ClickDelay", 2..4, 2..10)
+    val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
+    val clickDelay by intRange("ClickDelay", 2..4, 2..10, "ticks")
     val autoClose by boolean("AutoClose", true)
     val quickBuy by boolean("QuickBuy", false)
     val reload by boolean("Reload", false).listen {
@@ -56,12 +56,10 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         false
     }
 
-    var traderTitle = ""
-    var initialCategorySlot = -1
     var prevCategorySlot = -1   // prev category slot (used for optimizing clicks count)
-    val shopElements: MutableList<ShopElement> = mutableListOf()
     private var waitedBeforeTheFirstClick = false
     private var itemsFromInventory = mutableMapOf<Item, Int>()
+    lateinit var currentConfig: AutoShopConfig
 
     val onUpdate = handler<GameTickEvent> {
         // update items from the player's inventory
@@ -81,8 +79,8 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             return@repeatable
         }
 
-        for (index in shopElements.indices) {
-            val element = shopElements[index]
+        for (index in currentConfig.elements.indices) {
+            val element = currentConfig.elements[index]
 
             var needToBuy = checkElement(element) != null
             if (!needToBuy) {
@@ -107,7 +105,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
                 checkElement(element) ?: break
 
-                doClicks(shopElements, index)
+                doClicks(currentConfig.elements, index)
                 needToBuy = checkElement(element) != null
             }
         }
@@ -118,7 +116,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         }
     }
 
-    private suspend fun Sequence<*>.doClicks(currentElements: List<ShopElement>, currentIndex: Int) {
+    private suspend fun Sequence<*>.doClicks(currentElements: List<AutoShopElement>, currentIndex: Int) {
         val categorySlot = currentElements[currentIndex].categorySlot
         val itemSlot = currentElements[currentIndex].itemSlot
 
@@ -178,7 +176,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      * It's required to calculate how many items it's possible to buy immediately, according to the resources the player has
      * and the buy order in the config, simply because waiting for a response from a server isn't the case
      */
-    private fun simulateNextPurchases(currentElements: List<ShopElement>, currentIndex: Int) : List<Int> {
+    private fun simulateNextPurchases(currentElements: List<AutoShopElement>, currentIndex: Int) : List<Int> {
         val currentCategorySlot = currentElements[currentIndex].categorySlot
         val currentItems = getItemsFromInventory().toMutableMap()
         val limitedItemsAmount = currentItems.filterKeys { key -> key in LIMITED_ITEMS }.toMutableMap()
@@ -226,26 +224,26 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      * Returns the limited items required to buy an item
      * Returns null if an item shouldn't or can't be bought
      */
-    private fun checkElement(shopElement: ShopElement, items: Map<Item, Int> = itemsFromInventory) : Map<Item, Int>? {
-        if (!shouldBuy(shopElement, items)) {
+    private fun checkElement(autoShopElement: AutoShopElement, items: Map<Item, Int> = itemsFromInventory) : Map<Item, Int>? {
+        if (!shouldBuy(autoShopElement, items)) {
             return null
         }
 
-        if (findItem(shopElement.item, items) >= shopElement.minAmount) {
+        if (findItem(autoShopElement.item, items) >= autoShopElement.minAmount) {
             return null
         }
 
-        return checkPrice(shopElement.price, items)?.filterKeys { key -> key in LIMITED_ITEMS }
+        return checkPrice(autoShopElement.price, items)?.filterKeys { key -> key in LIMITED_ITEMS }
     }
 
     /**
      * Returns the amount of clicks which can be performed to buy an item
      * For example, it might need 4 clicks to buy wool blocks but there might be enough resources only for 3 clicks
      */
-    private fun getRequiredClicks(shopElement: ShopElement, items: Map<Item, Int> = itemsFromInventory) : Int {
-        checkElement(shopElement, items) ?: return 0
+    private fun getRequiredClicks(autoShopElement: AutoShopElement, items: Map<Item, Int> = itemsFromInventory) : Int {
+        checkElement(autoShopElement, items) ?: return 0
 
-        val requiredLimitedItems = checkElement(shopElement, items)?.filterKeys { key -> key in LIMITED_ITEMS } ?: return 0
+        val requiredLimitedItems = checkElement(autoShopElement, items)?.filterKeys { key -> key in LIMITED_ITEMS } ?: return 0
         val currentLimitedItems = items.filterKeys { key -> key in LIMITED_ITEMS }.toMutableMap()
         // after this requiredLimitedItems and currentLimitedItems will be something like that:
         // iron_ingots - 46
@@ -253,8 +251,8 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         // emeralds - 3
 
 
-        val currentItemAmount = min(findItem(shopElement.item, items), shopElement.minAmount)
-        val maxBuyClicks = ceil(1f * (shopElement.minAmount - currentItemAmount) / shopElement.amountPerClick).toInt()
+        val currentItemAmount = min(findItem(autoShopElement.item, items), autoShopElement.minAmount)
+        val maxBuyClicks = ceil(1f * (autoShopElement.minAmount - currentItemAmount) / autoShopElement.amountPerClick).toInt()
         var minMultiplier = Int.MAX_VALUE
         for (key in requiredLimitedItems.keys) {
             val requiredItemsAmount = (requiredLimitedItems[key] ?: 0)
@@ -268,12 +266,12 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     /**
      * Checks the whole CheckItems block
      */
-    private fun shouldBuy(shopElement: ShopElement, items: Map<Item, Int> = itemsFromInventory) : Boolean {
-        if (shopElement.itemsToCheckBeforeBuying == null) {
+    private fun shouldBuy(autoShopElement: AutoShopElement, items: Map<Item, Int> = itemsFromInventory) : Boolean {
+        if (autoShopElement.itemsToCheckBeforeBuying == null) {
             return true
         }
 
-        for (currentItem in shopElement.itemsToCheckBeforeBuying) {
+        for (currentItem in autoShopElement.itemsToCheckBeforeBuying) {
             val hasItem = findItem(item = currentItem.first, items) >= currentItem.second
             if (hasItem) {
                 return false
@@ -357,11 +355,11 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         val screen = mc.currentScreen as? GenericContainerScreen ?: return false
 
         val title = screen.title.string.stripMinecraftColorCodes()
-        return title.startsWith(traderTitle, ignoreCase = true)
+        return title.startsWith(currentConfig.traderTitle, ignoreCase = true)
     }
 
     private fun reset() {
-        prevCategorySlot = initialCategorySlot
+        prevCategorySlot = currentConfig.initialCategorySlot
         waitedBeforeTheFirstClick = false
     }
 }
