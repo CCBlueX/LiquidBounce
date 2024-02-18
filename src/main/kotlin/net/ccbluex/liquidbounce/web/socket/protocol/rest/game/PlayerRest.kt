@@ -28,31 +28,14 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.minecraft.client.util.SkinTextures
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Identifier
 
 fun RestNode.playerRest() {
     get("/player") {
-        httpOk(JsonObject().apply {
-            addProperty("username", player.nameForScoreboard)
-            addProperty("uuid", player.uuidAsString)
-            add("stats", protocolGson.toJsonTree(PlayerStatistics.fromPlayer(player)))
-            add("gameMode", protocolGson.toJsonTree(interaction.currentGameMode))
-            add("position", JsonObject().apply {
-                addProperty("x", player.x)
-                addProperty("y", player.y)
-                addProperty("z", player.z)
-            })
-            add("rotation", JsonObject().apply {
-                addProperty("yaw", player.yaw)
-                addProperty("pitch", player.pitch)
-            })
-            add("region", JsonObject().apply {
-                addProperty("x", player.chunkPos.x)
-                addProperty("z", player.chunkPos.z)
-            })
-        })
+        httpOk(protocolGson.toJsonTree(PlayerData.fromPlayer(player)))
     }
 }
 
@@ -61,7 +44,7 @@ fun RestNode.playerRest() {
  * experience level, and experience progress.
  *
  * This data class automatically generates an [equals] method which compares the values of all
- * properties declared in the primary constructor. Therefore, instances of [PlayerStatistics] with
+ * properties declared in the primary constructor. Therefore, instances of [PlayerData] with
  * the same values for all properties are considered equal.
  *
  * @property health The current health of the player.
@@ -72,36 +55,46 @@ fun RestNode.playerRest() {
  * @property experienceLevel The level of experience the player has.
  * @property experienceProgress The progress towards the next experience level.
  */
-data class PlayerStatistics(
+data class PlayerData(
     val username: String,
-    val skinIdentifier: Identifier? = null,
+    val textures: SkinTextures? = null,
+    val selectedSlot: Int,
     val health: Float,
     val maxHealth: Float,
     val absorption: Float,
     val armor: Int,
     val food: Int,
+    val air: Int,
+    val maxAir: Int,
     val experienceLevel: Int,
     val experienceProgress: Float,
+    val mainHandStack: ItemStack,
+    val offHandStack: ItemStack,
     val armorItems: List<ItemStack> = emptyList()
 ) {
 
     companion object {
         /**
-         * Creates a [PlayerStatistics] instance from a [PlayerEntity].
+         * Creates a [PlayerData] instance from a [PlayerEntity].
          *
          * @param player The player entity to extract statistics from.
-         * @return A [PlayerStatistics] instance representing the player's statistics.
+         * @return A [PlayerData] instance representing the player's statistics.
          */
-        fun fromPlayer(player: PlayerEntity) = PlayerStatistics(
+        fun fromPlayer(player: PlayerEntity) = PlayerData(
             player.nameForScoreboard,
-            network.playerList.find { it.profile.id == player.uuid }?.skinTextures?.texture,
+            network.playerList.find { it.profile == player.gameProfile }?.skinTextures,
+            player.inventory.selectedSlot,
             player.health,
             player.maxHealth,
             player.absorptionAmount,
             player.armor,
             player.hungerManager.foodLevel,
+            player.air,
+            player.maxAir,
             player.experienceLevel,
             player.experienceProgress,
+            player.mainHandStack,
+            player.offHandStack,
             player.armorItems.toList()
         )
     }

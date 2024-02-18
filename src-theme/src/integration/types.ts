@@ -130,17 +130,29 @@ export interface VirtualScreen {
     splash: boolean;
 }
 
-export interface PlayerStats {
+export interface PlayerData {
     username: string;
-    skinIdentifier: string;
+    textures: SkinTextures;
+    selectedSlot: number;
     health: number,
     maxHealth: number;
     absorption: number;
     armor: number;
     food: number;
+    air: number;
+    maxAir: number;
     experienceLevel: number;
     experienceProgress: number;
+    mainHandStack: ItemStack;
+    offHandStack: ItemStack;
     armorItems: ItemStack[];
+}
+
+export interface SkinTextures {
+    texture: string,
+    textureUrl: string,
+    capeTexture: string,
+    elytraTexture: string,
 }
 
 export interface ItemStack {

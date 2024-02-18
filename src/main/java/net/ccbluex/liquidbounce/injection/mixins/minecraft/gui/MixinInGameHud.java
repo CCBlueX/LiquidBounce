@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.common.SidebarEntry;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
@@ -28,6 +29,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.option.AttackIndicator;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardEntry;
 import net.minecraft.scoreboard.ScoreboardObjective;
@@ -35,12 +39,11 @@ import net.minecraft.scoreboard.Team;
 import net.minecraft.scoreboard.number.NumberFormat;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.text.Text;
+import net.minecraft.util.Arm;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -79,12 +82,22 @@ public abstract class MixinInGameHud {
     @Final
     private static Comparator<ScoreboardEntry> SCOREBOARD_ENTRY_COMPARATOR;
 
+    @Shadow
+    protected abstract void renderHotbarItem(DrawContext context, int x, int y, float tickDelta, PlayerEntity player, ItemStack stack, int seed);
+
+    @Shadow
+    @Nullable
+    protected abstract PlayerEntity getCameraPlayer();
+
     /**
      * Hook render hud event at the top layer
      */
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
     private void hookRenderEvent(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickDelta));
+
+        // Draw after overlay event
+        drawHotbar(context, tickDelta);
     }
 
     @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
@@ -190,6 +203,41 @@ public abstract class MixinInGameHud {
                         Colors.WHITE, false);
             }
         });
+    }
+
+    @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
+    private void hookRenderHotbar(float tickDelta, DrawContext context, CallbackInfo ci) {
+        // todo: check components
+        ci.cancel();
+    }
+
+    @Inject(method = "renderStatusBars", at = @At("HEAD"), cancellable = true)
+    private void hookRenderStatusBars(DrawContext context, CallbackInfo ci) {
+        // todo: check components
+        ci.cancel();
+    }
+
+    @Unique
+    private void drawHotbar(DrawContext context, float tickDelta) {
+        var playerEntity = this.getCameraPlayer();
+        if (playerEntity == null) {
+            return;
+        }
+
+        int center = this.scaledWidth / 2;
+        var y = this.scaledHeight - 27;
+
+        int l = 1;
+        for (int m = 0; m < 9; ++m) {
+            var x = center - 100 + m * 22 + 2;
+            this.renderHotbarItem(context, x, y, tickDelta, playerEntity,
+                    playerEntity.getInventory().main.get(m), l++);
+        }
+
+        var offHandStack = playerEntity.getOffHandStack();
+        if (!offHandStack.isEmpty()) {
+            this.renderHotbarItem(context, center - 100 - 26, y, tickDelta, playerEntity, offHandStack, l++);
+        }
     }
 
 }

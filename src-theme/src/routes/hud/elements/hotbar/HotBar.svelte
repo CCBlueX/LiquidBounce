@@ -2,48 +2,41 @@
     import Status from "./Status.svelte";
     import Slot from "./Slot.svelte";
     import { listen } from "../../../../integration/ws";
-    import type { PlayerStats } from "../../../../integration/types";
+    import type { PlayerData } from "../../../../integration/types";
     import { onMount } from "svelte";
-    import { getPlayerStats } from "../../../../integration/rest";
+    import { getPlayerData } from "../../../../integration/rest";
 
     let currentSlot = 0;
-    let stats: PlayerStats | null = null;
+    let playerData: PlayerData | null = null;
     let maxAbsorption = 0;
 
-    function updateStats(s: PlayerStats) {
-        stats = s;
-        if (stats.absorption <= 0) {
+    function updatePlayerData(s: PlayerData) {
+        playerData = s;
+        if (playerData.absorption <= 0) {
             maxAbsorption = 0;
         }
-        if (stats.absorption > maxAbsorption) {
-            maxAbsorption = stats.absorption;
+        if (playerData.absorption > maxAbsorption) {
+            maxAbsorption = playerData.absorption;
         }
+        currentSlot = playerData.selectedSlot;
     }
 
-    function handleMouseWheel(e: WheelEvent) {
-        if (e.deltaY > 0) {
-            currentSlot = (currentSlot + 1) % 9;
-        } else {
-            currentSlot = (currentSlot - 1 + 9) % 9;
-        }
-    }
-
-    listen("playerStats", updateStats);
+    listen("clientPlayerData", (event: any) => {
+        updatePlayerData(event.playerData);
+    });
     onMount(async () => {
-        updateStats(await getPlayerStats());
+        updatePlayerData(await getPlayerData());
     });
 </script>
 
-<svelte:window on:wheel={handleMouseWheel} />
-
 <div class="hotbar">
-    {#if stats}
+    {#if playerData}
         <div class="status">
-            {#if stats.armor > 0}
+            {#if playerData.armor > 0}
                 <div class="pair">
                     <Status
                         max={20}
-                        value={stats.armor}
+                        value={playerData.armor}
                         color="#49EAD6"
                         alignRight={false}
                     />
@@ -51,11 +44,11 @@
                     <div></div>
                 </div>
             {/if}
-            {#if stats.absorption > 0}
+            {#if playerData.absorption > 0}
                 <div class="pair">
                     <Status
                         max={maxAbsorption}
-                        value={stats.absorption}
+                        value={playerData.absorption}
                         color="#D4AF37"
                         alignRight={false}
                     />
@@ -65,25 +58,25 @@
             {/if}
             <div class="pair">
                 <Status
-                    max={stats.maxHealth}
-                    value={stats.health}
+                    max={playerData.maxHealth}
+                    value={playerData.health}
                     color="#FC4130"
                     alignRight={false}
                 />
                 <Status
                     max={20}
-                    value={stats.food}
+                    value={playerData.food}
                     color="#B88458"
                     alignRight={true}
                 />
             </div>
-            {#if stats.experienceLevel > 0}
+            {#if playerData.experienceLevel > 0}
                 <Status
                     max={100}
-                    value={stats.experienceProgress * 100}
+                    value={playerData.experienceProgress * 100}
                     color="#88C657"
                     alignRight={false}
-                    label={stats.experienceLevel.toString()}
+                    label={playerData.experienceLevel.toString()}
                 />
             {/if}
         </div>

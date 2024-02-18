@@ -1,12 +1,12 @@
 <script lang="ts">
     import ArmorStatus from "./ArmorStatus.svelte";
     import {listen} from "../../../../integration/ws.js";
-    import type {PlayerStats} from "../../../../integration/types";
+    import type {PlayerData} from "../../../../integration/types";
     import {REST_BASE} from "../../../../integration/host";
     import { fly } from "svelte/transition";
     import HealthProgress from "./HealthProgress.svelte";
 
-    let target: PlayerStats | null = null;
+    let target: PlayerData | null = null;
     let visible = true;
 
     let hideTimeout: number;
@@ -31,7 +31,11 @@
     <div class="targethud" transition:fly={{ y: -10, duration: 200 }}>
         <div class="main-wrapper">
             <div class="avatar">
-                <img src="{REST_BASE}/api/v1/client/resource?id={target.skinIdentifier}" alt="avatar" />
+                {#if target.textures.textureUrl != null}
+                    <img src="{target.textures.textureUrl}" alt="avatar" />
+                {:else}
+                    <img src="{REST_BASE}/api/v1/client/resource?id={target.textures.texture}" alt="avatar" />
+                {/if}
             </div>
     
             <div class="name">{target.username}</div>

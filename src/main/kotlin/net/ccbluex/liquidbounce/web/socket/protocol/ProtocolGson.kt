@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
 import net.minecraft.client.network.ServerInfo
+import net.minecraft.client.util.SkinTextures
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -78,6 +79,7 @@ class ItemStackSerializer : JsonSerializer<ItemStack> {
                 addProperty("count", it.count)
                 addProperty("damage", it.damage)
                 addProperty("maxDamage", it.maxDamage)
+                addProperty("empty", it.isEmpty)
             }
     }
 

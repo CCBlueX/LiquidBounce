@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerStatistics
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -85,7 +85,7 @@ class TargetTracker(
         lockedOnTarget = entity
 
         if (entity is PlayerEntity) {
-            EventManager.callEvent(TargetChangeEvent(PlayerStatistics.fromPlayer(entity)))
+            EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
         }
     }
 

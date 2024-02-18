@@ -63,7 +63,7 @@ object ClientSocket {
 
         // Statistic events
         "fps",
-        "playerStats",
+        "clientPlayerData",
 
         // LiquidChat events, needed for chat UI
         "clientChatMessage",
