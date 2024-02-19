@@ -11,6 +11,6 @@
       width: max-content;
       border-radius: 5px;
       display: flex;
-      column-gap: 10px;
+      column-gap: 20px;
     }
 </style>

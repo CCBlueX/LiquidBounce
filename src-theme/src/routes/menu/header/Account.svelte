@@ -14,7 +14,7 @@
         <img src="img/steve.png" alt=avatar class="avatar">
     </object>
     <div class="username">{username}</div>
-    <div class="account-type">{premium ? "Premium" : "Offlne"}</div>
+    <div class="account-type">{premium ? "Premium" : "Offline"}</div>
     <button class="button-change-account" type="button" on:click={() => dispatch("changeAccount")}>
         <ToolTip text="Change account" />
 

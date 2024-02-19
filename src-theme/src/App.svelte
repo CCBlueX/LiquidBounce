@@ -9,13 +9,15 @@
     import Inventory from "./routes/inventory/Inventory.svelte";
     import Title from "./routes/menu/title/Title.svelte";
     import SplashScreen from "./routes/menu/splash/SplashScreen.svelte";
+    import Multiplayer from "./routes/menu/multiplayer/Multiplayer.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
         "/hud": Hud,
         "/inventory": Inventory,
         "/title": Title,
-        "/splash": SplashScreen
+        "/splash": SplashScreen,
+        "/multiplayer": Multiplayer
     };
 
     const url = window.location.href;
@@ -74,7 +76,7 @@
 
         const screen = await getVirtualScreen();
 
-        const screenName = screen.name ?? "none";
+        const screenName = screen.name ?? "title";
         await changeRoute(screenName, screen.splash);
     });
 </script>

@@ -1,45 +1,43 @@
 <script lang="ts">
-    import Header from "../header/Header.svelte";
     import MainButton from "./buttons/MainButton.svelte";
     import ChildButton from "./buttons/ChildButton.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
-    import {onMount} from "svelte";
-    import {getSession, browse, exitClient, openScreen} from "../../../integration/rest";
-    import type {Session} from "../../../integration/types";
-
-    let session: Session | null = null;
-
-    onMount(async () => {
-        session = await getSession();
-    });
+    import {browse, exitClient, openScreen} from "../../../integration/rest";
+    import {push} from "svelte-spa-router";
+    import Menu from "../common/Menu.svelte";
+    import {fly} from "svelte/transition";
 </script>
 
-<div class="title">
-    {#if session}
-        <Header username={session.username} avatar={session.avatar} premium={session.premium}/>
-    {/if}
-
+<Menu>
     <div class="content">
         <div class="main-buttons">
-            <MainButton title="Singleplayer" icon="singleplayer" on:click={() => openScreen("singleplayer")}/>
-            <MainButton title="Multiplayer" icon="multiplayer" let:parentHovered
-                        on:click={() => openScreen("multiplayer")}>
-                <ChildButton title="Realms" icon="realms" {parentHovered}
-                             on:click={() => openScreen("multiplayer_realms")}/>
-            </MainButton>
-            <MainButton title="Proxy Manager" icon="proxymanager"/>
-            <MainButton title="Options" icon="options" on:click={() => openScreen("options")}/>
+            <div transition:fly|global={{duration: 400, x: -500}}>
+                <MainButton title="Singleplayer" icon="singleplayer" on:click={() => openScreen("singleplayer")}/>
+            </div>
+            <div transition:fly|global={{duration: 400, x: -500, delay: 100}}>
+                <MainButton title="Multiplayer" icon="multiplayer" let:parentHovered
+                            on:click={() => push("/multiplayer")}>
+                    <ChildButton title="Realms" icon="realms" {parentHovered}
+                                 on:click={() => openScreen("multiplayer_realms")}/>
+                </MainButton>
+            </div>
+            <div transition:fly|global={{duration: 400, x: -500, delay: 200}}>
+                <MainButton title="Proxy Manager" icon="proxymanager"/>
+            </div>
+            <div transition:fly|global={{duration: 400, x: -500, delay: 300}}>
+                <MainButton title="Options" icon="options" on:click={() => openScreen("options")}/>
+            </div>
         </div>
 
-        <div class="additional-buttons">
+        <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
                 <IconTextButton icon="exit" title="Exit" on:click={exitClient}/>
             </ButtonContainer>
         </div>
 
-        <div class="social-buttons">
+        <div class="social-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
                 <IconButton title="Forum" icon="nodebb" on:click={() => browse("https://forums.ccbluex.net")}/>
                 <IconButton title="GitHub" icon="github" on:click={() => browse("https://github.com/CCBlueX")}/>
@@ -52,18 +50,9 @@
             </ButtonContainer>
         </div>
     </div>
-</div>
+</Menu>
 
 <style>
-    .title {
-        width: 100vw;
-        height: 100vh;
-        padding: 50px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-    }
-
     .content {
         flex: 1;
         display: grid;

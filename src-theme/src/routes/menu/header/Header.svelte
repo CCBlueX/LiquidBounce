@@ -1,21 +1,28 @@
 <script lang="ts">
     import Account from "./Account.svelte";
+    import type {Session} from "../../../integration/types";
+    import {onMount} from "svelte";
+    import {getSession} from "../../../integration/rest";
 
-    export let username: string;
-    export let avatar: string;
-    export let premium: boolean;
+    let session: Session | null = null;
+
+    onMount(async () => {
+        session = await getSession();
+    });
 </script>
 
 <div class="header">
     <img class="logo" src="img/lb-logo.svg" alt="logo">
 
-    <Account {username} {avatar} {premium} />
+    {#if session}
+        <Account username={session.username} avatar={session.avatar} premium={session.premium}/>
+    {/if}
 </div>
 
 <style lang="scss">
-    .header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 60px;
-    }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 60px;
+  }
 </style>
