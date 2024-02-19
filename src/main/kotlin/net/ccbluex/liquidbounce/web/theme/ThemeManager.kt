@@ -36,7 +36,7 @@ import java.io.File
 object ThemeManager {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
-    private val defaultTheme = Theme.defaults()
+    internal val defaultTheme = Theme.defaults()
 
     var activeTheme = defaultTheme
         set(value) {
@@ -148,5 +148,8 @@ data class ThemeMetadata(
     val author: String,
     val version: String,
     val supports: List<String>,
-    val overlays: List<String>
-)
+    val overlays: List<String>,
+    val disables: List<String>
+) {
+    fun doesDisable(name: String) = disables.contains(name)
+}

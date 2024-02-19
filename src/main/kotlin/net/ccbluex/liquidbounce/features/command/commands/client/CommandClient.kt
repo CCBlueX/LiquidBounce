@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.web.theme.Theme
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -57,6 +58,7 @@ object CommandClient {
         .subcommand(browserCommand())
         .subcommand(integrationCommand())
         .subcommand(languageCommand())
+        .subcommand(themeCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -198,6 +200,43 @@ object CommandClient {
                 chat(regular("Unset override language..."))
                 LanguageManager.overrideLanguage = ""
                 ConfigSystem.storeConfigurable(LanguageManager)
+            }.build()
+        )
+        .build()
+
+    private fun themeCommand() = CommandBuilder.begin("theme")
+        .hub()
+        .subcommand(CommandBuilder.begin("list")
+            .handler { command, args ->
+                chat(regular("Available themes:"))
+                for (theme in ThemeManager.themesFolder.listFiles()!!) {
+                    chat(regular("-> ${theme.name}"))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("set")
+            .parameter(
+                ParameterBuilder.begin<String>("theme")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                    .build()
+            ).handler { command, args ->
+                val theme = ThemeManager.themesFolder.listFiles()?.find {
+                    it.name.equals(args[0] as String, true)
+                }
+
+                if (theme == null) {
+                    chat(regular("Theme not found."))
+                    return@handler
+                }
+
+                chat(regular("Setting theme to ${theme.name}..."))
+                ThemeManager.activeTheme = Theme(theme.name)
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("unset")
+            .handler { command, args ->
+                chat(regular("Unset active theme..."))
+                ThemeManager.activeTheme = ThemeManager.defaultTheme
             }.build()
         )
         .build()

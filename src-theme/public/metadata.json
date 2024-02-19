@@ -15,5 +15,6 @@
     "splash",
     "container",
     "disconnected"
-  ]
+  ],
+  "disables": []
 }
