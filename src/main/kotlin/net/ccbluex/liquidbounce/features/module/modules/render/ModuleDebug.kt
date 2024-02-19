@@ -190,7 +190,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
-        return Color4b(Color.getHSBColor(hue, 1f, 1f)).alpha(32)
+        return Color4b(Color.getHSBColor(hue, 0.7f, 0.7f)).alpha(255)
     }
 
     abstract class DebuggedGeometry(val color: Color4b) {

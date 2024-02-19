@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReve
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
+import net.ccbluex.liquidbounce.features.module.modules.movement.parkour.ModuleParkour
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
