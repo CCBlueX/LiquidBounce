@@ -20,42 +20,43 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.script.bindings.api.JsMovementUtil.strafe
-import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
+import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
+import net.ccbluex.liquidbounce.utils.entity.downwards
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.entity.effect.StatusEffects
 
-object SpeedVulcan286 : Choice("Vulcan286") {
+/**
+ * BHop Speed for Vulcan 286
+ * Taken from InspectorBoat Vulcan Bypasses (He agreed to it)
+ *
+ * Tested on both anticheat-test.com and loyisa.cn
+ */
+object SpeedVulcan286 : SpeedBHopBase("Vulcan286") {
 
-    /*
-        * Bypasses Vulcan 286
-        * Tested on eu.loyisa.cn
-        * Note: Ported from LiquidBounce Legacy
-     */
+    private inline val goingSideways: Boolean
+        get() = player.input.movementSideways != 0f
 
+    val afterJumpEvent = sequenceHandler<PlayerAfterJumpEvent> {
+        // We might lose the effect during runtime of the sequence,
+        // but we don't care, since it is Vulcan.
+        val speedLevel = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
 
-    override val parent: ChoiceConfigurable
-        get() = ModuleSpeed.modes
-
-    val repeatable = repeatable {
-        if (player.isTouchingWater || player.isInLava || player.isHoldingOntoLadder) {
-            return@repeatable
+        waitTicks(1)
+        player.strafe(speed = if (goingSideways) 0.3345 else 0.3355 * (1 + speedLevel * 0.3819))
+        waitTicks(1)
+        if (player.isSprinting) {
+            player.strafe(speed = if (goingSideways) 0.3235 else 0.3284 * (1 + speedLevel * 0.355))
         }
 
-        if (player.moving) {
-            if (player.isOnGround) {
-                player.jump()
-                Timer.requestTimerSpeed(0.45f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
-            } else {
-                Timer.requestTimerSpeed(1.125f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
-            }
-        } else {
-            Timer.requestTimerSpeed(1.0f, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
+        waitTicks(2)
+        player.downwards(0.376f)
+
+        waitTicks(2)
+        if (player.speed > 0.298) {
+            player.strafe(speed = 0.298)
         }
     }
+
 }
