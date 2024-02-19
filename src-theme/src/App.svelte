@@ -46,8 +46,10 @@
                     await changeRoute("none");
                     break;
                 case "open":
-                    const screenName = event.screenName ?? "none";
-                    await changeRoute(screenName);
+                    const screenName = event.screenName;
+                    if (screenName) {
+                        await changeRoute(screenName);
+                    }
                     break;
             }
         });
