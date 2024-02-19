@@ -8,25 +8,26 @@
     import {push} from "svelte-spa-router";
     import Menu from "../common/Menu.svelte";
     import {fly} from "svelte/transition";
+    import {backIn} from "svelte/easing";
 </script>
 
 <Menu>
     <div class="content">
         <div class="main-buttons">
-            <div transition:fly|global={{duration: 400, x: -500}}>
+            <div out:fly|global={{duration: 400, x: -500, easing: backIn }} in:fly|global={{duration: 400, x: -500}}>
                 <MainButton title="Singleplayer" icon="singleplayer" on:click={() => openScreen("singleplayer")}/>
             </div>
-            <div transition:fly|global={{duration: 400, x: -500, delay: 100}}>
+            <div out:fly|global={{duration: 400, x: -500, delay: 100, easing: backIn}} in:fly|global={{duration: 400, x: -500, delay: 100}}>
                 <MainButton title="Multiplayer" icon="multiplayer" let:parentHovered
                             on:click={() => push("/multiplayer")}>
                     <ChildButton title="Realms" icon="realms" {parentHovered}
                                  on:click={() => openScreen("multiplayer_realms")}/>
                 </MainButton>
             </div>
-            <div transition:fly|global={{duration: 400, x: -500, delay: 200}}>
+            <div out:fly|global={{duration: 400, x: -500, delay: 200, easing: backIn}} in:fly|global={{duration: 400, x: -500, delay: 200}}>
                 <MainButton title="Proxy Manager" icon="proxymanager"/>
             </div>
-            <div transition:fly|global={{duration: 400, x: -500, delay: 300}}>
+            <div out:fly|global={{duration: 400, x: -500, delay: 300, easing: backIn}} in:fly|global={{duration: 400, x: -500, delay: 300}}>
                 <MainButton title="Options" icon="options" on:click={() => openScreen("options")}/>
             </div>
         </div>
