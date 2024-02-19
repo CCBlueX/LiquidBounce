@@ -23,21 +23,12 @@
     const url = window.location.href;
     const staticTag = url.split("?")[1];
     const isStatic = staticTag === "static";
-    let showingSplash = false;
-    let nextRoute: string | null = null;
 
-    async function changeRoute(name: string, splash = false) {
+    async function changeRoute(name: string) {
         await confirmVirtualScreen(name);
 
-        if (splash) {
-            showingSplash = true;
-            nextRoute = name;
-        } else {
-            cleanupListeners();
-            await push("/" + name);
-            showingSplash = false;
-            nextRoute = null;
-        }
+        cleanupListeners();
+        await push(`/${name}`);
     }
 
     onMount(async () => {
@@ -46,19 +37,6 @@
         if (isStatic) {
             return;
         }
-
-        listenAlways("splashOverlay", async (event: any) => {
-            const action = event.action;
-
-            if (action === "show") {
-                cleanupListeners();
-                await push("/");
-
-                showingSplash = true;
-            } else if (action === "hide") {
-                await changeRoute(nextRoute ?? "none");
-            }
-        });
 
         listenAlways("virtualScreen", async (event: any) => {
             const action = event.action;
@@ -69,18 +47,13 @@
                     break;
                 case "open":
                     const screenName = event.screenName ?? "none";
-                    await changeRoute(screenName, showingSplash);
+                    await changeRoute(screenName);
                     break;
             }
         });
-
-        const screen = await getVirtualScreen();
-
-        const screenName = screen.name ?? "title";
-        await changeRoute(screenName, screen.splash);
     });
 </script>
 
 <main>
-    <Router {routes} />
+    <Router {routes}/>
 </main>
