@@ -16,7 +16,8 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew2
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -110,7 +111,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         // Draw
         val guiHeight = tabs.size * tabHeight
 
-        drawRect(1F, 0F, width, guiHeight, backgroundColor.rgb)
+        drawRectNew(1F, 0F, width, guiHeight, backgroundColor.rgb)
 
         if (borderValue) {
             RainbowShader.begin(borderRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
@@ -122,7 +123,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         val rectColor = if (rectRainbow) Color.black else Color(rectRed, rectGreen, rectBlue, rectAlpha)
 
         RainbowShader.begin(rectRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-            drawRect(1F, 1 + tabY - 1, width, tabY + tabHeight, rectColor)
+            drawRectNew2(1F, 1 + tabY - 1, width, tabY + tabHeight, rectColor)
         }
 
         glColor4f(1f, 1f, 1f, 1f)
@@ -291,11 +292,11 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
                     drawBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor)
                 }
             }
-            drawRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
+            drawRectNew(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
 
 
             RainbowShader.begin(rectRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-                drawRect(x - 1f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight - 1, color)
+                drawRectNew(x - 1f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight - 1, color)
             }
 
             glColor4f(1f, 1f, 1f, 1f)

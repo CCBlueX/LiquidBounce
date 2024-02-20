@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -63,14 +63,14 @@ class Target : Element() {
 
             // Damage animation
             if (easingHealth > targetHealth.coerceAtMost(target.maxHealth))
-                drawRect(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 185, 65).rgb)
+                drawRectNew(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 185, 65).rgb)
 
             // Health bar
-            drawRect(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 96, 66).rgb)
+            drawRectNew(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 96, 66).rgb)
 
             // Heal animation
             if (easingHealth < targetHealth)
-                drawRect((easingHealth / target.maxHealth).coerceAtMost(1f) * width, 34F,
+                drawRectNew((easingHealth / target.maxHealth).coerceAtMost(1f) * width, 34F,
                         (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(44, 201, 144).rgb)
 
             easingHealth += ((targetHealth - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime

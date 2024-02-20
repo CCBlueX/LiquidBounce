@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNewInt
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.StringUtils
@@ -59,7 +59,7 @@ object SlowlyStyle : Style() {
     }
 
     override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement) {
-        drawRect(buttonElement.x - 1, buttonElement.y - 1, buttonElement.x + buttonElement.width + 1, buttonElement.y + buttonElement.height + 1,
+        drawRectNewInt(buttonElement.x - 1, buttonElement.y - 1, buttonElement.x + buttonElement.width + 1, buttonElement.y + buttonElement.height + 1,
             getHoverColor(
                 if (buttonElement.color != Int.MAX_VALUE) Color(7, 152, 252) else Color(54, 71, 96),
                 buttonElement.hoverTime
@@ -70,10 +70,10 @@ object SlowlyStyle : Style() {
     }
 
     override fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean {
-        drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
+        drawRectNewInt(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
             getHoverColor(Color(54, 71, 96), moduleElement.hoverTime)
         )
-        drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
+        drawRectNewInt(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
             getHoverColor(Color(7, 152, 252, moduleElement.slowlyFade), moduleElement.hoverTime, !moduleElement.module.isActive)
         )
 
@@ -196,8 +196,8 @@ object SlowlyStyle : Style() {
                                 if (mouseButton == 0) return true
                             }
 
-                            drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
-                            drawRect(x, y, sliderValue, y + 2, color.rgb)
+                            drawRectNewInt(x, y, x + width, y + 2, Int.MAX_VALUE)
+                            drawRectNewInt(x, y, sliderValue, y + 2, color.rgb)
                             drawFilledCircle(sliderValue, y + 1, 3f, color)
 
                             font35.drawString(text, minX + 2, yPos + 3, Color.WHITE.rgb)
@@ -231,8 +231,8 @@ object SlowlyStyle : Style() {
                                 if (mouseButton == 0) return true
                             }
 
-                            drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
-                            drawRect(x, y, sliderValue, y + 2, color.rgb)
+                            drawRectNewInt(x, y, x + width, y + 2, Int.MAX_VALUE)
+                            drawRectNewInt(x, y, sliderValue, y + 2, color.rgb)
                             drawFilledCircle(sliderValue, y + 1, 3f, color)
 
                             font35.drawString(text, minX + 2, yPos + 3, Color.WHITE.rgb)

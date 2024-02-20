@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
 import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -212,7 +212,7 @@ class Arraylist(
                     val xPos = -module.slide - 2
 
                     RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRect(
+                        drawRectNew(
                             xPos - if (rectMode == "Right") 5 else 2,
                             yPos,
                             if (rectMode == "Right") -3F else 0F,
@@ -259,8 +259,8 @@ class Arraylist(
                                 }
 
                             when (rectMode) {
-                                "Left" -> drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
-                                "Right" -> drawRect(-3F, yPos, 0F, yPos + textHeight, rectColor)
+                                "Left" -> drawRectNew(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
+                                "Right" -> drawRectNew(-3F, yPos, 0F, yPos + textHeight, rectColor)
                             }
                         }
                     }
@@ -271,7 +271,7 @@ class Arraylist(
                     val xPos = -(width - module.slide) + if (rectMode == "Left") 5 else 2
 
                     RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRect(
+                        drawRectNew(
                             0F, yPos, xPos + width + if (rectMode == "Right") 5 else 2, yPos + textHeight,
                             when (backgroundMode) {
                                 "Rainbow" -> 0
@@ -315,8 +315,8 @@ class Arraylist(
                                 }
 
                             when (rectMode) {
-                                "Left" -> drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
-                                "Right" -> drawRect(
+                                "Left" -> drawRectNew(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
+                                "Right" -> drawRectNew(
                                     xPos + width + 2,
                                     yPos,
                                     xPos + width + 2 + 3,
