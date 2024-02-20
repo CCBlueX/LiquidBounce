@@ -338,12 +338,12 @@ object RenderUtils : MinecraftInstance() {
     fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Color) = drawRect(x, y, x2, y2, color.rgb)
 
     fun drawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
-        drawRect(x, y, x2, y2, color2)
+        drawRectNew(x, y, x2, y2, color2)
         drawBorder(x, y, x2, y2, width, color1)
     }
 
     fun drawBorderedRect(x: Int, y: Int, x2: Int, y2: Int, width: Int, borderColor: Int, rectColor: Int) {
-        drawRect(x, y, x2, y2, rectColor)
+        drawRectNewInt(x, y, x2, y2, rectColor)
         drawBorder(x, y, x2, y2, width, borderColor)
     }
 
@@ -400,6 +400,93 @@ object RenderUtils : MinecraftInstance() {
             val rot = (System.nanoTime() / 5000000 * i % 360).toInt()
             drawCircle(x, y, (i * 10).toFloat(), rot - 180, rot)
         }
+    }
+
+    /**
+     * Optimized version of drawRect (Float)
+     */
+    fun drawRectNew(x1: Float, y1: Float, x2: Float, y2: Float, color: Int) {
+        val alpha = ((color shr 24) and 0xFF) / 255f
+        val red = ((color shr 16) and 0xFF) / 255f
+        val green = ((color shr 8) and 0xFF) / 255f
+        val blue = (color and 0xFF) / 255f
+
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glShadeModel(GL_SMOOTH)
+
+        val tessellator = Tessellator.getInstance()
+        val buffer = tessellator.worldRenderer
+        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
+
+        buffer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+
+        tessellator.draw()
+
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+    }
+
+    /**
+     * Optimized version of drawRect (Float)
+     */
+    fun drawRectNew2(x1: Float, y1: Float, x2: Float, y2: Float, color: Color) {
+        val red = color.red.toFloat() / 255f
+        val green = color.green.toFloat() / 255f
+        val blue = color.blue.toFloat() / 255f
+        val alpha = color.alpha.toFloat() / 255f
+
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glShadeModel(GL_SMOOTH)
+
+        val tessellator = Tessellator.getInstance()
+        val buffer = tessellator.worldRenderer
+        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
+
+        buffer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+
+        tessellator.draw()
+
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+    }
+
+    /**
+     * Optimized version of drawRect (Int)
+     */
+    fun drawRectNewInt(x1: Int, y1: Int, x2: Int, y2: Int, color: Int) {
+        val alpha = ((color shr 24) and 0xFF) / 255f
+        val red = ((color shr 16) and 0xFF) / 255f
+        val green = ((color shr 8) and 0xFF) / 255f
+        val blue = (color and 0xFF) / 255f
+
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glShadeModel(GL_SMOOTH)
+
+        val tessellator = Tessellator.getInstance()
+        val buffer = tessellator.worldRenderer
+        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
+
+        buffer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        buffer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+
+        tessellator.draw()
+
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
     }
 
     fun drawCircle(x: Float, y: Float, radius: Float, start: Int, end: Int) {

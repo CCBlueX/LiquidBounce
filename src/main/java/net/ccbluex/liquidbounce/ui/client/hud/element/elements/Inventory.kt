@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew2
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -54,10 +54,10 @@ class Inventory : Element(300.0, 50.0) {
         val titleColor = if (titleRainbow) ColorUtils.rainbow() else Color(titleRed, titleGreen, titleBlue)
 
         // draw rect and borders
-        drawRect(0F, startY, width, height, Color(0,0,0, backgroundAlpha))
+        drawRectNew2(0F, startY, width, height, Color(0,0,0, backgroundAlpha))
         if (borderValue) {
             drawBorder(0f, startY, width, height, 3f, borderColor.rgb)
-            drawRect(0F, 0f, width, 1f, borderColor)
+            drawRectNew2(0F, 0f, width, 1f, borderColor)
         }
         // Reset color
         resetColor()
