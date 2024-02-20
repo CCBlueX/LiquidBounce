@@ -207,7 +207,7 @@ open class Module(
     /**
      * Handles disconnect from world and if [disableOnQuit] is true disables module
      */
-    val onDisconnect = handler<WorldDisconnectEvent> {
+    val onDisconnect = handler<WorldDisconnectEvent>(ignoreCondition = true) {
         if (disableOnQuit) {
             enabled = false
         }
