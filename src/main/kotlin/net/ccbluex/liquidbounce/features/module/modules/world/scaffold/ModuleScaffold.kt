@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTellyTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -152,7 +153,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val towerMode = choices("Tower", {
         it.choices[0] // None
     }) {
-        arrayOf(NoneChoice(it), ScaffoldTowerMotion)
+        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown)
     }
 
     private var randomization = Random.nextDouble(-0.02, 0.02)
