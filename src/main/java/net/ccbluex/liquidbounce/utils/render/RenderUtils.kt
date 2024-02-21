@@ -293,13 +293,13 @@ object RenderUtils : MinecraftInstance() {
      */
     fun quickDrawRectNew(x: Float, y: Float, x2: Float, y2: Float) {
         val tessellator = Tessellator.getInstance()
-        val buffer = tessellator.worldRenderer
+        val worldRenderer = tessellator.worldRenderer
 
-        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION)
-        buffer.pos(x2.toDouble(), y.toDouble(), 0.0).endVertex()
-        buffer.pos(x.toDouble(), y.toDouble(), 0.0).endVertex()
-        buffer.pos(x.toDouble(), y2.toDouble(), 0.0).endVertex()
-        buffer.pos(x2.toDouble(), y2.toDouble(), 0.0).endVertex()
+        worldRenderer.begin(GL_QUADS, DefaultVertexFormats.POSITION)
+        worldRenderer.pos(x2.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldRenderer.pos(x.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldRenderer.pos(x.toDouble(), y2.toDouble(), 0.0).endVertex()
+        worldRenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).endVertex()
         tessellator.draw()
     }
 
