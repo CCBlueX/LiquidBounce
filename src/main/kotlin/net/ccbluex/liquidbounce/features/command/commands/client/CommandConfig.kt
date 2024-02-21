@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.config.AutoConfig.configsCache
@@ -77,7 +78,19 @@ object CommandConfig {
                             return@handler
                         }
 
-
+                        // Get online config from API
+                        AutoConfig.loadingNow = true
+                        runCatching {
+                            ClientApi.requestSettingsScript(name).apply {
+                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
+                                    ConfigSystem.autoConfigGson)
+                            }
+                        }.onFailure {
+                            chat(markAsError(command.result("failedToLoad", variable(name))))
+                        }.onSuccess {
+                            chat(regular(command.result("loaded", variable(name))))
+                        }
+                        AutoConfig.loadingNow = false
                     }
                     .build()
             )
