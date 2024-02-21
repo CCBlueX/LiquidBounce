@@ -25,6 +25,7 @@
     const isStatic = staticTag === "static";
 
     async function changeRoute(name: string) {
+        console.log(`[Router] Redirecting to ${name}`);
         await confirmVirtualScreen(name);
 
         cleanupListeners();
@@ -39,6 +40,7 @@
         }
 
         listenAlways("virtualScreen", async (event: any) => {
+            console.log(`[Router] Virtual screen change to ${event.screenName}`)
             const action = event.action;
 
             switch (action) {

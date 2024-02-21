@@ -7,7 +7,8 @@ import type {
     PrintableKey,
     Registries,
     Session,
-    VirtualScreen
+    VirtualScreen,
+    Server
 } from "./types";
 
 const API_BASE = `${REST_BASE}/api/v1`;
@@ -138,5 +139,22 @@ export async function openScreen(name: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({name})
+    });
+}
+
+export async function getServers(): Promise<Server[]> {
+    const response = await fetch(`${API_BASE}/client/servers`);
+    const data: Server[] = await response.json();
+
+    return data;
+}
+
+export async function connectToServer(address: string) {
+    await fetch(`${API_BASE}/client/servers/connect`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({address})
     });
 }

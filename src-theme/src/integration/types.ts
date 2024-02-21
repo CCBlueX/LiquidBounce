@@ -192,3 +192,15 @@ export interface Session {
     premium: boolean;
     uuid: string;
 }
+
+// TODO: players, playerList
+export interface Server {
+    address: string;
+    icon: string;
+    label: string;
+    name: string;
+    online: boolean;
+    playerCountLabel: string;
+    protocolVersion: number;
+    version: string;
+}
