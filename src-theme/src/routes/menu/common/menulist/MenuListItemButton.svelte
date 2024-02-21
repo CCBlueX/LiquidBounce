@@ -10,7 +10,7 @@
 
 <button class="button" type="button" on:click={() => dispatch("click")}>
     <ToolTip text={title}/>
-    <img class="icon" src="/img/menu/icon-{icon}.svg" alt={icon}>
+    <img class="icon" src="img/menu/icon-{icon}.svg" alt={icon}>
 </button>
 
 <style lang="scss">
