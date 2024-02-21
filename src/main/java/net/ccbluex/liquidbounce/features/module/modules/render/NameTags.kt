@@ -19,8 +19,8 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawTexturedModalRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRectNew2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager.*
@@ -195,7 +195,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         val borderColor = Color(borderColorRed, borderColorGreen, borderColorBlue, borderColorAlpha)
 
-        if (border) quickDrawBorderedRect(
+        if (border) quickDrawBorderedRectNew(
             -width - 2F,
             -2F,
             width + 4F,
@@ -204,19 +204,19 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             borderColor.rgb,
             bgColor.rgb
         )
-        else quickDrawRect(
+        else quickDrawRectNew2(
             -width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F, bgColor.rgb
         )
 
         if (healthBar) {
-            quickDrawRect(
+            quickDrawRectNew2(
                 -width - 2F,
                 fontRenderer.FONT_HEIGHT + 3F,
                 -width - 2F + dist,
                 fontRenderer.FONT_HEIGHT + 4F,
                 Color(10, 155, 10).rgb
             )
-            quickDrawRect(
+            quickDrawRectNew2(
                 -width - 2F,
                 fontRenderer.FONT_HEIGHT + 3F,
                 -width - 2F + (dist * (getHealth(entity) / entity.maxHealth).coerceIn(0F, 1F)),

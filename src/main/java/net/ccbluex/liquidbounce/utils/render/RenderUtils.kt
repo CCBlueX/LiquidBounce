@@ -36,28 +36,28 @@ object RenderUtils : MinecraftInstance() {
         }
 
         glNewList(DISPLAY_LISTS_2D[0], GL_COMPILE)
-        quickDrawRect(-7f, 2f, -4f, 3f)
-        quickDrawRect(4f, 2f, 7f, 3f)
-        quickDrawRect(-7f, 0.5f, -6f, 3f)
-        quickDrawRect(6f, 0.5f, 7f, 3f)
+        quickDrawRectNew(-7f, 2f, -4f, 3f)
+        quickDrawRectNew(4f, 2f, 7f, 3f)
+        quickDrawRectNew(-7f, 0.5f, -6f, 3f)
+        quickDrawRectNew(6f, 0.5f, 7f, 3f)
         glEndList()
         glNewList(DISPLAY_LISTS_2D[1], GL_COMPILE)
-        quickDrawRect(-7f, 3f, -4f, 3.3f)
-        quickDrawRect(4f, 3f, 7f, 3.3f)
-        quickDrawRect(-7.3f, 0.5f, -7f, 3.3f)
-        quickDrawRect(7f, 0.5f, 7.3f, 3.3f)
+        quickDrawRectNew(-7f, 3f, -4f, 3.3f)
+        quickDrawRectNew(4f, 3f, 7f, 3.3f)
+        quickDrawRectNew(-7.3f, 0.5f, -7f, 3.3f)
+        quickDrawRectNew(7f, 0.5f, 7.3f, 3.3f)
         glEndList()
         glNewList(DISPLAY_LISTS_2D[2], GL_COMPILE)
-        quickDrawRect(4f, -20f, 7f, -19f)
-        quickDrawRect(-7f, -20f, -4f, -19f)
-        quickDrawRect(6f, -20f, 7f, -17.5f)
-        quickDrawRect(-7f, -20f, -6f, -17.5f)
+        quickDrawRectNew(4f, -20f, 7f, -19f)
+        quickDrawRectNew(-7f, -20f, -4f, -19f)
+        quickDrawRectNew(6f, -20f, 7f, -17.5f)
+        quickDrawRectNew(-7f, -20f, -6f, -17.5f)
         glEndList()
         glNewList(DISPLAY_LISTS_2D[3], GL_COMPILE)
-        quickDrawRect(7f, -20f, 7.3f, -17.5f)
-        quickDrawRect(-7.3f, -20f, -7f, -17.5f)
-        quickDrawRect(4f, -20.3f, 7.3f, -20f)
-        quickDrawRect(-7.3f, -20.3f, -4f, -20f)
+        quickDrawRectNew(7f, -20f, 7.3f, -17.5f)
+        quickDrawRectNew(-7.3f, -20f, -7f, -17.5f)
+        quickDrawRectNew(4f, -20.3f, 7.3f, -20f)
+        quickDrawRectNew(-7.3f, -20.3f, -4f, -20f)
         glEndList()
     }
 
@@ -288,6 +288,22 @@ object RenderUtils : MinecraftInstance() {
         glEnd()
     }
 
+    /**
+     * Optimized version of quickDrawRect (Float)
+     */
+    fun quickDrawRectNew(x: Float, y: Float, x2: Float, y2: Float) {
+        val tessellator = Tessellator.getInstance()
+        val worldRenderer = tessellator.worldRenderer
+
+        worldRenderer.begin(GL_QUADS, DefaultVertexFormats.POSITION)
+        worldRenderer.pos(x2.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldRenderer.pos(x.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldRenderer.pos(x.toDouble(), y2.toDouble(), 0.0).endVertex()
+        worldRenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).endVertex()
+        tessellator.draw()
+    }
+
+
     fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
         glEnable(GL_BLEND)
         glDisable(GL_TEXTURE_2D)
@@ -334,6 +350,23 @@ object RenderUtils : MinecraftInstance() {
         glVertex2d(x2.toDouble(), y2.toDouble())
         glEnd()
     }
+
+    /**
+     * Optimized version of quickDrawRect (Color)
+     */
+    fun quickDrawRectNew2(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
+        val tessellator = Tessellator.getInstance()
+        val worldrenderer = tessellator.worldRenderer
+
+        glColor(color)
+        worldrenderer.begin(GL_QUADS, DefaultVertexFormats.POSITION)
+        worldrenderer.pos(x2.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldrenderer.pos(x.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldrenderer.pos(x.toDouble(), y2.toDouble(), 0.0).endVertex()
+        worldrenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).endVertex()
+        tessellator.draw()
+    }
+
 
     fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Color) = drawRect(x, y, x2, y2, color.rgb)
 
@@ -384,7 +417,7 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun quickDrawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
-        quickDrawRect(x, y, x2, y2, color2)
+        quickDrawRectNew2(x, y, x2, y2, color2)
         glColor(color1)
         glLineWidth(width)
         glBegin(GL_LINE_LOOP)
@@ -393,6 +426,26 @@ object RenderUtils : MinecraftInstance() {
         glVertex2d(x.toDouble(), y2.toDouble())
         glVertex2d(x2.toDouble(), y2.toDouble())
         glEnd()
+    }
+
+    /**
+     * Optimized version of quickDrawBorderedRect
+     */
+    fun quickDrawBorderedRectNew(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
+        quickDrawRectNew2(x, y, x2, y2, color2)
+
+        val tessellator = Tessellator.getInstance()
+        val worldrenderer = tessellator.worldRenderer
+
+        glColor(color1)
+        glLineWidth(width)
+        worldrenderer.begin(GL_LINE_LOOP, DefaultVertexFormats.POSITION)
+        worldrenderer.pos(x2.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldrenderer.pos(x.toDouble(), y.toDouble(), 0.0).endVertex()
+        worldrenderer.pos(x.toDouble(), y2.toDouble(), 0.0).endVertex()
+        worldrenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).endVertex()
+
+        tessellator.draw()
     }
 
     fun drawLoadingCircle(x: Float, y: Float) {
@@ -417,13 +470,13 @@ object RenderUtils : MinecraftInstance() {
         glShadeModel(GL_SMOOTH)
 
         val tessellator = Tessellator.getInstance()
-        val buffer = tessellator.worldRenderer
-        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
+        val worldrenderer = tessellator.worldRenderer
+        worldrenderer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
 
-        buffer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
 
         tessellator.draw()
 
@@ -446,13 +499,13 @@ object RenderUtils : MinecraftInstance() {
         glShadeModel(GL_SMOOTH)
 
         val tessellator = Tessellator.getInstance()
-        val buffer = tessellator.worldRenderer
-        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
+        val worldrenderer = tessellator.worldRenderer
+        worldrenderer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
 
-        buffer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
 
         tessellator.draw()
 
@@ -475,13 +528,13 @@ object RenderUtils : MinecraftInstance() {
         glShadeModel(GL_SMOOTH)
 
         val tessellator = Tessellator.getInstance()
-        val buffer = tessellator.worldRenderer
-        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
+        val worldrenderer = tessellator.worldRenderer
+        worldrenderer.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR)
 
-        buffer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-        buffer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x1.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x2.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+        worldrenderer.pos(x1.toDouble(), y1.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
 
         tessellator.draw()
 
@@ -679,7 +732,7 @@ object RenderUtils : MinecraftInstance() {
         setGlCap(GL_BLEND, true)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         val width = Fonts.font35.getStringWidth(string) / 2
-        drawRect(-width - 1, -1, width + 1, Fonts.font35.FONT_HEIGHT, Int.MIN_VALUE)
+        drawRectNewInt(-width - 1, -1, width + 1, Fonts.font35.FONT_HEIGHT, Int.MIN_VALUE)
         Fonts.font35.drawString(string, -width.toFloat(), 1.5f, Color.WHITE.rgb, true)
         resetCaps()
         glColor4f(1f, 1f, 1f, 1f)
