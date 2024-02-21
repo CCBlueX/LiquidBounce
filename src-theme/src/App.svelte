@@ -40,7 +40,9 @@
         }
 
         const virtualScreen = await getVirtualScreen();
-        await changeRoute(virtualScreen.name || "none");
+        if (virtualScreen.name) {
+            await changeRoute(virtualScreen.name);
+        }
 
         listenAlways("virtualScreen", async (event: any) => {
             console.log(`[Router] Virtual screen change to ${event.screenName}`)
