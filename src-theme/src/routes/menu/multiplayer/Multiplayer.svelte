@@ -11,12 +11,22 @@
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
     import {onMount} from "svelte";
     import {connectToServer, getServers, openScreen} from "../../../integration/rest";
-    import type {Server} from "../../../integration/types";
+    import type {Server, ServerPingedEvent} from "../../../integration/types";
+    import {listen} from "../../../integration/ws";
 
     let servers: Server[] = [];
 
     onMount(async () => {
        servers = await getServers();
+    });
+
+    listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
+        const server = pingedEvent.server;
+
+        const index = servers.findIndex(s => s.address === server.address);
+        if (index !== -1) {
+            servers[index] = server;
+        }
     });
 </script>
 

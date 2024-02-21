@@ -204,3 +204,7 @@ export interface Server {
     protocolVersion: number;
     version: string;
 }
+
+export interface ServerPingedEvent {
+    server: Server;
+}
