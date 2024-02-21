@@ -26,7 +26,7 @@ import net.minecraft.util.Formatting
 import org.apache.commons.lang3.RandomStringUtils
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.UUID
+import java.util.*
 
 /**
  * LiquidBounce Client API
@@ -150,8 +150,14 @@ data class AutoSettings(
     @SerializedName("server_address") val serverAddress: String?
 ) {
 
+    val javaDate: Date
+        get() = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(date)
+
     val dateFormatted: String
-        get() = DateFormat.getDateInstance().format(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(date))
+        get() = DateFormat.getDateInstance().format(javaDate)
+
+    val statusDateFormatted: String
+        get() = DateFormat.getDateInstance().format(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(statusDate))
 
 }
 /**
