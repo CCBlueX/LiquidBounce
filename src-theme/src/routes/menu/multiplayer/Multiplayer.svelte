@@ -38,7 +38,7 @@
                     <MenuListItemButton title="Edit" icon="pen-2" />
                 </div>
                 <div slot="always-visible">
-                    <MenuListItemButton title="Play" icon="play" on:click={() => connectToServer(address)} />
+                    <MenuListItemButton title="Join" icon="play" on:click={() => connectToServer(address)} />
                 </div>
             </MenuListItem>
         {/each}
