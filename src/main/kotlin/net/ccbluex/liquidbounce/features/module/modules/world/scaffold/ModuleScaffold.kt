@@ -92,60 +92,25 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private var delay by intRange("Delay", 3..5, 0..40, "ticks")
-    object Swing : ToggleableConfigurable(this, "Swing", true) {
-        val swingSilent by boolean("Silent", false);
-    }
 
     // Silent block selection
-    private val autoBlock by boolean("AutoBlock", true)
-    private val alwaysHoldBlock by boolean("AlwaysHoldBlock", false)
-    private val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
+    object AutoBlock : ToggleableConfigurable(this, "AutoBlock", true) {
+        val alwaysHoldBlock by boolean("Always", false)
+        val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
+    }
 
-    // Rotation
-    private val rotationsConfigurable = tree(RotationsConfigurable())
+    init {
+        tree(AutoBlock)
+    }
+
+    // Aim mode
     private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
     internal val technique = choices("Technique", ScaffoldNormalTechnique,
         arrayOf(ScaffoldNormalTechnique, ScaffoldEagleTechnique, ScaffoldTellyTechnique))
 
-    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-
-    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
-
-    // SafeWalk feature - uses the SafeWalk module as a base
-    @Suppress("UnusedPrivateProperty")
-    private val safeWalkMode = choices("SafeWalk", {
-        it.choices[1] // Safe mode
-    }, ModuleSafeWalk::createChoices)
-
-    val zitterModes =
-        choices(
-            "ZitterMode",
-            ScaffoldZitterFeature.Off,
-            arrayOf(
-                ScaffoldZitterFeature.Off,
-                ScaffoldZitterFeature.Teleport,
-                ScaffoldZitterFeature.Smooth,
-            ),
-        )
-    private val timer by float("Timer", 1f, 0.01f..10f)
-
-    private val sameY by boolean("SameY", false)
-    private val jumpSlowdown by float("SlowdownOnJump", 0f, 0f..1f)
-
-    private var currentTarget: BlockPlacementTarget? = null
-
-    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
-    private val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
-
     init {
-        tree(SimulatePlacementAttempts)
-        tree(Swing)
-        tree(ScaffoldSlowFeature)
-        tree(ScaffoldSpeedLimiterFeature)
-        tree(ScaffoldDownFeature)
         tree(ScaffoldAutoJumpFeature)
-        tree(ScaffoldStabilizeMovementFeature)
         tree(ScaffoldBreezilyFeature)
     }
 
@@ -154,6 +119,37 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         it.choices[0] // None
     }) {
         arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown)
+    }
+
+    // SafeWalk feature - uses the SafeWalk module as a base
+    @Suppress("UnusedPrivateProperty")
+    private val safeWalkMode = choices("SafeWalk", {
+        it.choices[1] // Safe mode
+    }, ModuleSafeWalk::createChoices)
+
+    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val timer by float("Timer", 1f, 0.01f..10f)
+    private val sameY by boolean("SameY", false)
+
+    private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+
+    private var currentTarget: BlockPlacementTarget? = null
+
+    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
+    private val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
+
+    object Swing : ToggleableConfigurable(this, "Swing", true) {
+        val swingSilent by boolean("Silent", false);
+    }
+
+    init {
+        tree(SimulatePlacementAttempts)
+        tree(Swing)
+        tree(ScaffoldSlowFeature)
+        tree(ScaffoldSpeedLimiterFeature)
+        tree(ScaffoldDownFeature)
+        tree(ScaffoldStabilizeMovementFeature)
     }
 
     private var randomization = Random.nextDouble(-0.02, 0.02)
@@ -205,17 +201,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         randomization = Random.nextDouble(-0.01, 0.01)
         placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
-
-        // Slow down the player when jumping
-        if (jumpSlowdown != 0f) {
-            val velocity = player.velocity
-
-            player.setVelocity(
-                velocity.x / (1 + jumpSlowdown),
-                velocity.y,
-                velocity.z / (1 + jumpSlowdown)
-            )
-        }
     }
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
@@ -392,7 +377,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
         val hasBlockInOffHand = isValidBlock(player.offHandStack)
 
-        if (alwaysHoldBlock) {
+        if (AutoBlock.alwaysHoldBlock) {
             hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
         }
 
@@ -428,7 +413,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
         }
 
-        if (!alwaysHoldBlock) {
+        if (!AutoBlock.alwaysHoldBlock) {
             hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
         }
 
@@ -614,11 +599,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private fun handleSilentBlockSelection(hasBlockInMainHand: Boolean, hasBlockInOffHand: Boolean): Boolean {
         // Handle silent block selection
-        if (autoBlock && !hasBlockInMainHand && !hasBlockInOffHand) {
+        if (AutoBlock.enabled && !hasBlockInMainHand && !hasBlockInOffHand) {
             val bestMainHandSlot = findBestValidHotbarSlotForTarget()
 
             if (bestMainHandSlot != null) {
-                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, slotResetDelay)
+                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, AutoBlock.slotResetDelay)
 
                 return true
             } else {
@@ -639,7 +624,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val hasBlockInOffHand = isValidBlock(player.offHandStack)
 
         return hasBlockInMainHand || hasBlockInOffHand ||
-            (autoBlock && findBestValidHotbarSlotForTarget() != null)
+            (AutoBlock.enabled && findBestValidHotbarSlotForTarget() != null)
     }
 
     enum class AimTimingMode(override val choiceName: String) : NamedChoice {
