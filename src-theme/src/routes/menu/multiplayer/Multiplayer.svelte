@@ -7,11 +7,10 @@
     import Menu from "../common/Menu.svelte";
     import Search from "../common/Search.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
-    import {pop} from "svelte-spa-router";
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
     import {onMount} from "svelte";
-    import {getServers, connectToServer} from "../../../integration/rest";
+    import {connectToServer, getServers, openScreen} from "../../../integration/rest";
     import type {Server} from "../../../integration/types";
 
     let servers: Server[] = [];
@@ -52,7 +51,7 @@
         </ButtonContainer>
 
         <ButtonContainer>
-            <IconTextButton icon="exit" title="Back" on:click={pop}/>
+            <IconTextButton icon="exit" title="Back" on:click={() => openScreen("title")}/>
         </ButtonContainer>
     </BottomButtonWrapper>
 </Menu>

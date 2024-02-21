@@ -5,7 +5,6 @@
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
     import {browse, exitClient, openScreen} from "../../../integration/rest";
-    import {push} from "svelte-spa-router";
     import Menu from "../common/Menu.svelte";
     import {fly} from "svelte/transition";
     import {backIn} from "svelte/easing";
@@ -19,7 +18,7 @@
             </div>
             <div out:fly|global={{duration: 400, x: -500, delay: 100, easing: backIn}} in:fly|global={{duration: 400, x: -500, delay: 100}}>
                 <MainButton title="Multiplayer" icon="multiplayer" let:parentHovered
-                            on:click={() => push("/multiplayer")}>
+                            on:click={() => openScreen("multiplayer")}>
                     <ChildButton title="Realms" icon="realms" {parentHovered}
                                  on:click={() => openScreen("multiplayer_realms")}/>
                 </MainButton>

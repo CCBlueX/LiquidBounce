@@ -6,7 +6,8 @@
   "supports": [
     "clickgui",
     "hud",
-    "title"
+    "title",
+    "multiplayer"
   ],
   "overlays": [
     "inventory",
