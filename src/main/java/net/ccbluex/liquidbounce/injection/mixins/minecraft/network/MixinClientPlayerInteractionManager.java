@@ -134,8 +134,6 @@ public class MixinClientPlayerInteractionManager {
         EventManager.INSTANCE.callEvent(cancelEvent);
     }
 
-
-
     @Inject(method = "stopUsingItem", at = @At("HEAD"))
     private void stopUsingItem(PlayerEntity player, CallbackInfo callbackInfo) {
         ModuleAutoBow.onStopUsingItem();
