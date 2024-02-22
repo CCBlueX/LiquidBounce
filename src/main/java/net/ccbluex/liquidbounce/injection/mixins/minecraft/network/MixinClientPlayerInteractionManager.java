@@ -128,6 +128,7 @@ public class MixinClientPlayerInteractionManager {
         args.set(3, rotation.getYaw());
         args.set(4, rotation.getPitch());
     }
+
     @Inject(method = "interactItem", at = @At("RETURN"))
     private void hookItemInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         final PlayerInteractedItem cancelEvent = new PlayerInteractedItem(player, hand, cir.getReturnValue());
