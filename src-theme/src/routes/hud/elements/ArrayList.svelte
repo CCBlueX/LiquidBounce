@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import {onMount} from "svelte";
     import type { Module } from "../../../integration/types";
     import { getModules } from "../../../integration/rest";
     import { listen } from "../../../integration/ws";
@@ -14,12 +14,14 @@
             .filter((m) => m.enabled)
             .sort(
                 (a, b) =>
-                    getTextWidth(b.name, "Inter 14px") -
-                    getTextWidth(a.name, "Inter 14px"),
+                    getTextWidth(b.name, "500 14px Inter") -
+                    getTextWidth(a.name, "500 14px Inter"),
             );
     }
 
-    onMount(updateEnabledModules);
+    onMount(async () => {
+        await updateEnabledModules();
+    });
 
     listen("toggleModule", async () => {
         await updateEnabledModules();
