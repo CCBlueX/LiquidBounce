@@ -133,8 +133,8 @@ dependencies {
     // https://mvnrepository.com/artifact/io.netty/netty-codec-socks
     implementation 'io.netty:netty-codec-socks:4.1.82.Final'
 
-
     implementation 'com.vdurmont:semver4j:3.1.0'
+    implementation 'org.apache.tika:tika-core:2.9.1'
 
     // Test libraries
 
@@ -182,7 +182,12 @@ tasks.register('buildTheme', NpmTask) {
         println 'Successfully build theme'
     }
 
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
+    inputs.files(
+            'src-theme/package.json',
+            'src-theme/package-lock.json',
+            'src-theme/bundle.cjs',
+            'src-theme/rollup.config.js'
+    )
     inputs.dir("src-theme/src")
     outputs.dir('src-theme/public')
 }
@@ -196,7 +201,14 @@ tasks.register('bundleTheme', NodeTask) {
     }
 
     // Incremental stuff
-    inputs.files('src-theme/package.json', 'src-theme/package-lock.json', 'src-theme/bundle.cjs', 'src-theme/rollup.config.js')
+    inputs.files(
+            'src-theme/package.json',
+            'src-theme/package-lock.json',
+            'src-theme/bundle.cjs',
+            'src-theme/rollup.config.js'
+    )
+    inputs.dir("src-theme/src")
+    inputs.dir("src-theme/public")
     outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 
@@ -278,15 +290,16 @@ shadowJar {
         include(dependency('com.github.CCBlueX:DiscordIPC'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('net.fabricmc:tiny-mappings-parser'))
-        include(dependency('org.graalvm.sdk:graal-sdk:23.0.3'))
-        include(dependency('org.graalvm.truffle:truffle-api:23.0.3'))
-        include(dependency('org.graalvm.js:js:23.0.3'))
+        include(dependency('org.graalvm.sdk:graal-sdk'))
+        include(dependency('org.graalvm.truffle:truffle-api'))
+        include(dependency('org.graalvm.js:js'))
         include(dependency('io.netty:netty-codec'))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
         include(dependency('io.netty:netty-codec-socks'))
         include(dependency('org.apache.commons:commons-exec'))
-        include(dependency('com.vdurmont:semver4j:3.1.0'))
+        include(dependency('org.apache.tika:tika-core'))
+        include(dependency('com.vdurmont:semver4j'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
         include(dependency('net.lenni0451:Reflect'))

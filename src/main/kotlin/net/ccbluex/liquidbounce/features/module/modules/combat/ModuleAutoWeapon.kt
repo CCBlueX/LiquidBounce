@@ -45,9 +45,7 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
     }
 
     // Preferred type of weapon e.g. a shovel (ANY)
-    private val preferredWeapon by enumChoice(
-        "PreferredWeapon", ANY, PreferredWeapon.values()
-    )
+    private val preferredWeapon by enumChoice("PreferredWeapon", ANY)
 
     // Ignore items with low durability
     private val ignoreDurability by boolean("IgnoreDurability", false)

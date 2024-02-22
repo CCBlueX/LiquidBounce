@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.LivingEntity
@@ -59,8 +59,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     private object PacketCrit : Choice("Packet") {
 
-        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS, Mode.values())
-        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+        private val mode by enumChoice("Mode", Mode.NO_CHEAT_PLUS)
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
         private object WhenSprinting : ToggleableConfigurable(ModuleCriticals, "WhenSprinting", true) {
             val unSprint by boolean("UnSprint", false)
@@ -138,6 +138,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val checkKillaura by boolean("CheckKillaura", false)
         val checkAutoClicker by boolean("CheckAutoClicker", false)
+        val canBeSeen by boolean("CanBeSeen", true)
 
         /**
          * Should the upwards velocity be set to the `height`-value on next jump?
@@ -160,11 +161,12 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            world.findEnemy(0f..range) ?: return@handler
+            val enemies = world.findEnemies(0f..range)
+                .filter { (entity, _) -> !canBeSeen || player.canSee(entity) }
 
             // Change the jump motion only if the jump is a normal jump (small jumps, i.e. honey blocks
             // are not affected) and currently.
-            if (player.isOnGround) {
+            if (enemies.isNotEmpty() && player.isOnGround) {
                 it.jumping = true
                 adjustNextJump = true
             }

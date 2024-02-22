@@ -47,7 +47,7 @@ import kotlin.math.max
 
 object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
 
-    private val mode by enumChoice("Mode", Mode.BLINK_BACK, Mode.values())
+    private val mode by enumChoice("Mode", Mode.BLINK_BACK)
 
     private val maximumFallDamage by float("MaximumFallDamage", 3F, 0F..40F)
 
@@ -66,7 +66,7 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
 
     val movementInputEvent = handler<MovementInputEvent> {
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput(it.directionalInput, it.jumping, player.isSprinting, it.sneaking)
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
         )
 
         // Tick three times to make sure we are not falling

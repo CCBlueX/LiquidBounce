@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -32,7 +32,6 @@ import net.minecraft.screen.slot.SlotActionType
  *
  * Automatically throws away useless items and sorts them.
  */
-
 object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
 
@@ -64,16 +63,16 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     val isGreedy by boolean("Greedy", true)
 
-    val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD, ItemSortChoice.entries.toTypedArray())
-    val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.WEAPON, ItemSortChoice.entries.toTypedArray())
-    val slotItem2 by enumChoice("SlotItem-2", ItemSortChoice.BOW, ItemSortChoice.entries.toTypedArray())
-    val slotItem3 by enumChoice("SlotItem-3", ItemSortChoice.PICKAXE, ItemSortChoice.entries.toTypedArray())
-    val slotItem4 by enumChoice("SlotItem-4", ItemSortChoice.AXE, ItemSortChoice.entries.toTypedArray())
-    val slotItem5 by enumChoice("SlotItem-5", ItemSortChoice.NONE, ItemSortChoice.entries.toTypedArray())
-    val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.POTION, ItemSortChoice.entries.toTypedArray())
-    val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD, ItemSortChoice.entries.toTypedArray())
-    val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.entries.toTypedArray())
-    val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.entries.toTypedArray())
+    val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD)
+    val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.WEAPON)
+    val slotItem2 by enumChoice("SlotItem-2", ItemSortChoice.BOW)
+    val slotItem3 by enumChoice("SlotItem-3", ItemSortChoice.PICKAXE)
+    val slotItem4 by enumChoice("SlotItem-4", ItemSortChoice.AXE)
+    val slotItem5 by enumChoice("SlotItem-5", ItemSortChoice.NONE)
+    val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.POTION)
+    val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD)
+    val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK)
+    val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK)
 
     var hasClickedBefore = false
 

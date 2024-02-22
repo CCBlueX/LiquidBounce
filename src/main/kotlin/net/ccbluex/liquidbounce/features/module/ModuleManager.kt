@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
@@ -44,17 +46,16 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
+import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
@@ -108,11 +109,11 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleBacktrack,
             ModuleSwordBlock,
             ModuleAutoShoot,
+            ModuleKeepSprint,
 
             // Exploit
             ModuleAbortBreaking,
             ModuleAntiReducedDebugInfo,
-            ModuleAntiVanish,
             ModuleAntiHunger,
             ModuleClip,
             ModuleDamage,
@@ -132,6 +133,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleVehicleOneHit,
             ModuleServerCrasher,
             ModuleSwingFix,
+            ModuleClickTp,
 
             // Fun
             ModuleDankBobbing,
@@ -207,7 +209,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSmartEat,
 
             // Render
-            ModuleAnimation,
+            ModuleAnimations,
             ModuleAntiBlind,
             ModuleBlockESP,
             ModuleBreadcrumbs,
@@ -318,6 +320,9 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     @JvmName("getCategories")
     @ScriptApi
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+
+    @JvmName("getModules")
+    fun getModules() = modules
 
     @JvmName("getModuleByName")
     @ScriptApi

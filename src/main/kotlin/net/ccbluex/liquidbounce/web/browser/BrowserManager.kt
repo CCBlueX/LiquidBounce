@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 object BrowserManager : Configurable("browser") {
 
     private val DEFAULT_BROWSER_TYPE = BrowserType.JCEF
-    private val browserType by enumChoice("type", DEFAULT_BROWSER_TYPE, BrowserType.values())
+    private val browserType by enumChoice("type", DEFAULT_BROWSER_TYPE)
 
     /**
      * A browser exception. Used to indicate that something went wrong while using the browser.

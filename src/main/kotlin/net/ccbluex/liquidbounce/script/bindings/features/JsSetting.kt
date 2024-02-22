@@ -32,34 +32,68 @@ object JsSetting {
     fun boolean(name: String, default: Boolean) = value(name, default, ValueType.BOOLEAN)
 
     @JvmName("float")
-    fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.FLOAT)
+    fun float(name: String, default: Double, range: Array<Double>, suffix: String = ""): RangedValue<Float> {
+        require(range.size == 2)
+        return rangedValue(
+            name,
+            default.toFloat(),
+            range.first().toFloat()..range.last().toFloat(),
+            suffix,
+            ValueType.FLOAT
+        )
+    }
 
     @JvmName("floatRange")
     fun floatRange(
         name: String,
-        default: ClosedFloatingPointRange<Float>,
-        range: ClosedFloatingPointRange<Float>,
+        default: Array<Double>,
+        range: Array<Double>,
         suffix: String = ""
-    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE)
+    ): RangedValue<ClosedFloatingPointRange<Float>> {
+        require(default.size == 2)
+        require(range.size == 2)
+        return rangedValue(
+            name,
+            default.first().toFloat()..default.last().toFloat(),
+            range.first().toFloat()..range.last().toFloat(),
+            suffix,
+            ValueType.FLOAT_RANGE
+        )
+    }
 
     @JvmName("int")
-    fun int(name: String, default: Int, range: IntRange, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.INT)
+    fun int(name: String, default: Int, range: Array<Int>, suffix: String = ""): RangedValue<Int> {
+        require(range.size == 2)
+        return rangedValue(name, default, range.first()..range.last(), suffix, ValueType.INT)
+    }
+
+    @JvmName("intRange")
+    fun intRange(
+        name: String,
+        default: Array<Int>,
+        range: Array<Int>,
+        suffix: String = ""
+    ): RangedValue<IntRange> {
+        require(default.size == 2)
+        require(range.size == 2)
+        return rangedValue(
+            name,
+            default.first()..default.last(),
+            range.first()..range.last(),
+            suffix,
+            ValueType.INT_RANGE
+        )
+    }
 
     @JvmName("key")
     fun key(name: String, default: Int) = value(name, default, ValueType.KEY)
-
-    @JvmName("intRange")
-    fun intRange(name: String, default: IntRange, range: IntRange, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.INT_RANGE)
 
     @JvmName("text")
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
     @JvmName("textArray")
-    fun textArray(name: String, default: MutableList<String>) =
-        value(name, default, ValueType.TEXT_ARRAY, ListValueType.String)
+    fun textArray(name: String, default: Array<String>) =
+        value(name, default.toMutableList(), ValueType.TEXT_ARRAY, ListValueType.String)
 
     private fun <T : Any> value(
         name: String,
@@ -68,8 +102,10 @@ object JsSetting {
         listType: ListValueType = ListValueType.None
     ) = Value(name, default, valueType, listType)
 
-    private fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>, suffix: String,
-                                      valueType: ValueType) =
+    private fun <T : Any> rangedValue(
+        name: String, default: T, range: ClosedRange<*>, suffix: String,
+        valueType: ValueType
+    ) =
         RangedValue(name, default, range, suffix, valueType)
 
 }

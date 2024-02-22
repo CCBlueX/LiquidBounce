@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
 import org.graalvm.polyglot.Source
+import org.graalvm.polyglot.Value
 import org.graalvm.polyglot.io.IOAccess
 import java.io.File
 import java.util.function.Function
@@ -143,7 +144,7 @@ class Script(val scriptFile: File) {
      * @param command From the command builder.
      */
     @Suppress("unused")
-    fun registerCommand(commandObject: Map<String, Any>) {
+    fun registerCommand(commandObject: Value) {
         val commandBuilder = JsCommandBuilder(commandObject)
         registeredCommands += commandBuilder.build()
     }

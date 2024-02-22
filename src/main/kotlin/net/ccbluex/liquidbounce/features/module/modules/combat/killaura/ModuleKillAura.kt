@@ -35,12 +35,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
@@ -56,7 +56,6 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -86,13 +85,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(40f..60f))
-    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL, AimTimingMode.values())
+    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
 
     // Target rendering
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     // Predict
     private val pointTracker = tree(PointTracker())
+
+    private val onClick by boolean("OnClick", false)
 
     init {
         tree(FightBot)
@@ -109,7 +110,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         tree(TickBase)
     }
 
-    internal val raycast by enumChoice("Raycast", TRACE_ALL, values())
+    internal val raycast by enumChoice("Raycast", TRACE_ALL)
 
     private val failRate by int("FailRate", 0, 0..100, "%")
 
@@ -141,6 +142,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    private val canTargetEnemies
+        get() = !onClick || mc.options.attackKey.isPressed
+
     private var renderTarget: Entity? = null
 
     val renderHandler = handler<WorldRenderEvent> { event ->
@@ -151,7 +155,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
-        val target = renderTarget ?: return
+        val target = targetTracker.lockedOnTarget ?: return
+
         renderEnvironmentForWorld(matrixStack) {
             targetRenderer.render(this, target, partialTicks)
         }
@@ -162,7 +167,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val isInInventoryScreen =
             InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
-        if ((isInInventoryScreen && !ignoreOpenInventory) || player.isSpectator || player.isDead) {
+        val shouldCleanUpTracker = player.isSpectator || player.isDead || !canTargetEnemies
+
+        if (isInInventoryScreen && !ignoreOpenInventory || shouldCleanUpTracker) {
             // Cleanup current target tracker
             targetTracker.cleanup()
             return@handler
@@ -185,14 +192,19 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@repeatable
         }
 
-        if (target == null || target !is LivingEntity) {
+        if (target == null) {
             AutoBlock.stopBlocking()
 
             // Deal with fake swing when there is no target
-            if (FailSwing.enabled) {
+            if (FailSwing.enabled && canTargetEnemies) {
                 waitTicks(AutoBlock.tickOff)
                 dealWithFakeSwing(null)
             }
+            return@repeatable
+        }
+
+        // Check if the module should (not) continue after the blocking state is updated
+        if (!canTargetEnemies) {
             return@repeatable
         }
 
@@ -215,15 +227,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // Determine if we should attack the target or someone else
         val rotation = if (aimTimingMode == AimTimingMode.ON_TICK) {
-            val rangeSquared = range * range
-            val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
-                ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
-            } else {
-                rangeSquared.toDouble()
-            }
-
-            getSpot(target, scanRange,
-                PointTracker.AimSituation.FOR_NOW)?.rotation ?: RotationManager.serverRotation
+            getSpot(target, range.toDouble(), PointTracker.AimSituation.FOR_NOW)?.rotation
+                ?: RotationManager.serverRotation
         } else {
             RotationManager.serverRotation
         }
@@ -240,7 +245,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }) ?: target
 
             // Swap enemy if there is a better enemy (closer to the player crosshair)
-            if (chosenEntity.shouldBeAttacked() && chosenEntity != target) {
+            if (chosenEntity is LivingEntity && chosenEntity.shouldBeAttacked() && chosenEntity != target) {
                 targetTracker.lock(chosenEntity)
             }
         } else {
@@ -260,7 +265,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
         ModuleDebug.debugParameter(ModuleKillAura, "Target", chosenEntity.nameForScoreboard)
 
-        if(!isFacingEnemy) {
+        if (!isFacingEnemy) {
             dealWithFakeSwing(chosenEntity)
             return
         }
@@ -310,38 +315,46 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      * Update enemy on target tracker
      */
     private fun updateEnemySelection() {
-        val rangeSquared = range * range
+        targetTracker.validateLock { it.shouldBeAttacked() && it.boxedDistanceTo(player) <= range }
 
-        targetTracker.validateLock { it.shouldBeAttacked() && it.squaredBoxedDistanceTo(player) <= rangeSquared }
+        // Update target tracker, since we want to access
+        // the maximumDistance in the next step
+        val enemies = targetTracker.enemies()
 
-        val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
-            ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
+        // Maximum range can be higher than the normal range, since we want to scan for enemies
+        // which are in our [scanExtraRange] as well
+        val maximumRange = if (targetTracker.maximumDistance > range) {
+            range + scanExtraRange
         } else {
-            rangeSquared.toDouble()
+            range
         }
 
-        renderTarget = null
+        // Find the newest target in range
+        updateTargetWithRange(enemies, maximumRange)
+    }
 
-        for (target in targetTracker.enemies()) {
-            if (target.squaredBoxedDistanceTo(player) > scanRange) {
+    private fun updateTargetWithRange(enemies: Iterable<LivingEntity>, range: Float) {
+        for (target in enemies) {
+            if (target.boxedDistanceTo(player) > range) {
                 continue
             }
 
             val situation = when {
                 clickScheduler.goingToClick ||
                     clickScheduler.isClickOnNextTick(1) -> PointTracker.AimSituation.FOR_NEXT_TICK
+
                 else -> PointTracker.AimSituation.FOR_THE_FUTURE
             }
-            val spot = getSpot(target, scanRange, situation) ?: continue
-
-            renderTarget = target
+            ModuleDebug.debugParameter(ModuleKillAura, "AimSituation", situation)
+            val spot = getSpot(target, range.toDouble(), situation) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
 
             // aim at target
             val ticks = rotations.howLongItTakes(spot.rotation)
-            if (aimTimingMode == AimTimingMode.FLICK && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
+            if (aimTimingMode == AimTimingMode.FLICK
+                && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
                 break
             }
 
@@ -355,18 +368,18 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
-            break
+            return
         }
 
         // Choose enemy for fight bot
-        if (FightBot.enabled && targetTracker.lockedOnTarget == null) {
+        if (FightBot.enabled) {
             // Because target tracker enemies are sorted by priority, we can just take the first one
             val targetByPriority = targetTracker.enemies().firstOrNull() ?: return
 
             val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
             // lock on target tracker
             RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, silent = false),
+                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, changeLook = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -374,20 +387,41 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
-    private fun getSpot(entity: LivingEntity, scanRange: Double, situation: PointTracker.AimSituation): VecRotation? {
+    /**
+     * Get the best spot to attack the entity
+     *
+     * @param entity The entity to attack
+     * @param range The range to attack the entity (NOT SQUARED)
+     * @param situation The aim situation we are in
+     *  - [PointTracker.AimSituation.FOR_NOW] if we are going to attack the entity on the current tick (ON_TICK)
+     *  - [PointTracker.AimSituation.FOR_THE_FUTURE] if we are going to attack the entity in the future
+     *  - [PointTracker.AimSituation.FOR_NEXT_TICK] if we are going to attack the entity on the next tick
+     *
+     *  @return The best spot to attack the entity
+     */
+    private fun getSpot(entity: LivingEntity, range: Double, situation: PointTracker.AimSituation): VecRotation? {
         val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(
             entity,
             situation
         )
+
+        ModuleDebug.debugGeometry(this, "Box",
+            ModuleDebug.DebuggedBox(box, Color4b.RED.alpha(60)))
+        ModuleDebug.debugGeometry(this, "CutOffBox",
+            ModuleDebug.DebuggedBox(cutOffBox, Color4b.GREEN.alpha(90)))
+
         val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
         // find best spot
         val spot = raytraceBox(
-            eyes, cutOffBox, range = sqrt(scanRange),
+            eyes, cutOffBox,
+            // Since [range] is squared, we need to square root
+            range = range,
             wallsRange = wallRange.toDouble(),
             rotationPreference = rotationPreference
         ) ?: raytraceBox(
-            eyes, box, range = sqrt(scanRange),
+            eyes, box,
+            range = range,
             wallsRange = wallRange.toDouble(),
             rotationPreference = rotationPreference
         ) ?: return null

@@ -44,7 +44,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
     private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
     private val doNotCauseHunger by boolean("DoNotCauseHunger", false)
 
-    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     val repeatable = repeatable {
         if (player.abilities.creativeMode || player.isDead || player.health > health) {

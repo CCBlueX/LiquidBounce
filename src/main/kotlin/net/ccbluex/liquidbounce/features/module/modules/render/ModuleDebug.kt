@@ -46,9 +46,14 @@ import java.awt.Color
 
 object ModuleDebug : Module("Debug", Category.RENDER) {
 
+    private val parameters by boolean("Parameters", true)
+    private val geometry by boolean("Geometry", true)
+
     object RenderSimulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
+
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
         private val simLines = mutableListOf<Vec3>()
+
         val tickRep =
             handler<MovementInputEvent> { event ->
                 // We aren't actually where we are because of blink.
@@ -62,12 +67,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
                 val world = world
 
                 val input =
-                    SimulatedPlayer.SimulatedPlayerInput(
-                        event.directionalInput,
-                        player.input.jumping,
-                        player.isSprinting,
-                        player.isSneaking
-                    )
+                    SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
@@ -76,6 +76,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
                     simLines.add(Vec3(simulatedPlayer.pos))
                 }
             }
+
         val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(Color4b.BLUE) {
@@ -83,6 +84,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
                 }
             }
         }
+
     }
     init {
         tree(RenderSimulatedPlayer)
@@ -92,6 +94,10 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
+
+        if (!geometry) {
+            return@handler
+        }
 
         renderEnvironmentForWorld(matrixStack) {
             debuggedGeometry.values.forEach {
@@ -103,7 +109,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     val screenRenderHandler = handler<OverlayRenderEvent> { event ->
         val context = event.context
 
-        if (mc.options.playerListKey.isPressed) {
+        if (mc.options.playerListKey.isPressed || !parameters) {
             return@handler
         }
 

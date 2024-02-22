@@ -10,7 +10,7 @@ import Inventory from "./routes/inventory/Inventory.svelte";
 import Disconnected from "./routes/disconnected/Disconnected.svelte";
 
 export const routes = {
-    '/': Splashscreen,
+    '/splash': Splashscreen,
     '/title': Title,
     '/hud': Hud,
     '/clickgui': ClickGui,

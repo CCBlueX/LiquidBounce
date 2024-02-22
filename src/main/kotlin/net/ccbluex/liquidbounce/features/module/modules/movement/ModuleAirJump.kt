@@ -30,7 +30,7 @@ import net.minecraft.util.shape.VoxelShapes
 
 object ModuleAirJump : Module("AirJump", Category.MOVEMENT) {
 
-    val mode by enumChoice("Mode", Mode.JUMP_FREELY, Mode.entries.toTypedArray())
+    val mode by enumChoice("Mode", Mode.JUMP_FREELY)
 
     private var doubleJump = true
 

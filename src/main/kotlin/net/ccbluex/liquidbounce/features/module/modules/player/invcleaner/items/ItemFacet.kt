@@ -39,5 +39,10 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
         return false
     }
 
+    /**
+     * Should this item be kept, even if it is not allocated to any slot?
+     */
+    open fun shouldKeep(): Boolean = false
+
     override fun compareTo(other: ItemFacet): Int = compareValueByCondition(this, other, ItemFacet::isInHotbar)
 }

@@ -26,21 +26,16 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.acknowledgement
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.browserIsReady
-import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.updateIntegrationBrowser
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
 
 object AcknowledgementHandler : Listenable {
 
     val desyncCheck = handler<GameTickEvent> {
         if (browserIsReady && mc.currentScreen !is MCEFDownloaderMenu && acknowledgement.isDesynced) {
-            logger.warn("Integration desync detected. ${acknowledgement}: " +
-                "${ThemeManager.integrationUrl} -> ${clientJcef?.getUrl()}")
-            chat("Integration desync detected. It should now be fixed.")
+            chat("UI desync detected, it should now be fixed!")
             acknowledgement.since.reset()
             updateIntegrationBrowser()
         }

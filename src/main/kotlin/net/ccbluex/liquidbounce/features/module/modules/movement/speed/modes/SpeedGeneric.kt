@@ -41,18 +41,21 @@ object SpeedSpeedYPort : Choice("YPort") {
             player.strafe(speed = 0.4)
             player.upwards(0.42f)
             waitTicks(1)
-            player.downwards(-1f)
+            player.downwards(1f)
         }
     }
 
 }
 
-object SpeedLegitHop : Choice("LegitHop") {
+object SpeedLegitHop : SpeedBHopBase("LegitHop")
+
+open class SpeedBHopBase(name: String) : Choice(name) {
 
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
 
     private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
+
     // Avoids running into edges which loses speed
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 

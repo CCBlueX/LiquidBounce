@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.script.bindings.features.JsCommandBuilder
 import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.RotationAxis
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.graalvm.polyglot.Value
@@ -33,7 +33,7 @@ import org.graalvm.polyglot.Value
  */
 object JsContextProvider {
 
-    internal fun setupUsefulContext(context: Value) = context.apply {
+    internal fun setupUsefulContext(bindings: Value) = bindings.apply {
         // Class bindings
         // -> Client API
         putMember("Setting", JsSetting)
@@ -44,19 +44,21 @@ object JsContextProvider {
         putMember("MathHelper", MathHelper::class.java)
         putMember("BlockPos", BlockPos::class.java)
         putMember("Hand", Hand::class.java)
+        putMember("RotationAxis", RotationAxis::class.java)
 
         // Variable bindings
         putMember("mc", mc)
-        putMember("client", JsClient)
+        putMember("Client", JsClient)
 
         // Register utilities
-        putMember("rotationUtil", JsRotationUtil)
-        putMember("itemUtil", JsItemUtil)
-        putMember("networkUtil", JsNetworkUtil)
-        putMember("interactionUtil", JsInteractionUtil)
-        putMember("blockUtil", JsBlockUtil)
-        putMember("movementUtil", JsMovementUtil)
-        putMember("reflectionUtil", JsReflectionUtil)
+        putMember("RotationUtil", JsRotationUtil)
+        putMember("ItemUtil", JsItemUtil)
+        putMember("NetworkUtil", JsNetworkUtil)
+        putMember("InteractionUtil", JsInteractionUtil)
+        putMember("BlockUtil", JsBlockUtil)
+        putMember("MovementUtil", JsMovementUtil)
+        putMember("ReflectionUtil", JsReflectionUtil)
+        putMember("ParameterValidator", JsParameterValidator(bindings))
     }
 
 }

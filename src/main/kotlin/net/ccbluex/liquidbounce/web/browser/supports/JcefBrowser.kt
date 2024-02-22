@@ -23,13 +23,11 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.MCEFDownloader
-import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.web.browser.BrowserType
 import net.ccbluex.liquidbounce.web.browser.supports.tab.JcefTab
-import net.minecraft.client.gui.screen.TitleScreen
 import kotlin.concurrent.thread
 
 /**
@@ -59,8 +57,10 @@ class JcefBrowser : IBrowser, Listenable {
             val downloader = MCEFDownloader.newDownloader()
             if (downloader.requiresDownload(librariesFolder)) {
                 thread(name = "mcef-downloader") {
-                    downloader.downloadJcef(librariesFolder)
-                    RenderSystem.recordRenderCall(whenAvailable)
+                    runCatching {
+                        downloader.downloadJcef(librariesFolder)
+                        RenderSystem.recordRenderCall(whenAvailable)
+                    }.onFailure(ErrorHandler::fatal)
                 }
             } else {
                 whenAvailable()

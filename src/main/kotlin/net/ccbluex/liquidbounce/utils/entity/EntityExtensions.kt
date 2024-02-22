@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -47,14 +48,18 @@ val ClientPlayerEntity.moving
 fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
     val hitbox =
         this.dimensions
-        .getBoxAt(position)
-        .expand(-0.05, 0.0, -0.05)
-        .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
+            .getBoxAt(position)
+            .expand(-0.05, 0.0, -0.05)
+            .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
 
     return world.isSpaceEmpty(this, hitbox)
 }
 
-fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distance: Double = 0.1): Boolean {
+fun ClientPlayerEntity.isCloseToEdge(
+    directionalInput: DirectionalInput,
+    distance: Double = 0.1,
+    pos: Vec3d = this.pos
+): Boolean {
     val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
 
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
@@ -66,6 +71,8 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
         simulatedInput
     )
 
+    simulatedPlayer.pos = pos
+
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.velocity
@@ -76,7 +83,7 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
         Vec3d(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
     }
 
-    val from = this.pos + Vec3d(0.0, -0.1, 0.0)
+    val from = pos + Vec3d(0.0, -0.1, 0.0)
     val to = from + direction.multiply(distance)
 
     if (findEdgeCollision(from, to) != null) {
@@ -138,7 +145,7 @@ fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
 }
 
 fun ClientPlayerEntity.downwards(motion: Float) {
-    velocity.y = motion.toDouble()
+    velocity.y = -motion.toDouble()
     velocityDirty = true
 }
 
@@ -155,7 +162,14 @@ fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpe
 val Vec3d.sqrtSpeed: Double
     get() = sqrt(x * x + z * z)
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) {
+fun Vec3d.strafe(yaw: Float = player.directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0,
+                 keyboardCheck: Boolean = false): Vec3d {
+    if (keyboardCheck && !player.pressingMovementButton) {
+        x = 0.0
+        z = 0.0
+        return this
+    }
+
     val prevX = x * (1.0 - strength)
     val prevZ = z * (1.0 - strength)
     val useSpeed = speed * strength
@@ -163,18 +177,7 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) 
     val angle = Math.toRadians(yaw.toDouble())
     x = (-sin(angle) * useSpeed) + prevX
     z = (cos(angle) * useSpeed) + prevZ
-}
-
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, keyboardCheck: Boolean = false) {
-    val player = mc.player ?: return
-
-    if (keyboardCheck && !player.pressingMovementButton) {
-        x = 0.0
-        z = 0.0
-        return
-    }
-
-    this.strafe(yaw, speed, strength)
+    return this
 }
 
 val Entity.eyes: Vec3d
@@ -271,11 +274,11 @@ fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
     val z = nearestPointInBlock.z
 
     val nearestPointOnSide =
-        when(side) {
+        when (side) {
             Direction.DOWN -> Vec3d(x, box.minY, z)
             Direction.UP -> Vec3d(x, box.maxY, z)
             Direction.NORTH -> Vec3d(x, y, box.minZ)
-            Direction.SOUTH -> Vec3d(x, y,  box.maxZ)
+            Direction.SOUTH -> Vec3d(x, y, box.maxZ)
             Direction.WEST -> Vec3d(box.maxX, y, z)
             Direction.EAST -> Vec3d(box.minX, y, z)
         }
