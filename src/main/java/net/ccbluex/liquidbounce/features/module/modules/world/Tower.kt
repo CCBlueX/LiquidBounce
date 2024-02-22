@@ -78,6 +78,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
     // ConstantMotion
     private val constantMotion by FloatValue("ConstantMotion", 0.42f, 0.1f..1f) { mode == "ConstantMotion" }
     private val constantMotionJumpGround by FloatValue("ConstantMotionJumpGround", 0.79f, 0.76f..1f) { mode == "ConstantMotion" }
+    private val constantMotionJumpPacket by BoolValue("JumpPacket", true) { mode == "ConstantMotion" }
 
     // Teleport
     private val teleportHeight by FloatValue("TeleportHeight", 1.15f, 0.1f..5f) { mode == "Teleport" }
@@ -216,12 +217,16 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O, gameDetecti
 
             "constantmotion" -> {
                 if (thePlayer.onGround) {
-                    fakeJump()
+		    if (constantMotionJumpPacket) {
+			fakeJump()
+		    }
                     jumpGround = thePlayer.posY
                     thePlayer.motionY = constantMotion.toDouble()
                 }
                 if (thePlayer.posY > jumpGround + constantMotionJumpGround) {
-                    fakeJump()
+                    if (constantMotionJumpPacket) {
+			fakeJump()
+		    }
                     thePlayer.setPosition(
                         thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ
                     ) // TODO: toInt() required?
