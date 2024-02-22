@@ -32,29 +32,29 @@
         await push(`/${name}`);
     }
 
-    listenAlways("virtualScreen", async (event: any) => {
-        console.log(`[Router] Virtual screen change to ${event.screenName}`)
-        const action = event.action;
-
-        switch (action) {
-            case "close":
-                await changeRoute("none");
-                break;
-            case "open":
-                const screenName = event.screenName;
-                if (screenName) {
-                    await changeRoute(screenName);
-                }
-                break;
-        }
-    });
-
     onMount(async () => {
         await insertPersistentData();
 
         if (isStatic) {
             return;
         }
+
+        listenAlways("virtualScreen", async (event: any) => {
+            console.log(`[Router] Virtual screen change to ${event.screenName}`)
+            const action = event.action;
+
+            switch (action) {
+                case "close":
+                    await changeRoute("none");
+                    break;
+                case "open":
+                    const screenName = event.screenName;
+                    if (screenName) {
+                        await changeRoute(screenName);
+                    }
+                    break;
+            }
+        });
 
         const virtualScreen = await getVirtualScreen();
         if (virtualScreen.name) {
