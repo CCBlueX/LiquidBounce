@@ -1,16 +1,13 @@
 <script lang="ts">
-    import {onMount} from "svelte";
     import Header from "../header/Header.svelte";
 
     const transitionDuration = 800; // TODO: suboptimal
 
     let ready = false;
 
-    onMount(() => {
-        setTimeout(() => {
-            ready = true;
-        }, transitionDuration)
-    })
+    setTimeout(() => {
+        ready = true;
+    }, transitionDuration);
 </script>
 
 <div class="menu">

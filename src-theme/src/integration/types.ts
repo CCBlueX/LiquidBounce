@@ -193,11 +193,14 @@ export interface Session {
     uuid: string;
 }
 
-// TODO: players, playerList
 export interface Server {
     address: string;
     icon: string;
-    label: string;
+    label: TextComponent | string;
+    players: {
+        max: number;
+        online: number;
+    };
     name: string;
     online: boolean;
     playerCountLabel: string;
@@ -207,4 +210,17 @@ export interface Server {
 
 export interface ServerPingedEvent {
     server: Server;
+}
+
+export interface TextComponent {
+    type?: string;
+    extra?: (TextComponent | string)[];
+    color: string;
+    bold?: boolean;
+    italic?: boolean;
+    underlined?: boolean;
+    strikethrough?: boolean;
+    obfuscated?: boolean;
+    font?: string;
+    text: string;
 }

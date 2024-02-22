@@ -1,23 +1,28 @@
 <script lang="ts">
+    import {createEventDispatcher} from "svelte";
+
     export let image: string;
     export let imageText: string | null = null;
     export let imageTextBackgroundColor: string | null = null;
     export let title: string;
-    export let titleTag: string | null = null;
-    export let subtitle: string;
 
+    const dispatch = createEventDispatcher();
 </script>
 
-<div class="menu-list-item">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="menu-list-item" on:dblclick={() => dispatch("doubleClick")}>
     <div class="image">
         <img src={image} alt="preview">
         <span class="text" class:visible={imageText !== null && imageTextBackgroundColor !== null} style="background-color: {imageTextBackgroundColor};">{imageText}</span>
     </div>
     <div class="title">
         <span class="text">{title}</span>
-        <span class="tag" class:visible={titleTag !== null}>{titleTag}</span>
+        <slot name="tag" />
     </div>
-    <div class="subtitle">{subtitle}</div>
+    <div class="subtitle">
+        <slot name="subtitle"/>
+    </div>
     <div class="buttons">
         <div class="active">
             <slot name="active-visible"/>
@@ -49,11 +54,6 @@
 
       .subtitle {
         color: $menu-text-color;
-      }
-
-      .title .tag {
-        background-color: $menu-text-color;
-        color: $accent-color;
       }
 
       .buttons .active {
@@ -100,21 +100,6 @@
       color: $menu-text-color;
       font-weight: 600;
     }
-
-    .tag {
-      background-color: $accent-color;
-      color: $menu-text-color;
-      font-size: 12px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      margin-left: 10px;
-      display: none;
-      transition: ease color .2s, ease background-color .2s;
-
-      &.visible {
-        display: block;
-      }
-    }
   }
 
   .subtitle {
@@ -122,6 +107,7 @@
     font-size: 18px;
     color: $menu-text-dimmed-color;
     transition: ease color .2s;
+    align-self: flex-start;
   }
 
   .buttons {
@@ -129,6 +115,7 @@
     display: flex;
 
     .active {
+      margin-right: 20px;
       opacity: 0;
       transition: ease opacity .2s;
     }

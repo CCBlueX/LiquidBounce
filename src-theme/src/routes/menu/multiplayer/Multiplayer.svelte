@@ -13,11 +13,13 @@
     import {connectToServer, getServers, openScreen} from "../../../integration/rest";
     import type {Server, ServerPingedEvent} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
+    import TextComponent from "../common/TextComponent.svelte";
+    import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
 
     let servers: Server[] = [];
 
     onMount(async () => {
-       servers = await getServers();
+        servers = await getServers();
     });
 
     listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
@@ -39,16 +41,25 @@
     </OptionBar>
 
     <MenuList>
-        {#each servers as {name, icon, address}}
-            <MenuListItem imageText="15ms" imageTextBackgroundColor="#4DAC68" image="data:image/png;base64,{icon}" titleTag="30534 Players" title={name} subtitle="Not implemented">
-                <div slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" />
-                    <MenuListItemButton title="Favorite" icon="star" />
-                    <MenuListItemButton title="Edit" icon="pen-2" />
-                </div>
-                <div slot="always-visible">
-                    <MenuListItemButton title="Join" icon="play" on:click={() => connectToServer(address)} />
-                </div>
+        {#each servers as {name, icon, address, label, players, version}}
+            <MenuListItem imageText="15ms" imageTextBackgroundColor="#4DAC68" image="data:image/png;base64,{icon}"
+                          title={name} on:doubleClick={() => connectToServer(address)}>
+                <TextComponent slot="subtitle" textComponent={label}/>
+
+                <svelte:fragment slot="tag">
+                    <MenuListItemTag text="{players.online}/{players.max} Players"/>
+                    <MenuListItemTag text={version}/>
+                </svelte:fragment>
+
+                <svelte:fragment slot="active-visible">
+                    <MenuListItemButton title="Delete" icon="trash"/>
+                    <MenuListItemButton title="Favorite" icon="star"/>
+                    <MenuListItemButton title="Edit" icon="pen-2"/>
+                </svelte:fragment>
+
+                <svelte:fragment slot="always-visible">
+                    <MenuListItemButton title="Join" icon="play" on:click={() => connectToServer(address)}/>
+                </svelte:fragment>
             </MenuListItem>
         {/each}
     </MenuList>
