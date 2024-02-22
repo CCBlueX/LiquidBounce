@@ -21,16 +21,38 @@ object UIRenderer {
     }
 
     fun drawUIOverlay(context: DrawContext, tickDelta: Float) {
-        this.overlayFramebuffer.clear(true)
-        this.overlayFramebuffer.beginWrite(true)
+        val a = mc.player
+        val b = mc.world
+        val c = mc.gameRenderer
+
+        if (b != null) {
+            this.overlayFramebuffer.clear(true)
+            this.overlayFramebuffer.beginWrite(false)
+        }
 
         callEvent(OverlayRenderEvent(context, tickDelta))
 
         RenderSystem.enableBlend()
 
-        this.overlayFramebuffer.endWrite()
-        mc.framebuffer.beginWrite(true)
-        this.overlayFramebuffer.draw(mc.window.framebufferWidth, mc.window.framebufferHeight, false)
+        if (c != null) {
+            this.overlayFramebuffer.endWrite()
+        }
+
+        mc.framebuffer.beginWrite(false)
+
+        if (a != null) {
+            this.overlayFramebuffer.draw(mc.window.framebufferWidth, mc.window.framebufferHeight, false)
+
+            mc.framebuffer.beginWrite(true)
+
+
+            context.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
+
+            RenderSystem.defaultBlendFunc()
+            RenderSystem.disableBlend()
+            RenderSystem.depthMask(true)
+            RenderSystem.enableDepthTest()
+        }
     }
 
     fun setupDimensions(width: Int, height: Int) {

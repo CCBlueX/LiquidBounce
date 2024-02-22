@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
@@ -67,7 +68,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
-    val onOverlayRender = handler<OverlayRenderEvent> {
+    val onOverlayRender = handler<OverlayRenderEvent>(priority = -100) {
         val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
 
         for (tab in tabs.sortedWith(compareByCondition(ITab::preferOnTop))) {

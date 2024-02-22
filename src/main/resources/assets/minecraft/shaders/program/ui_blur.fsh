@@ -10,18 +10,22 @@ uniform vec2 InSize;
 
 out vec4 fragColor;
 
-const vec2 BlurDir = vec2(1.0, 1.0);
+const vec2 BlurDir = vec2(1.2, 0.8);
 
 void main() {
     vec4 overlay_color = texture(Overlay, texCoord);
-    if (overlay_color.a < 0.1) {
+    if (overlay_color.a <= 0.01) {
         fragColor = vec4(texture(DiffuseSampler, texCoord).rgb, 1.0);
 
         return;
     }
 
+    float opacity = clamp((overlay_color.a - 0.1) * 2.0, 0.1, 1.0);
+
     // This should cause terrible performance, but it doesn't (on my nvidia-based machine at least)
-    float Radius = min(10.0, (overlay_color.a - 0.1) * 15.0);
+    float Radius = 20.0;
+
+    vec4 origColor = texture(DiffuseSampler, texCoord);
 
     vec4 blurred = vec4(0.0);
     float totalStrength = 0.0;
@@ -39,7 +43,7 @@ void main() {
         totalStrength = totalStrength + strength;
         blurred = blurred + sampleValue;
     }
-    fragColor = vec4(blurred.rgb / (Radius * 2.0 + 1.0), 1.0);
+    fragColor = vec4(mix(origColor.rgb, blurred.rgb / (Radius * 2.0 + 1.0), opacity), 1.0);
 
 }
 
