@@ -8,13 +8,16 @@
     import { groupByCategory } from "../../../../integration/util";
     import Category from "./Category.svelte";
     import { getTextWidth } from "../../../../integration/text_measurement";
-    import ModuleList from "./ModuleList.svelte";
     import { listen } from "../../../../integration/ws";
+    import { fly } from "svelte/transition";
+    import Module from "./Module.svelte";
+    import {setModuleEnabled} from "../../../../integration/rest";
 
     let modules: TModule[] = [];
     let groupedModules: GroupedModules = {};
     let categories: string[] = [];
     let selectedCategoryIndex = 0;
+    let selectedModuleIndex = 0;
     let renderedModules: TModule[] = [];
     let categoriesElement: HTMLElement;
 
@@ -27,38 +30,56 @@
         );
     });
 
-    function handleKeyDown(e: KeyboardEvent) {
-        switch (e.key) {
-            case "ArrowDown":
-                if (renderedModules.length > 0) {
-                    return;
+    async function handleKeyDown(e: any) {
+        if (e.action !== 1) {
+            return;
+        }
+
+        switch (e.key.name) {
+            case "key.keyboard.down":
+                if (renderedModules.length === 0) {
+                    selectedCategoryIndex =
+                        (selectedCategoryIndex + 1) %
+                        Object.keys(categories).length;
+                } else {
+                    selectedModuleIndex =
+                        (selectedModuleIndex + 1) % renderedModules.length;
                 }
-                selectedCategoryIndex =
-                    (selectedCategoryIndex + 1) %
-                    Object.keys(categories).length;
                 break;
-            case "ArrowUp":
-                if (renderedModules.length > 0) {
-                    return;
+            case "key.keyboard.up":
+                if (renderedModules.length === 0) {
+                    selectedCategoryIndex =
+                        (selectedCategoryIndex -
+                            1 +
+                            Object.keys(categories).length) %
+                        Object.keys(categories).length;
+                } else {
+                    selectedModuleIndex =
+                        (selectedModuleIndex - 1 + renderedModules.length) % renderedModules.length;
                 }
-                selectedCategoryIndex =
-                    (selectedCategoryIndex -
-                        1 +
-                        Object.keys(categories).length) %
-                    Object.keys(categories).length;
                 break;
-            case "ArrowLeft":
+            case "key.keyboard.left":
                 renderedModules = [];
+                selectedModuleIndex = 0;
                 break;
-            case "ArrowRight":
+            case "key.keyboard.right":
                 if (renderedModules.length > 0) {
                     return;
                 }
                 renderedModules =
                     groupedModules[categories[selectedCategoryIndex]];
                 break;
+            case "key.keyboard.enter":
+                if (renderedModules.length === 0) {
+                    return;
+                }
+                const mod = renderedModules[selectedModuleIndex];
+                await setModuleEnabled(mod.name, !mod.enabled);
+                break;
         }
     }
+
+    listen("key", handleKeyDown);
 
     listen("toggleModule", (e: any) => {
         const moduleName = e.moduleName;
@@ -75,8 +96,6 @@
     });
 </script>
 
-<svelte:window on:keydown={handleKeyDown} />
-
 <div class="tabgui">
     <div class="categories" bind:this={categoriesElement}>
         {#each categories as name, index}
@@ -85,10 +104,11 @@
     </div>
 
     {#if renderedModules.length > 0}
-        <ModuleList
-            modules={renderedModules}
-            height={categoriesElement.offsetHeight}
-        />
+        <div class="modules" transition:fly={{ x: -10, duration: 200 }} style="height: {categoriesElement.offsetHeight}px">
+            {#each renderedModules as { name, enabled }, index}
+                <Module {name} {enabled} selected={selectedModuleIndex === index} />
+            {/each}
+        </div>
     {/if}
 </div>
 
@@ -108,5 +128,20 @@
         flex-direction: column;
         border-radius: 5px;
         overflow: hidden;
+    }
+
+    .modules {
+      background-clip: content-box;
+      background-color: rgba($tabgui-base-color, 0.5);
+      margin-left: 6px;
+      border-radius: 5px;
+      min-width: 100px;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+
+      &::-webkit-scrollbar {
+        width: 0;
+      }
     }
 </style>
