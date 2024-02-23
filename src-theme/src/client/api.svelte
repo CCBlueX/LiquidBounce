@@ -26,21 +26,21 @@
      *     }
      */
     export function exitClient() {
-        return request("/exit")
+        return request("/exit", { method: "POST" })
     }
 
     /**
      *
-     * @param url
+     * @param target
      * @returns {Promise<any>}
      */
-    export function browse(url) {
+    export function browse(target) {
         return request("/browse", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ "url": url })
+            body: JSON.stringify({ "target": target })
         })
     }
 
