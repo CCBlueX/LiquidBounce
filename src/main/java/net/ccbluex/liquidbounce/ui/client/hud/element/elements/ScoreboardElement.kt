@@ -12,12 +12,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNewInt
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRectInt
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.scoreboard.ScoreObjective
 import net.minecraft.scoreboard.ScorePlayerTeam
 import net.minecraft.util.EnumChatFormatting
@@ -43,6 +40,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
     private val backgroundColorAlpha by IntegerValue("Background-Alpha", 95, 0..255)
 
     private val rect by BoolValue("Rect", false)
+        private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
         private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Rainbow"), "Custom") { rect }
             private val rectColorRed by IntegerValue("Rect-R", 0, 0..255) { rect && rectColorMode == "Custom"}
             private val rectColorGreen by IntegerValue("Rect-G", 111, 0..255) { rect && rectColorMode == "Custom"}
@@ -99,7 +97,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
         val maxHeight = scoreCollection.size * fontRenderer.FONT_HEIGHT
         val l1 = -maxWidth - 3 - if (rect) 3 else 0
 
-        drawRectNewInt(l1 - 2, -2, 5, (maxHeight + fontRenderer.FONT_HEIGHT), backColor)
+        drawRoundedRectInt(l1 - 2, -2, 5, (maxHeight + fontRenderer.FONT_HEIGHT), backColor, roundedRectRadius)
 
         scoreCollection.forEachIndexed { index, score ->
             val team = scoreboard.getPlayersTeam(score.playerName)
@@ -135,12 +133,13 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                     else -> rectCustomColor
                 }
 
-                drawRectNew(
+                drawRoundedRect(
                     2F,
                     if (index == scoreCollection.size - 1) -2F else height,
                     5F,
                     if (index == 0) fontRenderer.FONT_HEIGHT.toFloat() else height + fontRenderer.FONT_HEIGHT * 2F,
-                    rectColor
+                    rectColor,
+                    roundedRectRadius
                 )
             }
         }

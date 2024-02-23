@@ -12,11 +12,8 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew2
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting
@@ -34,6 +31,8 @@ class Inventory : Element(300.0, 50.0) {
         private val titleRed by IntegerValue("TitleRed", 255, 0..255) { title != "None" && !titleRainbow }
         private val titleGreen by IntegerValue("TitleGreen", 255, 0..255) { title != "None" && !titleRainbow }
         private val titleBlue by IntegerValue("TitleBlue", 255, 0..255) { title != "None" && !titleRainbow }
+
+    private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
 
     private val borderValue by BoolValue("Border", true)
     private val borderRainbow by BoolValue("BorderRainbow", false) { borderValue }
@@ -54,10 +53,10 @@ class Inventory : Element(300.0, 50.0) {
         val titleColor = if (titleRainbow) ColorUtils.rainbow() else Color(titleRed, titleGreen, titleBlue)
 
         // draw rect and borders
-        drawRectNew2(0F, startY, width, height, Color(0,0,0, backgroundAlpha))
+        drawRoundedRect2(0F, startY, width, height, Color(0,0,0, backgroundAlpha), roundedRectRadius)
         if (borderValue) {
             drawBorder(0f, startY, width, height, 3f, borderColor.rgb)
-            drawRectNew2(0F, 0f, width, 1f, borderColor)
+            drawRoundedRect2(0F, 0f, width, 1f, borderColor, roundedRectRadius)
         }
         // Reset color
         resetColor()
