@@ -26,11 +26,4 @@ public class MixinGameOptions {
         VanillaTranslationRecognizer.INSTANCE.setBuildingVanillaKeybinds(false);
     }
 
-//    @Redirect(method = "<init>", at = @At(value = "NEW", target = "(Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILjava/lang/String;)Lnet/minecraft/client/option/KeyBinding;"))
-//    private KeyBinding redirectKeyBindingB(String translationKey, InputUtil.Type type, int code, String category) {
-//        System.out.println("B: " + translationKey);
-//
-//        return new KeyBinding(translationKey, type, code, category);
-//    }
-
 }
