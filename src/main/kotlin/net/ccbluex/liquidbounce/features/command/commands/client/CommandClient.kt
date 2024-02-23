@@ -33,6 +33,12 @@ import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.Theme
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
+import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.types.FrameComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.HtmlComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.ImageComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.TextComponent
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 
@@ -59,6 +65,7 @@ object CommandClient {
         .subcommand(integrationCommand())
         .subcommand(languageCommand())
         .subcommand(themeCommand())
+        .subcommand(componentCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -238,6 +245,78 @@ object CommandClient {
                 chat(regular("Unset active theme..."))
                 ThemeManager.activeTheme = ThemeManager.defaultTheme
             }.build()
+        )
+        .build()
+
+    fun componentCommand() = CommandBuilder.begin("component")
+        .hub()
+        .subcommand(CommandBuilder.begin("list")
+            .handler { command, args ->
+                chat(regular("Components:"))
+                for (component in components) {
+                    chat(regular("-> ${component.name}"))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("add")
+            .hub()
+            .subcommand(CommandBuilder.begin("text")
+                .parameter(
+                    ParameterBuilder.begin<String>("text")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    components += TextComponent(arg)
+                    ComponentOverlay.updateComponents()
+
+                    chat("Successfully added text component.")
+                }.build()
+            )
+            .subcommand(CommandBuilder.begin("frame")
+                .parameter(
+                    ParameterBuilder.begin<String>("url")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    components += FrameComponent(arg)
+                    ComponentOverlay.updateComponents()
+
+                    chat("Successfully added frame component.")
+                }.build()
+            )
+            .subcommand(CommandBuilder.begin("image")
+                .parameter(
+                    ParameterBuilder.begin<String>("url")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    components += ImageComponent(arg)
+                    ComponentOverlay.updateComponents()
+
+                    chat("Successfully added image component.")
+                }.build()
+            )
+            .subcommand(CommandBuilder.begin("html")
+                .parameter(
+                    ParameterBuilder.begin<String>("code")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    components += HtmlComponent(arg)
+                    ComponentOverlay.updateComponents()
+
+                    chat("Successfully added html component.")
+                }.build()
+            )
+            .build()
         )
         .build()
 

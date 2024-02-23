@@ -54,4 +54,6 @@ abstract class Component(name: String, enabled: Boolean)
         }
     }
 
+    override fun parent() = ComponentOverlay
+
 }

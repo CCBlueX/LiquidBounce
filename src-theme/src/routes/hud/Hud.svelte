@@ -30,6 +30,14 @@
                     <TabGui getModules={getModules} toggleModule={toggleModule} listen={listen}/>
                 {:else if c.name === "Notifications"}
                     <Notifications listen={listen}/>
+                {:else if c.name === "Frame"}
+                    <iframe src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
+                {:else if c.name === "Html"}
+                    {@html c.settings.code}
+                {:else if c.name === "Text"}
+                    <p>{c.settings.text}</p>
+                {:else if c.name === "Image"}
+                    <img alt="" src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px;">
                 {/if}
             </div>
         {/if}
