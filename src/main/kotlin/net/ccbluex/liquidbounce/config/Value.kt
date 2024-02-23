@@ -38,12 +38,13 @@ import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import org.graalvm.polyglot.HostAccess.Export
 import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = (T) -> T
+
+typealias ValueChangedListener = () -> Unit
 
 /**
  * Value based on generics and support for readable names and description
@@ -62,6 +63,10 @@ open class Value<T : Any>(
     @Exclude
     @ProtocolExclude
     private val listeners = mutableListOf<ValueListener<T>>()
+
+    @Exclude
+    @ProtocolExclude
+    private val changedListeners = mutableListOf<ValueChangedListener>()
 
     /**
      * If true, value will not be included in generated public config
@@ -157,6 +162,7 @@ open class Value<T : Any>(
         }.onSuccess {
             value = currT
             EventManager.callEvent(ValueChangedEvent(this))
+            changedListeners.forEach { it() }
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.value} to $t", ex)
         }
@@ -164,8 +170,13 @@ open class Value<T : Any>(
 
     fun type() = valueType
 
-    fun listen(listener: ValueListener<T>): Value<T> {
+    fun onChange(listener: ValueListener<T>): Value<T> {
         listeners += listener
+        return this
+    }
+
+    fun onChanged(listener: ValueChangedListener): Value<T> {
+        changedListeners += listener
         return this
     }
 
@@ -380,7 +391,7 @@ class ChooseListValue<T : NamedChoice>(
             )
         }
 
-        this.value = newValue
+        set(newValue)
     }
 
     @ScriptApi

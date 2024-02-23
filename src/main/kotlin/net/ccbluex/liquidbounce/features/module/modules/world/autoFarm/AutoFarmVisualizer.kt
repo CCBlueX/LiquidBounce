@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.util.math.Box
@@ -53,7 +52,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
         private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
         private val placeColor by color("PlaceColor", Color4b(191, 245, 66, 100))
-        private val range by int("Range", 50, 10..128).listen {
+        private val range by int("Range", 50, 10..128).onChange {
             rangeSquared = it * it
             it
         }

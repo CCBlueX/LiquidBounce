@@ -21,19 +21,15 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
-import net.minecraft.client.RunArgs.Game
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
@@ -114,7 +110,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
 
         private val radius by float("Radius", 0.85f, 0.1f..2f)
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
-            .listen { min(radius, it) }
+            .onChange { min(radius, it) }
 
         private val heightMode = choices(
             module,

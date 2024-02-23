@@ -1,5 +1,5 @@
 <script>
-    import { fly } from "svelte/transition";
+    import {fly} from "svelte/transition";
     import Category from "./Category.svelte";
     import Module from "./Module.svelte";
 
@@ -151,10 +151,6 @@
 <style>
     .tabgui {
         font-family: "Montserrat", sans-serif;
-
-        position: absolute;
-        top: 90px;
-        left: 15px;
         display: flex;
         flex-direction: row;
     }

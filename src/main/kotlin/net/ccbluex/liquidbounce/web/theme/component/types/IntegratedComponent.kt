@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,27 +15,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.render.AlignmentConfigurable
+package net.ccbluex.liquidbounce.web.theme.component.types
 
-object ModuleScoreboard : Module("Scoreboard", Category.RENDER) {
+import net.ccbluex.liquidbounce.web.theme.component.Component
+import net.ccbluex.liquidbounce.web.theme.component.FeatureTweak
 
-    val turnOff by boolean("TurnOff", false)
-    val alignment =
-        AlignmentConfigurable(
-            horizontalAlignment = AlignmentConfigurable.ScreenAxisX.RIGHT,
-            horizontalPadding = 0,
-            verticalAlignment = AlignmentConfigurable.ScreenAxisY.BOTTOM,
-            verticalPadding = 16,
-        )
-
-    init {
-        tree(alignment)
-    }
-
-
-}
+/**
+ * Unlike other components integrated are built into the theme and are being configured
+ * by the metadata of the theme
+ *
+ * TODO: These should be serializable from the Metadata JSON
+ */
+class IntegratedComponent(
+    name: String,
+    val tweaks: Array<FeatureTweak> = emptyArray()
+) : Component(name, true)

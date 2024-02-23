@@ -2,9 +2,6 @@
 
 <style>
     .watermark {
-        position: absolute;
-        top: 15px;
-        left: 15px;
         width: 165px;
     }
 </style>

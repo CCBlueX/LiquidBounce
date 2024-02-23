@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
+import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent
 import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
 
@@ -149,7 +150,5 @@ data class ThemeMetadata(
     val version: String,
     val supports: List<String>,
     val overlays: List<String>,
-    val disables: List<String>
-) {
-    fun doesDisable(name: String) = disables.contains(name)
-}
+    val components: List<IntegratedComponent>
+)

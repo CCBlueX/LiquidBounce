@@ -57,6 +57,7 @@ import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
@@ -160,6 +161,7 @@ object LiquidBounce : Listenable {
 
             // Initialize browser
             ThemeManager
+            ComponentOverlay
             IntegrationHandler
             BrowserManager.initBrowser()
 

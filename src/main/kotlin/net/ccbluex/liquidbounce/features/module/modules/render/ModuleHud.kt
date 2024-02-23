@@ -22,10 +22,13 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ChunkRenderer
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.minecraft.client.gui.screen.DisconnectedScreen
 
 /**
@@ -40,6 +43,10 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
+
+    init {
+        tree(ComponentOverlay)
+    }
 
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {
         if (!enabled || !inGame || it.screen is DisconnectedScreen) {
@@ -56,12 +63,19 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
         // Create a new tab and open it
         browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
+
+        // Minimap
+        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
     }
 
     override fun disable() {
         // Closes tab entirely
         browserTab?.closeTab()
         browserTab = null
+
+        // Minimap
+        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+        ChunkRenderer.unloadEverything()
     }
 
 }
