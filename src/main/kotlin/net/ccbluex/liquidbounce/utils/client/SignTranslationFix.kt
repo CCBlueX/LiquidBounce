@@ -11,14 +11,13 @@ import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableTextContent
 import java.util.*
-import kotlin.collections.HashSet
 
 object VanillaTranslationRecognizer {
     val vanillaKeybinds = mutableSetOf<String>()
     val vanillaTranslations = HashSet<String>()
 
     fun registerKey(translationKey: String) {
-        if (isBuildingVanillaKeybinds)  {
+        if (isBuildingVanillaKeybinds) {
             this.vanillaKeybinds.add(translationKey)
         }
     }
@@ -51,6 +50,7 @@ fun filterNonVanillaText(text: Text): Text {
                 MutableText.of(SuppressedKeybindTextContent(keybind))
             }
         }
+
         is TranslatableTextContent -> {
             val translationKey: String = content.key
 
@@ -60,6 +60,7 @@ fun filterNonVanillaText(text: Text): Text {
                 MutableText.of(SuppressedTranslatableTextContent(translationKey, content.fallback, content.args))
             }
         }
+
         else -> MutableText.of(text.content)
     }
 
@@ -84,7 +85,9 @@ class SuppressedKeybindTextContent(key: String) : KeybindTextContent(key) {
     }
 }
 
-class SuppressedTranslatableTextContent(key: String, fallback: String?, args: Array<Any>) : TranslatableTextContent(key, fallback, args) {
+class SuppressedTranslatableTextContent(key: String, fallback: String?, args: Array<Any>) :
+    TranslatableTextContent(key, fallback, args) {
+
     private val translated: Text = Text.of(fallback ?: key)
 
     override fun <T : Any?> visit(visitor: StringVisitable.Visitor<T>?): Optional<T> {
