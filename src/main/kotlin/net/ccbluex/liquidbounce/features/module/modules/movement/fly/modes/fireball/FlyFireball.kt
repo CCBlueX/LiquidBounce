@@ -45,10 +45,7 @@ internal object FlyFireball : Choice("Fireball") {
 
     private val rotations = tree(RotationsConfigurable(50f..80f))
     private val pitch by float("Rotation Pitch", 75f, 0f..90f)
-
-    val technique = choices(ModuleFly, "Technique",
-        FlyFireballHighTechnique,
-        arrayOf(FlyFireballHighTechnique, FlyFireballLongTechnique, FlyFireballCustomTechnique, FlyFireballStompTechnique))
+    private val delay by int("Throw Delay", 1, 0..20)
 
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         RotationManager.aimAt(
@@ -63,23 +60,13 @@ internal object FlyFireball : Choice("Fireball") {
             if (mc.player?.isOnGround == true)
                 mc.player?.jump()
 
-            var ticks = 0
-
-            when (technique.activeChoice) {
-                FlyFireballHighTechnique -> ticks = 1
-                FlyFireballStompTechnique -> ticks = 7
-                FlyFireballLongTechnique -> ticks = 4
-                FlyFireballCustomTechnique -> ticks = (technique.activeChoice as FlyFireballCustomTechnique).customDelay
-            }
-
-            waitTicks(ticks)
+            waitTicks(delay)
             mc.interactionManager?.interactItem(mc.player, Hand.MAIN_HAND)
-            ModuleFly.enabled = false
         } else {
             notification("Fly", "You need to hold a fireball!", NotificationEvent.Severity.ERROR)
-            ModuleFly.enabled = false
             return@repeatable
         }
+        ModuleFly.enabled = false
     }
 
 }
