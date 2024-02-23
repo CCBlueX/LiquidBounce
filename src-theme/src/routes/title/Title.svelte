@@ -48,27 +48,27 @@
     }
 
     function browseForum() {
-        browse("https://forums.ccbluex.net").catch(console.error);
+        browse("MAINTAINER_FORUM").catch(console.error);
     }
 
     function browseGitHub() {
-        browse("https://github.com/CCBlueX").catch(console.error);
+        browse("MAINTAINER_GITHUB").catch(console.error);
     }
 
     function browseGuilded() {
-        browse("https://guilded.gg/CCBlueX?r=pmbDp7K4").catch(console.error);
+        browse("MAINTAINER_GUILDED").catch(console.error);
     }
 
     function browseTwitter() {
-        browse("https://twitter.com/CCBlueX").catch(console.error);
+        browse("MAINTAINER_TWITTER").catch(console.error);
     }
 
     function browseYouTube() {
-        browse("https://youtube.com/CCBlueX").catch(console.error);
+        browse("MAINTAINER_YOUTUBE").catch(console.error);
     }
 
     function browseWebsite() {
-        browse("https://liquidbounce.net").catch(console.error);
+        browse("CLIENT_WEBSITE").catch(console.error);
     }
 
     let username = "Loading...";

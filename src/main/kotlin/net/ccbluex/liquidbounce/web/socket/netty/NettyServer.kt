@@ -34,9 +34,8 @@ import net.ccbluex.liquidbounce.utils.client.logger
 internal class NettyServer {
 
     companion object {
-
         val PORT = (15000..16000).random()
-        val NETTY_ROOT = "http://localhost:$PORT"
+        val NETTY_ROOT = "http://127.0.0.1:$PORT"
 
     }
 
