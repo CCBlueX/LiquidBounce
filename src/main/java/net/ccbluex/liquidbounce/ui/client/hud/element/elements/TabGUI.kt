@@ -15,9 +15,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew2
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorder
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -37,12 +37,14 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
     private val rectBlue by IntegerValue("Rectangle Blue", 255, 0..255) { !rectRainbow }
     private val rectAlpha by IntegerValue("Rectangle Alpha", 140, 0..255) { !rectRainbow }
 
+    private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
+
     private val backgroundRed by IntegerValue("Background Red", 0, 0..255)
     private val backgroundGreen by IntegerValue("Background Green", 0, 0..255)
     private val backgroundBlue by IntegerValue("Background Blue", 0, 0..255)
     private val backgroundAlpha by IntegerValue("Background Alpha", 150, 0..255)
 
-    private val borderValue by BoolValue("Border", true)
+    private val borderValue by BoolValue("Border", false)
         private val borderStrength by FloatValue("Border Strength", 2F, 1F..5F) { borderValue }
         private val borderRainbow by BoolValue("Border Rainbow", false) { borderValue }
             private val borderRed by IntegerValue("Border Red", 0, 0..255) { borderValue && !borderRainbow }
@@ -111,11 +113,11 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         // Draw
         val guiHeight = tabs.size * tabHeight
 
-        drawRectNew(1F, 0F, width, guiHeight, backgroundColor.rgb)
+        drawRoundedRect(1F, 0F, width, guiHeight, backgroundColor.rgb, roundedRectRadius)
 
         if (borderValue) {
             RainbowShader.begin(borderRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-                drawBorder(1F, 0F, width, guiHeight, borderStrength, borderColor.rgb)
+                drawRoundedBorder(1F, 0F, width, guiHeight, borderStrength, borderColor.rgb, roundedRectRadius)
             }
         }
 
@@ -123,7 +125,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         val rectColor = if (rectRainbow) Color.black else Color(rectRed, rectGreen, rectBlue, rectAlpha)
 
         RainbowShader.begin(rectRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-            drawRectNew2(1F, 1 + tabY - 1, width, tabY + tabHeight, rectColor)
+            drawRoundedRect2(1F, 1 + tabY - 1, width, tabY + tabHeight, rectColor, roundedRectRadius)
         }
 
         glColor4f(1f, 1f, 1f, 1f)
@@ -289,14 +291,14 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 
             if (borderValue) {
                 RainbowShader.begin(borderRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-                    drawBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor)
+                    drawRoundedBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor, roundedRectRadius)
                 }
             }
-            drawRectNew(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
+            drawRoundedRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor, roundedRectRadius)
 
 
             RainbowShader.begin(rectRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-                drawRectNew(x - 1f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight - 1, color)
+                drawRoundedRect(x - 1f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight - 1, color, roundedRectRadius)
             }
 
             glColor4f(1f, 1f, 1f, 1f)
