@@ -19,10 +19,11 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 
 object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
 
-    private val mode by ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
+    private val mode by ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom", "Grim"), "NCP")
 
         private val delay by IntegerValue("CustomDelay", 0, 0..300) { mode == "Custom" }
         private val customSpeed by IntegerValue("CustomSpeed", 2, 1..35) { mode == "Custom" }
@@ -81,6 +82,12 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
                 }
 
                 msTimer.reset()
+            }
+
+            "grim" -> {
+                repeat(5) {
+                    sendPacket(C06PacketPlayerPosLook(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, mc.thePlayer.onGround), false)
+                }
             }
         }
     }
