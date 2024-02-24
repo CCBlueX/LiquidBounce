@@ -44,6 +44,8 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
 
+    val blur by boolean("Blur", true)
+
     init {
         tree(ComponentOverlay)
     }

@@ -45,7 +45,7 @@ object BrowserManager : Configurable("browser") {
         private set
 
     @Suppress("UnusedPrivateProperty")
-    private val browserDrawer = BrowserDrawer { browser }
+    val browserDrawer = BrowserDrawer { browser }
     @Suppress("UnusedPrivateProperty")
     private val browserInput = BrowserInput { browser }
 

@@ -109,6 +109,8 @@ accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
 accessible method net/minecraft/client/render/Camera setPos (DDD)V
 accessible method net/minecraft/client/render/Camera setPos (Lnet/minecraft/util/math/Vec3d;)V
 
+accessible method net/minecraft/client/render/GameRenderer loadPostProcessor (Lnet/minecraft/util/Identifier;)V
+
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager sendSequencedPacket (Lnet/minecraft/client/world/ClientWorld;Lnet/minecraft/client/network/SequencedPacketCreator;)V
 
 accessible field net/minecraft/client/gui/screen/ingame/CreativeInventoryScreen selectedTab Lnet/minecraft/item/ItemGroup;

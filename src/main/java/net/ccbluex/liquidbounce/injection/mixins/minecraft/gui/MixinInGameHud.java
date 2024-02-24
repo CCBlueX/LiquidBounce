@@ -18,25 +18,35 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
+import net.ccbluex.liquidbounce.common.SidebarEntry;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleScoreboard;
+import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay;
 import net.ccbluex.liquidbounce.web.theme.component.FeatureTweak;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardEntry;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.Team;
+import net.minecraft.scoreboard.number.NumberFormat;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
+import net.minecraft.text.Text;
+import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Comparator;
 
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHud {
@@ -62,12 +72,13 @@ public abstract class MixinInGameHud {
     @Nullable
     protected abstract PlayerEntity getCameraPlayer();
 
+
     /**
      * Hook render hud event at the top layer
      */
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
-    private void hookRenderEvent(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickDelta));
+    private void hookRenderEventStart(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
+        UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickDelta);
 
         // Draw after overlay event
         if (ComponentOverlay.isTweakEnabled(FeatureTweak.TWEAK_HOTBAR)) {
