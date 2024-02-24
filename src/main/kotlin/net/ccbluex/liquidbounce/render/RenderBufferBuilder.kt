@@ -140,6 +140,10 @@ class RenderBufferBuilder<I: VertexInputType>(
         tesselator.buffer.reset()
     }
 
+    fun reset() {
+        tesselator.buffer.end()
+    }
+
     companion object {
         val TESSELATOR_A: Tessellator = Tessellator(0x200000)
         val TESSELATOR_B: Tessellator = Tessellator(0x200000)

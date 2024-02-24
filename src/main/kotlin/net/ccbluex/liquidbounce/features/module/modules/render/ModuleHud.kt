@@ -41,6 +41,8 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
 
+    val blur by boolean("Blur", true)
+
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {
         if (!enabled || !inGame || it.screen is DisconnectedScreen) {
             browserTab?.closeTab()

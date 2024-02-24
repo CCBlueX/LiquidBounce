@@ -19,11 +19,10 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.common.SidebarEntry;
-import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleScoreboard;
+import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -57,7 +56,6 @@ public abstract class MixinInGameHud {
     @Final
     @Shadow
     private static Identifier POWDER_SNOW_OUTLINE;
-
     @Shadow
     public abstract TextRenderer getTextRenderer();
 
@@ -83,8 +81,8 @@ public abstract class MixinInGameHud {
      * Hook render hud event at the top layer
      */
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
-    private void hookRenderEvent(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickDelta));
+    private void hookRenderEventStart(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
+        UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickDelta);
     }
 
     @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)

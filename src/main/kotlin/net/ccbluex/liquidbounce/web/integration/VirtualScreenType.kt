@@ -48,10 +48,11 @@ private val Screen.isLunar
 enum class VirtualScreenType(
     val routeName: String,
     val recognizer: (Screen) -> Boolean = { false },
+    val isInGame: Boolean = false,
     private val open: () -> Unit = {}
 ) {
 
-    HUD("hud"),
+    HUD("hud", isInGame = true),
     CLICK_GUI("clickgui"),
     ALT_MANAGER("altmanager"),
     PROXY_MANAGER("proxymanager"),

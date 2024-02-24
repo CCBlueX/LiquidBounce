@@ -16,20 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
+package net.ccbluex.liquidbounce.render.shader.shaders
 
-class Chronometer(var lastUpdate: Long = 0) {
-    val elapsed: Long
-        get() = System.currentTimeMillis() - lastUpdate
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
 
-    fun hasElapsed(ms: Long = 0) = lastUpdate + ms < System.currentTimeMillis()
+object BlurUIShader : MinecraftFramebufferShader("blur_ui") {
 
-    fun reset() {
-        this.lastUpdate = System.currentTimeMillis()
+    fun begin(shaderTexture: Int) {
+        this.beginInternal()
+
+        RenderSystem.setShaderTexture(1, shaderTexture)
     }
 
-    fun waitFor(ms: Long) {
-        this.lastUpdate = System.currentTimeMillis() + ms
+    fun setColor(color: Color4b) {
+        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
     }
 
 }
