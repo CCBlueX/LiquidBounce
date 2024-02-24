@@ -27,13 +27,13 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
-import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.client.input.KeyboardInput
 import net.minecraft.util.Hand
 
 internal object FlyFireball : Choice("Fireball") {
@@ -43,10 +43,11 @@ internal object FlyFireball : Choice("Fireball") {
 
     private val disableDelay by int("DisableDelay", 10, 0..20)
 
-    object Movement : ToggleableConfigurable(this, "Strafe", true) {
-        val yVelocity by float("YVelocity", 0f, -1f..1f)
-        val delay by int("StrafeDelay", 0, 0..20)
-        val strength by float("Strength", 0f, 0f..1f)
+    private var shouldThrow = true
+
+    object YMovement : ToggleableConfigurable(this, "YMovement", true) {
+        val yVelocity by float("YVelocity", 0f, -5f..5f)
+        val yVelocityDelay by int("YVelocityDelay", 0, 0..20)
     }
 
     object Rotations : RotationsConfigurable(80f..120f) {
@@ -54,7 +55,7 @@ internal object FlyFireball : Choice("Fireball") {
     }
 
     init {
-        tree(Movement)
+        tree(YMovement)
         tree(Rotations)
     }
 
@@ -67,13 +68,14 @@ internal object FlyFireball : Choice("Fireball") {
     }
 
     val playerMoveHandler = sequenceHandler<PlayerMoveEvent> {
-        mc.interactionManager?.interactItem(mc.player, Hand.MAIN_HAND)
-        waitTicks(Movement.delay)
-        if (Movement.enabled) {
-            if (Movement.yVelocity != 0f) {
-                mc.player?.velocity?.y = Movement.yVelocity.toDouble()
-            }
-            it.movement.strafe(mc.player?.directionYaw!!, strength = Movement.strength.toDouble())
+        if (!ModuleFly.enabled) return@sequenceHandler
+        if (mc.player?.isOnGround!!) {
+            mc.interactionManager?.interactItem(mc.player, Hand.MAIN_HAND)
+            mc.player?.isSprinting = true
+        }
+        if (YMovement.enabled) {
+            waitTicks(YMovement.yVelocityDelay)
+            mc.player?.velocity?.y = YMovement.yVelocity.toDouble()
         }
         waitTicks(disableDelay)
         ModuleFly.enabled = false
