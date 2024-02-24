@@ -23,6 +23,7 @@
     const url = window.location.href;
     const staticTag = url.split("?")[1];
     const isStatic = staticTag === "static";
+    let showSplash = false;
 
     async function changeRoute(name: string) {
         console.log(`[Router] Redirecting to ${name}`);
@@ -39,6 +40,10 @@
             return;
         }
 
+        listenAlways("splashOverlay", async (event: any) => {
+            showSplash = event.showingSplash;
+        });
+
         listenAlways("virtualScreen", async (event: any) => {
             console.log(`[Router] Virtual screen change to ${event.screenName}`)
             const action = event.action;
@@ -48,21 +53,21 @@
                     await changeRoute("none");
                     break;
                 case "open":
-                    const screenName = event.screenName;
-                    if (screenName) {
-                        await changeRoute(screenName);
-                    }
+                    await changeRoute(event.screenName || "none");
                     break;
             }
         });
 
         const virtualScreen = await getVirtualScreen();
-        if (virtualScreen.name) {
-            await changeRoute(virtualScreen.name);
-        }
+        await changeRoute(virtualScreen.name || "none");
+        showSplash = virtualScreen.showingSplash;
     });
 </script>
 
 <main>
-    <Router {routes}/>
+    {#if showSplash}
+        <SplashScreen />
+    {:else}
+        <Router {routes} />
+    {/if}
 </main>

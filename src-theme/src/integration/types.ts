@@ -127,7 +127,7 @@ export interface PersistentStorageItem {
 
 export interface VirtualScreen {
     name: string;
-    splash: boolean;
+    showingSplash: boolean;
 }
 
 export interface PlayerData {

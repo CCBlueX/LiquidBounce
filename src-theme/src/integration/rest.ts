@@ -6,9 +6,9 @@ import type {
     PlayerData,
     PrintableKey,
     Registries,
+    Server,
     Session,
-    VirtualScreen,
-    Server
+    VirtualScreen
 } from "./types";
 
 const API_BASE = `${REST_BASE}/api/v1`;
@@ -129,7 +129,9 @@ export async function browse(url: string) {
 }
 
 export async function exitClient() {
-    await fetch(`${API_BASE}/client/exit`);
+    await fetch(`${API_BASE}/client/exit`, {
+        method: "POST"
+    });
 }
 
 export async function openScreen(name: string) {
