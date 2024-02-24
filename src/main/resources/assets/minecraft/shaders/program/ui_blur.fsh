@@ -7,6 +7,7 @@ in vec2 texCoord;
 in vec2 oneTexel;
 
 uniform vec2 InSize;
+uniform float Radius;
 
 out vec4 fragColor;
 
@@ -21,9 +22,6 @@ void main() {
     }
 
     float opacity = clamp((overlay_color.a - 0.1) * 2.0, 0.1, 1.0);
-
-    // This should cause terrible performance, but it doesn't (on my nvidia-based machine at least)
-    float Radius = 20.0;
 
     vec4 origColor = texture(DiffuseSampler, texCoord);
 

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.PostEffectPassTextureAddition;
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -193,6 +195,10 @@ public abstract class MixinGameRenderer {
             }
         }
 
+        if (!ModuleHud.INSTANCE.getBlur()) {
+            return;
+        }
+
         RenderSystem.disableBlend();
         RenderSystem.disableDepthTest();
         RenderSystem.resetTextureMatrix();
@@ -204,7 +210,13 @@ public abstract class MixinGameRenderer {
 
         RenderSystem.setShaderTexture(0, overlayTexture);
         ((PostEffectPassTextureAddition) this.uiRendererShader.passes.get(0)).liquid_bounce$setTextureSampler("Overlay", overlayTexture);
+        this.uiRendererShader.passes.get(0).getProgram().getUniformByName("Radius").set(UIRenderer.INSTANCE.getBlurRadius());
 
         this.uiRendererShader.render(tickDelta);
+    }
+
+    @Inject(method = "render", at = @At(value = "RETURN"))
+    private void hookRenderEventStop(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+        UIRenderer.INSTANCE.endUIOverlayDrawing();
     }
 }
