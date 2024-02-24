@@ -69,11 +69,12 @@ internal object FlyFireball : Choice("Fireball") {
     val playerMoveHandler = sequenceHandler<PlayerMoveEvent> {
         mc.interactionManager?.interactItem(mc.player, Hand.MAIN_HAND)
         waitTicks(Movement.delay)
-        if (Movement.yVelocity != 0f) {
-            mc.player?.velocity?.y = Movement.yVelocity.toDouble()
+        if (Movement.enabled) {
+            if (Movement.yVelocity != 0f) {
+                mc.player?.velocity?.y = Movement.yVelocity.toDouble()
+            }
+            it.movement.strafe(mc.player?.directionYaw!!, strength = Movement.strength.toDouble())
         }
-        if (Movement.enabled)
-            it.movement.strafe(mc.player?.directionYaw!!, strength = Movement.strength.toDouble()) //Last thing we do
         waitTicks(disableDelay)
         ModuleFly.enabled = false
     }
