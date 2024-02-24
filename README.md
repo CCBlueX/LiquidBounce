@@ -30,12 +30,13 @@ nor legally binding.
 *Actions that you are allowed to do:*
 
 - Use
+- Sell
 - Share
 - Modify
 
 *If you do decide to use ANY code from the source:*
 
-- **You must disclose the source code of your modified work and the source code you took from this project. This means
+- **You must disclose the source code of your modified work and the source code you took from this project to whomever you distribute this project to. This means
   you are not allowed to use code from this project (even partially) in a closed-source (or even obfuscated)
   application.**
 - **Your modified application must also be licensed under the GPL**
