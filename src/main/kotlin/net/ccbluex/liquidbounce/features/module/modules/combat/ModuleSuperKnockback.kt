@@ -43,7 +43,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     var sequence: Sequence<DummyEvent>? = null
 
     init {
-        modes.listen {
+        modes.onChange {
             reset()
             it
         }

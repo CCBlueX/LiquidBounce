@@ -23,12 +23,14 @@
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAutoShoot.kt$ModuleAutoShoot$val (fromPoint, toPoint, _, _) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( entity, situation )</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
+    <ID>EmptyClassBlock:ThemeManager.kt$ThemeMetadata${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandClient.kt$CommandClient$fun componentCommand()</ID>
     <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
     <ID>LongMethod:CommandConfig.kt$CommandConfig$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandContainers.kt$CommandContainers$fun createCommand(): Command</ID>
@@ -63,6 +65,7 @@
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
     <ID>MatchingDeclarationName:CombatUtils.kt$CombatManager : Listenable</ID>
     <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
+    <ID>MatchingDeclarationName:ComponentGson.kt$ComponentSerializer : JsonSerializer</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
     <ID>MatchingDeclarationName:RenderShortcuts.kt$RenderEnvironment</ID>
     <ID>MaxLineLength:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("The command is marked as not executable (hub), but no handler was specified")</ID>
@@ -98,8 +101,6 @@
     <ID>MaxLineLength:Region.kt$Region$return this.from.x &lt;= maxX &amp;&amp; this.to.x > minX &amp;&amp; this.from.y &lt;= maxY &amp;&amp; this.to.y > minY &amp;&amp; this.from.z &lt;= maxZ &amp;&amp; this.to.z > minZ</ID>
     <ID>MaxLineLength:RenderingFlags.kt$RenderingFlags$*</ID>
     <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
-    <ID>MaxLineLength:Value.kt$ListValueType$Block : ListValueType</ID>
-    <ID>MaxLineLength:Value.kt$ListValueType$Proxy : ListValueType</ID>
     <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
@@ -140,6 +141,7 @@
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
     <ID>TooManyFunctions:CombatUtils.kt$CombatManager : Listenable</ID>
     <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
+    <ID>TooManyFunctions:ConfigSystem.kt$ConfigSystem</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
     <ID>TooManyFunctions:EntityExtensions.kt$net.ccbluex.liquidbounce.utils.entity.EntityExtensions.kt</ID>
     <ID>TooManyFunctions:FakeLag.kt$FakeLag : Listenable</ID>

@@ -78,9 +78,6 @@
 <style>
     .arraylist {
         font-family: "Montserrat", sans-serif;
-        position: fixed;
-        top: 0;
-        right: -10px;
         display: flex;
         flex-direction: column;
         align-items: flex-end;

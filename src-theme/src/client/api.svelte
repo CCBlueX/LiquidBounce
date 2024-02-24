@@ -694,5 +694,9 @@
             }
         })
     }
+
+    export function getComponents() {
+        return request("/components")
+    }
 </script>
 

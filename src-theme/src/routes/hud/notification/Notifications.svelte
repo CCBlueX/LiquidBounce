@@ -34,9 +34,6 @@
 
 <style>
     .notifications {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
         display: grid;
         grid-auto-rows: max-content;
         row-gap: 10px;

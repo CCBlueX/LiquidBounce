@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
-import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.key
@@ -38,12 +37,13 @@ import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import org.graalvm.polyglot.HostAccess.Export
 import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = (T) -> T
+
+typealias ValueChangedListener = () -> Unit
 
 /**
  * Value based on generics and support for readable names and description
@@ -62,6 +62,10 @@ open class Value<T : Any>(
     @Exclude
     @ProtocolExclude
     private val listeners = mutableListOf<ValueListener<T>>()
+
+    @Exclude
+    @ProtocolExclude
+    private val changedListeners = mutableListOf<ValueChangedListener>()
 
     /**
      * If true, value will not be included in generated public config
@@ -157,6 +161,7 @@ open class Value<T : Any>(
         }.onSuccess {
             value = currT
             EventManager.callEvent(ValueChangedEvent(this))
+            changedListeners.forEach { it() }
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.value} to $t", ex)
         }
@@ -164,8 +169,13 @@ open class Value<T : Any>(
 
     fun type() = valueType
 
-    fun listen(listener: ValueListener<T>): Value<T> {
+    fun onChange(listener: ValueListener<T>): Value<T> {
         listeners += listener
+        return this
+    }
+
+    fun onChanged(listener: ValueChangedListener): Value<T> {
+        changedListeners += listener
         return this
     }
 
@@ -251,7 +261,7 @@ open class Value<T : Any>(
             }
 
             ValueType.TEXT -> {
-                this.value = string as T
+                set(string as T)
             }
 
             ValueType.TEXT_ARRAY -> {
@@ -380,7 +390,7 @@ class ChooseListValue<T : NamedChoice>(
             )
         }
 
-        this.value = newValue
+        set(newValue)
     }
 
     @ScriptApi
@@ -413,10 +423,11 @@ enum class ValueType {
 }
 
 enum class ListValueType(val type: Class<*>?) {
-    Block(net.minecraft.block.Block::class.java), Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java), Friend(
-        FriendManager.Friend::class.java
-    ),
-    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontInfo::class.java), None(
-        null
-    )
+    Block(net.minecraft.block.Block::class.java),
+    Item(net.minecraft.item.Item::class.java),
+    String(kotlin.String::class.java),
+    Friend(FriendManager.Friend::class.java),
+    Proxy(ProxyManager.Proxy::class.java),
+    Account(MinecraftAccount::class.java),
+    None(null)
 }

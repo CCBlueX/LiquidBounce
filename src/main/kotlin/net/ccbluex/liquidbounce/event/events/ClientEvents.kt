@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
+import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
 
@@ -125,6 +126,10 @@ class VirtualScreenEvent(val screenName: String, val action: Action) : Event() {
 @Nameable("serverPinged")
 @WebSocketEvent
 class ServerPingedEvent(val server: ServerInfo) : Event()
+
+@Nameable("componentsUpdate")
+@WebSocketEvent
+class ComponentsUpdate(val components: List<Component>) : Event()
 
 /**
  * The simulated tick event is called by the [MovementInputEvent] with a simulated movement context.
