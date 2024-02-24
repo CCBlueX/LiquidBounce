@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.block.HoneyBlock
 import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
+import net.minecraft.client.network.PendingUpdateManager
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
@@ -52,7 +53,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
         val modes = choices("Choice", { Reuse }) {
-            arrayOf(NoneChoice(it), Reuse, Rehold)
+            arrayOf(NoneChoice(it), Reuse, Rehold, Grim)
         }
 
         /**
@@ -88,6 +89,30 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                             interaction.sendSequencedPacket(world) { sequence ->
                                 PlayerInteractItemC2SPacket(blockingHand, sequence)
                             }
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        object Grim : Choice("Grim") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (event.state == EventState.PRE) {
+                    if (mc.player!!.isUsingItem) {
+                        if (mc.player!!.getActiveHand() === Hand.OFF_HAND) {
+                            mc.player!!.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(
+                                mc.player!!.inventory.selectedSlot % 8 + 1))
+                            mc.player!!.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(
+                                mc.player!!.inventory.selectedSlot))
+                        } else {
+                            mc.player!!.networkHandler.sendPacket(PlayerInteractItemC2SPacket(
+                                Hand.OFF_HAND, 0))
                         }
                     }
                 }
