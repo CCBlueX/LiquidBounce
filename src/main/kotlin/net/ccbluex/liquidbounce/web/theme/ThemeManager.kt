@@ -19,8 +19,11 @@
  */
 package net.ccbluex.liquidbounce.web.theme
 
+import com.google.gson.JsonArray
+import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
@@ -30,7 +33,7 @@ import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
-import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
 
@@ -48,8 +51,12 @@ object ThemeManager {
 
             field = value
 
+            // Update components
+            ComponentOverlay.parseComponents()
+
             // Update integration browser
             IntegrationHandler.updateIntegrationBrowser()
+            ModuleHud.refresh()
         }
 
     private val takesInputHandler: () -> Boolean
@@ -150,5 +157,10 @@ data class ThemeMetadata(
     val version: String,
     val supports: List<String>,
     val overlays: List<String>,
-    val components: List<IntegratedComponent>
-)
+    @SerializedName("components")
+    val rawComponents: JsonArray
+) {
+
+
+
+}

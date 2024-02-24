@@ -21,34 +21,19 @@
 
 package net.ccbluex.liquidbounce.web.theme.component
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdate
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent
-import net.ccbluex.liquidbounce.web.theme.component.types.MinimapComponent
 
-// todo: serialize with metadata.json
-var components: MutableList<Component> = mutableListOf(
-    // TextComponent() demo
-    //HtmlComponent() demo
-    IntegratedComponent("Watermark"),
-    IntegratedComponent("TabGui"),
-    IntegratedComponent("ArrayList"),
-    IntegratedComponent("Notifications"),
-//    IntegratedComponent("Hotbar", tweaks = arrayOf(
-//        FeatureTweak.TWEAK_HOTBAR,
-//        FeatureTweak.DISABLE_STATUS_BAR,
-//        FeatureTweak.DISABLE_EXP_BAR,
-//        FeatureTweak.DISABLE_HELD_ITEM_TOOL_TIP
-//    )),
-//    IntegratedComponent("Scoreboard", tweaks = arrayOf(
-//        FeatureTweak.DISABLE_SCOREBOARD
-//    )),
-    MinimapComponent(),
-)
+var components: MutableList<Component> = mutableListOf()
 
 object ComponentOverlay : Configurable("Components", components as MutableList<Value<*>>), Listenable {
 
@@ -56,11 +41,45 @@ object ComponentOverlay : Configurable("Components", components as MutableList<V
     fun isTweakEnabled(tweak: FeatureTweak) = handleEvents() && components.filterIsInstance<IntegratedComponent>()
         .any { it.enabled && it.tweaks.contains(tweak) }
 
-    fun defaultComponents() {
+    fun parseComponents() {
+        val theme = ThemeManager.activeTheme
+        val rawComponents = theme.metadata.rawComponents
+        val themeComponent = rawComponents
+            .map { it.asJsonObject }
+            .associateBy { it["name"].asString!! }
 
+        val componentList = mutableListOf<Component>()
+
+        for ((name, obj) in themeComponent) {
+            // Check if component already exists in components, allows for seamless switch between themes/
+            val existingComponent = components.find { it.name == name }
+            if (existingComponent != null) {
+                componentList.add(existingComponent)
+                continue
+            }
+
+            runCatching {
+                val componentType = ComponentType.byName(name) ?: error("Unknown component type: $name")
+                val component = componentType.createComponent()
+
+                runCatching {
+                    ConfigSystem.deserializeConfigurable(component, obj)
+                }.onFailure {
+                    logger.error("Failed to deserialize component $name", it)
+                }
+
+                componentList.add(component)
+            }.onFailure {
+                logger.error("Failed to create component $name", it)
+            }
+        }
+
+        // Clear and fill the components list
+        components.clear()
+        components.addAll(componentList)
     }
 
-    fun updateComponents() = EventManager.callEvent(ComponentsUpdate(components))
+    fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(components))
 
     override fun parent() = ModuleHud
 

@@ -269,7 +269,7 @@ object CommandClient {
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
                     components += TextComponent(arg)
-                    ComponentOverlay.updateComponents()
+                    ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added text component.")
                 }.build()
@@ -283,7 +283,7 @@ object CommandClient {
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
                     components += FrameComponent(arg)
-                    ComponentOverlay.updateComponents()
+                    ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added frame component.")
                 }.build()
@@ -297,7 +297,7 @@ object CommandClient {
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
                     components += ImageComponent(arg)
-                    ComponentOverlay.updateComponents()
+                    ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added image component.")
                 }.build()
@@ -311,7 +311,7 @@ object CommandClient {
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
                     components += HtmlComponent(arg)
-                    ComponentOverlay.updateComponents()
+                    ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added html component.")
                 }.build()

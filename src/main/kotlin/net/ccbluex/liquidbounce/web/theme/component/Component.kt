@@ -39,16 +39,16 @@ abstract class Component(name: String, enabled: Boolean)
     ))
 
     init {
-        registerComponentListen(this)
+        registerComponentListen()
     }
 
-    private fun registerComponentListen(cfg: Configurable) {
+    private fun registerComponentListen(cfg: Configurable = this) {
         for (v in cfg.value) {
             if (v is Configurable) {
                 registerComponentListen(v)
             } else {
                 v.onChanged {
-                    ComponentOverlay.updateComponents()
+                    ComponentOverlay.fireComponentsUpdate()
                 }
             }
         }

@@ -161,7 +161,7 @@ object LiquidBounce : Listenable {
 
             // Initialize browser
             ThemeManager
-            ComponentOverlay
+            ComponentOverlay.parseComponents()
             IntegrationHandler
             BrowserManager.initBrowser()
 

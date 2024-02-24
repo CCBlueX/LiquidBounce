@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
-import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.key
@@ -262,7 +261,7 @@ open class Value<T : Any>(
             }
 
             ValueType.TEXT -> {
-                this.value = string as T
+                set(string as T)
             }
 
             ValueType.TEXT_ARRAY -> {
@@ -424,10 +423,11 @@ enum class ValueType {
 }
 
 enum class ListValueType(val type: Class<*>?) {
-    Block(net.minecraft.block.Block::class.java), Item(net.minecraft.item.Item::class.java), String(kotlin.String::class.java), Friend(
-        FriendManager.Friend::class.java
-    ),
-    Proxy(ProxyManager.Proxy::class.java), Account(MinecraftAccount::class.java), FontDetail(Fonts.FontInfo::class.java), None(
-        null
-    )
+    Block(net.minecraft.block.Block::class.java),
+    Item(net.minecraft.item.Item::class.java),
+    String(kotlin.String::class.java),
+    Friend(FriendManager.Friend::class.java),
+    Proxy(ProxyManager.Proxy::class.java),
+    Account(MinecraftAccount::class.java),
+    None(null)
 }

@@ -59,12 +59,16 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         }
     }
 
-    override fun enable() {
+    fun refresh() {
         // Should not happen, but in-case there is already a tab open, close it
         browserTab?.closeTab()
 
         // Create a new tab and open it
         browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
+    }
+
+    override fun enable() {
+        refresh()
 
         // Minimap
         ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
