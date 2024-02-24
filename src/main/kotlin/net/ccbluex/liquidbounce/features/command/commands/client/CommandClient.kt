@@ -51,12 +51,6 @@ object CommandClient {
 
     /**
      * Creates client command with a variety of subcommands.
-     *
-     * TODO: contributors
-     *  links
-     *  instructions
-     *  reset
-     *  theme manager
      */
     fun createCommand() = CommandBuilder.begin("client")
         .hub()
@@ -315,8 +309,42 @@ object CommandClient {
 
                     chat("Successfully added html component.")
                 }.build()
-            )
-            .build()
+            ).build()
+        )
+        .subcommand(CommandBuilder.begin("remove")
+            .parameter(
+                ParameterBuilder.begin<String>("name")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                    .build()
+            ).handler { command, args ->
+                val name = args[0] as String
+                val component = components.find { it.name.equals(name, true) }
+
+                if (component == null) {
+                    chat(regular("Component not found."))
+                    return@handler
+                }
+
+                components -= component
+                ComponentOverlay.fireComponentsUpdate()
+
+                chat("Successfully removed component.")
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("clear")
+            .handler { command, args ->
+                components.clear()
+                ComponentOverlay.fireComponentsUpdate()
+
+                chat("Successfully cleared components.")
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("update")
+            .handler { command, args ->
+                ComponentOverlay.fireComponentsUpdate()
+
+                chat("Successfully updated components.")
+            }.build()
         )
         .build()
 
