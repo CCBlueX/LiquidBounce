@@ -23,16 +23,17 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
-class AlignmentConfigurable(
+class Alignment(
     horizontalAlignment: ScreenAxisX,
     horizontalPadding: Int,
     verticalAlignment: ScreenAxisY,
     verticalPadding: Int,
 ) : Configurable("Alignment") {
-    private val horizontalAlignment by enumChoice("HorizontalAlignment", horizontalAlignment)
-    private val horizontalPadding by int("HorizontalPadding", horizontalPadding, 1..256)
-    private val verticalAlignment by enumChoice("VerticalAlignment", verticalAlignment)
-    private val verticalPadding by int("VerticalPadding", verticalPadding, 1..256)
+
+    val horizontalAlignment by enumChoice("HorizontalAlignment", horizontalAlignment)
+    val horizontalPadding by int("HorizontalPadding", horizontalPadding, -256..256)
+    val verticalAlignment by enumChoice("VerticalAlignment", verticalAlignment)
+    val verticalPadding by int("VerticalPadding", verticalPadding, -256..256)
 
     fun getBounds(
         width: Float,
@@ -44,12 +45,14 @@ class AlignmentConfigurable(
         val x =
             when (horizontalAlignment) {
                 ScreenAxisX.LEFT -> horizontalPadding.toFloat()
+                ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f - horizontalPadding.toFloat()
                 ScreenAxisX.RIGHT -> screenWidth - width - horizontalPadding.toFloat()
             }
 
         val y =
             when (verticalAlignment) {
                 ScreenAxisY.TOP -> verticalPadding.toFloat()
+                ScreenAxisY.CENTER -> screenHeight / 2f - height / 2f - verticalPadding.toFloat()
                 ScreenAxisY.BOTTOM -> screenHeight - height - verticalPadding.toFloat()
             }
 
@@ -58,11 +61,31 @@ class AlignmentConfigurable(
 
     enum class ScreenAxisX(override val choiceName: String) : NamedChoice {
         LEFT("Left"),
+        CENTER("Center"),
         RIGHT("Right"),
     }
 
     enum class ScreenAxisY(override val choiceName: String) : NamedChoice {
         TOP("Top"),
+        CENTER("Center"),
         BOTTOM("Bottom"),
     }
+
+    /**
+     * Converts the alignement configurable to style (CSS)
+     */
+    fun toStyle() = """
+        position: fixed;
+        ${when (horizontalAlignment) {
+            ScreenAxisX.LEFT -> "left: ${horizontalPadding}px"
+            ScreenAxisX.RIGHT -> "right: ${horizontalPadding}px"
+            ScreenAxisX.CENTER -> "right: calc(50% - ${horizontalPadding}px)" // test if this works, i guessed
+        }};
+        ${when (verticalAlignment) {
+            ScreenAxisY.TOP -> "top: ${verticalPadding}px"
+            ScreenAxisY.BOTTOM -> "bottom: ${verticalPadding}px"
+            ScreenAxisY.CENTER -> "top: calc(50% - ${verticalPadding}px)"
+        }};
+    """.trimIndent().replace("\n", "")
+
 }

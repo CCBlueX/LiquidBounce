@@ -29,7 +29,9 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.minecraft.util.Util
+import java.net.URL
 import java.text.SimpleDateFormat
+import java.util.Properties
 
 internal fun RestNode.clientRest() {
     get("/info") {
@@ -68,7 +70,7 @@ internal fun RestNode.clientRest() {
         })
     }
 
-    get("/exit") {
+    post("/exit") {
         mc.scheduleStop()
         httpOk(JsonObject())
     }
@@ -84,8 +86,19 @@ internal fun RestNode.clientRest() {
 
     post("/browse") {
         val body = decode<JsonObject>(it.content)
-        val url = body["url"]?.asString ?: return@post httpForbidden("No url")
+        val target = body["target"]?.asString ?: return@post httpForbidden("No target specified")
+
+        val url = POSSIBLE_URL_TARGETS[target] ?: return@post httpForbidden("Unknown target")
+
         Util.getOperatingSystem().open(url)
         httpOk(JsonObject())
     }
+}
+
+private val POSSIBLE_URL_TARGETS: Map<String, URL> = run {
+    val properties = Properties()
+
+    properties.load(LiquidBounce::class.java.getResourceAsStream("/assets/liquidbounce/client_urls.properties"))
+
+    properties.stringPropertyNames().associateWith { URL(properties.getProperty(it)) }
 }

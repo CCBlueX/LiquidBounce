@@ -96,6 +96,7 @@ object Fonts {
          */
         private fun downloadFont() {
             logger.info("Downloading required font $name...")
+
             val fontFolder = fontsRoot.resolve(name).apply {
                 if (exists()) {
                     deleteRecursively()

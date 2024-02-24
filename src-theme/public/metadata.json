@@ -2,35 +2,174 @@
   "name": "LiquidBounce",
   "version": "0.1.0",
   "author": "CCBlueX",
-  "baseUrl": "#",
   "supports": [
     "clickgui",
-    "hud",
     "title",
-    "multiplayer"
+    "proxymanager",
+    "altmanager",
+    "customize"
   ],
   "overlays": [
+    "hud",
     "inventory",
-    "splash"
+    "splash",
+    "container",
+    "disconnected"
   ],
-  "components": {
-    "arraylist": {
-      "enabled": true,
-      "alignment": {
-        "horizontalAlignment": "right",
-        "horizontalPadding": 0,
-        "verticalAlignment": "top",
-        "verticalPadding": 0
-      }
-    },
-    "hotbar": {
-        "enabled": true,
-        "alignment": {
-            "horizontalAlignment": "center",
-            "horizontalPadding": 98,
-            "verticalAlignment": "bottom",
-            "verticalPadding": 0
+  "components": [
+    {
+      "name": "Watermark",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "HorizontalAlignment",
+              "value": "Left"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 15
+            },
+            {
+              "name": "VerticalAlignment",
+              "value": "Top"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 15
+            }
+          ]
         }
+      ]
+    },
+    {
+      "name": "TabGui",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "HorizontalAlignment",
+              "value": "Left"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 15
+            },
+            {
+              "name": "VerticalAlignment",
+              "value": "Top"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 90
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ArrayList",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "HorizontalAlignment",
+              "value": "Right"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": -10
+            },
+            {
+              "name": "VerticalAlignment",
+              "value": "Top"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "HorizontalAlignment",
+              "value": "Right"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 15
+            },
+            {
+              "name": "VerticalAlignment",
+              "value": "Bottom"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 15
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Minimap",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "HorizontalAlignment",
+              "value": "Left"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 7
+            },
+            {
+              "name": "VerticalAlignment",
+              "value": "Top"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 180
+            }
+          ]
+        },
+        {
+          "name": "Size",
+          "value": 82
+        }
+      ]
     }
-  }
+  ]
 }

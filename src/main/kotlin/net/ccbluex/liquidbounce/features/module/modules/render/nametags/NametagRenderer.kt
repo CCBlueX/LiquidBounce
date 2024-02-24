@@ -110,7 +110,14 @@ class NametagRenderer {
         GL11.glEnable(GL11.GL_DEPTH_TEST)
 
         RenderSystem.enableBlend()
-        env.withColor(Color4b(0, 0, 0, 127)) {
+        RenderSystem.blendFuncSeparate(
+            GL11.GL_SRC_ALPHA,
+            GL11.GL_ONE_MINUS_SRC_ALPHA,
+            GL11.GL_ONE,
+            GL11.GL_ZERO
+        )
+
+        env.withColor(Color4b(0, 0, 0, 120)) {
             quadBuffers.draw()
         }
         env.withColor(Color4b(0, 0, 0, 255)) {

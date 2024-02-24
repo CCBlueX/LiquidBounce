@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.Configurable
@@ -27,7 +28,6 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -68,7 +68,7 @@ open class Module(
     private var calledSinceStartup = false
 
     // Module options
-    var enabled by valueEnabled.listen { new ->
+    var enabled by valueEnabled.onChange { new ->
         // Check if the module is locked
         locked?.let { locked ->
             if (locked.get()) {
@@ -79,7 +79,7 @@ open class Module(
                 )
 
                 // Keeps it turned off
-                return@listen false
+                return@onChange false
             }
         }
 
@@ -99,10 +99,10 @@ open class Module(
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {
-                return@listen false
+                return@onChange false
             }
 
-            if (!CommandConfig.loadingNow) {
+            if (!loadingNow) {
                 notification(
                     if (new) translation("liquidbounce.generic.enabled")
                     else translation("liquidbounce.generic.disabled"),
@@ -130,7 +130,7 @@ open class Module(
         .doNotInclude()
     var hidden by boolean("Hidden", hide)
         .doNotInclude()
-        .listen {
+        .onChange {
             EventManager.callEvent(RefreshArrayListEvent())
             it
         }
@@ -207,8 +207,8 @@ open class Module(
     /**
      * Handles disconnect from world and if [disableOnQuit] is true disables module
      */
-    val onDisconnect = handler<WorldDisconnectEvent> {
-        if (disableOnQuit) {
+    val onDisconnect = handler<WorldDisconnectEvent>(ignoreCondition = true) {
+        if (enabled && disableOnQuit) {
             enabled = false
         }
     }

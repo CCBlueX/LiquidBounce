@@ -47,6 +47,8 @@ data class DirectionalInput(
         val NONE = DirectionalInput(forwards = false, backwards = false, left = false, right = false)
         val FORWARDS = DirectionalInput(forwards = true, backwards = false, left = false, right = false)
         val BACKWARDS = DirectionalInput(forwards = false, backwards = true, left = false, right = false)
+        val LEFT = DirectionalInput(forwards = false, backwards = false, left = true, right = false)
+        val RIGHT = DirectionalInput(forwards = false, backwards = false, left = false, right = true)
     }
 }
 

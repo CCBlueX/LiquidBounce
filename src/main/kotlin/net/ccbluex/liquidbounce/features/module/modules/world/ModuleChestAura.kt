@@ -50,7 +50,7 @@ import net.minecraft.util.math.Box
 object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 0F..6F).listen {
+    private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
         if (it > range) {
             range
         } else {

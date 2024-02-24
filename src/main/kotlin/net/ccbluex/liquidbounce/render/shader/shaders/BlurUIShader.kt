@@ -16,26 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.render.shader.shaders
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.render.AlignmentConfigurable
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
 
-object ModuleScoreboard : Module("Scoreboard", Category.RENDER) {
+object BlurUIShader : MinecraftFramebufferShader("blur_ui") {
 
-    val turnOff by boolean("TurnOff", false)
-    val alignment =
-        AlignmentConfigurable(
-            horizontalAlignment = AlignmentConfigurable.ScreenAxisX.RIGHT,
-            horizontalPadding = 0,
-            verticalAlignment = AlignmentConfigurable.ScreenAxisY.BOTTOM,
-            verticalPadding = 16,
-        )
+    fun begin(shaderTexture: Int) {
+        this.beginInternal()
 
-    init {
-        tree(alignment)
+        RenderSystem.setShaderTexture(1, shaderTexture)
     }
 
+    fun setColor(color: Color4b) {
+        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
+    }
 
 }

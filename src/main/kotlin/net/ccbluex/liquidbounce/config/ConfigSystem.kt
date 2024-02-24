@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.config
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import com.google.gson.JsonParser
+import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
@@ -223,50 +220,61 @@ object ConfigSystem {
             throw IllegalStateException()
         }
 
-        val values =
-            jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
+        val values = jsonObject.getAsJsonArray("value").map {
+            it.asJsonObject
+        }.associateBy { it["name"].asString!! }
 
         for (value in configurable.value) {
-            if (value is Configurable) {
-                val currentElement = values[value.name] ?: continue
+            val currentElement = values[value.name] ?: continue
 
-                runCatching {
-                    if (value is ChoiceConfigurable) {
-                        runCatching {
-                            val newActive = currentElement["active"].asString
+            deserializeValue(value, currentElement)
+        }
+    }
 
-                            value.setFromValueName(newActive)
-                        }.onFailure { it.printStackTrace() }
-
-                        val choices = currentElement["choices"].asJsonObject
-
-                        for (choice in value.choices) {
-                            runCatching {
-                                val choiceElement = choices[choice.name]
-                                    ?: error("Choice ${choice.name} not found")
-
-                                deserializeConfigurable(choice, choiceElement)
-                            }.onFailure {
-                                logger.error("Unable to deserialize choice ${choice.name}", it)
-                            }
-                        }
+    /**
+     * Deserialize a value from a json object
+     */
+    fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
+        // In case of a configurable, we need to go deeper and deserialize the configurable itself
+        if (value is Configurable) {
+            runCatching {
+                if (value is ChoiceConfigurable) {
+                    // Set current active choice
+                    runCatching {
+                        value.setFromValueName(jsonObject["active"].asString)
+                    }.onFailure {
+                        logger.error("Unable to deserialize active choice for ${value.name}", it)
                     }
 
-                    // Deserialize the rest of the configurable
-                    deserializeConfigurable(value, currentElement)
-                }.onFailure {
-                    logger.error("Unable to deserialize configurable ${value.name}", it)
-                }
-            } else {
-                val currentElement = values[value.name] ?: continue
+                    // Deserialize each choice
+                    val choices = jsonObject["choices"].asJsonObject
 
-                runCatching {
-                    value.deserializeFrom(clientGson, currentElement["value"])
-                }.onFailure {
-                    logger.error("Unable to deserialize value ${value.name}", it)
+                    for (choice in value.choices) {
+                        runCatching {
+                            val choiceElement = choices[choice.name]
+                                ?: error("Choice ${choice.name} not found")
+
+                            deserializeConfigurable(choice, choiceElement)
+                        }.onFailure {
+                            logger.error("Unable to deserialize choice ${choice.name}", it)
+                        }
+                    }
                 }
+
+                // Deserialize the rest of the configurable
+                deserializeConfigurable(value, jsonObject)
+            }.onFailure {
+                logger.error("Unable to deserialize configurable ${value.name}", it)
             }
 
+            return
+        }
+
+        // Otherwise we simply deserialize the value
+        runCatching {
+            value.deserializeFrom(clientGson, jsonObject["value"])
+        }.onFailure {
+            logger.error("Unable to deserialize value ${value.name}", it)
         }
     }
 

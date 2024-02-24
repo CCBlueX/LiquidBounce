@@ -49,7 +49,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val modes = choices("Mode", Box, arrayOf(Box))
     private val targets by blocks("Targets",
-        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()).listen {
+        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()).onChange {
         if (enabled) {
             disable()
             enable()

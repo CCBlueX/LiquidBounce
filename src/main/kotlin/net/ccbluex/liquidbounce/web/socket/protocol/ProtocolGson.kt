@@ -22,8 +22,9 @@ package net.ccbluex.liquidbounce.web.socket.protocol
 import com.google.gson.*
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
-import net.ccbluex.tenacc.utils.outputString
+import net.ccbluex.liquidbounce.utils.client.convertToString
+import net.ccbluex.liquidbounce.web.theme.ComponentSerializer
+import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.ItemStack
@@ -40,6 +41,42 @@ annotation class ProtocolExclude
 class ProtocolExclusionStrategy : ExclusionStrategy {
     override fun shouldSkipClass(clazz: Class<*>?) = false
     override fun shouldSkipField(field: FieldAttributes) = field.getAnnotation(ProtocolExclude::class.java) != null
+}
+
+object ProtocolConfigurableWithComponentSerializer : JsonSerializer<Configurable> {
+
+    override fun serialize(
+        src: Configurable,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ): JsonElement {
+        if (src is Component) {
+            return ComponentSerializer.serialize(src, typeOfSrc, context)
+        }
+
+        return JsonObject().apply {
+            addProperty("name", src.name)
+            add("value", context.serialize(src.value.filter {
+                !it.notAnOption
+            }))
+            add("valueType", context.serialize(src.valueType))
+        }
+    }
+}
+
+object ProtocolConfigurableSerializer : JsonSerializer<Configurable> {
+
+    override fun serialize(
+        src: Configurable,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ) = JsonObject().apply {
+        addProperty("name", src.name)
+        add("value", context.serialize(src.value.filter {
+            !it.notAnOption
+        }))
+        add("valueType", context.serialize(src.valueType))
+    }
 }
 
 class ServerInfoSerializer : JsonSerializer<ServerInfo> {
@@ -77,7 +114,7 @@ class ItemStackSerializer : JsonSerializer<ItemStack> {
         = src?.let {
             JsonObject().apply {
                 addProperty("identifier", Registries.ITEM.getId(it.item).toString())
-                addProperty("displayName", it.name.outputString())
+                addProperty("displayName", it.name.convertToString())
                 addProperty("count", it.count)
                 addProperty("damage", it.damage)
                 addProperty("maxDamage", it.maxDamage)
@@ -100,7 +137,7 @@ class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
     ) = src?.let {
         JsonObject().apply {
             addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType).toString())
-            addProperty("localizedName", it.effectType.name.outputString())
+            addProperty("localizedName", it.effectType.name.convertToString())
             addProperty("duration", it.duration)
             addProperty("amplifier", it.amplifier)
             addProperty("ambient", it.isAmbient)
@@ -112,10 +149,17 @@ class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
 
 }
 
-internal val protocolGson = GsonBuilder()
+internal val strippedProtocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableSerializer)
+    .create()
+
+internal val protocolGson = GsonBuilder()
+    .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
+    .registerCommonTypeAdapters()
+    //.registerTypeHierarchyAdapter(Component::class.java, ComponentSerializer)
+    .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableWithComponentSerializer)
     .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer())
     .registerTypeAdapter(GameMode::class.java, GameModeSerializer())
     .registerTypeAdapter(ItemStack::class.java, ItemStackSerializer())

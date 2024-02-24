@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
@@ -62,7 +63,7 @@ object CommandLocalConfig {
                                 return@handler
                             }
 
-                            CommandConfig.loadingNow = true
+                            loadingNow = true
                             ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
                                 ConfigSystem.autoConfigGson)
                         }.onFailure {
@@ -71,7 +72,7 @@ object CommandLocalConfig {
                             chat(regular(command.result("loaded", variable(name))))
                         }
 
-                        CommandConfig.loadingNow = false
+                        loadingNow = false
                     }
                     .build()
             )
