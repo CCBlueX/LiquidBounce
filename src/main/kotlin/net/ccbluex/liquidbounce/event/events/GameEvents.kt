@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.network.ServerAddress
-import net.minecraft.client.network.ServerInfo.ServerType
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.text.Text
 
@@ -94,14 +92,7 @@ class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatTy
 
 @Nameable("splashOverlay")
 @WebSocketEvent
-class SplashOverlayEvent(val action: Action) : Event() {
-
-    enum class Action {
-        @SerializedName("show") SHOW,
-        @SerializedName("hide") HIDE
-    }
-
-}
+class SplashOverlayEvent(val showingSplash: Boolean) : Event()
 
 @Nameable("splashProgress")
 @WebSocketEvent
