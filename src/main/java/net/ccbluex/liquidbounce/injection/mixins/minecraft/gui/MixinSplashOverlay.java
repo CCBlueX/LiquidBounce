@@ -27,7 +27,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.resource.ResourceReload;
 import net.minecraft.util.math.ColorHelper;
-import org.checkerframework.checker.units.qual.A;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -53,13 +52,13 @@ public class MixinSplashOverlay {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void hookInit(CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(SplashOverlayEvent.Action.SHOW));
+        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(true));
         BRAND_ARGB = () -> ColorHelper.Argb.getArgb(255, 24, 26, 27);
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setOverlay(Lnet/minecraft/client/gui/screen/Overlay;)V"))
     private void hookEnd(CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(SplashOverlayEvent.Action.HIDE));
+        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(false));
     }
 
     @Unique
