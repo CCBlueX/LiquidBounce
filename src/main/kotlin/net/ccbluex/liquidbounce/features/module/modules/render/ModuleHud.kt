@@ -22,13 +22,13 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ChunkRenderer
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
+import net.ccbluex.liquidbounce.web.theme.component.types.minimap.ChunkRenderer
 import net.minecraft.client.gui.screen.DisconnectedScreen
 
 /**

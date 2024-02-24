@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.web.theme.component
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent
-import net.ccbluex.liquidbounce.web.theme.component.types.MinimapComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.minimap.MinimapComponent
 
 enum class ComponentType(
     override val choiceName: String,

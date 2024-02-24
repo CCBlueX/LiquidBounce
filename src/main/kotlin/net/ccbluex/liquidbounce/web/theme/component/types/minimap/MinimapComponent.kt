@@ -19,13 +19,12 @@
  *
  */
 
-package net.ccbluex.liquidbounce.web.theme.component.types
+package net.ccbluex.liquidbounce.web.theme.component.types.minimap
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
-import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ChunkRenderer
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3

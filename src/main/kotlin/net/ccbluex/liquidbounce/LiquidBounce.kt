@@ -153,6 +153,10 @@ object LiquidBounce : Listenable {
             // Load user scripts
             ScriptManager.loadScripts()
 
+            // Load theme and component overlay
+            ThemeManager
+            ComponentOverlay.parseComponents()
+
             // Load config system from disk
             ConfigSystem.load()
 
@@ -160,8 +164,6 @@ object LiquidBounce : Listenable {
             ClientSocket.start()
 
             // Initialize browser
-            ThemeManager
-            ComponentOverlay.parseComponents()
             IntegrationHandler
             BrowserManager.initBrowser()
 
