@@ -12,6 +12,13 @@ import kotlin.math.sqrt
 
 object SpeedGrimCollide : SpeedBHopBase("GrimCollide") {
 
+    /**
+     * The factor to multiply the player's velocity with when colliding with another player.
+     *
+     * 1.19f seems decent enough. Rarely flags for Simulation. 1.3f is the maximum that works.
+     */
+    private val factor by float("Factor", 1.19f, 1.1f..1.3f)
+
     override val parent: ChoiceConfigurable
         get() = ModuleSpeed.modes
 
@@ -30,8 +37,8 @@ object SpeedGrimCollide : SpeedBHopBase("GrimCollide") {
         }
 
         if (collidesWithAnother) {
-            val velocityX = player.velocity.x * 1.08 * 1.1
-            val velocityZ = player.velocity.z * 1.08 * 1.1
+            val velocityX = player.velocity.x * factor
+            val velocityZ = player.velocity.z * factor
             player.setVelocity(velocityX, player.velocity.y, velocityZ)
         }
     }

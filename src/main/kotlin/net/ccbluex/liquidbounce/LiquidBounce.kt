@@ -19,10 +19,10 @@
  */
 package net.ccbluex.liquidbounce
 
-import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -31,16 +31,15 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
+import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
+import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
-import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -238,9 +237,9 @@ object LiquidBounce : Listenable {
             // Load settings list from API
             runCatching {
                 logger.info("Loading settings list from API...")
-                CommandConfig.cachedSettingsList = ClientApi.requestSettingsList()
+                AutoConfig.configs
             }.onSuccess {
-                logger.info("Loaded ${CommandConfig.cachedSettingsList?.size} settings from API.")
+                logger.info("Loaded ${it.size} settings from API.")
             }.onFailure {
                 logger.error("Failed to load settings list from API", it)
             }

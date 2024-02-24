@@ -41,6 +41,7 @@ class RestApi {
                 localStorageRest()
                 moduleRest()
                 proxyRest()
+                configRest()
                 screenRest()
                 sessionRest()
 

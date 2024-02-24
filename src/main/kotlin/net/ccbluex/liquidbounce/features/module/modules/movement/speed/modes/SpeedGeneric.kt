@@ -41,7 +41,7 @@ object SpeedSpeedYPort : Choice("YPort") {
             player.strafe(speed = 0.4)
             player.upwards(0.42f)
             waitTicks(1)
-            player.downwards(-1f)
+            player.downwards(1f)
         }
     }
 

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -144,7 +145,7 @@ fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
 }
 
 fun ClientPlayerEntity.downwards(motion: Float) {
-    velocity.y = motion.toDouble()
+    velocity.y = -motion.toDouble()
     velocityDirty = true
 }
 
@@ -161,7 +162,14 @@ fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpe
 val Vec3d.sqrtSpeed: Double
     get() = sqrt(x * x + z * z)
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) {
+fun Vec3d.strafe(yaw: Float = player.directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0,
+                 keyboardCheck: Boolean = false): Vec3d {
+    if (keyboardCheck && !player.pressingMovementButton) {
+        x = 0.0
+        z = 0.0
+        return this
+    }
+
     val prevX = x * (1.0 - strength)
     val prevZ = z * (1.0 - strength)
     val useSpeed = speed * strength
@@ -169,18 +177,7 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) 
     val angle = Math.toRadians(yaw.toDouble())
     x = (-sin(angle) * useSpeed) + prevX
     z = (cos(angle) * useSpeed) + prevZ
-}
-
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, keyboardCheck: Boolean = false) {
-    val player = mc.player ?: return
-
-    if (keyboardCheck && !player.pressingMovementButton) {
-        x = 0.0
-        z = 0.0
-        return
-    }
-
-    this.strafe(yaw, speed, strength)
+    return this
 }
 
 val Entity.eyes: Vec3d

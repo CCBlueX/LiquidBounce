@@ -23,7 +23,7 @@ import com.google.gson.*
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.adapter.ProtocolConfigurableSerializer
-import net.ccbluex.tenacc.utils.outputString
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.ItemStack
@@ -77,7 +77,7 @@ class ItemStackSerializer : JsonSerializer<ItemStack> {
         = src?.let {
             JsonObject().apply {
                 addProperty("identifier", Registries.ITEM.getId(it.item).toString())
-                addProperty("displayName", it.name.outputString())
+                addProperty("displayName", it.name.convertToString())
                 addProperty("count", it.count)
                 addProperty("damage", it.damage)
                 addProperty("maxDamage", it.maxDamage)
@@ -100,7 +100,7 @@ class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
     ) = src?.let {
         JsonObject().apply {
             addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType).toString())
-            addProperty("localizedName", it.effectType.name.outputString())
+            addProperty("localizedName", it.effectType.name.convertToString())
             addProperty("duration", it.duration)
             addProperty("amplifier", it.amplifier)
             addProperty("ambient", it.isAmbient)
