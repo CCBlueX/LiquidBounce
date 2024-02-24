@@ -125,7 +125,11 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         val rectColor = if (rectRainbow) Color.black else Color(rectRed, rectGreen, rectBlue, rectAlpha)
 
         RainbowShader.begin(rectRainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-            drawRoundedRect2(1F, 1 + tabY - 1, width, tabY + tabHeight, rectColor, roundedRectRadius)
+            if (!borderValue) {
+                drawRoundedRect2(1F, 1 + tabY - 1, width, tabY + tabHeight, rectColor, roundedRectRadius)
+            } else {
+                drawRoundedRect2(3F, 5 + tabY - 4, width - 2F, tabY + tabHeight - 2F, rectColor, roundedRectRadius)
+            }
         }
 
         glColor4f(1f, 1f, 1f, 1f)

@@ -39,8 +39,9 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
     private val backgroundColorBlue by IntegerValue("Background-B", 0, 0..255)
     private val backgroundColorAlpha by IntegerValue("Background-Alpha", 95, 0..255)
 
+    private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
+
     private val rect by BoolValue("Rect", false)
-        private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
         private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Rainbow"), "Custom") { rect }
             private val rectColorRed by IntegerValue("Rect-R", 0, 0..255) { rect && rectColorMode == "Custom"}
             private val rectColorGreen by IntegerValue("Rect-G", 111, 0..255) { rect && rectColorMode == "Custom"}
