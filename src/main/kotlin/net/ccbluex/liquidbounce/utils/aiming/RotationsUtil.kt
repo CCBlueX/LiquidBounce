@@ -47,7 +47,7 @@ import kotlin.math.*
 /**
  * Configurable to configure the dynamic rotation engine
  */
-class RotationsConfigurable(
+open class RotationsConfigurable(
     turnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
     smootherMode: SmootherMode = SmootherMode.RELATIVE,
     fixVelocity: Boolean = true,

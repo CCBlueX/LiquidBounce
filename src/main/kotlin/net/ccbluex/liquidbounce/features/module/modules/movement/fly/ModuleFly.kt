@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyEn
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyExplosion
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyJetpack
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusDamage
@@ -53,6 +54,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             FlyEnderpearl,
             FlyAirWalk,
             FlyExplosion,
+            FlyFireball,
 
             // Anti-cheat specific fly modes
             FlyVulcan277Glide,
