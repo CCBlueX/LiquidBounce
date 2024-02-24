@@ -28,7 +28,9 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
+import java.net.BindException
 
 
 internal class NettyServer {
@@ -40,7 +42,7 @@ internal class NettyServer {
 
     }
 
-    fun startServer() {
+    fun startServer(port: Int = PORT) {
         val bossGroup = if (Epoll.isAvailable()) EpollEventLoopGroup() else NioEventLoopGroup()
         val workerGroup = if (Epoll.isAvailable()) EpollEventLoopGroup() else NioEventLoopGroup()
 
@@ -52,11 +54,20 @@ internal class NettyServer {
                 .channel(if (Epoll.isAvailable()) EpollServerSocketChannel::class.java else NioServerSocketChannel::class.java)
                 .handler(LoggingHandler(LogLevel.INFO))
                 .childHandler(HttpChannelInitializer())
-            val ch = b.bind(PORT).sync().channel()
-            logger.info("Netty server started on port $PORT.")
+            val ch = b.bind(port).sync().channel()
+            logger.info("Netty server started on port $port.")
             ch.closeFuture().sync()
         } catch (e: InterruptedException) {
             logger.error("Netty server interrupted", e)
+        } catch (e: BindException) {
+            logger.error("Netty server failed to bind to port $port", e)
+            if (port > 15100) {
+                logger.error("Netty server failed to bind to any port")
+                ErrorHandler.fatal(e)
+                return
+            }
+
+            startServer(port + 1)
         } finally {
             bossGroup.shutdownGracefully()
             workerGroup.shutdownGracefully()
