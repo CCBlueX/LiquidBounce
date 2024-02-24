@@ -155,7 +155,7 @@ object LiquidBounce : Listenable {
 
             // Load theme and component overlay
             ThemeManager
-            ComponentOverlay.parseComponents()
+            ComponentOverlay.insertComponents()
 
             // Load config system from disk
             ConfigSystem.load()

@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.web.theme.component
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 
 import net.ccbluex.liquidbounce.config.Value
@@ -41,42 +40,14 @@ object ComponentOverlay : Configurable("Components", components as MutableList<V
     fun isTweakEnabled(tweak: FeatureTweak) = handleEvents() && components.filterIsInstance<IntegratedComponent>()
         .any { it.enabled && it.tweaks.contains(tweak) }
 
-    fun parseComponents() {
-        val theme = ThemeManager.activeTheme
-        val rawComponents = theme.metadata.rawComponents
-        val themeComponent = rawComponents
-            .map { it.asJsonObject }
-            .associateBy { it["name"].asString!! }
+    fun insertComponents() {
+        val componentList = ThemeManager.activeTheme.parseComponents()
 
-        val componentList = mutableListOf<Component>()
-
-        for ((name, obj) in themeComponent) {
-            // Check if component already exists in components, allows for seamless switch between themes/
-            val existingComponent = components.find { it.name == name }
-            if (existingComponent != null) {
-                componentList.add(existingComponent)
-                continue
-            }
-
-            runCatching {
-                val componentType = ComponentType.byName(name) ?: error("Unknown component type: $name")
-                val component = componentType.createComponent()
-
-                runCatching {
-                    ConfigSystem.deserializeConfigurable(component, obj)
-                }.onFailure {
-                    logger.error("Failed to deserialize component $name", it)
-                }
-
-                componentList.add(component)
-            }.onFailure {
-                logger.error("Failed to create component $name", it)
-            }
-        }
-
-        // Clear and fill the components list
+        // todo: fix custom components being removed
         components.clear()
-        components.addAll(componentList)
+        components += componentList
+
+        logger.info("Inserted ${components.size} components")
     }
 
     fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(components))
