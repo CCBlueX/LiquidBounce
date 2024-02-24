@@ -41,7 +41,7 @@ fun RestNode.screenRest() {
     get("/virtualScreen") {
         httpOk(JsonObject().apply {
             addProperty("name", IntegrationHandler.momentaryVirtualScreen?.type?.routeName)
-            addProperty("splash", mc.overlay is SplashOverlay)
+            addProperty("showingSplash", mc.overlay is SplashOverlay)
         })
     }
 
