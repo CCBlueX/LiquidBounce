@@ -138,6 +138,66 @@
       ]
     },
     {
+      "name": "Hotbar",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "HorizontalAlignment",
+              "value": "Center"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 0
+            },
+            {
+              "name": "VerticalAlignment",
+              "value": "Bottom"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Scoreboard",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "HorizontalAlignment",
+              "value": "Left"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 0
+            },
+            {
+              "name": "VerticalAlignment",
+              "value": "Center"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 20
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Minimap",
       "value": [
         {
