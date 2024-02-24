@@ -23,6 +23,8 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL14
 import java.awt.Color
 import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sin
 
 object RenderUtils : MinecraftInstance() {
@@ -385,9 +387,9 @@ object RenderUtils : MinecraftInstance() {
         drawRoundedBorder(x, y, x2, y2, width, color1, radius)
     }
 
-    fun drawRoundedBorderRect(x: Int, y: Int, x2: Int, y2: Int, width: Int, borderColor: Int, rectColor: Int, radius: Float) {
-        drawRoundedRectInt(x, y, x2, y2, rectColor, radius)
-        drawRoundedBorderInt(x, y, x2, y2, width, borderColor, radius)
+    fun drawRoundedBorderRectInt(x: Int, y: Int, x2: Int, y2: Int, width: Int, color1: Int, color2: Int, radius: Float) {
+        drawRoundedRectInt(x, y, x2, y2, color2, radius)
+        drawRoundedBorderInt(x, y, x2, y2, width.toFloat(), color1, radius)
     }
 
     fun drawBorder(x: Float, y: Float, x2: Float, y2: Float, width: Float, color: Int) {
@@ -426,84 +428,53 @@ object RenderUtils : MinecraftInstance() {
         glDisable(GL_LINE_SMOOTH)
     }
 
-    // TODO: Fix extra bold corner
     fun drawRoundedBorder(x: Float, y: Float, x2: Float, y2: Float, width: Float, color: Int, radius: Float) {
-        val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
-
-        glEnable(GL_BLEND)
-        glDisable(GL_TEXTURE_2D)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_LINE_SMOOTH)
-        glColor(color)
-        glLineWidth(width)
-
-        worldrenderer.begin(GL_LINE_LOOP, DefaultVertexFormats.POSITION)
-
-        val degree = Math.PI / 180
-        for (i in 0 until 90) {
-            val xPos = (x2 - radius + sin(i * degree) * radius)
-            val yPos = (y2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
-        }
-        for (i in 90 until 180) {
-            val xPos = (x2 - radius + sin(i * degree) * radius)
-            val yPos = (y + radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
-        }
-        for (i in 180 until 270) {
-            val xPos = (x + radius + sin(i * degree) * radius)
-            val yPos = (y + radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
-        }
-        for (i in 270 until 360) {
-            val xPos = (x + radius + sin(i * degree) * radius)
-            val yPos = (y2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
-        }
-
-        tessellator.draw()
-
-        glEnable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
-        glDisable(GL_LINE_SMOOTH)
+        drawRoundedBordered(x, y, x2, y2, color, width, radius)
     }
 
-    // TODO: Fix extra bold corner
-    fun drawRoundedBorderInt(x: Int, y: Int, x2: Int, y2: Int, width: Int, color: Int, radius: Float) {
+    fun drawRoundedBorderInt(x: Int, y: Int, x2: Int, y2: Int, width: Float, color: Int, radius: Float) {
+        drawRoundedBordered(x.toFloat(), y.toFloat(), x2.toFloat(), y2.toFloat(), color, width, radius)
+    }
+
+    private fun drawRoundedBordered(x1: Float, y1: Float, x2: Float, y2: Float, color: Int, radius: Float, width: Float) {
+        val alpha = (color ushr 24 and 0xFF) / 255.0f
+        val red = (color ushr 16 and 0xFF) / 255.0f
+        val green = (color ushr 8 and 0xFF) / 255.0f
+        val blue = (color and 0xFF) / 255.0f
+
+        val (newX1, newY1, newX2, newY2) = orderPoints(x1, y1, x2, y2)
+
         val tessellator = Tessellator.getInstance()
         val worldrenderer = tessellator.worldRenderer
 
-        glPushMatrix()
         glEnable(GL_BLEND)
         glDisable(GL_TEXTURE_2D)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_LINE_SMOOTH)
-        glColor(color)
-        glLineWidth(width.toFloat())
+        glLineWidth(width)
 
-        worldrenderer.begin(GL_LINE_LOOP, DefaultVertexFormats.POSITION)
+        worldrenderer.begin(GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR)
 
         val degree = Math.PI / 180
         for (i in 0 until 90) {
-            val xPos = (x2 - radius + sin(i * degree) * radius)
-            val yPos = (y2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
+            val x = (newX2 - radius + sin(i * degree) * radius)
+            val y = (newY2 - radius + cos(i * degree) * radius)
+            worldrenderer.pos(x - width / 2, y - width / 2, 0.0).color(red, green, blue, alpha).endVertex()
         }
         for (i in 90 until 180) {
-            val xPos = (x2 - radius + sin(i * degree) * radius)
-            val yPos = (y + radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
+            val x = (newX2 - radius + sin(i * degree) * radius)
+            val y = (newY1 + radius + cos(i * degree) * radius)
+            worldrenderer.pos(x - width / 2, y + width / 2, 0.0).color(red, green, blue, alpha).endVertex()
         }
         for (i in 180 until 270) {
-            val xPos = (x + radius + sin(i * degree) * radius)
-            val yPos = (y + radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
+            val x = (newX1 + radius + sin(i * degree) * radius)
+            val y = (newY1 + radius + cos(i * degree) * radius)
+            worldrenderer.pos(x + width / 2, y + width / 2, 0.0).color(red, green, blue, alpha).endVertex()
         }
         for (i in 270 until 360) {
-            val xPos = (x + radius + sin(i * degree) * radius)
-            val yPos = (y2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(xPos, yPos, 0.0).endVertex()
+            val x = (newX1 + radius + sin(i * degree) * radius)
+            val y = (newY2 - radius + cos(i * degree) * radius)
+            worldrenderer.pos(x + width / 2, y - width / 2, 0.0).color(red, green, blue, alpha).endVertex()
         }
 
         tessellator.draw()
@@ -511,7 +482,6 @@ object RenderUtils : MinecraftInstance() {
         glEnable(GL_TEXTURE_2D)
         glDisable(GL_BLEND)
         glDisable(GL_LINE_SMOOTH)
-        glPopMatrix()
     }
 
     fun quickDrawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
@@ -559,63 +529,9 @@ object RenderUtils : MinecraftInstance() {
         val green = (color ushr 8 and 0xFF) / 255.0f
         val blue = (color and 0xFF) / 255.0f
 
-        var temp: Float
-        var newX1 = x1
-        var newY1 = y1
-        var newX2 = x2
-        var newY2 = y2
+        val (newX1, newY1, newX2, newY2) = orderPoints(x1, y1, x2, y2)
 
-        if (newX1 > newX2) {
-            temp = newX1
-            newX1 = newX2
-            newX2 = temp
-        }
-
-        if (newY1 > newY2) {
-            temp = newY1
-            newY1 = newY2
-            newY2 = temp
-        }
-
-        glPushMatrix()
-        glEnable(GL_BLEND)
-        glDisable(GL_TEXTURE_2D)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_LINE_SMOOTH)
-        glLineWidth(1f)
-
-        val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
-        worldrenderer.begin(GL_POLYGON, DefaultVertexFormats.POSITION_COLOR)
-
-        val degree = Math.PI / 180
-        for (i in 0 until 90) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 90 until 180) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 180 until 270) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 270 until 360) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-
-        tessellator.draw()
-
-        glEnable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
-        glDisable(GL_LINE_SMOOTH)
-        glPopMatrix()
+        drawRoundedRectangle(newX1, newY1, newX2, newY2, red, green, blue, alpha, radius)
     }
 
     fun drawRoundedRect2(x1: Float, y1: Float, x2: Float, y2: Float, color: Color, radius: Float) {
@@ -624,23 +540,37 @@ object RenderUtils : MinecraftInstance() {
         val green = color.green / 255.0f
         val blue = color.blue / 255.0f
 
-        var temp: Float
-        var newX1 = x1
-        var newY1 = y1
-        var newX2 = x2
-        var newY2 = y2
+        val (newX1, newY1, newX2, newY2) = orderPoints(x1, y1, x2, y2)
 
-        if (newX1 > newX2) {
-            temp = newX1
-            newX1 = newX2
-            newX2 = temp
-        }
+        drawRoundedRectangle(newX1, newY1, newX2, newY2, red, green, blue, alpha, radius)
+    }
 
-        if (newY1 > newY2) {
-            temp = newY1
-            newY1 = newY2
-            newY2 = temp
-        }
+    fun drawRoundedRect3(x1: Float, y1: Float, x2: Float, y2: Float, color: Float, radius: Float) {
+        val intColor = color.toInt()
+        val alpha = (intColor ushr 24 and 0xFF) / 255.0f
+        val red = (intColor ushr 16 and 0xFF) / 255.0f
+        val green = (intColor ushr 8 and 0xFF) / 255.0f
+        val blue = (intColor and 0xFF) / 255.0f
+
+        val (newX1, newY1, newX2, newY2) = orderPoints(x1, y1, x2, y2)
+
+        drawRoundedRectangle(newX1, newY1, newX2, newY2, red, green, blue, alpha, radius)
+    }
+
+
+    fun drawRoundedRectInt(x1: Int, y1: Int, x2: Int, y2: Int, color: Int, radius: Float) {
+        val alpha = (color ushr 24 and 0xFF) / 255.0f
+        val red = (color ushr 16 and 0xFF) / 255.0f
+        val green = (color ushr 8 and 0xFF) / 255.0f
+        val blue = (color and 0xFF) / 255.0f
+
+        val (newX1, newY1, newX2, newY2) = orderPoints(x1.toFloat(), y1.toFloat(), x2.toFloat(), y2.toFloat())
+
+        drawRoundedRectangle(newX1, newY1, newX2, newY2, red, green, blue, alpha, radius)
+    }
+
+    private fun drawRoundedRectangle(x1: Float, y1: Float, x2: Float, y2: Float, red: Float, green: Float, blue: Float, alpha: Float, radius: Float) {
+        val (newX1, newY1, newX2, newY2) = orderPoints(x1, y1, x2, y2)
 
         glPushMatrix()
         glEnable(GL_BLEND)
@@ -683,69 +613,12 @@ object RenderUtils : MinecraftInstance() {
         glPopMatrix()
     }
 
-    fun drawRoundedRectInt(x1: Int, y1: Int, x2: Int, y2: Int, color: Int, radius: Float) {
-        val alpha = (color ushr 24 and 0xFF) / 255.0f
-        val red = (color ushr 16 and 0xFF) / 255.0f
-        val green = (color ushr 8 and 0xFF) / 255.0f
-        val blue = (color and 0xFF) / 255.0f
-
-        var temp: Int
-        var newX1 = x1
-        var newY1 = y1
-        var newX2 = x2
-        var newY2 = y2
-
-        if (newX1 > newX2) {
-            temp = newX1
-            newX1 = newX2
-            newX2 = temp
-        }
-
-        if (newY1 > newY2) {
-            temp = newY1
-            newY1 = newY2
-            newY2 = temp
-        }
-
-        glPushMatrix()
-        glEnable(GL_BLEND)
-        glDisable(GL_TEXTURE_2D)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_LINE_SMOOTH)
-        glLineWidth(1f)
-
-        val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
-        worldrenderer.begin(GL_POLYGON, DefaultVertexFormats.POSITION_COLOR)
-
-        val degree = Math.PI / 180
-        for (i in 0 until 90) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 90 until 180) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 180 until 270) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 270 until 360) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-
-        tessellator.draw()
-
-        glEnable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
-        glDisable(GL_LINE_SMOOTH)
-        glPopMatrix()
+    private fun orderPoints(x1: Float, y1: Float, x2: Float, y2: Float): FloatArray {
+        val newX1 = min(x1, x2)
+        val newY1 = min(y1, y2)
+        val newX2 = max(x1, x2)
+        val newY2 = max(y1, y2)
+        return floatArrayOf(newX1, newY1, newX2, newY2)
     }
 
     /**

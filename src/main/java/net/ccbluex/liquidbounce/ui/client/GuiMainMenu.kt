@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.minecraft.client.gui.*
 import net.minecraft.client.resources.I18n
@@ -42,10 +41,11 @@ class GuiMainMenu : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        drawBorderedRect(width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175,
+        drawRoundedBorderRect(width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175,
             2f,
             Integer.MIN_VALUE,
-            Integer.MIN_VALUE
+            Integer.MIN_VALUE,
+            3F
         )
 
         Fonts.fontBold180.drawCenteredString(CLIENT_NAME, width / 2F, height / 8F, 4673984, true)
@@ -55,13 +55,14 @@ class GuiMainMenu : GuiScreen() {
         if (messageOfTheDay?.isNotBlank() == true) {
             val lines = messageOfTheDay.lines()
 
-            drawBorderedRect(width / 2f - 115,
+            drawRoundedBorderRect(width / 2f - 115,
                 height / 4f + 190,
                 width / 2f + 115,
                 height / 4f + 192 + (Fonts.font35.fontHeight * lines.size),
                 2f,
                 Integer.MIN_VALUE,
-                Integer.MIN_VALUE
+                Integer.MIN_VALUE,
+                3F
             )
 
             // Draw rect below main rect and within draw MOTD text

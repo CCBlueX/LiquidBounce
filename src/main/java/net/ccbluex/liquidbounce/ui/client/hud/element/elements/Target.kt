@@ -14,8 +14,8 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -35,6 +35,8 @@ import kotlin.math.pow
  */
 @ElementInfo(name = "Target")
 class Target : Element() {
+
+    private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
 
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
     private val absorption by BoolValue("Absorption", true)
@@ -59,7 +61,7 @@ class Target : Element() {
             val width = (38f + (target.name?.let(Fonts.font40::getStringWidth) ?: 0)).coerceAtLeast(118f)
 
             // Draw rect box
-            drawBorderedRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
+            drawRoundedBorderRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb, roundedRectRadius)
 
             // Damage animation
             if (easingHealth > targetHealth.coerceAtMost(target.maxHealth))
