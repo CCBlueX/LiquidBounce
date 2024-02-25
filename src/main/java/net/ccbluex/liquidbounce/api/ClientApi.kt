@@ -23,7 +23,13 @@ import org.apache.http.entity.mime.MultipartEntityBuilder
  */
 object ClientApi {
 
-    private const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
+    /**
+     * For many people the SSL certificate is not being accepted because of outdated Java or odd computer settings.
+     * This is why we use a non-SSL endpoint since we don't handle any sensitive data.
+     *
+     * DO NOT CHANGE THIS ENDPOINT TO SSL.
+     */
+    private const val API_ENDPOINT = "http://nossl.api.liquidbounce.net/api/v1"
 
     /**
      * This makes sense because we want forks to be able to use this API and not only the official client.
