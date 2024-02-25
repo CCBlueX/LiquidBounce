@@ -23,6 +23,9 @@
     };
 
     function translateColor(color: string): string {
+        if (!color) {
+            return colors.black;
+        }
         if (color.startsWith("#")) {
             return color;
         } else {
