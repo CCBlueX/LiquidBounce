@@ -47,6 +47,7 @@
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ModuleTrajectories.kt$ModuleTrajectories$private fun drawTrajectoryForProjectile( motion: Vec3d, trajectoryInfo: TrajectoryInfo, pos: Vec3d, player: Entity, interpolatedOffset: Vec3, color: Color4b, matrixStack: MatrixStack ): HitResult?</ID>
     <ID>LongMethod:ProxyRest.kt$internal fun RestNode.proxyRest()</ID>
+    <ID>LongMethod:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>LongMethod:SessionRest.kt$private fun RestNode.setupAccountManagerRest()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, val ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val changeLook: Boolean )</ID>

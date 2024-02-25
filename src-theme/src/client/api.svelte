@@ -240,8 +240,8 @@
         })
     }
 
-    export function newMicrosoftAccountUrl() {
-        return request("/accounts/new/microsoft/url", {
+    export function newMicrosoftAccountClipboard() {
+        return request("/accounts/new/microsoft/clipboard", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -279,7 +279,7 @@
      * @param apiToken
      */
     export function newAlteningGen(apiToken) {
-        return request("/accounts/new/alteningGenerate", {
+        return request("/accounts/new/altening/generate", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -312,7 +312,7 @@
     }
 
     export function restoreInitialAccount() {
-        return request("/account/restoreInitial", {
+        return request("/account/restore", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -463,7 +463,7 @@
     }
 
     export function addProxy(proxy) {
-        return request("/proxies", {
+        return request("/proxies/add", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -473,7 +473,7 @@
     }
 
     export function removeProxy(id) {
-        return request("/proxies", {
+        return request("/proxies/remove", {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json"
@@ -483,8 +483,8 @@
     }
 
     export function setProxy(id) {
-        return request("/proxies", {
-            method: "PUT",
+        return request("/proxy", {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
