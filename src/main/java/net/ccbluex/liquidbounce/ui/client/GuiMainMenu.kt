@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.minecraft.client.gui.*
 import net.minecraft.client.resources.I18n
@@ -73,6 +74,24 @@ class GuiMainMenu : GuiScreen() {
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks)
+    }
+
+    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
+        // When clicking the message of the day text
+        val messageOfTheDay = messageOfTheDay?.message
+        if (messageOfTheDay?.isNotBlank() == true) {
+            val lines = messageOfTheDay.lines()
+            val motdHeight = height / 4f + 190
+            val motdWidth = width / 2f - 115
+            val motdHeightEnd = motdHeight + 192 + (Fonts.font35.fontHeight * lines.size)
+
+            if (mouseX >= motdWidth && mouseX <= width / 2f + 115 && mouseY >= motdHeight && mouseY <= motdHeightEnd) {
+                // Open liquidbounce website
+                MiscUtils.showURL("https://liquidbounce.net")
+            }
+        }
+
+        super.mouseClicked(mouseX, mouseY, mouseButton)
     }
 
     override fun actionPerformed(button: GuiButton) {
