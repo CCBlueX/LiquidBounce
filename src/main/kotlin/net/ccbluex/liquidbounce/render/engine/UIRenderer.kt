@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -73,6 +74,7 @@ object UIRenderer {
         this.isDrawingHudFramebuffer = false
 
         RenderSystem.enableBlend()
+        RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
 
         this.overlayFramebuffer.endWrite()
 
