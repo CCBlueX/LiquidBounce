@@ -28,11 +28,10 @@
 
 <style lang="scss">
   .menu {
-    width: 100vw;
-    height: 100vh;
     padding: 50px;
     display: flex;
     flex-direction: column;
+    height: 100vh;
   }
 
   .menu-wrapper {
@@ -40,5 +39,40 @@
     display: flex;
     flex-direction: column;
     will-change: transform;
+  }
+
+  @media screen and (max-width: 1366px) {
+    .menu {
+      zoom: 0.8;
+      height: 125vh;
+    }
+  }
+
+  @media screen and (max-width: 1200px) {
+    .menu {
+      zoom: 0.5;
+      height: 200vh;
+    }
+  }
+
+  @media screen and (max-height: 1000px) {
+    .menu {
+      zoom: 0.8;
+      height: 125vh;
+    }
+  }
+
+  @media screen and (max-height: 700px) {
+    .menu {
+      zoom: 0.5;
+      height: 200vh;
+    }
+  }
+
+  @media screen and (max-height: 540px) {
+    .menu {
+      zoom: 0.4;
+      height: 250vh;
+    }
   }
 </style>
