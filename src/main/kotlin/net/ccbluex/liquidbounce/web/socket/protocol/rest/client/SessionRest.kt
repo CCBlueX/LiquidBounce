@@ -79,6 +79,54 @@ private fun RestNode.setupAccountManagerRest() {
             })
         }
         httpOk(accounts)
+    }.apply {
+        post("/new/microsoft") {
+            AccountManager.newMicrosoftAccount {
+                browseUrl(it)
+                EventManager.callEvent(AltManagerUpdateEvent(true, "Opened login url in browser"))
+            }
+            httpOk(JsonObject())
+        }.apply {
+            post("/new/microsoft/clipboard") {
+                AccountManager.newMicrosoftAccount {
+                    RenderSystem.recordRenderCall {
+                        GLFW.glfwSetClipboardString(mc.window.handle, it)
+                        EventManager.callEvent(AltManagerUpdateEvent(true, "Copied login url to clipboard"))
+                    }
+                }
+
+                httpOk(JsonObject())
+            }
+        }
+
+        post("/new/cracked") {
+            class AccountForm(
+                val username: String
+            )
+            val accountForm = decode<AccountForm>(it.content)
+
+            AccountManager.newCrackedAccount(accountForm.username)
+            httpOk(JsonObject())
+        }
+
+        post("/accounts/new/altening") {
+            class AlteningForm(
+                val token: String
+            )
+            val accountForm = decode<AlteningForm>(it.content)
+            AccountManager.newAlteningAccount(accountForm.token)
+            httpOk(JsonObject())
+        }.apply {
+            post("/generate") {
+                class AlteningGenForm(
+                    val apiToken: String
+                )
+                val accountForm = decode<AlteningGenForm>(it.content)
+
+                AccountManager.generateAlteningAccount(accountForm.apiToken)
+                httpOk(JsonObject())
+            }
+        }
     }
 
     post("/account/login") {
@@ -89,73 +137,53 @@ private fun RestNode.setupAccountManagerRest() {
         AccountManager.loginAccountAsync(accountForm.id)
 
         httpOk(JsonObject())
+    }.apply {
+        post("/cracked") {
+            class AccountForm(
+                val username: String
+            )
+            val accountForm = decode<AccountForm>(it.content)
+            AccountManager.loginCrackedAccountAsync(accountForm.username)
+            httpOk(JsonObject())
+        }
     }
 
-    post("/account/login/cracked") {
-        class AccountForm(
-            val username: String
-        )
-        val accountForm = decode<AccountForm>(it.content)
-        AccountManager.loginCrackedAccountAsync(accountForm.username)
-        httpOk(JsonObject())
-    }
-
-    // Restore initial session
-    post("/account/restoreInitial") {
+    post("/account/restore") {
         AccountManager.restoreInitial()
         httpOk(mc.session.toJsonObject())
     }
 
-    post("/accounts/new/cracked") {
+    put("/account/favorite") {
         class AccountForm(
-            val username: String
+            val id: Int
         )
+
         val accountForm = decode<AccountForm>(it.content)
-
-        AccountManager.newCrackedAccount(accountForm.username)
+        AccountManager.favoriteAccount(accountForm.id)
         httpOk(JsonObject())
     }
 
-
-
-    post("/accounts/new/microsoft") {
-        AccountManager.newMicrosoftAccount {
-            browseUrl(it)
-            EventManager.callEvent(AltManagerUpdateEvent(true, "Opened login url in browser"))
-        }
-        httpOk(JsonObject())
-    }
-
-    post("/accounts/new/microsoft/url") {
-        AccountManager.newMicrosoftAccount {
-            RenderSystem.recordRenderCall {
-                GLFW.glfwSetClipboardString(mc.window.handle, it)
-                EventManager.callEvent(AltManagerUpdateEvent(true, "Copied login url to clipboard"))
-            }
-        }
-        httpOk(JsonObject())
-    }
-
-    post("/accounts/new/altening") {
-        class AlteningForm(
-            val token: String
+    delete("/account/favorite") {
+        class AccountForm(
+            val id: Int
         )
-        val accountForm = decode<AlteningForm>(it.content)
-        AccountManager.newAlteningAccount(accountForm.token)
+
+        val accountForm = decode<AccountForm>(it.content)
+        AccountManager.unfavoriteAccount(accountForm.id)
         httpOk(JsonObject())
     }
 
-    post("/accounts/new/alteningGenerate") {
-        class AlteningGenForm(
-            val apiToken: String
+    post("/account/swap") {
+        class AccountForm(
+            val from: Int,
+            val to: Int
         )
-        val accountForm = decode<AlteningGenForm>(it.content)
 
-        AccountManager.generateAlteningAccount(accountForm.apiToken)
+        val accountForm = decode<AccountForm>(it.content)
+        AccountManager.swapAccounts(accountForm.from, accountForm.to)
         httpOk(JsonObject())
     }
 
-    // Deletes a specific account
     delete("/account") {
         class AccountForm(
             val id: Int
@@ -172,12 +200,6 @@ private fun RestNode.setupAccountManagerRest() {
             addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
             addProperty("type", account.type)
         })
-    }
-
-    // Clears all accounts
-    delete("/accounts") {
-        AccountManager.accounts.clear()
-        httpOk(JsonObject())
     }
 
 }
