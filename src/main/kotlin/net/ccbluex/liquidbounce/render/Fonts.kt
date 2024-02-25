@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient.download
 import net.ccbluex.liquidbounce.utils.io.extractZip
+import net.ccbluex.liquidbounce.validation.ClientDataValidator
 import java.awt.Font
 import java.io.File
 
@@ -67,6 +68,8 @@ object Fonts {
          */
         internal fun load(retry: Boolean = true): FontRenderer {
             val file = File(fontsRoot, name)
+
+            ClientDataValidator.expectHashOrDelete(file)
 
             if (!file.exists() || !file.isDirectory || file.listFiles().isNullOrEmpty()) {
                 runCatching {
