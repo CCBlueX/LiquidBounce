@@ -104,7 +104,7 @@ object ServerListRest : Listenable {
             val servers = JsonArray()
             runCatching {
                 serverList.toList().forEachIndexed { index, serverInfo ->
-                    val json = protocolGson.toJsonTree(it)
+                    val json = protocolGson.toJsonTree(serverInfo)
 
                     if (!json.isJsonObject) {
                         logger.warn("Failed to convert serverInfo to json")
