@@ -45,6 +45,18 @@ internal fun RestNode.proxyRest() {
         httpOk(proxyObject)
     }
 
+    post("/proxy") {
+        data class ProxyRequest(val id: Int)
+        val body = decode<ProxyRequest>(it.content)
+
+        if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+            return@post httpForbidden("Invalid id")
+        }
+
+        ProxyManager.setProxy(body.id)
+        httpOk(JsonObject())
+    }
+
     delete("/proxy") {
         ProxyManager.unsetProxy()
         httpOk(JsonObject())
@@ -64,47 +76,35 @@ internal fun RestNode.proxyRest() {
         }
 
         httpOk(proxiesArray)
-    }
+    }.apply {
+        post("/add") {
+            data class ProxyRequest(val host: String, val port: Int, val username: String, val password: String)
 
-    post("/proxies") {
-        data class ProxyRequest(val host: String, val port: Int, val username: String, val password: String)
+            val body = decode<ProxyRequest>(it.content)
 
-        val body = decode<ProxyRequest>(it.content)
+            if (body.host.isBlank()) {
+                return@post httpForbidden("No host")
+            }
 
-        if (body.host.isBlank()) {
-            return@post httpForbidden("No host")
+            if (body.port <= 0) {
+                return@post httpForbidden("No port")
+            }
+
+            ProxyManager.addProxy(body.host, body.port, body.username, body.password)
+            httpOk(JsonObject())
         }
 
-        if (body.port <= 0) {
-            return@post httpForbidden("No port")
+        delete("/remove") {
+            data class ProxyRequest(val id: Int)
+            val body = decode<ProxyRequest>(it.content)
+
+            if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+                return@delete httpForbidden("Invalid id")
+            }
+
+            ProxyManager.removeProxy(body.id)
+            httpOk(JsonObject())
         }
-
-        ProxyManager.addProxy(body.host, body.port, body.username, body.password)
-        httpOk(JsonObject())
-    }
-
-    delete("/proxies") {
-        data class ProxyRequest(val id: Int)
-        val body = decode<ProxyRequest>(it.content)
-
-        if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
-            return@delete httpForbidden("Invalid id")
-        }
-
-        ProxyManager.removeProxy(body.id)
-        httpOk(JsonObject())
-    }
-
-    put("/proxies") {
-        data class ProxyRequest(val id: Int)
-        val body = decode<ProxyRequest>(it.content)
-
-        if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
-            return@put httpForbidden("Invalid id")
-        }
-
-        ProxyManager.setProxy(body.id)
-        httpOk(JsonObject())
     }
 
 }

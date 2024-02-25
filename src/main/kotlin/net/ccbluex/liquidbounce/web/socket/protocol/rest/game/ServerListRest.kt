@@ -103,8 +103,17 @@ object ServerListRest : Listenable {
 
             val servers = JsonArray()
             runCatching {
-                serverList.toList().forEach {
-                    servers.add(protocolGson.toJsonTree(it))
+                serverList.toList().forEachIndexed { index, serverInfo ->
+                    val json = protocolGson.toJsonTree(it)
+
+                    if (!json.isJsonObject) {
+                        logger.warn("Failed to convert serverInfo to json")
+                        return@forEachIndexed
+                    }
+
+                    val jsonObject = json.asJsonObject
+                    jsonObject.addProperty("index", index)
+                    servers.add(jsonObject)
                 }
 
                 httpOk(servers)
@@ -123,6 +132,50 @@ object ServerListRest : Listenable {
                     ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo,
                         false)
                 }
+                httpOk(JsonObject())
+            }
+
+            put("/add") {
+                data class ServerAddRequest(val name: String, val address: String)
+                val serverAddRequest = decode<ServerAddRequest>(it.content)
+
+                val serverInfo = ServerInfo(serverAddRequest.name, serverAddRequest.address,
+                    ServerInfo.ServerType.OTHER)
+                serverList.add(serverInfo, false)
+                serverList.saveFile()
+
+                httpOk(JsonObject())
+            }
+
+            delete("/remove") {
+                data class ServerRemoveRequest(val index: Int)
+                val serverRemoveRequest = decode<ServerRemoveRequest>(it.content)
+                val serverInfo = serverList.get(serverRemoveRequest.index)
+
+                serverList.remove(serverInfo)
+                serverList.saveFile()
+
+                httpOk(JsonObject())
+            }
+
+            put("/edit") {
+                data class ServerEditRequest(val index: Int, val name: String, val address: String)
+                val serverEditRequest = decode<ServerEditRequest>(it.content)
+                val serverInfo = serverList.get(serverEditRequest.index)
+
+                serverInfo.name = serverEditRequest.name
+                serverInfo.address = serverEditRequest.address
+                serverList.saveFile()
+
+                httpOk(JsonObject())
+            }
+
+            post("/swap") {
+                data class ServerSwapRequest(val from: Int, val to: Int)
+                val serverSwapRequest = decode<ServerSwapRequest>(it.content)
+
+                serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
+                serverList.saveFile()
                 httpOk(JsonObject())
             }
         }
