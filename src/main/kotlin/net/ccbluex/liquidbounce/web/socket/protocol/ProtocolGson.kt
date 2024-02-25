@@ -92,6 +92,7 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
         add("playerCountLabel", protocolGson.toJsonTree(playerCountLabel))
         add("version", protocolGson.toJsonTree(version))
         addProperty("protocolVersion", protocolVersion)
+        addProperty("ping", ping)
         add("players", JsonObject().apply {
             addProperty("max", players?.max)
             addProperty("online", players?.online)

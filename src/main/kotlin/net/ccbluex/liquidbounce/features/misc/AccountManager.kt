@@ -292,6 +292,26 @@ object AccountManager : Configurable("Accounts"), Listenable {
         mc.profileKeys = initialSession.profileKeys
     }
 
+    fun favoriteAccount(id: Int) {
+        val account = accounts.getOrNull(id) ?: error("Account not found!")
+        account.favorite()
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
+    fun unfavoriteAccount(id: Int) {
+        val account = accounts.getOrNull(id) ?: error("Account not found!")
+        account.unfavorite()
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
+    fun swapAccounts(index1: Int, index2: Int) {
+        val account1 = accounts.getOrNull(index1) ?: error("Account not found!")
+        val account2 = accounts.getOrNull(index2) ?: error("Account not found!")
+        accounts[index1] = account2
+        accounts[index2] = account1
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
     data class SessionData(val session: Session, val sessionService: MinecraftSessionService?,
                            val profileKeys: ProfileKeys)
 
