@@ -18,6 +18,7 @@
     "minecraft.block.MixinSlimeBlock",
     "minecraft.block.MixinSnowBlock",
     "minecraft.client.MixinClientWorld",
+    "minecraft.client.MixinClientWorldProperties",
     "minecraft.client.MixinGameMode",
     "minecraft.client.MixinGameOptions",
     "minecraft.client.MixinInput",
