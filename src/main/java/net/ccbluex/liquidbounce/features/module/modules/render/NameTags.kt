@@ -170,6 +170,17 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         val text = "$distanceText$pingText$nameColor$name$healthText$botText"
 
+        // Calculate health color based on entity's health
+        val healthColor = when {
+            entity.health <= 0 -> Color(255, 0, 0)
+            else -> {
+                val healthRatio = getHealth(entity) / entity.maxHealth
+                val red = (255 * (1 - healthRatio)).toInt()
+                val green = (255 * healthRatio).toInt()
+                Color(red, green, 0)
+            }
+        }
+
         // Scale
         val scale = ((playerDistance / 4F).coerceAtLeast(1F) / 150F) * scale
 
@@ -214,14 +225,14 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
                 fontRenderer.FONT_HEIGHT + 3F,
                 -width - 2F + dist,
                 fontRenderer.FONT_HEIGHT + 4F,
-                Color(10, 155, 10).rgb
+                Color(50, 50, 50).rgb
             )
             quickDrawRectNew2(
                 -width - 2F,
                 fontRenderer.FONT_HEIGHT + 3F,
                 -width - 2F + (dist * (getHealth(entity) / entity.maxHealth).coerceIn(0F, 1F)),
                 fontRenderer.FONT_HEIGHT + 4F,
-                Color(10, 255, 10).rgb
+                healthColor.rgb
             )
         }
 
