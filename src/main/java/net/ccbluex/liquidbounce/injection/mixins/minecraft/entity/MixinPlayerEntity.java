@@ -23,9 +23,12 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall;
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
@@ -146,11 +149,21 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
     private boolean injectOnAirNoSlow(PlayerEntity instance) {
-        ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player &&
-                module.getEnabled() && module.getOnAir()) {
-            return true;
+        if ((Object) this == MinecraftClient.getInstance().player) {
+
+            if (ModuleNoSlowBreak.INSTANCE.getEnabled() && ModuleNoSlowBreak.INSTANCE.getOnAir()){
+                return true;
+            }
+
+            if (ModuleNoFall.INSTANCE.getEnabled() && NoFallNoGround.INSTANCE.isActive()) {
+                return false;
+            }
+
+            if (ModuleCriticals.INSTANCE.getEnabled() && ModuleCriticals.NoGroundCrit.INSTANCE.isActive()) {
+                return false;
+            }
         }
+
 
         return instance.isOnGround();
     }
