@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
-import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.ccbluex.liquidbounce.web.socket.protocol.strippedProtocolGson
 import java.io.StringReader
 
 internal fun RestNode.moduleRest() {
@@ -120,7 +120,7 @@ data class ModuleRequest(val name: String) {
 
     fun acceptGetSettingsRequest(): FullHttpResponse {
         val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-        return httpOk(ConfigSystem.serializeConfigurable(module, gson = protocolGson))
+        return httpOk(ConfigSystem.serializeConfigurable(module, gson = strippedProtocolGson))
     }
 
     fun acceptPutSettingsRequest(content: String): FullHttpResponse {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,10 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.render.minimap
+package net.ccbluex.liquidbounce.web.theme.component.types.minimap
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Vec2i
@@ -26,10 +27,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor.Brightness
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
 import java.awt.Color
 import kotlin.math.PI
 import kotlin.math.roundToInt
@@ -43,7 +41,7 @@ object ChunkRenderer {
 
     fun unloadEverything() {
         heightmapManager.unloadAllChunks()
-        this.textureAtlasManager.deallocateAll()
+        textureAtlasManager.deallocateAll()
     }
 
     fun getAtlasPosition(chunkPos: ChunkPos): MinimapTextureAtlasManager.AtlasPosition {
@@ -51,7 +49,7 @@ object ChunkRenderer {
     }
 
     fun prepareRendering(): Int {
-        return this.textureAtlasManager.prepareRendering()
+        return textureAtlasManager.prepareRendering()
     }
 
     object MinimapChunkUpdateSubscriber : ChunkScanner.BlockChangeSubscriber {

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.config
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.Curves
 import net.minecraft.block.Block
@@ -130,9 +129,6 @@ open class Configurable(
 
     protected fun items(name: String, default: MutableList<Item>) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
-
-    protected fun fonts(name: String, default: MutableList<Fonts.FontInfo>) =
-        value(name, default, ValueType.INVALID, ListValueType.FontDetail)
 
     internal inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
         where T : Enum<T>, T: NamedChoice = enumChoice(name, default, enumValues<T>())

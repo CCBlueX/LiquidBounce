@@ -68,7 +68,7 @@ open class Module(
     private var calledSinceStartup = false
 
     // Module options
-    var enabled by valueEnabled.listen { new ->
+    var enabled by valueEnabled.onChange { new ->
         // Check if the module is locked
         locked?.let { locked ->
             if (locked.get()) {
@@ -79,7 +79,7 @@ open class Module(
                 )
 
                 // Keeps it turned off
-                return@listen false
+                return@onChange false
             }
         }
 
@@ -99,7 +99,7 @@ open class Module(
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {
-                return@listen false
+                return@onChange false
             }
 
             if (!loadingNow) {
@@ -130,7 +130,7 @@ open class Module(
         .doNotInclude()
     var hidden by boolean("Hidden", hide)
         .doNotInclude()
-        .listen {
+        .onChange {
             EventManager.callEvent(RefreshArrayListEvent())
             it
         }

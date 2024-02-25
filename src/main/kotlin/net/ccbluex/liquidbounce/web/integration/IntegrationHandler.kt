@@ -46,7 +46,7 @@ object IntegrationHandler : Listenable {
      * The client tab will be initialized when the browser is ready.
      */
     val clientJcef by lazy {
-        ThemeManager.openInputAwareImmediate(VirtualScreenType.SPLASH).preferOnTop()
+        ThemeManager.openInputAwareImmediate().preferOnTop()
     }
 
     var momentaryVirtualScreen: VirtualScreen? = null

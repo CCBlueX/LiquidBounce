@@ -60,6 +60,7 @@ object ClientSocket {
         "serverPinged",
         "targetChange",
         "gameModeChange",
+        "componentsUpdate",
 
         // Statistic events
         "fps",

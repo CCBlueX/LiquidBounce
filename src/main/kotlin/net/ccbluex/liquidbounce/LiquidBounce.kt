@@ -57,6 +57,7 @@ import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
@@ -152,6 +153,10 @@ object LiquidBounce : Listenable {
             // Load user scripts
             ScriptManager.loadScripts()
 
+            // Load theme and component overlay
+            ThemeManager
+            ComponentOverlay.insertComponents()
+
             // Load config system from disk
             ConfigSystem.load()
 
@@ -159,7 +164,6 @@ object LiquidBounce : Listenable {
             ClientSocket.start()
 
             // Initialize browser
-            ThemeManager
             IntegrationHandler
             BrowserManager.initBrowser()
 

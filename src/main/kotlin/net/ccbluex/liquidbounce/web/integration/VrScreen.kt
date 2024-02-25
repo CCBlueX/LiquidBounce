@@ -42,7 +42,10 @@ class VrScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context, mouseX, mouseY, delta)
+        // Only render the background if the world is not null, otherwise the html should draw the background.
+        if (mc.world == null) {
+            this.renderBackground(context, mouseX, mouseY, delta)
+        }
     }
 
     override fun shouldPause(): Boolean {

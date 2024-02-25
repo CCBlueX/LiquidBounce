@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -89,7 +88,7 @@ class PointTracker(
      * Define the highest and lowest point of the box we want to aim at.
      */
     private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault)
-        .listen { new ->
+        .onChange { new ->
             if (lowestPoint.isHigherThan(new)) {
                 lowestPoint
             } else {
@@ -97,7 +96,7 @@ class PointTracker(
             }
         }
     private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault)
-        .listen { new ->
+        .onChange { new ->
             if (!highestPoint.isHigherThan(new)) {
                 highestPoint
             } else {

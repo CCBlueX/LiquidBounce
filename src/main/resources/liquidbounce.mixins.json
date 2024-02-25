@@ -72,6 +72,7 @@
     "minecraft.render.MixinInGameOverlayRenderer",
     "minecraft.render.MixinLightmapTextureManager",
     "minecraft.render.MixinLivingEntityRenderer",
+    "minecraft.render.MixinPostEffectPass",
     "minecraft.render.MixinRenderTickCounter",
     "minecraft.render.MixinSignText",
     "minecraft.render.MixinSodiumBlockOcclusionCache",
