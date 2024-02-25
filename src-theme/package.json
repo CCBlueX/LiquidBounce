@@ -20,6 +20,7 @@
     "vite": "^5.1.0"
   },
   "dependencies": {
+    "@jhubbardsf/svelte-sortablejs": "^1.1.0",
     "@simonwep/pickr": "^1.9.0",
     "archiver": "^6.0.1",
     "nouislider": "^15.7.1",

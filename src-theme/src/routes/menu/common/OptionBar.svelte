@@ -15,7 +15,7 @@
       display: flex;
       border-radius: 5px;
       align-items: center;
-      column-gap: 20px;
+      column-gap: 30px;
       margin-bottom: 25px;
     }
 </style>

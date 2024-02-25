@@ -5,20 +5,20 @@
     export let imageText: string | null = null;
     export let imageTextBackgroundColor: string | null = null;
     export let title: string;
-
-    const dispatch = createEventDispatcher();
+    export let sortable = false;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="menu-list-item" on:dblclick={() => dispatch("doubleClick")}>
+<div class="menu-list-item" class:sortable>
     <div class="image">
         <img src={image} alt="preview">
-        <span class="text" class:visible={imageText !== null && imageTextBackgroundColor !== null} style="background-color: {imageTextBackgroundColor};">{imageText}</span>
+        <span class="text" class:visible={imageText !== null && imageTextBackgroundColor !== null}
+              style="background-color: {imageTextBackgroundColor};">{imageText}</span>
     </div>
     <div class="title">
         <span class="text">{title}</span>
-        <slot name="tag" />
+        <slot name="tag"/>
     </div>
     <div class="subtitle">
         <slot name="subtitle"/>
@@ -45,19 +45,22 @@
     padding: 15px 25px;
     column-gap: 15px;
     border-radius: 5px;
-    cursor: pointer;
     transition: ease background-color .2s;
     align-items: center;
 
-    &:hover {
-      background-color: $accent-color;
+    &.sortable {
+      cursor: grab;
 
-      .subtitle {
-        color: $menu-text-color;
-      }
+      &:hover {
+        background-color: $accent-color;
 
-      .buttons .active {
-        opacity: 1;
+        .subtitle {
+          color: $menu-text-color;
+        }
+
+        .buttons .active {
+          opacity: 1;
+        }
       }
     }
   }

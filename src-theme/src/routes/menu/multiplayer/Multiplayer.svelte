@@ -10,16 +10,49 @@
     import MenuListItem from "../common/menulist/MenuListItem.svelte";
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
     import {onMount} from "svelte";
-    import {connectToServer, getServers, openScreen} from "../../../integration/rest";
-    import type {Server, ServerPingedEvent} from "../../../integration/types";
+    import {
+        connectToServer,
+        getServers,
+        openScreen,
+        getProtocols,
+        getSelectedProtocol,
+        setSelectedProtocol,
+        swapServers
+    } from "../../../integration/rest";
+    import type {Protocol, Server, ServerPingedEvent} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import TextComponent from "../common/TextComponent.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
+    import SingleSelect from "../common/select/SingleSelect.svelte";
+    import {REST_BASE} from "../../../integration/host";
+
+    let onlineOnly = false;
+    let searchQuery = "";
+
+    $: {
+        let filteredServers = servers;
+        if (onlineOnly) {
+            filteredServers = filteredServers.filter(s => s.ping >= 0);
+        }
+        if (searchQuery) {
+            filteredServers = filteredServers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+        renderedServers = filteredServers;
+    }
 
     let servers: Server[] = [];
+    let renderedServers: Server[] = [];
+    let protocols: Protocol[] = [];
+    let selectedProtocol: Protocol = {
+        name: "",
+        version: -1
+    };
 
     onMount(async () => {
         servers = await getServers();
+        renderedServers = servers;
+        protocols = await getProtocols();
+        selectedProtocol = await getSelectedProtocol();
     });
 
     listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
@@ -31,6 +64,10 @@
     });
 
     function getPingColor(ping: number) {
+        if (ping < 0) {
+            return "#E84C3D";
+        }
+
         if (ping <= 50) {
             return "#2DCC70";
         } else if (ping <= 100) {
@@ -39,25 +76,49 @@
             return "#E84C3D";
         }
     }
+
+    async function changeProtocolVersion(e: CustomEvent<{ value: string }>) {
+        const p = protocols.find(p => p.name == e.detail.value);
+        if (!p) {
+            return;
+        }
+
+
+        await setSelectedProtocol(p);
+        selectedProtocol = await getSelectedProtocol();
+    }
+
+    async function handleServerSort(e: CustomEvent<{ oldIndex: number, newIndex: number }>) {
+        //await swapServers(e.detail.oldIndex, e.detail.newIndex);
+    }
+
+    function handleSearch(e: CustomEvent<{ query: string }>) {
+        searchQuery = e.detail.query;
+    }
 </script>
 
 <Menu>
     <OptionBar>
-        <Search/>
-        <SwitchSetting title="Favorites only" value={true}/>
-        <SwitchSetting title="Current version" value={false}/>
-        <SwitchSetting title="Online" value={true}/>
+        <Search on:search={handleSearch}/>
+        <SwitchSetting title="Online" bind:value={onlineOnly}/>
+        <SingleSelect value={selectedProtocol.name} options={protocols.map(p => p.name)}
+                      on:change={changeProtocolVersion}/>
     </OptionBar>
 
-    <MenuList>
-        {#each servers as {name, icon, address, label, players, version, ping}}
-            <MenuListItem imageText="{ping}ms" imageTextBackgroundColor={getPingColor(ping)} image="data:image/png;base64,{icon}"
-                          title={name} on:doubleClick={() => connectToServer(address)}>
-                <TextComponent slot="subtitle" textComponent={label}/>
+    <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>
+        {#each renderedServers as {name, icon, address, label, players, version, ping}}
+            <MenuListItem imageText="{ping}ms" imageTextBackgroundColor={getPingColor(ping)}
+                          image={ping < 0
+                            ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
+                            :`data:image/png;base64,${icon}`}
+                          title={name} sortable="{renderedServers.length === servers.length}">
+                <TextComponent slot="subtitle" textComponent={ping < 0 ? "§CCan't connect to server" : label}/>
 
                 <svelte:fragment slot="tag">
-                    <MenuListItemTag text="{players.online}/{players.max} Players"/>
-                    <MenuListItemTag text={version}/>
+                    {#if ping >= 0}
+                        <MenuListItemTag text="{players.online}/{players.max} Players"/>
+                        <MenuListItemTag text={version}/>
+                    {/if}
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">

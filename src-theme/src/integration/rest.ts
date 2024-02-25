@@ -4,7 +4,7 @@ import type {
     Module,
     PersistentStorageItem,
     PlayerData,
-    PrintableKey,
+    PrintableKey, Protocol,
     Registries,
     Server,
     Session,
@@ -158,5 +158,39 @@ export async function connectToServer(address: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({address})
+    });
+}
+
+export async function swapServers(from: number, to: number) {
+    await fetch(`${API_BASE}/client/servers/swap`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({from, to})
+    });
+}
+
+export async function getProtocols(): Promise<Protocol[]> {
+    const response = await fetch(`${API_BASE}/client/protocols`);
+    const data: Protocol[] = await response.json();
+
+    return data;
+}
+
+export async function getSelectedProtocol(): Promise<Protocol> {
+    const response = await fetch(`${API_BASE}/client/protocols/protocol`);
+    const data: Protocol = await response.json();
+
+    return data;
+}
+
+export async function setSelectedProtocol(protocol: Protocol) {
+    await fetch(`${API_BASE}/client/protocols/protocol`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({version: protocol.version})
     });
 }

@@ -225,3 +225,8 @@ export interface TextComponent {
     font?: string;
     text: string;
 }
+
+export interface Protocol {
+    name: string;
+    version: number;
+}
