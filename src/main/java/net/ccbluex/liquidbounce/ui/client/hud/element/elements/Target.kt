@@ -56,7 +56,7 @@ class Target : Element() {
             val healthColor = when {
                 target.health <= 0 -> Color(255, 0, 0)
                 else -> {
-                    val healthRatio = targetHealth / target.maxHealth
+                    val healthRatio = (targetHealth / target.maxHealth).coerceIn(0.0F, 1.0F)
                     val red = (255 * (1 - healthRatio)).toInt()
                     val green = (255 * healthRatio).toInt()
                     Color(red, green, 0)

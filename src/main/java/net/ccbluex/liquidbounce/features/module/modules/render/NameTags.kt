@@ -174,7 +174,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val healthColor = when {
             entity.health <= 0 -> Color(255, 0, 0)
             else -> {
-                val healthRatio = getHealth(entity) / entity.maxHealth
+                val healthRatio = (getHealth(entity) / entity.maxHealth).coerceIn(0.0F, 1.0F)
                 val red = (255 * (1 - healthRatio)).toInt()
                 val green = (255 * healthRatio).toInt()
                 Color(red, green, 0)
