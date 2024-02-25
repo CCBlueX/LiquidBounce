@@ -53,7 +53,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
         val modes = choices("Choice", { Reuse }) {
-            arrayOf(NoneChoice(it), Reuse, Rehold, Grim1.9)
+            arrayOf(NoneChoice(it), Reuse, Rehold, Grim)
         }
 
         /**
@@ -97,7 +97,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         }
 
-        object Grim : Choice("Grim1.9") {
+        object Grim : Choice("Grim") {
 
             override val parent: ChoiceConfigurable
                 get() = modes
