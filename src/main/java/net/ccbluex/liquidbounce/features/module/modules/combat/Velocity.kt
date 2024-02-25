@@ -463,8 +463,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     }
                 }
 
-                mc.thePlayer.motionX = motionX
-                mc.thePlayer.motionZ = motionZ
+                mc.thePlayer.motionX = motionX * horizontal
+                mc.thePlayer.motionZ = motionZ * horizontal
             }
 
             // Don't modify player's motionY when vertical value is 0
@@ -474,7 +474,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 if (limitMaxMotionValue.get())
                     motionY = motionY.coerceAtMost(maxYMotion + 0.00075)
 
-                mc.thePlayer.motionY = motionY
+                mc.thePlayer.motionY = motionY * vertical
             }
         } else if (packet is S27PacketExplosion) {
             // Don't cancel explosions, modify them, they could change blocks in the world
