@@ -14,17 +14,9 @@ import net.minecraft.util.Identifier
 import java.io.File
 
 object AutoShopConfig {
-    val configFolder = File(
+    private val configFolder = File(
         ConfigSystem.rootFolder, "autoshop-configs"
-    ).apply {
-        if (!exists()) {
-            mkdir().runCatching {
-                downloadDefaultConfigs()
-            }.onFailure {
-                logger.error("Failed to download the default AutoShop configs", it)
-            }
-        }
-    }
+    )
 
     private val jsonDecoder = Json { ignoreUnknownKeys = true }
 
@@ -105,10 +97,22 @@ object AutoShopConfig {
     /**
      * Downloads the default autoShop configs from the cloud.
      */
-    private fun downloadDefaultConfigs() {
-        logger.info("Downloading the default AutoShop configs...")
-        // not sure if it's the best idea to download the whole folder
-        HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs", configFolder)
-        logger.info("Successfully downloaded the default AutoShop configs")
+    fun downloadDefaultConfigs() {
+        if (configFolder.exists()) {
+            return
+        }
+
+        configFolder.mkdir()
+        this.runCatching {
+            logger.info("Downloading the default AutoShop configs...")
+            // TODO: make it download the whole folder
+            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/dexland.json", configFolder.resolve("dexland.json"))
+            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork.json", configFolder.resolve("pikanetwork.json"))
+            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork2.json", configFolder.resolve("pikanetwork2.json"))
+            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/test.json", configFolder.resolve("test.json"))
+            logger.info("Successfully downloaded the default AutoShop configs")
+        }.onFailure {
+            logger.error("Failed to download the default AutoShop configs", it)
+        }
     }
 }

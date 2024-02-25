@@ -157,6 +157,7 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.load()
+            AutoShopConfig.downloadDefaultConfigs()
             AutoShopConfig.load()
 
             // Netty WebSocket

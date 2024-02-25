@@ -62,10 +62,11 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     lateinit var currentConfig: AutoShopConfig
 
     val onUpdate = handler<GameTickEvent> {
-        // update items from the player's inventory
         if (!isShopOpened()) {
             return@handler
         }
+
+        // update items from the player's inventory
         synchronized(itemsFromInventory) {
             itemsFromInventory.clear()
             itemsFromInventory.putAll(getItemsFromInventory())
@@ -87,25 +88,24 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 continue
             }
 
-            // wait between the opening a shop and the fist click
+            // wait between the opening a shop and the first click
             if (!waitedBeforeTheFirstClick) {
                 waitConditional(startDelay.random()) { !isShopOpened() }
                 waitedBeforeTheFirstClick = true
             }
 
-            needToBuy = checkElement(element) != null
+            // check it again because it might be changed after "startDelay.random()" ticks
+            needToBuy = checkElement(element) != null && isShopOpened()
 
             // buy an item
             while (needToBuy) {
+                doClicks(currentConfig.elements, index)
+
                 // check if it's capable of clicking
                 if (!isShopOpened()) {
                     reset()
                     return@repeatable
                 }
-
-                checkElement(element) ?: break
-
-                doClicks(currentConfig.elements, index)
                 needToBuy = checkElement(element) != null
             }
         }
@@ -122,7 +122,6 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
         // we don't need to open, for example, "Blocks" category again if it's already opened,
         if (categorySlot != prevCategorySlot) {
-            //mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, categorySlot, 0, 0, mc.thePlayer)
             interaction.clickSlot(
                 (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
                 categorySlot,
@@ -140,7 +139,6 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         }
 
         if (!quickBuy) {
-            //mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, itemSlot, 0, 0, mc.thePlayer)
             interaction.clickSlot(
                 (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
                 itemSlot,
@@ -154,7 +152,6 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
         val slotsToClick = simulateNextPurchases(currentElements, currentIndex)
         for(slot in slotsToClick) {
-            //mc.playerController.windowClick(mc.thePlayer.openContainer.windowId, slot, 0, 0, mc.thePlayer)
             interaction.clickSlot(
                 (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
                 slot,
@@ -304,9 +301,9 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      */
     private fun findItems(requiredItems: Map<Item, Int>, items: Map<Item, Int>) : Boolean {
         val currentItems : MutableMap<Item, Int>
-        synchronized(itemsFromInventory) {
+        //synchronized(itemsFromInventory) {
             currentItems = items.toMutableMap()
-        }
+        //}
 
         for (item in requiredItems.keys) {
             if (!currentItems.containsKey(item)) {
