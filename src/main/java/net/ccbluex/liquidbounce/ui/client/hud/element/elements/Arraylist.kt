@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
 import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -42,6 +43,8 @@ class Arraylist(
     private val textRed by IntegerValue("Text-R", 0, 0..255) { textColorMode == "Custom" }
     private val textGreen by IntegerValue("Text-G", 111, 0..255) { textColorMode == "Custom" }
     private val textBlue by IntegerValue("Text-B", 255, 0..255) { textColorMode == "Custom" }
+
+    private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
 
     private val rectMode by ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
     private val rectColorMode by ListValue(
@@ -212,16 +215,17 @@ class Arraylist(
                     val xPos = -module.slide - 2
 
                     RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRectNew(
+                        drawRoundedRect(
                             xPos - if (rectMode == "Right") 5 else 2,
-                            yPos,
-                            if (rectMode == "Right") -3F else 0F,
-                            yPos + textHeight,
+                            yPos + 1,
+                            if (rectMode == "Right") -1F else 0F,
+                            yPos + 1 + textHeight,
                             when (backgroundMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
                                 else -> backgroundCustomColor
-                            }
+                            },
+                            roundedRectRadius
                         )
                     }
 
@@ -259,8 +263,8 @@ class Arraylist(
                                 }
 
                             when (rectMode) {
-                                "Left" -> drawRectNew(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
-                                "Right" -> drawRectNew(-3F, yPos, 0F, yPos + textHeight, rectColor)
+                                "Left" -> drawRectNew(xPos - 4.5F, yPos + 0.8F, xPos - 1.5F, yPos + textHeight + 0.8F, rectColor)
+                                "Right" -> drawRectNew(-3F, yPos + 1F, 0F, yPos + textHeight + 1, rectColor)
                             }
                         }
                     }

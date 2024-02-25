@@ -128,7 +128,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
             if (!borderValue) {
                 drawRoundedRect2(1F, 1 + tabY - 1, width, tabY + tabHeight, rectColor, roundedRectRadius)
             } else {
-                drawRoundedRect2(3F, 5 + tabY - 4, width - 2F, tabY + tabHeight - 2F, rectColor, roundedRectRadius)
+                drawRoundedRect2(2.5F, 5 + tabY - 3.5F, width - 1.5F, tabY + tabHeight - 1.5F, rectColor, roundedRectRadius)
             }
         }
 

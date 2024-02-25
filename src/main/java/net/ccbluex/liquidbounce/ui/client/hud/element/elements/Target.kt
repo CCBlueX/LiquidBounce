@@ -52,6 +52,17 @@ class Target : Element() {
         if (KillAura.handleEvents() && target is EntityPlayer) {
             val targetHealth = getHealth(target, healthFromScoreboard, absorption)
 
+            // Calculate health color based on entity's health
+            val healthColor = when {
+                target.health <= 0 -> Color(255, 0, 0)
+                else -> {
+                    val healthRatio = targetHealth / target.maxHealth
+                    val red = (255 * (1 - healthRatio)).toInt()
+                    val green = (255 * healthRatio).toInt()
+                    Color(red, green, 0)
+                }
+            }
+
             if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
                     abs(easingHealth - targetHealth) < 0.01
             ) {
@@ -68,7 +79,7 @@ class Target : Element() {
                 drawRectNew(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 185, 65).rgb)
 
             // Health bar
-            drawRectNew(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 96, 66).rgb)
+            drawRectNew(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, healthColor.rgb)
 
             // Heal animation
             if (easingHealth < targetHealth)
