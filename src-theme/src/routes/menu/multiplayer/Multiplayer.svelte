@@ -24,12 +24,21 @@
 
     listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
         const server = pingedEvent.server;
-
         const index = servers.findIndex(s => s.address === server.address);
         if (index !== -1) {
             servers[index] = server;
         }
     });
+
+    function getPingColor(ping: number) {
+        if (ping <= 50) {
+            return "#2DCC70";
+        } else if (ping <= 100) {
+            return "#F1C40F";
+        } else {
+            return "#E84C3D";
+        }
+    }
 </script>
 
 <Menu>
@@ -41,8 +50,8 @@
     </OptionBar>
 
     <MenuList>
-        {#each servers as {name, icon, address, label, players, version}}
-            <MenuListItem imageText="15ms" imageTextBackgroundColor="#4DAC68" image="data:image/png;base64,{icon}"
+        {#each servers as {name, icon, address, label, players, version, ping}}
+            <MenuListItem imageText="{ping}ms" imageTextBackgroundColor={getPingColor(ping)} image="data:image/png;base64,{icon}"
                           title={name} on:doubleClick={() => connectToServer(address)}>
                 <TextComponent slot="subtitle" textComponent={label}/>
 

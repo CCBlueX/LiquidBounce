@@ -206,6 +206,7 @@ export interface Server {
     playerCountLabel: string;
     protocolVersion: number;
     version: string;
+    ping: number;
 }
 
 export interface ServerPingedEvent {

@@ -65,7 +65,7 @@ object HideAppearance : Listenable {
             return@handler
         }
 
-        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT && modifier == GLFW.GLFW_MOD_CONTROL) {
             if (!shiftChronometer.hasElapsed(400L)) {
                 isHidingNow = !isHidingNow
             }
