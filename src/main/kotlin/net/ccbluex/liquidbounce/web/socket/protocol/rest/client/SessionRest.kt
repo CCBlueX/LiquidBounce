@@ -110,7 +110,7 @@ private fun RestNode.setupAccountManagerRest() {
             httpOk(JsonObject())
         }
 
-        post("/accounts/new/altening") {
+        post("/new/altening") {
             class AlteningForm(
                 val token: String
             )
