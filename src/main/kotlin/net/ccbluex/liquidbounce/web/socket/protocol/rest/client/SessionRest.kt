@@ -88,7 +88,7 @@ private fun RestNode.setupAccountManagerRest() {
             }
             httpOk(JsonObject())
         }.apply {
-            post("/new/microsoft/clipboard") {
+            post("/clipboard") {
                 AccountManager.newMicrosoftAccount {
                     RenderSystem.recordRenderCall {
                         GLFW.glfwSetClipboardString(mc.window.handle, it)
@@ -191,9 +191,17 @@ private fun RestNode.setupAccountManagerRest() {
         )
 
         val accountForm = decode<AccountForm>(it.content)
-        AccountManager.accounts.removeAt(accountForm.id)
+        val account = AccountManager.accounts.removeAt(accountForm.id)
 
-        httpOk(JsonObject())
+        httpOk(JsonObject().apply {
+            addProperty("id", accountForm.id)
+
+            val profile = account.profile ?: return@apply
+            addProperty("username", profile.username)
+            addProperty("uuid", profile.uuid.toString())
+            addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+            addProperty("type", account.type)
+        })
     }
 
 }
