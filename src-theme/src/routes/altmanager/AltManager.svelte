@@ -10,11 +10,11 @@
         newAlteningGen,
         newCrackedAccount,
         newMicrosoftAccount,
-        newMicrosoftAccountUrl,
+        newMicrosoftAccountClipboard,
         restoreInitialAccount
     } from "../../client/api.svelte";
-    import { listen } from "../../client/ws.svelte";
-    import { pop } from "svelte-spa-router";
+    import {listen} from "../../client/ws.svelte";
+    import {pop} from "svelte-spa-router";
     import {fade} from "svelte/transition";
 
     const random = (length = 8) => {
@@ -355,7 +355,7 @@
                 <button on:click={newMicrosoftAccount}>
                     Browser
                 </button>
-                <button on:click={newMicrosoftAccountUrl}>
+                <button on:click={newMicrosoftAccountClipboard}>
                     Copy URL
                 </button>
             </div>
