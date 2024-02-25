@@ -77,6 +77,7 @@ private fun RestNode.setupAccountManagerRest() {
                 addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
                 add("bans", protocolGson.toJsonTree(account.bans))
                 addProperty("type", account.type)
+                addProperty("favorite", account.favorite)
             })
         }
         httpOk(accounts)
