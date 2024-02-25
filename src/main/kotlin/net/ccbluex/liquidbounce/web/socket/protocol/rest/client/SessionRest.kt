@@ -75,6 +75,7 @@ private fun RestNode.setupAccountManagerRest() {
                 addProperty("username", profile.username)
                 addProperty("uuid", profile.uuid.toString())
                 addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+                add("bans", protocolGson.toJsonTree(account.bans))
                 addProperty("type", account.type)
             })
         }
@@ -190,16 +191,9 @@ private fun RestNode.setupAccountManagerRest() {
         )
 
         val accountForm = decode<AccountForm>(it.content)
-        val account = AccountManager.accounts.removeAt(accountForm.id)
-        httpOk(JsonObject().apply {
-            addProperty("id", accountForm.id)
+        AccountManager.accounts.removeAt(accountForm.id)
 
-            val profile = account.profile ?: return@apply
-            addProperty("username", profile.username)
-            addProperty("uuid", profile.uuid.toString())
-            addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
-            addProperty("type", account.type)
-        })
+        httpOk(JsonObject())
     }
 
 }
