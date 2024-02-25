@@ -53,7 +53,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
         val modes = choices("Choice", { Reuse }) {
-            arrayOf(NoneChoice(it), Reuse, Rehold, Grim)
+            arrayOf(NoneChoice(it), Reuse, Rehold, Grim1.9)
         }
 
         /**
@@ -97,21 +97,21 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         }
 
-        object Grim : Choice("Grim") {
+        object Grim : Choice("Grim1.9") {
 
             override val parent: ChoiceConfigurable
                 get() = modes
 
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (event.state == EventState.PRE) {
-                    if (mc.player!!.isUsingItem) {
-                        if (mc.player!!.getActiveHand() === Hand.OFF_HAND) {
-                            mc.player!!.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(
-                                mc.player!!.inventory.selectedSlot % 8 + 1))
-                            mc.player!!.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(
-                                mc.player!!.inventory.selectedSlot))
+                    if (player.isUsingItem) {
+                        if (player.getActiveHand() === Hand.OFF_HAND) {
+                            player.network.sendPacket(UpdateSelectedSlotC2SPacket(
+                                player.inventory.selectedSlot % 8 + 1))
+                            player.network.sendPacket(UpdateSelectedSlotC2SPacket(
+                                player.inventory.selectedSlot))
                         } else {
-                            mc.player!!.networkHandler.sendPacket(PlayerInteractItemC2SPacket(
+                            player.network.sendPacket(PlayerInteractItemC2SPacket(
                                 Hand.OFF_HAND, 0))
                         }
                     }
