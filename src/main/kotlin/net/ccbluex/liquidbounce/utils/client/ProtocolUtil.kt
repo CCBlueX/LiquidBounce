@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.minecraft.SharedConstants
 import net.raphimc.vialoader.util.VersionEnum
 
 // Only runs once
@@ -29,7 +30,8 @@ val usesViaFabricPlus = runCatching {
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ProtocolVersion("1.20.3", 765)
+val defaultProtocolVersion = ProtocolVersion(SharedConstants.getGameVersion().name,
+    SharedConstants.getGameVersion().protocolVersion)
 
 val protocolVersion: ProtocolVersion
     get() = runCatching {

@@ -24,10 +24,12 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.render.BoxesRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -36,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.vehicle.ChestBoatEntity
-import net.minecraft.entity.vehicle.ChestMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -171,12 +172,12 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     }
 
     enum class ChestType(val color: () -> Color4b, val shouldRender: (BlockPos) -> Boolean = { true }) {
-        CHEST({chestColor}, { !ModuleChestAura.clickedBlocks.contains(it) }),
-        ENDER_CHEST({enderChestColor}, { !ModuleChestAura.clickedBlocks.contains(it) }),
+        CHEST({chestColor}, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
+        ENDER_CHEST({enderChestColor}, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
         FURNACE({furnaceColor}),
         DISPENSER({dispenserColor}),
         HOPPER({hopperColor}),
-        SHULKER_BOX({ net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP.shulkerColor })
+        SHULKER_BOX({ shulkerColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) })
     }
 
     object StorageScanner : WorldChangeNotifier.WorldChangeSubscriber {
