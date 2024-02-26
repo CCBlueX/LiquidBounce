@@ -184,7 +184,7 @@ public abstract class MixinGameRenderer {
         UIRenderer.INSTANCE.setupDimensions(width, height);
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V", shift = At.Shift.AFTER))
     private void injectUIBlurRender(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         if (this.uiRendererShader == null) {
             try {
