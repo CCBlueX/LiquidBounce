@@ -140,7 +140,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private val notificationDebug by BoolValue("NotificationDebug", false) { resetOnlagBack || resetOnKnockback }
 
     private fun timerReset() {
-        mc.timer.timerSpeed = 1f
+        if (shouldResetTimer())
+            mc.timer.timerSpeed = 1f
     }
 
     override fun onEnable() {
@@ -168,7 +169,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      */
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity !is EntityLivingBase && playerTicks >= 1 || shouldResetTimer()) {
+        if (event.targetEntity !is EntityLivingBase && playerTicks >= 1) {
             timerReset()
             return
         } else {
@@ -442,10 +443,14 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * Separate condition to make it cleaner
      */
     private fun shouldResetTimer(): Boolean {
-        return(mc.thePlayer != null && (mc.thePlayer.isSpectator || mc.thePlayer.isDead
+        if (mc.thePlayer != null && (mc.thePlayer.isSpectator || mc.thePlayer.isDead
                 || mc.thePlayer.isInWater || mc.thePlayer.isInLava
                 || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder
-                || mc.thePlayer.isRiding))
+                || mc.thePlayer.isRiding)) {
+            return true
+        }
+
+        return getNearestEntityInRange() != null
     }
 
     /**
@@ -464,9 +469,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             if (Blink.state || mc.thePlayer.isRiding)
                 return
 
-            if (event.isCancelled)
-                return
-
             when (packet) {
                 is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
                     return
@@ -479,7 +481,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             }
         }
 
-        if (isPlayerMoving() && !shouldResetTimer() && playerTicks > 0) {
+        if (isPlayerMoving() && shouldResetTimer() && playerTicks > 0) {
 
             // Check for lagback
             if (resetOnlagBack && packet is S08PacketPlayerPosLook) {
