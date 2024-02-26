@@ -162,7 +162,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAvoidHazards,
             ModuleBlockBounce,
             ModuleBlockWalk,
-            ModuleBugUp,
             ModuleElytraFly,
             ModuleFly,
             ModuleFreeze,
@@ -188,6 +187,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleVehicleControl,
 
             // Player
+            ModuleAntiVoid,
             ModuleAntiAFK,
             ModuleAntiExploit,
             ModuleAutoBreak,

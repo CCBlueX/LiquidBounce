@@ -341,7 +341,7 @@
   "liquidbounce.module.blockEsp.description": "Allows you to see selected blocks through walls.",
   "liquidbounce.module.blockWalk.description": "Allows you to walk on non-fullblock blocks.",
   "liquidbounce.module.breadcrumbs.description": "Leaves a trace behind you.",
-  "liquidbounce.module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
+  "liquidbounce.module.antiVoid.description": "Protects you from falling into the void.",
   "liquidbounce.module.cameraClip.description": "Allows you to see through walls in third person view.",
   "liquidbounce.module.capeTransfer.description": "Transfers your donator cape from one account to another. Donate at https://liquidbounce.net/donate",
   "liquidbounce.module.chestAura.description": "Automatically opens chests around you.",

@@ -84,7 +84,6 @@
     <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
     <ID>MaxLineLength:ModuleAutoWeapon.kt$ModuleAutoWeapon$if</ID>
     <ID>MaxLineLength:ModuleBacktrack.kt$ModuleBacktrack$if</ID>
-    <ID>MaxLineLength:ModuleChestAura.kt$ModuleChestAura$// if (CloseInstantlyOptions.enabled &amp;&amp; !closeInstantlyTimeout.hasElapsed(CloseInstantlyOptions.timeout.toLong())) {</ID>
     <ID>MaxLineLength:ModuleClickGui.kt$ModuleClickGui$object</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$!player.isInLava &amp;&amp; !player.isTouchingWater &amp;&amp; !player.isClimbing &amp;&amp; !player.hasNoGravity()</ID>
     <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$)</ID>
@@ -155,8 +154,8 @@
     <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
+    <ID>UnusedPrivateProperty:ModuleAntiVoid.kt$ModuleAntiVoid$i</ID>
     <ID>UnusedPrivateProperty:ModuleAutoTool.kt$ModuleAutoTool$private val handleBlockBreakingProgress = handler&lt;BlockBreakingProgressEvent> { event -> val blockState = world.getBlockState(event.pos) val inventory = player.inventory val index = if (search) { val (hotbarSlot, stack) = (0..8).map { it to inventory.getStack(it) }.filter { (_, stack) -> ( stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)) ) }.maxByOrNull { (_, stack) -> stack.getMiningSpeedMultiplier(blockState) } ?: return@handler val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState) // The current slot already matches the best if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) { return@handler } hotbarSlot } else { slot } SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay) }</ID>
-    <ID>UnusedPrivateProperty:ModuleBugUp.kt$ModuleBugUp$i</ID>
     <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent> { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
     <ID>UnusedPrivateProperty:ModuleScaffold.kt$ModuleScaffold$private val afterJumpEvent = handler&lt;PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { randomization = Random.nextDouble(-0.01, 0.01) placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1 }</ID>
     <ID>UseCheckOrError:ChunkScanner.kt$ChunkScanner$throw IllegalStateException("Subscriber already registered")</ID>

@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleBugUp
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
@@ -78,7 +78,7 @@ object FakeLag : Listenable {
      * Implement your module here if you want to enable lag.
      */
     private fun shouldLag(packet: Packet<*>?): Boolean {
-        return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
+        return ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
     }
 

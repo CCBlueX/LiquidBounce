@@ -64,8 +64,6 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
                 simLines.clear()
 
-                val world = world
-
                 val input =
                     SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
