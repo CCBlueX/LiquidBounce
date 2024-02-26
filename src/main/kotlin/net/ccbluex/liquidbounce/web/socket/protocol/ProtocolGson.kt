@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.web.theme.ComponentSerializer
 import net.ccbluex.liquidbounce.web.theme.component.Component
+import net.minecraft.SharedConstants
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.ItemStack
@@ -92,6 +93,7 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
         add("playerCountLabel", protocolGson.toJsonTree(playerCountLabel))
         add("version", protocolGson.toJsonTree(version))
         addProperty("protocolVersion", protocolVersion)
+        addProperty("protocolVersionMatches", protocolVersion == SharedConstants.getGameVersion().protocolVersion)
         addProperty("ping", ping)
         add("players", JsonObject().apply {
             addProperty("max", players?.max)
