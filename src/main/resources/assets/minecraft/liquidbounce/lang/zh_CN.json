@@ -21,6 +21,8 @@
         "module.autoBow.description": "弓拉满时自动射出。",
 
         "module.autoClicker.description": "按住鼠标按钮时自动点击。",
+		
+	"module.autoDisable.description": "根据指定事件自动禁用特定模块。",
 
         "module.autoLeave.description": "血量低时自动退出服务器。",
 
@@ -66,8 +68,6 @@
 
         "module.bedGodMode.description": "允许你躺在床上四处走动。(对于1.9)",
 
-        "module.bedProtectionESP.description": "帮助你找到保护床所需放置方块的位置。 ",
-
         "module.clip.description": "允许你clip通过方块。",
         
         "module.airJump.description": "允许你在空中跳跃。",
@@ -97,6 +97,8 @@
         "module.autoFish.description": "切换到鱼竿时自动钓鱼。",
 
 	"module.autoProjectile.description": "自动扔鸡蛋/雪球。",
+		
+	"module.autoPlay.description": "自动为下一场比赛排队。",
         
         "module.autoRespawn.description": "死后自动重生。",
         
@@ -107,6 +109,8 @@
         "module.avoidHazards.description": "防止走进可能对你有害的方块。",
         
         "module.blink.description": "挂起所有移动数据包(达到开关后瞬间移动的效果)。",
+		
+	"module.bedProtectionESP.description": "帮助你找到保护床所需放置方块的位置。 ",
         
         "module.blockESP.description": "允许你透过墙壁看到指定的方块。",
         
@@ -303,6 +307,8 @@
         "module.speed.description": "允许你移动得更快。",
         
         "module.sprint.description": "自动保持疾跑。",
+		
+	"module.staffDetector.description": "检测服务器上的工作人员并提醒用户。",
 
         "module.step.description": "允许你更快地走上方块。",
         
