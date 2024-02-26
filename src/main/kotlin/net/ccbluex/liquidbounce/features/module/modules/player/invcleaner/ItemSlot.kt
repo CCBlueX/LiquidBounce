@@ -69,7 +69,7 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
 
 private fun GenericContainerScreen.itemCount() = this.screenHandler.rows * 9
 
-open class HotbarItemSlot(private val hotbarSlot: Int) : ItemSlot() {
+open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
     override val itemStack: ItemStack
         get() = mc.player!!.inventory.getStack(this.hotbarSlot)
 

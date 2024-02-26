@@ -25,21 +25,21 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.potion.PotionUtil
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.UseAction
+import kotlin.math.absoluteValue
 import kotlin.math.max
 
 /**
@@ -57,61 +57,77 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
     private val preferNotchAppleHealth by float("MaxPreferNotchAppleHealth", 2f, 0f..20f)
     private val preferHealthPotHealth by float("MaxPreferHealthPotHealth", 12f, 0f..20f)
 
-    private var prefersGapples = false
-    private var prefersNotchApple = false
-    private var prefersHealthPot = false
-    private val food: Pair<Int, ItemStack>?
-        get() = Hotbar.findBestItem(0) { _, itemStack ->
-            getItemScore(itemStack)
-        }
-    @Suppress("ReturnCount")
-    private fun getItemScore(itemStack: ItemStack): Int {
-        val item = itemStack.item
+    private object Estimator {
+        fun findBestFood(): HotbarItemSlot? {
+            val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
+                // If there is an indication for a special item, we should use it. Items with lower health threshold
+                // are preferred since their usage is probably more urgent.
+                compareBy { it.second.healthThreshold },
+                compareBy { it.second.restoredHunger },
+                // Use the closest slot
+                compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
+                // Just for stabilization reasons
+                compareBy { SilentHotbar.serversideSlot }
+            )
 
-        if (prefersHealthPot && item == Items.POTION) {
-            val hasHealthEffect =
-                PotionUtil.getPotionEffects(itemStack).any {
-                    it.effectType == StatusEffects.INSTANT_HEALTH
+            return Hotbar.slots
+                .mapNotNull { slot -> getFoodEstimationData(slot.itemStack)?.let { slot to it } }
+                .maxWithOrNull(comparator)?.first
+        }
+
+        private class FoodEstimationData(val restoredHunger: Int = 0, val healthThreshold: Int = 20)
+
+        private fun getFoodEstimationData(itemStack: ItemStack): FoodEstimationData? {
+            val item = itemStack.item
+
+            val prefersGapples = player.health <= preferGappleHealth
+            val prefersNotchApple = player.health <= preferNotchAppleHealth
+            val prefersHealthPot = player.health <= preferHealthPotHealth
+
+            return when {
+                prefersGapples && item == Items.GOLDEN_APPLE -> {
+                    val hasHealthEffect =
+                        PotionUtil.getPotionEffects(itemStack).any {
+                            it.effectType == StatusEffects.INSTANT_HEALTH
+                        }
+
+                    if (hasHealthEffect)
+                        FoodEstimationData(healthThreshold = preferHealthPotHealth.toInt())
+                    else
+                        null
                 }
-
-            if (hasHealthEffect)
-                return 100 - preferHealthPotHealth.toInt()
+                prefersHealthPot && item == Items.POTION -> {
+                    FoodEstimationData(
+                        healthThreshold = preferHealthPotHealth.toInt(),
+                        restoredHunger = item.foodComponent!!.hunger
+                    )
+                }
+                prefersNotchApple && item == Items.ENCHANTED_GOLDEN_APPLE -> {
+                    FoodEstimationData(
+                        healthThreshold = preferNotchAppleHealth.toInt(),
+                        restoredHunger = item.foodComponent!!.hunger
+                    )
+                }
+                item.foodComponent != null -> FoodEstimationData(restoredHunger = item.foodComponent!!.hunger)
+                else -> null
+            }
         }
-
-        val foodComp = item.foodComponent ?: return -1
-
-        val hasHungerEffect = foodComp.statusEffects.any { it.first.effectType == StatusEffects.HUNGER }
-        if (hasHungerEffect)
-            return 0
-
-        if(prefersGapples && item == Items.GOLDEN_APPLE)
-            return 100 - preferGappleHealth.toInt()
-
-        if (prefersNotchApple && item == Items.ENCHANTED_GOLDEN_APPLE)
-            return 100 - preferNotchAppleHealth.toInt()
-
-        return foodComp.hunger
     }
 
-    val tickHandler = repeatable {
-        prefersGapples = player.health <= preferGappleHealth
-        prefersNotchApple = player.health <= preferNotchAppleHealth
-        prefersHealthPot = player.health <= preferHealthPotHealth
-    }
     private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
         private object RenderSlot : ToggleableConfigurable(this, "RenderSlot", true) {
             private val offset by int("Offset", 26, 0..40)
             val renderHandler = handler<OverlayRenderEvent> {
                 renderEnvironmentForGUI {
-                    val currentFood = food ?: return@renderEnvironmentForGUI
+                    val currentFood = Estimator.findBestFood() ?: return@renderEnvironmentForGUI
                     val dc = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
                     val scaledWidth = dc.scaledWindowWidth
                     val scaledHeight = dc.scaledWindowHeight
                     val i: Int = scaledWidth / 2
                     val x = i - 91 - 26 - offset
                     val y = scaledHeight - 16 - 3
-                    dc.drawItemInSlot(mc.textRenderer, currentFood.second, x, y)
-                    dc.drawItem(currentFood.second, x, y)
+                    dc.drawItemInSlot(mc.textRenderer, currentFood.itemStack, x, y)
+                    dc.drawItem(currentFood.itemStack, x, y)
                     dc.drawGuiTexture(
                         HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,
                         scaledHeight - 23, 29, 24
@@ -127,17 +143,21 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
             if(event.actionResult != ActionResult.PASS)
                 return@handler
 
-            val currentFood = food ?: return@handler
+            val currentFood = Estimator.findBestFood() ?: return@handler
 
             if(
                 !player.canConsume(false)
-                && currentFood.second.item.foodComponent?.isAlwaysEdible() == false
+                && currentFood.itemStack.item.foodComponent?.isAlwaysEdible == false
                 ) {
                 return@handler
             }
 
 
-            SilentHotbar.selectSlotSilently(this@SilentOffhand, currentFood.first, max(swapBackDelay, 5))
+            SilentHotbar.selectSlotSilently(
+                this@SilentOffhand,
+                currentFood.hotbarSlot,
+                max(swapBackDelay, 5)
+            )
         }
 
         val tickHandler = repeatable {
@@ -174,11 +194,9 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
         }
 
         fun eat() {
-            val currentBestFood = food ?: return
+            val currentBestFood = Estimator.findBestFood() ?: return
 
-            val slot = currentBestFood.first
-
-            SilentHotbar.selectSlotSilently(AutoEat, slot, swapBackDelay)
+            SilentHotbar.selectSlotSilently(AutoEat, currentBestFood.hotbarSlot, swapBackDelay)
 
             KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
 
