@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.effect.StatusEffects
@@ -62,7 +63,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
             val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
                 // If there is an indication for a special item, we should use it. Items with lower health threshold
                 // are preferred since their usage is probably more urgent.
-                compareBy { it.second.healthThreshold },
+                compareByDescending { it.second.healthThreshold },
                 compareBy { it.second.restoredHunger },
                 // Use the closest slot
                 compareByDescending { (it.first.hotbarSlot - SilentHotbar.serversideSlot).absoluteValue },
@@ -85,7 +86,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
             val prefersHealthPot = player.health <= preferHealthPotHealth
 
             return when {
-                prefersGapples && item == Items.GOLDEN_APPLE -> {
+                prefersGapples && item == Items.POTION -> {
                     val hasHealthEffect =
                         PotionUtil.getPotionEffects(itemStack).any {
                             it.effectType == StatusEffects.INSTANT_HEALTH
@@ -96,7 +97,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
                     else
                         null
                 }
-                prefersHealthPot && item == Items.POTION -> {
+                prefersHealthPot && item == Items.GOLDEN_APPLE -> {
                     FoodEstimationData(
                         healthThreshold = preferHealthPotHealth.toInt(),
                         restoredHunger = item.foodComponent!!.hunger
