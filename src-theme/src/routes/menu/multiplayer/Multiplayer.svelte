@@ -118,7 +118,7 @@
 
     <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>
         {#each renderedServers as {name, icon, address, label, players, version, ping}}
-            <MenuListItem imageText="{ping}ms" imageTextBackgroundColor={getPingColor(ping)}
+            <MenuListItem imageText={ping >= 0 ? `${ping}ms` : null} imageTextBackgroundColor={getPingColor(ping)}
                           image={ping < 0
                             ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
                             :`data:image/png;base64,${icon}`}
