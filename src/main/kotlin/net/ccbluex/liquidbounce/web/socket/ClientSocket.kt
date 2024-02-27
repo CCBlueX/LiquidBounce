@@ -75,7 +75,7 @@ object ClientSocket {
         "chatReceive",
 
         "death",
-        "worldDisconnect",
+        "disconnect",
 
         // Might be nice to have in case someone needs them for any reason
         "mouseButton",

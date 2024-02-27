@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -37,6 +38,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
  * Criticals module
@@ -53,6 +55,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         arrayOf(
             NoneChoice(it),
             PacketCrit,
+            NoGroundCrit,
             JumpCrit
         )
     }
@@ -116,6 +119,26 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             VANILLA("Vanilla"),
             NO_CHEAT_PLUS("NoCheatPlus"),
             FALLING("Falling")
+        }
+
+    }
+
+
+    /**
+     * Same thing as NoGround NoFall mode
+     */
+    object NoGroundCrit : Choice("NoGround") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> {
+            val packet = it.packet
+
+            if (packet is PlayerMoveC2SPacket) {
+                packet.onGround = false
+            }
+
         }
 
     }

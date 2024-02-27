@@ -341,7 +341,7 @@
   "liquidbounce.module.blockEsp.description": "Allows you to see selected blocks through walls.",
   "liquidbounce.module.blockWalk.description": "Allows you to walk on non-fullblock blocks.",
   "liquidbounce.module.breadcrumbs.description": "Leaves a trace behind you.",
-  "liquidbounce.module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
+  "liquidbounce.module.antiVoid.description": "Protects you from falling into the void.",
   "liquidbounce.module.cameraClip.description": "Allows you to see through walls in third person view.",
   "liquidbounce.module.capeTransfer.description": "Transfers your donator cape from one account to another. Donate at https://liquidbounce.net/donate",
   "liquidbounce.module.chestAura.description": "Automatically opens chests around you.",
@@ -485,5 +485,6 @@
   "liquidbounce.module.antiHunger.messages.warnSprint": "Another module caused sprint packets, which could lead to hunger.",
   "liquidbounce.module.antiHunger.messages.warnBreak": "You are breaking a block, which could lead to hunger.",
   "liquidbounce.module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
-  "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client"
+  "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client",
+  "liquidbounce.module.consoleSpammer.description": "Allows you to spam server console"
 }

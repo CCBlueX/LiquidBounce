@@ -88,6 +88,7 @@ object UIRenderer {
         this.overlayFramebuffer.draw(mc.window.framebufferWidth, mc.window.framebufferHeight, false)
 
         RenderSystem.setProjectionMatrix(projectionMatrix, vertexSorting)
+        RenderSystem.defaultBlendFunc()
     }
 
     fun setupDimensions(width: Int, height: Int) {

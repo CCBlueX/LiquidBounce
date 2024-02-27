@@ -51,9 +51,7 @@ import java.util.concurrent.ThreadPoolExecutor
 
 object ServerListRest : Listenable {
 
-    private val serverList by lazy {
-        ServerList(mc).apply { loadFile() }
-    }
+    private var serverList = ServerList(mc).apply { loadFile() }
 
     private val serverListPinger = MultiplayerServerListPinger()
     private val serverPingerThreadPool: ThreadPoolExecutor = ScheduledThreadPoolExecutor(
@@ -98,6 +96,8 @@ object ServerListRest : Listenable {
 
     internal fun RestNode.serverListRest() {
         get("/servers") {
+            serverList = ServerList(mc).apply { loadFile() }
+
             // We either hit Refresh or entered the page for the first time
             pingThemAll()
 
@@ -176,6 +176,19 @@ object ServerListRest : Listenable {
 
                 serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
                 serverList.saveFile()
+                httpOk(JsonObject())
+            }
+
+            post("/order") {
+                data class ServerOrderRequest(val order: List<Int>)
+                val serverOrderRequest = decode<ServerOrderRequest>(it.content)
+
+                serverOrderRequest.order.map { serverList.get(it) }
+                    .forEachIndexed { index, serverInfo ->
+                        serverList.set(index, serverInfo)
+                    }
+                serverList.saveFile()
+
                 httpOk(JsonObject())
             }
         }

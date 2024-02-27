@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.player.chestStealer
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.item.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isNothing
@@ -42,15 +45,22 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
     val closeDelay by intRange("CloseDelay", 1..5, 0..20, "ticks")
     val quickSwaps by boolean("QuickSwaps", true)
-    val viaFix by boolean("ViaFix(1.9+)", true)
+    val viaFix by boolean("ViaFix(1.9+)", false)
     val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
     val checkTitle by boolean("CheckTitle", true)
 
+    init {
+        tree(FeatureChestAura)
+    }
+
     private val stolenSlots = mutableListOf<ContainerItemSlot>()
-
     private var lastSlot = 0
-
     private var isFirstTime = true
+
+    override fun disable() {
+        FeatureChestAura.interactedBlocksSet.clear()
+        super.disable()
+    }
 
     val repeatable = repeatable {
         if (!screenIsChest()) {
@@ -251,7 +261,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             InventoryCleanupPlan(usefulItems.toMutableSet(), mutableListOf(), hashMapOf())
         } else {
-            val availableItems = findNonEmptySlotsInInventory() + this.findItemsInContainer(screen)
+            val availableItems = findNonEmptySlotsInInventory() + findItemsInContainer(screen)
 
             CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
         }
@@ -264,7 +274,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             .map { ContainerItemSlot(it.id) }
 
     enum class SelectionMode(
-        override val choiceName: String, val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>
+        override val choiceName: String,
+        val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>
     ) : NamedChoice {
         DISTANCE("Distance", {
             it.sortedBy { slot ->
@@ -279,9 +290,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 (colA - colB) * (colA - colB) + (rowA - rowB) * (rowA - rowB)
             }
         }),
-        INDEX("Index", { list -> list.sortedBy { it.slotInContainer } }), RANDOM(
-            "Random", List<ContainerItemSlot>::shuffled
-        ),
+        INDEX("Index", { list -> list.sortedBy { it.slotInContainer } }),
+        RANDOM("Random", List<ContainerItemSlot>::shuffled ),
     }
 
     private fun screenIsChest(): Boolean {
