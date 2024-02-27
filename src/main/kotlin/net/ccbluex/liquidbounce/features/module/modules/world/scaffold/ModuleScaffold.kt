@@ -99,7 +99,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
     }
 
-    init {
+    init {ModuleScaffold
         tree(AutoBlock)
     }
 

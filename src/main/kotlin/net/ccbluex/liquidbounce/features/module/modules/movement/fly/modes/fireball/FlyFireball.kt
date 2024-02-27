@@ -23,15 +23,21 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fire
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques.FlyFireballCustomTechnique
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques.FlyFireballLegitTechnique
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballInstantTrigger
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballOnEdgeTrigger
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.item.interactItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.item.FireChargeItem
 import net.minecraft.util.Hand
 
 internal object FlyFireball : Choice("Fireball") {
@@ -39,43 +45,71 @@ internal object FlyFireball : Choice("Fireball") {
     override val parent: ChoiceConfigurable
         get() = ModuleFly.modes
 
-    private val disableDelay by int("DisableDelay", 10, 0..20)
+    internal val technique = choices(
+        ModuleFly, "Technique", FlyFireballLegitTechnique,
+        arrayOf(FlyFireballLegitTechnique, FlyFireballCustomTechnique)
+    )
 
-    object YMovement : ToggleableConfigurable(this, "YMovement", true) {
-        val yVelocity by float("YVelocity", 0f, -5f..5f)
-        val yVelocityDelay by int("YVelocityDelay", 0, 0..20)
+    val trigger = choices(
+        ModuleFly, "Trigger",
+        FlyFireballInstantTrigger,
+        arrayOf(FlyFireballInstantTrigger, FlyFireballOnEdgeTrigger)
+    )
+
+    // Silent fireball selection
+    object AutoFireball : ToggleableConfigurable(this, "AutoFireball", true) {
+        val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
     }
 
     object Rotations : RotationsConfigurable(80f..120f) {
-        val pitch by float("Pitch", 80f, 0f..90f)
+        val pitch by float("Pitch", 90f, 0f..90f)
+        val backwards by boolean("Backwards", true)
     }
 
+    var wasTriggered = false
+
     init {
-        tree(YMovement)
+        tree(AutoFireball)
         tree(Rotations)
     }
 
-    val rotationUpdateHandler = handler<SimulatedTickEvent> {
+    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         RotationManager.aimAt(
-            Rotations.toAimPlan(Rotation(player.yaw, Rotations.pitch)),
+            Rotation(if (Rotations.backwards) RotationManager.invertYaw(player.yaw) else player.yaw, Rotations.pitch),
+            configurable = Rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
         )
     }
 
-    val playerMoveHandler = sequenceHandler<PlayerMoveEvent> {
-        if (player.isOnGround) {
-            interaction.interactItem(player, Hand.MAIN_HAND)
-            player.isSprinting = true
+    private fun findFireballSlot(): Int? {
+        return (0..8).firstOrNull {
+            val stack = player.inventory.getStack(it)
+            stack.item is FireChargeItem
         }
+    }
 
-        if (YMovement.enabled) {
-            waitTicks(YMovement.yVelocityDelay)
-            player.velocity.y = YMovement.yVelocity.toDouble()
-        }
+    fun holdsFireball(): Boolean {
+        return player.inventory.mainHandStack.item is FireChargeItem
+    }
 
-        waitTicks(disableDelay)
-        ModuleFly.enabled = false
+    fun handleSilentFireballSelection() {
+        if (AutoFireball.enabled) {
+            val bestMainHandSlot = findFireballSlot()
+            if (bestMainHandSlot != null) {
+                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, AutoFireball.slotResetDelay)
+            } else
+                SilentHotbar.resetSlot(this)
+        } else
+            SilentHotbar.resetSlot(this)
+    }
+
+    fun throwFireball() {
+        interactItem(Hand.MAIN_HAND)
+    }
+
+    private val repeatable = repeatable {
+        handleSilentFireballSelection()
     }
 
 }
