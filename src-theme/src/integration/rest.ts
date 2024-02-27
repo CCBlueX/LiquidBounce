@@ -171,6 +171,17 @@ export async function swapServers(from: number, to: number) {
     });
 }
 
+export async function orderServers(order: number[]) {
+    await fetch(`${API_BASE}/client/servers/order`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({order})
+    });
+}
+
+
 export async function getProtocols(): Promise<Protocol[]> {
     const response = await fetch(`${API_BASE}/client/protocols`);
     const data: Protocol[] = await response.json();

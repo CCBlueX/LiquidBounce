@@ -17,7 +17,7 @@
         getProtocols,
         getSelectedProtocol,
         setSelectedProtocol,
-        swapServers
+        orderServers
     } from "../../../integration/rest";
     import type {Protocol, Server, ServerPingedEvent} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
@@ -47,6 +47,13 @@
         name: "",
         version: -1
     };
+
+    function calculateNewOrder(oldIndex: number, newIndex: number, length: number): number[] {
+        const a = Array.from({length}, (x, i) => i);
+        a.splice(oldIndex, 1);
+        a.splice(newIndex, 0, oldIndex)
+        return a;
+    }
 
     onMount(async () => {
         servers = await getServers();
@@ -89,7 +96,7 @@
     }
 
     async function handleServerSort(e: CustomEvent<{ oldIndex: number, newIndex: number }>) {
-        //await swapServers(e.detail.oldIndex, e.detail.newIndex);
+        await orderServers(calculateNewOrder(e.detail.oldIndex, e.detail.newIndex, servers.length));
     }
 
     function handleSearch(e: CustomEvent<{ query: string }>) {
