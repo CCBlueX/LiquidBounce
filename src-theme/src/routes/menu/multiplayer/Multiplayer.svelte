@@ -147,13 +147,13 @@
 
     <BottomButtonWrapper>
         <ButtonContainer>
-            <IconTextButton icon="exit" title="Add"/>
-            <IconTextButton icon="exit" title="Direct"/>
-            <IconTextButton icon="exit" title="Refresh" on:click={refreshServers}/>
+            <IconTextButton icon="plus-circle" title="Add"/>
+            <IconTextButton icon="plane" title="Direct"/>
+            <IconTextButton icon="refresh" title="Refresh" on:click={refreshServers}/>
         </ButtonContainer>
 
         <ButtonContainer>
-            <IconTextButton icon="exit" title="Back" on:click={() => openScreen("title")}/>
+            <IconTextButton icon="back" title="Back" on:click={() => openScreen("title")}/>
         </ButtonContainer>
     </BottomButtonWrapper>
 </Menu>
