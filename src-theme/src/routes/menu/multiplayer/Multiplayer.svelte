@@ -70,6 +70,10 @@
         }
     });
 
+    async function refreshServers() {
+        servers = await getServers();
+    }
+
     function getPingColor(ping: number) {
         if (ping < 0) {
             return "#E84C3D";
@@ -145,7 +149,7 @@
         <ButtonContainer>
             <IconTextButton icon="exit" title="Add"/>
             <IconTextButton icon="exit" title="Direct"/>
-            <IconTextButton icon="exit" title="Refresh"/>
+            <IconTextButton icon="exit" title="Refresh" on:click={refreshServers}/>
         </ButtonContainer>
 
         <ButtonContainer>
