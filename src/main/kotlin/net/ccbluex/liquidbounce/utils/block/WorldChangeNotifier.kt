@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
-import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 
 object WorldChangeNotifier : Listenable {
@@ -55,7 +55,7 @@ object WorldChangeNotifier : Listenable {
         }
     }
 
-    val disconnectHandler = handler<WorldDisconnectEvent> { event ->
+    val disconnectHandler = handler<DisconnectEvent> { event ->
         notifyAllSubscribers { it.invalidateEverything() }
     }
 

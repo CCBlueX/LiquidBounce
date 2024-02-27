@@ -205,9 +205,9 @@ open class Module(
     override fun handleEvents() = enabled && inGame
 
     /**
-     * Handles disconnect from world and if [disableOnQuit] is true disables module
+     * Handles disconnect and if [disableOnQuit] is true disables module
      */
-    val onDisconnect = handler<WorldDisconnectEvent>(ignoreCondition = true) {
+    val onDisconnect = handler<DisconnectEvent>(ignoreCondition = true) {
         if (enabled && disableOnQuit) {
             enabled = false
         }
