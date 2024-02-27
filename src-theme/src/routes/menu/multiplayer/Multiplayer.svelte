@@ -134,7 +134,6 @@
 
                 <svelte:fragment slot="active-visible">
                     <MenuListItemButton title="Delete" icon="trash"/>
-                    <MenuListItemButton title="Favorite" icon="star"/>
                     <MenuListItemButton title="Edit" icon="pen-2"/>
                 </svelte:fragment>
 
