@@ -99,4 +99,34 @@
       background-color: rgba($menu-text-color, 0.1);
     }
   }
+
+  @media screen and (max-width: 1366px) {
+    .modal {
+      zoom: 0.8;
+    }
+  }
+
+  @media screen and (max-width: 1200px) {
+    .modal {
+      zoom: 0.5;
+    }
+  }
+
+  @media screen and (max-height: 1000px) {
+    .modal {
+      zoom: 0.8;
+    }
+  }
+
+  @media screen and (max-height: 700px) {
+    .modal {
+      zoom: 0.5;
+    }
+  }
+
+  @media screen and (max-height: 540px) {
+    .modal {
+      zoom: 0.4;
+    }
+  }
 </style>
