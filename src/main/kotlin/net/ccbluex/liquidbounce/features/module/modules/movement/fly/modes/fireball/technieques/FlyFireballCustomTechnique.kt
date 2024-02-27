@@ -25,10 +25,16 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.MovementType
 
@@ -52,12 +58,25 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     val sprint by boolean("Sprint", true)
     val stopMove by boolean("StopMove", true) /* Stop moving when module is active to avoid falling off, for example a bridge. */
 
+    object Rotations : RotationsConfigurable(80f..120f) {
+        val pitch by float("Pitch", 90f, 0f..90f)
+    }
 
     var canMove = true
 
     init {
         tree(Jump)
         tree(YVelocity)
+        tree(Rotations)
+    }
+
+    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
+        RotationManager.aimAt(
+            Rotation(player.yaw, Rotations.pitch),
+            configurable = Rotations,
+            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
+            provider = ModuleFly
+        )
     }
 
     private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->

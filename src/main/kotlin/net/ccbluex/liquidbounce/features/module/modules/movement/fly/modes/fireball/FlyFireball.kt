@@ -61,25 +61,10 @@ internal object FlyFireball : Choice("Fireball") {
         val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
     }
 
-    object Rotations : RotationsConfigurable(80f..120f) {
-        val pitch by float("Pitch", 90f, 0f..90f)
-        val backwards by boolean("Backwards", true)
-    }
-
     var wasTriggered = false
 
     init {
         tree(AutoFireball)
-        tree(Rotations)
-    }
-
-    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        RotationManager.aimAt(
-            Rotation(if (Rotations.backwards) RotationManager.invertYaw(player.yaw) else player.yaw, Rotations.pitch),
-            configurable = Rotations,
-            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
-            provider = ModuleFly
-        )
     }
 
     private fun findFireballSlot(): Int? {
