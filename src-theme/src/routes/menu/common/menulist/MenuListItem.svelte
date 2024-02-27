@@ -5,12 +5,11 @@
     export let imageText: string | null = null;
     export let imageTextBackgroundColor: string | null = null;
     export let title: string;
-    export let sortable = false;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="menu-list-item" class:sortable>
+<div class="menu-list-item">
     <div class="image">
         <img src={image} alt="preview">
         <span class="text" class:visible={imageText !== null && imageTextBackgroundColor !== null}
@@ -47,20 +46,17 @@
     border-radius: 5px;
     transition: ease background-color .2s;
     align-items: center;
+    cursor: grab;
 
-    &.sortable {
-      cursor: grab;
+    &:hover {
+      background-color: $accent-color;
 
-      &:hover {
-        background-color: $accent-color;
+      .subtitle {
+        color: $menu-text-color;
+      }
 
-        .subtitle {
-          color: $menu-text-color;
-        }
-
-        .buttons .active {
-          opacity: 1;
-        }
+      .buttons .active {
+        opacity: 1;
       }
     }
   }

@@ -122,7 +122,7 @@
                           image={ping < 0
                             ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
                             :`data:image/png;base64,${icon}`}
-                          title={name} sortable="{renderedServers.length === servers.length}">
+                          title={name}>
                 <TextComponent slot="subtitle" textComponent={ping < 0 ? "§CCan't connect to server" : label}/>
 
                 <svelte:fragment slot="tag">
