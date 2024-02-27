@@ -101,3 +101,7 @@ class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event(
 @Nameable("serverConnect")
 @WebSocketEvent
 class ServerConnectEvent(val serverName: String, val serverAddress: String) : Event()
+
+@Nameable("disconnect")
+@WebSocketEvent
+class DisconnectEvent : Event()

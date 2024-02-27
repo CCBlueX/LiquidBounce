@@ -22,9 +22,8 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
-import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.BlockState
@@ -61,7 +60,7 @@ object ChunkScanner : Listenable {
         )
     }
 
-    val disconnectHandler = handler<WorldDisconnectEvent> { event ->
+    val disconnectHandler = handler<DisconnectEvent> { event ->
         synchronized(this) {
             this.subscriber.forEach(BlockChangeSubscriber::clearAllChunks)
         }
