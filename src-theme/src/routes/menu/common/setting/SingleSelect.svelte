@@ -5,6 +5,7 @@
 
     export let options: string[];
     export let value: string;
+    export let title: string;
 
     const dispatch = createEventDispatcher<{
         change: { value: string }
@@ -18,6 +19,11 @@
             expanded = false;
         }
     }
+
+    function handleOptionClick(o: string) {
+        value = o;
+        dispatch("change", {value: o});
+    }
 </script>
 
 <svelte:window on:click={handleWindowClick}/>
@@ -26,14 +32,14 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="single-select" on:click={() => expanded = !expanded} bind:this={selectElement} class:expanded>
     <div class="header">
-        <span class="title">{value}</span>
+        <span class="title"><span>{title}</span> {value}</span>
         <img src="img/menu/icon-select-arrow.svg" alt="expand">
     </div>
 
     {#if expanded}
         <div class="options" transition:fade|global={{ duration: 200, easing: quintOut }}>
             {#each options as o}
-                <div on:click={() => dispatch("change", {value: o})} class="option" class:active={o === value}
+                <div on:click={() => handleOptionClick(o)} class="option" class:active={o === value}
                      transition:slide|global={{ duration: 200, easing: quintOut }}>{o}</div>
             {/each}
         </div>
@@ -41,7 +47,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
+  @import "../../../../colors";
 
   .single-select {
     cursor: pointer;
@@ -65,9 +71,13 @@
     transition: ease border-radius .2s;
 
     .title {
-      font-weight: 500;
       color: $menu-text-color;
       font-size: 20px;
+      font-weight: 500;
+
+      span {
+        font-weight: 600;
+      }
     }
   }
 

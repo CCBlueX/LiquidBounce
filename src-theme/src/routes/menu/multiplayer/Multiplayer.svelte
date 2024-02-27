@@ -20,15 +20,20 @@
         orderServers,
         removeServer as removeServerRest
     } from "../../../integration/rest";
+
     import type {Protocol, Server, ServerPingedEvent} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import TextComponent from "../common/TextComponent.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
-    import SingleSelect from "../common/select/SingleSelect.svelte";
+    import SingleSelect from "../common/setting/SingleSelect.svelte";
     import {REST_BASE} from "../../../integration/host";
+    import AddServerModal from "./AddServerModal.svelte";
+    import DirectConnectModal from "./DirectConnectModal.svelte";
 
     let onlineOnly = false;
     let searchQuery = "";
+    let addServerModalVisible = false;
+    let directConnectModalVisible = false;
 
     $: {
         let filteredServers = servers;
@@ -114,11 +119,13 @@
     }
 </script>
 
+<AddServerModal bind:visible={addServerModalVisible} on:serverAdd={refreshServers}/>
+<DirectConnectModal bind:visible={directConnectModalVisible} />
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Online" bind:value={onlineOnly}/>
-        <SingleSelect value={selectedProtocol.name} options={protocols.map(p => p.name)}
+        <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
                       on:change={changeProtocolVersion}/>
     </OptionBar>
 
@@ -152,8 +159,8 @@
 
     <BottomButtonWrapper>
         <ButtonContainer>
-            <IconTextButton icon="plus-circle" title="Add"/>
-            <IconTextButton icon="plane" title="Direct"/>
+            <IconTextButton icon="plus-circle" title="Add" on:click={() => addServerModalVisible = true}/>
+            <IconTextButton icon="plane" title="Direct" on:click={() => directConnectModalVisible = true}/>
             <IconTextButton icon="refresh" title="Refresh" on:click={refreshServers}/>
         </ButtonContainer>
 

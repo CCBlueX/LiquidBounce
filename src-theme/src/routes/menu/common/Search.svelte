@@ -2,17 +2,14 @@
     import {createEventDispatcher} from "svelte";
 
     let value = "";
-    let searchElement: HTMLElement;
 
     const dispatch = createEventDispatcher<{
         search: { query: string }
     }>();
 </script>
 
-<svelte:window on:keydown={() => searchElement.focus()} />
-
 <input class="search" type="text" placeholder="Search..." bind:value={value}
-       on:input={() => dispatch("search", {query: value})} bind:this={searchElement}>
+       on:input={() => dispatch("search", {query: value})}>
 
 <style lang="scss">
   @import "../../../colors.scss";

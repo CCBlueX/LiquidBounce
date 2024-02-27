@@ -1,0 +1,102 @@
+<script lang="ts">
+    import {fly, fade} from "svelte/transition";
+    import {createEventDispatcher} from "svelte";
+
+    export let title: string;
+    export let visible: boolean;
+
+    const dispatch = createEventDispatcher();
+
+    function handleClick() {
+        dispatch("close");
+        visible = false;
+    }
+</script>
+
+{#if visible}
+    <div class="modal-wrapper" transition:fade|global={{duration: 200}}>
+        <button class="button-modal-close" on:click={handleClick}>
+            <img src="img/menu/icon-close.svg" alt="close">
+        </button>
+
+        <div class="modal" transition:fly|global={{duration: 300, y: -100}}>
+            <div class="title">{title}</div>
+
+            <div class="content">
+                <slot />
+            </div>
+        </div>
+    </div>
+{/if}
+
+<style lang="scss">
+  @import "../../../colors.scss";
+
+  .modal-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba($menu-base-color, 0.5);
+    z-index: 99999;
+  }
+
+  .modal {
+    background-color: rgba($menu-base-color, 0.7);
+    width: 500px;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+  }
+
+  .title {
+    color: $menu-text-color;
+    font-size: 34px;
+    position: relative;
+    width: max-content;
+    align-self: center;
+    margin-bottom: 80px;
+
+    &::after {
+      content: "";
+      position: absolute;
+      display: block;
+      height: 8px;
+      width: calc(90%);
+      background-color: $accent-color;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 10px;
+    }
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    row-gap: 40px;
+  }
+
+  .button-modal-close {
+    height: 64px;
+    width: 64px;
+    background-color: transparent;
+    border: solid 1px $menu-text-color;
+    border-radius: 50%;
+    cursor: pointer;
+    top: 30px;
+    right: 30px;
+    position: fixed;
+    transition: ease background-color .2s;
+
+    &:hover {
+      background-color: rgba($menu-text-color, 0.1);
+    }
+  }
+</style>
