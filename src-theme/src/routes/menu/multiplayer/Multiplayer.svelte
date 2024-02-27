@@ -17,7 +17,8 @@
         getProtocols,
         getSelectedProtocol,
         setSelectedProtocol,
-        orderServers
+        orderServers,
+        removeServer as removeServerRest
     } from "../../../integration/rest";
     import type {Protocol, Server, ServerPingedEvent} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
@@ -74,6 +75,12 @@
         servers = await getServers();
     }
 
+    async function removeServer(index: number) {
+        await refreshServers();
+        await removeServerRest(index);
+        await refreshServers();
+    }
+
     function getPingColor(ping: number) {
         if (ping < 0) {
             return "#E84C3D";
@@ -93,7 +100,6 @@
         if (!p) {
             return;
         }
-
 
         await setSelectedProtocol(p);
         selectedProtocol = await getSelectedProtocol();
@@ -117,7 +123,7 @@
     </OptionBar>
 
     <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>
-        {#each renderedServers as {name, icon, address, label, players, version, ping}}
+        {#each renderedServers as {name, icon, address, label, players, version, ping}, index}
             <MenuListItem imageText={ping >= 0 ? `${ping}ms` : null} imageTextBackgroundColor={getPingColor(ping)}
                           image={ping < 0
                             ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
@@ -133,7 +139,7 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash"/>
+                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeServer(index)}/>
                     <MenuListItemButton title="Edit" icon="pen-2"/>
                 </svelte:fragment>
 

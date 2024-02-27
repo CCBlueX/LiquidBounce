@@ -161,6 +161,16 @@ export async function connectToServer(address: string) {
     });
 }
 
+export async function removeServer(index: number) {
+    await fetch(`${API_BASE}/client/servers/remove`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({index})
+    });
+}
+
 export async function swapServers(from: number, to: number) {
     await fetch(`${API_BASE}/client/servers/swap`, {
         method: "POST",
@@ -180,7 +190,6 @@ export async function orderServers(order: number[]) {
         body: JSON.stringify({order})
     });
 }
-
 
 export async function getProtocols(): Promise<Protocol[]> {
     const response = await fetch(`${API_BASE}/client/protocols`);
