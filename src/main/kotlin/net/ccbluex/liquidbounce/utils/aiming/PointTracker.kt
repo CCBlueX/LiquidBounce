@@ -97,7 +97,7 @@ class PointTracker(
         }
     private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault)
         .onChange { new ->
-            if (!highestPoint.isHigherThan(new)) {
+            if (new.isHigherThan(highestPoint)) {
                 highestPoint
             } else {
                 new
@@ -113,7 +113,7 @@ class PointTracker(
          * Check if this part of the box is higher than the other by the index of the enum.
          * So please DO NOT change the order of the enum.
          */
-        fun isHigherThan(other: PreferredBoxPart) = values().indexOf(this) > values().indexOf(other)
+        fun isHigherThan(other: PreferredBoxPart) = entries.indexOf(this) < entries.indexOf(other)
 
     }
 
