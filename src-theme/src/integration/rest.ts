@@ -181,6 +181,16 @@ export async function addServer(name: string, address: string, serverResourcePac
     });
 }
 
+export async function editServer(index: number, name: string, address: string, serverResourcePacks: string) {
+    await fetch(`${API_BASE}/client/servers/edit`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({index, name, address, serverResourcePacks})
+    });
+}
+
 export async function swapServers(from: number, to: number) {
     await fetch(`${API_BASE}/client/servers/swap`, {
         method: "POST",

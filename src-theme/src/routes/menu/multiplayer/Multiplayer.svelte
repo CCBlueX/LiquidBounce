@@ -29,11 +29,18 @@
     import {REST_BASE} from "../../../integration/host";
     import AddServerModal from "./AddServerModal.svelte";
     import DirectConnectModal from "./DirectConnectModal.svelte";
+    import EditServerModal from "./EditServerModal.svelte";
 
     let onlineOnly = false;
     let searchQuery = "";
     let addServerModalVisible = false;
     let directConnectModalVisible = false;
+
+    let editServerModalVisible = false;
+    let currentEditServer: {
+        server: Server,
+        index: number
+    } | null = null;
 
     $: {
         let filteredServers = servers;
@@ -117,10 +124,20 @@
     function handleSearch(e: CustomEvent<{ query: string }>) {
         searchQuery = e.detail.query;
     }
+
+    function editServer(server: Server, index: number) {
+        currentEditServer = {
+            server,
+            index
+        };
+        editServerModalVisible = true;
+    }
 </script>
 
 <AddServerModal bind:visible={addServerModalVisible} on:serverAdd={refreshServers}/>
-<DirectConnectModal bind:visible={directConnectModalVisible} />
+<EditServerModal bind:visible={editServerModalVisible} address={currentEditServer?.server.address}
+                 name={currentEditServer?.server.name} on:serverEdit={refreshServers} index={currentEditServer?.index}/>
+<DirectConnectModal bind:visible={directConnectModalVisible}/>
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
@@ -130,28 +147,30 @@
     </OptionBar>
 
     <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>
-        {#each renderedServers as {name, icon, address, label, players, version, ping}, index}
-            <MenuListItem imageText={ping >= 0 ? `${ping}ms` : null} imageTextBackgroundColor={getPingColor(ping)}
-                          image={ping < 0
+        {#each renderedServers as server, index}
+            <MenuListItem imageText={server.ping >= 0 ? `${server.ping}ms` : null}
+                          imageTextBackgroundColor={getPingColor(server.ping)}
+                          image={server.ping < 0
                             ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
-                            :`data:image/png;base64,${icon}`}
-                          title={name}>
-                <TextComponent slot="subtitle" textComponent={ping < 0 ? "§CCan't connect to server" : label}/>
+                            :`data:image/png;base64,${server.icon}`}
+                          title={server.name}>
+                <TextComponent slot="subtitle"
+                               textComponent={server.ping < 0 ? "§CCan't connect to server" : server.label}/>
 
                 <svelte:fragment slot="tag">
-                    {#if ping >= 0}
-                        <MenuListItemTag text="{players.online}/{players.max} Players"/>
-                        <MenuListItemTag text={version}/>
+                    {#if server.ping >= 0}
+                        <MenuListItemTag text="{server.players.online}/{server.players.max} Players"/>
+                        <MenuListItemTag text={server.version}/>
                     {/if}
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
                     <MenuListItemButton title="Delete" icon="trash" on:click={() => removeServer(index)}/>
-                    <MenuListItemButton title="Edit" icon="pen-2"/>
+                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editServer(server, index)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Join" icon="play" on:click={() => connectToServer(address)}/>
+                    <MenuListItemButton title="Join" icon="play" on:click={() => connectToServer(server.address)}/>
                 </svelte:fragment>
             </MenuListItem>
         {/each}
