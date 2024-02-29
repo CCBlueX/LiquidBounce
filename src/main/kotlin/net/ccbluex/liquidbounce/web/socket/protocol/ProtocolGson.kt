@@ -87,7 +87,7 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
     fun ServerInfo.asJsonObject() = JsonObject().apply {
         addProperty("name", name)
         addProperty("address", address)
-        addProperty("online", online)
+        addProperty("status", status.name)
         add("playerList", protocolGson.toJsonTree(playerListSummary))
         add("label", protocolGson.toJsonTree(label))
         add("playerCountLabel", protocolGson.toJsonTree(playerCountLabel))
@@ -139,8 +139,8 @@ class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
         context: JsonSerializationContext?
     ) = src?.let {
         JsonObject().apply {
-            addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType).toString())
-            addProperty("localizedName", it.effectType.name.convertToString())
+            addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType.value()).toString())
+            addProperty("localizedName", it.effectType.value().name.convertToString())
             addProperty("duration", it.duration)
             addProperty("amplifier", it.amplifier)
             addProperty("ambient", it.isAmbient)

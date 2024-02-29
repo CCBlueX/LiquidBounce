@@ -38,12 +38,12 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
                 val o1EffectScores =
                     PotionUtil.getPotionEffects(o1.itemStack)
-                        .map { tierOf(it.effectType).score }
+                        .map { tierOf(it.effectType.value()).score }
                         .sortedDescending()
                         .toTypedArray()
                 val o2EffectScores =
                     PotionUtil.getPotionEffects(o2.itemStack)
-                        .map { tierOf(it.effectType).score }
+                        .map { tierOf(it.effectType.value()).score }
                         .sortedDescending()
                         .toTypedArray()
 
@@ -59,12 +59,12 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
                 val o1EffectScores =
                     PotionUtil.getPotionEffects(o1.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.amplifier }
                         .toTypedArray()
                 val o2EffectScores =
                     PotionUtil.getPotionEffects(o2.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.amplifier }
                         .toTypedArray()
 
@@ -101,12 +101,12 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
                 val o1EffectScores =
                     PotionUtil.getPotionEffects(o1.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.duration }
                         .toTypedArray()
                 val o2EffectScores =
                     PotionUtil.getPotionEffects(o2.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.duration }
                         .toTypedArray()
 
@@ -139,7 +139,8 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             StatusEffects.NIGHT_VISION to Tier.C,
 
             StatusEffects.LUCK to Tier.D,
-        )
+        ).mapKeys { it.key.value() }
+
         val BAD_STATUS_EFFECTS = hashSetOf(
             StatusEffects.SLOWNESS,
             StatusEffects.MINING_FATIGUE,

@@ -12,6 +12,7 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.item.FilledMapItem
+import net.minecraft.item.map.MapId
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.util.Identifier
 import java.util.*
@@ -21,7 +22,7 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
     override val parent: ChoiceConfigurable
         get() = ModuleMurderMystery.modes
 
-    private var lastMap: String? = null
+    private var lastMap: MapId? = null
     private var currentAssasinationTarget: UUID? = null
     private var currentAssasin: UUID? = null
 
@@ -75,16 +76,16 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
             return
         }
 
-        val mapName = FilledMapItem.getMapId(equippedItem)?.let { FilledMapItem.getMapName(it) }
-        val mapData = mapName?.let { world.getMapState(it) } ?: return
+        val mapId = FilledMapItem.getMapId(equippedItem)
+        val mapState = mapId?.let { world.getMapState(it) } ?: return
 
-        if (mapName == lastMap) {
+        if (mapId == lastMap) {
             return
         }
 
-        lastMap = mapName
+        lastMap = mapId
 
-        val outs = MurderMysteryFontDetection.readContractLine(mapData)
+        val outs = MurderMysteryFontDetection.readContractLine(mapState)
 
         val s = outs.split(" ").toTypedArray()
 

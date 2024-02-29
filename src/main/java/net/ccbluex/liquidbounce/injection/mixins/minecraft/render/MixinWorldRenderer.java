@@ -33,8 +33,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -62,7 +64,7 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void onRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f positionMatrix, CallbackInfo ci) {
+    private void onRender(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
         try {
             OutlineShader.INSTANCE.begin(ModuleESP.OutlineMode.INSTANCE.getWidth());
         } catch (Throwable e) {
@@ -100,7 +102,7 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
-    private void onDrawOutlines(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo info) {
+    private void onDrawOutlines(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
         if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive()) {
             return;
         }
@@ -192,21 +194,25 @@ public abstract class MixinWorldRenderer {
         return ModuleFreeCam.INSTANCE.getEnabled() || spectator;
     }
 
-    @ModifyVariable(method = "renderWeather", at = @At(value = "STORE"), name = "precipitation", ordinal = 0, require = 1, allow = 1)
-    private Biome.Precipitation modifyBiomePrecipitation(Biome.Precipitation precipitation) {
+    @Redirect(method = "renderWeather", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/Biome;getPrecipitation(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/biome/Biome$Precipitation;"))
+    private Biome.Precipitation modifyBiomePrecipitation(Biome instance, BlockPos pos) {
         var moduleOverrideWeather = ModuleOverrideWeather.INSTANCE;
+
         if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleOverrideWeather.WeatherType.SNOWY) {
             return Biome.Precipitation.SNOW;
         }
-        return precipitation;
+
+        return instance.getPrecipitation(pos);
     }
 
-    @ModifyVariable(method = "tickRainSplashing", at = @At("STORE"), ordinal = 0, require = 1, allow = 1)
-    private float removeRainSplashing(float f) {
+    @Redirect(method = "tickRainSplashing", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getRainGradient(F)F"))
+    private float removeRainSplashing(ClientWorld instance, float v) {
         var moduleOverrideWeather = ModuleOverrideWeather.INSTANCE;
+
         if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleOverrideWeather.WeatherType.SNOWY) {
             return 0f;
         }
-        return f;
+
+        return instance.getRainGradient(v);
     }
 }

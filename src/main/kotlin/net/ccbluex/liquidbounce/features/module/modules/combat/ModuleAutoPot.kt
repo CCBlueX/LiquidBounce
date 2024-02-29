@@ -215,7 +215,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
      */
     private fun isStandingInsideLingering() =
         world.entities.filterIsInstance<AreaEffectCloudEntity>().any {
-            it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potion.effects.any { effect ->
+            it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potion.value().effects.any { effect ->
                 effect.effectType == StatusEffects.REGENERATION || effect.effectType == StatusEffects.INSTANT_HEALTH
                         || effect.effectType == StatusEffects.STRENGTH
             }

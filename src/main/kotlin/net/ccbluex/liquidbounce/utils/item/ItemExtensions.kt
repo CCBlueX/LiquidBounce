@@ -36,6 +36,7 @@ import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.potion.PotionUtil
 import net.minecraft.registry.Registries
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.Identifier
 
 /**
@@ -44,7 +45,7 @@ import net.minecraft.util.Identifier
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
 fun createItem(stack: String, amount: Int = 1): ItemStack =
-    ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
+    ItemStringReader(mc.world!!.registryManager).consume(StringReader(stack)).let {
         ItemStackArgument(it.item, it.nbt).createStack(amount, false)
     }
 
@@ -134,7 +135,7 @@ val Item.attackDamage: Float
 val Item.attackSpeed: Float
     get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
 
-private fun Item.getAttributeValue(attribute: EntityAttribute): Float {
+private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
     for (entityAttributeModifier in this.getAttributeModifiers(EquipmentSlot.MAINHAND)

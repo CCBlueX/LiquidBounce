@@ -48,7 +48,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING_EDGE, 0.2f),
             )
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(

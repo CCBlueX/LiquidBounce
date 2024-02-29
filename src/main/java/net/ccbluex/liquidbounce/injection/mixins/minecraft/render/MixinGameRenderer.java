@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.PostEffectProcessor;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -49,12 +48,14 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.io.IOException;
 
@@ -65,13 +66,15 @@ public abstract class MixinGameRenderer {
     @Final
     private MinecraftClient client;
     private PostEffectProcessor uiRendererShader;
-
-    @Shadow
-    public abstract MinecraftClient getClient();
-
     @Shadow
     @Final
     private ResourceManager resourceManager;
+    @Shadow
+    @Final
+    private Camera camera;
+
+    @Shadow
+    public abstract MinecraftClient getClient();
 
     /**
      * Hook game render event
@@ -84,7 +87,7 @@ public abstract class MixinGameRenderer {
     /**
      * We change crossHairTarget according to server side rotations
      */
-    @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
+    @Redirect(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
     private HitResult hookRaycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
         if (instance != client.player) return instance.raycast(maxDistance, tickDelta, includeFluids);
 
@@ -97,7 +100,7 @@ public abstract class MixinGameRenderer {
         return RaytracingExtensionsKt.raycast(maxDistance, rotation, includeFluids);
     }
 
-    @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
+    @Redirect(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookRotationVector(Entity instance, float tickDelta) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
 
@@ -107,9 +110,16 @@ public abstract class MixinGameRenderer {
     /**
      * Hook world render event
      */
-    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
-    public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, partialTicks));
+    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0), locals = LocalCapture.PRINT)
+    public void hookWorldRender(float tickDelta, long limitTime, CallbackInfo ci) {
+        // TODO: Improve this
+        Matrix4f matrix4f2 = new Matrix4f().rotationXYZ(this.camera.getPitch() * ((float) Math.PI / 180), this.camera.getYaw() * ((float) Math.PI / 180) + (float) Math.PI, 0.0f);
+
+        var matrixStack = new MatrixStack();
+
+        matrixStack.multiplyPositionMatrix(matrix4f2);
+
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, tickDelta));
     }
 
     /**
@@ -157,21 +167,9 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(method = "renderHand", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamDisableHandRender(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
+    private void hookFreeCamDisableHandRender(Camera camera, float tickDelta, CallbackInfo ci) {
         if (ModuleFreeCam.INSTANCE.shouldDisableHandRender()) {
             ci.cancel();
-        }
-    }
-
-    @ModifyConstant(method = "updateTargetedEntity", constant = @Constant(doubleValue = 9.0))
-    private double hookReachModifyCombatReach(double constant) {
-        return ModuleReach.INSTANCE.getEnabled() ? (ModuleReach.INSTANCE.getCombatReach() * ModuleReach.INSTANCE.getCombatReach()) : constant;
-    }
-
-    @Inject(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-    private void hookReachModifyBlockReach(float tickDelta, CallbackInfo ci) {
-        if (ModuleReach.INSTANCE.getEnabled()) {
-            client.crosshairTarget = client.player.raycast(ModuleReach.INSTANCE.getBlockReach(), tickDelta, false);
         }
     }
 

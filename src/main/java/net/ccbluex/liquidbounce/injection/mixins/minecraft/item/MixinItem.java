@@ -30,6 +30,7 @@ import net.minecraft.item.SwordItem;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -67,23 +68,36 @@ public class MixinItem {
         }
     }
 
-    @Redirect(method = "raycast", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
-    private static float hookFixRotationA(PlayerEntity instance) {
+    @Redirect(method = "raycast", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
+    private static Vec3d hookFixRotationA(PlayerEntity instance, float v) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+
         if (instance != MinecraftClient.getInstance().player || rotation == null) {
-            return instance.getYaw();
+            return instance.getRotationVec(1.0f);
         }
 
-        return rotation.getYaw();
+        return rotation.getRotationVec();
     }
 
-    @Redirect(method = "raycast", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getPitch()F"))
-    private static float hookFixRotationB(PlayerEntity instance) {
-        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (instance != MinecraftClient.getInstance().player || rotation == null) {
-            return instance.getPitch();
-        }
+// TODO: getRotationVec might be inlined. In this case, we can use those methods below
 
-        return rotation.getPitch();
-    }
+//    @Redirect(method = "raycast", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
+//    private static float hookFixRotationA(PlayerEntity instance) {
+//        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+//        if (instance != MinecraftClient.getInstance().player || rotation == null) {
+//            return instance.getYaw();
+//        }
+//
+//        return rotation.getYaw();
+//    }
+//
+//    @Redirect(method = "raycast", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getPitch()F"))
+//    private static float hookFixRotationB(PlayerEntity instance) {
+//        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+//        if (instance != MinecraftClient.getInstance().player || rotation == null) {
+//            return instance.getPitch();
+//        }
+//
+//        return rotation.getPitch();
+//    }
 }

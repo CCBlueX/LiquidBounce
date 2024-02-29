@@ -109,7 +109,10 @@ enum class ItemSortChoice(
 /**
  * @param expectedFullArmor what is the expected armor material when we have full armor (full iron, full dia, etc.)
  */
-class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND) {
+class ItemCategorization(
+    availableItems: List<ItemSlot>,
+    expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND.value()
+) {
     private val bestPiecesIfFullArmor: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
