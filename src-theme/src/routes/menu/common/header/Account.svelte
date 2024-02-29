@@ -1,12 +1,10 @@
 <script lang="ts">
-    import ToolTip from "../common/ToolTip.svelte";
-    import {createEventDispatcher} from "svelte";
+    import ToolTip from "../ToolTip.svelte";
+    import {openScreen} from "../../../../integration/rest";
 
     export let username: string;
     export let avatar: string;
     export let premium: boolean;
-
-    const dispatch = createEventDispatcher();
 </script>
 
 <div class="account">
@@ -15,7 +13,7 @@
     </object>
     <div class="username">{username}</div>
     <div class="account-type">{premium ? "Premium" : "Offline"}</div>
-    <button class="button-change-account" type="button" on:click={() => dispatch("changeAccount")}>
+    <button class="button-change-account" type="button" on:click={() => openScreen("altmanager")}>
         <ToolTip text="Change account" />
 
         <img class="icon" src="img/menu/icon-pen.svg" alt="change account">
@@ -23,7 +21,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../colors.scss";
+  @import "../../../../colors";
 
   .account {
     background-color: rgba($hotbar-base-color, 0.68);

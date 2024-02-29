@@ -1,5 +1,6 @@
 import {REST_BASE} from "./host";
 import type {
+    Account,
     ConfigurableSetting,
     Module,
     PersistentStorageItem,
@@ -233,4 +234,21 @@ export async function setSelectedProtocol(protocol: Protocol) {
         },
         body: JSON.stringify({version: protocol.version})
     });
+}
+
+export async function addCrackedAccount(username: string) {
+    await fetch(`${API_BASE}/client/accounts/new/cracked`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username })
+    });
+}
+
+export async function getAccounts(): Promise<Account[]> {
+    const response = await fetch(`${API_BASE}/client/accounts`);
+    const data: Account[] = await response.json();
+
+    return data;
 }

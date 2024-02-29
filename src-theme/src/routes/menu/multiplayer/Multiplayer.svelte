@@ -135,13 +135,16 @@
 </script>
 
 <AddServerModal bind:visible={addServerModalVisible} on:serverAdd={refreshServers}/>
-<EditServerModal bind:visible={editServerModalVisible} address={currentEditServer?.server.address}
-                 name={currentEditServer?.server.name} on:serverEdit={refreshServers} index={currentEditServer?.index}/>
+{#if currentEditServer}
+    <EditServerModal bind:visible={editServerModalVisible} address={currentEditServer.server.address}
+                     name={currentEditServer.server.name} on:serverEdit={refreshServers} index={currentEditServer.index}
+                     serverResourcePacks="Prompt"/>
+{/if}
 <DirectConnectModal bind:visible={directConnectModalVisible}/>
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
-        <SwitchSetting title="Online" bind:value={onlineOnly}/>
+        <SwitchSetting title="Online only" bind:value={onlineOnly}/>
         <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
                       on:change={changeProtocolVersion}/>
     </OptionBar>

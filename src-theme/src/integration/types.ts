@@ -230,3 +230,12 @@ export interface Protocol {
     name: string;
     version: number;
 }
+
+export interface Account {
+    avatar: string;
+    favorite: boolean;
+    id: number;
+    type: string;
+    username: string;
+    uuid: string;
+}

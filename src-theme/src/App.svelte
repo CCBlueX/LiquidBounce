@@ -10,6 +10,7 @@
     import Title from "./routes/menu/title/Title.svelte";
     import SplashScreen from "./routes/menu/splash/SplashScreen.svelte";
     import Multiplayer from "./routes/menu/multiplayer/Multiplayer.svelte";
+    import AltManager from "./routes/menu/altmanager/AltManager.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
@@ -17,7 +18,8 @@
         "/inventory": Inventory,
         "/title": Title,
         "/splash": SplashScreen,
-        "/multiplayer": Multiplayer
+        "/multiplayer": Multiplayer,
+        "/altmanager": AltManager
     };
 
     const url = window.location.href;
@@ -66,8 +68,8 @@
 
 <main>
     {#if showSplash}
-        <SplashScreen />
+        <SplashScreen/>
     {:else}
-        <Router {routes} />
+        <Router {routes}/>
     {/if}
 </main>

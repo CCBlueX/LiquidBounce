@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Header from "../header/Header.svelte";
+    import Header from "./header/Header.svelte";
     import {fly} from "svelte/transition";
     import {onMount} from "svelte";
 

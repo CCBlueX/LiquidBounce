@@ -1,8 +1,8 @@
 <script lang="ts">
     import Account from "./Account.svelte";
-    import type {Session} from "../../../integration/types";
+    import type {Session} from "../../../../integration/types";
     import {onMount} from "svelte";
-    import {getSession} from "../../../integration/rest";
+    import {getSession} from "../../../../integration/rest";
 
     let session: Session | null = null;
 
