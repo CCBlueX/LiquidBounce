@@ -49,7 +49,7 @@ enum class VirtualScreenType(
     val routeName: String,
     val recognizer: (Screen) -> Boolean = { false },
     val isInGame: Boolean = false,
-    private val open: () -> Unit = {}
+    private val open: () -> Unit = { mc.setScreen(VrScreen(byName(routeName)!!)) }
 ) {
 
     HUD("hud", isInGame = true),
