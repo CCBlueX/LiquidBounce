@@ -98,13 +98,6 @@ object IntegrationHandler : Listenable {
         browserIsReady = true
     }
 
-    fun virtualOpen(name: String) {
-        val type = VirtualScreenType.byName(name) ?: return
-        val (theme, _) = ThemeManager.route(type, false)
-
-        virtualOpen(theme, type)
-    }
-
     fun virtualOpen(theme: Theme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
