@@ -100,10 +100,12 @@ object IntegrationHandler : Listenable {
 
     fun virtualOpen(name: String) {
         val type = VirtualScreenType.byName(name) ?: return
-        virtualOpen(type = type)
+        val (theme, _) = ThemeManager.route(type, false)
+
+        virtualOpen(theme, type)
     }
 
-    fun virtualOpen(theme: Theme = ThemeManager.activeTheme, type: VirtualScreenType) {
+    fun virtualOpen(theme: Theme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return
