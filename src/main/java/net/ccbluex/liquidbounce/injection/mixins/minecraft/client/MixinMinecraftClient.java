@@ -38,6 +38,7 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -98,6 +99,9 @@ public abstract class MixinMinecraftClient {
     @Shadow
     public abstract int getCurrentFps();
 
+    @Shadow
+    public abstract Session getSession();
+
     /**
      * Entry point of our hacked client
      *
@@ -122,7 +126,7 @@ public abstract class MixinMinecraftClient {
             target = "Lnet/minecraft/client/MinecraftClient;profileKeys:Lnet/minecraft/client/session/ProfileKeys;",
             ordinal = 0, shift = At.Shift.AFTER))
     private void onSessionInit(CallbackInfo callback) {
-        EventManager.INSTANCE.callEvent(new SessionEvent());
+        EventManager.INSTANCE.callEvent(new SessionEvent(getSession()));
     }
 
     /**

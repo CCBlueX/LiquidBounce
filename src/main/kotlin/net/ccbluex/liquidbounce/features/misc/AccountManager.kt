@@ -34,7 +34,8 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.AltManagerUpdateEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.script.ScriptApi
@@ -74,7 +75,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         loginDirectAccount(account)
     }.onFailure {
         logger.error("Failed to login into account", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
 
     @ScriptApi
@@ -102,11 +103,11 @@ object AccountManager : Configurable("Accounts"), Listenable {
         mc.sessionService = service.createMinecraftSessionService()
         mc.profileKeys = profileKeys
 
-        EventManager.callEvent(SessionEvent())
-        EventManager.callEvent(AltManagerUpdateEvent(true, "Logged in as ${account.profile?.username}"))
+        EventManager.callEvent(SessionEvent(session))
+        EventManager.callEvent(AccountManagerLoginResultEvent(username = account.profile?.username))
     }.onFailure {
         logger.error("Failed to login into account", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
 
     private val USERNAME_REGEX = Regex("[a-zA-z0-9_]{1,16}")
@@ -140,7 +141,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
 
-        EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: $username"))
+        EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -182,16 +183,25 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
                 url(it)
             }, success = { account ->
-                EventManager.callEvent(AltManagerUpdateEvent(true,
-                    "Added new account: ${account.profile?.username}"))
+                val profile = account.profile
+                if (profile == null) {
+                    logger.error("Failed to get profile")
+                    EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                    return@newMicrosoftAccount
+                }
+
+                EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
                 this.activeUrl = null
             }, error = { errorString ->
-                EventManager.callEvent(AltManagerUpdateEvent(false, errorString))
+                logger.error("Failed to create new account: $errorString")
+
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = errorString))
                 this.activeUrl = null
             })
         }.onFailure {
             logger.error("Failed to create new account", it)
-            EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
             this.activeUrl = null
         }
     }
@@ -254,13 +264,23 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @ScriptApi
     @JvmName("newAlteningAccount")
     fun newAlteningAccount(accountToken: String) = runCatching {
-        accounts += AlteningAccount.fromToken(accountToken)
+        accounts += AlteningAccount.fromToken(accountToken).apply {
+            val profile = this.profile
+
+            if (profile == null) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                return@runCatching
+            }
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        }
+
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
     }.onFailure {
         logger.error("Failed to login into altening account (for add-process)", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }
 
     fun generateAlteningAccountAsync(apiToken: String) = GlobalScope.launch {
@@ -282,10 +302,16 @@ object AccountManager : Configurable("Accounts"), Listenable {
         account
     }.onFailure {
         logger.error("Failed to generate altening account", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }.onSuccess {
+        val profile = it.profile
 
-        EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: ${it.profile?.username}"))
+        if (profile == null) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+            return@onSuccess
+        }
+
+        EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
     }
 
     @ScriptApi

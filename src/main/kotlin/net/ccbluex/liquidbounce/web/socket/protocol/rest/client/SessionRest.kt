@@ -26,29 +26,19 @@ import net.ccbluex.liquidbounce.api.ClientApi.formatAvatarUrl
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.AltManagerUpdateEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerMessageEvent
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
-import net.ccbluex.liquidbounce.utils.client.isPremium
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
-import net.minecraft.client.session.Session
 import org.lwjgl.glfw.GLFW
 
 fun RestNode.sessionRest() {
     get("/session") {
-        httpOk(JsonObject().apply {
-            mc.session.let {
-                addProperty("username", it.username)
-                addProperty("uuid", it.uuidOrNull.toString())
-                addProperty("accountType", it.accountType.getName())
-                addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
-                addProperty("premium", it.isPremium())
-            }
-        })
+        httpOk(protocolGson.toJsonTree(mc.session))
     }
     get("/location") {
         httpOk(
@@ -85,7 +75,7 @@ private fun RestNode.setupAccountManagerRest() {
         post("/new/microsoft") {
             AccountManager.newMicrosoftAccount {
                 browseUrl(it)
-                EventManager.callEvent(AltManagerUpdateEvent(true, "Opened login url in browser"))
+                EventManager.callEvent(AccountManagerMessageEvent("Opened login url in browser"))
             }
             httpOk(JsonObject())
         }.apply {
@@ -93,7 +83,7 @@ private fun RestNode.setupAccountManagerRest() {
                 AccountManager.newMicrosoftAccount {
                     RenderSystem.recordRenderCall {
                         GLFW.glfwSetClipboardString(mc.window.handle, it)
-                        EventManager.callEvent(AltManagerUpdateEvent(true, "Copied login url to clipboard"))
+                        EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
                     }
                 }
 
@@ -152,7 +142,7 @@ private fun RestNode.setupAccountManagerRest() {
 
     post("/account/restore") {
         AccountManager.restoreInitial()
-        httpOk(mc.session.toJsonObject())
+        httpOk(protocolGson.toJsonTree(mc.session))
     }
 
     put("/account/favorite") {
@@ -205,12 +195,4 @@ private fun RestNode.setupAccountManagerRest() {
         })
     }
 
-}
-
-private fun Session.toJsonObject() = JsonObject().apply {
-    addProperty("username", username)
-    addProperty("uuid", uuidOrNull.toString())
-    addProperty("accountType", accountType.getName())
-    addProperty("avatar", formatAvatarUrl(uuidOrNull, username))
-    addProperty("premium", isPremium())
 }

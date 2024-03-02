@@ -20,13 +20,16 @@
 package net.ccbluex.liquidbounce.web.socket.protocol
 
 import com.google.gson.*
+import net.ccbluex.liquidbounce.api.ClientApi.formatAvatarUrl
 import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.convertToString
+import net.ccbluex.liquidbounce.utils.client.isPremium
 import net.ccbluex.liquidbounce.web.theme.ComponentSerializer
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.SharedConstants
 import net.minecraft.client.network.ServerInfo
+import net.minecraft.client.session.Session
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
@@ -152,6 +155,19 @@ class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
 
 }
 
+class SessionSerializer : JsonSerializer<Session> {
+    override fun serialize(src: Session?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = src?.let {
+            JsonObject().apply {
+                addProperty("username", it.username)
+                addProperty("uuid", it.uuidOrNull.toString())
+                addProperty("accountType", it.accountType.getName())
+                addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
+                addProperty("premium", it.isPremium())
+            }
+        }
+}
+
 internal val strippedProtocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
@@ -163,6 +179,7 @@ internal val protocolGson = GsonBuilder()
     .registerCommonTypeAdapters()
     //.registerTypeHierarchyAdapter(Component::class.java, ComponentSerializer)
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableWithComponentSerializer)
+    .registerTypeAdapter(Session::class.java, SessionSerializer())
     .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer())
     .registerTypeAdapter(GameMode::class.java, GameModeSerializer())
     .registerTypeAdapter(ItemStack::class.java, ItemStackSerializer())
