@@ -238,18 +238,12 @@ public abstract class MixinMinecraftClient {
     }
 
     @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
-    private void injectPerfectHit(CallbackInfoReturnable<Boolean> cir) {
+    private void injectCombatPause(CallbackInfoReturnable<Boolean> cir) {
         if (player == null || crosshairTarget == null) {
             return;
         }
 
         if (CombatManager.INSTANCE.shouldPauseCombat()) {
-            cir.setReturnValue(false);
-        }
-
-        float h = player.getAttackCooldownProgress(0.5F);
-
-        if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {
             cir.setReturnValue(false);
         }
     }
