@@ -41,7 +41,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     override val parent: ChoiceConfigurable
         get() = FlyFireball.technique
 
-    object Jump: ToggleableConfigurable(this, "Jump", true) {
+    object Jump : ToggleableConfigurable(this, "Jump", true) {
         val delay by int("Delay", 3, 0..20, "ticks")
     }
 
@@ -71,20 +71,23 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     }
 
     private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
-        if (stopMove && !canMove)
+        if (stopMove && !canMove) {
             event.directionalInput = DirectionalInput.BACKWARDS // Cancel out movement.
+        }
     }
 
     private val repeatable = repeatable {
         if (FlyFireball.wasTriggered) {
             canMove = !stopMove
 
-            if (Jump.enabled && player.isOnGround)
+            if (Jump.enabled && player.isOnGround) {
                 player.jump()
+            }
 
 
-            if (Jump.enabled)
+            if (Jump.enabled) {
                 waitTicks(Jump.delay)
+            }
 
             FlyFireball.throwFireball()
 
