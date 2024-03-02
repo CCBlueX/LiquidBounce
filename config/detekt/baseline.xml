@@ -147,6 +147,7 @@
     <ID>TooManyFunctions:FakeLag.kt$FakeLag : Listenable</ID>
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
+    <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
     <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -> Boolean = { true }</ID>
     <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -> Boolean = { true }</ID>
