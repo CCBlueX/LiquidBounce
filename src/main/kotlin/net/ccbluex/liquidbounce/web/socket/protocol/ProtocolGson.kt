@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isPremium
+import net.ccbluex.liquidbounce.utils.client.processContent
 import net.ccbluex.liquidbounce.web.theme.ComponentSerializer
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.SharedConstants
@@ -33,6 +34,7 @@ import net.minecraft.client.session.Session
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.world.GameMode
 import java.lang.reflect.Type
@@ -168,6 +170,11 @@ class SessionSerializer : JsonSerializer<Session> {
         }
 }
 
+class TextSerializer : JsonSerializer<Text> {
+    override fun serialize(src: Text?, typeOfSrc: Type?, context: JsonSerializationContext?)
+        = Text.Serialization.toJsonTree(src?.processContent())
+}
+
 internal val strippedProtocolGson = GsonBuilder()
     .addSerializationExclusionStrategy(ProtocolExclusionStrategy())
     .registerCommonTypeAdapters()
@@ -179,6 +186,7 @@ internal val protocolGson = GsonBuilder()
     .registerCommonTypeAdapters()
     //.registerTypeHierarchyAdapter(Component::class.java, ComponentSerializer)
     .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ProtocolConfigurableWithComponentSerializer)
+    .registerTypeHierarchyAdapter(Text::class.java, TextSerializer())
     .registerTypeAdapter(Session::class.java, SessionSerializer())
     .registerTypeAdapter(ServerInfo::class.java, ServerInfoSerializer())
     .registerTypeAdapter(GameMode::class.java, GameModeSerializer())
