@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
@@ -56,7 +55,8 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     }
 
     val sprint by boolean("Sprint", true)
-    val stopMove by boolean("StopMove", true) /* Stop moving when module is active to avoid falling off, for example a bridge. */
+    //  Stop moving when module is active to avoid falling off, for example a bridge
+    val stopMove by boolean("StopMove", true)
 
     object Rotations : RotationsConfigurable(80f..120f) {
         val pitch by float("Pitch", 90f, 0f..90f)
