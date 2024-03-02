@@ -101,8 +101,8 @@
 <span class="text-component">
     {#if typeof textComponent === "string"}
         <svelte:self textComponent={convertLegacyCodes(textComponent)}/>
-    {:else}
-        {#if textComponent.text}
+    {:else if textComponent}
+        {#if textComponent.text }
             <span class="text" class:bold={textComponent.bold} class:italic={textComponent.italic}
                   class:underlined={textComponent.underlined}
                   class:strikethrough={textComponent.strikethrough}
