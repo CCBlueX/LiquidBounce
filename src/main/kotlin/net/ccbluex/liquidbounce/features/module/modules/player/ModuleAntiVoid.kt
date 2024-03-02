@@ -51,11 +51,11 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
 
     // Cases in which the AntiVoid protection should not be active.
     private val isExempt
-        get() = player.isDead || ModuleFly.enabled || ModuleScaffold.enabled || player.isSneaking
+        get() = player.isDead || ModuleFly.enabled || ModuleScaffold.enabled
 
     // Whether artificial lag is needed to prevent falling into the void.
     val needsArtificialLag
-        get() = enabled && needsAction && !actionAlreadyTaken
+        get() = enabled && needsAction && !actionAlreadyTaken && !isExempt
 
     // How many future ticks to simulate to ensure safety.
     private const val SAFE_TICKS_THRESHOLD = 10

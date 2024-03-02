@@ -41,6 +41,7 @@ class Script(val scriptFile: File) {
 
     private val context: Context = Context.newBuilder("js")
         .allowHostAccess(HostAccess.ALL) // Allow access to all Java classes
+        .allowHostClassLookup { true }
         .currentWorkingDirectory(scriptFile.parentFile.toPath())
         .allowIO(IOAccess.ALL) // Allow access to all IO operations
         .allowCreateProcess(false) // Disable process creation
