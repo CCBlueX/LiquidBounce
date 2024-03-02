@@ -1,9 +1,9 @@
-package net.ccbluex.liquidbounce.validation
+package net.ccbluex.liquidbounce.utils.validation
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.utils.client.logger
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
 import java.io.FileInputStream
@@ -11,35 +11,25 @@ import java.io.InputStreamReader
 
 private const val HASH_FILE_NAME = ".hash"
 
-object ClientDataValidator {
-    /**
-     * These folders are *recursively* searched for hash files (.hash). The files are checked against the hash and if
-     * the hash does not match the **ENTIRE FOLDER IS DELETED**. Never add a folder to this list
-     * that contains user data.
-     */
-    private val VALIDATED_FOLDERS = arrayOf("fonts", "mcef", "themes/default")
-
-    fun validateInstallation() {
-        LiquidBounce.logger.info("Validing installation...")
-
-        for (folder in VALIDATED_FOLDERS) {
-            val file = ConfigSystem.rootFolder.resolve(folder)
-
-            when {
-                !file.exists() -> continue
-                !file.isDirectory -> file.delete()
-                else -> validateFolder(file)
-            }
-        }
-    }
+object HashValidator {
 
     private fun containsHashFile(f: File) = f.resolve(HASH_FILE_NAME).exists()
 
-    private fun validateFolder(file: File) {
-        file
-            .walk()
+    fun validateFolder(file: File) {
+        if (!file.exists()) {
+            return
+        }
+
+        if (!file.isDirectory) {
+            file.delete()
+            return
+        }
+
+        expectHashOrDelete(file)
+
+        file.walk()
             .mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
-            .forEach(::validateHashFile)
+            .forEach(HashValidator::validateHashFile)
     }
 
     private fun validateHashFile(hashFile: File) {
@@ -55,8 +45,7 @@ object ClientDataValidator {
         if (delete) {
             val folderToDelete = hashFile.parentFile
 
-            LiquidBounce.logger.warn("Verification of ${folderToDelete.absolutePath} failed. Deleting folder..")
-
+            logger.warn("Verification of ${folderToDelete.absolutePath} failed. Deleting folder..")
             deleteFolder(folderToDelete)
         }
     }
@@ -66,7 +55,7 @@ object ClientDataValidator {
             folderToDelete.deleteRecursively()
         }.onSuccess { return }
 
-        LiquidBounce.logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...")
+        logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...")
 
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() {
@@ -86,7 +75,7 @@ object ClientDataValidator {
 
                 // A file went missing? A file is not a file anymore? Better delete it.
                 if (!resolveSibling.exists() || !resolveSibling.isFile) {
-                    LiquidBounce.logger.warn("File ${resolveSibling.absolutePath} went missing.")
+                    logger.warn("File ${resolveSibling.absolutePath} went missing.")
 
                     return true
                 }
@@ -101,7 +90,7 @@ object ClientDataValidator {
                 }
             }
         } catch (e: Exception) {
-            LiquidBounce.logger.error("Failed to validate ${hashFile.absolutePath}", e)
+            logger.error("Failed to validate ${hashFile.absolutePath}", e)
 
             return true
         }
@@ -109,7 +98,7 @@ object ClientDataValidator {
         return false
     }
 
-    fun expectHashOrDelete(f: File) {
+    private fun expectHashOrDelete(f: File) {
         if (!f.isDirectory || !containsHashFile(f)) {
             deleteFolder(f)
         }

@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.mcef.MCEFDownloader
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
-import net.ccbluex.liquidbounce.validation.ClientDataValidator
+import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import net.ccbluex.liquidbounce.web.browser.BrowserType
 import net.ccbluex.liquidbounce.web.browser.supports.tab.JcefTab
 import kotlin.concurrent.thread
@@ -49,10 +49,10 @@ class JcefBrowser : IBrowser, Listenable {
 
     override fun makeDependenciesAvailable(whenAvailable: () -> Unit) {
         if (!MCEF.isInitialized()) {
-            ClientDataValidator.expectHashOrDelete(librariesFolder)
+            HashValidator.validateFolder(librariesFolder)
 
             MCEF.getSettings().apply {
-                downloadMirror = "https://dl.liquidbounce.net/resources"
+                downloadMirror = "https://dl.ccbluex.net/resources"
                 // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
             }
