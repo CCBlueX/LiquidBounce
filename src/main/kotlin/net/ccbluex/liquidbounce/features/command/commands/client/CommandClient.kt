@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.web.theme.Theme
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.customComponents
 import net.ccbluex.liquidbounce.web.theme.component.types.FrameComponent
 import net.ccbluex.liquidbounce.web.theme.component.types.HtmlComponent
 import net.ccbluex.liquidbounce.web.theme.component.types.ImageComponent
@@ -246,8 +247,13 @@ object CommandClient {
         .hub()
         .subcommand(CommandBuilder.begin("list")
             .handler { command, args ->
-                chat(regular("Components:"))
+                chat(regular("In-built:"))
                 for (component in components) {
+                    chat(regular("-> ${component.name}"))
+                }
+
+                chat(regular("Custom:"))
+                for (component in customComponents) {
                     chat(regular("-> ${component.name}"))
                 }
             }.build()
@@ -262,7 +268,7 @@ object CommandClient {
                         .build()
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
-                    components += TextComponent(arg)
+                    customComponents += TextComponent(arg)
                     ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added text component.")
@@ -276,7 +282,7 @@ object CommandClient {
                         .build()
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
-                    components += FrameComponent(arg)
+                    customComponents += FrameComponent(arg)
                     ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added frame component.")
@@ -290,7 +296,7 @@ object CommandClient {
                         .build()
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
-                    components += ImageComponent(arg)
+                    customComponents += ImageComponent(arg)
                     ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added image component.")
@@ -304,7 +310,7 @@ object CommandClient {
                         .build()
                 ).handler { command, args ->
                     val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
-                    components += HtmlComponent(arg)
+                    customComponents += HtmlComponent(arg)
                     ComponentOverlay.fireComponentsUpdate()
 
                     chat("Successfully added html component.")
@@ -318,14 +324,14 @@ object CommandClient {
                     .build()
             ).handler { command, args ->
                 val name = args[0] as String
-                val component = components.find { it.name.equals(name, true) }
+                val component = customComponents.find { it.name.equals(name, true) }
 
                 if (component == null) {
                     chat(regular("Component not found."))
                     return@handler
                 }
 
-                components -= component
+                customComponents -= component
                 ComponentOverlay.fireComponentsUpdate()
 
                 chat("Successfully removed component.")
@@ -333,7 +339,7 @@ object CommandClient {
         )
         .subcommand(CommandBuilder.begin("clear")
             .handler { command, args ->
-                components.clear()
+                customComponents.clear()
                 ComponentOverlay.fireComponentsUpdate()
 
                 chat("Successfully cleared components.")
