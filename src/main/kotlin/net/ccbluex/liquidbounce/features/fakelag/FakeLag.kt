@@ -265,7 +265,8 @@ object FakeLag : Listenable {
         synchronized(positions) {
             renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
-                    drawLineStrip(*positions.map { Vec3(it.vec) }.toTypedArray())
+                    @Suppress("SpreadOperator")
+                    drawLineStrip(*positions.map { Vec3(relativeToCamera(it.vec)) }.toTypedArray())
                 }
             }
         }

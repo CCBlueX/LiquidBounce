@@ -25,9 +25,10 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.customComponents
 
 fun RestNode.componentRest() {
     get("/components") {
-        httpOk(protocolGson.toJsonTree(components))
+        httpOk(protocolGson.toJsonTree(components + customComponents))
     }
 }

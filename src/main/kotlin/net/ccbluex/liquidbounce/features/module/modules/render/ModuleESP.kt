@@ -94,13 +94,13 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 entitiesWithBoxes.forEach { box, entities ->
                     for (entity in entities) {
-                        val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
                         val color = getColor(entity)
 
                         val baseColor = color.alpha(50)
                         val outlineColor = color.alpha(100)
 
-                        withPosition(pos) {
+                        withPositionRelativeToCamera(pos) {
                             withColor(baseColor) {
                                 drawSolidBox(box)
                             }

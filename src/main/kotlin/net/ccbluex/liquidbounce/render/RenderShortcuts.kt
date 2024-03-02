@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
+import net.minecraft.client.render.Camera
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
@@ -36,6 +37,7 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.World
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11C
 import kotlin.math.PI
@@ -47,9 +49,23 @@ import kotlin.math.sin
  *
  * @property matrixStack The matrix stack for rendering.
  */
-data class RenderEnvironment(val matrixStack: MatrixStack) {
+abstract class RenderEnvironment(val matrixStack: MatrixStack) {
     val currentMvpMatrix: Matrix4f
         get() = matrixStack.peek().positionMatrix
+
+    abstract fun relativeToCamera(pos: Vec3d): Vec3d
+}
+
+class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {
+    override fun relativeToCamera(pos: Vec3d): Vec3d {
+        return pos
+    }
+}
+
+class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {
+    override fun relativeToCamera(pos: Vec3d): Vec3d {
+        return pos.subtract(camera.pos)
+    }
 }
 
 /**
@@ -58,26 +74,16 @@ data class RenderEnvironment(val matrixStack: MatrixStack) {
  * @param matrixStack The matrix stack for rendering.
  * @param draw The block of code to be executed in the rendering environment.
  */
-fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.() -> Unit) {
+fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRenderEnvironment.() -> Unit) {
     val camera = mc.entityRenderDispatcher.camera ?: return
-    val cameraPosition = camera.pos
 
     RenderSystem.enableBlend()
     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
     RenderSystem.disableDepthTest()
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
-
-
-    matrixStack.push()
-
-    // Translate to the entity position
-    matrixStack.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z)
-
-    val environment = RenderEnvironment(matrixStack)
+    val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
-
-    matrixStack.pop()
 
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
     RenderSystem.disableBlend()
@@ -86,12 +92,12 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
-fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: RenderEnvironment.() -> Unit) {
+fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIRenderEnvironment.() -> Unit) {
     RenderSystem.setShader { GameRenderer.getPositionTexColorProgram() }
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     RenderSystem.enableBlend()
 
-    draw(RenderEnvironment(matrixStack))
+    draw(GUIRenderEnvironment(matrixStack,))
 
     RenderSystem.disableBlend()
 }
@@ -109,6 +115,36 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
         try { draw() }
         finally { pop() }
 
+    }
+}
+
+/**
+ * Extension function to apply a position transformation to the current rendering environment.
+ *
+ * @param pos The position vector.
+ * @param draw The block of code to be executed in the transformed environment.
+ */
+fun RenderEnvironment.withPosition(pos: Vec3d, draw: RenderEnvironment.() -> Unit) {
+    with(matrixStack) {
+        push()
+        translate(pos.x, pos.y, pos.z)
+        try { draw() }
+        finally { pop() }
+
+    }
+}
+
+/**
+ * Shorthand for `withPosition(relativeToCamera(pos))`
+ */
+fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
+    val relativePos = relativeToCamera(pos)
+
+    with(matrixStack) {
+        push()
+        translate(relativePos.x, relativePos.y, relativePos.z)
+        try { draw() }
+        finally { pop() }
     }
 }
 

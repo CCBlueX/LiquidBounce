@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.ItemEntity
@@ -71,9 +72,9 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
-                    withPosition(pos) {
+                    withPositionRelativeToCamera(pos) {
                         boxRenderer.drawBox(this, box, true)
                     }
                 }

@@ -264,8 +264,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 ModuleScaffold,
                 "lineToBlock",
                 ModuleDebug.DebuggedLineSegment(
-                    from = Vec3(a),
-                    to = Vec3(b),
+                    from = a,
+                    to = b,
                     Color4b(255, 0, 0, 255),
                 ),
             )

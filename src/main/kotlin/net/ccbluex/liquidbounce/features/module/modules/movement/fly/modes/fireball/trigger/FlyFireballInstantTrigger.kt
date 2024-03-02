@@ -18,24 +18,22 @@
  *
  */
 
-package net.ccbluex.liquidbounce.event.events
+package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger
 
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.render.Camera
-import net.minecraft.client.util.math.MatrixStack
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques.FlyFireballLegitTechnique
 
-@Nameable("gameRender")
-class GameRenderEvent : Event()
+object FlyFireballInstantTrigger : Choice("Instant") {
 
-@Nameable("screenRender")
-class ScreenRenderEvent : Event()
+    override val parent: ChoiceConfigurable
+        get() = FlyFireball.trigger
 
-@Nameable("worldRender")
-class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val partialTicks: Float) : Event()
+    val repeatable = repeatable {
+        FlyFireball.wasTriggered = true
+    }
 
-@Nameable("overlayRender")
-class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
-
+}

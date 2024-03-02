@@ -23,6 +23,6 @@ package net.ccbluex.liquidbounce.web.theme.component.types
 
 import net.ccbluex.liquidbounce.web.theme.component.Component
 
-class TextComponent(text: String) : Component("Text", true) {
+class TextComponent(text: String, enabled: Boolean = true) : Component("Text", enabled) {
     val text by text("Text", text)
 }
