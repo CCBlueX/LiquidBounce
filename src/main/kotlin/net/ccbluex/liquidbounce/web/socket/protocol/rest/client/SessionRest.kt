@@ -101,6 +101,16 @@ private fun RestNode.setupAccountManagerRest() {
             httpOk(JsonObject())
         }
 
+        post("/new/session") {
+            class AccountForm(
+                val token: String
+            )
+            val accountForm = decode<AccountForm>(it.content)
+
+            AccountManager.newSessionAccount(accountForm.token)
+            httpOk(JsonObject())
+        }
+
         post("/new/altening") {
             class AlteningForm(
                 val token: String
