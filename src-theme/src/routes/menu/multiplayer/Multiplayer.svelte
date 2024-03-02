@@ -12,13 +12,13 @@
     import {onMount} from "svelte";
     import {
         connectToServer,
-        getServers,
-        openScreen,
         getProtocols,
         getSelectedProtocol,
-        setSelectedProtocol,
+        getServers,
+        openScreen,
         orderServers,
-        removeServer as removeServerRest
+        removeServer as removeServerRest,
+        setSelectedProtocol
     } from "../../../integration/rest";
 
     import type {Protocol, Server, ServerPingedEvent} from "../../../integration/types";
@@ -77,10 +77,7 @@
 
     listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
         const server = pingedEvent.server;
-        const index = servers.findIndex(s => s.address === server.address);
-        if (index !== -1) {
-            servers[index] = server;
-        }
+        servers = servers.map(s => s.address === server.address ? server : s);
     });
 
     async function refreshServers() {
