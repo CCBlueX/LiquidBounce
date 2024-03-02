@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent
 
 var components: MutableList<Component> = mutableListOf()
 var customComponents: MutableList<Component> = mutableListOf(
-    HtmlComponent("<b>This is HTML</>", enabled = false)
+    HtmlComponent("<b>This is HTML</b>", enabled = false)
 )
 
 object ComponentOverlay : Listenable {
