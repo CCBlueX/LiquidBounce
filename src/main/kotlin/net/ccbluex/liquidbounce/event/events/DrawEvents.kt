@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.render.Camera
 import net.minecraft.client.util.math.MatrixStack
 
 @Nameable("gameRender")
@@ -33,7 +34,7 @@ class GameRenderEvent : Event()
 class ScreenRenderEvent : Event()
 
 @Nameable("worldRender")
-class WorldRenderEvent(val matrixStack: MatrixStack, val partialTicks: Float) : Event()
+class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val partialTicks: Float) : Event()
 
 @Nameable("overlayRender")
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()

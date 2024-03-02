@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Curves
+import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.tuple.MutablePair
 
 object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
@@ -45,7 +47,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
     private val lifetime by int("Lifetime", 15, 1..30)
 
-    private var circles = arrayListOf<MutablePair<Vec3, Long>>()
+    private var circles = arrayListOf<MutablePair<Vec3d, Long>>()
 
     val repeatable = repeatable {
         circles.forEach { it.right += 1 }
@@ -61,7 +63,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
                     .at((it.right + event.partialTicks) / lifetime)
                     .coerceIn(0f..1f)
 
-                withPosition(it.left) {
+                withPositionRelativeToCamera(it.left) {
                     drawGradientCircle(
                         endRadius.endInclusive * progress,
                         endRadius.start * progress,
@@ -85,7 +87,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
     val onJump = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
-        circles.add(MutablePair(Vec3(player.pos), 0L))
+        circles.add(MutablePair(player.pos, 0L))
     }
 
 

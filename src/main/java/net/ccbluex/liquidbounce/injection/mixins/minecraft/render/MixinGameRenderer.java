@@ -73,6 +73,9 @@ public abstract class MixinGameRenderer {
     @Final
     private ResourceManager resourceManager;
 
+    @Shadow
+    public abstract Camera getCamera();
+
     /**
      * Hook game render event
      */
@@ -109,7 +112,7 @@ public abstract class MixinGameRenderer {
      */
     @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
     public void hookWorldRender(float partialTicks, long finishTimeNano, MatrixStack matrixStack, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, partialTicks));
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, this.getCamera(), partialTicks));
     }
 
     /**

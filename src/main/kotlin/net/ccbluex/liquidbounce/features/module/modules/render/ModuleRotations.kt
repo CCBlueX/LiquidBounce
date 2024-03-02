@@ -57,7 +57,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
         val eyeVector = Vec3(0.0, 0.0, 1.0)
             .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)
+            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
         renderEnvironmentForWorld(matrixStack) {
             withColor(Color4b.WHITE) {
