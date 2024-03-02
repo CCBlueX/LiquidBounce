@@ -1,18 +1,12 @@
 <script lang="ts">
-    import {slide, fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {createEventDispatcher} from "svelte";
+    import {fade} from "svelte/transition";
 
-    export let options: string[];
-    export let value: string;
-    export let title: string;
-
-    const dispatch = createEventDispatcher<{
-        change: { value: string }
-    }>();
+    export let closeOnInternalClick: boolean;
 
     let expanded = false;
     let selectElement: HTMLElement;
+    let headerElement: HTMLElement;
 
     function handleWindowClick(e: MouseEvent) {
         if (!selectElement.contains(e.target as Node)) {
@@ -20,9 +14,16 @@
         }
     }
 
-    function handleOptionClick(o: string) {
-        value = o;
-        dispatch("change", {value: o});
+    function handleSelectClick(e:MouseEvent) {
+        if (closeOnInternalClick) {
+            expanded = !expanded;
+        } else {
+            if (!expanded) {
+                expanded = true;
+            } else {
+                expanded = !headerElement.contains(e.target as Node);
+            }
+        }
     }
 </script>
 
@@ -30,26 +31,24 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="single-select" on:click={() => expanded = !expanded} bind:this={selectElement} class:expanded>
-    <div class="header">
-        <span class="title"><span>{title}</span> {value}</span>
+<div class="select" class:expanded bind:this={selectElement} on:click={handleSelectClick}>
+    <div class="header" bind:this={headerElement}>
+        <span class="title">
+            <slot name="title"/>
+        </span>
         <img src="img/menu/icon-select-arrow.svg" alt="expand">
     </div>
-
     {#if expanded}
         <div class="options" transition:fade|global={{ duration: 200, easing: quintOut }}>
-            {#each options as o}
-                <div on:click={() => handleOptionClick(o)} class="option" class:active={o === value}
-                     transition:slide|global={{ duration: 200, easing: quintOut }}>{o}</div>
-            {/each}
+            <slot name="options"></slot>
         </div>
     {/if}
 </div>
 
 <style lang="scss">
-  @import "../../../../colors";
+  @import "../../../../../colors.scss";
 
-  .single-select {
+  .select {
     cursor: pointer;
     min-width: 250px;
     position: relative;
@@ -89,21 +88,5 @@
     max-height: 250px;
     overflow: auto;
     background-color: rgba($menu-base-color, 0.9);
-
-    .option {
-      font-weight: 500;
-      color: $menu-text-dimmed-color;
-      font-size: 20px;
-      padding: 15px 20px;
-      transition: ease color .2s;
-
-      &:hover {
-        color: $menu-text-color;
-      }
-
-      &.active {
-        color: $accent-color;
-      }
-    }
   }
 </style>

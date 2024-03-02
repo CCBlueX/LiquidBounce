@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Modal from "../common/Modal.svelte";
+    import Modal from "../common/modal/Modal.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import {connectToServer} from "../../../integration/rest";

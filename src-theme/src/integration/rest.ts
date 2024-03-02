@@ -246,6 +246,22 @@ export async function addCrackedAccount(username: string) {
     });
 }
 
+export async function addMicrosoftAccount() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft`, {
+        method: "POST",
+    });
+}
+
+export async function loginToAccount(id: number) {
+    await fetch(`${API_BASE}/client/account/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ id })
+    });
+}
+
 export async function getAccounts(): Promise<Account[]> {
     const response = await fetch(`${API_BASE}/client/accounts`);
     const data: Account[] = await response.json();

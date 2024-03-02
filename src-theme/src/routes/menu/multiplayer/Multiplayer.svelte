@@ -25,7 +25,7 @@
     import {listen} from "../../../integration/ws";
     import TextComponent from "../common/TextComponent.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
-    import SingleSelect from "../common/setting/SingleSelect.svelte";
+    import SingleSelect from "../common/setting/select/SingleSelect.svelte";
     import {REST_BASE} from "../../../integration/host";
     import AddServerModal from "./AddServerModal.svelte";
     import DirectConnectModal from "./DirectConnectModal.svelte";

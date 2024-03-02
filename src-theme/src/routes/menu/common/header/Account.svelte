@@ -1,10 +1,28 @@
 <script lang="ts">
     import ToolTip from "../ToolTip.svelte";
-    import {openScreen} from "../../../../integration/rest";
+    import {getSession, openScreen} from "../../../../integration/rest";
+    import type {Session} from "../../../../integration/types";
+    import {onMount} from "svelte";
+    import {listen} from "../../../../integration/ws";
 
-    export let username: string;
-    export let avatar: string;
-    export let premium: boolean;
+    let username = "";
+    let avatar = "";
+    let premium = true;
+
+    async function refreshSession() {
+        const session = await getSession();
+        username = session.username;
+        avatar = session.avatar;
+        premium = session.premium;
+    }
+
+    onMount(async () => {
+        await refreshSession();
+    });
+
+    listen("session", async () => {
+        await refreshSession();
+    });
 </script>
 
 <div class="account">
@@ -14,7 +32,7 @@
     <div class="username">{username}</div>
     <div class="account-type">{premium ? "Premium" : "Offline"}</div>
     <button class="button-change-account" type="button" on:click={() => openScreen("altmanager")}>
-        <ToolTip text="Change account" />
+        <ToolTip text="Change account"/>
 
         <img class="icon" src="img/menu/icon-pen.svg" alt="change account">
     </button>

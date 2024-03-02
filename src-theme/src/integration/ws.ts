@@ -60,6 +60,10 @@ export function cleanupListeners() {
     listeners = {}
 }
 
+export function deleteListener(eventName: string, cb: Function) {
+    listeners[eventName] = listeners[eventName].filter(handler => handler !== cb);
+}
+
 // Send ping to server every 5 seconds
 setInterval(() => {
     if (!ws) return;

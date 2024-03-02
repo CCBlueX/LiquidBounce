@@ -1,6 +1,6 @@
 <script lang="ts">
-    import Modal from "../common/Modal.svelte";
-    import SingleSelect from "../common/setting/SingleSelect.svelte";
+    import Modal from "../common/modal/Modal.svelte";
+    import SingleSelect from "../common/setting/select/SingleSelect.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import {editServer as editServerRest} from "../../../integration/rest";

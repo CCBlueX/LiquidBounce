@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {getAccounts, openScreen} from "../../../integration/rest.js";
+    import {getAccounts, loginToAccount, openScreen} from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -13,11 +13,15 @@
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
     import type {Account} from "../../../integration/types";
     import {onMount} from "svelte";
+    import MultiSelect from "../common/setting/select/MultiSelect.svelte";
+    import AddAccountModal from "./addaccount/AddAccountModal.svelte";
 
     let premiumOnly = false;
     let accounts: Account[] = [];
     let renderedAccounts: Account[] = [];
     let searchQuery = "";
+
+    let addAccountModalVisible = false;
 
     $: {
         let filteredAccounts = accounts;
@@ -28,6 +32,10 @@
             filteredAccounts = filteredAccounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         renderedAccounts = filteredAccounts;
+    }
+
+    async function refreshAccounts() {
+        accounts = await getAccounts();
     }
 
     onMount(async () => {
@@ -44,14 +52,16 @@
     }
 </script>
 
+<AddAccountModal bind:visible={addAccountModalVisible} on:modify={refreshAccounts}/>
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Premium only" bind:value={premiumOnly}/>
+        <MultiSelect title="Account Types" options={["Mojang", "TheAltening"]} values={["Mojang", "TheAltening"]}/>
     </OptionBar>
 
-    <MenuList sortable={renderedAccounts.length === accounts.length} on:sort={handleAccountSort}>
-        {#each renderedAccounts as account}
+    <MenuList sortable={false} on:sort={handleAccountSort}>
+        {#each renderedAccounts as account, index}
             <MenuListItem
                     image={account.avatar}
                     title={account.username}>
@@ -71,7 +81,7 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Login" icon="play"/>
+                    <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(index)}/>
                 </svelte:fragment>
             </MenuListItem>
         {/each}
@@ -79,7 +89,7 @@
 
     <BottomButtonWrapper>
         <ButtonContainer>
-            <IconTextButton icon="plus-circle" title="Add"/>
+            <IconTextButton icon="plus-circle" title="Add" on:click={() => addAccountModalVisible = true}/>
             <IconTextButton icon="plus-circle" title="Direct"/>
             <IconTextButton icon="plus-circle" title="Clipboard"/>
             <IconTextButton icon="plus-circle" title="Import"/>

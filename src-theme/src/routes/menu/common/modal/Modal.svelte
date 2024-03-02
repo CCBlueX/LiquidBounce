@@ -19,7 +19,7 @@
             <img src="img/menu/icon-close.svg" alt="close">
         </button>
 
-        <div class="modal" transition:fly|global={{duration: 300, y: -100}}>
+        <div class="modal" in:fly|global={{duration: 300, y: -100}} out:fly|global={{duration: 300, y: -100}}>
             <div class="title">{title}</div>
 
             <div class="content">
@@ -30,7 +30,7 @@
 {/if}
 
 <style lang="scss">
-  @import "../../../colors.scss";
+  @import "../../../../colors";
 
   .modal-wrapper {
     position: fixed;
@@ -53,6 +53,7 @@
     display: flex;
     flex-direction: column;
     border-radius: 5px;
+    overflow: hidden;
   }
 
   .title {
