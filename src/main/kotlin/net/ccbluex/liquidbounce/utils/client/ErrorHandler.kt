@@ -36,7 +36,7 @@ object ErrorHandler {
      *
      * @param error the throwable error that occurred
      */
-    fun fatal(error: Throwable) {
+    fun fatal(error: Throwable, additionalMessage: String? = null) {
         logger.error("Fatal error", error)
 
         val logPath = mc.runDirectory.resolve("logs").resolve("latest.log").absolutePath
@@ -48,7 +48,7 @@ object ErrorHandler {
                     |OS: ${System.getProperty("os.name")} (${System.getProperty("os.arch")})
                     |Java: ${System.getProperty("java.version")}
                     |Client Version: ${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit})
-                    |
+                    |${additionalMessage ?: ""}
                     |Error: ${error.message}
                     |Error Type: ${error.javaClass.name}
                     |
